@@ -1,0 +1,22 @@
+# Roblox Studio lock / backup / autosave files
+*.rbxl.lock
+*.rbxl.bak
+*.rbxl.autosave
+*.rbxlx.lock
+*.rbxlx.bak
+
+# Python / Node
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+
+# Large captures and videos (kept on disk only)
+captures/
+*.mp4
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
