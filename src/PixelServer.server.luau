@@ -45,7 +45,7 @@ Lighting.ClockTime = 0.4
 Lighting.Brightness = 0.8
 Lighting.ExposureCompensation = -0.25
 Lighting.Ambient = Color3.fromRGB(30, 24, 50)
-Lighting.OutdoorAmbient = Color3.fromRGB(96, 88, 146)
+Lighting.OutdoorAmbient = Color3.fromRGB(80, 74, 136) -- cool indigo shadows; the lanterns carry the warm light
 Lighting.EnvironmentDiffuseScale, Lighting.EnvironmentSpecularScale = 0.3, 0.25
 Lighting.GlobalShadows, Lighting.ShadowSoftness = true, 0.3
 local function effect(cls, props)
@@ -186,6 +186,7 @@ local function shade(col, r, c, d)
 	return Color3.fromHSV(h, sat, math.clamp(v * (0.85 + ((r * 7 + c * 13 + d * 3) % 3) * 0.07), 0, 1))
 end
 
+local FACE_SHADE = { [Enum.NormalId.Top] = 1, [Enum.NormalId.Front] = 0.86, [Enum.NormalId.Back] = 0.86, [Enum.NormalId.Left] = 0.78, [Enum.NormalId.Right] = 0.78, [Enum.NormalId.Bottom] = 0.6 }
 -- A block shows its texture on every face that looks into open space; a natural cave floor gets a mossy top
 local function updateFaces(s, p, r, c, d, kind)
 	for _, n in NB do
@@ -198,6 +199,8 @@ local function updateFaces(s, p, r, c, d, kind)
 				dc.Name, dc.Face = face.Name, face
 				local mossy = face == Enum.NormalId.Top and kind ~= "gild" and kind ~= "egg" and not s.mods[keyOf(rr, cc, dd)] and rr >= C.CAVE_START
 				dc.Texture = mossy and C.TEX.moss_top or texFor(kind, r, c, d)
+				local k = FACE_SHADE[face]
+				dc.Color3 = Color3.new(k, k, k * 1.04)
 				dc.Parent = p
 			end
 		end

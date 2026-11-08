@@ -264,7 +264,7 @@ local function feedLine(msg, color)
 end
 
 -- A dim scrim behind modal panels so they read over the busy world
-local scrim = new("Frame", gui, { Name = "Scrim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 0, Visible = false })
+local scrim = new("Frame", gui, { Name = "Scrim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 3, Visible = false })
 
 -- Night Shaft report (spec 5.7)
 local night = panel(gui, S(460, 230), S(640, 296), Vector2.new(0.5, 0.5), "panel")
@@ -313,13 +313,13 @@ for i = 1, 4 do
 	local nm = text(cd, "", UDim2.fromScale(0.86, 0.13), UDim2.fromScale(0.5, 0.08), Vector2.new(0.5, 0), INK, 700, false)
 	local ic = icon(cd, "pick", UDim2.fromScale(0.5, 0.42), UDim2.fromScale(0.5, 0.26), Vector2.new(0.5, 0))
 	new("UIAspectRatioConstraint", ic, { AspectRatio = 1 })
-	local st = text(cd, "", UDim2.fromScale(0.8, 0.13), UDim2.fromScale(0.5, 0.78), Vector2.new(0.5, 0), MINT)
+	local st = text(cd, "", UDim2.fromScale(0.8, 0.17), UDim2.fromScale(0.5, 0.76), Vector2.new(0.5, 0), MINT)
 	cards[i] = { frame = cd, name = nm, icon = ic, status = st }
 end
 local stats = panel(forge, UDim2.fromScale(0.58, 0.26), UDim2.fromScale(0.05, 0.66), nil, "card")
 local statA = text(stats, "", UDim2.fromScale(0.9, 0.26), UDim2.fromScale(0.05, 0.1), nil, INK, 700, false)
 statA.TextXAlignment = Enum.TextXAlignment.Left
-local statB = text(stats, "", UDim2.fromScale(0.9, 0.24), UDim2.fromScale(0.05, 0.42), nil, Color3.fromRGB(40, 128, 104), 700, false)
+local statB = text(stats, "", UDim2.fromScale(0.9, 0.3), UDim2.fromScale(0.05, 0.38), nil, Color3.fromRGB(40, 128, 104), 700, false)
 statB.TextXAlignment = Enum.TextXAlignment.Left
 local statC = text(stats, "", UDim2.fromScale(0.9, 0.18), UDim2.fromScale(0.05, 0.7), nil, PLUM_SOFT, 500, false)
 statC.TextXAlignment = Enum.TextXAlignment.Left
@@ -689,7 +689,8 @@ local function buildViewmodel()
 	end
 	local cf, size = vm:GetBoundingBox()
 	vm.WorldPivot = CFrame.new(cf.Position - Vector3.new(0, size.Y * 0.38, 0)) -- swing from the grip
-	vm:ScaleTo(vm:GetScale() * (1.9 / math.max(size.Y, 0.1)))
+	vm:ScaleTo(vm:GetScale() * (1.55 / math.max(size.Y, 0.1)))
+	new("Highlight", vm, { FillTransparency = 1, OutlineColor = Color3.fromRGB(255, 236, 200), OutlineTransparency = 0.7, DepthMode = Enum.HighlightDepthMode.Occluded })
 	local _, sz = vm:GetBoundingBox()
 	local a0 = new("Attachment", root, { Position = root.CFrame:PointToObjectSpace(vm:GetBoundingBox().Position + Vector3.new(0, sz.Y * 0.45, 0)) })
 	local a1 = new("Attachment", root, { Position = a0.Position + Vector3.new(0.6, 0, 0) })
@@ -849,7 +850,7 @@ local STEPS = {
 	"A fossil egg is buried below. Dig it out!",
 	"Your crew digs with you. Go deeper!",
 }
-local stepShown, stepDoneAt = "", nil
+local stepShown, stepDoneAt, stepExpired = "", nil, false
 local function stepMessage()
 	if not state then return "" end
 	if not inMine and state.step <= 2 then return "Jump into the glowing mine shaft!" end
@@ -1008,6 +1009,11 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		fovKick = combo > 0 and 6 or 3
 		if v > 0 then
 			oreFly(pos, col)
+			for g = 1, (combo > 0 or bkind == "gild") and 4 or (bkind == "ore3" and 2 or 0) do
+				local gem = new("Part", fx, { Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, Size = Vector3.one * 0.55, Color = col:Lerp(WHITE, 0.25), Material = Enum.Material.Neon })
+				gem.CFrame = CFrame.new(pos) * CFrame.Angles(0, g, math.pi / 4)
+				table.insert(shards, { part = gem, v = Vector3.new(math.random(-6, 6), math.random(12, 18), math.random(-6, 6)), spin = Vector3.new(0, 8, 0), t = -0.2 })
+			end
 			floatText(pos, "+" .. v .. " " .. ore, combo > 0 and GOLD or (who == "you" and CREAM or SKY))
 			feedLine("+" .. v .. " " .. ore:upper(), col)
 		elseif bkind == "egg" then
@@ -1183,6 +1189,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		cam.CFrame = CFrame.lookAt(focus + dir * C.CAM_DIST + off, focus + off)
 	end
 	local modal = forge.Visible or odds.Visible or mapP.Visible or night.Visible
+	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired
 	if modal ~= scrim.Visible then
 		scrim.Visible = true
 		tween(scrim, 0.2, { BackgroundTransparency = modal and 0.3 or 1 })
@@ -1270,7 +1277,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	-- tutorial
 	local msg = stepMessage()
 	if msg ~= stepShown then
-		stepShown = msg
+		stepShown, stepExpired = msg, false
 		stepText.Text = msg
 		stepCard.Visible = msg ~= ""
 		stepCard.Position = S(640, -40)
@@ -1278,7 +1285,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		stepDoneAt = state.step >= 6 and now + 6 or nil
 	end
 	if stepDoneAt and now > stepDoneAt then
-		stepCard.Visible, stepDoneAt = false, nil
+		stepExpired, stepDoneAt = true, nil
 	end
 	local t = state.target
 	local tp = (inMine and t and blocks and blocks:FindFirstChild(t[1] .. "_" .. t[2] .. "_" .. t[3])) or nil
@@ -1311,6 +1318,10 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 			layerNum.Text, layerName.Text, layerDepth.Text = "CAMP", "HOLLOW MOUNTAIN", ""
 		end
 		lastRow = row
+		if inMine and atmo then
+			local tintCol = C.LAYERS[L][3]:Lerp(Color3.fromRGB(46, 32, 70), 0.55)
+			tween(atmo, 1.2, { Color = tintCol, Decay = tintCol:Lerp(Color3.new(), 0.45) })
+		end
 		tween(marker, 0.3, { Position = UDim2.fromScale(0.5, math.clamp(row / (#C.LAYERS * C.LAYER_ROWS), 0, 1)) }, Enum.EasingStyle.Back)
 	end
 

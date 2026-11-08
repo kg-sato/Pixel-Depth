@@ -268,7 +268,7 @@ function Hub.build(parent, origin)
 	for _, b in { { -47, 0, 82, 160 }, { 47, 0, 82, 160 }, { 0, -43, 12, 74 }, { 0, 43, 12, 74 } } do -- dark grout/dirt under everything, open over the shaft
 		vox(ground, "Base", Vector3.new(b[3], 6, b[4]), CFrame.new(W(b[1], -3, b[2])), Color3.fromRGB(70, 58, 84))
 	end
-	local PR, T, S = 26, 4, 3.2
+	local PR, T, S = 22, 4, 3.2
 	for x = -72, 68, T do -- grass outside the plaza
 		for z = -72, 68, T do
 			local cx, cz = x + T / 2, z + T / 2
@@ -354,7 +354,7 @@ function Hub.build(parent, origin)
 
 	-- a station frame at (dx, dz), turned so its front (+Z) faces the shaft
 	local function station(dx, dz)
-		dx, dz = dx * 0.84, dz * 0.84 -- round-2 grade: cluster the stalls tighter round the pit
+		dx, dz = dx * 0.72, dz * 0.72 -- graded rounds 2-4: cluster the stalls tight round the pit (the concept is an intimate alcove)
 		local p = W(dx, 0, dz)
 		local away = Vector3.new(dx, 0, dz).Unit
 		local cf = CFrame.lookAt(p, p + away)
@@ -478,6 +478,11 @@ function Hub.build(parent, origin)
 			vox(e, "Mid", Vector3.new(1.8, 1.1, 1.8), at(x, 2.8, z), ec)
 			vox(e, "Top", Vector3.new(1.2, 0.8, 1.2), at(x, 3.7, z), ec)
 			for _, p in e:GetChildren() do p.Material = Enum.Material.Neon end
+			local sp = Instance.new("ParticleEmitter") -- sparkles round each egg
+			sp.Rate, sp.Lifetime, sp.Speed, sp.SpreadAngle = 2, NumberRange.new(0.8, 1.4), NumberRange.new(0.5, 1.2), Vector2.new(180, 180)
+			sp.Color, sp.LightEmission = ColorSequence.new(ec:Lerp(Color3.new(1, 1, 1), 0.4)), 1
+			sp.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.5, 0.35), NumberSequenceKeypoint.new(1, 0) })
+			sp.Parent = e:FindFirstChild("Mid")
 			e:SetAttribute("Bob", 0.25 + i * 0.05)
 			if i == 2 then glow(e:FindFirstChild("Mid"), Color3.fromRGB(255, 220, 200), 18, 1.4) end
 		end
@@ -506,7 +511,7 @@ function Hub.build(parent, origin)
 	-- 9. Campfire: stone ring, a teepee of voxel logs, embers and dancing flame cubes; log benches round it
 	do
 		local g = group("Campfire")
-		local c = W(7, 0, 15)
+		local c = W(6, 0, 12.5)
 		for i = 0, 9 do
 			local a = i / 10 * math.pi * 2
 			vox(g, "Stone", Vector3.new(1.3, 0.9, 1.3), CFrame.new(c + Vector3.new(math.cos(a) * 2.3, 0.45, math.sin(a) * 2.3)), shadeOf("stone", i, 0, 3))
@@ -531,16 +536,16 @@ function Hub.build(parent, origin)
 	end
 
 	-- 10. Friends bench (south-east)
-	vox(model, "FriendsBench", Vector3.new(5, 0.6, 1.6), CFrame.new(W(15, 1.4, 21)), PAL.plank[3])
-	vox(model, "FriendsBenchBack", Vector3.new(5, 1.6, 0.5), CFrame.new(W(15, 2.4, 21.8)), PAL.plank[2])
-	for _, s in { -1, 1 } do vox(model, "FriendsBenchLeg", Vector3.new(0.5, 1.1, 1.4), CFrame.new(W(15 + s * 2.1, 0.55, 21)), PAL.wood[1]) end
-	sign(model, "FRIENDS", CFrame.new(W(15, 4.2, 22.1)), 3.8, 1, PAL.pink[3])
+	vox(model, "FriendsBench", Vector3.new(5, 0.6, 1.6), CFrame.new(W(13, 1.4, 18)), PAL.plank[3])
+	vox(model, "FriendsBenchBack", Vector3.new(5, 1.6, 0.5), CFrame.new(W(13, 2.4, 18.8)), PAL.plank[2])
+	for _, s in { -1, 1 } do vox(model, "FriendsBenchLeg", Vector3.new(0.5, 1.1, 1.4), CFrame.new(W(13 + s * 2.1, 0.55, 18)), PAL.wood[1]) end
+	sign(model, "FRIENDS", CFrame.new(W(13, 4.2, 19.1)), 3.8, 1, PAL.pink[3])
 
 	-- 11. Lantern posts round the plaza
 	local posts = group("LanternPosts")
 	for i = 0, 9 do
 		local a = i / 10 * math.pi * 2 + 0.3
-		local p = W(math.cos(a) * 24, 0, math.sin(a) * 24 * 0.87)
+		local p = W(math.cos(a) * 20, 0, math.sin(a) * 20 * 0.87)
 		if not (math.abs(p.X - O.X) < 8 and p.Z - O.Z > 20) then -- keep the front open for the camera
 			vox(posts, "Post", Vector3.new(0.8, 7, 0.8), CFrame.new(p + Vector3.new(0, 3.5, 0)), PAL.wood[1])
 			vox(posts, "Arm", Vector3.new(2.2, 0.5, 0.5), CFrame.new(p + Vector3.new(0.9, 7, 0)), PAL.wood[1])
@@ -554,7 +559,8 @@ function Hub.build(parent, origin)
 	local tubes = {}
 	for _, s in { -1, 1 } do
 		local function T(p0, p1, p2, p3, r0, r1)
-			table.insert(tubes, { W(p0[1] * s, p0[2], p0[3]), W(p1[1] * s, p1[2], p1[3]), W(p2[1] * s, p2[2], p2[3]), W(p3[1] * s, p3[2], p3[3]), r0, r1 })
+			local k = 0.86 -- pull the root walls in round the smaller plaza
+			table.insert(tubes, { W(p0[1] * s * k, p0[2], p0[3] * k), W(p1[1] * s * k, p1[2], p1[3] * k), W(p2[1] * s * k, p2[2], p2[3] * k), W(p3[1] * s * k, p3[2], p3[3] * k), r0, r1 })
 		end
 		T({ 8, 24, -62 }, { 34, 30, -50 }, { 46, 14, -16 }, { 38, -1, 18 }, 7, 3.6) -- the big wall roots, west and east
 		T({ 6, 12, -60 }, { 26, 12, -44 }, { 36, 6, -30 }, { 30, -1, -20 }, 5.6, 3)
@@ -587,7 +593,7 @@ function Hub.build(parent, origin)
 		local a = i / 64 * math.pi * 2
 		local south = math.cos(a - math.pi / 2) -- 1 = due south (+z), the camera side
 		if south < 0.55 then
-			local rr = 50 + hash(i, 1, 2) * 5
+			local rr = 44 + hash(i, 1, 2) * 5
 			local p = W(math.cos(a) * rr, 0, math.sin(a) * rr)
 			local h = (34 + hash(i, 3, 4) * 14) * (1 - math.max(south, 0) * 1.1)
 			local look = CFrame.lookAt(p, W(0, 0, 0))
@@ -623,18 +629,18 @@ function Hub.build(parent, origin)
 		for y = 0, 2 do vox(props, "Barrel", Vector3.new(1.8, 0.9, 1.8), CFrame.new(p + Vector3.new(0, 0.45 + y * 0.9, 0)), y == 1 and PAL.wood[3] or PAL.wood[2]) end
 		vox(props, "BarrelBand", Vector3.new(1.9, 0.2, 1.9), CFrame.new(p + Vector3.new(0, 1.35, 0)), PAL.stone[1])
 	end
-	for _, p in { W(-23, 0, -7), W(-24.8, 0, -5.4), W(-12, 0, -23), W(20, 0, -8), W(28, 0, 5) } do barrel(p) end
-	for _, c in { { -25, 9 }, { 28, -8 }, { 11, -24 }, { -7, 23 } } do
+	for _, p in { W(-20, 0, -6), W(-21.6, 0, -4.6), W(-10, 0, -20), W(17, 0, -7), W(24, 0, 4) } do barrel(p) end
+	for _, c in { { -21, 8 }, { 24, -7 }, { 9, -21 }, { -6, 20 } } do
 		for k = 0, 2 do vox(props, "Crate", Vector3.new(2, 2, 2), CFrame.new(W(c[1] + (k % 2) * 2.1, 1 + math.floor(k / 2) * 2, c[2])) * CFrame.Angles(0, k * 0.2, 0), PAL.plank[2 + k % 2]) end
 	end
-	for _, c in { { -28, -2 }, { 29, 0 }, { -10, 27 }, { 22, 22 }, { -25, -18 }, { 27, -18 }, { -18, 25 } } do -- voxel bushes at the plaza edge
+	for _, c in { { -24, -2 }, { 25, 0 }, { -9, 23 }, { 19, 19 }, { -22, -16 }, { 23, -16 }, { -16, 21 } } do -- voxel bushes at the plaza edge
 		for i = -1, 1 do for k = -1, 1 do
 			if hash(c[1] + i, 3, c[2] + k) > 0.2 then
 				vox(props, "Bush", Vector3.new(1.6, 1.6, 1.6), CFrame.new(W(c[1] + i * 1.5, 0.8 + (i == 0 and k == 0 and 1.2 or 0), c[2] + k * 1.5)), shadeOf("leaf", c[1] + i, 1, c[2] + k), { CanCollide = false })
 			end
 		end end
 	end
-	for i, c in { { -32, -22 }, { -38, 4 }, { 34, -20 }, { 38, 2 }, { -32, 20 }, { 32, 18 } } do -- glowing mushrooms at the root walls
+	for i, c in { { -28, -19 }, { -33, 4 }, { 29, -17 }, { 33, 2 }, { -28, 17 }, { 28, 16 } } do -- glowing mushrooms at the root walls
 		local tint = ({ Color3.fromRGB(196, 96, 128), Color3.fromRGB(80, 168, 136), Color3.fromRGB(140, 120, 200) })[i % 3 + 1] -- darker tints: neon blooms them
 		for k = 0, 2 do
 			local h = 1.2 + k * 0.6
@@ -644,7 +650,7 @@ function Hub.build(parent, origin)
 			if k == 2 then glow(cap, tint, 12, 0.8) end
 		end
 	end
-	for k = 0, 3 do vox(props, "LogPile", Vector3.new(3.6, 0.8, 0.8), CFrame.new(W(14, 0.4 + math.floor(k / 2) * 0.8, 12 + (k % 2) * 0.85)), PAL.wood[(k % 2) + 1]) end
+	for k = 0, 3 do vox(props, "LogPile", Vector3.new(3.6, 0.8, 0.8), CFrame.new(W(12, 0.4 + math.floor(k / 2) * 0.8, 8 + (k % 2) * 0.85)), PAL.wood[(k % 2) + 1]) end
 	for i = 0, 4 do -- stepping stones from the spawn to the plaza
 		vox(props, "Step", Vector3.new(2.6, 0.4, 1.8), CFrame.new(W((i % 2) * 0.8 - 0.4, 0.5, 28 + i * 3.2)), PAL.plaza[2])
 	end
@@ -663,15 +669,21 @@ function Hub.build(parent, origin)
 		end
 	end
 
-	for i, v in { { "Juniper", Vector3.new(7 - 6.4, 0, 15), PAL.pink[2], Color3.fromRGB(96, 150, 132) }, { "Tock", Vector3.new(7 + 6.4, 0, 15), Color3.fromRGB(142, 200, 255), PAL.roof[2] } } do
+	for i, v in { { "Juniper", Vector3.new(6 - 6.2, 0, 12.5), PAL.pink[2], Color3.fromRGB(96, 150, 132) }, { "Tock", Vector3.new(6 + 6.2, 0, 12.5), Color3.fromRGB(142, 200, 255), PAL.roof[2] } } do
 		local pos = W(v[2].X, 0.5, v[2].Z)
-		local fire = W(7, 0.5, 15)
+		local fire = W(6, 0.5, 12.5)
 		local m = villager(v[1], CFrame.lookAt(pos, Vector3.new(fire.X, pos.Y, fire.Z)), v[3], v[4])
 		local q = m:FindFirstChild("Quest")
 		if q then q:Destroy() end
 		local hand = CFrame.lookAt(pos, Vector3.new(fire.X, pos.Y, fire.Z)) * CFrame.new(0.9, 2.4, -1.4)
 		vox(m, "Stick", Vector3.new(0.18, 0.18, 2.6), hand * CFrame.Angles(-0.35, 0, 0), PAL.wood[3], { CanCollide = false })
-		vox(m, "Marshmallow", Vector3.new(0.55, 0.55, 0.55), hand * CFrame.Angles(-0.35, 0, 0) * CFrame.new(0, 0, -1.4), PAL.cream[3], { CanCollide = false })
+		local mm = vox(m, "Marshmallow", Vector3.new(0.55, 0.55, 0.55), hand * CFrame.Angles(-0.35, 0, 0) * CFrame.new(0, 0, -1.4), PAL.cream[3], { CanCollide = false })
+		local puff = Instance.new("ParticleEmitter") -- a toasty puff now and then
+		puff.Rate, puff.Lifetime, puff.Speed, puff.EmissionDirection = 1.2, NumberRange.new(1, 1.6), NumberRange.new(1, 2), Enum.NormalId.Top
+		puff.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(1, 1.1) })
+		puff.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.4), NumberSequenceKeypoint.new(1, 1) })
+		puff.Color = ColorSequence.new(Color3.fromRGB(230, 220, 240))
+		puff.Parent = mm
 		m:SetAttribute("Bob", 0.06 + i * 0.02)
 	end
 
