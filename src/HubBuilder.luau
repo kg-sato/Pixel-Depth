@@ -23,6 +23,7 @@ local PAL = {
 	lilac = { Color3.fromRGB(108, 90, 168), Color3.fromRGB(154, 134, 214), Color3.fromRGB(201, 184, 242) },
 	straw = { Color3.fromRGB(196, 150, 86), Color3.fromRGB(226, 186, 110), Color3.fromRGB(246, 214, 140) },
 }
+local WHITE_ = Color3.fromRGB(255, 255, 255)
 local LAMP, CYAN, GOLD, EMBER = Color3.fromRGB(232, 168, 96), Color3.fromRGB(96, 206, 226), Color3.fromRGB(255, 214, 92), Color3.fromRGB(240, 130, 64)
 local INK = Color3.fromRGB(42, 28, 58)
 local ORE = { EMBER, Color3.fromRGB(201, 184, 242), GOLD, Color3.fromRGB(140, 227, 192) }
@@ -33,7 +34,7 @@ local TEX = {
 	cobble = 115790715717963, shingle_teal = 123617774947178, shingle_plum = 97900496468174, moss_roof = 105534931797006,
 	awning = 114815078373584, plaster = 90929537651821, beam = 113295401166112, bark = 95671523543687,
 	rockface = 76858268703683, leaves = 87594727710313, path = 114352826559819, iron = 134383025955872,
-	glass = 127998839149211, grass = 133229924509191, wood_frame = 98417694570042, flagstone = 113808643905036, cobble_soft = 124222168049970,
+	glass = 127998839149211, grass = 133229924509191, wood_frame = 98417694570042, flagstone = 113808643905036, cobble_soft = 124222168049970, cobble_lane = 138112363793278,
 }
 local AVG = {
 	planks = Color3.fromRGB(167, 123, 103), planks_light = Color3.fromRGB(174, 130, 108), logs = Color3.fromRGB(131, 93, 83),
@@ -42,7 +43,7 @@ local AVG = {
 	plaster = Color3.fromRGB(238, 227, 217), beam = Color3.fromRGB(93, 61, 71), bark = Color3.fromRGB(73, 47, 106),
 	rockface = Color3.fromRGB(81, 63, 106), leaves = Color3.fromRGB(43, 108, 99), path = Color3.fromRGB(166, 140, 137),
 	iron = Color3.fromRGB(85, 77, 120), glass = Color3.fromRGB(196, 220, 237), grass = Color3.fromRGB(118, 196, 162),
-	wood_frame = Color3.fromRGB(201, 155, 126), flagstone = Color3.fromRGB(163, 140, 139), cobble_soft = Color3.fromRGB(140, 131, 173),
+	wood_frame = Color3.fromRGB(201, 155, 126), flagstone = Color3.fromRGB(163, 140, 139), cobble_soft = Color3.fromRGB(140, 131, 173), cobble_lane = Color3.fromRGB(122, 116, 153),
 }
 local N = Enum.NormalId
 local SIDES = { N.Top, N.Front, N.Back, N.Left, N.Right }
@@ -141,6 +142,7 @@ local function prompt(p, action, object, station)
 	local pr = Instance.new("ProximityPrompt")
 	pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode = action, object, Enum.KeyCode.F
 	pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.HoldDuration = 14, false, 0
+	pr.Style = Enum.ProximityPromptStyle.Custom -- drawn by PixelClient (keycap + tooltip bubble)
 	pr.Parent = p
 	p:SetAttribute("Station", station)
 	return pr
@@ -277,34 +279,330 @@ function Hub.build(parent, origin)
 	local O = origin
 	local function W(x, y, z) return O + Vector3.new(x, y, z) end
 
+	-- v5 town layout (the user, 2026-11-08: "more varied instead of just a linear line to each location"; refs: the user's
+	-- Pinterest pixel towns and art/hub/pdv5_town_s71.jpg / s73.jpg): a north terrace (top y 4) behind a retaining wall with
+	-- wide stairs, an east rise (top y 2) for the cabins, a stream with two arched footbridges, winding lanes that open into a
+	-- small square round the shaft, tree clusters, a vegetable garden, a well, and lamps along the lanes.
+	local TERRACE = { x0 = -20, x1 = 64, z0 = -120, z1 = -28, top = 4 }
+	local RISE = { x0 = 28, x1 = 66, z0 = -12, z1 = 40, top = 2 }
+	local function groundTop(x, z)
+		if x >= TERRACE.x0 and x <= TERRACE.x1 and z >= TERRACE.z0 and z <= TERRACE.z1 then return TERRACE.top end
+		if x >= RISE.x0 and x <= RISE.x1 and z >= RISE.z0 and z <= RISE.z1 then return RISE.top end
+		return 0.6
+	end
+	local function bez(pts, u)
+		local a = 1 - u
+		return pts[1] * a ^ 3 + pts[2] * 3 * a ^ 2 * u + pts[3] * 3 * a * u ^ 2 + pts[4] * u ^ 3
+	end
+	local function P(x, z) return W(x, 0, z) end
+
 	-- 1. Ground: a grass meadow round a big lilac cobblestone plaza (textured slabs, open over the shaft), tufts and flowers
 	local ground = group("Ground")
 	for _, b in { { -95, 0, 178, 360 }, { 95, 0, 178, 360 }, { 0, -93, 12, 174 }, { 0, 93, 12, 174 } } do -- grass meadow with a 12 x 12 hole for the shaft
 		skin(vox(ground, "Meadow", Vector3.new(b[3], 6, b[4]), CFrame.new(W(b[1], -2.4, b[2])), AVG.grass), "grass", 6, { N.Top })
 	end
-	local PX, PZ = 46, 52 -- plaza half extents (an ellipse)
-	for z = -PZ, PZ - 4, 4 do -- the plaza in 4-stud strips, ragged at the ends; split round the shaft hole
-		local zc = z + 2
-		local half = PX * math.sqrt(math.max(0, 1 - (zc / PZ) ^ 2)) - hash(z, 1, 1) * 3
+	-- the small square round the shaft: cobbles with a ragged edge (top y 1.1)
+	for z = -20, 18, 3 do
+		local zc = z + 1.5
+		local half = 17 * math.sqrt(math.max(0, 1 - (zc / 20.5) ^ 2)) + (hash(z, 2, 2) - 0.5) * 4
 		if half > 3 then
 			local spans = math.abs(zc) < 8 and { { -half, -7.5 }, { 7.5, half } } or { { -half, half } }
 			for _, sp in spans do
 				if sp[2] - sp[1] > 1 then
-					skin(vox(ground, "Plaza", Vector3.new(sp[2] - sp[1], 0.5, 4), CFrame.new(W((sp[1] + sp[2]) / 2, 0.85, zc)), AVG.cobble_soft), "cobble_soft", 7, { N.Top, N.Front, N.Back, N.Left, N.Right })
+					skin(vox(ground, "Square", Vector3.new(sp[2] - sp[1], 0.5, 3), CFrame.new(W((sp[1] + sp[2]) / 2, 0.85, zc)), AVG.cobble_soft), "cobble_soft", 6, SIDES)
 				end
 			end
 		end
 	end
-	for i = 0, 95 do -- loose edge stones where the plaza meets the grass
-		local a = i / 96 * math.pi * 2
-		local rr = 1 + hash(i, 4, 4) * 0.08
-		if hash(i, 6, 6) > 0.3 then
-			tvox(ground, "Stray", Vector3.new(2.2 + hash(i, 1, 1) * 1.4, 0.5, 1.8 + hash(i, 2, 2)), CFrame.new(W(math.cos(a) * PX * rr, 0.8, math.sin(a) * PZ * rr)) * CFrame.Angles(0, hash(i, 3, 3) * 3, 0), "cobble", 3)
+
+	-- the raised ground: grass on top, a lilac stone retaining wall round the sides, a mossy lip and hanging moss on the open edges
+	local terr = group("Terraces")
+	local wallTint = Color3.fromRGB(205, 200, 235)
+	local function raised(r, name, edges)
+		local blk = vox(terr, name, Vector3.new(r.x1 - r.x0, r.top + 2, r.z1 - r.z0), CFrame.new(W((r.x0 + r.x1) / 2, r.top / 2 - 1, (r.z0 + r.z1) / 2)), AVG.grass)
+		skin(blk, "grass", 6, { N.Top })
+		skin(blk, "stonebrick", 5, { N.Front, N.Back, N.Left, N.Right }, wallTint)
+		blk.Color = AVG.stonebrick
+		for _, e in edges do -- e = { "x" or "z", fixed coordinate, from, to, outward sign, skip from, skip to }
+			for t = e[3], e[4] - 2, 2.6 do
+				if not (e[6] and t > e[6] - 1 and t < e[7] + 1) then
+					local h = hash(t, e[2], 4)
+					local pos = e[1] == "z" and W(t + 1.3, r.top + 0.25, e[2] + e[5] * 0.4) or W(e[2] + e[5] * 0.4, r.top + 0.25, t + 1.3)
+					vox(terr, "Lip", e[1] == "z" and Vector3.new(2.8, 0.7, 1.4) or Vector3.new(1.4, 0.7, 2.8), CFrame.new(pos), shadeOf("grass", t, 1, e[2]), { CanCollide = false })
+					if h > 0.62 then -- hanging moss with a flower
+						local hang = 1.2 + h * 2.2
+						local hp = pos + (e[1] == "z" and Vector3.new(0, -0.35 - hang / 2, e[5] * 0.5) or Vector3.new(e[5] * 0.5, -0.35 - hang / 2, 0))
+						vox(terr, "Moss", Vector3.new(0.8, hang, 0.8), CFrame.new(hp), PAL.moss[2], { CanCollide = false })
+						vox(terr, "MossFlower", Vector3.new(0.6, 0.6, 0.6), CFrame.new(hp - Vector3.new(0, hang / 2 + 0.2, 0)), h > 0.8 and PAL.pink[2] or PAL.lilac[3], { CanCollide = false })
+					end
+				end
+			end
 		end
 	end
-	for i = 0, 219 do -- grass tufts and flowers out in the meadow
-		local a, rr = hash(i, 11, 3) * math.pi * 2, 52 + hash(i, 12, 3) * 34
-		local p = W(math.cos(a) * rr, 0.6, math.sin(a) * rr * 1.1)
+	raised(TERRACE, "NorthTerrace", { { "z", TERRACE.z1, TERRACE.x0, TERRACE.x1, 1, 1.5, 10.5 }, { "x", TERRACE.x0, TERRACE.z0 + 40, TERRACE.z1, -1 } })
+	raised(RISE, "EastRise", { { "x", RISE.x0, RISE.z0, RISE.z1, -1, 2, 12 }, { "z", RISE.z1, RISE.x0, RISE.x1, 1 }, { "z", RISE.z0, RISE.x0, RISE.x1, -1 } })
+	for k = 0, 3 do -- the wide terrace stairs, with stepped cheek walls
+		local top = k + 1
+		skin(vox(terr, "Stair", Vector3.new(8, top, 2), CFrame.new(W(6, top / 2, -21 - k * 2)), PAL.stone[2]), "stonebrick", 3, SIDES, wallTint)
+		for _, x in { 1.5, 10.5 } do skin(vox(terr, "Cheek", Vector3.new(1, top + 0.6, 2), CFrame.new(W(x, (top + 0.6) / 2, -21 - k * 2)), PAL.stone[2]), "stonebrick", 3, SIDES, wallTint) end
+	end
+	for k = 0, 1 do -- two steps up onto the east rise
+		local top = 1 + k
+		skin(vox(terr, "Stair", Vector3.new(2, top, 8), CFrame.new(W(25 + k * 2, top / 2, 7)), PAL.stone[2]), "stonebrick", 3, SIDES, wallTint)
+	end
+
+	-- the stream: water over the meadow with stone banks, reeds and lily pads; it walks the town from the west roots to the south
+	local water = group("Stream")
+	local function stream(pts, width)
+		local n = math.ceil((pts[1] - pts[4]).Magnitude / 2)
+		local prev = bez(pts, 0)
+		for i = 1, n do
+			local c = bez(pts, i / n)
+			local mid = (prev + c) / 2
+			local y = O.Y + 0.68 + (i % 2) * 0.01
+			local cf = CFrame.lookAt(Vector3.new(mid.X, y, mid.Z), Vector3.new(c.X, y, c.Z))
+			local w = vox(water, "Water", Vector3.new(width, 0.2, (c - prev).Magnitude + 0.8), cf, Color3.fromRGB(120, 206, 226), { CanCollide = false, Transparency = 0.12, Material = Enum.Material.Glass })
+			local t = Instance.new("Texture")
+			t.Texture, t.Face, t.StudsPerTileU, t.StudsPerTileV, t.Transparency = "rbxassetid://102263231288805", N.Top, 6, 6, 0.4
+			t.Parent = w
+			for _, sd in { -1, 1 } do
+				local h = hash(i, sd, c.X)
+				tvox(water, "Bank", Vector3.new(1.3 + h, 0.6 + h * 0.6, 2.2), cf * CFrame.new(sd * (width / 2 + 0.5), 0.2, 0) * CFrame.Angles(0, h, 0), "cobble", 2)
+				if h > 0.78 then
+					for k = 0, 2 do vox(water, "Reed", Vector3.new(0.25, 1.6 + k * 0.4, 0.25), cf * CFrame.new(sd * (width / 2 + 1.4), 0.9, k * 0.5 - 0.5), PAL.moss[(k % 3) + 1], { CanCollide = false }) end
+				end
+			end
+			if hash(i, 7, c.Z) > 0.72 then
+				vox(water, "LilyPad", Vector3.new(1.4, 0.12, 1.4), cf * CFrame.new((hash(i, 8, 1) - 0.5) * width * 0.5, 0.13, 0), PAL.moss[3], { CanCollide = false })
+				if hash(i, 9, 1) > 0.5 then vox(water, "LilyFlower", Vector3.new(0.5, 0.4, 0.5), cf * CFrame.new((hash(i, 8, 1) - 0.5) * width * 0.5, 0.35, 0), PAL.pink[3], { CanCollide = false }) end
+			end
+			prev = c
+		end
+	end
+	stream({ P(-92, -14), P(-66, -6), P(-46, 24), P(-19, 22) }, 5)
+	stream({ P(-19, 22), P(-6, 21), P(-12, 40), P(-9, 46) }, 5)
+	stream({ P(-9, 46), P(-6, 58), P(8, 70), P(16, 94) }, 5.5)
+
+	-- arched plank footbridges with railings
+	local function bridge(x, z, dx, dz, len)
+		local g = group("Bridge")
+		local p = W(x, 0.6, z)
+		local cf = CFrame.lookAt(p, p + Vector3.new(dx, 0, dz))
+		local n = 7
+		for i = 0, n - 1 do
+			local y = math.sin((i + 0.5) / n * math.pi) * 1.2
+			tvox(g, "Deck", Vector3.new(4.4, 0.5, len / n + 0.1), cf * CFrame.new(0, 0.45 + y, -len / 2 + (i + 0.5) * len / n), "planks", 2)
+		end
+		for _, sd in { -1, 1 } do
+			for i = 0, 4 do
+				local u = i / 4
+				tvox(g, "RailPost", Vector3.new(0.4, 1.8, 0.4), cf * CFrame.new(sd * 2.1, 1.4 + math.sin(u * math.pi) * 1.2, -len / 2 + u * len), "beam", 1)
+			end
+			for i = 0, 3 do
+				local a = (cf * CFrame.new(sd * 2.1, 2.2 + math.sin(i / 4 * math.pi) * 1.2, -len / 2 + i / 4 * len)).Position
+				local b = (cf * CFrame.new(sd * 2.1, 2.2 + math.sin((i + 1) / 4 * math.pi) * 1.2, -len / 2 + (i + 1) / 4 * len)).Position
+				tvox(g, "Rail", Vector3.new(0.35, 0.35, (b - a).Magnitude + 0.2), CFrame.lookAt((a + b) / 2, b), "beam", 1)
+			end
+		end
+	end
+	bridge(-19, 22, 0, 1, 10)
+	bridge(-9, 46, -0.9, 0.45, 10)
+
+	-- winding lanes v2 (refs: art/hub/refs/README.md, Paths): big rounded cobbles; the width swells along the lane and flares where
+	-- it meets a square or a door; the edges break up into the grass with loose stones and creeping tufts, and flowers grow in clumps
+	local function lane(pts, width, tex, y)
+		local n = math.max(3, math.ceil((pts[1] - pts[4]).Magnitude / 2.4))
+		local prev = bez(pts, 0)
+		for i = 1, n do
+			local u = i / n
+			local c = bez(pts, u)
+			local mid = (prev + c) / 2
+			local yy = O.Y + (y or groundTop(mid.X - O.X, mid.Z - O.Z)) + 0.15 + (i % 2) * 0.02
+			local cf = CFrame.lookAt(Vector3.new(mid.X, yy, mid.Z), Vector3.new(c.X, yy, c.Z))
+			local w = width * (1 + 0.45 * (1 - u) ^ 6 + 0.3 * u ^ 8 + 0.12 * math.sin(u * 6 + width))
+			skin(vox(ground, "Lane", Vector3.new(w, 0.3, (c - prev).Magnitude + 1.2), cf, AVG[tex]), tex, 5, { N.Top })
+			for _, side in { -1, 1 } do -- ragged edges: loose stones half in the grass, or a tuft creeping over the edge
+				local h = hash(i, side, c.X + c.Z)
+				local e = cf * CFrame.new(side * (w / 2 + 0.2 + h * 0.5), -0.05, (h - 0.5) * 1.6)
+				if h < 0.55 then
+					tvox(ground, "EdgeStone", Vector3.new(1 + h * 0.9, 0.32, 0.9 + h * 0.8), e * CFrame.Angles(0, h * 2.5, 0), tex, 3)
+				elseif h < 0.8 then
+					vox(ground, "EdgeTuft", Vector3.new(1.1, 0.5, 0.9), e * CFrame.new(-side * 0.5, 0.15, 0), shadeOf("grass", i, side, 5), { CanCollide = false })
+				end
+			end
+			if i % 4 == 2 and hash(i, 3, c.X) > 0.35 then -- a flower clump beside the lane
+				local side = hash(i, 4, c.Z) > 0.5 and 1 or -1
+				local e = cf * CFrame.new(side * (w / 2 + 1.6), 0, 0)
+				local tint = ({ PAL.pink, PAL.lilac, { GOLD, GOLD, Color3.fromRGB(255, 240, 180) }, { PAL.cream[2], PAL.cream[3], WHITE_ } })[(i % 4) + 1]
+				vox(ground, "Leaves", Vector3.new(1.8, 0.5, 1.6), e * CFrame.new(0, 0.1, 0), PAL.moss[2], { CanCollide = false })
+				for k = 0, 3 do vox(ground, "Bloom", Vector3.new(0.6, 0.6, 0.6), e * CFrame.new((k % 2 - 0.5) * 0.9, 0.55 + (k == 3 and 0.35 or 0), (math.floor(k / 2) - 0.5) * 0.8), tint[(k % 3) + 1], { CanCollide = false }) end
+			end
+			prev = c
+		end
+	end
+	-- stepping stones: flat cream slabs, each turned a little, with grass between them
+	local function steps(pts, y)
+		local n = math.max(2, math.floor((pts[1] - pts[4]).Magnitude / 2.6))
+		for i = 0, n do
+			local c = bez(pts, i / n)
+			local h = hash(i, c.X, c.Z)
+			local yy = O.Y + (y or groundTop(c.X - O.X, c.Z - O.Z)) + 0.12
+			skin(vox(ground, "SteppingStone", Vector3.new(2 + h * 0.7, 0.24, 1.7 + h * 0.6), CFrame.new(c.X + (h - 0.5) * 0.8, yy, c.Z) * CFrame.Angles(0, h * 3, 0), Color3.fromRGB(226, 216, 232)), "flagstone", 3, { N.Top }, Color3.fromRGB(255, 250, 255))
+		end
+	end
+	lane({ P(-13, 3), P(-18, 1), P(-23, 4), P(-28, 3) }, 5, "cobble_lane") -- to the sell stall (the ore cart rails run along it)
+	lane({ P(-11, -11), P(-17, -19), P(-26, -14), P(-32, -22) }, 5, "cobble_lane") -- to the forge
+	lane({ P(6, -28), P(6, -31), P(6, -33), P(6, -36) }, 6, "flagstone", 4) -- up the stairs to the quest kiosk
+	lane({ P(9, -30), P(16, -28), P(24, -37), P(31, -36) }, 5, "flagstone", 4) -- along the terrace to the trophy hall
+	lane({ P(15, 2), P(19, 6), P(22, 6), P(24, 7) }, 5, "cobble_lane") -- east to the rise steps
+	lane({ P(28, 6), P(34, 4), P(40, -2), P(44, -1) }, 4.5, "cobble_lane", 2) -- the cabins on the rise
+	lane({ P(28, 8), P(31, 14), P(33, 22), P(36, 24) }, 4.5, "cobble_lane", 2)
+	lane({ P(-11, 11), P(-14, 13), P(-18, 14), P(-19, 17) }, 5, "cobble_lane") -- over the first bridge to the incubator
+	steps({ P(-19, 27), P(-21, 30), P(-26, 30.5), P(-30, 30) })
+	lane({ P(3, 19), P(5, 24), P(7, 28), P(9, 31) }, 5, "cobble_lane") -- south to the campfire glade
+	steps({ P(2, 42), P(0, 43), P(-3, 43.5), P(-4.5, 43.8) }) -- the glade loop over the second bridge to the garden
+	steps({ P(-13.5, 48.3), P(-14.5, 49.5), P(-15.5, 50.5), P(-16.5, 51) })
+
+	-- voxel trees v2 (refs: art/hub/refs/README.md, Trees): a trunk in two bent segments with a root flare, branches for the
+	-- blossom and wisteria kinds, and a canopy of shaded clumps (dark underside, light top, loose leaf cubes breaking the outline).
+	-- Kinds: round (mint), blossom (pink, petals on the ground), wisteria (lilac, hanging strands), bonsai (flat layered pads).
+	local trees = group("Trees")
+	local TREE_COLS = {
+		round = { Color3.fromRGB(34, 92, 90), Color3.fromRGB(52, 130, 116), Color3.fromRGB(90, 176, 144), Color3.fromRGB(150, 226, 186) },
+		blossom = { Color3.fromRGB(196, 84, 120), Color3.fromRGB(236, 128, 158), Color3.fromRGB(252, 184, 202), Color3.fromRGB(255, 226, 234) },
+		wisteria = { Color3.fromRGB(96, 80, 160), Color3.fromRGB(148, 126, 210), Color3.fromRGB(196, 178, 240), Color3.fromRGB(236, 224, 255) },
+		bonsai = { Color3.fromRGB(28, 80, 84), Color3.fromRGB(44, 116, 106), Color3.fromRGB(78, 160, 132), Color3.fromRGB(130, 210, 170) },
+	}
+	local function clump(c, r, cols, seed)
+		local function L(name, size, off, col, rot) vox(trees, name, size, CFrame.new(c + off) * CFrame.Angles(0, rot, 0), col, { CanCollide = false }) end
+		L("LeafLow", Vector3.new(r * 1.6, r * 0.55, r * 1.6), Vector3.new(0, -r * 0.42, 0), cols[1], seed)
+		L("LeafMid", Vector3.new(r * 2, r * 0.62, r * 2), Vector3.zero, cols[2], seed + 0.4)
+		L("LeafTop", Vector3.new(r * 1.4, r * 0.5, r * 1.4), Vector3.new(0, r * 0.52, 0), cols[3], seed + 0.8)
+		for k = 1, 3 do
+			local a = seed * 7 + k * 2.1
+			L("LeafBit", Vector3.new(r * 0.5, r * 0.45, r * 0.5), Vector3.new(math.cos(a) * r * 0.98, (k - 2) * r * 0.32, math.sin(a) * r * 0.98), k == 3 and cols[4] or cols[2], a)
+		end
+	end
+	local function tree(x, z, sc, kind)
+		kind = kind == true and "blossom" or (kind or "round")
+		local cols = TREE_COLS[kind]
+		local base = W(x, groundTop(x, z), z)
+		local seed = hash(x, z, 9) * 6
+		local lean = Vector3.new(math.cos(seed), 0, math.sin(seed)) * 0.6 * sc
+		local h = (kind == "bonsai" and 4.5 or 6.5) * sc
+		local tw = (kind == "bonsai" and 2.2 or 1.7) * sc
+		local barkTint = Color3.fromRGB(230, 210, 220)
+		local mid = base + Vector3.new(0, h * 0.5, 0) + lean
+		local top = base + Vector3.new(0, h, 0) + lean * 0.3
+		for _, seg in { { base, mid, tw }, { mid, top, tw * 0.8 } } do -- two bent trunk segments
+			local a, b = seg[1], seg[2]
+			skin(vox(trees, "Trunk", Vector3.new(seg[3], seg[3], (b - a).Magnitude + seg[3] * 0.5), CFrame.lookAt((a + b) / 2, b), AVG.bark), "bark", 4, SIDES, barkTint)
+		end
+		for k = 0, 3 do -- root flare
+			local a = seed + k * math.pi / 2
+			local d = Vector3.new(math.cos(a), 0, math.sin(a))
+			skin(vox(trees, "Root", Vector3.new(tw * 0.55, tw * 0.45, tw * 1.2), CFrame.lookAt(base + d * tw * 0.75 + Vector3.new(0, tw * 0.15, 0), base + d * tw * 2), AVG.bark), "bark", 4, { N.Top, N.Left, N.Right }, barkTint)
+		end
+		local crown = {}
+		if kind == "round" then
+			crown = { { top + Vector3.new(0, 1.4 * sc, 0), 2.7 }, { top + Vector3.new(2.1, 0.2, 0.8) * sc, 1.9 }, { top + Vector3.new(-1.9, 0.4, -1.1) * sc, 2 }, { top + Vector3.new(0.4, 0.9, -2.2) * sc, 1.7 }, { top + Vector3.new(-0.6, 3, 0.6) * sc, 1.6 } }
+		elseif kind == "bonsai" then
+			for k, o in { { 0, 0.4, 0, 3.2 }, { 2.6, -1.4, 1, 2.2 }, { -2.4, -0.6, -1.2, 2.4 } } do -- flat layered pads on short branches
+				local pc = top + Vector3.new(o[1], o[2], o[3]) * sc
+				skin(vox(trees, "Branch", Vector3.new(0.6 * sc, 0.6 * sc, (pc - top).Magnitude + 0.3), CFrame.lookAt((pc + top) / 2, pc), AVG.bark), "bark", 4, SIDES, barkTint)
+				vox(trees, "Pad", Vector3.new(o[4] * 2, 0.7, o[4] * 1.7) * Vector3.new(sc, 1, sc), CFrame.new(pc) * CFrame.Angles(0, seed + k, 0), cols[2], { CanCollide = false })
+				vox(trees, "PadTop", Vector3.new(o[4] * 1.5, 0.6, o[4] * 1.2) * Vector3.new(sc, 1, sc), CFrame.new(pc + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, seed + k + 0.3, 0), cols[3], { CanCollide = false })
+				vox(trees, "PadUnder", Vector3.new(o[4] * 1.6, 0.4, o[4] * 1.3) * Vector3.new(sc, 1, sc), CFrame.new(pc - Vector3.new(0, 0.5, 0)) * CFrame.Angles(0, seed + k + 0.6, 0), cols[1], { CanCollide = false })
+			end
+		else -- blossom and wisteria: three branches spread sideways, a clump on each and one on top
+			crown = { { top + Vector3.new(0, 1.6 * sc, 0), 2.2 } }
+			for k = 0, 2 do
+				local a = seed + k * 2.1
+				local tip = top + Vector3.new(math.cos(a) * 3.2, 0.6 + (k % 2) * 0.8, math.sin(a) * 3.2) * sc
+				skin(vox(trees, "Branch", Vector3.new(0.7 * sc, 0.7 * sc, (tip - top).Magnitude + 0.4), CFrame.lookAt((tip + top) / 2, tip), AVG.bark), "bark", 4, SIDES, barkTint)
+				table.insert(crown, { tip + Vector3.new(0, 0.6 * sc, 0), 1.8 })
+			end
+		end
+		for k, cl in crown do clump(cl[1], cl[2] * sc, cols, seed + k) end
+		if kind == "wisteria" then -- hanging flower strands under the clumps, lilac fading to pink at the tips
+			for k = 1, #crown do
+				for j = 0, 2 do
+					local a = seed + k * 1.7 + j * 2.1
+					local sp = crown[k][1] + Vector3.new(math.cos(a) * crown[k][2] * sc * 0.7, -crown[k][2] * sc * 0.5, math.sin(a) * crown[k][2] * sc * 0.7)
+					for q = 0, 2 do
+						vox(trees, "Strand", Vector3.new(0.6, 0.9, 0.6), CFrame.new(sp - Vector3.new(0, q * 0.85, 0)), q == 2 and PAL.pink[2] or cols[2 + (q % 2)], { CanCollide = false })
+					end
+				end
+			end
+		end
+		if kind == "blossom" then
+			for k = 0, 5 do vox(trees, "Petal", Vector3.new(0.6, 0.12, 0.6), CFrame.new(base + Vector3.new((hash(k, x, 1) - 0.5) * 8 * sc, 0.08, (hash(k, z, 2) - 0.5) * 8 * sc)), cols[3], { CanCollide = false }) end
+		end
+		for k = 0, 2 do -- a ring of grass tufts round the foot
+			local a = seed * 2 + k * 2.1
+			vox(trees, "Tuft", Vector3.new(0.9, 0.6, 0.9), CFrame.new(base + Vector3.new(math.cos(a) * tw * 1.4, 0.3, math.sin(a) * tw * 1.4)), shadeOf("grass", k, x, z), { CanCollide = false })
+		end
+	end
+	for _, t in { { -24, -44, 1.1 }, { -54, -44, 1.3, "wisteria" }, { -58, -16, 1, "blossom" }, { -60, 36, 1.2 }, { -48, 54, 1, "blossom" }, { -14, 66, 1.1, "bonsai" }, { 22, 66, 1.2 },
+		{ 44, 56, 1, "wisteria" }, { 60, 48, 1.3 }, { 58, -20, 1, "bonsai" }, { 54, -42, 1.2, "blossom" }, { -8, -58, 1.3 }, { 22, -62, 1.1, "wisteria" }, { 20, -18, 0.9, "blossom" },
+		{ 18, 24, 0.8, "bonsai" }, { -48, -18, 0.8, "blossom" }, { 62, 12, 1.1 }, { -66, 6, 1.1, "wisteria" } } do
+		tree(t[1], t[2], t[3], t[4])
+	end
+
+	-- the vegetable garden by the second bridge: soil rows, sprouts, pumpkins, a picket fence with a gate on the east side
+	do
+		local g = group("Garden")
+		local x0, x1, z0, z1 = -30, -16, 44, 58
+		for k = 0, 3 do
+			local z = z0 + 2.5 + k * 3.2
+			vox(g, "Soil", Vector3.new(x1 - x0 - 2, 0.5, 1.8), CFrame.new(W((x0 + x1) / 2, 0.75, z)), Color3.fromRGB(110, 76, 84))
+			for j = 0, 5 do
+				local x = x0 + 2 + j * 2.1
+				if k == 2 and j % 2 == 0 then
+					vox(g, "Pumpkin", Vector3.new(1.3, 1, 1.3), CFrame.new(W(x, 1.4, z)), Color3.fromRGB(240, 150, 80))
+					vox(g, "Stalk", Vector3.new(0.25, 0.4, 0.25), CFrame.new(W(x, 2.1, z)), PAL.moss[1], { CanCollide = false })
+				else
+					vox(g, "Sprout", Vector3.new(0.6, 0.7 + (j % 2) * 0.3, 0.6), CFrame.new(W(x, 1.35, z)), shadeOf("moss", j, k, 2), { CanCollide = false })
+					if k == 1 then vox(g, "Carrot", Vector3.new(0.4, 0.3, 0.4), CFrame.new(W(x + 0.4, 1.1, z + 0.3)), Color3.fromRGB(240, 140, 70), { CanCollide = false }) end
+				end
+			end
+		end
+		local picket = PAL.cream[3]
+		for x = x0, x1, 1.6 do for _, z in { z0, z1 } do vox(g, "Picket", Vector3.new(0.4, 1.6, 0.4), CFrame.new(W(x, 1.4, z)), picket) end end
+		for z = z0, z1, 1.6 do
+			vox(g, "Picket", Vector3.new(0.4, 1.6, 0.4), CFrame.new(W(x0, 1.4, z)), picket)
+			if z < 49 or z > 53 then vox(g, "Picket", Vector3.new(0.4, 1.6, 0.4), CFrame.new(W(x1, 1.4, z)), picket) end -- the gate gap
+		end
+		for _, z in { z0, z1 } do vox(g, "FenceRail", Vector3.new(x1 - x0, 0.3, 0.25), CFrame.new(W((x0 + x1) / 2, 1.7, z)), picket) end
+		vox(g, "FenceRail", Vector3.new(0.25, 0.3, z1 - z0), CFrame.new(W(x0, 1.7, (z0 + z1) / 2)), picket)
+	end
+
+	-- a stone well on the square's west corner, and a signpost at the north-east corner pointing up the stairs
+	do
+		local g = group("Well")
+		local c = W(-16, 1.1, -6)
+		for i = 0, 9 do
+			local a = i / 10 * math.pi * 2
+			tvox(g, "WellStone", Vector3.new(1.2, 1.6, 1.2), CFrame.new(c + Vector3.new(math.cos(a) * 1.9, 0.8, math.sin(a) * 1.9)) * CFrame.Angles(0, -a, 0), "stonebrick", 2)
+		end
+		vox(g, "WellWater", Vector3.new(2.8, 0.2, 2.8), CFrame.new(c + Vector3.new(0, 1.2, 0)), Color3.fromRGB(110, 200, 226), { CanCollide = false, Material = Enum.Material.Glass })
+		for _, sd in { -1, 1 } do tvox(g, "WellPost", Vector3.new(0.5, 4.4, 0.5), CFrame.new(c + Vector3.new(sd * 2.1, 2.2, 0)), "beam", 2) end
+		tvox(g, "Crank", Vector3.new(4.6, 0.35, 0.35), CFrame.new(c + Vector3.new(0, 3.6, 0)), "beam", 1)
+		stepRoof(g, function(x, y, z) return CFrame.new(c) * CFrame.new(x, y, z) end, 5.6, 4, 4.4, "shingle_teal", 0.5)
+		tvox(g, "Bucket", Vector3.new(0.9, 0.8, 0.9), CFrame.new(c + Vector3.new(0.4, 2.4, 0.3)), "planks", 1)
+		vox(g, "Rope", Vector3.new(0.12, 0.9, 0.12), CFrame.new(c + Vector3.new(0.4, 3.1, 0.3)), PAL.cream[1], { CanCollide = false })
+		local sp = group("Signpost")
+		local q = W(11, 1.1, -14)
+		tvox(sp, "Post", Vector3.new(0.6, 5.4, 0.6), CFrame.new(q + Vector3.new(0, 2.7, 0)), "beam", 2)
+		for k, d in { { "QUESTS", -100, 4.6 }, { "TROPHIES", -40, 3.8 }, { "CABINS", 20, 3 } } do
+			sign(sp, d[1], CFrame.new(q + Vector3.new(0, d[3], 0)) * CFrame.Angles(0, math.rad(d[2]), 0) * CFrame.new(1.6, 0, 0), 3.4, 0.8, PAL.cream[2])
+		end
+	end
+
+	for i = 0, 219 do -- grass tufts and flowers in the grass between the lanes
+		local a, rr = hash(i, 11, 3) * math.pi * 2, 22 + hash(i, 12, 3) * 62
+		local tx, tz = math.cos(a) * rr, math.sin(a) * rr * 1.1
+		local p = W(tx, groundTop(tx, tz), tz)
 		local h = hash(i, 13, 3)
 		if h > 0.55 then
 			local fc = ({ PAL.pink[2], GOLD, PAL.cream[2], PAL.lilac[3], PAL.moss[3] })[math.floor(h * 1000) % 5 + 1]
@@ -321,15 +619,6 @@ function Hub.build(parent, origin)
 		vox(ground, "Bramble", Vector3.new(4, h, 3.8), CFrame.new(W(x, h / 2 + 0.6, z)) * CFrame.Angles(0, hash(i, 4, 9), 0), PAL.leaf[(i % 3) + 1], { CanCollide = false })
 		if i % 3 == 0 then vox(ground, "BrambleTop", Vector3.new(2.6, 1.4, 2.6), CFrame.new(W(x + 0.6, h + 1.2, z - 0.4)), PAL.leaf[3], { CanCollide = false }) end
 		if i % 4 == 1 then vox(ground, "Berry", Vector3.new(0.6, 0.6, 0.6), CFrame.new(W(x - 0.8, h + 0.8, z - 1.4)), PAL.pink[2], { CanCollide = false }) end
-	end
-
-	-- flagstone paths from the shaft out to each store (and south to the campfire), so the plaza reads as walkways
-	for _, b in { 225, 269, 318, 7, 56, 97, 135, 180 } do
-		local a = math.rad(b)
-		local dir = Vector3.new(math.sin(a), 0, -math.cos(a))
-		local len = b == 180 and 16 or 22
-		local mid = W(0, 1.2, 0) + dir * (9 + len / 2)
-		skin(vox(ground, "Path", Vector3.new(5, 0.3, len), CFrame.lookAt(mid, mid + dir), AVG.path), "flagstone", 5, { N.Top })
 	end
 
 	-- 2. The mine shaft in the centre: stone-block rim, a pit with stone walls and a cyan crystal glow; falling in enters your mine
@@ -388,19 +677,19 @@ function Hub.build(parent, origin)
 	sign(shaft, "MINE", CFrame.new(W(0, 17.2, 6.9)), 5, 1.8, GOLD)
 	prompt(tvox(shaft, "EnterPlate", Vector3.new(4, 0.3, 2), CFrame.new(W(0, 1.75, 7)), "planks_light", 2, { CanCollide = false }), "Enter the mine", "Lift", "enter")
 
-	-- a station frame on the plaza at bearing `deg` (0 = north, 90 = east) and radius r, turned so its front (+Z) faces the shaft
-	local function station(deg, r)
-		local a = math.rad(deg)
-		local p = W(math.sin(a) * r, 0, -math.cos(a) * r)
-		local away = (p - W(0, 0, 0)).Unit
+	-- a store frame at (x, z) with its front (+Z) turned toward the point (fx, fz); store parts are laid out for a ground top of
+	-- 1.1, so the frame sits at the real ground top (meadow 0.6, rise 2, terrace 4) minus 1.1
+	local function stationAt(x, z, fx, fz, top)
+		local p = W(x, (top or 0.6) - 1.1, z)
+		local away = Vector3.new(x - fx, 0, z - fz).Unit
 		local cf = CFrame.lookAt(p, p + away)
-		return function(x, y, z) return cf * CFrame.new(x, y, z) end, cf
+		return function(xx, yy, zz) return cf * CFrame.new(xx, yy, zz) end, cf
 	end
 
 	-- 3. Sell stall (west; ref art/hub/pdv4_sell_s61.jpg): a raised plank deck, a counter with drawers and brass knobs, thick posts,
 	-- a scalloped pink and cream awning, crates heaped with glowing ore, brass scales, lanterns and a SELL sign hung from the post
 	do
-		local g, at = group("SellStall"), station(269, 40)
+		local g, at = group("SellStall"), stationAt(-36, 2, -12, 4)
 		tvox(g, "Deck", Vector3.new(18, 1.4, 12), at(0, 1.3, -2), "planks_light", 4)
 		for _, x in { -8.6, 8.6 } do for _, z in { 3.6, -7.6 } do tvox(g, "DeckPost", Vector3.new(0.9, 1.5, 0.9), at(x, 1.2, z), "beam", 2) end end
 		tvox(g, "Counter", Vector3.new(14, 3, 2.6), at(0, 3.5, 1.6), "planks", 4)
@@ -469,7 +758,7 @@ function Hub.build(parent, origin)
 	-- timber-framed plaster upper floor, a steep teal shingle gable facing front, a brick chimney with a fireplace on the right,
 	-- an anvil on a stump, a stone quench trough, a tool barrel and a lamp post
 	do
-		local g, at = group("Forge"), station(318, 42)
+		local g, at = group("Forge"), stationAt(-38, -26, -14, -10)
 		local cool = Color3.fromRGB(200, 196, 230) -- keeps the brick lilac next to the fire glow
 		skin(vox(g, "Apron", Vector3.new(28, 0.6, 18), at(2.5, 1.1, -3), PAL.stone[2]), "flagstone", 5, { N.Top, N.Front, N.Left, N.Right }, Color3.fromRGB(205, 200, 240))
 		skin(vox(g, "Base", Vector3.new(16, 5, 7), at(0, 3.9, -8.5), PAL.stone[2]), "stonebrick", 5, SIDES, cool)
@@ -557,7 +846,7 @@ function Hub.build(parent, origin)
 	-- 5. Trophy hall (north-east; ref art/hub/pdv4_trophy_s61.jpg): a wide stone hall, stepped plum shingle roof, three horned
 	-- skulls along the eave, an arched double door in a stone arch, pennant bunting, fire braziers and glowing gem pedestals
 	do
-		local g, at = group("TrophyHouse"), station(56, 44)
+		local g, at = group("TrophyHouse"), stationAt(36, -42, 18, -18, 4)
 		tvox(g, "Apron", Vector3.new(26, 0.6, 19), at(0, 1.1, -3.5), "cobble", 4, nil, { N.Top, N.Front, N.Left, N.Right })
 		tvox(g, "Hall", Vector3.new(22, 11, 13), at(0, 6.9, -6.5), "stonebrick", 5)
 		gables(g, function(x, y, z) return at(x, y, z - 6.5) end, 10.6, 13, 12.4, "stonebrick")
@@ -642,8 +931,8 @@ function Hub.build(parent, origin)
 	-- 6. Two log guest cabins (east and south-east; ref art/hub/pdv4_cabin_s62.jpg): round-log walls with notched log ends, a front
 	-- gable with an attic window under a lower overhanging roof, a gabled porch roof, an outside fieldstone chimney, a barred
 	-- window with a flower box. The first cabin has a moss roof and pink flowers, the second teal shingles and butter flowers.
-	for n, spot in { { 97, 40 }, { 135, 40 } } do
-		local g, at = group("GuestCabin" .. n), station(spot[1], spot[2])
+	for n, spot in { { 48, -2, 20, 4 }, { 40, 26, 18, 14 } } do
+		local g, at = group("GuestCabin" .. n), stationAt(spot[1], spot[2], spot[3], spot[4], 2)
 		local roofTex = n == 1 and "moss_roof" or "shingle_teal"
 		local logTint = Color3.fromRGB(214, 198, 204)
 		tvox(g, "Porch", Vector3.new(14, 0.6, 4), at(0, 1.4, 1.6), "planks_light", 4)
@@ -702,13 +991,13 @@ function Hub.build(parent, origin)
 			for k = 0, 3 do tvox(g, "Firewood", Vector3.new(0.8, 0.8, 3), at(-8 + (k % 2) * 0.85, 1.5 + math.floor(k / 2) * 0.8, -2), "logs", 2) end
 		end
 	end
-	sign(model, "GUESTS SOON", CFrame.new(station(116, 30)(0, 2.6, 0).Position), 6, 1.6)
-	tvox(model, "GuestSignPost", Vector3.new(0.6, 2, 0.6), station(116, 30)(0, 1, 0), "beam", 2)
+	sign(model, "GUESTS SOON", CFrame.new(W(21, 3.2, 12)), 6, 1.6)
+	tvox(model, "GuestSignPost", Vector3.new(0.6, 2.2, 0.6), CFrame.new(W(21, 1.5, 12)), "beam", 2)
 
 	-- 7. Egg incubator (south-west; ref art/hub/pdv4_incubator_s61.jpg): a stone base, a warm timber frame with clear glass and a
 	-- pitched glass roof, three big speckled eggs on twig nests, terracotta pots with succulents, two hanging lanterns
 	do
-		local g, at = group("Incubator"), station(225, 41)
+		local g, at = group("Incubator"), stationAt(-34, 32, -10, 14)
 		tvox(g, "Base", Vector3.new(15, 1.4, 13), at(0, 1.3, -5), "stonebrick", 4)
 		skin(vox(g, "Plinth", Vector3.new(17, 0.8, 15), at(0, 1.0, -5), PAL.stone[3]), "stonebrick", 4, SIDES, Color3.fromRGB(235, 232, 250))
 		for _, c in { { -7, 1 }, { 7, 1 }, { -7, -11 }, { 7, -11 }, { -2.3, 1 }, { 2.3, 1 }, { 0, -11 }, { -7, -5 }, { 7, -5 } } do
@@ -778,13 +1067,14 @@ function Hub.build(parent, origin)
 		end
 		tvox(g, "SignPost", Vector3.new(0.5, 3.2, 0.5), at(3.8, 2.7, 3.4), "beam", 2)
 		sign(g, "EGGS", CFrame.new(at(3.8, 4.8, 3.4).Position), 3.4, 1.3, PAL.pink[3])
+		prompt(g:FindFirstChild("SignPost"), "Egg odds", "Incubator", "odds") -- the odds moved off the HUD rail (the user, 2026-11-08)
 		prompt(g:FindFirstChild("Base"), "Hatch an egg", "Incubator", "hatch")
 		villager("Maribel", at(-4.8, 1.1, 4.6), Color3.fromRGB(140, 227, 192), Color3.fromRGB(201, 184, 242))
 	end
 
 	-- 8. Quest notice board, treasure map and the daily relic chest (north, behind the shaft; ref art/hub/pdv4_notice_s61.jpg)
 	do
-		local g, at = group("NoticeBoard"), station(7, 40)
+		local g, at = group("NoticeBoard"), stationAt(6, -42, 6, 0, 4)
 		tvox(g, "Apron", Vector3.new(24, 0.6, 12), at(0, 1.1, 0), "flagstone", 5, nil, { N.Top, N.Front, N.Left, N.Right })
 		for _, s in { -1, 1 } do
 			tvox(g, "Post", Vector3.new(1, 10, 1), at(s * 4.6, 5.4, 0), "beam", 4)
@@ -848,7 +1138,7 @@ function Hub.build(parent, origin)
 
 	-- 9. Campfire (south, near the spawn; ref art/hub/pdv4_campfire_s62.jpg): a flagstone patio with a stone kerb, a fire ring,
 	-- criss-crossed logs and a teepee, a three-pole tripod with a kettle, log benches with a blanket, a kindling stack
-	local fire = W(6, 0, 34)
+	local fire = W(12, 0, 40)
 	do
 		local g = group("Campfire")
 		for z = -9, 7, 2 do -- the round flagstone patio in strips
@@ -926,23 +1216,21 @@ function Hub.build(parent, origin)
 	-- 10. Friends bench (south-west)
 	do
 		local g = group("FriendsBench")
-		local p = W(-12, 0, 38)
+		local p = W(30, 0, 52)
 		tvox(g, "Seat", Vector3.new(6, 0.6, 1.8), CFrame.new(p + Vector3.new(0, 2.1, 0)), "planks_light", 2)
 		tvox(g, "Back", Vector3.new(6, 1.8, 0.5), CFrame.new(p + Vector3.new(0, 3.1, 0.9)), "planks", 2)
 		for _, s in { -1, 1 } do tvox(g, "Leg", Vector3.new(0.5, 1.4, 1.6), CFrame.new(p + Vector3.new(s * 2.5, 1.3, 0)), "beam", 1) end
 		sign(g, "FRIENDS", CFrame.new(p + Vector3.new(0, 5, 1.2)), 4.6, 1.2, PAL.pink[3])
 	end
 
-	-- 11. Lantern posts in a ring between the shaft and the stores
+	-- 11. Lamp posts along the lanes, at the stair top and by the bridges
 	local posts = group("LanternPosts")
-	for i = 0, 11 do
-		local a = i / 12 * math.pi * 2 + 0.26
-		local p = W(math.cos(a) * 26, 0.6, math.sin(a) * 28)
-		if not (math.abs(p.X - O.X) < 10 and p.Z - O.Z > 18) then -- keep the front open for the camera
-			tvox(posts, "Post", Vector3.new(0.9, 8, 0.9), CFrame.new(p + Vector3.new(0, 4, 0)), "beam", 4)
-			tvox(posts, "Arm", Vector3.new(2.4, 0.5, 0.5), CFrame.new(p + Vector3.new(1, 8, 0)), "beam", 2)
-			cubeLantern(posts, p + Vector3.new(2, 6.4, 0), 0.6)
-		end
+	for _, l in { { -20, -2 }, { -22, -21 }, { 1.5, -30 }, { 10.5, -30 }, { 20, -33 }, { 19, 10 }, { 32, 10 }, { -15, 9 }, { -23, 17 }, { 11, 27 }, { -5, 39 }, { -20, 30 }, { 40, 6 } } do
+		local y = groundTop(l[1], l[2])
+		local p = W(l[1], y, l[2])
+		tvox(posts, "Post", Vector3.new(0.9, 8, 0.9), CFrame.new(p + Vector3.new(0, 4, 0)), "beam", 4)
+		tvox(posts, "Arm", Vector3.new(2.4, 0.5, 0.5), CFrame.new(p + Vector3.new(1, 8, 0)), "beam", 2)
+		cubeLantern(posts, p + Vector3.new(2, 6.4, 0), 0.6)
 	end
 
 	-- 12. The World Tree: a huge trunk behind the camp (north) and roots that wall the plaza and arch overhead (twice the v3 size)
@@ -1062,13 +1350,12 @@ function Hub.build(parent, origin)
 	tvox(props, "Cart", Vector3.new(3.4, 2, 2.6), CFrame.new(W(-15, 2.7, 2)), "planks", 2)
 	for _, w in { { -16.2, 0.6 }, { -13.8, 0.6 }, { -16.2, 3.4 }, { -13.8, 3.4 } } do tvox(props, "Wheel", Vector3.new(1, 1, 0.3), CFrame.new(W(w[1], 1.9, w[2])), "iron", 1) end
 	for k = 0, 4 do vox(props, "CartOre", Vector3.new(0.8, 0.8, 0.8), CFrame.new(W(-16 + k * 0.5, 3.9 + (k % 2) * 0.3, 1.6 + (k % 3) * 0.4)), ORE[k % 3 + 1], { Material = k == 2 and Enum.Material.Neon or Enum.Material.SmoothPlastic }) end
-	for _, p in { W(-28, 0.6, -14), W(-29.6, 0.6, -11.6), W(22, 0.6, -16), W(30, 0.6, 10), W(-10, 0.6, -28) } do barrel(props, p) end
-	for _, c in { { -28, 16 }, { 30, -2 }, { 12, -30 }, { -8, 26 } } do
+	for _, p in { W(-12, 0.6, -14), W(-13.6, 0.6, -12), W(14, 0.6, -10), W(-26, 0.6, 10), W(26, 0.6, -6) } do barrel(props, p) end
+	for _, c in { { 13, 15 }, { -15, -15 }, { 24, -20 }, { -30, -6 } } do
 		for k = 0, 2 do tvox(props, "Crate", Vector3.new(2.2, 2.2, 2.2), CFrame.new(W(c[1] + (k % 2) * 2.3, 1.7 + math.floor(k / 2) * 2.2, c[2])) * CFrame.Angles(0, k * 0.2, 0), "wood_frame", 2) end
 	end
-	for _, b in { 247, 293, 342, 32, 77, 116, 166, 196 } do -- bushes in the gaps between the stores
-		local a = math.rad(b)
-		bush(props, W(math.sin(a) * 47, 0.6, -math.cos(a) * 52), b)
+	for _, b in { { -18, -26 }, { 16, -24 }, { 22, 18 }, { -50, -12 }, { 26, 36 }, { 2, 56 }, { 36, -22 }, { -30, -40 } } do -- bush clumps round the lanes
+		bush(props, W(b[1], groundTop(b[1], b[2]), b[2]), b[1] * 3 + b[2])
 	end
 	for i = 0, 9 do -- glowing mushrooms at the root walls
 		local a = i / 10 * math.pi * 2 + 0.4
@@ -1076,7 +1363,8 @@ function Hub.build(parent, origin)
 			local tint = ({ Color3.fromRGB(196, 96, 128), Color3.fromRGB(80, 168, 136), Color3.fromRGB(140, 120, 200) })[i % 3 + 1]
 			for k = 0, 2 do
 				local h = 1.6 + k * 0.9
-				local p = W(math.cos(a) * 62 + k * 1.8, 0.6, math.sin(a) * 66 + (k % 2) * 1.5)
+				local mx, mz = math.cos(a) * 62 + k * 1.8, math.sin(a) * 66 + (k % 2) * 1.5
+				local p = W(mx, groundTop(mx, mz), mz)
 				vox(props, "MushStem", Vector3.new(0.7, h, 0.7), CFrame.new(p + Vector3.new(0, h / 2, 0)), PAL.cream[2], { CanCollide = false })
 				local cap = vox(props, "MushCap", Vector3.new(h * 1.2, 0.8, h * 1.2), CFrame.new(p + Vector3.new(0, h + 0.3, 0)), tint, { CanCollide = false })
 				if k == 2 then glow(cap, tint, 14, 0.8) end

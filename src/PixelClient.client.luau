@@ -44,11 +44,24 @@ local function commas(n)
 	return out:sub(1, 1) == "," and out:sub(2) or out
 end
 
--- Pastel kit (art/ui_pastel, uploaded 2026-11-08) and the pixel icons (art/ui)
+-- Pastel pixel kit v2 (art/ui_pixel from art/pd_ui_pixel.py, 2026-11-08; refs: Sprout Lands UI, Pastel GUI bundle, Delightful Spring GUI)
+-- and the pixel icons (art/ui). SLICE is each skin's 9-slice centre in image pixels (4 image pixels per art pixel).
 local SKIN = {
-	panel = "rbxassetid://79278954190104", card = "rbxassetid://128742357396382", pill = "rbxassetid://125517514288079", dark = "rbxassetid://140361213038970",
-	mint = "rbxassetid://99245432768431", pink = "rbxassetid://81976695173406", lilac = "rbxassetid://85859816296944",
-	butter = "rbxassetid://75394361548245", sky = "rbxassetid://136700517340299", off = "rbxassetid://124402708705242",
+	panel = "rbxassetid://93707876200453", card = "rbxassetid://79842358679900", pill = "rbxassetid://121063443574094", dark = "rbxassetid://78739618153197",
+	mint = "rbxassetid://125080117344457", pink = "rbxassetid://82843958291721", lilac = "rbxassetid://121757186743891",
+	butter = "rbxassetid://126269484976180", sky = "rbxassetid://102098077170418", off = "rbxassetid://98706078302447",
+	keycap = "rbxassetid://93046503035392", keycapDown = "rbxassetid://107782006531078", slot = "rbxassetid://117192697959697",
+	tab = "rbxassetid://116763633161127", tabOn = "rbxassetid://121777325322315",
+	ribbonPink = "rbxassetid://127357668395417", ribbonLilac = "rbxassetid://109247493789977",
+}
+local SLICE = {
+	panel = { 36, 36, 76, 76 }, card = { 28, 28, 68, 60 }, pill = { 28, 24, 68, 36 }, dark = { 16, 16, 48, 48 }, keycap = { 20, 20, 44, 40 }, keycapDown = { 20, 20, 44, 40 },
+	slot = { 16, 16, 48, 48 }, tab = { 24, 20, 56, 36 }, tabOn = { 24, 20, 56, 36 }, ribbonPink = { 40, 16, 136, 48 }, ribbonLilac = { 40, 16, 136, 48 },
+	button = { 28, 24, 68, 48 },
+}
+local SPRITE = {
+	wisteria = "rbxassetid://133392597906841", sakura = "rbxassetid://113252916003793", sparkle = "rbxassetid://80767555598583",
+	pointer = "rbxassetid://102380117320913", close = "rbxassetid://128975550462771",
 }
 local ICON = {
 	coin = "rbxassetid://127130970164674", gem = "rbxassetid://112281160766494", pick = "rbxassetid://135042498218444", bag = "rbxassetid://90942769596950",
@@ -76,16 +89,46 @@ end
 local function S(x, y) -- board pixels (1280 x 592 phone landscape) to scale
 	return UDim2.fromScale(x / 1280, y / 592)
 end
+local skinned = {} -- every skin image, so the art pixel size follows the screen height (a weak table loses Instance keys)
+local function pixelScale() -- one art pixel = 4 image pixels x this; kept to whole screen pixels so every frame shares one pixel grid
+	return math.clamp(math.floor(workspace.CurrentCamera.ViewportSize.Y / 250 + 0.5), 1, 4) / 4
+end
+local SPRITE_PX = { wisteria = { 64, 52 }, sakura = { 48, 40 }, sparkle = { 28, 28 }, pointer = { 40, 24 }, close = { 48, 48 } } -- image pixels
+local gridded = {} -- sprites sized on the same pixel grid as the skins
 local function skin(o, kind)
 	o.BackgroundTransparency = 1
 	local s = o:FindFirstChild("Skin") or new("ImageLabel", o, {
 		Name = "Skin", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Slice,
-		SliceCenter = Rect.new(16, 16, 48, 48), SliceScale = 0.5, ResampleMode = Enum.ResamplerMode.Pixelated, ZIndex = 0,
+		ResampleMode = Enum.ResamplerMode.Pixelated, ZIndex = 0,
 	})
+	local r = SLICE[kind] or SLICE.button
+	s.SliceCenter, s.SliceScale = Rect.new(r[1], r[2], r[3], r[4]), pixelScale()
 	s.Image = SKIN[kind] or SKIN.panel
+	if not skinned[s] then
+		skinned[s] = true
+		s.Destroying:Connect(function() skinned[s] = nil end)
+	end
 	o:SetAttribute("Kind", kind)
 	return s
 end
+local function gridSize(o, name)
+	local px, k = SPRITE_PX[name], pixelScale()
+	o.Size = UDim2.fromOffset(px[1] * k, px[2] * k)
+	if not gridded[o] then o.Destroying:Connect(function() gridded[o] = nil end) end
+	gridded[o] = name
+end
+task.spawn(function() -- the camera (and its viewport size) can be replaced or resized at any time: re-check every half second
+	local last = 0
+	while true do
+		local k = pixelScale()
+		if k ~= last then
+			last = k
+			for sk in skinned do sk.SliceScale = k end
+			for o, name in gridded do gridSize(o, name) end
+		end
+		task.wait(0.5)
+	end
+end)
 local function fit(o, w, h)
 	new("UIAspectRatioConstraint", o, { AspectRatio = w / h, DominantAxis = Enum.DominantAxis.Height })
 	return o
@@ -167,6 +210,49 @@ end
 local function setKind(b, kind)
 	if b:GetAttribute("Kind") ~= kind then skin(b, kind) end
 end
+-- A sprite (flower cluster, sparkle) pinned over a corner of a frame, poking out over the edge like the reference kits
+local function deco(parent, name, size, pos, rot)
+	local d = new("ImageLabel", parent, {
+		Name = "Deco", BackgroundTransparency = 1, Image = SPRITE[name], Position = pos, AnchorPoint = Vector2.new(0.5, 0.5),
+		ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Stretch, ZIndex = 4, -- unrotated: rotation would break the pixel grid
+	})
+	gridSize(d, name)
+	return d
+end
+-- A ribbon banner across the top edge of a panel, carrying its title
+local function ribbonTitle(parent, label, kind, width)
+	local r = new("Frame", parent, { Name = "Ribbon", Size = UDim2.fromScale(width or 0.6, 0.15), Position = UDim2.fromScale(0.5, 0.01), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
+	skin(r, kind or "ribbonPink")
+	local t = text(r, label, UDim2.fromScale(0.7, 0.46), UDim2.fromScale(0.5, 0.4), Vector2.new(0.5, 0.5), WHITE)
+	t.ZIndex = 4
+	return r, t
+end
+-- The butter close button (a pixel sprite), top-right corner of a panel
+local function closeButton(parent, name)
+	local b = new("ImageButton", parent, {
+		Name = name, BackgroundTransparency = 1, Image = SPRITE.close, ResampleMode = Enum.ResamplerMode.Pixelated, AutoButtonColor = false,
+		Position = UDim2.fromScale(0.975, 0.03), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4,
+	})
+	gridSize(b, "close")
+	local sc = scaler(b)
+	b.MouseEnter:Connect(function() tween(sc, 0.12, { Scale = 1.12 }) end)
+	b.MouseLeave:Connect(function() tween(sc, 0.15, { Scale = 1 }) end)
+	b.MouseButton1Down:Connect(function()
+		tween(sc, 0.07, { Scale = 0.85 })
+		if sfxClick then sfxClick() end
+	end)
+	b.MouseButton1Up:Connect(function() tween(sc, 0.4, { Scale = 1 }, Enum.EasingStyle.Elastic) end)
+	return b
+end
+-- A small cream keycap with a key letter (key hints on buttons, the prompt key)
+local function keyCap(parent, key, size, pos)
+	local k = new("Frame", parent, { Name = "KeyHint", Size = size, Position = pos, AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4 })
+	skin(k, "keycap")
+	new("UIAspectRatioConstraint", k, { AspectRatio = 16 / 17 })
+	local t = text(k, key, UDim2.fromScale(0.64, 0.5), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), INK, 700, false)
+	t.ZIndex = 5
+	return k, t
+end
 
 -- HUD (board HUD artboard): gold and egg pills, bag pill, left rail, layer pill and depth strip, tutorial card, DIG, crosshair
 local goldPill = panel(gui, S(170, 46), S(20, 18), nil, "pill")
@@ -196,11 +282,10 @@ local bagTrack = new("Frame", bagPill, { Size = UDim2.fromScale(0.72, 0.22), Pos
 local bagFill = new("Frame", bagTrack, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 3 })
 new("Frame", bagFill, { Size = UDim2.fromScale(1, 0.3), Position = UDim2.fromScale(0, 0.7), BackgroundColor3 = Color3.fromRGB(217, 150, 46), BorderSizePixel = 0, ZIndex = 4, BackgroundTransparency = 0.2 })
 
-local railForge = button(gui, "FORGE", S(72, 72), S(20, 142), nil, "lilac", "pick", true)
-local railOdds = button(gui, "ODDS", S(72, 72), S(20, 222), nil, "lilac", "dice", true)
-local railLift = button(gui, "SURFACE", S(72, 72), S(20, 302), nil, "sky", "surface", true)
-for _, b in { railForge, railOdds, railLift } do fit(b, 1, 1) end
-railForge.Name, railOdds.Name, railLift.Name = "Upgrades", "OddsButton", "Surface"
+local railForge = button(gui, "FORGE", S(76, 76), S(20, 146), nil, "lilac", "pick", true)
+local railLift = button(gui, "SURFACE", S(76, 76), S(20, 232), nil, "sky", "surface", true)
+for _, b in { railForge, railLift } do fit(b, 1, 1) end
+railForge.Name, railLift.Name = "Upgrades", "Surface"
 
 local layerPill = panel(gui, S(300, 46), S(1260, 18), Vector2.new(1, 0), "pill")
 fit(layerPill, 300, 46)
@@ -215,11 +300,15 @@ new("UIStroke", strip, { Color = INK, Thickness = 3 })
 for i, lay in C.LAYERS do
 	new("Frame", strip, { Size = UDim2.fromScale(1, 1 / #C.LAYERS), Position = UDim2.fromScale(0, (i - 1) / #C.LAYERS), BackgroundColor3 = lay[4][1][2], BorderSizePixel = 0 })
 end
+for i = 1, #C.LAYERS do
+	local n = text(strip, tostring(i), UDim2.new(1.4, 0, 0.6 / #C.LAYERS, 0), UDim2.fromScale(-0.3, (i - 0.5) / #C.LAYERS), Vector2.new(1, 0.5), WHITE)
+	n.Name = "LayerNum"
+end
 local marker = new("Frame", strip, { Size = UDim2.new(1.9, 0, 0, 8), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 3 })
 new("UIStroke", marker, { Color = INK, Thickness = 2 })
 
-local stepCard = panel(gui, S(560, 58), S(640, 18), Vector2.new(0.5, 0), "card")
-fit(stepCard, 560, 58)
+local stepCard = panel(gui, S(560, 62), S(640, 18), Vector2.new(0.5, 0), "card")
+fit(stepCard, 560, 62)
 local stepIcon = icon(stepCard, "pick", UDim2.fromScale(0.07, 0.6), UDim2.fromScale(0.03, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", stepIcon, { AspectRatio = 1 })
 local stepText = text(stepCard, "", UDim2.fromScale(0.84, 0.48), UDim2.fromScale(0.55, 0.5), Vector2.new(0.5, 0.5), INK, 700, false)
@@ -242,8 +331,8 @@ new("UIListLayout", feed, { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UD
 local feedN = 0
 local function feedLine(msg, color)
 	feedN += 1
-	local row = new("Frame", feed, { Size = UDim2.fromScale(0.9, 0.2), BackgroundColor3 = INK, BackgroundTransparency = 0.35, BorderSizePixel = 0, LayoutOrder = -feedN })
-	new("UICorner", row, { CornerRadius = UDim.new(0, 4) })
+	local row = new("Frame", feed, { Size = UDim2.fromScale(0.9, 0.2), BorderSizePixel = 0, LayoutOrder = -feedN })
+	local rowSkin = skin(row, "dark")
 	local sw = new("Frame", row, { Size = UDim2.fromScale(0.06, 0.6), Position = UDim2.fromScale(0.03, 0.5), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = color, BorderSizePixel = 0 })
 	new("UIAspectRatioConstraint", sw, { AspectRatio = 1 })
 	new("UIStroke", sw, { Color = WHITE, Thickness = 1 })
@@ -260,7 +349,7 @@ local function feedLine(msg, color)
 	end
 	task.delay(2.4, function()
 		if row.Parent then
-			tween(row, 0.3, { BackgroundTransparency = 1 })
+			tween(rowSkin, 0.3, { ImageTransparency = 1 })
 			tween(t, 0.3, { TextTransparency = 1, TextStrokeTransparency = 1 })
 			task.delay(0.32, function() row:Destroy() end)
 		end
@@ -274,7 +363,8 @@ local scrim = new("Frame", gui, { Name = "Scrim", Size = UDim2.new(1, 0, 1, 60),
 local night = panel(gui, S(460, 230), S(640, 296), Vector2.new(0.5, 0.5), "panel")
 fit(night, 460, 230)
 night.Visible, night.Name = false, "NightReport"
-text(night, "NIGHT SHAFT REPORT", UDim2.fromScale(0.8, 0.14), UDim2.fromScale(0.5, 0.08), Vector2.new(0.5, 0), LILAC)
+ribbonTitle(night, "NIGHT SHAFT REPORT", "ribbonLilac", 0.84)
+deco(night, "wisteria", UDim2.fromScale(0.13, 0.13), UDim2.fromScale(0.02, 0.06), -12)
 local nightInfo = text(night, "", UDim2.fromScale(0.86, 0.11), UDim2.fromScale(0.5, 0.3), Vector2.new(0.5, 0), INK, 500, false)
 local nightGold = text(night, "", UDim2.fromScale(0.6, 0.18), UDim2.fromScale(0.5, 0.46), Vector2.new(0.5, 0), GOLD)
 local nightOk = button(night, "COLLECT", UDim2.fromScale(0.5, 0.24), UDim2.fromScale(0.5, 0.92), Vector2.new(0.5, 1), "mint", "coin")
@@ -285,10 +375,11 @@ nightOk.Activated:Connect(function() closePanel(night) end)
 local sellPop = panel(gui, S(420, 210), S(640, 300), Vector2.new(0.5, 0.5), "panel")
 fit(sellPop, 420, 210)
 sellPop.Visible, sellPop.Name = false, "SellPopup"
-local spIc = icon(sellPop, "bag", UDim2.fromScale(0.16, 0.3), UDim2.fromScale(0.08, 0.08))
+local spIc = icon(sellPop, "bag", UDim2.fromScale(0.16, 0.3), UDim2.fromScale(0.08, 0.16))
 new("UIAspectRatioConstraint", spIc, { AspectRatio = 1 })
-text(sellPop, "BACKPACK FULL!", UDim2.fromScale(0.66, 0.16), UDim2.fromScale(0.27, 0.12), nil, PINK)
-local sellInfo = text(sellPop, "", UDim2.fromScale(0.66, 0.11), UDim2.fromScale(0.27, 0.32), nil, INK, 500, false)
+ribbonTitle(sellPop, "BACKPACK FULL!", "ribbonPink", 0.72)
+deco(sellPop, "wisteria", nil, UDim2.fromScale(0.02, 0.06), -12)
+local sellInfo = text(sellPop, "", UDim2.fromScale(0.62, 0.12), UDim2.fromScale(0.29, 0.26), nil, INK, 700, false)
 local sellBtn = button(sellPop, "SELL", UDim2.fromScale(0.56, 0.3), UDim2.fromScale(0.5, 0.82), Vector2.new(0.5, 1), "mint", "surface")
 sellBtn.Name = "Sell"
 text(sellPop, "Rides the lift up to the sell stall", UDim2.fromScale(0.84, 0.08), UDim2.fromScale(0.5, 0.86), Vector2.new(0.5, 0), PLUM_SOFT, 500, false)
@@ -297,22 +388,18 @@ text(sellPop, "Rides the lift up to the sell stall", UDim2.fromScale(0.84, 0.08)
 local forge = panel(gui, S(680, 420), S(640, 300), Vector2.new(0.5, 0.5), "panel")
 fit(forge, 680, 420)
 forge.Visible, forge.Name = false, "Forge"
-local fIc1 = icon(forge, "pick", UDim2.fromScale(0.06, 0.1), UDim2.fromScale(0.36, 0.05))
-local fIc2 = icon(forge, "pick", UDim2.fromScale(0.06, 0.1), UDim2.fromScale(0.58, 0.05))
-for _, ic in { fIc1, fIc2 } do new("UIAspectRatioConstraint", ic, { AspectRatio = 1 }) end
-text(forge, "FORGE", UDim2.fromScale(0.2, 0.1), UDim2.fromScale(0.5, 0.05), Vector2.new(0.5, 0), LILAC)
-local closeBtn = button(forge, "X", UDim2.fromScale(0.08, 0.12), UDim2.fromScale(0.97, 0.03), Vector2.new(1, 0), "pink")
-fit(closeBtn, 1, 1)
-closeBtn.Name = "Close"
+ribbonTitle(forge, "FORGE", "ribbonPink", 0.4)
+deco(forge, "wisteria", UDim2.fromScale(0.1, 0.1), UDim2.fromScale(0.015, 0.06), -12)
+local closeBtn = closeButton(forge, "Close")
 local tabs, tabWhat = {}, "pick"
 for i, t in { { "pick", "PICKAXE" }, { "pack", "BACKPACK" } } do
-	local tb = button(forge, t[2], UDim2.fromScale(0.2, 0.09), UDim2.fromScale(0.05 + (i - 1) * 0.215, 0.18), nil, i == 1 and "lilac" or "off")
+	local tb = button(forge, t[2], UDim2.fromScale(0.2, 0.09), UDim2.fromScale(0.05 + (i - 1) * 0.215, 0.18), nil, i == 1 and "tabOn" or "tab")
 	tb.Name = "Tab" .. t[2]
 	tabs[t[1]] = tb
 end
 local cards = {}
 for i = 1, 4 do
-	local cd = panel(forge, UDim2.fromScale(0.215, 0.3), UDim2.fromScale(0.05 + (i - 1) * 0.228, 0.3), nil, "pill")
+	local cd = panel(forge, UDim2.fromScale(0.215, 0.3), UDim2.fromScale(0.05 + (i - 1) * 0.228, 0.3), nil, "slot")
 	cd.Name = "Card" .. i
 	local nm = text(cd, "", UDim2.fromScale(0.86, 0.13), UDim2.fromScale(0.5, 0.08), Vector2.new(0.5, 0), INK, 700, false)
 	local ic = icon(cd, "pick", UDim2.fromScale(0.5, 0.42), UDim2.fromScale(0.5, 0.26), Vector2.new(0.5, 0))
@@ -339,10 +426,9 @@ end
 local odds = panel(gui, S(380, 400), S(640, 300), Vector2.new(0.5, 0.5), "panel")
 fit(odds, 380, 400)
 odds.Visible, odds.Name = false, "Odds"
-text(odds, "EGG ODDS", UDim2.fromScale(0.6, 0.08), UDim2.fromScale(0.5, 0.05), Vector2.new(0.5, 0), LILAC)
-local oddsClose = button(odds, "X", UDim2.fromScale(0.13, 0.11), UDim2.fromScale(0.96, 0.03), Vector2.new(1, 0), "pink")
-fit(oddsClose, 1, 1)
-oddsClose.Name = "OddsClose"
+ribbonTitle(odds, "EGG ODDS", "ribbonLilac", 0.62)
+deco(odds, "wisteria", nil, UDim2.fromScale(0.02, 0.05), -12)
+local oddsClose = closeButton(odds, "OddsClose")
 for i, t in C.RARITIES do
 	local y = 0.18 + (i - 1) * 0.1
 	local sw = new("Frame", odds, { Size = UDim2.fromScale(0.06, 0.06), Position = UDim2.fromScale(0.07, y + 0.005), BackgroundColor3 = t[3], BorderSizePixel = 0, ZIndex = 2 })
@@ -358,9 +444,9 @@ local pityText = text(odds, "", UDim2.fromScale(0.86, 0.06), UDim2.fromScale(0.5
 local mapP = panel(gui, S(420, 420), S(640, 300), Vector2.new(0.5, 0.5), "panel")
 fit(mapP, 420, 420)
 mapP.Visible, mapP.Name = false, "Map"
-text(mapP, "THE HOLLOW MOUNTAIN", UDim2.fromScale(0.8, 0.07), UDim2.fromScale(0.5, 0.05), Vector2.new(0.5, 0), LILAC)
-local mapClose = button(mapP, "X", UDim2.fromScale(0.12, 0.11), UDim2.fromScale(0.96, 0.03), Vector2.new(1, 0), "pink")
-fit(mapClose, 1, 1)
+ribbonTitle(mapP, "THE HOLLOW MOUNTAIN", "ribbonLilac", 0.82)
+deco(mapP, "wisteria", UDim2.fromScale(0.12, 0.12), UDim2.fromScale(0.02, 0.06), -12)
+local mapClose = closeButton(mapP, "MapClose")
 local mapRows = {}
 for i, lay in C.LAYERS do
 	local y = 0.16 + (i - 1) * 0.11
@@ -849,9 +935,6 @@ railForge.Activated:Connect(function()
 	if forge.Visible then closePanel(forge) else refreshForge(); openPanel(forge) end
 end)
 closeBtn.Activated:Connect(function() closePanel(forge) end)
-railOdds.Activated:Connect(function()
-	if odds.Visible then closePanel(odds) else openPanel(odds) end
-end)
 oddsClose.Activated:Connect(function() closePanel(odds) end)
 mapClose.Activated:Connect(function() closePanel(mapP) end)
 railLift.Activated:Connect(function() R.Surface:FireServer(inMine and "up" or "down") end)
@@ -865,14 +948,10 @@ end
 buyBtn.Activated:Connect(function() R.Buy:FireServer(tabWhat) end)
 
 -- Keyboard: first person locks the mouse, so every rail button also has a key (shown on the button on PC)
-local KEYS = { [Enum.KeyCode.G] = railForge, [Enum.KeyCode.T] = railOdds, [Enum.KeyCode.Q] = railLift }
+local KEYS = { [Enum.KeyCode.G] = railForge, [Enum.KeyCode.Q] = railLift }
 if UIS.KeyboardEnabled then
-	for key, b in KEYS do
-		local k = text(b, key.Name, UDim2.fromScale(0.3, 0.22), UDim2.fromScale(0.94, 0.06), Vector2.new(1, 0), BUTTER)
-		k.Name = "KeyHint"
-	end
-	local dk = text(digBtn, "E", UDim2.fromScale(0.12, 0.26), UDim2.fromScale(0.95, 0.1), Vector2.new(1, 0), BUTTER)
-	dk.Name = "KeyHint"
+	for key, b in KEYS do keyCap(b, key.Name, UDim2.fromScale(0.34, 0.34), UDim2.fromScale(0.92, 0.1)) end
+	keyCap(digBtn, "E", UDim2.fromScale(0.13, 0.5), UDim2.fromScale(0.93, 0.16))
 end
 UIS.InputBegan:Connect(function(input, gp)
 	if gp or hatchBusy then return end
@@ -881,10 +960,106 @@ UIS.InputBegan:Connect(function(input, gp)
 		R.Surface:FireServer(inMine and "up" or "down")
 	elseif k == Enum.KeyCode.G then
 		if forge.Visible then closePanel(forge) else refreshForge(); openPanel(forge) end
-	elseif k == Enum.KeyCode.T then
-		if odds.Visible then closePanel(odds) else openPanel(odds) end
 	elseif k == Enum.KeyCode.Return and sellPop.Visible then
 		R.Sell:FireServer()
+	end
+end)
+
+-- Custom interaction prompts (the user, 2026-11-08: no default Roblox prompt buttons). A cream keycap and a butter tooltip
+-- bubble with a pointer float over the object: they pop in, bob, fill while held and squash when used. Mouse and touch press
+-- the bubble itself; keys and gamepad buttons work as usual. Prompts carry Style = Custom (HubBuilder, PixelServer).
+local PPS = game:GetService("ProximityPromptService")
+local promptUI = {}
+local function promptScale() return math.clamp(workspace.CurrentCamera.ViewportSize.Y / 720, 0.7, 1.4) end
+PPS.PromptShown:Connect(function(prompt, inputType)
+	if prompt.Style ~= Enum.ProximityPromptStyle.Custom or promptUI[prompt] then return end
+	local k = promptScale()
+	local adornee = prompt.Parent
+	local lift = adornee:IsA("BasePart") and adornee.Size.Y / 2 + 2 or 2
+	-- drawn in screen space and moved to the object every frame, so it shares the HUD's pixel scale
+	local bb = new("Frame", gui, { Name = "PromptUI", BackgroundTransparency = 1, Size = UDim2.fromOffset(260 * k, 96 * k), AnchorPoint = Vector2.new(0.62, 1), ZIndex = 2 })
+	local root = new("TextButton", bb, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", AutoButtonColor = false })
+	local sc = new("UIScale", root, { Scale = 0.35 })
+	local bubble = new("Frame", root, { Name = "Bubble", Size = UDim2.fromScale(0.76, 0.78), Position = UDim2.fromScale(1, 0.02), AnchorPoint = Vector2.new(1, 0) })
+	skin(bubble, "card")
+	local action = text(bubble, prompt.ActionText, UDim2.fromScale(0.8, 0.36), UDim2.fromScale(0.5, 0.36), Vector2.new(0.5, 0.5), INK, 700, false)
+	local object = text(bubble, prompt.ObjectText, UDim2.fromScale(0.76, 0.22), UDim2.fromScale(0.5, 0.66), Vector2.new(0.5, 0.5), INK:Lerp(PLUM_SOFT, 0.35), 700, false)
+	if prompt.ObjectText == "" then
+		object.Visible = false
+		action.Position = UDim2.fromScale(0.5, 0.46)
+	end
+	new("ImageLabel", root, {
+		Name = "Pointer", BackgroundTransparency = 1, Image = SPRITE.pointer, ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit,
+		Size = UDim2.fromScale(0.12, 0.2), Position = UDim2.fromScale(0.62, 0.74), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 2,
+	})
+	local spark = new("ImageLabel", bubble, {
+		BackgroundTransparency = 1, Image = SPRITE.sparkle, ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit,
+		Size = UDim2.fromScale(0.13, 0.34), Position = UDim2.fromScale(0.97, 0.04), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4,
+	})
+	local cap = new("Frame", root, { Name = "Key", Size = UDim2.fromScale(0.28, 0.86), Position = UDim2.fromScale(0.02, 0.42), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
+	skin(cap, "keycap")
+	new("UIAspectRatioConstraint", cap, { AspectRatio = 16 / 17 })
+	if inputType == Enum.ProximityPromptInputType.Gamepad then
+		new("ImageLabel", cap, { BackgroundTransparency = 1, Image = UIS:GetImageForKeyCode(prompt.GamepadKeyCode), Size = UDim2.fromScale(0.6, 0.6), Position = UDim2.fromScale(0.5, 0.42), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4 })
+	else
+		local key = inputType == Enum.ProximityPromptInputType.Touch and "TAP" or UIS:GetStringForKeyCode(prompt.KeyboardKeyCode)
+		local kt = text(cap, key, UDim2.fromScale(#key > 1 and 0.74 or 0.5, 0.42), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), INK, 700, false)
+		kt.ZIndex = 4
+	end
+	local hold = new("Frame", bubble, { Size = UDim2.fromScale(0, 0.08), Position = UDim2.fromScale(0.1, 0.82), BackgroundColor3 = Color3.fromRGB(63, 156, 132), BorderSizePixel = 0, ZIndex = 3 })
+	tween(sc, 0.32, { Scale = 1 }, Enum.EasingStyle.Back)
+	local bob = TweenService:Create(root, TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Position = UDim2.fromScale(0, -0.06) })
+	bob:Play()
+	local twinkle = TweenService:Create(spark, TweenInfo.new(0.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Rotation = 45, ImageTransparency = 0.5 })
+	twinkle:Play()
+	root.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then prompt:InputHoldBegin() end
+	end)
+	root.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then prompt:InputHoldEnd() end
+	end)
+	local conns = {
+		prompt.PromptButtonHoldBegan:Connect(function()
+			skin(cap, "keycapDown")
+			hold.Size = UDim2.fromScale(0, 0.08)
+			tween(hold, prompt.HoldDuration, { Size = UDim2.fromScale(0.8, 0.08) }, Enum.EasingStyle.Linear)
+		end),
+		prompt.PromptButtonHoldEnded:Connect(function()
+			skin(cap, "keycap")
+			tween(hold, 0.15, { Size = UDim2.fromScale(0, 0.08) })
+		end),
+		prompt.Triggered:Connect(function()
+			sc.Scale = 0.8
+			tween(sc, 0.45, { Scale = 1 }, Enum.EasingStyle.Elastic)
+			skin(cap, "keycapDown")
+			task.delay(0.12, function() if cap.Parent then skin(cap, "keycap") end end)
+			if sfxClick then sfxClick() end
+		end),
+	}
+	promptUI[prompt] = { bb = bb, sc = sc, conns = conns, tweens = { bob, twinkle }, adornee = adornee, lift = lift }
+end)
+PPS.PromptHidden:Connect(function(prompt)
+	local u = promptUI[prompt]
+	if not u then return end
+	promptUI[prompt] = nil
+	for _, c in u.conns do c:Disconnect() end
+	for _, t in u.tweens do t:Cancel() end
+	tween(u.sc, 0.14, { Scale = 0.3 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+	task.delay(0.15, function() u.bb:Destroy() end)
+end)
+RunService.RenderStepped:Connect(function()
+	local cam = workspace.CurrentCamera
+	for _, u in promptUI do
+		local a = u.adornee
+		local p = (a:IsA("BasePart") and a.Position or (a:IsA("Attachment") and a.WorldPosition or Vector3.zero)) + Vector3.new(0, u.lift, 0)
+		local v, on = cam:WorldToScreenPoint(p)
+		u.bb.Visible = on
+		u.bb.Position = UDim2.fromOffset(v.X, v.Y)
+	end
+end)
+PPS.PromptTriggered:Connect(function(prompt) -- client-only stations
+	if prompt.Parent and prompt.Parent:GetAttribute("Station") == "odds" then
+		if odds.Visible then closePanel(odds) else openPanel(odds) end
 	end
 end)
 
@@ -912,11 +1087,15 @@ local TIER_TINT = { -- one colour per pickaxe (Pickaxe Forge palette)
 local function tierIcon(card, def, owned, isNext, locked)
 	card.icon.ImageColor3 = card.icon:GetAttribute("Tint") or WHITE
 	card.icon.ImageTransparency = 0
-	setKind(card.frame, isNext and "card" or "pill")
+	setKind(card.frame, isNext and "card" or "slot")
 end
 refreshForge = function()
 	if not state then return end
-	for what, tb in tabs do setKind(tb, what == tabWhat and "lilac" or "off") end
+	for what, tb in tabs do
+		setKind(tb, what == tabWhat and "tabOn" or "tab")
+		local lab = tb:FindFirstChild("Label")
+		if lab then lab.TextColor3 = what == tabWhat and INK or WHITE; lab.TextStrokeTransparency = what == tabWhat and 1 or 0 end
+	end
 	local list = tabWhat == "pick" and C.PICKS or C.PACKS
 	local cur = state[tabWhat]
 	for i, card in cards do

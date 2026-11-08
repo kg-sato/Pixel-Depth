@@ -783,6 +783,7 @@ local function buildShrine(s, f, L, r0)
 	chest:SetAttribute("Lid", lid.Name)
 	local pr = Instance.new("ProximityPrompt")
 	pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.RequiresLineOfSight, pr.MaxActivationDistance = "Open", "Shrine chest", Enum.KeyCode.F, false, 10
+	pr.Style = Enum.ProximityPromptStyle.Custom -- drawn by PixelClient
 	pr.Parent = chest
 	pr.Triggered:Connect(function(plr)
 		if plr ~= s.player or chest:GetAttribute("Opened") then return end
@@ -824,6 +825,7 @@ local function buildStatic(s)
 	up.Parent = f
 	local pr = Instance.new("ProximityPrompt")
 	pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.RequiresLineOfSight, pr.MaxActivationDistance = "Ride up", "Lift", Enum.KeyCode.F, false, 12
+	pr.Style = Enum.ProximityPromptStyle.Custom -- drawn by PixelClient
 	pr.Parent = up
 	pr.Triggered:Connect(function(plr)
 		local hrp = hrpOf(plr)

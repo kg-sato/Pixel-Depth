@@ -334,11 +334,31 @@ def cobble_soft(seed=12, n=7):
     return im
 
 
+def cobble_lane(seed=21, n=6):
+    """Lane cobbles: big rounded stones in lilac grey with moss in some of the joints and a lit top edge on each stone."""
+    r = RAMP["cobble"]
+    rv = random.Random(seed)
+    pts = [(rv.uniform(0, N), rv.uniform(0, N), rv.random()) for _ in range(n)]
+    im = img()
+    for y in range(N):
+        for x in range(N):
+            ds = sorted((math.hypot(x - px - ox, y - py - oy), py + oy, tone) for px, py, tone in pts for ox in (-N, 0, N) for oy in (-N, 0, N))
+            (d1, cy, tone), d2 = ds[0], ds[1][0]
+            if d2 - d1 < 1.4:
+                moss = fbm(x / N, y / N, seed + 5, base=3) > 0.55
+                put(im, x, y, RAMP["moss"][1] if moss else RAMP["mortar"][1])
+            else:
+                edge = min(1.0, (d2 - d1) / 5)
+                t = 0.35 + tone * 0.25 + (0.22 if y < cy - 2.5 else (-0.12 if y > cy + 3 else 0)) * edge + fbm(x / N, y / N, seed, base=8, octs=1) * 0.1
+                put(im, x, y, pick(r, t, x, y, 0.05))
+    return im
+
+
 TEX = {
     "planks": lambda: planks(), "planks_light": lambda: planks(seed=4, board=8), "logs": logs, "stonebrick": bricks,
     "cobble": cobble, "shingle_teal": lambda: shingles("teal"), "shingle_plum": lambda: shingles("plum", seed=14),
     "moss_roof": moss_roof, "awning": awning, "plaster": plaster, "beam": beam, "bark": bark, "rockface": rockface,
-    "leaves": leaves, "path": path, "iron": iron, "glass": glass, "wood_frame": wood_frame, "flagstone": flagstone, "cobble_soft": cobble_soft,
+    "leaves": leaves, "path": path, "iron": iron, "glass": glass, "wood_frame": wood_frame, "flagstone": flagstone, "cobble_soft": cobble_soft, "cobble_lane": cobble_lane,
 }
 
 if __name__ == "__main__":
