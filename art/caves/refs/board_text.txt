@@ -1,0 +1,111 @@
+ 
+ Pixel Depth - Production Reference Artboard 
+ Pixel Depth: Subterranean Exploration Rework Reference Artboard
+ Production Master Reference Board — Zero-Overlap Two-Column Architecture
+ 1. Huge Dark Voxel Caves (ENV-01 to ENV-03)
+ Feature 1: Huge Dark Voxel Caves
+ Core Concept: Replace corridor mining with vast cavern exploration inside the roots of the World Tree.
+ ENV-01: Colossal Voxel Chasm & Rope Bridge
+ What to Copy: Colossal vertical scale, natural rock ramps, deep lilac/plum drop-offs with mint moss.
+ What to Ignore: Gritty photorealism and monotone grey dirt.
+ ENV-02: Flooded Sunken Crystal Grotto
+ What to Copy: Luminous aqua water depth, submerged Norse rune pillars, rising air bubbles, violet quartz.
+ What to Ignore: Top-down 2D grid movement.
+ ENV-03: Root Tunnel Mushroom Squeeze
+ What to Copy: Dramatic tight root crawlway opening into towering bioluminescent fungal spore chambers.
+ What to Ignore: Smooth clay terrain. Maintain crisp 32px cubic voxel fidelity.
+ ENV-01: Colossal Voxel Chasm & Rope Bridge
+ ENV-02: Flooded Sunken Crystal Grotto
+ ENV-03: Root Tunnel Mushroom Squeeze
+ 2. Torch Light & Illumination Progression (LGT-01 to LGT-02)
+ Feature 2: Torch Light & Illumination Progression
+ Core Concept: Light is your lifeline and primary survival resource. Fuel decays over 180 seconds.
+ LGT-01: Torch Radius & Dynamic Shadows
+ What to Copy: Warm amber spherical light boundary casting crisp voxel block shadows, shrinking as fuel drains.
+ What to Ignore: Grim pitch-black blinding darkness; keep silhouettes readable.
+ LGT-02: 3-Tier Held Illumination Progression
+ Tier 1: Rough Wooden Torch: 18-stud radius, flickering flame, amber sparks.
+ Tier 2: Brass Miner Lantern: 28-stud radius, steady beam, directional forward cone.
+ Tier 3: Runic Crystal Lamp: 40-stud radius, prismatic aura, orbiting pastel motes.
+ What to Copy: Clear visual evolution from survival fire to magical artifact.
+ What to Ignore: Blinding lens flares.
+ LGT-01: Torch Radius & Dynamic Shadows
+ LGT-02: 3-Tier Held Items Progression
+ 3. Safe Underground Camps (CMP-01 to CMP-02)
+ Feature 3: Safe Underground Camps & Sanctuaries
+ Core Concept: Fixed depth-band checkpoints that never move during hourly cave rebuilds.
+ CMP-01: Main Camp Sanctuary
+ Elements: Campfire, pastel pup-tents, supply stall, lift winch, glowing runic boundary.
+ What to Copy: Emotional relief, warm ambient light, automatic ore deposit & 100% torch relight.
+ What to Ignore: Tedious survival micromanagement.
+ CMP-02: 3 Deep Biome Camps
+ Geode Camp: Amethyst canopy in Glitterhall.
+ Thermal Camp: Obsidian hearth and steam forge in Muspell.
+ Flooded Camp: Floating bamboo docks in Mimir's Well.
+ CMP-01: Underground Safe Camp Sanctuary
+ CMP-02: 3 Deep Biome Camp Variations
+ 4. Gloomlings - Creature Design & Light Reactions (GLM-01 to GLM-02)
+ Feature 4: Gloomlings (Semi-Scary Cute Creatures)
+ Core Concept: Fluffy shadowy soot-sprites with glowing eyes that hate light. They stalk dimming torches.
+ GLM-01: Gloomling Species Sheet
+ Muck-Pup (Swarmer): Round fluffy soot body, huge amber eyes, tiny smoke paws.
+ Shadow-Stalker (Lurker): Sleek silhouette clinging to cave ceilings with cyan eyes.
+ Gloom-Brute (Titan): Massive rotund soot titan with stubby magenta horns.
+ GLM-02: Behavioral Reactions
+ Eyes in the Dark: Blinking glowing eyes in unlit tunnels.
+ Stalking: Creeps forward in the penumbra when torch is low.
+ Flare Panic: Blinding light flattens them into comical pancakes as they scatter into wall cracks.
+ What to Ignore: Gore, teeth, realistic claws, or scary shrieks.
+ GLM-01: Gloomling Species Sheet
+ GLM-02: Gloomling Behavioral Light Reactions
+ 5. Hidden Ores & Extraction Minigames (ORE & EXT)
+ Feature 5 & 6: Ores & Extraction Minigames
+ Core Concept: Ores shimmer with periodic distance glints. Mining is an active timing/rhythm minigame.
+ ORE-01 & ORE-02: Ores & Shimmer Shader
+ Distance Glint: Starburst glints pulse every 3s through the dark to reward attentive explorers.
+ 7 Layer Ores: Kobold-copper, Rune-tin, Valkyrie sapphire, Muspell ruby, Mimir pearl, Spore-opal, Worldheart.
+ EXT-01: Perfect Strike (Common Ores)
+ 1.0s rotating needle sweep. 15° golden arc yields bonus loot and resonant chime.
+ EXT-02: Vein Rush (Rare+ Crystals)
+ Timberman-style mobile split-screen (Chisel Left / Right). Dodge red crystal crack hazards across 8-12 beats.
+ Dynamic gem quality: Flawless (3★) > Pristine > Standard > Chipped.
+ ORE-01: Cavern Distance Glint Shimmer
+ ORE-02: 7-Layer Embedded Ore Clusters
+ EXT-01: Perfect Strike Needle Dial UI
+ EXT-02: Vein Rush Chisel & Grade UI
+ 6. Survival HUD & Cavern Events (HUD & EVT)
+ Feature 7 & Priority 2: Survival HUD & Cavern Events
+ Mobile Layout: Pastel pixel kit optimized for two-thumb landscape gameplay on phones.
+ HUD-01: Composite Cavern HUD
+ Fear Face Badge: Dynamic pixel portrait changes expression as light drains.
+ Torch Fuel Meter: Amber flame bar with percentage readout.
+ Compass Ribbon & Fog Minimap: Camp directions and explored cave corridors.
+ HUD-02 & EVT-01: Hourly Roots Stirring Shift
+ T-2:00 Warning Banner pulses across screen.
+ At T=0, World Tree roots twist and carry un-camped miners down smooth root slides into safe camp.
+ GLM-03: Getting Caught (Ore Spill)
+ Playful comic BONK stumble, 25% unbanked ore drops, 3.0s golden light shield activates to allow escape.
+ HUD-01: In-Cavern Survival HUD
+ HUD-02: Event Banners & Sanctuary Feedback
+ GLM-03: Getting Caught Comic Stumble
+ EVT-01: Hourly Roots Stirring Slide Evacuation
+ 7. Co-Op, Traversal & Roadmap Features (COP, TRV, WPN, CST)
+ Priority 2 & 3: Systems & Roadmap
+ COP-01: Shared Deposit Co-Op Mining
+ Multiple miners strike the same crystal spire; resonant lightning connects their tools.
+ Extraction speed scales by +35% per miner; loot is 100% individual (no stealing).
+ TRV-01: Dynamic Cavern Traversal
+ Rope vine swings across chasms, high-speed ziplines, and voxel minecart tracks.
+ WPN-01: Flares and Light Defense
+ Thrown flares emit 30-stud shockwaves that scatter Gloomlings in comic panic.
+ CST-01, MIN-03, MIN-04: Roadmap Features
+ CST-01: 3D turntable avatar wardrobe menu with cosmetic categories.
+ MIN-03: Acoustic wall tapping Minesweeper prospecting for hidden hollows.
+ MIN-04: Safe camp concentric runic ring puzzle for cracking sealed geodes.
+ COP-01: Co-op Shared Spire Extraction
+ TRV-01: Cavern Traversal Systems
+ WPN-01: Flare Toss Gloomling Scatter
+ CST-01: Character Customization Turntable
+ MIN-03: Acoustic Wall Tapping Prospecting
+ MIN-04: Geode Lock Cracker Runic Puzzle
+ 
