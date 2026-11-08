@@ -15,6 +15,7 @@ local cam = workspace.CurrentCamera
 local B = C.B
 local state, blocks
 local hatchBusy, inMine = false, false
+local inCave = false -- in the shared caves (cave rework): first person, torch and fear, no block digging
 
 local function hrp()
 	local ch = plr.Character
@@ -1348,20 +1349,163 @@ R.State.OnClientEvent:Connect(function(s)
 	syncPets()
 end)
 
--- Camera modes: bird's-eye follow camera in the hub, first person in the mine
+-- Caves (cave rework, refs LGT-01, HUD-01): torch meter and fear badge bottom left, compass ribbon to camp at the top.
+-- The torch dims from full to its dimmest glow over C.TORCH.time (5 minutes); inside Camp 1's ring it relights and fear clears.
+-- shortcut: the torch and fear run on the client for the prototype; move them to the server when gloomling catches cost ore.
+local caveHud, cave, caveLighting, caveStep -- one scope for the cave HUD keeps the script under Luau's 200-local limit
+do
+	caveHud = new("Frame", gui, { Name = "CaveHud", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Visible = false })
+	local torchPill = panel(caveHud, S(270, 52), S(20, 470), nil, "pill")
+	fit(torchPill, 270, 52)
+	torchPill.Name = "TorchPill"
+	local flameBox = new("Frame", torchPill, { Size = UDim2.fromScale(0.12, 0.62), Position = UDim2.fromScale(0.05, 0.5), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.fromRGB(255, 150, 60), BorderSizePixel = 0, ZIndex = 3 })
+	new("UIAspectRatioConstraint", flameBox, { AspectRatio = 0.75 })
+	local flameCore = new("Frame", flameBox, { Size = UDim2.fromScale(0.5, 0.55), Position = UDim2.fromScale(0.5, 0.62), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 236, 160), BorderSizePixel = 0, ZIndex = 4 })
+	local torchText = text(torchPill, "TORCH 100%", UDim2.fromScale(0.7, 0.34), UDim2.fromScale(0.22, 0.14), nil, WHITE)
+	torchText.TextXAlignment = Enum.TextXAlignment.Left
+	local torchTrack = new("Frame", torchPill, { Size = UDim2.fromScale(0.72, 0.2), Position = UDim2.fromScale(0.22, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
+	local torchFill = new("Frame", torchTrack, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 176, 70), BorderSizePixel = 0, ZIndex = 3 })
+
+	local fearPill = panel(caveHud, S(270, 52), S(20, 528), nil, "pill")
+	fit(fearPill, 270, 52)
+	fearPill.Name = "FearPill"
+	local face = new("Frame", fearPill, { Size = UDim2.fromScale(0.15, 0.7), Position = UDim2.fromScale(0.04, 0.5), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 3 })
+	new("UIAspectRatioConstraint", face, { AspectRatio = 1 })
+	new("UIStroke", face, { Color = INK, Thickness = 2 })
+	local eyes = {}
+	for _, x in { 0.3, 0.7 } do eyes[#eyes + 1] = new("Frame", face, { Size = UDim2.fromScale(0.16, 0.2), Position = UDim2.fromScale(x, 0.38), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 4 }) end
+	local mouth = new("Frame", face, { Size = UDim2.fromScale(0.4, 0.1), Position = UDim2.fromScale(0.5, 0.72), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 4 })
+	local fearText = text(fearPill, "CALM", UDim2.fromScale(0.7, 0.34), UDim2.fromScale(0.23, 0.14), nil, WHITE)
+	fearText.TextXAlignment = Enum.TextXAlignment.Left
+	local fearTrack = new("Frame", fearPill, { Size = UDim2.fromScale(0.71, 0.2), Position = UDim2.fromScale(0.23, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
+	local fearFill = new("Frame", fearTrack, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = LILAC, BorderSizePixel = 0, ZIndex = 3 })
+
+	-- compass ribbon: ticks for the four directions and a tent marker pointing to Camp 1
+	local compass = panel(caveHud, S(440, 40), S(640, 92), Vector2.new(0.5, 0), "pill")
+	fit(compass, 440, 40)
+	compass.Name, compass.ClipsDescendants = "Compass", true
+	local compassMarks = {}
+	for _, m in { { "N", 0 }, { "E", math.pi / 2 }, { "S", math.pi }, { "W", -math.pi / 2 } } do
+		local l = text(compass, m[1], UDim2.fromScale(0.06, 0.6), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), LILAC)
+		compassMarks[#compassMarks + 1] = { label = l, a = m[2] }
+	end
+	local campMark = new("Frame", compass, { Size = UDim2.fromScale(0.11, 0.8), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 4 })
+	new("UICorner", campMark, { CornerRadius = UDim.new(0, 4) })
+	local campText = text(campMark, "CAMP", UDim2.fromScale(0.9, 0.7), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), INK, 700, false)
+	campText.ZIndex = 5
+	local relitBanner = panel(caveHud, S(420, 54), S(640, 150), Vector2.new(0.5, 0), "card")
+	fit(relitBanner, 420, 54)
+	relitBanner.Visible = false
+	local relitText = text(relitBanner, "TORCH RELIT", UDim2.fromScale(0.86, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), INK, 700, false)
+
+	cave = { relitAt = os.clock(), saved = nil, wasInCamp = true, fuel = 1, fear = 0 }
+	local Lighting = game:GetService("Lighting")
+	caveLighting = function(on) -- swap the camp look for C.CAVE_LIGHT and back (each property in a pcall: some may be locked)
+		if on and not cave.saved then
+			cave.saved = {}
+			for name, props in C.CAVE_LIGHT do
+				local o = name == "Lighting" and Lighting or Lighting:FindFirstChild(name)
+				if not o and name == "DepthOfField" then
+					o = new("DepthOfFieldEffect", Lighting, { Name = "DepthOfField" })
+					cave.dof = o
+				end
+				if o then
+					for k, v in props do
+						local ok, old = pcall(function() return o[k] end)
+						if ok then
+							table.insert(cave.saved, { o, k, old })
+							pcall(function() o[k] = v end)
+						end
+					end
+				end
+			end
+		elseif not on and cave.saved then
+			for _, e in cave.saved do pcall(function() e[1][e[2]] = e[3] end) end
+			cave.saved = nil
+			if cave.dof then cave.dof:Destroy() cave.dof = nil end
+		end
+	end
+	local function inCamp(pos)
+		local o = C.CAVE_ORIGIN
+		return Vector2.new(pos.X - o.X, pos.Z - o.Z).Magnitude < C.CAMP_RING and math.abs(pos.Y - o.Y) < 30
+	end
+	local function wrapAngle(a) return (a + math.pi) % (2 * math.pi) - math.pi end
+	caveStep = function(now)
+		local h = hrp()
+		if not h then return end
+		local here = inCamp(h.Position)
+		if here then
+			if cave.fuel < 0.95 and not cave.wasInCamp then -- coming home: TORCH RELIT banner (HUD-02)
+				relitBanner.Visible = true
+				relitText.Text = "TORCH RELIT  -  SAFE AT CAMP"
+				pop(relitBanner, 1.3, 0.3)
+				task.delay(2.2, function() relitBanner.Visible = false end)
+			end
+			cave.relitAt = now
+		end
+		cave.wasInCamp = here
+		local age = plr:GetAttribute("DevTorchAge") -- Studio test hook: age the torch by this many seconds
+		if age then cave.relitAt = now - age plr:SetAttribute("DevTorchAge", nil) end
+		cave.fuel = math.clamp(1 - (now - cave.relitAt) / C.TORCH.time, 0, 1)
+		cave.fear = here and 0 or math.clamp((1 - cave.fuel) * 1.15 - 0.1, 0, 1)
+		-- the torch: the head lantern shrinks and dims with the fuel and flickers like a flame (LGT-01)
+		local hd = head()
+		local lantern = hd and hd:FindFirstChild("Lantern")
+		if lantern then
+			local flick = math.noise(now * 6, 1.7) * 0.18 + math.noise(now * 17, 4.2) * 0.08
+			lantern.Color = Color3.fromRGB(255, 196, 120)
+			lantern.Range = C.TORCH.minRange + (C.TORCH.range - C.TORCH.minRange) * cave.fuel ^ 0.7 + flick * 2
+			lantern.Brightness = 0.3 + 0.9 * cave.fuel + flick * 0.6 -- soft: at full strength it blew out nearby surfaces
+		end
+		torchFill.Size = UDim2.fromScale(cave.fuel, 1)
+		torchFill.BackgroundColor3 = cave.fuel > 0.3 and Color3.fromRGB(255, 176, 70) or Color3.fromRGB(255, 110, 90)
+		torchText.Text = "TORCH " .. math.floor(cave.fuel * 100 + 0.5) .. "%"
+		flameBox.Size = UDim2.fromScale(0.08 + 0.05 * cave.fuel + math.abs(math.noise(now * 5)) * 0.01, 0.4 + 0.25 * cave.fuel)
+		fearFill.Size = UDim2.fromScale(cave.fear, 1)
+		fearFill.BackgroundColor3 = LILAC:Lerp(PINK, cave.fear)
+		fearText.Text = cave.fear < 0.25 and "CALM" or (cave.fear < 0.6 and "UNEASY" or "SCARED")
+		-- the face badge: eyes widen and the mouth drops open as fear rises (HUD-01 fear face)
+		for _, e in eyes do e.Size = UDim2.fromScale(0.16 + cave.fear * 0.08, 0.2 + cave.fear * 0.12) end
+		mouth.Size = UDim2.fromScale(0.4 - cave.fear * 0.18, 0.1 + cave.fear * 0.18)
+		face.Rotation = cave.fear > 0.6 and math.sin(now * 40) * 4 * (cave.fear - 0.6) or 0
+		-- compass: marks slide by the angle between the camera heading and each direction
+		local lv = cam.CFrame.LookVector
+		local heading = math.atan2(lv.X, -lv.Z)
+		local span = math.rad(110)
+		for _, m in compassMarks do
+			local d = wrapAngle(m.a - heading)
+			m.label.Visible = math.abs(d) < span / 2
+			m.label.Position = UDim2.fromScale(0.5 + d / span, 0.5)
+		end
+		local to = C.CAVE_ORIGIN - h.Position
+		local ca = math.atan2(to.X, -to.Z)
+		local d = wrapAngle(ca - heading)
+		campMark.Position = UDim2.fromScale(0.5 + math.clamp(d / span, -0.44, 0.44), 0.5)
+		campMark.BackgroundColor3 = math.abs(d) < span / 2 and BUTTER or Color3.fromRGB(255, 236, 190)
+		campText.Text = here and "CAMP" or ("CAMP " .. math.floor(to.Magnitude / 4 + 0.5) .. "m")
+	end
+end
+
+-- Camera modes: bird's-eye follow camera in the hub, first person in the mine and the caves
 local lookDownUntil = 0
 local atmo = game:GetService("Lighting"):FindFirstChildOfClass("Atmosphere")
 local atmoCamp = atmo and { Density = atmo.Density, Offset = atmo.Offset, Haze = atmo.Haze, Color = atmo.Color, Decay = atmo.Decay }
 local ATMO_MINE = { Density = 0.62, Offset = 0, Haze = 0.8, Color = Color3.fromRGB(46, 32, 70), Decay = Color3.fromRGB(26, 18, 44) }
-local function setMode(mine)
-	inMine = mine
-	if mine then lookDownUntil = os.clock() + 0.35 end
+local function setMode(mine, inCaves)
+	inMine = mine and not inCaves
+	inCave = inCaves == true
+	if inMine then lookDownUntil = os.clock() + 0.35 end
 	atmo = atmo or game:GetService("Lighting"):FindFirstChildOfClass("Atmosphere")
-	if atmo then
+	if atmo and not inCave then
 		atmoCamp = atmoCamp or { Density = atmo.Density, Offset = atmo.Offset, Haze = atmo.Haze, Color = atmo.Color, Decay = atmo.Decay }
-		for k, v in (mine and ATMO_MINE or atmoCamp) do atmo[k] = v end
+		for k, v in (inMine and ATMO_MINE or atmoCamp) do atmo[k] = v end
 	end
-	cross.Visible, digBtn.Visible = mine, mine
+	caveLighting(inCave)
+	caveHud.Visible = inCave
+	strip.Visible = not inCave -- the block-mine depth strip has no meaning in the caves
+	if inCave then cave.relitAt, cave.wasInCamp = os.clock(), true end
+	mine = inMine or inCave
+	cross.Visible, digBtn.Visible = inMine, inMine
 	railLift.Text = mine and "SURFACE" or "MINE"
 	setKind(railLift, mine and "sky" or "butter")
 	if mine then
@@ -1380,12 +1524,14 @@ local function setMode(mine)
 		if vm then vm:Destroy() vm = nil vmTier = nil end
 	end
 end
-plr:GetAttributeChangedSignal("InMine"):Connect(function() setMode(plr:GetAttribute("InMine") == true) end)
+local function modeNow() return plr:GetAttribute("InMine") == true or plr:GetAttribute("InCave") == true, plr:GetAttribute("InCave") == true end
+plr:GetAttributeChangedSignal("InMine"):Connect(function() setMode(modeNow()) end)
+plr:GetAttributeChangedSignal("InCave"):Connect(function() setMode(modeNow()) end)
 plr.CharacterAdded:Connect(function()
 	vm, vmTier = nil, nil
-	task.defer(setMode, plr:GetAttribute("InMine") == true)
+	task.defer(function() setMode(modeNow()) end)
 end)
-setMode(plr:GetAttribute("InMine") == true)
+setMode(modeNow())
 
 -- Server FX events
 R.Fx.OnClientEvent:Connect(function(kind, ...)
@@ -1588,7 +1734,8 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	end
 	shakeAmp *= math.exp(-dt * 12)
 	fovKick *= math.exp(-dt * 8)
-	if inMine then
+	if inCave then caveStep(now) end
+	if inMine or inCave then
 		cam.FieldOfView = C.FP_FOV + fovKick
 		local hd = head()
 		if now < lookDownUntil and hd then
@@ -1607,14 +1754,14 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		cam.CFrame = CFrame.lookAt(focus + dir * C.CAM_DIST + off, focus + off)
 	end
 	local modal = forge.Visible or odds.Visible or mapP.Visible or night.Visible
-	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired
+	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and not inCave
 	if modal ~= scrim.Visible then
 		scrim.Visible = true
 		tween(scrim, 0.2, { BackgroundTransparency = modal and 0.25 or 1 })
 		if not modal then task.delay(0.2, function() if scrim.BackgroundTransparency > 0.95 then scrim.Visible = false end end) end
 	end
 	-- a free mouse while a panel is open (or Left Alt is held) so PC players can click the HUD in first person
-	if inMine then
+	if inMine or inCave then
 		local free = forge.Visible or odds.Visible or sellPop.Visible or mapP.Visible or night.Visible or UIS:IsKeyDown(Enum.KeyCode.LeftAlt)
 		if free then
 			UIS.MouseBehavior = Enum.MouseBehavior.Default
@@ -1624,7 +1771,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		UIS.MouseIconEnabled = true
 	end
 	-- first-person pickaxe swing: wind-up, fast strike, short hold, recover; walking bob
-	if vm and inMine then
+	if vm and (inMine or inCave) then
 		local t = now - swingT0
 		local a = 0
 		if t < 0.07 then a = -0.8 * t / 0.07

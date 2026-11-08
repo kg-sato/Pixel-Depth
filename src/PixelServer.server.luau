@@ -11,6 +11,7 @@ local IS_STUDIO = game:GetService("RunService"):IsStudio()
 local C = require(RS:WaitForChild("Shared"):WaitForChild("Config"))
 local ProfileStore = require(game:GetService("ServerScriptService"):WaitForChild("ProfileStore"))
 local HubBuilder = require(game:GetService("ServerScriptService"):WaitForChild("HubBuilder"))
+local CaveBuilder = require(game:GetService("ServerScriptService"):WaitForChild("CaveBuilder"))
 local Store = ProfileStore.New(C.SAVE_STORE, C.SAVE_TEMPLATE)
 
 local B, W = C.B, C.MINE_W
@@ -35,6 +36,16 @@ if oldHub then oldHub:Destroy() end
 local hub = HubBuilder.build(workspace, Vector3.zero)
 local HUB_SPAWN = hub:FindFirstChild("SpawnPoint").CFrame
 local HUB_SELL = hub:FindFirstChild("SellPoint", true)
+
+-- Caves (cave exploration rework): one shared cave world per server, built from the hour's seed at C.CAVE_ORIGIN.
+-- The lift takes players to Camp 1 instead of their private block mine while C.CAVES_ON is true (the old mine code stays).
+local caveLanding
+if C.CAVES_ON then
+	local oldCaves = workspace:FindFirstChild("Caves") -- an Edit-mode preview may be saved in the place
+	if oldCaves then oldCaves:Destroy() end
+	local caves = CaveBuilder.build(workspace, C.CAVE_ORIGIN, os.time() // 3600)
+	caveLanding = caves:FindFirstChild("LiftLanding", true)
+end
 
 local plots = Instance.new("Folder")
 plots.Name = "Shafts"
@@ -635,6 +646,7 @@ SellR.OnServerEvent:Connect(function(plr) -- the lift: ride up to the sell stall
 	if not s or not hrp then return end
 	hrp.CFrame = HUB_SELL and (HUB_SELL.CFrame * CFrame.Angles(0, math.pi, 0) + Vector3.new(0, 1, 0)) or spawnCFrame() -- face the stall
 	plr:SetAttribute("InMine", false)
+	plr:SetAttribute("InCave", false)
 	FxR:FireClient(plr, "lift", false)
 	sell(s)
 end)
@@ -650,13 +662,21 @@ SurfaceR.OnServerEvent:Connect(function(plr, dir) -- the rail lift button: "down
 	if s and hrp then
 		hrp.CFrame = spawnCFrame()
 		plr:SetAttribute("InMine", false)
+		plr:SetAttribute("InCave", false)
 		FxR:FireClient(plr, "lift", false)
 	end
 end)
 
 enterMine = function(s)
 	local hrp = hrpOf(s.player)
-	if not hrp or s.player:GetAttribute("InMine") then return end
+	if not hrp or s.player:GetAttribute("InMine") or s.player:GetAttribute("InCave") then return end
+	if caveLanding then
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
+		s.player:SetAttribute("InCave", true)
+		FxR:FireClient(s.player, "lift", true)
+		return
+	end
 	s.pr = -99 -- render the landing now
 	hrp.AssemblyLinearVelocity = Vector3.zero
 	hrp.CFrame = landingCFrame(s)
@@ -948,6 +968,7 @@ local function onJoin(plr)
 		task.wait()
 		hrp.CFrame = spawnCFrame()
 		plr:SetAttribute("InMine", false)
+		plr:SetAttribute("InCave", false)
 		local head = ch:FindFirstChild("Head") or hrp
 		local lantern = Instance.new("PointLight") -- the miner's lantern: the mine is dark, light comes from you and the glowing things
 		lantern.Name, lantern.Color, lantern.Range, lantern.Brightness, lantern.Shadows = "Lantern", Color3.fromRGB(255, 220, 180), 28, 1.1, true
@@ -1030,7 +1051,7 @@ while true do
 				sendState(s)
 			end
 		end
-		if hrp then
+		if hrp and not plr:GetAttribute("InCave") then
 			local r, c, d = cellOf(s, hrp.Position)
 			if r ~= s.pr or c ~= s.pc or d ~= s.pd then
 				s.pr, s.pc, s.pd = r, c, d

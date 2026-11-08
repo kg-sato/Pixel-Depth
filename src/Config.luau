@@ -216,6 +216,9 @@ C.FP_FOV = 80
 
 
 -- Caves (cave exploration rework; vault Projects/Pixel-_/Briefs/Cave Exploration Rework.md and Cave Rework Reference Board)
+C.CAVES_ON = true -- the lift goes to the shared caves; false brings back the private block mines
+C.TORCH = { time = 300, range = 18, minRange = 6 } -- full light to the dimmest glow in 5 minutes (the user, 2026-11-08); wooden torch radius 18 studs (LGT-02)
+C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
 -- Cave lighting preset, applied by the client on entering the caves and undone at camp. From the lighting video the user sent
 -- (https://www.youtube.com/watch?v=adgCWET34rU): realistic style, tinted ambient so shadows keep colour, low diffuse, punchy
