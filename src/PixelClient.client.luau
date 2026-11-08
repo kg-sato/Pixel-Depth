@@ -133,6 +133,7 @@ local function closePanel(o)
 	end)
 end
 
+local sfxClick -- set once the sound bank exists
 -- Button: transparent TextButton, pastel skin, an optional icon and a PixelText label that mirrors .Text; squash on press
 local function button(parent, label, size, pos, anchor, kind, iconName, vertical)
 	local b = new("TextButton", parent, {
@@ -156,7 +157,10 @@ local function button(parent, label, size, pos, anchor, kind, iconName, vertical
 	local sc = scaler(b)
 	b.MouseEnter:Connect(function() tween(sc, 0.12, { Scale = 1.06 }) end)
 	b.MouseLeave:Connect(function() tween(sc, 0.15, { Scale = 1 }) end)
-	b.MouseButton1Down:Connect(function() tween(sc, 0.07, { Scale = 0.88 }) end)
+	b.MouseButton1Down:Connect(function()
+		tween(sc, 0.07, { Scale = 0.88 })
+		if sfxClick then sfxClick() end
+	end)
 	b.MouseButton1Up:Connect(function() tween(sc, 0.45, { Scale = 1 }, Enum.EasingStyle.Elastic) end)
 	return b
 end
@@ -409,6 +413,30 @@ local function setGold(n)
 	end
 end
 
+-- Sound effects (Creator Store audio, free: ProSoundEffects where available). Each play varies the pitch a little.
+local SFX = {
+	-- name = { asset id, volume, seconds to play at most (some library sounds are long takes) }
+	swing = { 9119710806, 0.35 }, hit = { 9118582313, 0.45, 0.28 }, clink = { 9116651251, 0.5, 0.6 }, breakRock = { 9118587698, 0.55, 0.9 },
+	coin = { 113730061669739, 0.5 }, click = { 17779566040, 0.5, 0.4 }, upgrade = { 135996502799215, 0.6 }, sparkle = { 132381858621446, 0.55, 1.4 },
+}
+local soundBank = {}
+for name, s in SFX do
+	soundBank[name] = new("Sound", game:GetService("SoundService"), { Name = "Pixel_" .. name, SoundId = "rbxassetid://" .. s[1], Volume = s[2] })
+end
+local sfx
+sfx = function(name, pitch)
+	local base = soundBank[name]
+	if not base then return end
+	local s = base:Clone()
+	s.PlaybackSpeed = (pitch or 1) * (0.94 + math.random() * 0.12)
+	s.Parent = game:GetService("SoundService")
+	s:Play()
+	local len = SFX[name][3]
+	if len then task.delay(len, function() tween(s, 0.08, { Volume = 0 }) end) end
+	task.delay(math.min(s.TimeLength > 0 and s.TimeLength or 3, len and len + 0.2 or 3), function() s:Destroy() end)
+end
+sfxClick = function() sfx("click") end
+
 -- World FX
 local fx = new("Folder", workspace, { Name = "ClientFX" })
 local function anchor(size)
@@ -514,7 +542,23 @@ local aim = new("Highlight", fx, { FillColor = WHITE, FillTransparency = 0.82, O
 -- Rarity tags: rare blocks carry Tag ("1 IN 104") and TagColor; draw a framed tag and an outline when they appear
 local function tagBlock(p)
 	local ore = p:GetAttribute("Ore")
-	if ore then -- valuable ore glints so the walls are not one muddy colour
+	if ore then -- valuable ore pokes out of the rock in chunky facets and glints
+		for _, d in p:GetChildren() do
+			if d:IsA("Decal") and not d.Name:find("^Crack") then
+				local n = Vector3.FromNormalId(d.Face)
+				for k = 1, 2 do
+					local sz = 0.6 + ((p.Position.X * 7 + k * 13) % 4) * 0.12
+					local off = Vector3.new(((k * 37 + p.Position.Y) % 3) - 1, ((k * 53 + p.Position.Z) % 3) - 1, ((k * 71 + p.Position.X) % 3) - 1) * 0.9
+					off = off - n * off:Dot(n)
+					new("Part", p, {
+						Name = "Chunk", Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false,
+						Size = Vector3.one * sz, Color = ore:Lerp(WHITE, 0.15), Material = Enum.Material.SmoothPlastic,
+						CFrame = CFrame.new(p.Position + n * (B / 2 + sz * 0.15) + off) * CFrame.Angles(0.6, 0.8 * k, 0.4),
+					})
+				end
+			end
+		end
+
 		new("ParticleEmitter", p, {
 			Rate = 0.8, Lifetime = NumberRange.new(0.5, 0.9), Speed = NumberRange.new(0, 0.2), Color = ColorSequence.new(ore:Lerp(WHITE, 0.5)),
 			LightEmission = 1, Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.5, 0.45), NumberSequenceKeypoint.new(1, 0) }),
@@ -639,6 +683,8 @@ local function hatchShow(name)
 	tween(vp, 0.45, { ImageColor3 = WHITE })
 	title.Text = string.upper(name)
 	title.TextColor3 = rc
+	sfx("upgrade")
+	sfx("sparkle")
 	pop(title, 0.4)
 	local sub = text(ov, p[1]:upper() .. "  -  " .. p[2]:upper(), UDim2.fromScale(0.5, 0.06), UDim2.fromScale(0.5, 0.74), Vector2.new(0.5, 0), rc)
 	sub.ZIndex = 23
@@ -754,6 +800,7 @@ local nextTry = 0
 local function digPart(p, res)
 	if not p then return end
 	swingT0 = os.clock()
+	sfx("swing", 1.1)
 	R.Dig:FireServer(p)
 	lastHitPos, lastHitNormal = res and res.Position or p.Position, res and res.Normal or Vector3.yAxis
 	burst(lastHitPos, lastHitNormal, p.Color:Lerp(WHITE, 0.4), 6)
@@ -943,7 +990,7 @@ end)
 local lookDownUntil = 0
 local atmo = game:GetService("Lighting"):FindFirstChildOfClass("Atmosphere")
 local atmoCamp = atmo and { Density = atmo.Density, Offset = atmo.Offset, Haze = atmo.Haze, Color = atmo.Color, Decay = atmo.Decay }
-local ATMO_MINE = { Density = 0.5, Offset = 0, Haze = 0.6, Color = Color3.fromRGB(46, 32, 70), Decay = Color3.fromRGB(26, 18, 44) }
+local ATMO_MINE = { Density = 0.62, Offset = 0, Haze = 0.8, Color = Color3.fromRGB(46, 32, 70), Decay = Color3.fromRGB(26, 18, 44) }
 local function setMode(mine)
 	inMine = mine
 	if mine then lookDownUntil = os.clock() + 0.35 end
@@ -988,6 +1035,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		if p and p.Parent then
 			critUntil = os.clock() + 2.5
 			crack(p, frac)
+			sfx(crit and "clink" or "hit", 1 + (1 - frac) * 0.2)
 			p.Size = Vector3.one * B * 0.9 -- squash punch (local only)
 			tween(p, 0.22, { Size = Vector3.one * B }, Enum.EasingStyle.Back)
 			if crit then
@@ -1000,6 +1048,9 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 	elseif kind == "break" then
 		local pos, ore, v, who, combo, col, crit, bkind = ...
 		breakFx(pos, col)
+		sfx("breakRock")
+		if v > 0 then task.delay(0.35, function() sfx("coin", 1 + math.min(combo, 12) * 0.05) end) end
+		if bkind == "gild" or bkind == "egg" then sfx("sparkle") end
 		if crit then
 			shockwave(pos, BUTTER)
 			floatText(pos + Vector3.new(0, 2.2, 0), "CRIT!", PINK)
@@ -1032,6 +1083,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		tween(frenzyFill, dur, { Size = UDim2.fromScale(0, 1) }, Enum.EasingStyle.Linear)
 		pop(banner, 0.4)
 		rainEm.Rate, edge.Visible = 40, true
+		sfx("sparkle", 0.9)
 	elseif kind == "frenzyEnd" then
 		local bank, combo, newBest = ...
 		rainEm.Rate, edge.Visible, banner.Visible, frenzyBar.Visible = 0, false, false, false
@@ -1040,11 +1092,14 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 	elseif kind == "sold" then
 		local gold = ...
 		toast("+" .. commas(gold) .. " GOLD", GOLD, true)
+		sfx("coin", 0.9)
+		task.delay(0.12, function() sfx("coin", 1.1) end)
 		local h = hrp()
 		if h then burst(h.Position + Vector3.new(0, 3, 0), Vector3.yAxis, GOLD, 30) end
 	elseif kind == "bought" then
 		local name = ...
 		toast(name:upper() .. "!", MINT, true)
+		sfx("upgrade")
 		task.delay(0.3, buildViewmodel)
 		for i, card in cards do if i == 2 then pop(card.frame, 1.3) end end
 	elseif kind == "full" then
@@ -1127,6 +1182,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 	elseif kind == "lift" then
 		local down = ...
 		fadeText.Text = down and "RIDING THE LIFT DOWN..." or "BACK TO CAMP!"
+		sfx("swing", 0.6)
 		fade.BackgroundTransparency = 0
 		fadeText.TextTransparency = 0
 		task.delay(0.35, function()
@@ -1192,7 +1248,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired
 	if modal ~= scrim.Visible then
 		scrim.Visible = true
-		tween(scrim, 0.2, { BackgroundTransparency = modal and 0.3 or 1 })
+		tween(scrim, 0.2, { BackgroundTransparency = modal and 0.25 or 1 })
 		if not modal then task.delay(0.2, function() if scrim.BackgroundTransparency > 0.95 then scrim.Visible = false end end) end
 	end
 	-- a free mouse while a panel is open (or Left Alt is held) so PC players can click the HUD in first person

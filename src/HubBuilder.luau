@@ -204,6 +204,15 @@ local function rootSweep(g, tubes, mat)
 			end
 			prev = c
 		end
+		if p3.Y < p0.Y - 4 then -- the root meets the ground: three short splays
+			local dir = (p3 - p2) * Vector3.new(1, 0, 1)
+			dir = dir.Magnitude > 0.1 and dir.Unit or Vector3.xAxis
+			for k = -1, 1 do
+				local d = (CFrame.Angles(0, k * 0.7, 0) * CFrame.new(dir * 1)).Position.Unit
+				local a, b = p3 + Vector3.new(0, 0.6, 0), p3 + d * (r1 * 2.6) + Vector3.new(0, -0.4, 0)
+				vox(g, "RootSplay", Vector3.new(r1 * 1.2, r1 * 0.9, (b - a).Magnitude), CFrame.lookAt((a + b) / 2, b), PAL[mat][1])
+			end
+		end
 	end
 end
 
@@ -296,6 +305,26 @@ function Hub.build(parent, origin)
 		end
 	end
 
+	for i = 0, 47 do
+		local a = i / 48 * math.pi * 2
+		local rr = PR + 1.5 + hash(i, 4, 4) * 3
+		if hash(i, 6, 6) > 0.35 then
+			vox(ground, "Stray", Vector3.new(1.6 + hash(i, 1, 1), 0.4, 1.4 + hash(i, 2, 2)), CFrame.new(W(math.cos(a) * rr, 0.62, math.sin(a) * rr * 1.15)) * CFrame.Angles(0, hash(i, 3, 3) * 3, 0), PAL.plaza[(i % 3) + 1])
+		end
+	end
+	for i = 0, 22 do -- low brambles and stones along the south edge of the view
+		local x = -44 + i * 4 + hash(i, 1, 9) * 2
+		local z = 34 + hash(i, 2, 9) * 6
+		local h = 1.2 + hash(i, 3, 9) * 1.6
+		vox(ground, "Bramble", Vector3.new(3.2, h, 3), CFrame.new(W(x, h / 2 + 0.4, z)) * CFrame.Angles(0, hash(i, 4, 9), 0), PAL.leaf[(i % 3) + 1], { CanCollide = false })
+		if i % 3 == 0 then
+			vox(ground, "BrambleTop", Vector3.new(2, 1.2, 2), CFrame.new(W(x + 0.6, h + 0.9, z - 0.4)), PAL.leaf[3], { CanCollide = false })
+		end
+		if i % 4 == 1 then
+			vox(ground, "Berry", Vector3.new(0.5, 0.5, 0.5), CFrame.new(W(x - 0.8, h + 0.6, z - 1.2)), Color3.fromRGB(232, 122, 150), { CanCollide = false })
+		end
+	end
+
 	-- 2. The mine shaft in the centre: stone-block rim, a pit with stone walls and a cyan crystal glow; falling in enters your mine
 	local shaft = group("MineShaft")
 	for _, o in { { 0, -1 }, { 0, 1 }, { -1, 0 }, { 1, 0 } } do
@@ -333,19 +362,23 @@ function Hub.build(parent, origin)
 	mist.Parent = pitFloor
 	-- headframe: two A-legs of voxel beams, a crossbeam, a cube-built pulley wheel, rope and a hanging crystal
 	for _, s in { -1, 1 } do
-		for _, z in { -6, 6 } do vox(shaft, "Leg", Vector3.new(1.4, 20, 1.4), CFrame.new(W(s * 7.5, 10, z)) * CFrame.Angles(z > 0 and 0.12 or -0.12, 0, 0), PAL.wood[2]) end
-		vox(shaft, "Brace", Vector3.new(1, 1, 12), CFrame.new(W(s * 7.5, 7, 0)), PAL.wood[1])
+		for _, z in { -6, 6 } do vox(shaft, "Leg", Vector3.new(2, 20, 2), CFrame.new(W(s * 7.5, 10, z)) * CFrame.Angles(z > 0 and 0.12 or -0.12, 0, 0), PAL.wood[2]) end
+		vox(shaft, "Brace", Vector3.new(1.4, 1.4, 12), CFrame.new(W(s * 7.5, 7, 0)), PAL.wood[1])
+		vox(shaft, "Brace", Vector3.new(1.2, 1.2, 12.5), CFrame.new(W(s * 7.5, 12, 0)) * CFrame.Angles(0.5, 0, 0), PAL.wood[1])
 	end
-	vox(shaft, "CrossBeam", Vector3.new(17, 1.6, 1.6), CFrame.new(W(0, 19.5, 0)), PAL.wood[3])
+	vox(shaft, "CrossBeam", Vector3.new(18, 2.2, 2.2), CFrame.new(W(0, 19.5, 0)), PAL.wood[3])
 	local wheel = group("LiftWheel")
-	for i = 0, 11 do
-		local a = i / 12 * math.pi * 2
-		vox(wheel, "Rim", Vector3.new(1, 1, 1), CFrame.new(W(0, 22 + math.sin(a) * 2.6, math.cos(a) * 2.6)), i % 2 == 0 and PAL.wood[2] or PAL.wood[3])
+	for i = 0, 15 do
+		local a = i / 16 * math.pi * 2
+		vox(wheel, "Rim", Vector3.new(1.2, 1.2, 1.2), CFrame.new(W(0, 23 + math.sin(a) * 3.6, math.cos(a) * 3.6)), i % 2 == 0 and PAL.wood[2] or PAL.wood[3])
 	end
-	vox(wheel, "Hub", Vector3.new(1.4, 1.4, 1.4), CFrame.new(W(0, 22, 0)), PAL.stone[2])
-	for i = 0, 3 do vox(wheel, "Spoke", Vector3.new(0.5, 5, 0.5), CFrame.new(W(0, 22, 0)) * CFrame.Angles(i * math.pi / 4, 0, 0), PAL.wood[1]) end
+	vox(wheel, "Hub", Vector3.new(1.8, 1.8, 1.8), CFrame.new(W(0, 23, 0)), PAL.stone[2])
+	for i = 0, 3 do vox(wheel, "Spoke", Vector3.new(0.6, 7, 0.6), CFrame.new(W(0, 23, 0)) * CFrame.Angles(i * math.pi / 4, 0, 0), PAL.wood[1]) end
 	wheel:SetAttribute("SpinX", 1.4)
 	vox(shaft, "Rope", Vector3.new(0.25, 14, 0.25), CFrame.new(W(0, 13, 2.6)), PAL.cream[1], { CanCollide = false })
+	for k, o in { { 0.7, 0.2, 1.1 }, { -0.6, -0.4, 0.9 }, { 0.1, -0.9, 0.8 } } do -- a cluster of smaller crystals round the big one
+		vox(shaft, "HangingShard", Vector3.new(0.7, o[3] * 1.6, 0.7), CFrame.new(W(o[1], 5.4 + o[2], 2.6)) * CFrame.Angles(0.3 * k, 0.5, 0.2), k == 2 and Color3.fromRGB(170, 150, 240) or CYAN, { CanCollide = false, Material = Enum.Material.Neon })
+	end
 	local hang = vox(shaft, "HangingCrystal", Vector3.new(1.6, 1.6, 1.6), CFrame.new(W(0, 5.4, 2.6)) * CFrame.Angles(0.6, 0.6, 0), CYAN, { CanCollide = false })
 	glow(hang, CYAN, 18, 1.2)
 	hang:SetAttribute("Bob", 0.3)
@@ -464,11 +497,10 @@ function Hub.build(parent, origin)
 		vox(g, "Ridge", Vector3.new(9.4, 0.7, 0.7), at(0, 10, -2), PAL.wood[3])
 		for _, s in { -1, 1 } do -- pitched glass roof with rafters, so the eggs show from above
 			local cf = at(0, 8.8, -2 + s * 2.2) * CFrame.Angles(s * 0.5, 0, 0)
-			vox(g, "RoofGlass", Vector3.new(8.8, 0.2, 5), cf, Color3.fromRGB(200, 236, 255), { Transparency = 0.6, CanCollide = false })
+			vox(g, "RoofGlass", Vector3.new(8.8, 0.2, 5), cf, Color3.fromRGB(190, 200, 240), { Transparency = 0.72, CanCollide = false })
 			for x = -4.2, 4.2, 2.8 do vox(g, "Rafter", Vector3.new(0.45, 0.45, 5.2), cf * CFrame.new(x, 0.2, 0), PAL.wood[1], { CanCollide = false }) end
 		end
-		local heat = vox(g, "HeatLamp", Vector3.new(1, 0.6, 1), at(0, 9.2, -2), Color3.fromRGB(255, 190, 150), { CanCollide = false, Material = Enum.Material.Neon })
-		glow(heat, Color3.fromRGB(255, 200, 170), 14, 0.7)
+		vox(g, "HeatLamp", Vector3.new(1, 0.6, 1), at(0, 9.2, -2), Color3.fromRGB(220, 150, 130), { CanCollide = false })
 		for _, z in { 2, -6 } do vox(g, "Glass", Vector3.new(7.3, 6, 0.2), at(0, 4.4, z), Color3.fromRGB(190, 230, 250), { Transparency = 0.75, CanCollide = false }) end
 		for _, x in { -4, 4 } do vox(g, "Glass", Vector3.new(0.2, 6, 7.3), at(x, 4.4, -2), Color3.fromRGB(190, 230, 250), { Transparency = 0.75, CanCollide = false }) end
 		for i, ec in { PAL.pink[2], PAL.cream[2], Color3.fromRGB(140, 227, 192) } do
@@ -477,14 +509,14 @@ function Hub.build(parent, origin)
 			vox(e, "Low", Vector3.new(1.6, 1, 1.6), at(x, 1.8, z), ec)
 			vox(e, "Mid", Vector3.new(1.8, 1.1, 1.8), at(x, 2.8, z), ec)
 			vox(e, "Top", Vector3.new(1.2, 0.8, 1.2), at(x, 3.7, z), ec)
-			for _, p in e:GetChildren() do p.Material = Enum.Material.Neon end
+			for _, p in e:GetChildren() do p.Material = Enum.Material.SmoothPlastic end
 			local sp = Instance.new("ParticleEmitter") -- sparkles round each egg
 			sp.Rate, sp.Lifetime, sp.Speed, sp.SpreadAngle = 2, NumberRange.new(0.8, 1.4), NumberRange.new(0.5, 1.2), Vector2.new(180, 180)
 			sp.Color, sp.LightEmission = ColorSequence.new(ec:Lerp(Color3.new(1, 1, 1), 0.4)), 1
 			sp.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.5, 0.35), NumberSequenceKeypoint.new(1, 0) })
 			sp.Parent = e:FindFirstChild("Mid")
 			e:SetAttribute("Bob", 0.25 + i * 0.05)
-			if i == 2 then glow(e:FindFirstChild("Mid"), Color3.fromRGB(255, 220, 200), 18, 1.4) end
+			if i == 2 then glow(e:FindFirstChild("Mid"), Color3.fromRGB(255, 170, 200), 14, 0.8) e:FindFirstChild("Mid").Material = Enum.Material.SmoothPlastic end
 		end
 		sign(g, "EGGS", at(0, 7.6, 2.9), 4, 1.5, PAL.pink[3])
 		prompt(g:FindFirstChild("Base"), "Hatch an egg", "Incubator", "hatch")
