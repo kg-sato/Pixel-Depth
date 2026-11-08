@@ -119,6 +119,7 @@ local function pop(o, from, t)
 end
 local function openPanel(o)
 	o.Visible = true
+	o.ZIndex = 5
 	local sc = scaler(o)
 	sc.Scale = 0.55
 	tween(sc, 0.38, { Scale = 1 }, Enum.EasingStyle.Back)
@@ -146,7 +147,7 @@ local function button(parent, label, size, pos, anchor, kind, iconName, vertical
 	elseif iconName then
 		local ic = icon(b, iconName, UDim2.fromScale(0.3, 0.62), UDim2.fromScale(0.08, 0.5), Vector2.new(0, 0.5))
 		new("UIAspectRatioConstraint", ic, { AspectRatio = 1 })
-		lab = text(b, label, UDim2.fromScale(0.6, 0.5), UDim2.fromScale(0.62, 0.48), Vector2.new(0.5, 0.5), WHITE)
+		lab = text(b, label, UDim2.fromScale(0.52, 0.46), UDim2.fromScale(0.68, 0.48), Vector2.new(0.5, 0.5), WHITE)
 	else
 		lab = text(b, label, UDim2.fromScale(0.84, 0.5), UDim2.fromScale(0.5, 0.47), Vector2.new(0.5, 0.5), WHITE)
 	end
@@ -262,6 +263,9 @@ local function feedLine(msg, color)
 	end)
 end
 
+-- A dim scrim behind modal panels so they read over the busy world
+local scrim = new("Frame", gui, { Name = "Scrim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 0, Visible = false })
+
 -- Night Shaft report (spec 5.7)
 local night = panel(gui, S(460, 230), S(640, 296), Vector2.new(0.5, 0.5), "panel")
 fit(night, 460, 230)
@@ -313,9 +317,9 @@ for i = 1, 4 do
 	cards[i] = { frame = cd, name = nm, icon = ic, status = st }
 end
 local stats = panel(forge, UDim2.fromScale(0.58, 0.26), UDim2.fromScale(0.05, 0.66), nil, "card")
-local statA = text(stats, "", UDim2.fromScale(0.9, 0.22), UDim2.fromScale(0.05, 0.14), nil, INK, 700, false)
+local statA = text(stats, "", UDim2.fromScale(0.9, 0.26), UDim2.fromScale(0.05, 0.1), nil, INK, 700, false)
 statA.TextXAlignment = Enum.TextXAlignment.Left
-local statB = text(stats, "", UDim2.fromScale(0.9, 0.22), UDim2.fromScale(0.05, 0.42), nil, Color3.fromRGB(63, 156, 132), 700, false)
+local statB = text(stats, "", UDim2.fromScale(0.9, 0.24), UDim2.fromScale(0.05, 0.42), nil, Color3.fromRGB(40, 128, 104), 700, false)
 statB.TextXAlignment = Enum.TextXAlignment.Left
 local statC = text(stats, "", UDim2.fromScale(0.9, 0.18), UDim2.fromScale(0.05, 0.7), nil, PLUM_SOFT, 500, false)
 statC.TextXAlignment = Enum.TextXAlignment.Left
@@ -505,10 +509,18 @@ local hl = new("Highlight", fx, { FillColor = BUTTER, OutlineColor = WHITE, Dept
 local arrowAnchor = anchor()
 local arrow = new("BillboardGui", arrowAnchor, { Size = UDim2.fromScale(6, 2.2), Enabled = false, LightInfluence = 0, AlwaysOnTop = true })
 local arrowText = text(arrow, "TAP!", nil, nil, nil, BUTTER, 700)
-local aim = new("SelectionBox", fx, { Color3 = WHITE, LineThickness = 0.06, SurfaceTransparency = 1, Transparency = 0.2 })
+local aim = new("Highlight", fx, { FillColor = WHITE, FillTransparency = 0.82, OutlineColor = BUTTER, OutlineTransparency = 0.35, DepthMode = Enum.HighlightDepthMode.Occluded })
 
 -- Rarity tags: rare blocks carry Tag ("1 IN 104") and TagColor; draw a framed tag and an outline when they appear
 local function tagBlock(p)
+	local ore = p:GetAttribute("Ore")
+	if ore then -- valuable ore glints so the walls are not one muddy colour
+		new("ParticleEmitter", p, {
+			Rate = 0.8, Lifetime = NumberRange.new(0.5, 0.9), Speed = NumberRange.new(0, 0.2), Color = ColorSequence.new(ore:Lerp(WHITE, 0.5)),
+			LightEmission = 1, Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.5, 0.45), NumberSequenceKeypoint.new(1, 0) }),
+			Shape = Enum.ParticleEmitterShape.Box, ShapeStyle = Enum.ParticleEmitterShapeStyle.Surface, Rotation = NumberRange.new(45),
+		})
+	end
 	local tag = p:GetAttribute("Tag")
 	if not tag then return end
 	local col = p:GetAttribute("TagColor") or BUTTER
@@ -844,9 +856,14 @@ local function stepMessage()
 	if not inMine and state.step == 5 then return "Ride the lift back down to find the egg!" end
 	return STEPS[state.step] or ""
 end
+local TIER_TINT = { -- one colour per pickaxe (Pickaxe Forge palette)
+	Color3.fromRGB(230, 180, 130), Color3.fromRGB(200, 200, 215), Color3.fromRGB(255, 150, 180), Color3.fromRGB(255, 230, 140),
+	Color3.fromRGB(200, 180, 255), Color3.fromRGB(255, 120, 150), Color3.fromRGB(150, 230, 230), Color3.fromRGB(170, 130, 255),
+	Color3.fromRGB(255, 190, 220), Color3.fromRGB(170, 255, 210), Color3.fromRGB(255, 110, 120), Color3.fromRGB(235, 240, 255),
+}
 local function tierIcon(card, def, owned, isNext, locked)
-	card.icon.ImageColor3 = locked and Color3.fromRGB(120, 100, 140) or WHITE
-	card.icon.ImageTransparency = locked and 0.5 or 0
+	card.icon.ImageColor3 = card.icon:GetAttribute("Tint") or WHITE
+	card.icon.ImageTransparency = 0
 	setKind(card.frame, isNext and "card" or "pill")
 end
 refreshForge = function()
@@ -861,8 +878,9 @@ refreshForge = function()
 		if def then
 			card.name.Text = def.name:upper():gsub(" PICKAXE", ""):gsub("THE ", "")
 			card.icon.Image = tabWhat == "pick" and ICON.pick or ICON.bag
+			card.icon:SetAttribute("Tint", TIER_TINT[idx] and tabWhat == "pick" and TIER_TINT[idx] or WHITE)
 			local owned, isNext, locked = idx <= cur, idx == cur + 1, idx > cur + 1
-			card.status.Text = owned and "OWNED" or (isNext and commas(def.cost) or "LOCKED")
+			card.status.Text = owned and "OWNED" or commas(def.cost)
 			card.status.TextColor3 = owned and Color3.fromRGB(63, 156, 132) or (isNext and GOLD or PLUM_SOFT)
 			tierIcon(card, def, owned, isNext, locked)
 		end
@@ -877,8 +895,8 @@ refreshForge = function()
 		statB.Text = nxt and ("+" .. (nxt.cap - list[cur].cap) .. " ORE PER TRIP") or "MAXED"
 		statC.Text = nxt and ("Next: " .. nxt.name) or "The biggest bag!"
 	end
-	buyBtn.Text = nxt and commas(nxt.cost) or "MAX"
-	setKind(buyBtn, (nxt and state.gold >= nxt.cost) and "mint" or "off")
+	buyBtn.Text = nxt and ("BUY " .. commas(nxt.cost)) or "MAX"
+	setKind(buyBtn, (nxt and state.gold >= nxt.cost) and "mint" or (nxt and "butter" or "off"))
 end
 
 R.State.OnClientEvent:Connect(function(s)
@@ -922,9 +940,17 @@ end)
 
 -- Camera modes: bird's-eye follow camera in the hub, first person in the mine
 local lookDownUntil = 0
+local atmo = game:GetService("Lighting"):FindFirstChildOfClass("Atmosphere")
+local atmoCamp = atmo and { Density = atmo.Density, Offset = atmo.Offset, Haze = atmo.Haze, Color = atmo.Color, Decay = atmo.Decay }
+local ATMO_MINE = { Density = 0.5, Offset = 0, Haze = 0.6, Color = Color3.fromRGB(46, 32, 70), Decay = Color3.fromRGB(26, 18, 44) }
 local function setMode(mine)
 	inMine = mine
 	if mine then lookDownUntil = os.clock() + 0.35 end
+	atmo = atmo or game:GetService("Lighting"):FindFirstChildOfClass("Atmosphere")
+	if atmo then
+		atmoCamp = atmoCamp or { Density = atmo.Density, Offset = atmo.Offset, Haze = atmo.Haze, Color = atmo.Color, Decay = atmo.Decay }
+		for k, v in (mine and ATMO_MINE or atmoCamp) do atmo[k] = v end
+	end
 	cross.Visible, digBtn.Visible = mine, mine
 	railLift.Text = mine and "SURFACE" or "MINE"
 	setKind(railLift, mine and "sky" or "butter")
@@ -1155,6 +1181,12 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		local dir = Vector3.new(math.sin(C.CAM_YAW) * math.cos(C.CAM_PITCH), math.sin(C.CAM_PITCH), math.cos(C.CAM_YAW) * math.cos(C.CAM_PITCH))
 		local off = Vector3.new(math.random() - 0.5, math.random() - 0.5, 0) * shakeAmp
 		cam.CFrame = CFrame.lookAt(focus + dir * C.CAM_DIST + off, focus + off)
+	end
+	local modal = forge.Visible or odds.Visible or mapP.Visible or night.Visible
+	if modal ~= scrim.Visible then
+		scrim.Visible = true
+		tween(scrim, 0.2, { BackgroundTransparency = modal and 0.3 or 1 })
+		if not modal then task.delay(0.2, function() if scrim.BackgroundTransparency > 0.95 then scrim.Visible = false end end) end
 	end
 	-- a free mouse while a panel is open (or Left Alt is held) so PC players can click the HUD in first person
 	if inMine then

@@ -54,7 +54,7 @@ local function effect(cls, props)
 	e.Parent = Lighting
 end
 effect("Atmosphere", { Density = 0.3, Offset = 0.12, Haze = 1.4, Glare = 0, Color = Color3.fromRGB(86, 70, 140), Decay = Color3.fromRGB(34, 22, 66) })
-effect("BloomEffect", { Intensity = 0.5, Size = 24, Threshold = 1.1 })
+effect("BloomEffect", { Intensity = 0.35, Size = 22, Threshold = 1.3 })
 effect("ColorCorrectionEffect", { Saturation = 0.06, Contrast = 0.12, Brightness = 0.02, TintColor = Color3.fromRGB(242, 234, 255) })
 effect("Sky", { StarCount = 3000, MoonAngularSize = 18, CelestialBodiesShown = true })
 local clouds = workspace.Terrain:FindFirstChildOfClass("Clouds") or Instance.new("Clouds")
@@ -228,6 +228,7 @@ local function buildBlock(s, k, r, c, d, fake)
 			p:SetAttribute("TagColor", kind == "gild" and Color3.fromRGB(255, 206, 70) or Color3.fromRGB(255, 157, 176))
 		end
 		if kind == "bedrock" then p:SetAttribute("Bedrock", true) end
+		if kind == "ore3" then p:SetAttribute("Ore", C.LAYERS[layerOf(r)][4][3][2]) end
 	end
 	p.Parent = s.folder
 	s.parts[k] = p
@@ -677,8 +678,24 @@ local function pickModel(i)
 		p.Parent = m
 		return p
 	end
-	m.PrimaryPart = part("Handle", Vector3.new(0.2, 2.6, 0.2), 1.3, Color3.fromRGB(120, 78, 44), Enum.Material.Wood)
-	part("Head", Vector3.new(2.0, 0.32, 0.32), 2.5, i == 1 and Color3.fromRGB(150, 110, 70) or Color3.fromRGB(140, 140, 150), i == 1 and Enum.Material.Wood or Enum.Material.Slate)
+	local wood, woodDk = Color3.fromRGB(176, 120, 82), Color3.fromRGB(110, 70, 56)
+	local head, headLt, headDk = i == 1 and Color3.fromRGB(214, 168, 112) or Color3.fromRGB(150, 146, 172), i == 1 and Color3.fromRGB(240, 204, 150) or Color3.fromRGB(196, 194, 214), i == 1 and Color3.fromRGB(150, 100, 70) or Color3.fromRGB(96, 92, 120)
+	local function cube(name, size, pos, color)
+		local p = Instance.new("Part")
+		p.Name, p.Size, p.Color, p.Material, p.CFrame = name, size, color, Enum.Material.SmoothPlastic, CFrame.new(pos)
+		p.TopSurface, p.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
+		p.Parent = m
+		return p
+	end
+	m.PrimaryPart = cube("Handle", Vector3.new(0.34, 2.7, 0.34), Vector3.new(0, 1.35, 0), wood)
+	cube("Grip", Vector3.new(0.4, 0.7, 0.4), Vector3.new(0, 0.45, 0), woodDk)
+	cube("Bind", Vector3.new(0.5, 0.4, 0.5), Vector3.new(0, 2.55, 0), woodDk)
+	cube("Head", Vector3.new(0.7, 0.6, 0.6), Vector3.new(0, 2.85, 0), head)
+	for _, s in { -1, 1 } do -- each arm: three cubes curving down to a bright tip
+		cube("Arm", Vector3.new(0.55, 0.5, 0.5), Vector3.new(s * 0.6, 2.88, 0), head)
+		cube("Arm", Vector3.new(0.5, 0.45, 0.46), Vector3.new(s * 1.08, 2.74, 0), headDk)
+		cube("Tip", Vector3.new(0.42, 0.42, 0.42), Vector3.new(s * 1.5, 2.5, 0), headLt)
+	end
 	return m
 end
 
@@ -788,7 +805,7 @@ local function buildStatic(s)
 	local land = cellPos(s, 1, E1, E2) + Vector3.new(B / 2, 0, B / 2)
 	for _, o in { { -1, -1 }, { 1, -1 }, { -1, 1 }, { 1, 1 } } do
 		local post = proto:Clone()
-		post.Name, post.Size, post.Color, post.Material = "CagePost", Vector3.new(0.6, DROP * B, 0.6), Color3.fromRGB(138, 92, 74), Enum.Material.Wood
+		post.Name, post.Size, post.Color, post.Material = "CagePost", Vector3.new(0.7, DROP * B, 0.7), Color3.fromRGB(176, 120, 82), Enum.Material.SmoothPlastic
 		post.Position = land + Vector3.new(o[1] * (B - 0.4), -(DROP - 1) * B / 2, o[2] * (B - 0.4))
 		post.CanCollide = false
 		post.Parent = f

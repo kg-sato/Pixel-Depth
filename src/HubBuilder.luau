@@ -11,8 +11,9 @@ local PAL = {
 	wood = { Color3.fromRGB(92, 58, 62), Color3.fromRGB(138, 92, 74), Color3.fromRGB(178, 128, 92) },
 	plank = { Color3.fromRGB(110, 72, 64), Color3.fromRGB(156, 108, 82), Color3.fromRGB(196, 148, 106) },
 	stone = { Color3.fromRGB(78, 74, 104), Color3.fromRGB(108, 104, 138), Color3.fromRGB(140, 136, 170) },
-	plaza = { Color3.fromRGB(96, 84, 116), Color3.fromRGB(122, 108, 142), Color3.fromRGB(150, 134, 166) },
-	grass = { Color3.fromRGB(40, 92, 90), Color3.fromRGB(54, 114, 104), Color3.fromRGB(74, 140, 118) },
+	plaza = { Color3.fromRGB(108, 96, 128), Color3.fromRGB(120, 107, 140), Color3.fromRGB(134, 120, 152) },
+	grass = { Color3.fromRGB(76, 132, 128), Color3.fromRGB(92, 150, 138), Color3.fromRGB(112, 168, 150) },
+	rock = { Color3.fromRGB(54, 40, 76), Color3.fromRGB(70, 54, 96), Color3.fromRGB(90, 72, 120) },
 	dirt = { Color3.fromRGB(46, 34, 54), Color3.fromRGB(70, 50, 68), Color3.fromRGB(96, 70, 82) },
 	bark = { Color3.fromRGB(50, 30, 74), Color3.fromRGB(74, 44, 104), Color3.fromRGB(100, 62, 134) },
 	leaf = { Color3.fromRGB(30, 88, 86), Color3.fromRGB(48, 124, 112), Color3.fromRGB(86, 170, 140) },
@@ -21,7 +22,7 @@ local PAL = {
 	pink = { Color3.fromRGB(196, 84, 116), Color3.fromRGB(232, 122, 150), Color3.fromRGB(250, 186, 200) },
 	cream = { Color3.fromRGB(200, 184, 180), Color3.fromRGB(232, 220, 206), Color3.fromRGB(246, 238, 226) },
 }
-local LAMP, CYAN, GOLD, EMBER = Color3.fromRGB(255, 206, 120), Color3.fromRGB(110, 236, 255), Color3.fromRGB(255, 214, 92), Color3.fromRGB(255, 150, 70)
+local LAMP, CYAN, GOLD, EMBER = Color3.fromRGB(232, 168, 96), Color3.fromRGB(96, 206, 226), Color3.fromRGB(255, 214, 92), Color3.fromRGB(240, 130, 64)
 
 local model -- the hub Model being built
 local function hash(x, y, z)
@@ -183,6 +184,69 @@ local function voxTubes(g, tubes, V, mat, collide)
 	return count
 end
 
+-- Sweeping roots: chunky blocks laid along each curve (rotated, octagonal), banded in three bark shades
+local function rootSweep(g, tubes, mat)
+	for ti, t in tubes do
+		local p0, p1, p2, p3, r0, r1 = t[1], t[2], t[3], t[4], t[5], t[6]
+		local n = math.max(6, math.ceil((p0 - p3).Magnitude / 3.2))
+		local prev = p0
+		for i = 1, n do
+			local u = i / n
+			local a = 1 - u
+			local c = p0 * a ^ 3 + p1 * 3 * a ^ 2 * u + p2 * 3 * a * u ^ 2 + p3 * u ^ 3
+			local r = r0 + (r1 - r0) * u
+			local len = (c - prev).Magnitude
+			if len > 0.05 then
+				local cf = CFrame.lookAt((c + prev) / 2, c) * CFrame.Angles(0, 0, (ti * 0.7 + i * 0.13) % 0.8)
+				local shade = PAL[mat][(i + ti) % 3 == 0 and 1 or ((i + ti) % 3 == 1 and 2 or 3)]
+				vox(g, "Root", Vector3.new(r * 2, r * 2, len + r * 0.5), cf, shade)
+				vox(g, "RootEdge", Vector3.new(r * 1.7, r * 1.7, len + r * 0.4), cf * CFrame.Angles(0, 0, math.pi / 4), PAL[mat][2], { CanCollide = false })
+			end
+			prev = c
+		end
+	end
+end
+
+-- Warm string lights hung between two points (a sagging rope of small cube bulbs)
+local function stringLights(g, a, b, sag, n)
+	for i = 0, n do
+		local u = i / n
+		local p = a:Lerp(b, u) - Vector3.new(0, math.sin(u * math.pi) * sag, 0)
+		local bulb = vox(g, "Bulb", Vector3.new(0.6, 0.6, 0.6), CFrame.new(p), i % 3 == 0 and Color3.fromRGB(255, 157, 176) or LAMP, { CanCollide = false, Material = Enum.Material.Neon })
+		if i % 4 == 2 then glow(bulb, LAMP, 12, 0.5) end
+		if i < n then
+			local q = a:Lerp(b, (i + 1) / n) - Vector3.new(0, math.sin((i + 1) / n * math.pi) * sag, 0)
+			vox(g, "Wire", Vector3.new(0.12, 0.12, (q - p).Magnitude), CFrame.lookAt((p + q) / 2, q), PAL.wood[1], { CanCollide = false })
+		end
+	end
+end
+
+-- A chibi voxel villager (head about 45% of the height) with a bobbing "!" over the head
+local function villager(name, cf, body, hat, skin)
+	local m = Instance.new("Model")
+	m.Name = name
+	skin = skin or Color3.fromRGB(255, 214, 186)
+	local function at(x, y, z) return cf * CFrame.new(x, y, z) end
+	for _, x in { -0.45, 0.45 } do vox(m, "Leg", Vector3.new(0.7, 1, 0.8), at(x, 0.5, 0), PAL.wood[1]) end
+	vox(m, "Body", Vector3.new(2, 1.8, 1.3), at(0, 1.9, 0), body)
+	for _, x in { -1.25, 1.25 } do vox(m, "Arm", Vector3.new(0.55, 1.4, 0.6), at(x, 2, 0), body) end
+	vox(m, "Head", Vector3.new(2.4, 2.3, 2.2), at(0, 4, 0), skin)
+	for _, x in { -0.5, 0.5 } do
+		vox(m, "Eye", Vector3.new(0.4, 0.45, 0.1), at(x, 4.05, 1.12), Color3.fromRGB(42, 28, 58), { CanCollide = false })
+		vox(m, "Shine", Vector3.new(0.15, 0.15, 0.06), at(x + 0.08, 4.18, 1.17), Color3.new(1, 1, 1), { CanCollide = false })
+	end
+	vox(m, "Hat", Vector3.new(2.6, 0.6, 2.4), at(0, 5.4, 0), hat)
+	vox(m, "HatTop", Vector3.new(1.6, 0.7, 1.5), at(0, 6, 0), hat)
+	local bang = Instance.new("Model")
+	bang.Name = "Quest"
+	vox(bang, "Bar", Vector3.new(0.5, 1.2, 0.5), at(0, 8.1, 0), GOLD, { CanCollide = false, Material = Enum.Material.Neon })
+	vox(bang, "Dot", Vector3.new(0.5, 0.5, 0.5), at(0, 7.1, 0), GOLD, { CanCollide = false, Material = Enum.Material.Neon })
+	bang:SetAttribute("Bob", 0.3)
+	bang.Parent = m
+	m.Parent = model
+	return m
+end
+
 local function leafClump(g, c, r, V)
 	for i = -r, r do for j = -r, r do for k = -r, r do
 		local d = math.sqrt(i * i + j * j * 1.6 + k * k)
@@ -202,9 +266,9 @@ function Hub.build(parent, origin)
 	-- 1. Ground: lilac cobblestone plaza (tiles with gaps), grass voxels around it, a dark dirt rim under everything
 	local ground = group("Ground")
 	for _, b in { { -47, 0, 82, 160 }, { 47, 0, 82, 160 }, { 0, -43, 12, 74 }, { 0, 43, 12, 74 } } do -- dark grout/dirt under everything, open over the shaft
-		vox(ground, "Base", Vector3.new(b[3], 6, b[4]), CFrame.new(W(b[1], -3, b[2])), PAL.dirt[1])
+		vox(ground, "Base", Vector3.new(b[3], 6, b[4]), CFrame.new(W(b[1], -3, b[2])), Color3.fromRGB(70, 58, 84))
 	end
-	local PR, T, S = 34, 4, 3.2
+	local PR, T, S = 26, 4, 3.2
 	for x = -72, 68, T do -- grass outside the plaza
 		for z = -72, 68, T do
 			local cx, cz = x + T / 2, z + T / 2
@@ -249,18 +313,24 @@ function Hub.build(parent, origin)
 			end
 		end
 	end
-	local pitFloor = vox(shaft, "PitFloor", Vector3.new(12, 1, 12), CFrame.new(W(0, -10.5, 0)), Color3.fromRGB(40, 120, 150))
+	local pitFloor = vox(shaft, "PitFloor", Vector3.new(12, 1, 12), CFrame.new(W(0, -10.5, 0)), Color3.fromRGB(34, 70, 110))
 	pitFloor:SetAttribute("Station", "enter")
 	for i = 1, 7 do -- crystal shards glowing up out of the pit
 		local a = i / 7 * math.pi * 2
-		local c = vox(shaft, "PitCrystal", Vector3.new(0.9, 2 + (i % 3), 0.9), CFrame.new(W(math.cos(a) * 3.6, -8.5, math.sin(a) * 3.6)) * CFrame.Angles(math.sin(a) * 0.3, a, math.cos(a) * 0.3), CYAN, { CanCollide = false })
-		if i % 3 == 0 then glow(c, CYAN, 26, 1.6) else c.Material = Enum.Material.Neon end
+		local c = vox(shaft, "PitCrystal", Vector3.new(0.9, 2 + (i % 3), 0.9), CFrame.new(W(math.cos(a) * 3.6, -8.5, math.sin(a) * 3.6)) * CFrame.Angles(math.sin(a) * 0.3, a, math.cos(a) * 0.3), i % 2 == 0 and CYAN or Color3.fromRGB(150, 140, 230), { CanCollide = false })
+		if i == 3 then glow(c, CYAN, 18, 0.9) elseif i % 3 == 0 then c.Material = Enum.Material.Neon end
 	end
 	local sparks = Instance.new("ParticleEmitter")
-	sparks.Rate, sparks.Lifetime, sparks.Speed = 8, NumberRange.new(2, 3.5), NumberRange.new(3, 6)
+	sparks.Rate, sparks.Lifetime, sparks.Speed = 4, NumberRange.new(2, 3.5), NumberRange.new(3, 6)
 	sparks.Color, sparks.LightEmission, sparks.EmissionDirection = ColorSequence.new(CYAN), 1, Enum.NormalId.Top
 	sparks.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.35), NumberSequenceKeypoint.new(1, 0) })
 	sparks.Parent = pitFloor
+	local mist = Instance.new("ParticleEmitter")
+	mist.Rate, mist.Lifetime, mist.Speed, mist.SpreadAngle = 3, NumberRange.new(3, 5), NumberRange.new(2, 3.5), Vector2.new(25, 25)
+	mist.Color, mist.LightEmission, mist.EmissionDirection = ColorSequence.new(Color3.fromRGB(170, 160, 240), CYAN), 0.4, Enum.NormalId.Top
+	mist.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 2), NumberSequenceKeypoint.new(1, 6) })
+	mist.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.75), NumberSequenceKeypoint.new(1, 1) })
+	mist.Parent = pitFloor
 	-- headframe: two A-legs of voxel beams, a crossbeam, a cube-built pulley wheel, rope and a hanging crystal
 	for _, s in { -1, 1 } do
 		for _, z in { -6, 6 } do vox(shaft, "Leg", Vector3.new(1.4, 20, 1.4), CFrame.new(W(s * 7.5, 10, z)) * CFrame.Angles(z > 0 and 0.12 or -0.12, 0, 0), PAL.wood[2]) end
@@ -284,6 +354,7 @@ function Hub.build(parent, origin)
 
 	-- a station frame at (dx, dz), turned so its front (+Z) faces the shaft
 	local function station(dx, dz)
+		dx, dz = dx * 0.84, dz * 0.84 -- round-2 grade: cluster the stalls tighter round the pit
 		local p = W(dx, 0, dz)
 		local away = Vector3.new(dx, 0, dz).Unit
 		local cf = CFrame.lookAt(p, p + away)
@@ -386,9 +457,18 @@ function Hub.build(parent, origin)
 	-- 7. Egg incubator (south-west): small shed, glass dome, three glowing pastel voxel eggs
 	do
 		local g, at = group("Incubator"), station(-25, 17)
-		vox(g, "Base", Vector3.new(10, 1.2, 10), at(0, 0.6, -2), PAL.wood[1])
-		for _, c in { { -4, -6 }, { 4, -6 }, { -4, 2 }, { 4, 2 } } do vox(g, "Frame", Vector3.new(0.7, 6.4, 0.7), at(c[1], 4.4, c[2]), PAL.wood[1]) end
-		vox(g, "FrameTop", Vector3.new(8.7, 0.7, 8.7), at(0, 7.6, -2), PAL.wood[2])
+		vox(g, "Base", Vector3.new(10, 1.2, 10), at(0, 0.6, -2), PAL.stone[2])
+		vox(g, "BaseTrim", Vector3.new(10.4, 0.4, 10.4), at(0, 1.3, -2), PAL.stone[3])
+		for _, c in { { -4, -6 }, { 4, -6 }, { -4, 2 }, { 4, 2 } } do vox(g, "Frame", Vector3.new(0.7, 6.4, 0.7), at(c[1], 4.4, c[2]), PAL.wood[2]) end
+		for _, z in { -6, 2 } do vox(g, "Beam", Vector3.new(8.7, 0.6, 0.6), at(0, 7.6, z), PAL.wood[2]) end
+		vox(g, "Ridge", Vector3.new(9.4, 0.7, 0.7), at(0, 10, -2), PAL.wood[3])
+		for _, s in { -1, 1 } do -- pitched glass roof with rafters, so the eggs show from above
+			local cf = at(0, 8.8, -2 + s * 2.2) * CFrame.Angles(s * 0.5, 0, 0)
+			vox(g, "RoofGlass", Vector3.new(8.8, 0.2, 5), cf, Color3.fromRGB(200, 236, 255), { Transparency = 0.6, CanCollide = false })
+			for x = -4.2, 4.2, 2.8 do vox(g, "Rafter", Vector3.new(0.45, 0.45, 5.2), cf * CFrame.new(x, 0.2, 0), PAL.wood[1], { CanCollide = false }) end
+		end
+		local heat = vox(g, "HeatLamp", Vector3.new(1, 0.6, 1), at(0, 9.2, -2), Color3.fromRGB(255, 190, 150), { CanCollide = false, Material = Enum.Material.Neon })
+		glow(heat, Color3.fromRGB(255, 200, 170), 14, 0.7)
 		for _, z in { 2, -6 } do vox(g, "Glass", Vector3.new(7.3, 6, 0.2), at(0, 4.4, z), Color3.fromRGB(190, 230, 250), { Transparency = 0.75, CanCollide = false }) end
 		for _, x in { -4, 4 } do vox(g, "Glass", Vector3.new(0.2, 6, 7.3), at(x, 4.4, -2), Color3.fromRGB(190, 230, 250), { Transparency = 0.75, CanCollide = false }) end
 		for i, ec in { PAL.pink[2], PAL.cream[2], Color3.fromRGB(140, 227, 192) } do
@@ -423,37 +503,44 @@ function Hub.build(parent, origin)
 		prompt(map, "Look at the map", "Map", "map")
 	end
 
-	-- 9. Campfire with stone ring, log benches and voxel flames (south of the shaft)
+	-- 9. Campfire: stone ring, a teepee of voxel logs, embers and dancing flame cubes; log benches round it
 	do
 		local g = group("Campfire")
-		local c = W(9, 0, 20)
+		local c = W(7, 0, 15)
 		for i = 0, 9 do
 			local a = i / 10 * math.pi * 2
 			vox(g, "Stone", Vector3.new(1.3, 0.9, 1.3), CFrame.new(c + Vector3.new(math.cos(a) * 2.3, 0.45, math.sin(a) * 2.3)), shadeOf("stone", i, 0, 3))
 		end
-		for _, a in { 0.3, 1.9 } do vox(g, "Log", Vector3.new(3.2, 0.7, 0.7), CFrame.new(c + Vector3.new(0, 0.5, 0)) * CFrame.Angles(0, a, 0), PAL.wood[1]) end
+		for i = 0, 3 do
+			local a = i / 4 * math.pi * 2 + 0.4
+			vox(g, "Log", Vector3.new(0.6, 3, 0.6), CFrame.new(c + Vector3.new(math.cos(a) * 0.7, 1.3, math.sin(a) * 0.7)) * CFrame.Angles(math.sin(a) * 0.45, 0, -math.cos(a) * 0.45), PAL.wood[(i % 2) + 1])
+		end
+		for i = 0, 5 do
+			local a = i / 6 * math.pi * 2
+			vox(g, "Ember", Vector3.new(0.35, 0.25, 0.35), CFrame.new(c + Vector3.new(math.cos(a) * 1.2, 0.3, math.sin(a) * 1.2)), EMBER, { CanCollide = false, Material = Enum.Material.Neon })
+		end
 		local flames = group("Flames")
 		flames.Parent = g
-		for i, f in { { 0, 1.3, 0, 1.4, EMBER }, { 0.3, 2.3, 0.2, 1, GOLD }, { -0.3, 1.9, -0.2, 0.9, Color3.fromRGB(255, 110, 150) }, { 0, 3.1, 0, 0.6, Color3.fromRGB(255, 240, 180) } } do
+		for i, f in { { 0, 1, 0, 1.1, EMBER }, { 0.25, 1.8, 0.15, 0.75, GOLD }, { -0.2, 2.4, -0.1, 0.45, Color3.fromRGB(255, 240, 190) } } do
 			local p = vox(flames, "Flame", Vector3.new(f[4], f[4], f[4]), CFrame.new(c + Vector3.new(f[1], f[2], f[3])), f[5], { CanCollide = false, Material = Enum.Material.Neon })
-			if i == 1 then glow(p, EMBER, 30, 2.2, true):SetAttribute("Flicker", 1) end
+			if i == 1 then glow(p, EMBER, 24, 1.6, true):SetAttribute("Flicker", 1) end
 		end
 		flames:SetAttribute("Flames", true)
-		for _, s in { -1, 1 } do vox(g, "Bench", Vector3.new(1.2, 1, 4.2), CFrame.new(c + Vector3.new(s * 5, 0.5, 0)), PAL.wood[2]) end
-		vox(g, "Bench", Vector3.new(4.2, 1, 1.2), CFrame.new(c + Vector3.new(0, 0.5, 5)), PAL.wood[3])
+		for _, s in { -1, 1 } do vox(g, "Bench", Vector3.new(1.2, 1, 4.2), CFrame.new(c + Vector3.new(s * 4.6, 0.5, 0)), PAL.wood[2]) end
+		vox(g, "Bench", Vector3.new(4.2, 1, 1.2), CFrame.new(c + Vector3.new(0, 0.5, 4.4)), PAL.wood[3])
 	end
 
 	-- 10. Friends bench (south-east)
-	vox(model, "FriendsBench", Vector3.new(5, 0.6, 1.6), CFrame.new(W(18, 1.4, 26)), PAL.plank[3])
-	vox(model, "FriendsBenchBack", Vector3.new(5, 1.6, 0.5), CFrame.new(W(18, 2.4, 26.8)), PAL.plank[2])
-	for _, s in { -1, 1 } do vox(model, "FriendsBenchLeg", Vector3.new(0.5, 1.1, 1.4), CFrame.new(W(18 + s * 2.1, 0.55, 26)), PAL.wood[1]) end
-	sign(model, "FRIENDS", CFrame.new(W(18, 4.2, 27.1)), 3.8, 1, PAL.pink[3])
+	vox(model, "FriendsBench", Vector3.new(5, 0.6, 1.6), CFrame.new(W(15, 1.4, 21)), PAL.plank[3])
+	vox(model, "FriendsBenchBack", Vector3.new(5, 1.6, 0.5), CFrame.new(W(15, 2.4, 21.8)), PAL.plank[2])
+	for _, s in { -1, 1 } do vox(model, "FriendsBenchLeg", Vector3.new(0.5, 1.1, 1.4), CFrame.new(W(15 + s * 2.1, 0.55, 21)), PAL.wood[1]) end
+	sign(model, "FRIENDS", CFrame.new(W(15, 4.2, 22.1)), 3.8, 1, PAL.pink[3])
 
 	-- 11. Lantern posts round the plaza
 	local posts = group("LanternPosts")
 	for i = 0, 9 do
 		local a = i / 10 * math.pi * 2 + 0.3
-		local p = W(math.cos(a) * 30, 0, math.sin(a) * 30 * 0.87)
+		local p = W(math.cos(a) * 24, 0, math.sin(a) * 24 * 0.87)
 		if not (math.abs(p.X - O.X) < 8 and p.Z - O.Z > 20) then -- keep the front open for the camera
 			vox(posts, "Post", Vector3.new(0.8, 7, 0.8), CFrame.new(p + Vector3.new(0, 3.5, 0)), PAL.wood[1])
 			vox(posts, "Arm", Vector3.new(2.2, 0.5, 0.5), CFrame.new(p + Vector3.new(0.9, 7, 0)), PAL.wood[1])
@@ -464,24 +551,27 @@ function Hub.build(parent, origin)
 	-- 12. The World Tree: a huge trunk behind the camp (north) and voxel roots that wall the plaza and arch overhead
 	local tree = group("WorldTree")
 	local trunk = W(0, 0, -74)
-	local tubes = {
-		{ trunk + Vector3.new(0, -2, 0), trunk + Vector3.new(0, 40, 0), trunk + Vector3.new(0, 80, 0), trunk + Vector3.new(0, 124, 0), 16, 11 }, -- trunk
-	}
-	for _, s in { -1, 1 } do -- roots wall the plaza on the west, north and east; the south stays open for the camera
+	local tubes = {}
+	for _, s in { -1, 1 } do
 		local function T(p0, p1, p2, p3, r0, r1)
-			table.insert(tubes, { p0, W(p1[1] * s, p1[2], p1[3]), W(p2[1] * s, p2[2], p2[3]), W(p3[1] * s, p3[2], p3[3]), r0, r1 })
+			table.insert(tubes, { W(p0[1] * s, p0[2], p0[3]), W(p1[1] * s, p1[2], p1[3]), W(p2[1] * s, p2[2], p2[3]), W(p3[1] * s, p3[2], p3[3]), r0, r1 })
 		end
-		T(trunk + Vector3.new(s * 10, 14, 8), { 40, 26, -50 }, { 58, 16, -10 }, { 52, -1, 24 }, 5, 2.8)
-		T(trunk + Vector3.new(s * 8, 6, 10), { 30, 12, -46 }, { 44, 8, -26 }, { 40, -1, -12 }, 4, 2.5)
-		T(W(s * 56, 6, 0), { 62, 10, 20 }, { 52, 6, 40 }, { 34, -1, 54 }, 3.4, 2.2)
-		T(trunk + Vector3.new(s * 14, 4, 12), { 20, 6, -50 }, { 26, 4, -42 }, { 30, -1, -34 }, 3.4, 2)
-		T(trunk + Vector3.new(s * 12, 60, 0), { 30, 72, -52 }, { 50, 62, -36 }, { 60, 28, -22 }, 4, 2.6) -- high arch behind the camp
+		T({ 8, 24, -62 }, { 34, 30, -50 }, { 46, 14, -16 }, { 38, -1, 18 }, 7, 3.6) -- the big wall roots, west and east
+		T({ 6, 12, -60 }, { 26, 12, -44 }, { 36, 6, -30 }, { 30, -1, -20 }, 5.6, 3)
+		T({ 46, 10, -18 }, { 54, 8, 4 }, { 48, 5, 24 }, { 32, -1, 34 }, 3.4, 1.8) -- curling round the south-west and south-east corners
+		T({ 10, 40, -60 }, { 22, 46, -34 }, { 30, 38, -16 }, { 40, 12, -4 }, 3.6, 2) -- arches over the back half of the plaza
+		T({ 0, 44, -58 }, { 8, 50, -30 }, { 20, 40, -8 }, { 34, 20, 6 }, 2.8, 1.6)
 	end
-	voxTubes(tree, tubes, 3, "bark", true)
-	for _, c in { W(-30, 72, -50), W(30, 72, -50), W(0, 124, -74), W(-18, 120, -70), W(18, 118, -78), W(-50, 60, -36), W(50, 60, -36), W(-56, 22, -6), W(56, 22, -6) } do
+	table.insert(tubes, { W(-30, 38, -20), W(-12, 52, -26), W(12, 52, -26), W(30, 38, -20), 2.8, 2.8 }) -- the crown arch across the north
+	table.insert(tubes, { W(0, -2, -64), W(0, 30, -64), W(0, 70, -64), W(0, 110, -66), 13, 9 }) -- the trunk
+	rootSweep(tree, tubes, "bark")
+	for _, c in { W(-22, 52, -36), W(22, 52, -36), W(0, 108, -66), W(-16, 104, -62), W(16, 100, -68), W(-38, 40, -14), W(38, 40, -14), W(0, 56, -28) } do
 		leafClump(tree, c, 3, 2.8)
 	end
-	for i, p in { W(-46, 12, -14), W(46, 12, -14), W(-44, 12, 12), W(44, 12, 12), W(-26, 22, -44), W(26, 22, -44), W(-52, 8, 30), W(52, 8, 30) } do -- lanterns hanging from the roots
+	stringLights(tree, W(-36, 26, -10), W(36, 26, -10), 6, 20)
+	stringLights(tree, W(-30, 20, 10), W(-8, 34, -20), 4, 9)
+	stringLights(tree, W(30, 20, 10), W(8, 34, -20), 4, 9)
+	for i, p in { W(-34, 14, -2), W(34, 14, -2), W(-20, 30, -28), W(20, 30, -28), W(-40, 8, 20), W(40, 8, 20) } do -- lanterns hanging from the roots
 		cubeLantern(tree, p, 2 + (i % 3) * 2)
 	end
 	local flies = Instance.new("ParticleEmitter") -- fireflies drifting round the canopy
@@ -491,13 +581,41 @@ function Hub.build(parent, origin)
 	local flyBox = vox(tree, "Fireflies", Vector3.new(90, 30, 70), CFrame.new(W(0, 26, -16)), Color3.new(), { Transparency = 1, CanCollide = false, CanQuery = false })
 	flies.Shape, flies.Parent = Enum.ParticleEmitterShape.Box, flyBox
 
+	-- 12b. The Hollow Mountain: a stepped voxel rock wall round the camp, lower toward the south where the camera looks in
+	local hollow = group("HollowWall")
+	for i = 0, 63 do
+		local a = i / 64 * math.pi * 2
+		local south = math.cos(a - math.pi / 2) -- 1 = due south (+z), the camera side
+		if south < 0.55 then
+			local rr = 50 + hash(i, 1, 2) * 5
+			local p = W(math.cos(a) * rr, 0, math.sin(a) * rr)
+			local h = (34 + hash(i, 3, 4) * 14) * (1 - math.max(south, 0) * 1.1)
+			local look = CFrame.lookAt(p, W(0, 0, 0))
+			local y = 0
+			for band = 1, 3 do
+				local bh = h / 3 + (band == 3 and hash(i, band, 9) * 4 or 0)
+				vox(hollow, "Rock", Vector3.new(5.6, bh, 6 + band * 1.5), look * CFrame.new(0, y + bh / 2, -band * 0.6 + 1), PAL.rock[((i + band) % 3) + 1])
+				y += bh
+			end
+			if hash(i, 7, 7) > 0.6 then -- a mossy ledge or a glowing crystal on the wall face
+				local ledge = vox(hollow, "Ledge", Vector3.new(4, 1, 2), look * CFrame.new(0, h * (0.3 + hash(i, 8, 8) * 0.4), -3.6), PAL.grass[2])
+				if hash(i, 9, 9) > 0.6 then
+					local tint = hash(i, 5, 5) > 0.5 and Color3.fromRGB(120, 210, 220) or Color3.fromRGB(190, 160, 240)
+					local cr = vox(hollow, "WallCrystal", Vector3.new(0.8, 2.6, 0.8), ledge.CFrame * CFrame.new(0, 1.6, 0) * CFrame.Angles(0.2, 0, 0.3), tint, { CanCollide = false, Material = Enum.Material.Neon })
+					if i % 3 == 0 then glow(cr, tint, 14, 0.6) end
+				end
+			end
+		end
+	end
+	vox(hollow, "FarGround", Vector3.new(320, 6, 320), CFrame.new(W(0, -14, 0)), PAL.rock[1], { CanCollide = false }) -- under the pit floor, so the shaft stays open
+
 	-- 13. Props that make the camp feel lived in: an ore cart on rails, barrels, crate stacks, bushes, glowing mushrooms, a log pile
 	local props = group("Props")
-	for i = 0, 7 do -- rails from the shaft rim toward the sell stall
+	for i = 0, 3 do -- rails from the shaft rim toward the sell stall
 		local x = -9 - i * 1.6
 		vox(props, "Sleeper", Vector3.new(0.6, 0.25, 2.6), CFrame.new(W(x, 0.55, 2)), PAL.wood[1])
 	end
-	for _, z in { 1.1, 2.9 } do vox(props, "Rail", Vector3.new(13, 0.25, 0.3), CFrame.new(W(-14.6, 0.8, z)), PAL.stone[1]) end
+	for _, z in { 1.1, 2.9 } do vox(props, "Rail", Vector3.new(7, 0.25, 0.3), CFrame.new(W(-11.4, 0.8, z)), PAL.stone[1]) end
 	vox(props, "Cart", Vector3.new(3, 1.8, 2.4), CFrame.new(W(-12, 1.9, 2)), PAL.wood[2])
 	for _, w in { { -13, 1 }, { -11, 1 }, { -13, 3 }, { -11, 3 } } do vox(props, "Wheel", Vector3.new(0.9, 0.9, 0.3), CFrame.new(W(w[1], 1.1, w[2] + (w[2] > 2 and 0.3 or -0.3))), PAL.stone[1]) end
 	for k = 0, 4 do vox(props, "CartOre", Vector3.new(0.8, 0.8, 0.8), CFrame.new(W(-12.9 + k * 0.45, 3 + (k % 2) * 0.3, 1.6 + (k % 3) * 0.4)), ({ EMBER, GOLD, Color3.fromRGB(201, 184, 242) })[k % 3 + 1], { Material = k == 2 and Enum.Material.Neon or Enum.Material.SmoothPlastic }) end
@@ -505,34 +623,60 @@ function Hub.build(parent, origin)
 		for y = 0, 2 do vox(props, "Barrel", Vector3.new(1.8, 0.9, 1.8), CFrame.new(p + Vector3.new(0, 0.45 + y * 0.9, 0)), y == 1 and PAL.wood[3] or PAL.wood[2]) end
 		vox(props, "BarrelBand", Vector3.new(1.9, 0.2, 1.9), CFrame.new(p + Vector3.new(0, 1.35, 0)), PAL.stone[1])
 	end
-	for _, p in { W(-27, 0, -8), W(-29, 0, -6), W(-14, 0, -27), W(24, 0, -10), W(33, 0, 6) } do barrel(p) end
-	for _, c in { { -30, 10 }, { 34, -10 }, { 13, -28 }, { -8, 27 } } do
+	for _, p in { W(-23, 0, -7), W(-24.8, 0, -5.4), W(-12, 0, -23), W(20, 0, -8), W(28, 0, 5) } do barrel(p) end
+	for _, c in { { -25, 9 }, { 28, -8 }, { 11, -24 }, { -7, 23 } } do
 		for k = 0, 2 do vox(props, "Crate", Vector3.new(2, 2, 2), CFrame.new(W(c[1] + (k % 2) * 2.1, 1 + math.floor(k / 2) * 2, c[2])) * CFrame.Angles(0, k * 0.2, 0), PAL.plank[2 + k % 2]) end
 	end
-	for _, c in { { -33, -2 }, { 35, 0 }, { -12, 32 }, { 26, 26 }, { -30, -20 }, { 32, -20 }, { -20, 30 } } do -- voxel bushes at the plaza edge
+	for _, c in { { -28, -2 }, { 29, 0 }, { -10, 27 }, { 22, 22 }, { -25, -18 }, { 27, -18 }, { -18, 25 } } do -- voxel bushes at the plaza edge
 		for i = -1, 1 do for k = -1, 1 do
 			if hash(c[1] + i, 3, c[2] + k) > 0.2 then
 				vox(props, "Bush", Vector3.new(1.6, 1.6, 1.6), CFrame.new(W(c[1] + i * 1.5, 0.8 + (i == 0 and k == 0 and 1.2 or 0), c[2] + k * 1.5)), shadeOf("leaf", c[1] + i, 1, c[2] + k), { CanCollide = false })
 			end
 		end end
 	end
-	for i, c in { { -40, -26 }, { -44, 4 }, { 42, -24 }, { 44, 2 }, { -36, 22 }, { 38, 20 } } do -- glowing mushrooms at the root walls
-		local tint = ({ PAL.pink[2], Color3.fromRGB(140, 227, 192), Color3.fromRGB(201, 184, 242) })[i % 3 + 1]
+	for i, c in { { -32, -22 }, { -38, 4 }, { 34, -20 }, { 38, 2 }, { -32, 20 }, { 32, 18 } } do -- glowing mushrooms at the root walls
+		local tint = ({ Color3.fromRGB(196, 96, 128), Color3.fromRGB(80, 168, 136), Color3.fromRGB(140, 120, 200) })[i % 3 + 1] -- darker tints: neon blooms them
 		for k = 0, 2 do
 			local h = 1.2 + k * 0.6
 			local p = W(c[1] + k * 1.3, 0, c[2] + (k % 2) * 1.1)
 			vox(props, "MushStem", Vector3.new(0.5, h, 0.5), CFrame.new(p + Vector3.new(0, h / 2, 0)), PAL.cream[2], { CanCollide = false })
-			local cap = vox(props, "MushCap", Vector3.new(h * 1.1, 0.6, h * 1.1), CFrame.new(p + Vector3.new(0, h + 0.2, 0)), tint, { CanCollide = false, Material = Enum.Material.Neon })
+			local cap = vox(props, "MushCap", Vector3.new(h * 1.1, 0.6, h * 1.1), CFrame.new(p + Vector3.new(0, h + 0.2, 0)), tint, { CanCollide = false })
 			if k == 2 then glow(cap, tint, 12, 0.8) end
 		end
 	end
-	for k = 0, 3 do vox(props, "LogPile", Vector3.new(3.6, 0.8, 0.8), CFrame.new(W(16, 0.4 + math.floor(k / 2) * 0.8, 16 + (k % 2) * 0.85)), PAL.wood[(k % 2) + 1]) end
+	for k = 0, 3 do vox(props, "LogPile", Vector3.new(3.6, 0.8, 0.8), CFrame.new(W(14, 0.4 + math.floor(k / 2) * 0.8, 12 + (k % 2) * 0.85)), PAL.wood[(k % 2) + 1]) end
 	for i = 0, 4 do -- stepping stones from the spawn to the plaza
-		vox(props, "Step", Vector3.new(2.6, 0.4, 1.8), CFrame.new(W((i % 2) * 0.8 - 0.4, 0.5, 36 + i * 3.2)), PAL.plaza[2])
+		vox(props, "Step", Vector3.new(2.6, 0.4, 1.8), CFrame.new(W((i % 2) * 0.8 - 0.4, 0.5, 28 + i * 3.2)), PAL.plaza[2])
 	end
 
-	-- 14. Spawn point south of the shaft, facing it
-	vox(model, "SpawnPoint", Vector3.new(1, 1, 1), CFrame.lookAt(W(0, 3.5, 18), W(0, 3.5, 0)), PAL.wood[1], { Transparency = 1, CanCollide = false, CanQuery = false })
+	-- 14. Villagers who run the stations, each with a bobbing "!"
+	for _, v in { { "Bolt", "Forge", Vector3.new(-2.2, 0, 6.6), Color3.fromRGB(110, 120, 170), Color3.fromRGB(96, 70, 60) },
+		{ "Pip", "SellStall", Vector3.new(2.6, 0, -1.6), PAL.pink[2], PAL.cream[2] },
+		{ "Maribel", "Incubator", Vector3.new(5.6, 0, 2.4), Color3.fromRGB(140, 227, 192), Color3.fromRGB(201, 184, 242) } } do
+		local st = model:FindFirstChild(v[2])
+		local anchorPart = st and st:FindFirstChildWhichIsA("BasePart")
+		if anchorPart then
+			local base = st:GetBoundingBox()
+			local look = (Vector3.new(O.X, 0, O.Z) - Vector3.new(base.Position.X, 0, base.Position.Z)).Unit
+			local pos = Vector3.new(base.Position.X, O.Y, base.Position.Z) + look * v[3].Z + look:Cross(Vector3.yAxis) * v[3].X
+			villager(v[1], CFrame.lookAt(pos, pos + look), v[4], v[5])
+		end
+	end
+
+	for i, v in { { "Juniper", Vector3.new(7 - 6.4, 0, 15), PAL.pink[2], Color3.fromRGB(96, 150, 132) }, { "Tock", Vector3.new(7 + 6.4, 0, 15), Color3.fromRGB(142, 200, 255), PAL.roof[2] } } do
+		local pos = W(v[2].X, 0.5, v[2].Z)
+		local fire = W(7, 0.5, 15)
+		local m = villager(v[1], CFrame.lookAt(pos, Vector3.new(fire.X, pos.Y, fire.Z)), v[3], v[4])
+		local q = m:FindFirstChild("Quest")
+		if q then q:Destroy() end
+		local hand = CFrame.lookAt(pos, Vector3.new(fire.X, pos.Y, fire.Z)) * CFrame.new(0.9, 2.4, -1.4)
+		vox(m, "Stick", Vector3.new(0.18, 0.18, 2.6), hand * CFrame.Angles(-0.35, 0, 0), PAL.wood[3], { CanCollide = false })
+		vox(m, "Marshmallow", Vector3.new(0.55, 0.55, 0.55), hand * CFrame.Angles(-0.35, 0, 0) * CFrame.new(0, 0, -1.4), PAL.cream[3], { CanCollide = false })
+		m:SetAttribute("Bob", 0.06 + i * 0.02)
+	end
+
+	-- 15. Spawn point south of the shaft, facing it
+	vox(model, "SpawnPoint", Vector3.new(1, 1, 1), CFrame.lookAt(W(0, 3.5, 14), W(0, 3.5, 0)), PAL.wood[1], { Transparency = 1, CanCollide = false, CanQuery = false })
 
 	model.Parent = parent
 	return model
