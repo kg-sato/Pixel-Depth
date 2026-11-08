@@ -1,16 +1,20 @@
 -- ReplicatedStorage.Shared.Config: all tunable numbers for the Pixel Depths prototype (Game Spec v1.2).
 local C = {}
 
--- World grid (one shaft per player, side view, one block thick)
+-- World (2026-11-08 v2, the user: "the lobby where you upgrade is a 3rd person birdseye, slightly behind the player,
+-- once they enter the mine it switches to first person"). Each player owns a plot: the camp on the surface and a 3D
+-- voxel mine under it. Only the rock surfaces you can see from the open cave around you exist as Parts (flood fill).
 C.B = 4 -- block size in studs
-C.GAP = 0.14 -- blocks are this much smaller than the grid: the dark backing shows through as grid lines (Delve reference)
-C.GRASS = Color3.fromRGB(96, 168, 70) -- grass cap on the surface row
-C.COLS = 24 -- shaft width in blocks
+C.MINE_W = 20 -- mine footprint in blocks (x and z)
 C.LAYER_ROWS = 60 -- rows per layer
-C.SHAFT_GAP = 44 -- blocks between two players' shafts: room for each camp
-C.START_COL = 12 -- column of the glowing first block
-C.WINDOW = true -- spike result: only rows near the player exist as Parts (false = build all 420 rows, for the perf test)
-C.WIN_UP, C.WIN_DOWN, C.SURFACE_KEEP = 24, 36, 14 -- rows kept above/below the player, plus the top rows
+C.CRUST = 2 -- unbreakable ground rows under the camp; the mine starts below them
+C.PLOT_GAP = 240 -- studs between two players' mines
+C.MINE_X0 = 3000 -- the mines sit far from the shared hub (hub at the origin); the lift moves you between them
+C.ENTRY = { 10, 10 } -- column and depth of the 2x2 entrance hole (cells c..c+1, d..d+1)
+C.ENTRY_DROP = 3 -- open rows under the hole before the first (tutorial) block
+C.VIEW_R, C.VIEW_UP, C.VIEW_DOWN = 9, 7, 9 -- flood-fill render box around the player, in blocks
+C.VIEW_MAX = 3200 -- open cells visited at most per render pass
+C.CAVE_START = 11 -- first mine row where natural caves can open near the entrance
 
 -- Layers: name, subtitle, wall colour, ores {name, colour, hp multiplier, value}; ore 1 is the base block
 C.LAYERS = {
@@ -36,22 +40,15 @@ C.GILD_COLOR = Color3.fromRGB(255, 208, 64)
 C.EGG_CHANCE = 0.004
 C.EGG_COLOR = Color3.fromRGB(240, 226, 190)
 
--- Scripted first-30-seconds rows: [row] = {[column offset from START_COL] = kind}
--- kinds: base, ore2, ore3, gild (Gilded ore3), egg
+-- Scripted first-30-seconds blocks under the entrance hole: [step row] = kind for all four cells of the 2x2 column
+-- (step row 1 = the first block row under the open drop). kinds: base, ore2, ore3, gild (Gilded ore3), egg
 C.START_ROWS = 6
-C.START = {
-	[1] = { [0] = "base" },
-	[2] = { [0] = "base" },
-	[3] = { [0] = "ore3" },
-	[4] = { [-1] = "gild", [0] = "gild", [1] = "gild" },
-	[5] = { [0] = "base" },
-	[6] = { [0] = "egg" },
-}
+C.START = { "base", "base", "ore3", "gild", "base", "egg" }
 C.PREFILL = 4 -- endowed progress: the backpack starts 4/10
 
 -- Digging
 C.DIG_COOLDOWN = 0.18 -- seconds between player hits (server enforced)
-C.REACH = 10.5 -- studs from the character to a block centre
+C.REACH = 13 -- studs from the character's head to a block centre
 -- Pixel textures (art/pd_roblox.py, 32 px art upscaled to 256 px, uploaded 2026-11-08)
 C.TEX = {
 	alfglow_base0 = "rbxassetid://115448677967942",
@@ -101,10 +98,26 @@ C.TEX = {
 	titan_ore2 = "rbxassetid://129226927260437",
 	titan_ore3 = "rbxassetid://81273911948508",
 	titan_wall = "rbxassetid://134779103740583",
+	-- 3D world (art/pd_world3d.py, uploaded 2026-11-08)
+	grass_top = "rbxassetid://133229924509191",
+	moss_top = "rbxassetid://105099584389807",
+	water_top = "rbxassetid://102263231288805",
+	crack1 = "rbxassetid://132940257759186",
+	crack2 = "rbxassetid://109599158075303",
+	crack3 = "rbxassetid://88354204027901",
 }
 C.LAYER_TEX = { "rootholm", "titan", "glitter", "muspell", "mimir", "alfglow", "gap" }
-C.CAMP_W = 20 -- blocks of camp ground on each side of the shaft
-C.SHRINE_ROWS = { 22, 84, 146, 208, 270, 332, 394 } -- one hidden shrine room per layer (spec: structures hide under mist)
+C.SHRINE_ROWS = { 22, 84, 146, 208, 270, 332, 394 } -- one hidden shrine room per layer (rows of the mine, 5x3x5 cells)
+
+-- Caves (3D noise): caverns where the cave field is high, winding tunnels where two fields both cross zero
+C.CAVE_SCALE = { 9, 6 } -- horizontal and vertical noise scale in blocks
+C.CAVE_LEVEL = 0.32 -- cavern threshold (higher = fewer caverns)
+C.WORM_WIDTH = 0.085 -- tunnel thickness in noise units
+C.WATER_CHANCE = 0.5 -- share of cave floors in a wet zone that hold a pool
+C.DECO = { mushroom = 0.16, crystal = 0.05, drip = 0.22, moss = 0.6 } -- per eligible cave cell
+C.PASTEL = {
+	Color3.fromRGB(255, 157, 176), Color3.fromRGB(140, 227, 192), Color3.fromRGB(201, 184, 242), Color3.fromRGB(255, 224, 138),
+}
 
 -- Pickaxe ladder: Wood and Stone are part-built; the ten magical pickaxes are the Pickaxe Forge models (ServerStorage.Pickaxes)
 C.PICKS = {
@@ -175,7 +188,7 @@ C.HATCH_TIME = 5 -- seconds of the hatch show before the pet starts digging
 
 -- Saving (ProfileStore; Studio without API access uses its mock store)
 C.SAVE_STORE = "PixelDepths_v1"
-C.SAVE_TEMPLATE = { gold = 0, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0 }
+C.SAVE_TEMPLATE = { gold = 0, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
 
 -- Layer hazards. Layer 2, Titan's Stir: after you dig, the block above may shake loose and drop one row.
 -- Standing under it stuns you briefly and spills part of the bag (no damage, kid friendly).
@@ -185,18 +198,20 @@ C.STIR_WARN = 1.0 -- seconds of shaking before it drops
 C.STIR_STUN = 0.8
 C.STIR_LOSS = 0.2 -- share of the bag spilled
 
--- Camp incubator: after the tutorial egg, fossil eggs go into your bag of eggs and hatch at the camp incubator
-C.INCUBATOR_COL = 20 -- surface column of the incubator (the sell stand is at column 3)
+-- Daily relic chest (Miro board: non-punitive, pick 1 of 3, 24 h; a missed day only pauses the streak)
+C.CHEST_GOLD = 40 -- gold per chest, times the streak (capped at 7)
 
 -- Night Shaft (spec 5.7): your crew keeps digging while you are away; a report waits when you come back
 C.NIGHT_CAP = 8 * 3600 -- seconds counted at most
 C.NIGHT_MIN = 120 -- no report for shorter breaks
 C.NIGHT_RATE = 0.5 -- gold per minute for each point of crew dig power per second
 
--- Camera (near-orthographic, tilted so block tops and sides show; movement stays on the plane)
-C.CAM_FOV = 22
-C.CAM_DIST = 120 -- about 11 rows visible: the miner reads at phone size
-C.CAM_YAW = math.rad(16) -- turn toward the right side faces
-C.CAM_PITCH = math.rad(20) -- look down onto the top faces
+-- Cameras: bird's-eye follow camera in the camp, first person in the mine
+C.CAM_FOV = 50
+C.CAM_DIST = 46 -- studs from the player
+C.CAM_PITCH = math.rad(52) -- looking down
+C.CAM_YAW = 0 -- fixed: the camera sits south of the player looking north (toward the stations)
+C.FP_FOV = 80
+
 
 return C

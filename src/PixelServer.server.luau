@@ -1,4 +1,8 @@
--- ServerScriptService.PixelServer: shafts, digging, backpack, selling, upgrades, frenzy, eggs, crew (server decides everything).
+-- ServerScriptService.PixelServer: the shared camp hub, private 3D voxel mines, digging, backpack, selling, upgrades, frenzy, eggs, crew.
+-- The server decides everything. Everyone shares the hub (HubBuilder, at the origin); each player owns a mine far away
+-- (MINE_X0 + slot * PLOT_GAP) made of B-stud cells; the lift in the hub moves you between them.
+-- Cells: row r (1 = first row under the crust, down), column c (+x) and depth d (+z), 1..MINE_W. Only rock surfaces
+-- that face the open cave around the player are Parts: a flood fill from the player's cell decides which (refresh).
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
 local Lighting = game:GetService("Lighting")
@@ -6,11 +10,13 @@ local SS = game:GetService("ServerStorage")
 local IS_STUDIO = game:GetService("RunService"):IsStudio()
 local C = require(RS:WaitForChild("Shared"):WaitForChild("Config"))
 local ProfileStore = require(game:GetService("ServerScriptService"):WaitForChild("ProfileStore"))
-local Camp = require(game:GetService("ServerScriptService"):WaitForChild("CampBuilder"))
+local HubBuilder = require(game:GetService("ServerScriptService"):WaitForChild("HubBuilder"))
 local Store = ProfileStore.New(C.SAVE_STORE, C.SAVE_TEMPLATE)
 
-local B, COLS = C.B, C.COLS
+local B, W = C.B, C.MINE_W
 local ROWS = #C.LAYERS * C.LAYER_ROWS
+local E1, E2, DROP = C.ENTRY[1], C.ENTRY[2], C.ENTRY_DROP
+local TOP = -C.CRUST * B -- y of the mine's top face (the crust is above it)
 
 -- Remotes
 local remotes = Instance.new("Folder")
@@ -24,153 +30,364 @@ end
 local DigR, SellR, BuyR, SurfaceR, StateR, FxR = remote("Dig"), remote("Sell"), remote("Buy"), remote("Surface"), remote("State"), remote("Fx")
 remotes.Parent = RS
 
-local shafts = Instance.new("Folder")
-shafts.Name = "Shafts"
-shafts.Parent = workspace
+local oldHub = workspace:FindFirstChild("Hub") -- always build the current hub (an Edit-mode preview may be saved in the place)
+if oldHub then oldHub:Destroy() end
+local hub = HubBuilder.build(workspace, Vector3.zero)
+local HUB_SPAWN = hub:FindFirstChild("SpawnPoint").CFrame
+local HUB_SELL = hub:FindFirstChild("SellPoint", true)
 
--- Night (key art scene_night.png): moon and stars, lavender ambient, glow sources do the lighting
-Lighting.ClockTime = 0.3
-Lighting.Brightness = 1.4
-Lighting.Ambient = Color3.fromRGB(64, 54, 96)
-Lighting.OutdoorAmbient = Color3.fromRGB(104, 92, 156)
-Lighting.EnvironmentDiffuseScale, Lighting.EnvironmentSpecularScale = 0.45, 0.35
-Lighting.GlobalShadows, Lighting.ShadowSoftness = true, 0.25
+local plots = Instance.new("Folder")
+plots.Name = "Shafts"
+plots.Parent = workspace
+
+-- Night (key art scene_night.png): moonlit lilac camp outdoors; under the crust it is dark, light comes from the lantern and glowing things
+Lighting.ClockTime = 0.4
+Lighting.Brightness = 0.8
+Lighting.ExposureCompensation = -0.25
+Lighting.Ambient = Color3.fromRGB(30, 24, 50)
+Lighting.OutdoorAmbient = Color3.fromRGB(96, 88, 146)
+Lighting.EnvironmentDiffuseScale, Lighting.EnvironmentSpecularScale = 0.3, 0.25
+Lighting.GlobalShadows, Lighting.ShadowSoftness = true, 0.3
 local function effect(cls, props)
 	local e = Lighting:FindFirstChildOfClass(cls) or Instance.new(cls)
 	for k, v in props do e[k] = v end
 	e.Parent = Lighting
 end
-effect("Atmosphere", { Density = 0.3, Offset = 0.1, Haze = 0.5, Glare = 0.2, Color = Color3.fromRGB(70, 56, 120), Decay = Color3.fromRGB(28, 18, 60) })
-effect("BloomEffect", { Intensity = 0.8, Size = 24, Threshold = 0.95 })
-effect("ColorCorrectionEffect", { Saturation = 0.22, Contrast = 0.12, Brightness = 0.03, TintColor = Color3.fromRGB(240, 230, 255) })
-effect("Sky", { StarCount = 3000, MoonAngularSize = 16, CelestialBodiesShown = true })
+effect("Atmosphere", { Density = 0.3, Offset = 0.12, Haze = 1.4, Glare = 0, Color = Color3.fromRGB(86, 70, 140), Decay = Color3.fromRGB(34, 22, 66) })
+effect("BloomEffect", { Intensity = 0.5, Size = 24, Threshold = 1.1 })
+effect("ColorCorrectionEffect", { Saturation = 0.06, Contrast = 0.12, Brightness = 0.02, TintColor = Color3.fromRGB(242, 234, 255) })
+effect("Sky", { StarCount = 3000, MoonAngularSize = 18, CelestialBodiesShown = true })
 local clouds = workspace.Terrain:FindFirstChildOfClass("Clouds") or Instance.new("Clouds")
-clouds.Cover, clouds.Density, clouds.Color, clouds.Parent = 0.4, 0.5, Color3.fromRGB(120, 110, 170), workspace.Terrain
+clouds.Cover, clouds.Density, clouds.Color, clouds.Parent = 0.45, 0.5, Color3.fromRGB(120, 110, 176), workspace.Terrain
 
 local proto = Instance.new("Part")
 proto.Anchored = true
-proto.Size = Vector3.new(B - C.GAP, B - C.GAP, B)
+proto.Size = Vector3.new(B, B, B)
 proto.Material = Enum.Material.SmoothPlastic
 proto.TopSurface, proto.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
-local gemProto = proto:Clone()
-gemProto.CanCollide, gemProto.CanQuery, gemProto.CanTouch = false, false, false
 
-local data = {} -- [player] = shaft state
+local data = {} -- [player] = plot state
 local equipPick -- defined with the held pickaxe below
 local slots = {}
 
 local function layerOf(r)
 	return math.clamp(math.ceil(r / C.LAYER_ROWS), 1, #C.LAYERS)
 end
-
-local function cellPos(s, r, c)
-	return Vector3.new(s.x0 + (c - 0.5) * B, -(r - 0.5) * B, 0)
+local function keyOf(r, c, d)
+	return (r + 8) * 4096 + (c + 4) * 64 + (d + 4)
+end
+local function cellPos(s, r, c, d)
+	return Vector3.new(s.ox + (c - 0.5 - W / 2) * B, TOP - (r - 0.5) * B, s.oz + (d - 0.5 - W / 2) * B)
+end
+local function cellOf(s, pos) -- row, column, depth of a world position (rows < 1 are in the crust or the sky)
+	return math.floor((TOP - pos.Y) / B) + 1, math.floor((pos.X - s.ox) / B + W / 2) + 1, math.floor((pos.Z - s.oz) / B + W / 2) + 1
 end
 
-local function shade(col, r, c)
-	local h, sat, v = col:ToHSV()
-	return Color3.fromHSV(h, sat, math.clamp(v * (0.9 + ((r * 7 + c * 13) % 3) * 0.07), 0, 1))
-end
+-- Neighbours: dr, dc, dd and the face of a block that looks at that neighbour
+local NB = {
+	{ -1, 0, 0, Enum.NormalId.Top }, { 1, 0, 0, Enum.NormalId.Bottom }, { 0, 1, 0, Enum.NormalId.Right },
+	{ 0, -1, 0, Enum.NormalId.Left }, { 0, 0, 1, Enum.NormalId.Back }, { 0, 0, -1, Enum.NormalId.Front },
+}
 
-local SHRINE = {} -- [row] = true for the three rows of each hidden shrine room (columns 3 to 7)
+local SHRINE = {} -- [row] = room rows (3 rows from each shrine row; columns and depths 3..7)
 for _, r0 in C.SHRINE_ROWS do for r = r0, r0 + 2 do SHRINE[r] = true end end
+local function inShrine(r, c, d)
+	return SHRINE[r] and c >= 3 and c <= 7 and d >= 3 and d <= 7
+end
 
-local function newCell(s, r, c)
-	if SHRINE[r] and c >= 3 and c <= 7 then return { k = "air" } end
-	local start = C.START[r]
-	local kind = start and start[c - s.sc]
-	if not kind then
-		local rng = Random.new(s.seed + r * 997 + c * 31)
-		local x = rng:NextNumber()
-		if r > C.START_ROWS and x < C.EGG_CHANCE then
-			kind = "egg"
-		elseif x < C.ORE3_CHANCE then
-			kind = (r > C.START_ROWS and rng:NextNumber() < C.GILDED_CHANCE * 8) and "gild" or "ore3"
-		elseif x < C.ORE3_CHANCE + C.ORE2_CHANCE then
-			kind = "ore2"
-		else
-			kind = "base"
-		end
+-- Generation (pure, deterministic per plot seed)
+local function caveAt(s, r, c, d)
+	if r < 4 or r > ROWS or c < 1 or c > W or d < 1 or d > W then return false end
+	if r < C.CAVE_START and math.abs(c - E1 - 0.5) < 5 and math.abs(d - E2 - 0.5) < 5 then return false end -- the tutorial column stays solid
+	local sx, sy = C.CAVE_SCALE[1], C.CAVE_SCALE[2]
+	local L = layerOf(r)
+	if math.noise(c / sx + s.nx, r / sy + 0.31, d / sx + s.nz) > C.CAVE_LEVEL - math.min(L - 1, 3) * 0.03 then return true end
+	local w = C.WORM_WIDTH
+	if math.abs(math.noise(c / 11 + s.nx + 40.7, r / 9, d / 11 + s.nz)) > w then return false end
+	return math.abs(math.noise(c / 11 + s.nx, r / 9 + 70.3, d / 11 + s.nz + 20.9)) < w
+end
+
+local H4 = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }
+local function wetAt(s, r, c, d) -- a pool sits on a cave floor where no open neighbour would let it spill
+	if caveAt(s, r + 1, c, d) then return false end
+	if math.noise(c / 7 + s.nx + 9.1, r / 5 + 0.7, d / 7 + s.nz) < 0.08 then return false end
+	for _, o in H4 do
+		local cc, dd = c + o[1], d + o[2]
+		if caveAt(s, r, cc, dd) and caveAt(s, r + 1, cc, dd) then return false end
 	end
+	return Random.new(s.seed * 13 + keyOf(r, c, d)):NextNumber() < C.WATER_CHANCE
+end
+
+local function genKind(s, r, c, d)
+	if c < 1 or c > W or d < 1 or d > W or r > ROWS then return "bedrock" end
+	local hole = (c == E1 or c == E1 + 1) and (d == E2 or d == E2 + 1)
+	if r < 1 then return "crust" end
+	if hole then
+		if r <= DROP then return "air" end
+		local k = C.START[r - DROP]
+		if k then return k end
+	end
+	if inShrine(r, c, d) then return "air" end
+	if caveAt(s, r, c, d) then return wetAt(s, r, c, d) and "water" or "air" end
+	local rng = Random.new(s.seed * 7919 + keyOf(r, c, d))
+	local x = rng:NextNumber()
+	local deep = r > DROP + C.START_ROWS
+	if deep and x < C.EGG_CHANCE then return "egg" end
+	if x < C.ORE3_CHANCE then return (deep and rng:NextNumber() < C.GILDED_CHANCE * 8) and "gild" or "ore3" end
+	if x < C.ORE3_CHANCE + C.ORE2_CHANCE then return "ore2" end
+	return "base"
+end
+
+local function genAt(s, k, r, c, d)
+	local g = s.gen[k]
+	if g == nil then
+		g = genKind(s, r, c, d)
+		s.gen[k] = g
+	end
+	return g
+end
+local function kindAt(s, r, c, d)
+	local k = keyOf(r, c, d)
+	return s.mods[k] or genAt(s, k, r, c, d)
+end
+local function isOpen(kind)
+	return kind == "air" or kind == "water"
+end
+local UNBREAKABLE = { bedrock = true, crust = true }
+
+local function cellInfo(kind, r) -- ore name, colour, value and hp of a solid cell
 	local L = layerOf(r)
 	local hpScale, valScale = 2 ^ (L - 1), 3 ^ (L - 1)
 	if kind == "egg" then
-		return { k = kind, ore = "Fossil Egg", col = C.EGG_COLOR, v = 0, hp = 2 * hpScale, max = 2 * hpScale }
+		return { ore = "Fossil Egg", col = C.EGG_COLOR, v = 0, hp = 2 * hpScale }
 	end
-	local o = C.LAYERS[L][4][kind == "base" and 1 or kind == "ore2" and 2 or 3]
-	local hp = math.ceil(o[3] * hpScale)
-	local cell = { k = kind, ore = o[1], col = o[2], v = o[4] * valScale, hp = hp, max = hp }
+	local o = C.LAYERS[L][4][(kind == "ore2" and 2) or ((kind == "ore3" or kind == "gild") and 3) or 1]
+	local info = { ore = o[1], col = o[2], v = o[4] * valScale, hp = math.ceil(o[3] * hpScale) }
 	if kind == "gild" then
-		cell.ore, cell.col, cell.v = "Gilded " .. o[1], C.GILD_COLOR, cell.v * C.GILD_MULT
+		info.ore, info.col, info.v = "Gilded " .. o[1], C.GILD_COLOR, info.v * C.GILD_MULT
 	end
-	return cell
+	return info
 end
 
 local GILD_ODDS = math.floor(1 / (C.ORE3_CHANCE * C.GILDED_CHANCE * 8) + 0.5) -- true per-block odds for the tags
 local EGG_ODDS = math.floor(1 / C.EGG_CHANCE + 0.5)
 
-local function texFor(r, c, kind)
-	if r == 1 then return C.TEX.grass end
+local function texFor(kind, r, c, d)
 	if kind == "gild" then return C.TEX.gilded end
 	if kind == "egg" then return C.TEX.egg end
-	local nm = C.LAYER_TEX[layerOf(r)]
+	local nm = C.LAYER_TEX[layerOf(math.max(r, 1))]
+	if kind == "bedrock" then return C.TEX[nm .. "_wall"] end
 	if kind == "ore2" or kind == "ore3" then return C.TEX[nm .. "_" .. kind] end
-	return C.TEX[nm .. "_base" .. ((r * 7 + c * 13) % 2)]
+	return C.TEX[nm .. "_base" .. ((r * 7 + c * 13 + d * 5) % 2)]
 end
 
-local function buildPart(s, r, c, cell)
+local function shade(col, r, c, d)
+	local h, sat, v = col:ToHSV()
+	return Color3.fromHSV(h, sat, math.clamp(v * (0.85 + ((r * 7 + c * 13 + d * 3) % 3) * 0.07), 0, 1))
+end
+
+-- A block shows its texture on every face that looks into open space; a natural cave floor gets a mossy top
+local function updateFaces(s, p, r, c, d, kind)
+	for _, n in NB do
+		local face = n[4]
+		if not p:FindFirstChild(face.Name) then
+			local rr, cc, dd = r + n[1], c + n[2], d + n[3]
+			local nk = rr >= 1 and kindAt(s, rr, cc, dd) or "crust"
+			if isOpen(nk) then
+				local dc = Instance.new("Decal")
+				dc.Name, dc.Face = face.Name, face
+				local mossy = face == Enum.NormalId.Top and kind ~= "gild" and kind ~= "egg" and not s.mods[keyOf(rr, cc, dd)] and rr >= C.CAVE_START
+				dc.Texture = mossy and C.TEX.moss_top or texFor(kind, r, c, d)
+				dc.Parent = p
+			end
+		end
+	end
+end
+
+local function buildBlock(s, k, r, c, d, fake)
 	local p = proto:Clone()
-	p.Name = r .. "_" .. c
-	p.Position = cellPos(s, r, c)
-	local base = C.LAYERS[layerOf(r)][4][1][2]
-	p.Color = shade(base, r, c):Lerp(Color3.new(), 0.25) -- side faces read as the shaded edge of the texture
-	local tex = texFor(r, c, cell.k)
-	for _, face in { Enum.NormalId.Back, Enum.NormalId.Top } do
-		local d = Instance.new("Decal")
-		d.Texture, d.Face = tex, face
-		if face == Enum.NormalId.Top then d.Color3 = Color3.fromRGB(215, 205, 235) end
-		d.Parent = p
-	end
-	if cell.k == "gild" or cell.k == "egg" then -- rare: whole glowing block with a rarity outline and a true 1 IN N tag (client draws the tag)
-		local l = Instance.new("PointLight")
-		l.Color, l.Range, l.Brightness = cell.k == "gild" and Color3.fromRGB(255, 210, 110) or Color3.fromRGB(255, 236, 220), 8, 0.8
-		l.Parent = p
-		p:SetAttribute("Tag", "1 IN " .. (cell.k == "gild" and GILD_ODDS or EGG_ODDS))
-		p:SetAttribute("TagColor", cell.k == "gild" and Color3.fromRGB(255, 206, 70) or Color3.fromRGB(176, 101, 245))
-	end
+	p.Name = r .. "_" .. c .. "_" .. d
+	p.Position = cellPos(s, r, c, d)
 	p:SetAttribute("R", r)
 	p:SetAttribute("C", c)
+	p:SetAttribute("D", d)
+	if fake then -- closes the view where the open cave goes on past the render box: reads as darkness
+		p.Color, p.Material = Color3.fromRGB(6, 4, 12), Enum.Material.SmoothPlastic
+		p.CastShadow, p.CanCollide = false, false
+		p:SetAttribute("Fake", true)
+	else
+		local kind = kindAt(s, r, c, d)
+		local base = C.LAYERS[layerOf(math.max(r, 1))][4][1][2]
+		p.Color = shade(kind == "bedrock" and base:Lerp(Color3.new(), 0.5) or base, r, c, d)
+		updateFaces(s, p, r, c, d, kind)
+		if kind == "gild" or kind == "egg" then -- rare: glowing block with a rarity outline and a true 1 IN N tag (the client draws the tag)
+			local l = Instance.new("PointLight")
+			l.Color, l.Range, l.Brightness = kind == "gild" and Color3.fromRGB(255, 210, 110) or Color3.fromRGB(255, 220, 236), 14, 1.4
+			l.Parent = p
+			p:SetAttribute("Tag", "1 IN " .. (kind == "gild" and GILD_ODDS or EGG_ODDS))
+			p:SetAttribute("TagColor", kind == "gild" and Color3.fromRGB(255, 206, 70) or Color3.fromRGB(255, 157, 176))
+		end
+		if kind == "bedrock" then p:SetAttribute("Bedrock", true) end
+	end
 	p.Parent = s.folder
-	cell.part = p
+	s.parts[k] = p
+	return p
 end
 
-local function ensureRow(s, r)
-	if r < 1 or r > ROWS or s.built[r] then return end
-	local row = s.grid[r]
-	if not row then
-		row = {}
-		for c = 1, COLS do row[c] = newCell(s, r, c) end
-		s.grid[r] = row
-	end
-	for c = 1, COLS do
-		if row[c].k ~= "air" then buildPart(s, r, c, row[c]) end
-	end
-	s.built[r] = true
+-- Cave dressing (only in natural caves): glowing pastel mushrooms and crystals on floors, stalactites on ceilings, pebbles, pools
+local function decoPart(f, size, cf, color, neon, shape)
+	local q = Instance.new("Part")
+	q.Anchored, q.CanCollide, q.CanQuery, q.CanTouch, q.CastShadow = true, false, false, false, false
+	q.Size, q.CFrame, q.Color = size, cf, color
+	q.Material = neon and Enum.Material.Neon or Enum.Material.SmoothPlastic
+	q.TopSurface, q.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
+	if shape then q.Shape = shape end
+	q.Parent = f
+	return q
 end
 
-local function dropRow(s, r)
-	if not s.built[r] then return end
-	for c = 1, COLS do
-		local cell = s.grid[r][c]
-		if cell.part then cell.part:Destroy(); cell.part = nil end
+local function buildDeco(s, k, r, c, d)
+	if s.mods[k] or s.noDeco[k] then return end -- dug cells stay bare
+	local kind = genAt(s, k, r, c, d)
+	local f = Instance.new("Folder")
+	f.Name = "D" .. k
+	local pos = cellPos(s, r, c, d)
+	local floorY, ceilY = pos.Y - B / 2, pos.Y + B / 2
+	local rng = Random.new(s.seed * 31 + k)
+	local L = layerOf(r)
+	local wall = C.LAYERS[L][4][1][2]
+	if kind == "water" then
+		local w = decoPart(f, Vector3.new(B, B * 0.72, B), CFrame.new(pos.X, floorY + B * 0.36, pos.Z), Color3.fromRGB(96, 186, 214))
+		w.Transparency, w.Material, w.Name = 0.38, Enum.Material.Glass, "Water"
+		local t = Instance.new("Texture")
+		t.Texture, t.Face, t.StudsPerTileU, t.StudsPerTileV, t.Transparency = C.TEX.water_top, Enum.NormalId.Top, B, B, 0.15
+		t.Parent = w
+		w:SetAttribute("Ripple", true)
+	elseif r < ROWS and not isOpen(kindAt(s, r + 1, c, d)) and r >= C.CAVE_START then
+		local x = rng:NextNumber()
+		local tint = C.PASTEL[rng:NextInteger(1, #C.PASTEL)]
+		if x < C.DECO.mushroom then
+			for i = 1, rng:NextInteger(1, 3) do
+				local h = rng:NextNumber(0.7, 1.8) * (i == 1 and 1.3 or 1)
+				local px, pz = pos.X + rng:NextNumber(-1.3, 1.3), pos.Z + rng:NextNumber(-1.3, 1.3)
+				decoPart(f, Vector3.new(0.35, h, 0.35), CFrame.new(px, floorY + h / 2, pz), Color3.fromRGB(240, 228, 220))
+				local cap = decoPart(f, Vector3.new(h * 0.9, h * 0.45, h * 0.9), CFrame.new(px, floorY + h, pz), tint, true)
+				cap.Shape = Enum.PartType.Ball
+				cap:SetAttribute("Glow", true)
+				if i == 1 and rng:NextNumber() < 0.5 then
+					local l = Instance.new("PointLight")
+					l.Color, l.Range, l.Brightness = tint, 9, 0.9
+					l.Parent = cap
+				end
+			end
+		elseif x < C.DECO.mushroom + C.DECO.crystal then
+			for i = 1, rng:NextInteger(2, 4) do
+				local h = rng:NextNumber(1, 2.6)
+				local cf = CFrame.new(pos.X + rng:NextNumber(-1, 1), floorY + h * 0.4, pos.Z + rng:NextNumber(-1, 1)) * CFrame.Angles(rng:NextNumber(-0.4, 0.4), rng:NextNumber(0, 6), rng:NextNumber(-0.4, 0.4))
+				local q = decoPart(f, Vector3.new(0.55, h, 0.55), cf, tint, true)
+				q:SetAttribute("Glow", true)
+				if i == 1 then
+					local l = Instance.new("PointLight")
+					l.Color, l.Range, l.Brightness = tint, 11, 1.2
+					l.Parent = q
+				end
+			end
+		elseif x < 0.55 then
+			for _ = 1, rng:NextInteger(2, 5) do -- pebbles and grass tufts
+				local sz = rng:NextNumber(0.3, 0.8)
+				decoPart(f, Vector3.new(sz, sz * 0.6, sz), CFrame.new(pos.X + rng:NextNumber(-1.6, 1.6), floorY + sz * 0.3, pos.Z + rng:NextNumber(-1.6, 1.6)) * CFrame.Angles(0, rng:NextNumber(0, 3), 0),
+					rng:NextNumber() < 0.5 and Color3.fromRGB(110, 199, 166) or wall:Lerp(Color3.new(1, 1, 1), 0.25))
+			end
+		end
 	end
-	s.built[r] = nil
+	if kind == "air" and r > 1 and not isOpen(kindAt(s, r - 1, c, d)) and rng:NextNumber() < C.DECO.drip then
+		for _ = 1, rng:NextInteger(1, 3) do -- pixel stalactites: stacked shrinking blocks
+			local px, pz = pos.X + rng:NextNumber(-1.4, 1.4), pos.Z + rng:NextNumber(-1.4, 1.4)
+			local y, w = ceilY, rng:NextNumber(0.7, 1.1)
+			for _ = 1, rng:NextInteger(2, 3) do
+				local h = w * 0.9
+				decoPart(f, Vector3.new(w, h, w), CFrame.new(px, y - h / 2, pz), wall:Lerp(Color3.fromRGB(200, 180, 230), 0.25))
+				y -= h
+				w *= 0.6
+			end
+			if rng:NextNumber() < 0.35 then
+				decoPart(f, Vector3.new(0.22, 0.22, 0.22), CFrame.new(px, y - 0.3, pz), Color3.fromRGB(140, 227, 192), true):SetAttribute("Drip", true)
+			end
+		end
+	end
+	if #f:GetChildren() == 0 then
+		f:Destroy()
+		return
+	end
+	f.Parent = s.decoFolder
+	s.decos[k] = f
 end
 
-local function refreshWindow(s)
-	for r = 1, ROWS do
-		local keep = not C.WINDOW or r <= C.SURFACE_KEEP or (r >= s.row - C.WIN_UP and r <= s.row + C.WIN_DOWN)
-		if keep then ensureRow(s, r) else dropRow(s, r) end
+-- Render pass: flood the open cells around the player (inside the view box); every solid neighbour is a visible surface
+local function refresh(s)
+	local pr, pc, pd = s.pr, s.pc, s.pd
+	local queue = {}
+	if pr < 1 then -- in the hub: keep the landing under the lift ready
+		for _, cc in { E1, E1 + 1 } do for _, dd in { E2, E2 + 1 } do table.insert(queue, { 1, cc, dd }) end end
+		pr, pc, pd = 1 + C.VIEW_UP, E1, E2
+	else
+		table.insert(queue, { pr, pc, pd })
+		table.insert(queue, { pr - 1, pc, pd })
+	end
+	local seen, need, open = {}, {}, {}
+	local R, UP, DN = C.VIEW_R, C.VIEW_UP, C.VIEW_DOWN
+	local head = 1
+	while head <= #queue and head <= C.VIEW_MAX do
+		local q = queue[head]
+		head += 1
+		local r, c, d = q[1], q[2], q[3]
+		local k = keyOf(r, c, d)
+		if not seen[k] and r >= 1 then
+			seen[k] = true
+			if isOpen(kindAt(s, r, c, d)) then
+				open[k] = q
+				for _, n in NB do
+					local rr, cc, dd = r + n[1], c + n[2], d + n[3]
+					if rr >= 1 then
+						local nk = keyOf(rr, cc, dd)
+						if not seen[nk] then
+							if math.abs(cc - pc) > R or math.abs(dd - pd) > R or rr < pr - UP or rr > pr + DN then
+								seen[nk] = true
+								need[nk] = { rr, cc, dd, isOpen(kindAt(s, rr, cc, dd)) }
+							else
+								table.insert(queue, { rr, cc, dd })
+							end
+						end
+					end
+				end
+			else
+				need[k] = q
+			end
+		end
+	end
+	for k, p in s.parts do
+		local n = need[k]
+		if not n or (n[4] or false) ~= (p:GetAttribute("Fake") or false) then
+			p:Destroy()
+			s.parts[k] = nil
+		end
+	end
+	for k, n in need do
+		local p = s.parts[k]
+		if not p then
+			buildBlock(s, k, n[1], n[2], n[3], n[4])
+		elseif not n[4] then
+			updateFaces(s, p, n[1], n[2], n[3], kindAt(s, n[1], n[2], n[3]))
+		end
+	end
+	for k, f in s.decos do
+		if not open[k] then
+			f:Destroy()
+			s.decos[k] = nil
+		end
+	end
+	for k, q in open do
+		if not s.decos[k] then buildDeco(s, k, q[1], q[2], q[3]) end
 	end
 end
 
@@ -178,9 +395,16 @@ local function cap(s)
 	return C.PACKS[s.pack].cap
 end
 
-local function target(s)
-	local t = (s.step == 1 and { 1, s.sc }) or (s.step == 2 and { 4, s.sc }) or (s.step == 5 and { 6, s.sc })
-	if t and s.grid[t[1]] and s.grid[t[1]][t[2]].k == "air" then return nil end
+local function target(s) -- tutorial target cell {r, c, d}
+	local t = (s.step == 1 and { DROP + 1, E1, E2 }) or (s.step == 2 and { DROP + 4, E1, E2 }) or (s.step == 5 and { DROP + 6, E1, E2 })
+	if t and isOpen(kindAt(s, t[1], t[2], t[3])) then
+		if s.step == 2 or s.step == 5 then -- that cell is gone: point at any remaining cell of the same row
+			for _, cc in { E1, E1 + 1 } do for _, dd in { E2, E2 + 1 } do
+				if not isOpen(kindAt(s, t[1], cc, dd)) then return { t[1], cc, dd } end
+			end end
+		end
+		return nil
+	end
 	return t or nil
 end
 
@@ -188,7 +412,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	local d = s.profile and s.profile.Data
 	if not d then return end
 	d.gold, d.pick, d.pack, d.best, d.hatched, d.pity, d.step = s.gold, s.pick, s.pack, s.best, s.hatched, s.pity, s.step
-	d.eggs, d.lastSeen = s.eggs, os.time()
+	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
 	local names = {}
 	for i, p in s.pets do names[i] = p.name end
 	d.pets = names
@@ -200,12 +424,18 @@ local function sendState(s)
 	for i, p in s.pets do pets[i] = p.name end
 	StateR:FireClient(s.player, {
 		gold = s.gold, bag = s.bag, cap = cap(s), pick = s.pick, pack = s.pack, step = s.step, target = target(s),
-		pets = pets, x0 = s.x0, sc = s.sc, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs,
+		pets = pets, ox = s.ox, oz = s.oz, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs,
+		deepest = s.deepest, goal = s.goal,
 	})
 end
 
-local function surfaceCFrame(s, col)
-	return CFrame.new(cellPos(s, 0, col or s.sc) + Vector3.new(0, 1.5, 0.5))
+local function spawnCFrame()
+	return HUB_SPAWN * CFrame.new(math.random(-30, 30) / 10, 0, math.random(-10, 10) / 10)
+end
+
+local function landingCFrame(s) -- standing on the first tutorial blocks under the lift in your mine
+	local p = cellPos(s, DROP, E1, E2) + Vector3.new(B / 2, 0.5, B / 2)
+	return CFrame.lookAt(p, p + Vector3.new(0, 0, -1))
 end
 
 local HIGH = { Legendary = true, Mythic = true, Secret = true }
@@ -244,24 +474,23 @@ local function hrpOf(plr)
 	return ch and ch:FindFirstChild("HumanoidRootPart")
 end
 
-local function stir(s, r, c) -- Titan's Stir: a loose boulder drops down the dug column from a few rows up
+local function stir(s, r, c, d) -- Titan's Stir: a loose boulder drops down the dug column from a few rows up
 	local top = r - 3
-	if top < 1 or not s.grid[top] then return end
-	local start = s.grid[top][c].k == "air" and top or top + 1 -- falls out of a solid ceiling or through an open shaft
-	FxR:FireClient(s.player, "stir", start, c)
+	if top < 1 then return end
+	local start = isOpen(kindAt(s, top, c, d)) and top or top + 1
+	FxR:FireClient(s.player, "stir", cellPos(s, start, c, d))
 	task.delay(C.STIR_WARN, function()
 		if data[s.player] ~= s then return end
 		local land
 		for rr = start, ROWS do
-			local cell = s.grid[rr] and s.grid[rr][c]
-			if not cell or cell.k ~= "air" then break end
+			if not isOpen(kindAt(s, rr, c, d)) then break end
 			land = rr
 		end
 		if not land then return end
-		local pos = cellPos(s, land, c)
-		FxR:FireClient(s.player, "fell", land, c, pos)
+		local pos = cellPos(s, land, c, d)
+		FxR:FireClient(s.player, "fell", pos)
 		local hrp = hrpOf(s.player)
-		if hrp and math.abs(hrp.Position.X - pos.X) < B * 0.9 and math.abs(hrp.Position.Y - pos.Y) < B * 1.2 then
+		if hrp and math.abs(hrp.Position.X - pos.X) < B * 0.9 and math.abs(hrp.Position.Z - pos.Z) < B * 0.9 and math.abs(hrp.Position.Y - pos.Y) < B * 1.4 then
 			local lost = math.floor(s.bag * C.STIR_LOSS) -- it bursts on your helmet: stun and spill, no rubble
 			if s.bag > 0 then s.bagV -= math.floor(s.bagV * lost / s.bag) end
 			s.bag -= lost
@@ -270,30 +499,51 @@ local function stir(s, r, c) -- Titan's Stir: a loose boulder drops down the dug
 			sendState(s)
 			return
 		end
-		local L = layerOf(land) -- otherwise it lands as rubble and refills the hole
-		local o = C.LAYERS[L][4][1]
-		local hp = math.ceil(o[3] * 2 ^ (L - 1))
-		local rubble = { k = "base", ore = o[1], col = o[2], v = o[4] * 3 ^ (L - 1), hp = hp, max = hp }
-		s.grid[land][c] = rubble
-		if s.built[land] then buildPart(s, land, c, rubble) end
+		s.mods[keyOf(land, c, d)] = "base" -- otherwise it lands as rubble and refills the hole
+		s.hp[keyOf(land, c, d)] = nil
+		refresh(s)
 	end)
 end
 
-local function hit(s, r, c, dmg, who, crit)
-	local cell = s.grid[r][c]
-	cell.hp -= dmg
-	if cell.hp > 0 then
-		FxR:FireClient(s.player, "hit", r, c, cell.hp / cell.max, who, crit)
+local function breakCell(s, k, r, c, d)
+	local p = s.parts[k]
+	if p then p:Destroy() end
+	s.parts[k] = nil
+	s.mods[k] = "air"
+	s.hp[k] = nil
+	for _, nk in { keyOf(r - 1, c, d), keyOf(r + 1, c, d) } do -- the floor or ceiling under the cave dressing is gone
+		s.noDeco[nk] = true
+		if s.decos[nk] then s.decos[nk]:Destroy(); s.decos[nk] = nil end
+	end
+	refresh(s)
+end
+
+local function hit(s, r, c, d, dmg, who, crit)
+	local k = keyOf(r, c, d)
+	local kind = kindAt(s, r, c, d)
+	if isOpen(kind) or UNBREAKABLE[kind] then return end
+	local info = cellInfo(kind, r)
+	local hp = (s.hp[k] or info.hp) - dmg
+	local p = s.parts[k]
+	if hp > 0 then
+		s.hp[k] = hp
+		FxR:FireClient(s.player, "hit", p, hp / info.hp, who, crit)
 		return
 	end
-	local pos = cell.part.Position
-	cell.part:Destroy()
-	cell.part = nil
-	local k = cell.k
-	cell.k = "air"
+	local pos = cellPos(s, r, c, d)
+	breakCell(s, k, r, c, d)
 	if s.step == 1 then s.step = 2 end
-	if k == "egg" then
-		FxR:FireClient(s.player, "break", r, c, pos, cell.ore, 0, who, 0, cell.col)
+	if r > s.deepest then
+		local L0, L1 = layerOf(math.max(s.deepest, 1)), layerOf(r)
+		s.deepest = r
+		if L1 > L0 and s.deepest > 1 then -- first time into a new layer: a depth reward
+			local bonus = 25 * 3 ^ (L1 - 1)
+			s.gold += bonus
+			FxR:FireClient(s.player, "newLayer", L1, bonus)
+		end
+	end
+	if kind == "egg" then
+		FxR:FireClient(s.player, "break", pos, info.ore, 0, who, 0, info.col, crit, kind)
 		if s.hatched == 0 then
 			hatch(s) -- the tutorial egg hatches on the spot
 		else
@@ -303,8 +553,8 @@ local function hit(s, r, c, dmg, who, crit)
 		sendState(s)
 		return
 	end
-	local now, v = os.clock(), cell.v
-	if k == "gild" and now > s.frenzyUntil then
+	local now, v = os.clock(), info.v
+	if kind == "gild" and now > s.frenzyUntil then
 		s.frenzyUntil, s.combo, s.bank = now + C.FRENZY_TIME, 0, 0
 		FxR:FireClient(s.player, "frenzy", C.FRENZY_TIME)
 	end
@@ -317,34 +567,39 @@ local function hit(s, r, c, dmg, who, crit)
 	end
 	s.bag += 1
 	s.bagV += v
-	if layerOf(r) == C.STIR_LAYER and s.rng:NextNumber() < C.STIR_CHANCE then stir(s, r, c) end
-	FxR:FireClient(s.player, "break", r, c, pos, cell.ore, v, who, combo, cell.col, crit)
+	if layerOf(r) == C.STIR_LAYER and s.rng:NextNumber() < C.STIR_CHANCE then stir(s, r, c, d) end
+	FxR:FireClient(s.player, "break", pos, info.ore, v, who, combo, info.col, crit, kind)
 	if s.step == 2 and s.bag >= cap(s) then s.step = 3 end
 	sendState(s)
 end
-
-
 
 DigR.OnServerEvent:Connect(function(plr, part)
 	local s = data[plr]
 	if not s or typeof(part) ~= "Instance" or part.Parent ~= s.folder then return end
 	local now = os.clock()
 	if now < s.nextDig then return end
+	local r, c, d = part:GetAttribute("R"), part:GetAttribute("C"), part:GetAttribute("D")
+	if type(r) ~= "number" or type(c) ~= "number" or type(d) ~= "number" then return end
+	local k = keyOf(r, c, d)
+	local ch = plr.Character
+	local headPart = ch and (ch:FindFirstChild("Head") or ch:FindFirstChild("HumanoidRootPart"))
+	if s.parts[k] ~= part or part:GetAttribute("Fake") or not headPart or (headPart.Position - part.Position).Magnitude > C.REACH then return end
+	local kind = kindAt(s, r, c, d)
+	if UNBREAKABLE[kind] then
+		FxR:FireClient(plr, "bedrock", part.Position)
+		return
+	end
 	s.nextDig = now + C.DIG_COOLDOWN
-	local r, c = part:GetAttribute("R"), part:GetAttribute("C")
-	local cell = s.grid[r] and s.grid[r][c]
-	local hrp = hrpOf(plr)
-	if not cell or cell.part ~= part or not hrp or (hrp.Position - part.Position).Magnitude > C.REACH then return end
-	if s.bag >= cap(s) and cell.k ~= "egg" then
+	if s.bag >= cap(s) and kind ~= "egg" then
 		FxR:FireClient(plr, "full")
 		return
 	end
 	-- hit-timing crit, decided on the server clock: the ring restarts on a new block and after each crit
 	local dmg, crit = C.PICKS[s.pick].power, false
-	local key, t = r * 1000 + c, workspace:GetServerTimeNow()
-	if s.critKey ~= key then
-		s.critKey, s.critT0 = key, t
-		FxR:FireClient(plr, "ring", r, c, t)
+	local t = workspace:GetServerTimeNow()
+	if s.critKey ~= k then
+		s.critKey, s.critT0 = k, t
+		FxR:FireClient(plr, "ring", part, t)
 	else
 		local since = t - s.critT0
 		local inCycle = since % C.CRIT_PERIOD
@@ -352,11 +607,11 @@ DigR.OnServerEvent:Connect(function(plr, part)
 		if closing and now - s.lastHit >= C.CRIT_GAP then
 			crit, dmg = true, dmg * C.CRIT_MULT
 			s.critT0 = t
-			FxR:FireClient(plr, "ring", r, c, t)
+			FxR:FireClient(plr, "ring", part, t)
 		end
 	end
 	s.lastHit = now
-	hit(s, r, c, dmg, "you", crit)
+	hit(s, r, c, d, dmg, "you", crit)
 end)
 
 local function sell(s)
@@ -368,19 +623,40 @@ local function sell(s)
 	sendState(s)
 end
 
-SellR.OnServerEvent:Connect(function(plr) -- the "elevator": ride up to the sell stand and sell
+SellR.OnServerEvent:Connect(function(plr) -- the lift: ride up to the sell stall and sell
 	local s = data[plr]
 	local hrp = hrpOf(plr)
 	if not s or not hrp then return end
-	hrp.CFrame = surfaceCFrame(s, 4)
+	hrp.CFrame = HUB_SELL and (HUB_SELL.CFrame * CFrame.Angles(0, math.pi, 0) + Vector3.new(0, 1, 0)) or spawnCFrame() -- face the stall
+	plr:SetAttribute("InMine", false)
+	FxR:FireClient(plr, "lift", false)
 	sell(s)
 end)
 
-SurfaceR.OnServerEvent:Connect(function(plr)
+local enterMine -- defined below
+SurfaceR.OnServerEvent:Connect(function(plr, dir) -- the rail lift button: "down" into your mine, otherwise up to camp
 	local s = data[plr]
 	local hrp = hrpOf(plr)
-	if s and hrp then hrp.CFrame = surfaceCFrame(s) end
+	if s and dir == "down" then
+		enterMine(s)
+		return
+	end
+	if s and hrp then
+		hrp.CFrame = spawnCFrame()
+		plr:SetAttribute("InMine", false)
+		FxR:FireClient(plr, "lift", false)
+	end
 end)
+
+enterMine = function(s)
+	local hrp = hrpOf(s.player)
+	if not hrp or s.player:GetAttribute("InMine") then return end
+	s.pr = -99 -- render the landing now
+	hrp.AssemblyLinearVelocity = Vector3.zero
+	hrp.CFrame = landingCFrame(s)
+	s.player:SetAttribute("InMine", true)
+	FxR:FireClient(s.player, "lift", true)
+end
 
 -- Held pickaxe: Wood and Stone are built from parts, the magical ones are ServerStorage.Pickaxes models (uploaded forge GLBs)
 local function pickModel(i)
@@ -412,6 +688,7 @@ equipPick = function(s)
 	if old then old:Destroy() end
 	local m = pickModel(s.pick)
 	m.Name = "HeldPickaxe"
+	m:SetAttribute("Tier", s.pick)
 	local cf, size = m:GetBoundingBox()
 	local root = m.PrimaryPart or m:FindFirstChildWhichIsA("BasePart", true)
 	for _, p in m:GetDescendants() do
@@ -424,7 +701,6 @@ equipPick = function(s)
 			end
 		end
 	end
-	-- grip a quarter up the handle; the pick plane faces the side camera, head up out of the fist
 	local grip = CFrame.new(cf.Position - Vector3.new(0, size.Y * 0.22, 0))
 	local w = Instance.new("Weld")
 	w.Name, w.Part0, w.Part1 = "PickGrip", hand, root
@@ -445,7 +721,7 @@ BuyR.OnServerEvent:Connect(function(plr, what)
 	s[what] += 1
 	if what == "pick" then equipPick(s) end
 	if s.step == 4 then s.step = #s.pets > 0 and 6 or 5 end
-	FxR:FireClient(plr, "bought", nxt.name)
+	FxR:FireClient(plr, "bought", nxt.name, what)
 	sendState(s)
 end)
 
@@ -454,11 +730,12 @@ local function texture(p, face, tex, studs, tint)
 	t.Texture, t.Face, t.StudsPerTileU, t.StudsPerTileV = tex, face, studs, studs
 	if tint then t.Color3 = tint end
 	t.Parent = p
+	return t
 end
 
 local function buildShrine(s, f, L, r0)
-	-- hidden shrine room (columns 3 to 7, three rows): pillars, altar with a glowing relic, a chest; mist hides it until you step in
-	local a, b = cellPos(s, r0, 3), cellPos(s, r0 + 2, 7)
+	-- hidden shrine room (rows r0..r0+2, columns and depths 3..7): pillars, altar with a glowing relic, a chest
+	local a, b = cellPos(s, r0, 3, 3), cellPos(s, r0 + 2, 7, 7)
 	local mid = (a + b) / 2
 	local lc = C.LAYERS[L][4][3][2]
 	local function part(name, size, cf, color, mat)
@@ -468,19 +745,20 @@ local function buildShrine(s, f, L, r0)
 		return q
 	end
 	local floorY = b.Y - B / 2
-	part("ShrineFloor", Vector3.new(5 * B, 0.6, B), CFrame.new(mid.X, floorY + 0.3, 0), Color3.fromRGB(150, 140, 180), Enum.Material.Slate).CanCollide = true
-	for _, dx in { -2, 2 } do
-		part("ShrinePillar", Vector3.new(1.4, 3 * B - 1, 1.4), CFrame.new(mid.X + dx * B, mid.Y, -1), Color3.fromRGB(200, 190, 220), Enum.Material.Marble)
+	part("ShrineFloor", Vector3.new(5 * B, 0.6, 5 * B), CFrame.new(mid.X, floorY + 0.3, mid.Z), Color3.fromRGB(200, 190, 230), Enum.Material.Marble).CanCollide = true
+	for _, o in { { -2, -2 }, { 2, -2 }, { -2, 2 }, { 2, 2 } } do
+		part("ShrinePillar", Vector3.new(1.4, 3 * B - 1, 1.4), CFrame.new(mid.X + o[1] * B, mid.Y, mid.Z + o[2] * B), Color3.fromRGB(230, 220, 245), Enum.Material.Marble)
 	end
-	part("Altar", Vector3.new(3, 2, 2), CFrame.new(mid.X, floorY + 1.6, -1), Color3.fromRGB(170, 160, 200), Enum.Material.Marble)
-	local relic = part("Relic", Vector3.new(1.4, 1.4, 1.4), CFrame.new(mid.X, floorY + 3.6, -1), lc, Enum.Material.Neon)
+	part("Altar", Vector3.new(3, 2, 3), CFrame.new(mid.X, floorY + 1.6, mid.Z), Color3.fromRGB(190, 176, 228), Enum.Material.Marble)
+	local relic = part("Relic", Vector3.new(1.6, 1.6, 1.6), CFrame.new(mid.X, floorY + 3.8, mid.Z), lc, Enum.Material.Neon)
 	relic.Shape = Enum.PartType.Ball
 	relic:SetAttribute("Bob", 0.35)
 	local l = Instance.new("PointLight")
-	l.Color, l.Range, l.Brightness = lc, 16, 2
+	l.Color, l.Range, l.Brightness, l.Shadows = lc, 18, 2, true
 	l.Parent = relic
-	local chest = part("Chest", Vector3.new(2.6, 1.8, 1.8), CFrame.new(mid.X + 1.2 * B, floorY + 0.9 + 0.6, 0), Color3.fromRGB(160, 100, 60), Enum.Material.WoodPlanks)
-	part("ChestLid", Vector3.new(2.8, 0.5, 2), chest.CFrame * CFrame.new(0, 1.1, 0), Color3.fromRGB(255, 206, 70), Enum.Material.Metal)
+	local chest = part("Chest", Vector3.new(2.6, 1.8, 1.8), CFrame.new(mid.X + 1.4 * B, floorY + 1.5, mid.Z), Color3.fromRGB(160, 100, 60), Enum.Material.WoodPlanks)
+	local lid = part("ChestLid" .. L, Vector3.new(2.8, 0.5, 2), chest.CFrame * CFrame.new(0, 1.1, 0), Color3.fromRGB(255, 206, 70), Enum.Material.Metal)
+	chest:SetAttribute("Lid", lid.Name)
 	local pr = Instance.new("ProximityPrompt")
 	pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.RequiresLineOfSight, pr.MaxActivationDistance = "Open", "Shrine chest", Enum.KeyCode.F, false, 10
 	pr.Parent = chest
@@ -490,74 +768,98 @@ local function buildShrine(s, f, L, r0)
 		pr.Enabled = false
 		local gold = 60 * 3 ^ (L - 1)
 		s.gold += gold
-		FxR:FireClient(plr, "chest", chest.Position, gold, C.LAYERS[L][1])
+		FxR:FireClient(plr, "chest", chest, gold, C.LAYERS[L][1])
 		sendState(s)
 	end)
-	local mist = part("ShrineMist", Vector3.new(5 * B + 1, 3 * B + 1, 0.6), CFrame.new(mid.X, mid.Y, B / 2 + 0.4), Color3.fromRGB(26, 18, 44), Enum.Material.SmoothPlastic)
-	mist.Transparency, mist.CastShadow = 0.04, false
-	local g = Instance.new("SurfaceGui")
-	g.Face, g.LightInfluence = Enum.NormalId.Back, 0
-	local t = Instance.new("TextLabel")
-	t.Size, t.BackgroundTransparency, t.Text, t.TextScaled, t.Font = UDim2.fromScale(1, 1), 1, "?", true, Enum.Font.Arcade
-	t.TextColor3, t.TextTransparency = Color3.fromRGB(200, 180, 255), 0.35
-	t.Parent = g
-	g.Parent = mist
-	table.insert(s.shrines, { mist = mist, x0 = a.X - B / 2, x1 = b.X + B / 2, y0 = b.Y - B / 2, y1 = a.Y + B / 2 })
+	table.insert(s.shrines, { lo = a - Vector3.new(B / 2, -B / 2, B / 2), hi = b + Vector3.new(B / 2, -B / 2, B / 2), pos = relic.Position })
 end
 
 local function buildStatic(s)
+	-- the crust over the mine (closed: you arrive by lift) and a lamp-lit lift cage at the landing; shrines below
 	local f = Instance.new("Folder")
 	f.Name = "Static"
-	local function part(size, pos, color, props)
-		local p = proto:Clone()
-		p.Size, p.Position, p.Color = size, pos, color
-		for k, v in props or {} do p[k] = v end
-		p.Parent = f
-		return p
+	local T = C.CRUST * B
+	local crust = proto:Clone()
+	crust.Name, crust.Size, crust.Position, crust.Color = "Crust", Vector3.new(W * B + 8, T, W * B + 8), Vector3.new(s.ox, -T / 2, s.oz), Color3.fromRGB(46, 34, 54)
+	crust.Parent = f
+	texture(crust, Enum.NormalId.Bottom, C.TEX.rootholm_wall, B)
+	local land = cellPos(s, 1, E1, E2) + Vector3.new(B / 2, 0, B / 2)
+	for _, o in { { -1, -1 }, { 1, -1 }, { -1, 1 }, { 1, 1 } } do
+		local post = proto:Clone()
+		post.Name, post.Size, post.Color, post.Material = "CagePost", Vector3.new(0.6, DROP * B, 0.6), Color3.fromRGB(138, 92, 74), Enum.Material.Wood
+		post.Position = land + Vector3.new(o[1] * (B - 0.4), -(DROP - 1) * B / 2, o[2] * (B - 0.4))
+		post.CanCollide = false
+		post.Parent = f
 	end
-	local depth = ROWS * B
-	local midX = s.x0 + COLS * B / 2
-	local SIDE, BACK = C.CAMP_W * B, 18 -- wide camp ground on both sides; a deep backing shows depth from the tilted camera
-	local sideX = { s.x0 - SIDE / 2, s.x0 + COLS * B + SIDE / 2 }
-	for i, lay in C.LAYERS do
-		local y, base = -(i - 0.5) * C.LAYER_ROWS * B, lay[4][1][2]
-		local nm = C.LAYER_TEX[i]
-		local back = part(Vector3.new(COLS * B, C.LAYER_ROWS * B, BACK), Vector3.new(midX, y, -B / 2 - BACK / 2), base:Lerp(Color3.new(), 0.55), { CanQuery = false })
-		texture(back, Enum.NormalId.Back, C.TEX[nm .. "_cave"], B) -- dug cells show the cave texture
-		for _, x in sideX do
-			local wall = part(Vector3.new(SIDE, C.LAYER_ROWS * B, B + BACK), Vector3.new(x, y, B / 2 - (B + BACK) / 2), base:Lerp(Color3.new(), 0.3), { Material = Enum.Material.SmoothPlastic })
-			texture(wall, Enum.NormalId.Back, C.TEX[nm .. "_wall"], B)
-		end
-	end
-	for _, x in sideX do -- grass on the camp ground
-		local g = part(Vector3.new(SIDE, 0.9, B + BACK + 30), Vector3.new(x, 0.45, B / 2 - (B + BACK + 30) / 2), Color3.fromRGB(70, 150, 130), { Material = Enum.Material.Grass })
-		texture(g, Enum.NormalId.Back, C.TEX.grass, B)
-	end
-	part(Vector3.new(COLS * B + 2 * SIDE, B, B + BACK), Vector3.new(midX, -depth - B / 2, B / 2 - (B + BACK) / 2), Color3.fromRGB(34, 26, 22)) -- floor
-	part(Vector3.new(COLS * B + 2 * SIDE, depth + 60, 1), Vector3.new(midX, -depth / 2 + 30, B / 2 + 1.2), Color3.new(), { Transparency = 1, CanQuery = false }) -- keeps players on the plane
-	part(Vector3.new(COLS * B + 2 * SIDE, 30, 1), Vector3.new(midX, 15, -B / 2 - 0.5), Color3.new(), { Transparency = 1, CanQuery = false }) -- back wall above ground
-	local colors = {}
-	for i, lay in C.LAYERS do colors[i] = lay[4][1][2] end
-	Camp.build(f, {
-		x0 = s.x0, width = COLS * B, G = 0.9, sideW = SIDE, owner = s.player, seed = s.seed, layerColors = colors,
-		startX = cellPos(s, 0, s.sc).X,
-		on = {
-			sell = function() sell(s) end,
-			forge = function(plr) FxR:FireClient(plr, "openForge") end,
-			map = function(plr) FxR:FireClient(plr, "map") end,
-			hatch = function(plr)
-				if s.eggs <= 0 then FxR:FireClient(plr, "noEggs"); return end
-				if os.clock() < (s.nextHatch or 0) then return end
-				s.eggs -= 1
-				s.nextHatch = os.clock() + C.HATCH_TIME + 1
-				hatch(s)
-				sendState(s)
-			end,
-		},
-	})
+	local lamp = proto:Clone()
+	lamp.Name, lamp.Size, lamp.Position, lamp.Color, lamp.Material, lamp.CanCollide = "CageLamp", Vector3.new(1, 1.2, 1), land + Vector3.new(B - 1, 0, B - 1), Color3.fromRGB(255, 206, 120), Enum.Material.Neon, false
+	local l = Instance.new("PointLight")
+	l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 206, 150), 20, 0.9, true
+	l.Parent = lamp
+	lamp.Parent = f
+	local up = proto:Clone() -- ride the lift back up to the camp
+	up.Name, up.Size, up.Position, up.Color, up.Material, up.CanCollide = "LiftLever", Vector3.new(0.6, 2.4, 0.6), land + Vector3.new(-B + 1, -B, B - 1), Color3.fromRGB(255, 214, 92), Enum.Material.Metal, false
+	up.Parent = f
+	local pr = Instance.new("ProximityPrompt")
+	pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.RequiresLineOfSight, pr.MaxActivationDistance = "Ride up", "Lift", Enum.KeyCode.F, false, 12
+	pr.Parent = up
+	pr.Triggered:Connect(function(plr)
+		local hrp = hrpOf(plr)
+		if plr ~= s.player or not hrp then return end
+		hrp.CFrame = spawnCFrame()
+		plr:SetAttribute("InMine", false)
+		FxR:FireClient(plr, "lift", false)
+	end)
 	for L, r0 in C.SHRINE_ROWS do buildShrine(s, f, L, r0) end
 	f.Parent = s.root
 end
+
+-- Hub stations: every prompt in the hub belongs to whoever triggers it
+local function dailyChest(s)
+	local day = math.floor(os.time() / 86400)
+	local d = s.profile.Data
+	if d.chestDay == day then
+		FxR:FireClient(s.player, "chestWait", 86400 - os.time() % 86400)
+		return
+	end
+	s.streak = d.chestDay == day - 1 and math.min((d.streak or 0) + 1, 7) or math.max(d.streak or 0, 1) -- a missed day only pauses the streak
+	d.chestDay, d.streak = day, s.streak
+	local gold = C.CHEST_GOLD * s.streak * 3 ^ (layerOf(math.max(s.deepest, 1)) - 1)
+	s.gold += gold
+	FxR:FireClient(s.player, "dailyChest", gold, s.streak)
+	sendState(s)
+end
+
+local STATION = {
+	sell = function(s) sell(s) end,
+	forge = function(s) FxR:FireClient(s.player, "openForge") end,
+	map = function(s) FxR:FireClient(s.player, "map", s.deepest) end,
+	chest = dailyChest,
+	enter = function(s) enterMine(s) end,
+	hatch = function(s)
+		if s.eggs <= 0 then FxR:FireClient(s.player, "noEggs"); return end
+		if os.clock() < (s.nextHatch or 0) then return end
+		s.eggs -= 1
+		s.nextHatch = os.clock() + C.HATCH_TIME + 1
+		hatch(s)
+		sendState(s)
+	end,
+}
+for _, d in hub:GetDescendants() do
+	if d:IsA("ProximityPrompt") and d.Parent:GetAttribute("Station") then
+		local kind = d.Parent:GetAttribute("Station")
+		d.Triggered:Connect(function(plr)
+			local s = data[plr]
+			if s and STATION[kind] then STATION[kind](s) end
+		end)
+	end
+end
+local pit = hub:FindFirstChild("PitFloor", true) -- jumping into the glowing pit also takes the lift down
+pit.Touched:Connect(function(hitPart)
+	local plr = Players:GetPlayerFromCharacter(hitPart.Parent)
+	local s = plr and data[plr]
+	if s then enterMine(s) end
+end)
 
 local function onJoin(plr)
 	local profile = Store:StartSessionAsync(tostring(plr.UserId), { Cancel = function() return plr.Parent ~= Players end })
@@ -583,13 +885,18 @@ local function onJoin(plr)
 	local folder = Instance.new("Folder")
 	folder.Name = "Blocks"
 	folder.Parent = root
+	local decoFolder = Instance.new("Folder")
+	decoFolder.Name = "Deco"
+	decoFolder.Parent = root
+	local seed = 1000 + slot * 77
 	local s = {
-		player = plr, slot = slot, x0 = slot * (COLS + C.SHAFT_GAP) * B, sc = C.START_COL, seed = 1000 + slot * 77,
-		grid = {}, built = {}, row = 0, root = root, folder = folder, rng = Random.new(),
+		player = plr, slot = slot, ox = C.MINE_X0 + slot * C.PLOT_GAP, oz = 0, seed = seed, nx = (seed % 97) * 0.731 + 0.123, nz = (seed % 89) * 0.577 + 0.311,
+		gen = {}, mods = {}, hp = {}, parts = {}, decos = {}, noDeco = {}, pr = 0, pc = E1, pd = E2,
+		root = root, folder = folder, decoFolder = decoFolder, rng = Random.new(),
 		gold = d.gold, bag = d.step == 1 and C.PREFILL or 0, bagV = d.step == 1 and C.PREFILL or 0,
 		pick = math.clamp(d.pick, 1, #C.PICKS), pack = math.clamp(d.pack, 1, #C.PACKS), pets = {}, step = d.step,
 		frenzyUntil = 0, combo = 0, bank = 0, best = d.best, nextDig = 0, hatched = d.hatched, pity = d.pity,
-		profile = profile, critKey = 0, critT0 = 0, lastHit = 0, eggs = d.eggs, shrines = {},
+		profile = profile, critKey = 0, critT0 = 0, lastHit = 0, eggs = d.eggs, shrines = {}, deepest = d.deepest or 0, streak = d.streak or 0,
 	}
 	for _, n in d.pets do
 		if C.PETS[n] and #s.pets < C.MAX_PETS then table.insert(s.pets, { name = n, next = os.clock() + 2 }) end
@@ -608,17 +915,19 @@ local function onJoin(plr)
 	data[plr] = s
 	local t0 = os.clock()
 	buildStatic(s)
-	refreshWindow(s)
-	root.Parent = shafts
+	refresh(s)
+	root.Parent = plots
 	root:SetAttribute("BuildMs", math.floor((os.clock() - t0) * 1000))
 	local function spawned(ch)
 		local hrp = ch:WaitForChild("HumanoidRootPart")
 		ch:WaitForChild("RightHand", 5)
 		task.wait()
-		hrp.CFrame = surfaceCFrame(s)
-		local lantern = Instance.new("PointLight") -- the miner's lantern: caves are dark, light comes from you and the glowing blocks
-		lantern.Name, lantern.Color, lantern.Range, lantern.Brightness, lantern.Shadows = "Lantern", Color3.fromRGB(255, 214, 170), 26, 1.7, true
-		lantern.Parent = hrp
+		hrp.CFrame = spawnCFrame()
+		plr:SetAttribute("InMine", false)
+		local head = ch:FindFirstChild("Head") or hrp
+		local lantern = Instance.new("PointLight") -- the miner's lantern: the mine is dark, light comes from you and the glowing things
+		lantern.Name, lantern.Color, lantern.Range, lantern.Brightness, lantern.Shadows = "Lantern", Color3.fromRGB(255, 220, 180), 30, 1.6, true
+		lantern.Parent = head
 		equipPick(s)
 		sendState(s)
 		if s.nightReport then
@@ -643,52 +952,51 @@ Players.PlayerRemoving:Connect(function(plr)
 	data[plr] = nil
 end)
 
--- Tick: window, frenzy end, crew digging
-local PET_SCAN = { { 1, 0 }, { 0, -1 }, { 0, 1 }, { 1, -1 }, { 1, 1 }, { 2, 0 }, { -1, -1 }, { -1, 1 } }
+-- Tick: render box, frenzy end, shrines, crew digging
+local PET_SCAN = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, -1, 0 }, { 0, 0, 1 }, { 0, 0, -1 }, { 1, 1, 0 }, { 1, -1, 0 }, { 1, 0, 1 }, { 1, 0, -1 }, { 2, 0, 0 } }
 while true do
-	task.wait(0.2)
+	task.wait(0.1)
 	local now = os.clock()
 	for plr, s in data do
-		local dev = IS_STUDIO and plr:GetAttribute("DevGold") -- Studio-only test hook: set the attribute on the server to add gold
-		if dev then
-			plr:SetAttribute("DevGold", nil)
-			s.gold += dev
-			sendState(s)
-		end
-		local devRow = IS_STUDIO and plr:GetAttribute("DevRow") -- Studio test hook: dig a pocket at that row and go there
-		local hrp0 = hrpOf(plr)
-		if devRow and hrp0 then
-			plr:SetAttribute("DevRow", nil)
-			for r = devRow - 1, devRow + 1 do
-				ensureRow(s, r)
-				for c = s.sc - 1, s.sc + 1 do
-					local cell = s.grid[r] and s.grid[r][c]
-					if cell and cell.part then cell.part:Destroy(); cell.part = nil; cell.k = "air" end
-				end
-			end
-			hrp0.CFrame = CFrame.new(cellPos(s, devRow + 1, s.sc) + Vector3.new(0, B / 2 + 2.5, 0))
-		end
-		local devEggs = IS_STUDIO and plr:GetAttribute("DevEggs")
-		if devEggs then
-			plr:SetAttribute("DevEggs", nil)
-			s.eggs += devEggs
-			sendState(s)
-		end
 		local hrp = hrpOf(plr)
+		if IS_STUDIO then -- Studio-only test hooks: set these attributes on the server
+			local dev = plr:GetAttribute("DevGold")
+			if dev then
+				plr:SetAttribute("DevGold", nil)
+				s.gold += dev
+				sendState(s)
+			end
+			local devRow = plr:GetAttribute("DevRow") -- dig a pocket at that row under the entrance and go there
+			if devRow and hrp then
+				plr:SetAttribute("DevRow", nil)
+				for r = devRow - 2, devRow do
+					for c = E1, E1 + 1 do for d = E2, E2 + 1 do
+						s.mods[keyOf(r, c, d)] = "air"
+						local p = s.parts[keyOf(r, c, d)]
+						if p then p:Destroy(); s.parts[keyOf(r, c, d)] = nil end
+					end end
+				end
+				hrp.CFrame = CFrame.new(cellPos(s, devRow, E1, E2) + Vector3.new(B / 2, 0, B / 2))
+				s.pr = -99
+			end
+			local devEggs = plr:GetAttribute("DevEggs")
+			if devEggs then
+				plr:SetAttribute("DevEggs", nil)
+				s.eggs += devEggs
+				sendState(s)
+			end
+		end
 		if hrp then
-			local row = math.floor(-(hrp.Position.Y - 1) / B) + 1
-			local col = math.clamp(math.floor((hrp.Position.X - s.x0) / B) + 1, 1, COLS)
-			if row ~= s.row then
-				s.row = row
-				refreshWindow(s)
+			local r, c, d = cellOf(s, hrp.Position)
+			if r ~= s.pr or c ~= s.pc or d ~= s.pd then
+				s.pr, s.pc, s.pd = r, c, d
+				refresh(s)
 			end
 			for i = #s.shrines, 1, -1 do
-				local sh = s.shrines[i]
-				local q = hrp.Position
-				if q.X > sh.x0 - 2 and q.X < sh.x1 + 2 and q.Y > sh.y0 - 2 and q.Y < sh.y1 + 2 then
+				local sh, q = s.shrines[i], hrp.Position
+				if q.X > sh.lo.X and q.X < sh.hi.X and q.Z > sh.lo.Z and q.Z < sh.hi.Z and q.Y < sh.lo.Y and q.Y > sh.hi.Y then
 					table.remove(s.shrines, i)
-					FxR:FireClient(plr, "shrine", sh.mist.Position)
-					sh.mist:Destroy()
+					FxR:FireClient(plr, "shrine", sh.pos)
 				end
 			end
 			if s.frenzyUntil > 0 and now > s.frenzyUntil then
@@ -697,17 +1005,20 @@ while true do
 				if newBest then s.best = s.combo end
 				FxR:FireClient(plr, "frenzyEnd", s.bank, s.combo, newBest)
 			end
-			for i, pet in s.pets do
-				local stats = C.PETS[pet.name]
-				if now >= pet.next and s.bag < cap(s) then
-					pet.next = now + stats[4]
-					for _, d in PET_SCAN do
-						local r, c = row + d[1], col + d[2]
-						local cell = s.grid[r] and s.grid[r][c]
-						if cell and cell.part then
-							FxR:FireClient(plr, "petDig", i, r, c)
-							hit(s, r, c, stats[3], pet.name)
-							break
+			if r >= 1 then -- the crew digs next to you in the mine
+				for i, pet in s.pets do
+					local stats = C.PETS[pet.name]
+					if now >= pet.next and s.bag < cap(s) then
+						pet.next = now + stats[4]
+						for _, o in PET_SCAN do
+							local rr, cc, dd = r + o[1], c + o[2], d + o[3]
+							local kind = kindAt(s, rr, cc, dd)
+							local p = s.parts[keyOf(rr, cc, dd)]
+							if p and not isOpen(kind) and not UNBREAKABLE[kind] then
+								FxR:FireClient(plr, "petDig", i, p)
+								hit(s, rr, cc, dd, stats[3], pet.name)
+								break
+							end
 						end
 					end
 				end
