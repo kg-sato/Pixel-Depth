@@ -20,3 +20,15 @@ captures/
 .env.*
 *.pem
 *.key
+
+# Third-party reference images (not ours; kept on disk only, public repo)
+art/gen/ref_*.jpg
+# Raw Blender renders (the bloomed *_fx.jpg, sheets, GLBs and manifests are kept)
+blender/out/**/*_front.png
+blender/out/**/*_side.png
+blender/out/**/*_hero.png
+blender/out/**/*_three_quarter.png
+blender/out/**/*_game_side.png
+# Studio lock files
+*.lock
+art/gen/_compare*.jpg

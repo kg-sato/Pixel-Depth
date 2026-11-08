@@ -1,0 +1,22 @@
+{
+ "name": "SakuraPickaxe",
+ "objects": 121,
+ "parts": 14,
+ "tris": 9392,
+ "per_part": {
+  "irid_f2a6c6_0": 80,
+  "gold_e6bb6a_0": 4332,
+  "pearl_fff4f8_6": 224,
+  "irid_fff4f6_0": 568,
+  "satin_f4a9c8_0": 652,
+  "irid_f6a8c8_1": 1160,
+  "irid_ffd0e0_1": 464,
+  "pearl_fff4fa_0": 324,
+  "satin_f6a8c8_0": 640,
+  "crystal_fff0f6_10": 80,
+  "satin_ffe4ee_0": 148,
+  "pearl_ffffff_0": 528,
+  "crystal_f6a8c8_2": 92,
+  "pearl_fff4f8_0": 100
+ }
+}

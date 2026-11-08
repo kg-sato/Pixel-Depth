@@ -1,0 +1,7 @@
+Task: generate ONE image with your image generation tool (the imagegen skill) and save it as a file.
+
+Reference image: open and look at `ref_06.jpg` in the current folder and use it as the visual reference for the generation. It shows a galaxy scythe: a cosmic purple-blue blade filled with stars and nebula, glowing planet-like orb gems set along a dark handle, star chains, a black-purple deep-space background with a spiral galaxy.
+
+Generate one new image, portrait about 2:3, that keeps this reference's visual identity almost exactly: the same art style and rendering quality, the same palette, the same materials, the same ornaments and charms, and the same background mood. Change ONLY the weapon type: it must clearly read as a traditional PICKAXE, a straight handle with a pick head across the top (two long pointed pick arms, one on each side, curving slightly downward). Make the pick head out of the same cosmic star-filled material: two long curved pick arms full of stars and nebula, a glowing orb where the head meets the handle; keep the orbs along the handle. Single item, centred, slightly diagonal like the reference. No text, no labels, no frames or info panels, no watermark, no signature.
+
+Save the final image in the current folder as `pick_06.png` (copy it there from wherever the tool writes it). Do not change any other file. Reply with the saved path only.

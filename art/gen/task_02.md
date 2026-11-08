@@ -1,0 +1,7 @@
+Task: generate ONE image with your image generation tool (the imagegen skill) and save it as a file.
+
+Reference image: open and look at `ref_02.jpg` in the current folder and use it as the visual reference for the generation. It shows a purple and magenta star-crystal wand: a blooming flower of pink-magenta crystal petals around a big pink star crystal inside a thin gold ring, a tall crystal spike on top, a twisted spiral purple-magenta handle with gold bands, a pink star at the base, a soft lavender sparkly background.
+
+Generate one new image, portrait about 2:3, that keeps this reference's visual identity almost exactly: the same art style and rendering quality, the same palette, the same materials, the same ornaments and charms, and the same background mood. Change ONLY the weapon type: it must clearly read as a traditional PICKAXE, a straight handle with a pick head across the top (two long pointed pick arms, one on each side, curving slightly downward). Make the crystal star-flower the centre of the pick head; the two pick arms grow out of it as long curved magenta-pink faceted crystal spikes with gold trim. Single item, centred, slightly diagonal like the reference. No text, no labels, no frames or info panels, no watermark, no signature.
+
+Save the final image in the current folder as `pick_02.png` (copy it there from wherever the tool writes it). Do not change any other file. Reply with the saved path only.

@@ -1,0 +1,22 @@
+{
+ "name": "RoyalHeartPickaxe",
+ "objects": 152,
+ "parts": 14,
+ "tris": 8938,
+ "per_part": {
+  "silver_dfe3ef_0": 6086,
+  "crystal_ff4f9a_14": 232,
+  "crystal_ff4f9a_10": 16,
+  "irid_eef0ff_0": 568,
+  "irid_ffffff_8": 472,
+  "irid_ff7fb6_0": 472,
+  "silver_e8ebf5_0": 164,
+  "crystal_e0187a_20": 164,
+  "crystal_ff7fb6_12": 328,
+  "satin_ff5fa8_0": 292,
+  "crystal_e8f0ff_9": 36,
+  "crystal_ffd6ea_9": 48,
+  "crystal_ff4f9a_9": 24,
+  "crystal_ffffff_9": 36
+ }
+}

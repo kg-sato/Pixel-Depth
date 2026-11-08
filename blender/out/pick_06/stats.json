@@ -1,0 +1,20 @@
+{
+ "name": "GalaxyPickaxe",
+ "objects": 92,
+ "parts": 12,
+ "tris": 8656,
+ "per_part": {
+  "glitter_22184d_0": 80,
+  "silver_dfe3ef_0": 5448,
+  "crystal_6fa8ff_16": 204,
+  "crystal_7a5cff_9": 12,
+  "glitter_221650_8": 568,
+  "glitter_4a32b8_8": 568,
+  "irid_b9a6ff_12": 472,
+  "crystal_8f7bff_9": 80,
+  "crystal_8a7cff_18": 324,
+  "crystal_ffffff_20": 88,
+  "silver_d6c8ff_0": 712,
+  "pearl_fff4f8_0": 100
+ }
+}

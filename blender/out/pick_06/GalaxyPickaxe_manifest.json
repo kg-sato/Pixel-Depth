@@ -1,0 +1,47 @@
+{
+ "vfx": {
+  "sparkles": 22,
+  "colors": [
+   "#ffffff",
+   "#c9b8ff",
+   "#9fd0ff"
+  ],
+  "light": "#8a7cff",
+  "light_power": 70,
+  "glow": "#8a7cff",
+  "bg_top": "#1d1650",
+  "bg_bottom": "#06040f"
+ },
+ "name": "GalaxyPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 8656,
+ "palette": "GalaxyPickaxe_palette.png",
+ "parts": {
+  "GalaxyPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 1788,
+   "transparency": 0.0
+  },
+  "GalaxyPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 6160,
+   "transparency": 0.0
+  },
+  "GalaxyPickaxe_Neon": {
+   "roblox_material": "Neon",
+   "tris": 616,
+   "transparency": 0.0
+  },
+  "GalaxyPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 92,
+   "transparency": 0.25
+  }
+ }
+}

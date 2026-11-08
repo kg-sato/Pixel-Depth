@@ -1,0 +1,19 @@
+{
+ "name": "LotusCrystalPickaxe",
+ "objects": 129,
+ "parts": 11,
+ "tris": 6614,
+ "per_part": {
+  "gold_e6bb6a_0": 2906,
+  "crystal_d7b8ff_9": 36,
+  "crystal_d8ccff_6": 568,
+  "crystal_fff0fa_5": 32,
+  "crystal_f2dcff_5": 24,
+  "satin_c9a6f5_0": 640,
+  "crystal_9d6cff_10": 80,
+  "satin_f5b6dd_0": 148,
+  "pearl_ffffff_0": 2112,
+  "crystal_e6d8ff_9": 12,
+  "gold_d8ecff_0": 56
+ }
+}

@@ -1,0 +1,42 @@
+{
+ "vfx": {
+  "sparkles": 16,
+  "colors": [
+   "#ffffff",
+   "#ffd6f0",
+   "#e6dcff"
+  ],
+  "light": "#d7b8ff",
+  "light_power": 45,
+  "glow": "#e8e4ff",
+  "bg_top": "#2a3a78",
+  "bg_bottom": "#120f2a"
+ },
+ "name": "LotusCrystalPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 6614,
+ "palette": "LotusCrystalPickaxe_palette.png",
+ "parts": {
+  "LotusCrystalPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 2962,
+   "transparency": 0.0
+  },
+  "LotusCrystalPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 752,
+   "transparency": 0.25
+  },
+  "LotusCrystalPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 2900,
+   "transparency": 0.0
+  }
+ }
+}

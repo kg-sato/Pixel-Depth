@@ -1,0 +1,302 @@
+{
+ "name": "StarlightPickaxe",
+ "ref": "art/gen/pick_02.png",
+ "length": 3.6,
+ "handle_r": 0.085,
+ "tilt": 8,
+ "yaw": 20,
+ "seed": 2,
+ "vfx": {
+  "sparkles": 16,
+  "colors": [
+   "#ffffff",
+   "#ffc2ef",
+   "#e0c8ff"
+  ],
+  "light": "#ff7fd0",
+  "light_power": 45,
+  "glow": "#ff7fd0"
+ },
+ "handle": {
+  "mat": "glitter",
+  "color": "#5a35c8",
+  "wrap": {
+   "mat": "irid",
+   "color": "#e2479f",
+   "w": 0.055,
+   "turns": 4.5,
+   "z0": 0.25,
+   "z1": 3.15
+  },
+  "bands": [
+   {
+    "z": 3.18,
+    "mat": "gold",
+    "r": 0.03
+   },
+   {
+    "z": 0.22,
+    "mat": "gold"
+   }
+  ],
+  "gems": [
+   {
+    "z": 0.7,
+    "shape": "star",
+    "size": 0.035,
+    "mat": "gold",
+    "glow": 0
+   },
+   {
+    "z": 1.25,
+    "shape": "star",
+    "size": 0.035,
+    "mat": "gold",
+    "glow": 0
+   },
+   {
+    "z": 1.8,
+    "shape": "star",
+    "size": 0.035,
+    "mat": "gold",
+    "glow": 0
+   },
+   {
+    "z": 2.35,
+    "shape": "star",
+    "size": 0.035,
+    "mat": "gold",
+    "glow": 0
+   },
+   {
+    "z": 2.85,
+    "shape": "star",
+    "size": 0.035,
+    "mat": "gold",
+    "glow": 0
+   }
+  ]
+ },
+ "pommel": {
+  "type": "gem",
+  "color": "#8d5cf0",
+  "glow": 0.6,
+  "len": 0.62,
+  "r": 0.11,
+  "facets": 6,
+  "collar": "gold",
+  "crown": 0.2,
+  "cage": {
+   "n": 4,
+   "mat": "gold"
+  }
+ },
+ "arm": {
+  "len": 1.65,
+  "rise": 0.1,
+  "droop": 0.55,
+  "width": 0.26,
+  "top": 0.45,
+  "taper": 0.75,
+  "belly": 0.2,
+  "thick": 0.06,
+  "facet": true,
+  "mat": "crystal",
+  "color": "#b832d8",
+  "glow": 0.3,
+  "core": {
+   "mat": "crystal",
+   "color": "#6a2fd8",
+   "frac": 0.5
+  },
+  "edge": "#ffb0f0",
+  "edge_glow": 0.9,
+  "thorns": {
+   "n": 6,
+   "t0": 0.05,
+   "t1": 0.6,
+   "len": 0.24,
+   "color": "#d65ff0",
+   "glow": 0.5
+  }
+ },
+ "center": [
+  {
+   "type": "burst",
+   "at": [
+    0,
+    -3.32
+   ],
+   "n": 10,
+   "r0": 0.04,
+   "r1": 0.34,
+   "w": 0.07,
+   "colors": [
+    "#f06ac8",
+    "#c84fe8"
+   ],
+   "y": -0.02
+  },
+  {
+   "type": "collar",
+   "at": [
+    0,
+    -0.4
+   ],
+   "r": 0.1,
+   "h": 0.14,
+   "mat": "gold"
+  },
+  {
+   "type": "burst",
+   "at": [
+    0,
+    -0.28
+   ],
+   "n": 8,
+   "r0": 0.03,
+   "r1": 0.2,
+   "w": 0.05,
+   "colors": [
+    "#f06ac8",
+    "#ff9fd8"
+   ],
+   "y": -0.08
+  },
+  {
+   "type": "ring",
+   "at": [
+    0,
+    0
+   ],
+   "r": 0.42,
+   "w": 0.022,
+   "mat": "gold",
+   "y": 0.0
+  },
+  {
+   "type": "burst",
+   "at": [
+    0,
+    0
+   ],
+   "n": 12,
+   "r0": 0.12,
+   "r1": 0.5,
+   "w": 0.08,
+   "vary": 0.35,
+   "colors": [
+    "#9a5cf2",
+    "#c86cf0",
+    "#7b4ee0"
+   ],
+   "y": 0.0
+  },
+  {
+   "type": "star",
+   "at": [
+    0,
+    0
+   ],
+   "size": 0.44,
+   "points": 8,
+   "ratio": 0.4,
+   "color": "#8e5cf5",
+   "glow": 0.6,
+   "y": -0.06,
+   "rot": 22.5
+  },
+  {
+   "type": "star",
+   "at": [
+    0,
+    0
+   ],
+   "size": 0.36,
+   "points": 8,
+   "ratio": 0.35,
+   "color": "#ff7fd0",
+   "glow": 1.6,
+   "y": -0.12
+  },
+  {
+   "type": "spike",
+   "at": [
+    0,
+    0.25
+   ],
+   "len": 0.5,
+   "r": 0.07,
+   "color": "#9b6cff",
+   "glow": 0.6
+  },
+  {
+   "type": "gem",
+   "shape": "oval",
+   "at": [
+    -0.5,
+    -0.05
+   ],
+   "size": 0.07,
+   "color": "#7a3fd0",
+   "glow": 1.0,
+   "frame": "#e6bb6a"
+  },
+  {
+   "type": "gem",
+   "shape": "oval",
+   "at": [
+    0.5,
+    -0.05
+   ],
+   "size": 0.07,
+   "color": "#7a3fd0",
+   "glow": 1.0,
+   "frame": "#e6bb6a"
+  },
+  {
+   "type": "scroll",
+   "at": [
+    0,
+    -0.14
+   ],
+   "dx": 0.4,
+   "r": 0.08,
+   "turns": 1.2,
+   "w": 0.016
+  },
+  {
+   "type": "star",
+   "at": [
+    -0.3,
+    0.3
+   ],
+   "size": 0.045,
+   "mat": "gold",
+   "glow": 0,
+   "y": -0.04
+  },
+  {
+   "type": "star",
+   "at": [
+    0.3,
+    0.3
+   ],
+   "size": 0.045,
+   "mat": "gold",
+   "glow": 0,
+   "y": -0.04
+  },
+  {
+   "type": "star",
+   "at": [
+    0.42,
+    0.04
+   ],
+   "size": 0.04,
+   "mat": "gold",
+   "glow": 0,
+   "y": -0.04
+  }
+ ]
+}

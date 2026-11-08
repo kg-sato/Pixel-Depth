@@ -1,0 +1,26 @@
+{
+ "name": "StarlightPickaxe",
+ "objects": 77,
+ "parts": 18,
+ "tris": 6080,
+ "per_part": {
+  "glitter_5a35c8_0": 80,
+  "irid_e2479f_0": 508,
+  "gold_e6bb6a_0": 3012,
+  "crystal_8d5cf0_6": 12,
+  "crystal_b832d8_3": 568,
+  "crystal_6a2fd8_0": 568,
+  "irid_ffb0f0_9": 472,
+  "crystal_d65ff0_5": 96,
+  "crystal_f06ac8_2": 72,
+  "crystal_c84fe8_2": 40,
+  "crystal_ff9fd8_2": 32,
+  "crystal_9a5cf2_2": 32,
+  "crystal_c86cf0_2": 32,
+  "crystal_7b4ee0_2": 32,
+  "crystal_8e5cf5_6": 92,
+  "crystal_ff7fd0_16": 92,
+  "crystal_9b6cff_6": 12,
+  "crystal_7a3fd0_10": 328
+ }
+}

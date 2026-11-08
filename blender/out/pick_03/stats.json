@@ -1,0 +1,23 @@
+{
+ "name": "MoonlitPickaxe",
+ "objects": 192,
+ "parts": 15,
+ "tris": 13956,
+ "per_part": {
+  "glitter_26285e_0": 80,
+  "silver_dfe3ef_0": 10136,
+  "crystal_7d8cff_8": 12,
+  "crystal_8fa8ff_6": 568,
+  "silver_eef2ff_0": 472,
+  "silver_dfe3ef_10": 712,
+  "crystal_d8e4ff_16": 324,
+  "crystal_c8d6ff_7": 12,
+  "irid_d9d6ff_1": 928,
+  "irid_c6ccff_1": 348,
+  "crystal_cfdcff_3": 244,
+  "crystal_e8f0ff_9": 24,
+  "crystal_a8b8ff_9": 24,
+  "crystal_c8d4ff_9": 24,
+  "crystal_b8c8ff_9": 48
+ }
+}

@@ -1,0 +1,15 @@
+{
+ "name": "SilverWingPickaxe",
+ "objects": 143,
+ "parts": 7,
+ "tris": 8266,
+ "per_part": {
+  "silver_dfe3ef_0": 6290,
+  "crystal_2f6bff_14": 284,
+  "irid_ffffff_6": 472,
+  "crystal_8fb4ff_8": 12,
+  "crystal_2f6bff_17": 164,
+  "pearl_ffffff_0": 960,
+  "crystal_cfe0ff_9": 84
+ }
+}

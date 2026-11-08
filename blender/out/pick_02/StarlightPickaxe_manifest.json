@@ -1,0 +1,45 @@
+{
+ "vfx": {
+  "sparkles": 16,
+  "colors": [
+   "#ffffff",
+   "#ffc2ef",
+   "#e0c8ff"
+  ],
+  "light": "#ff7fd0",
+  "light_power": 45,
+  "glow": "#ff7fd0"
+ },
+ "name": "StarlightPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 6080,
+ "palette": "StarlightPickaxe_palette.png",
+ "parts": {
+  "StarlightPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 1060,
+   "transparency": 0.0
+  },
+  "StarlightPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 3012,
+   "transparency": 0.0
+  },
+  "StarlightPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 1916,
+   "transparency": 0.25
+  },
+  "StarlightPickaxe_Neon": {
+   "roblox_material": "Neon",
+   "tris": 92,
+   "transparency": 0.0
+  }
+ }
+}

@@ -1,0 +1,7 @@
+Task: generate ONE image with your image generation tool (the imagegen skill) and save it as a file.
+
+Reference image: open and look at `ref_03.jpg` in the current folder and use it as the visual reference for the generation. It shows a moon-themed silver scythe: a pale silver-blue crescent moon blade decorated with small flowers and crystals, a dark twisted silver handle, dangling silver chains with little crescent-moon and crystal charms, a flowing white ribbon, a deep blue night scene with a huge full moon and moonlit water.
+
+Generate one new image, portrait about 2:3, that keeps this reference's visual identity almost exactly: the same art style and rendering quality, the same palette, the same materials, the same ornaments and charms, and the same background mood. Change ONLY the weapon type: it must clearly read as a traditional PICKAXE, a straight handle with a pick head across the top (two long pointed pick arms, one on each side, curving slightly downward). Make the pick head a crescent moon: one long curved silver crescent pick arm and a shorter crescent arm on the other side, flowers and crystals where it meets the handle; keep the dangling moon charms and the white ribbon. Single item, centred, slightly diagonal like the reference. No text, no labels, no frames or info panels, no watermark, no signature.
+
+Save the final image in the current folder as `pick_03.png` (copy it there from wherever the tool writes it). Do not change any other file. Reply with the saved path only.

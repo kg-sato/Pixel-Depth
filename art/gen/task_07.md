@@ -1,0 +1,7 @@
+Task: generate ONE image with your image generation tool (the imagegen skill) and save it as a file.
+
+Reference image: open and look at `ref_07.jpg` in the current folder and use it as the visual reference for the generation. It shows a pink and white sakura crescent-moon scythe: a white crescent blade with pink and gold trim, a big pink satin bow with pearls and a flower, long pink tassels and ribbons, a slim pink handle with gold fittings, a plain black background.
+
+Generate one new image, portrait about 2:3, that keeps this reference's visual identity almost exactly: the same art style and rendering quality, the same palette, the same materials, the same ornaments and charms, and the same background mood. Change ONLY the weapon type: it must clearly read as a traditional PICKAXE, a straight handle with a pick head across the top (two long pointed pick arms, one on each side, curving slightly downward). Make the pick head a white crescent with gold and pink trim: two curved pick arms, the big pink bow with pearls right under the head, the same long tassels and ribbons. Single item, centred, slightly diagonal like the reference. No text, no labels, no frames or info panels, no watermark, no signature.
+
+Save the final image in the current folder as `pick_07.png` (copy it there from wherever the tool writes it). Do not change any other file. Reply with the saved path only.

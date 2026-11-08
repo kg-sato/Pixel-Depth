@@ -1,0 +1,46 @@
+{
+ "vfx": {
+  "sparkles": 14,
+  "colors": [
+   "#ffffff",
+   "#cfe0ff"
+  ],
+  "light": "#2f6bff",
+  "light_power": 60,
+  "glow": "#2f6bff",
+  "bg_top": "#1e2230",
+  "bg_bottom": "#08090d"
+ },
+ "name": "SilverWingPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 8266,
+ "palette": "SilverWingPickaxe_palette.png",
+ "parts": {
+  "SilverWingPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 6290,
+   "transparency": 0.0
+  },
+  "SilverWingPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 380,
+   "transparency": 0.25
+  },
+  "SilverWingPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 1432,
+   "transparency": 0.0
+  },
+  "SilverWingPickaxe_Neon": {
+   "roblox_material": "Neon",
+   "tris": 164,
+   "transparency": 0.0
+  }
+ }
+}

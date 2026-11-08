@@ -1,0 +1,312 @@
+{
+ "name": "SakuraPickaxe",
+ "ref": "art/gen/pick_07.png",
+ "length": 3.6,
+ "handle_r": 0.058,
+ "tilt": -13,
+ "yaw": 20,
+ "seed": 7,
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ffd0e4"
+  ],
+  "light": "#ffc0dc",
+  "light_power": 35,
+  "glow": "#ffc0dc",
+  "bg_top": "#2a1a2e",
+  "bg_bottom": "#0c0810"
+ },
+ "handle": {
+  "mat": "irid",
+  "color": "#f2a6c6",
+  "bands": [
+   {
+    "z": 1.25,
+    "mat": "gold"
+   },
+   {
+    "z": 0.35,
+    "mat": "gold"
+   },
+   {
+    "z": 3.15,
+    "mat": "gold"
+   }
+  ]
+ },
+ "pommel": {
+  "type": "orb",
+  "mat": "pearl",
+  "color": "#fff4f8",
+  "r": 0.07,
+  "collar": "gold",
+  "cap": 0.1
+ },
+ "arm": {
+  "len": 1.2,
+  "rise": 0.12,
+  "droop": 0.45,
+  "width": 0.2,
+  "top": 0.5,
+  "taper": 0.8,
+  "belly": 0.15,
+  "thick": 0.045,
+  "mat": "irid",
+  "color": "#fff4f6",
+  "edge": "#e6bb6a",
+  "edge_mat": "gold",
+  "edge_glow": 0.0,
+  "edge2": "#f4a9c8",
+  "edge2_mat": "satin"
+ },
+ "center": [
+  {
+   "type": "collar",
+   "at": [
+    0,
+    -0.02
+   ],
+   "r": 0.085,
+   "h": 0.22,
+   "mat": "gold"
+  },
+  {
+   "type": "blossoms",
+   "at": [
+    0,
+    0
+   ],
+   "n": 5,
+   "r": 0.12,
+   "size": 0.05,
+   "colors": [
+    "#f6a8c8",
+    "#ffd0e0"
+   ],
+   "py": -0.1
+  },
+  {
+   "type": "pearl",
+   "at": [
+    0,
+    0.24
+   ],
+   "r": 0.05
+  },
+  {
+   "type": "blossoms",
+   "pts": [
+    [
+     0.02,
+     -1.6
+    ],
+    [
+     -0.02,
+     -2.2
+    ],
+    [
+     0.02,
+     -3.2
+    ]
+   ],
+   "size": 0.05,
+   "py": -0.07,
+   "colors": [
+    "#f6a8c8"
+   ]
+  },
+  {
+   "type": "blossoms",
+   "pts": [
+    [
+     -0.06,
+     -3.52
+    ],
+    [
+     0.06,
+     -3.5
+    ],
+    [
+     0.0,
+     -3.44
+    ]
+   ],
+   "size": 0.055,
+   "py": -0.06,
+   "colors": [
+    "#f6a8c8",
+    "#ffd0e0"
+   ]
+  },
+  {
+   "type": "blossoms",
+   "pts": [
+    [
+     -0.12,
+     -0.5
+    ],
+    [
+     0.12,
+     -0.52
+    ],
+    [
+     0.0,
+     -0.62
+    ]
+   ],
+   "size": 0.05,
+   "py": -0.16,
+   "colors": [
+    "#f6a8c8",
+    "#ffd0e0"
+   ]
+  }
+ ],
+ "bow": {
+  "at": [
+   0,
+   -0.5
+  ],
+  "size": 0.36,
+  "color": "#f6a8c8",
+  "gem": "#fff0f6",
+  "lift": 0.2,
+  "y": -0.09
+ },
+ "ribbons": [
+  {
+   "pts": [
+    [
+     -0.1,
+     -0.6
+    ],
+    [
+     -0.4,
+     -1.2
+    ],
+    [
+     -0.45,
+     -1.9
+    ],
+    [
+     -0.6,
+     -2.4
+    ]
+   ],
+   "width": 0.15,
+   "color": "#f6a8c8",
+   "twist": 1.8,
+   "waves": 3.0
+  },
+  {
+   "pts": [
+    [
+     0.0,
+     -0.6
+    ],
+    [
+     -0.2,
+     -1.3
+    ],
+    [
+     -0.3,
+     -2.0
+    ],
+    [
+     -0.25,
+     -2.5
+    ]
+   ],
+   "width": 0.12,
+   "color": "#ffe4ee",
+   "twist": 1.8,
+   "waves": 3.0
+  }
+ ],
+ "charms": [
+  {
+   "anchor": [
+    -0.45,
+    -0.22
+   ],
+   "len": 0.3,
+   "charm": "tassel",
+   "color": "#f4a9c8",
+   "size": 0.06
+  },
+  {
+   "anchor": [
+    0.45,
+    -0.22
+   ],
+   "len": 0.3,
+   "charm": "tassel",
+   "color": "#f4a9c8",
+   "size": 0.06
+  },
+  {
+   "anchor": [
+    -0.15,
+    -0.7
+   ],
+   "len": 0.75,
+   "charm": "tassel",
+   "color": "#f4a9c8",
+   "size": 0.06
+  },
+  {
+   "anchor": [
+    0.15,
+    -0.7
+   ],
+   "len": 0.95,
+   "charm": "tassel",
+   "color": "#f4a9c8",
+   "size": 0.06
+  },
+  {
+   "anchor": [
+    0.0,
+    -3.62
+   ],
+   "len": 0.1,
+   "charm": "tassel",
+   "color": "#f4a9c8",
+   "size": 0.06
+  }
+ ],
+ "chains": [
+  {
+   "from": [
+    -0.32,
+    -0.62
+   ],
+   "to": [
+    0.32,
+    -0.62
+   ],
+   "sag": 0.22,
+   "bead_mat": "pearl",
+   "charm": "flower",
+   "color": "#f6a8c8",
+   "glow": 0.2,
+   "size": 0.05
+  },
+  {
+   "from": [
+    -0.22,
+    -0.7
+   ],
+   "to": [
+    0.22,
+    -0.7
+   ],
+   "sag": 0.4,
+   "bead_mat": "pearl",
+   "charm": "pearl",
+   "size": 0.05
+  }
+ ]
+}

@@ -1,0 +1,7 @@
+Task: generate ONE image with your image generation tool (the imagegen skill) and save it as a file.
+
+Reference image: open and look at `ref_04.jpg` in the current folder and use it as the visual reference for the generation. It shows a pastel pink opal axe: a spiky, flame-like iridescent pink-opal blade with a rose-gold ornate collar and small gems, a slim pink handle, a soft pink and baby-blue background with sparkles and floating bubbles.
+
+Generate one new image, portrait about 2:3, that keeps this reference's visual identity almost exactly: the same art style and rendering quality, the same palette, the same materials, the same ornaments and charms, and the same background mood. Change ONLY the weapon type: it must clearly read as a traditional PICKAXE, a straight handle with a pick head across the top (two long pointed pick arms, one on each side, curving slightly downward). Make the pick arms two long curved spiky iridescent pink-opal points with the same flame-like edges; keep the rose-gold ornate collar and gems. Single item, centred, slightly diagonal like the reference. No text, no labels, no frames or info panels, no watermark, no signature.
+
+Save the final image in the current folder as `pick_04.png` (copy it there from wherever the tool writes it). Do not change any other file. Reply with the saved path only.

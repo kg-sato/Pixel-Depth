@@ -1,0 +1,37 @@
+{
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ffe2f2",
+   "#e2f0ff"
+  ],
+  "light": "#ffd0ea",
+  "light_power": 40,
+  "glow": "#fff0f8",
+  "bg_top": "#3a2350",
+  "bg_bottom": "#150d22"
+ },
+ "name": "PearlTidePickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 9756,
+ "palette": "PearlTidePickaxe_palette.png",
+ "parts": {
+  "PearlTidePickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 4596,
+   "transparency": 0.0
+  },
+  "PearlTidePickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 5160,
+   "transparency": 0.0
+  }
+ }
+}

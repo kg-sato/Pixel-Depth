@@ -1,0 +1,218 @@
+{
+ "name": "RoseThornPickaxe",
+ "ref": "art/gen/pick_04.png",
+ "length": 3.6,
+ "handle_r": 0.07,
+ "tilt": -16,
+ "yaw": 20,
+ "seed": 4,
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ffd6ea",
+   "#d6ecff"
+  ],
+  "light": "#ffb0d8",
+  "light_power": 40,
+  "glow": "#cfe0ff",
+  "bg_top": "#3a2048",
+  "bg_bottom": "#140c1c"
+ },
+ "handle": {
+  "mat": "irid",
+  "color": "#ff9fcf",
+  "bands": [
+   {
+    "z": 2.78,
+    "mat": "rosegold"
+   },
+   {
+    "z": 2.46,
+    "mat": "rosegold"
+   },
+   {
+    "z": 3.3,
+    "mat": "rosegold"
+   }
+  ],
+  "sleeves": [
+   {
+    "z0": 2.48,
+    "z1": 2.76,
+    "r": 0.085,
+    "mat": "rosegold"
+   }
+  ],
+  "gems": [
+   {
+    "z": 2.62,
+    "shape": "diamond",
+    "size": 0.035,
+    "color": "#cfe0ff",
+    "glow": 1.2
+   }
+  ]
+ },
+ "pommel": {
+  "type": "gem",
+  "color": "#cfe0ff",
+  "glow": 1.0,
+  "len": 0.36,
+  "r": 0.09,
+  "facets": 6,
+  "collar": "rosegold",
+  "cap": 0.08,
+  "cage": {
+   "n": 4,
+   "mat": "rosegold"
+  }
+ },
+ "arm": {
+  "len": 1.55,
+  "rise": 0.2,
+  "droop": 0.45,
+  "width": 0.3,
+  "top": 0.55,
+  "taper": 0.7,
+  "belly": 0.2,
+  "thick": 0.05,
+  "facet": true,
+  "mat": "crystal",
+  "color": "#ff8fc4",
+  "glow": 0.7,
+  "edge": "#ffe0f0",
+  "edge_glow": 0.8,
+  "edge2": "#eba792",
+  "edge2_mat": "rosegold",
+  "thorns": {
+   "n": 6,
+   "t0": 0.04,
+   "t1": 0.62,
+   "len": 0.24,
+   "r": 0.04,
+   "color": "#ff9fcf",
+   "glow": 0.5
+  }
+ },
+ "center": [
+  {
+   "type": "spikes",
+   "at": [
+    0,
+    0.05
+   ],
+   "n": 5,
+   "from": 40,
+   "to": 140,
+   "r": 0.1,
+   "len": 0.42,
+   "w": 0.06,
+   "color": "#f7a6cf",
+   "glow": 0.4
+  },
+  {
+   "type": "spikes",
+   "at": [
+    0,
+    0.0
+   ],
+   "n": 4,
+   "from": 200,
+   "to": 340,
+   "r": 0.08,
+   "len": 0.22,
+   "w": 0.05,
+   "color": "#eba792",
+   "mat": "rosegold"
+  },
+  {
+   "type": "star",
+   "at": [
+    0,
+    0
+   ],
+   "size": 0.25,
+   "points": 4,
+   "ratio": 0.35,
+   "mat": "rosegold",
+   "glow": 0,
+   "y": -0.05
+  },
+  {
+   "type": "gem",
+   "shape": "circle",
+   "at": [
+    0,
+    0
+   ],
+   "size": 0.085,
+   "color": "#cfe0ff",
+   "glow": 1.6,
+   "y": -0.11,
+   "frame": "#eba792",
+   "frame_mat": "rosegold"
+  }
+ ],
+ "chains": [
+  {
+   "from": [
+    -0.5,
+    -0.05
+   ],
+   "to": [
+    -0.06,
+    -0.16
+   ],
+   "sag": 0.12,
+   "chain": "rosegold"
+  },
+  {
+   "from": [
+    0.06,
+    -0.16
+   ],
+   "to": [
+    0.5,
+    -0.05
+   ],
+   "sag": 0.12,
+   "chain": "rosegold"
+  }
+ ],
+ "charms": [
+  {
+   "anchor": [
+    -0.36,
+    -0.2
+   ],
+   "len": 0.22,
+   "charm": "drop",
+   "color": "#e8f0ff",
+   "chain": "rosegold",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    0.36,
+    -0.2
+   ],
+   "len": 0.18,
+   "charm": "drop",
+   "color": "#e8f0ff",
+   "chain": "rosegold",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    0,
+    -3.62
+   ],
+   "len": 0.05,
+   "charm": "drop",
+   "color": "#e8f0ff",
+   "chain": "rosegold",
+   "size": 0.05
+  }
+ ]
+}

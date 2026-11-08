@@ -1,0 +1,41 @@
+{
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ffd0e4"
+  ],
+  "light": "#ffc0dc",
+  "light_power": 35,
+  "glow": "#ffc0dc",
+  "bg_top": "#2a1a2e",
+  "bg_bottom": "#0c0810"
+ },
+ "name": "SakuraPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 9392,
+ "palette": "SakuraPickaxe_palette.png",
+ "parts": {
+  "SakuraPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 4888,
+   "transparency": 0.0
+  },
+  "SakuraPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 4332,
+   "transparency": 0.0
+  },
+  "SakuraPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 172,
+   "transparency": 0.25
+  }
+ }
+}

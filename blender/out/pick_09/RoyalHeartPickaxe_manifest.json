@@ -1,0 +1,47 @@
+{
+ "vfx": {
+  "sparkles": 20,
+  "colors": [
+   "#ffffff",
+   "#ffb8d8",
+   "#ffd6ea"
+  ],
+  "light": "#ff4f9a",
+  "light_power": 60,
+  "glow": "#ff4f9a",
+  "bg_top": "#3a2040",
+  "bg_bottom": "#120a16"
+ },
+ "name": "RoyalHeartPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 8938,
+ "palette": "RoyalHeartPickaxe_palette.png",
+ "parts": {
+  "RoyalHeartPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 6250,
+   "transparency": 0.0
+  },
+  "RoyalHeartPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 720,
+   "transparency": 0.25
+  },
+  "RoyalHeartPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 1804,
+   "transparency": 0.0
+  },
+  "RoyalHeartPickaxe_Neon": {
+   "roblox_material": "Neon",
+   "tris": 164,
+   "transparency": 0.0
+  }
+ }
+}

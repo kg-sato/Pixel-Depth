@@ -1,0 +1,18 @@
+{
+ "name": "PearlTidePickaxe",
+ "objects": 91,
+ "parts": 10,
+ "tris": 9756,
+ "per_part": {
+  "irid_f2a3cf_0": 80,
+  "rosegold_eba792_0": 5160,
+  "pearl_ffffff_0": 952,
+  "pearl_fff4fa_6": 224,
+  "pearl_fff6fb_0": 480,
+  "irid_f9b6da_0": 568,
+  "irid_fff0f6_2": 32,
+  "irid_ffd6ea_2": 32,
+  "pearl_fff4fa_0": 1928,
+  "pearl_fff4f8_0": 300
+ }
+}

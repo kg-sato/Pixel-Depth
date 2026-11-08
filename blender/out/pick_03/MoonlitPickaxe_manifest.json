@@ -1,0 +1,47 @@
+{
+ "vfx": {
+  "sparkles": 18,
+  "colors": [
+   "#ffffff",
+   "#cfdcff",
+   "#b9c8ff"
+  ],
+  "light": "#a9c0ff",
+  "light_power": 55,
+  "glow": "#d8e4ff",
+  "bg_top": "#25306a",
+  "bg_bottom": "#0b0f26"
+ },
+ "name": "MoonlitPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 13956,
+ "palette": "MoonlitPickaxe_palette.png",
+ "parts": {
+  "MoonlitPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 1356,
+   "transparency": 0.0
+  },
+  "MoonlitPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 11320,
+   "transparency": 0.0
+  },
+  "MoonlitPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 956,
+   "transparency": 0.25
+  },
+  "MoonlitPickaxe_Neon": {
+   "roblox_material": "Neon",
+   "tris": 324,
+   "transparency": 0.0
+  }
+ }
+}

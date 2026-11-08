@@ -1,0 +1,243 @@
+{
+ "name": "PearlTidePickaxe",
+ "ref": "art/gen/pick_05.png",
+ "length": 3.6,
+ "handle_r": 0.085,
+ "tilt": -24,
+ "yaw": 20,
+ "seed": 5,
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ffe2f2",
+   "#e2f0ff"
+  ],
+  "light": "#ffd0ea",
+  "light_power": 40,
+  "glow": "#fff0f8",
+  "bg_top": "#3a2350",
+  "bg_bottom": "#150d22"
+ },
+ "handle": {
+  "mat": "irid",
+  "color": "#f2a3cf",
+  "sleeves": [
+   {
+    "z0": 2.35,
+    "z1": 3.35,
+    "r": 0.1,
+    "mat": "rosegold"
+   }
+  ],
+  "bands": [
+   {
+    "z": 2.35,
+    "mat": "rosegold",
+    "r": 0.03,
+    "scale": 1.45
+   },
+   {
+    "z": 2.85,
+    "mat": "rosegold",
+    "scale": 1.4
+   },
+   {
+    "z": 0.3,
+    "mat": "rosegold"
+   },
+   {
+    "z": 2.6,
+    "mat": "pearl",
+    "r": 0.03,
+    "scale": 1.4
+   },
+   {
+    "z": 3.1,
+    "mat": "pearl",
+    "r": 0.03,
+    "scale": 1.4
+   }
+  ]
+ },
+ "pommel": {
+  "type": "orb",
+  "mat": "pearl",
+  "color": "#fff4fa",
+  "r": 0.16,
+  "collar": "rosegold",
+  "pearls": 10,
+  "cage": {
+   "n": 5,
+   "mat": "rosegold"
+  }
+ },
+ "arm": {
+  "len": 1.6,
+  "rise": 0.2,
+  "droop": 0.75,
+  "width": 0.28,
+  "top": 0.5,
+  "taper": 0.75,
+  "belly": 0.2,
+  "thick": 0.05,
+  "mat": "irid",
+  "color": "#f9b6da",
+  "edge": "#eba792",
+  "edge_mat": "rosegold",
+  "edge_glow": 0.0,
+  "edge2": "#ffffff",
+  "edge2_mat": "pearl",
+  "filigree": {
+   "n": 5,
+   "r": 0.07,
+   "mat": "rosegold",
+   "w": 0.014
+  }
+ },
+ "center": [
+  {
+   "type": "burst",
+   "at": [
+    0,
+    0
+   ],
+   "n": 8,
+   "r0": 0.15,
+   "r1": 0.45,
+   "w": 0.09,
+   "vary": 0.25,
+   "colors": [
+    "#fff0f6",
+    "#ffd6ea"
+   ],
+   "mat": "irid",
+   "glow": 0.2
+  },
+  {
+   "type": "flower",
+   "at": [
+    0,
+    0
+   ],
+   "size": 0.26,
+   "points": 10,
+   "mat": "rosegold",
+   "glow": 0,
+   "y": -0.03
+  },
+  {
+   "type": "pearls",
+   "at": [
+    0,
+    0
+   ],
+   "n": 14,
+   "r": 0.2,
+   "size": 0.022,
+   "y": -0.09
+  },
+  {
+   "type": "pearl",
+   "at": [
+    0,
+    0
+   ],
+   "r": 0.16,
+   "y": -0.13
+  },
+  {
+   "type": "pearl",
+   "at": [
+    0,
+    0.42
+   ],
+   "r": 0.06
+  },
+  {
+   "type": "scroll",
+   "at": [
+    0,
+    0.2
+   ],
+   "dx": 0.1,
+   "r": 0.1,
+   "turns": 1.3,
+   "w": 0.016,
+   "mat": "rosegold"
+  },
+  {
+   "type": "scroll",
+   "at": [
+    0,
+    -0.22
+   ],
+   "dx": 0.38,
+   "r": 0.09,
+   "turns": 1.2,
+   "w": 0.016,
+   "mat": "rosegold",
+   "rot": 180
+  },
+  {
+   "type": "pearls",
+   "at": [
+    0,
+    -1.0
+   ],
+   "n": 6,
+   "r": 0.1,
+   "size": 0.025,
+   "from": 0,
+   "to": 360,
+   "y": -0.04
+  },
+  {
+   "type": "spikes",
+   "at": [
+    0,
+    0.42
+   ],
+   "n": 3,
+   "from": 60,
+   "to": 120,
+   "r": 0.04,
+   "len": 0.16,
+   "w": 0.03,
+   "mat": "rosegold",
+   "glow": 0
+  }
+ ],
+ "charms": [
+  {
+   "anchor": [
+    -0.42,
+    -0.2
+   ],
+   "len": 0.22,
+   "charm": "pearl",
+   "chain": "rosegold",
+   "size": 0.045
+  },
+  {
+   "anchor": [
+    0.4,
+    -0.18
+   ],
+   "len": 0.18,
+   "charm": "pearl",
+   "chain": "rosegold",
+   "size": 0.04
+  },
+  {
+   "anchor": [
+    0.2,
+    -0.25
+   ],
+   "len": 0.12,
+   "charm": "pearl",
+   "chain": "rosegold",
+   "size": 0.035
+  }
+ ]
+}

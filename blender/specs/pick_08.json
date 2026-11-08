@@ -1,0 +1,268 @@
+{
+ "name": "LotusCrystalPickaxe",
+ "ref": "art/gen/pick_08.png",
+ "length": 3.6,
+ "handle_r": 0.042,
+ "tilt": 12,
+ "yaw": 20,
+ "seed": 8,
+ "vfx": {
+  "sparkles": 16,
+  "colors": [
+   "#ffffff",
+   "#ffd6f0",
+   "#e6dcff"
+  ],
+  "light": "#d7b8ff",
+  "light_power": 45,
+  "glow": "#e8e4ff",
+  "bg_top": "#2a3a78",
+  "bg_bottom": "#120f2a"
+ },
+ "handle": {
+  "mat": "gold",
+  "bands": [
+   {
+    "z": 3.1,
+    "mat": "gold",
+    "r": 0.02
+   },
+   {
+    "z": 0.2,
+    "mat": "gold"
+   }
+  ]
+ },
+ "pommel": {
+  "type": "gem",
+  "color": "#d7b8ff",
+  "glow": 0.9,
+  "len": 0.22,
+  "r": 0.05,
+  "facets": 6,
+  "collar": "gold"
+ },
+ "arm": {
+  "len": 1.3,
+  "rise": 0.15,
+  "droop": 0.35,
+  "width": 0.22,
+  "top": 0.5,
+  "taper": 0.75,
+  "belly": 0.25,
+  "thick": 0.045,
+  "facet": true,
+  "mat": "crystal",
+  "color": "#d8ccff",
+  "glow": 0.6,
+  "edge": "#e6bb6a",
+  "edge_glow": 0.0,
+  "edge_mat": "gold"
+ },
+ "center": [
+  {
+   "type": "collar",
+   "at": [
+    0,
+    -0.1
+   ],
+   "r": 0.06,
+   "h": 0.2,
+   "mat": "gold"
+  },
+  {
+   "type": "scroll",
+   "at": [
+    0,
+    -0.05
+   ],
+   "dx": 0.1,
+   "r": 0.06,
+   "turns": 1.2,
+   "w": 0.012
+  },
+  {
+   "type": "burst",
+   "at": [
+    0,
+    0.02
+   ],
+   "n": 7,
+   "r0": 0.02,
+   "r1": 0.24,
+   "w": 0.06,
+   "from": 25,
+   "to": 155,
+   "cup": 0.35,
+   "vary": 0.1,
+   "long_mid": 0.4,
+   "colors": [
+    "#fff0fa",
+    "#f2dcff"
+   ],
+   "glow": 0.5
+  },
+  {
+   "type": "spikes",
+   "at": [
+    0,
+    0.04
+   ],
+   "n": 5,
+   "from": 60,
+   "to": 120,
+   "r": 0.02,
+   "len": 0.12,
+   "w": 0.01,
+   "mat": "gold",
+   "glow": 0
+  }
+ ],
+ "bow": {
+  "at": [
+   0,
+   -0.34
+  ],
+  "size": 0.22,
+  "color": "#c9a6f5",
+  "gem": "#9d6cff",
+  "lift": 0.25,
+  "y": -0.07
+ },
+ "ribbons": [
+  {
+   "pts": [
+    [
+     -0.1,
+     -0.4
+    ],
+    [
+     -0.5,
+     -0.9
+    ],
+    [
+     -0.55,
+     -1.5
+    ],
+    [
+     -0.3,
+     -2.0
+    ]
+   ],
+   "width": 0.12,
+   "color": "#c9a6f5",
+   "twist": 1.2
+  },
+  {
+   "pts": [
+    [
+     0.1,
+     -0.4
+    ],
+    [
+     0.35,
+     -1.0
+    ],
+    [
+     0.3,
+     -1.6
+    ],
+    [
+     0.45,
+     -2.1
+    ]
+   ],
+   "width": 0.12,
+   "color": "#f5b6dd",
+   "twist": 1.0
+  }
+ ],
+ "charms": [
+  {
+   "anchor": [
+    -0.12,
+    -0.45
+   ],
+   "len": 0.9,
+   "charm": "drop",
+   "color": "#d7b8ff",
+   "bead_mat": "pearl",
+   "size": 0.045
+  },
+  {
+   "anchor": [
+    -0.05,
+    -0.45
+   ],
+   "len": 1.2,
+   "charm": "drop",
+   "color": "#e6d8ff",
+   "bead_mat": "pearl",
+   "size": 0.045
+  },
+  {
+   "anchor": [
+    0.05,
+    -0.45
+   ],
+   "len": 1.0,
+   "charm": "star",
+   "mat": "gold",
+   "glow": 0,
+   "bead_mat": "pearl",
+   "size": 0.04
+  },
+  {
+   "anchor": [
+    0.12,
+    -0.45
+   ],
+   "len": 0.8,
+   "charm": "drop",
+   "color": "#d7b8ff",
+   "bead_mat": "pearl",
+   "size": 0.045
+  }
+ ],
+ "chains": [
+  {
+   "from": [
+    -0.75,
+    -0.12
+   ],
+   "to": [
+    -0.08,
+    -0.28
+   ],
+   "sag": 0.18,
+   "bead_mat": "pearl",
+   "bead": 0.016
+  },
+  {
+   "from": [
+    0.08,
+    -0.28
+   ],
+   "to": [
+    0.75,
+    -0.12
+   ],
+   "sag": 0.18,
+   "bead_mat": "pearl",
+   "bead": 0.016
+  },
+  {
+   "from": [
+    -0.5,
+    -0.1
+   ],
+   "to": [
+    0.5,
+    -0.1
+   ],
+   "sag": 0.42,
+   "bead_mat": "pearl",
+   "bead": 0.016
+  }
+ ]
+}

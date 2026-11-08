@@ -1,0 +1,467 @@
+{
+ "name": "MoonlitPickaxe",
+ "ref": "art/gen/pick_03.png",
+ "length": 3.6,
+ "handle_r": 0.06,
+ "tilt": -10,
+ "yaw": 20,
+ "seed": 3,
+ "vfx": {
+  "sparkles": 18,
+  "colors": [
+   "#ffffff",
+   "#cfdcff",
+   "#b9c8ff"
+  ],
+  "light": "#a9c0ff",
+  "light_power": 55,
+  "glow": "#d8e4ff",
+  "bg_top": "#25306a",
+  "bg_bottom": "#0b0f26"
+ },
+ "handle": {
+  "mat": "glitter",
+  "color": "#26285e",
+  "wrap": {
+   "mat": "silver",
+   "w": 0.014,
+   "turns": 9,
+   "z0": 0.3,
+   "z1": 3.3
+  },
+  "bands": [
+   {
+    "z": 3.3,
+    "mat": "silver"
+   },
+   {
+    "z": 0.3,
+    "mat": "silver"
+   }
+  ]
+ },
+ "pommel": {
+  "type": "gem",
+  "color": "#7d8cff",
+  "glow": 0.8,
+  "len": 0.42,
+  "r": 0.07,
+  "facets": 6,
+  "collar": "silver"
+ },
+ "arms": [
+  {
+   "side": -1,
+   "len": 1.2,
+   "rise": 0.12,
+   "droop": 0.45,
+   "width": 0.22,
+   "top": 0.4,
+   "taper": 0.8,
+   "belly": 0.15,
+   "thick": 0.05,
+   "facet": true,
+   "mat": "crystal",
+   "color": "#8fa8ff",
+   "glow": 0.6,
+   "edge": "#eef2ff",
+   "edge_mat": "silver",
+   "edge_glow": 0.0,
+   "filigree": {
+    "n": 4,
+    "r": 0.055,
+    "mat": "silver"
+   }
+  },
+  {
+   "side": 1,
+   "len": 1.8,
+   "rise": 0.15,
+   "droop": 0.75,
+   "width": 0.24,
+   "top": 0.4,
+   "taper": 0.8,
+   "belly": 0.15,
+   "thick": 0.05,
+   "facet": true,
+   "mat": "crystal",
+   "color": "#8fa8ff",
+   "glow": 0.6,
+   "edge": "#eef2ff",
+   "edge_mat": "silver",
+   "edge_glow": 0.0,
+   "filigree": {
+    "n": 4,
+    "r": 0.055,
+    "mat": "silver"
+   }
+  }
+ ],
+ "center": [
+  {
+   "type": "ring",
+   "at": [
+    0,
+    0
+   ],
+   "r": 0.17,
+   "w": 0.02,
+   "mat": "silver"
+  },
+  {
+   "type": "crescent",
+   "at": [
+    0,
+    0
+   ],
+   "size": 0.15,
+   "mat": "silver",
+   "rot": 200,
+   "y": -0.08
+  },
+  {
+   "type": "orb",
+   "at": [
+    0,
+    0
+   ],
+   "r": 0.11,
+   "color": "#d8e4ff",
+   "glow": 1.6,
+   "y": -0.04
+  },
+  {
+   "type": "spike",
+   "at": [
+    -0.05,
+    0.15
+   ],
+   "len": 0.38,
+   "r": 0.06,
+   "color": "#c8d6ff",
+   "glow": 0.7,
+   "dir": [
+    -0.15,
+    0,
+    1
+   ]
+  },
+  {
+   "type": "blossoms",
+   "pts": [
+    [
+     -0.55,
+     0.05
+    ],
+    [
+     -0.32,
+     0.12
+    ],
+    [
+     0.25,
+     0.14
+    ],
+    [
+     0.45,
+     0.12
+    ],
+    [
+     0.7,
+     0.06
+    ],
+    [
+     -0.2,
+     -0.22
+    ]
+   ],
+   "size": 0.06,
+   "colors": [
+    "#d9d6ff",
+    "#c6ccff"
+   ],
+   "center": "silver"
+  },
+  {
+   "type": "blossoms",
+   "pts": [
+    [
+     0.03,
+     -0.7
+    ],
+    [
+     -0.04,
+     -1.3
+    ],
+    [
+     0.04,
+     -1.9
+    ],
+    [
+     -0.03,
+     -2.5
+    ],
+    [
+     0.02,
+     -3.15
+    ]
+   ],
+   "size": 0.055,
+   "py": -0.07,
+   "colors": [
+    "#d9d6ff"
+   ],
+   "center": "silver"
+  },
+  {
+   "type": "crescent",
+   "at": [
+    0,
+    -3.32
+   ],
+   "size": 0.13,
+   "mat": "silver",
+   "rot": -90,
+   "y": -0.04
+  },
+  {
+   "type": "star",
+   "at": [
+    0,
+    -3.32
+   ],
+   "size": 0.045,
+   "mat": "silver",
+   "glow": 0,
+   "points": 4,
+   "ratio": 0.3,
+   "y": -0.07
+  },
+  {
+   "type": "scroll",
+   "at": [
+    0,
+    0.0
+   ],
+   "dx": 0.2,
+   "r": 0.11,
+   "turns": 1.4,
+   "w": 0.016,
+   "mat": "silver"
+  },
+  {
+   "type": "scroll",
+   "at": [
+    0,
+    -0.06
+   ],
+   "dx": 0.2,
+   "r": 0.09,
+   "turns": 1.3,
+   "w": 0.014,
+   "mat": "silver",
+   "rot": 180
+  }
+ ],
+ "ribbons": [
+  {
+   "pts": [
+    [
+     -0.12,
+     -0.35
+    ],
+    [
+     -0.45,
+     -0.8
+    ],
+    [
+     -0.25,
+     -1.3
+    ],
+    [
+     -0.55,
+     -1.8
+    ],
+    [
+     -0.35,
+     -2.35
+    ],
+    [
+     -0.15,
+     -2.6
+    ]
+   ],
+   "width": 0.34,
+   "color": "#cfdcff",
+   "twist": 1.8,
+   "waves": 2.5,
+   "mat": "crystal",
+   "glow": 0.3
+  }
+ ],
+ "chains": [
+  {
+   "from": [
+    -0.7,
+    -0.08
+   ],
+   "to": [
+    -0.1,
+    -0.1
+   ],
+   "sag": 0.12,
+   "chain": "silver"
+  },
+  {
+   "from": [
+    0.1,
+    -0.1
+   ],
+   "to": [
+    0.65,
+    -0.05
+   ],
+   "sag": 0.1,
+   "chain": "silver"
+  },
+  {
+   "from": [
+    -0.55,
+    -0.25
+   ],
+   "to": [
+    0.55,
+    -0.25
+   ],
+   "sag": 0.12,
+   "chain": "silver",
+   "charm": "drop",
+   "color": "#e8f0ff",
+   "size": 0.045
+  },
+  {
+   "from": [
+    -0.41250000000000003,
+    -0.27
+   ],
+   "to": [
+    0.41250000000000003,
+    -0.27
+   ],
+   "sag": 0.24,
+   "chain": "silver",
+   "charm": "drop",
+   "color": "#e8f0ff",
+   "size": 0.045
+  }
+ ],
+ "charms": [
+  {
+   "anchor": [
+    -0.75,
+    -0.15
+   ],
+   "len": 0.45,
+   "charm": "drop",
+   "color": "#a8b8ff",
+   "chain": "silver",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    -0.58,
+    -0.17
+   ],
+   "len": 0.25,
+   "charm": "moon",
+   "chain": "silver",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    -0.3,
+    -0.18
+   ],
+   "len": 0.6,
+   "charm": "drop",
+   "color": "#c8d4ff",
+   "chain": "silver",
+   "size": 0.045
+  },
+  {
+   "anchor": [
+    0.3,
+    -0.16
+   ],
+   "len": 0.45,
+   "charm": "moon",
+   "chain": "silver",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    0.55,
+    -0.12
+   ],
+   "len": 0.28,
+   "charm": "drop",
+   "color": "#a8b8ff",
+   "chain": "silver",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    0.15,
+    -0.2
+   ],
+   "len": 0.85,
+   "charm": "drop",
+   "color": "#c8d4ff",
+   "chain": "silver",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    -0.9,
+    -0.18
+   ],
+   "len": 0.3,
+   "charm": "drop",
+   "color": "#b8c8ff",
+   "chain": "silver",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    -0.45,
+    -0.18
+   ],
+   "len": 0.4,
+   "charm": "drop",
+   "color": "#b8c8ff",
+   "chain": "silver",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    0.42,
+    -0.18
+   ],
+   "len": 0.62,
+   "charm": "drop",
+   "color": "#b8c8ff",
+   "chain": "silver",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    0.75,
+    -0.18
+   ],
+   "len": 0.22,
+   "charm": "drop",
+   "color": "#b8c8ff",
+   "chain": "silver",
+   "size": 0.05
+  }
+ ]
+}

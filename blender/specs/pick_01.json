@@ -1,0 +1,332 @@
+{
+ "name": "HeartGemPickaxe",
+ "ref": "art/gen/pick_01.png",
+ "length": 3.6,
+ "handle_r": 0.08,
+ "tilt": 15,
+ "yaw": 20,
+ "seed": 1,
+ "handle": {
+  "mat": "glitter",
+  "color": "#a77fe0",
+  "wrap": {
+   "mat": "satin",
+   "color": "#ee8fd6",
+   "w": 0.035,
+   "turns": 6,
+   "z0": 0.45,
+   "z1": 3.25
+  },
+  "bands": [
+   {
+    "z": 0.42,
+    "mat": "rosegold"
+   },
+   {
+    "z": 3.3,
+    "mat": "rosegold"
+   }
+  ]
+ },
+ "pommel": {
+  "type": "gem",
+  "color": "#a99cff",
+  "glow": 0.5,
+  "len": 0.38,
+  "r": 0.13,
+  "facets": 8,
+  "collar": "rosegold",
+  "pearls": 8,
+  "cap": 0.1
+ },
+ "arm": {
+  "len": 1.55,
+  "rise": 0.15,
+  "droop": 0.5,
+  "width": 0.2,
+  "top": 0.5,
+  "taper": 0.7,
+  "belly": 0.15,
+  "thick": 0.045,
+  "mat": "glitter",
+  "color": "#b48cf0",
+  "edge": "#fdf0ff",
+  "edge_glow": 0.8,
+  "edge_r": 0.02,
+  "edge2": "#9f78e0",
+  "edge2_mat": "irid",
+  "facet": true,
+  "filigree": {
+   "n": 5,
+   "r": 0.06,
+   "mat": "gold"
+  }
+ },
+ "center": [
+  {
+   "type": "burst",
+   "at": [
+    0,
+    0.0
+   ],
+   "n": 18,
+   "r0": 0.16,
+   "r1": 0.6,
+   "w": 0.07,
+   "vary": 0.45,
+   "y": -0.02,
+   "glow": 0.35,
+   "colors": [
+    "#9fe6cf",
+    "#c4a8ff",
+    "#f3a8e0",
+    "#9fd0ff"
+   ]
+  },
+  {
+   "type": "blossoms",
+   "at": [
+    0,
+    0.0
+   ],
+   "n": 9,
+   "r": 0.27,
+   "size": 0.07,
+   "colors": [
+    "#f6a8dc",
+    "#d7bfff",
+    "#fbd0ec"
+   ]
+  },
+  {
+   "type": "flower",
+   "at": [
+    0,
+    0
+   ],
+   "size": 0.36,
+   "points": 12,
+   "mat": "gold",
+   "glow": 0,
+   "y": -0.08
+  },
+  {
+   "type": "heart",
+   "at": [
+    0,
+    0.0
+   ],
+   "y": -0.12,
+   "size": 0.27,
+   "color": "#d77bff",
+   "glow": 1.8,
+   "frame": "#e6bb6a",
+   "frame_mat": "gold",
+   "frame_scale": 1.38
+  },
+  {
+   "type": "spikes",
+   "at": [
+    0,
+    0.18
+   ],
+   "n": 3,
+   "from": 65,
+   "to": 115,
+   "r": 0.12,
+   "len": 0.45,
+   "w": 0.055,
+   "color": "#d8c4ff"
+  },
+  {
+   "type": "burst",
+   "at": [
+    0,
+    -3.22
+   ],
+   "n": 8,
+   "r0": 0.06,
+   "r1": 0.22,
+   "w": 0.035,
+   "from": 20,
+   "to": 160,
+   "y": -0.02,
+   "colors": [
+    "#9fe6cf",
+    "#c4a8ff",
+    "#9fd0ff"
+   ]
+  }
+ ],
+ "bow": {
+  "at": [
+   0,
+   -0.62
+  ],
+  "size": 0.5,
+  "color": "#f59bd8",
+  "gem": "#d2f2ff",
+  "lift": 0.25,
+  "y": -0.09
+ },
+ "ribbons": [
+  {
+   "pts": [
+    [
+     -0.05,
+     -0.65
+    ],
+    [
+     -0.3,
+     -0.85
+    ],
+    [
+     -0.45,
+     -1.15
+    ],
+    [
+     -0.35,
+     -1.45
+    ],
+    [
+     -0.55,
+     -1.7
+    ]
+   ],
+   "width": 0.14,
+   "color": "#f3a6dd",
+   "twist": 1.0
+  },
+  {
+   "pts": [
+    [
+     0.06,
+     -0.66
+    ],
+    [
+     0.25,
+     -0.95
+    ],
+    [
+     0.3,
+     -1.25
+    ],
+    [
+     0.18,
+     -1.55
+    ]
+   ],
+   "width": 0.13,
+   "color": "#f3a6dd",
+   "twist": 0.8
+  }
+ ],
+ "chains": [
+  {
+   "from": [
+    0.1,
+    -0.55
+   ],
+   "to": [
+    0.45,
+    -0.4
+   ],
+   "sag": 0.15
+  },
+  {
+   "from": [
+    -0.42,
+    -0.3
+   ],
+   "to": [
+    0.42,
+    -0.3
+   ],
+   "sag": 0.12,
+   "chain": "gold",
+   "charm": "star",
+   "color": "#bfe8ff",
+   "size": 0.045,
+   "bead_mat": "pearl"
+  },
+  {
+   "from": [
+    -0.315,
+    -0.32
+   ],
+   "to": [
+    0.315,
+    -0.32
+   ],
+   "sag": 0.24,
+   "chain": "gold",
+   "charm": "star",
+   "color": "#bfe8ff",
+   "size": 0.045,
+   "bead_mat": "pearl"
+  }
+ ],
+ "charms": [
+  {
+   "anchor": [
+    0.45,
+    -0.42
+   ],
+   "len": 0.85,
+   "charm": "star",
+   "color": "#bfe8ff",
+   "size": 0.08
+  },
+  {
+   "anchor": [
+    0.38,
+    -0.5
+   ],
+   "len": 1.05,
+   "charm": "star",
+   "color": "#f6e2b0",
+   "size": 0.06
+  },
+  {
+   "anchor": [
+    0.3,
+    -0.55
+   ],
+   "len": 1.35,
+   "charm": "heart",
+   "color": "#f9c6e8",
+   "size": 0.07
+  },
+  {
+   "anchor": [
+    -0.12,
+    -3.25
+   ],
+   "len": 0.3,
+   "charm": "heart",
+   "color": "#f9c6e8",
+   "size": 0.06
+  },
+  {
+   "anchor": [
+    0.15,
+    -3.28
+   ],
+   "len": 0.22,
+   "charm": "star",
+   "color": "#f6e2b0",
+   "size": 0.05
+  }
+ ],
+ "vfx": {
+  "sparkles": 14,
+  "colors": [
+   "#ffffff",
+   "#ffd6f4",
+   "#d6e8ff"
+  ],
+  "light": "#d6b0ff",
+  "light_power": 40,
+  "glow": "#c79bff"
+ }
+}

@@ -1,0 +1,47 @@
+{
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ffd6ea",
+   "#d6ecff"
+  ],
+  "light": "#ffb0d8",
+  "light_power": 40,
+  "glow": "#cfe0ff",
+  "bg_top": "#3a2048",
+  "bg_bottom": "#140c1c"
+ },
+ "name": "RoseThornPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 5358,
+ "palette": "RoseThornPickaxe_palette.png",
+ "parts": {
+  "RoseThornPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 552,
+   "transparency": 0.0
+  },
+  "RoseThornPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 3860,
+   "transparency": 0.0
+  },
+  "RoseThornPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 782,
+   "transparency": 0.25
+  },
+  "RoseThornPickaxe_Neon": {
+   "roblox_material": "Neon",
+   "tris": 164,
+   "transparency": 0.0
+  }
+ }
+}

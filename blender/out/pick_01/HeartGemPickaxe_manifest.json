@@ -1,0 +1,45 @@
+{
+ "vfx": {
+  "sparkles": 14,
+  "colors": [
+   "#ffffff",
+   "#ffd6f4",
+   "#d6e8ff"
+  ],
+  "light": "#d6b0ff",
+  "light_power": 40,
+  "glow": "#c79bff"
+ },
+ "name": "HeartGemPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 11218,
+ "palette": "HeartGemPickaxe_palette.png",
+ "parts": {
+  "HeartGemPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 5012,
+   "transparency": 0.0
+  },
+  "HeartGemPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 5244,
+   "transparency": 0.0
+  },
+  "HeartGemPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 798,
+   "transparency": 0.25
+  },
+  "HeartGemPickaxe_Neon": {
+   "roblox_material": "Neon",
+   "tris": 164,
+   "transparency": 0.0
+  }
+ }
+}

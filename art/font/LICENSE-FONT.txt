@@ -1,0 +1,2 @@
+The PNG atlases in this folder are rendered from the Pixelify Sans typeface (Google Fonts),
+which is licensed under the SIL Open Font License, Version 1.1: https://openfontlicense.org

@@ -1,0 +1,276 @@
+{
+ "name": "GalaxyPickaxe",
+ "ref": "art/gen/pick_06.png",
+ "length": 3.6,
+ "handle_r": 0.065,
+ "tilt": 20,
+ "yaw": 20,
+ "seed": 6,
+ "vfx": {
+  "sparkles": 22,
+  "colors": [
+   "#ffffff",
+   "#c9b8ff",
+   "#9fd0ff"
+  ],
+  "light": "#8a7cff",
+  "light_power": 70,
+  "glow": "#8a7cff",
+  "bg_top": "#1d1650",
+  "bg_bottom": "#06040f"
+ },
+ "handle": {
+  "mat": "glitter",
+  "color": "#22184d",
+  "wrap": {
+   "mat": "silver",
+   "w": 0.012,
+   "turns": 7,
+   "z0": 0.3,
+   "z1": 3.3
+  },
+  "bands": [
+   {
+    "z": 3.3,
+    "mat": "silver"
+   },
+   {
+    "z": 0.3,
+    "mat": "silver"
+   }
+  ],
+  "gems": [
+   {
+    "z": 1.0,
+    "shape": "circle",
+    "size": 0.05,
+    "color": "#6fa8ff",
+    "glow": 1.6
+   },
+   {
+    "z": 1.9,
+    "shape": "circle",
+    "size": 0.05,
+    "color": "#6fa8ff",
+    "glow": 1.6
+   },
+   {
+    "z": 2.6,
+    "shape": "circle",
+    "size": 0.05,
+    "color": "#6fa8ff",
+    "glow": 1.6
+   }
+  ]
+ },
+ "pommel": {
+  "type": "gem",
+  "color": "#7a5cff",
+  "glow": 0.9,
+  "len": 0.5,
+  "r": 0.07,
+  "facets": 6,
+  "collar": "silver",
+  "cage": {
+   "n": 4,
+   "mat": "silver"
+  }
+ },
+ "arms": [
+  {
+   "side": -1,
+   "len": 1.55,
+   "rise": 0.15,
+   "droop": 0.35,
+   "width": 0.22,
+   "top": 0.45,
+   "taper": 0.8,
+   "belly": 0.2,
+   "thick": 0.05,
+   "mat": "glitter",
+   "color": "#221650",
+   "core": {
+    "mat": "glitter",
+    "color": "#4a32b8",
+    "frac": 0.45,
+    "glow": 0.8
+   },
+   "edge": "#b9a6ff",
+   "edge_glow": 1.2,
+   "glow": 0.8,
+   "thorns": {
+    "n": 5,
+    "t0": 0.1,
+    "t1": 0.7,
+    "len": 0.16,
+    "r": 0.03,
+    "color": "#8f7bff",
+    "glow": 0.9,
+    "mat": "crystal"
+   }
+  },
+  {
+   "side": 1,
+   "len": 1.0,
+   "rise": 0.1,
+   "droop": 0.55,
+   "width": 0.2,
+   "top": 0.45,
+   "taper": 0.8,
+   "belly": 0.2,
+   "thick": 0.05,
+   "mat": "glitter",
+   "color": "#221650",
+   "core": {
+    "mat": "glitter",
+    "color": "#4a32b8",
+    "frac": 0.45,
+    "glow": 0.8
+   },
+   "edge": "#b9a6ff",
+   "edge_glow": 1.2,
+   "glow": 0.8,
+   "thorns": {
+    "n": 5,
+    "t0": 0.1,
+    "t1": 0.7,
+    "len": 0.16,
+    "r": 0.03,
+    "color": "#8f7bff",
+    "glow": 0.9,
+    "mat": "crystal"
+   }
+  }
+ ],
+ "center": [
+  {
+   "type": "ring",
+   "at": [
+    0,
+    0
+   ],
+   "r": 0.17,
+   "w": 0.018,
+   "mat": "silver"
+  },
+  {
+   "type": "orb",
+   "at": [
+    0,
+    0
+   ],
+   "r": 0.12,
+   "color": "#8a7cff",
+   "glow": 1.8,
+   "y": -0.04
+  },
+  {
+   "type": "star",
+   "at": [
+    -0.22,
+    0.2
+   ],
+   "size": 0.07,
+   "points": 4,
+   "ratio": 0.22,
+   "color": "#ffffff",
+   "glow": 2.0,
+   "y": -0.08
+  },
+  {
+   "type": "star",
+   "at": [
+    0.25,
+    -0.15
+   ],
+   "size": 0.05,
+   "points": 4,
+   "ratio": 0.22,
+   "color": "#ffffff",
+   "glow": 2.0,
+   "y": -0.08
+  },
+  {
+   "type": "scroll",
+   "at": [
+    0,
+    0.08
+   ],
+   "dx": 0.2,
+   "r": 0.08,
+   "turns": 1.2,
+   "w": 0.014,
+   "mat": "silver"
+  }
+ ],
+ "chains": [
+  {
+   "from": [
+    -0.95,
+    -0.12
+   ],
+   "to": [
+    -0.15,
+    -0.12
+   ],
+   "sag": 0.18,
+   "chain": "silver"
+  },
+  {
+   "from": [
+    0.12,
+    -0.12
+   ],
+   "to": [
+    0.7,
+    -0.25
+   ],
+   "sag": 0.12,
+   "chain": "silver"
+  }
+ ],
+ "charms": [
+  {
+   "anchor": [
+    -0.6,
+    -0.25
+   ],
+   "len": 0.3,
+   "charm": "moon",
+   "chain": "silver",
+   "size": 0.055
+  },
+  {
+   "anchor": [
+    -0.35,
+    -0.22
+   ],
+   "len": 0.42,
+   "charm": "moon",
+   "color": "#d6c8ff",
+   "chain": "silver",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    0.38,
+    -0.22
+   ],
+   "len": 0.5,
+   "charm": "moon",
+   "color": "#d6c8ff",
+   "chain": "silver",
+   "size": 0.05
+  },
+  {
+   "anchor": [
+    0.18,
+    -0.2
+   ],
+   "len": 0.62,
+   "charm": "pearl",
+   "chain": "silver",
+   "size": 0.04
+  }
+ ]
+}

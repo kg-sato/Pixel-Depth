@@ -1,0 +1,19 @@
+{
+ "name": "RoseThornPickaxe",
+ "objects": 72,
+ "parts": 11,
+ "tris": 5358,
+ "per_part": {
+  "irid_ff9fcf_0": 80,
+  "rosegold_eba792_0": 3820,
+  "crystal_cfe0ff_12": 20,
+  "crystal_cfe0ff_10": 12,
+  "crystal_ff8fc4_7": 568,
+  "irid_ffe0f0_8": 472,
+  "crystal_ff9fcf_5": 96,
+  "crystal_f7a6cf_4": 50,
+  "rosegold_eba792_6": 40,
+  "crystal_cfe0ff_16": 164,
+  "crystal_e8f0ff_9": 36
+ }
+}
