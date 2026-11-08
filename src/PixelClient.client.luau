@@ -380,7 +380,7 @@ fadeText.ZIndex = 51
 local toasts = 0 -- live toasts stack downwards instead of overlapping
 local function toast(msg, color, big, delay)
 	task.delay(delay or 0, function()
-		local y = 0.36 + (toasts % 3) * 0.1
+		local y = 0.7 - (toasts % 3) * 0.09 -- above the DIG button, clear of the centre panels
 		toasts += 1
 		local t = text(gui, msg, UDim2.fromScale(big and 0.6 or 0.4, big and 0.08 or 0.06), UDim2.fromScale(0.5, y + 0.06), Vector2.new(0.5, 0.5), color, 700)
 		tween(t, 0.35, { Position = UDim2.fromScale(0.5, y) }, Enum.EasingStyle.Back)
@@ -559,6 +559,7 @@ local function petModel(name)
 	return m
 end
 
+local ripples = {} -- water surface textures that drift
 local petObjs, petKey = {}, ""
 local function syncPets()
 	local names = state and state.pets or {}
@@ -705,6 +706,13 @@ local function blockAtCross()
 	local vs = cam.ViewportSize
 	return pickRay(cam:ViewportPointToRay(vs.X / 2, vs.Y / 2))
 end
+local function tutorialBlock()
+	local t = state and state.target
+	local p = t and blocks and blocks:FindFirstChild(t[1] .. "_" .. t[2] .. "_" .. t[3])
+	local hd = head()
+	if p and hd and (hd.Position - p.Position).Magnitude <= C.REACH then return p, nil end
+	return nil
+end
 local function blockBelow() -- DIG with nothing in the crosshair digs the block under your feet
 	local h = hrp()
 	if not h or not state or not blocks then return nil end
@@ -715,6 +723,17 @@ local function blockBelow() -- DIG with nothing in the crosshair digs the block 
 	local d = math.floor((feet.Z - state.oz) / B + W / 2) + 1
 	local p = blocks:FindFirstChild((r + 1) .. "_" .. c .. "_" .. d) or blocks:FindFirstChild(r .. "_" .. c .. "_" .. d)
 	return p, nil
+end
+local function digTarget() -- the DIG button: the tutorial block, straight down when you look down (or must dig down), else the crosshair
+	local p, res = tutorialBlock()
+	if p then return p, res end
+	if (state and state.step == 2) or cam.CFrame.LookVector.Y < -0.75 then
+		p, res = blockBelow()
+		if p then return p, res end
+	end
+	p, res = blockAtCross()
+	if p then return p, res end
+	return blockBelow()
 end
 
 local lastHitPos, lastHitNormal = nil, nil
@@ -755,8 +774,7 @@ end)
 digBtn.MouseButton1Down:Connect(function() digHeld = true end)
 digBtn.Activated:Connect(function() -- a single tap (and scripted clicks) digs once
 	if inMine and os.clock() >= nextTry then
-		local p, res = blockAtCross()
-		if not p then p, res = blockBelow() end
+		local p, res = digTarget()
 		if p then
 			nextTry = os.clock() + C.DIG_COOLDOWN + 0.03
 			digPart(p, res)
@@ -785,6 +803,30 @@ for what, tb in tabs do
 	end)
 end
 buyBtn.Activated:Connect(function() R.Buy:FireServer(tabWhat) end)
+
+-- Keyboard: first person locks the mouse, so every rail button also has a key (shown on the button on PC)
+local KEYS = { [Enum.KeyCode.G] = railForge, [Enum.KeyCode.T] = railOdds, [Enum.KeyCode.Q] = railLift }
+if UIS.KeyboardEnabled then
+	for key, b in KEYS do
+		local k = text(b, key.Name, UDim2.fromScale(0.3, 0.22), UDim2.fromScale(0.94, 0.06), Vector2.new(1, 0), BUTTER)
+		k.Name = "KeyHint"
+	end
+	local dk = text(digBtn, "E", UDim2.fromScale(0.12, 0.26), UDim2.fromScale(0.95, 0.1), Vector2.new(1, 0), BUTTER)
+	dk.Name = "KeyHint"
+end
+UIS.InputBegan:Connect(function(input, gp)
+	if gp or hatchBusy then return end
+	local k = input.KeyCode
+	if k == Enum.KeyCode.Q then
+		R.Surface:FireServer(inMine and "up" or "down")
+	elseif k == Enum.KeyCode.G then
+		if forge.Visible then closePanel(forge) else refreshForge(); openPanel(forge) end
+	elseif k == Enum.KeyCode.T then
+		if odds.Visible then closePanel(odds) else openPanel(odds) end
+	elseif k == Enum.KeyCode.Return and sellPop.Visible then
+		R.Sell:FireServer()
+	end
+end)
 
 -- State from the server
 local STEPS = {
@@ -848,6 +890,16 @@ R.State.OnClientEvent:Connect(function(s)
 		blocks.ChildAdded:Connect(function(p)
 			task.defer(tagBlock, p)
 		end)
+		local deco = blocks.Parent:WaitForChild("Deco", 5)
+		if deco then
+			deco.ChildAdded:Connect(function(f)
+				task.defer(function()
+					for _, d in f:GetDescendants() do
+						if d:IsA("Texture") and d.Parent:GetAttribute("Ripple") then table.insert(ripples, d) end
+					end
+				end)
+			end)
+		end
 		local hub = workspace:FindFirstChild("Hub")
 		for _, l in hub and hub:GetDescendants() or {} do -- hub signs get the pixel font too
 			if l:IsA("TextLabel") then PixelText.attach(l, 700) end
@@ -869,8 +921,10 @@ R.State.OnClientEvent:Connect(function(s)
 end)
 
 -- Camera modes: bird's-eye follow camera in the hub, first person in the mine
+local lookDownUntil = 0
 local function setMode(mine)
 	inMine = mine
+	if mine then lookDownUntil = os.clock() + 0.35 end
 	cross.Visible, digBtn.Visible = mine, mine
 	railLift.Text = mine and "SURFACE" or "MINE"
 	setKind(railLift, mine and "sky" or "butter")
@@ -962,8 +1016,8 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		task.delay(0.3, buildViewmodel)
 		for i, card in cards do if i == 2 then pop(card.frame, 1.3) end end
 	elseif kind == "full" then
-		toast("BACKPACK FULL!", PINK)
-		pop(bagPill, 1.2)
+		pop(bagPill, 1.2) -- the popup already says it; no toast spam while you keep digging
+		if not sellPop.Visible then openPanel(sellPop) end
 	elseif kind == "stir" then -- a boulder shakes loose above the hole, then drops (server decides where it lands)
 		local pos = ...
 		local rock = new("Part", fx, { Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, Size = Vector3.one * B * 0.8, Position = pos, Color = Color3.fromRGB(188, 120, 96), Material = Enum.Material.Slate })
@@ -1086,6 +1140,11 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	fovKick *= math.exp(-dt * 8)
 	if inMine then
 		cam.FieldOfView = C.FP_FOV + fovKick
+		local hd = head()
+		if now < lookDownUntil and hd then
+			local lv = h.CFrame.LookVector
+			cam.CFrame = CFrame.lookAt(cam.CFrame.Position, cam.CFrame.Position + Vector3.new(lv.X, 0, lv.Z).Unit - Vector3.new(0, 0.9, 0))
+		end
 		if shakeAmp > 0.01 then
 			cam.CFrame = cam.CFrame * CFrame.Angles((math.random() - 0.5) * shakeAmp * 0.08, (math.random() - 0.5) * shakeAmp * 0.08, 0)
 		end
@@ -1096,6 +1155,16 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		local dir = Vector3.new(math.sin(C.CAM_YAW) * math.cos(C.CAM_PITCH), math.sin(C.CAM_PITCH), math.cos(C.CAM_YAW) * math.cos(C.CAM_PITCH))
 		local off = Vector3.new(math.random() - 0.5, math.random() - 0.5, 0) * shakeAmp
 		cam.CFrame = CFrame.lookAt(focus + dir * C.CAM_DIST + off, focus + off)
+	end
+	-- a free mouse while a panel is open (or Left Alt is held) so PC players can click the HUD in first person
+	if inMine then
+		local free = forge.Visible or odds.Visible or sellPop.Visible or mapP.Visible or night.Visible or UIS:IsKeyDown(Enum.KeyCode.LeftAlt)
+		if free then
+			UIS.MouseBehavior = Enum.MouseBehavior.Default
+		end
+		UIS.MouseIconEnabled = free
+	else
+		UIS.MouseIconEnabled = true
 	end
 	-- first-person pickaxe swing: wind-up, fast strike, short hold, recover; walking bob
 	if vm and inMine then
@@ -1141,6 +1210,14 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		end
 	end
 	rain.Position = h.Position + Vector3.new(0, 18, 0)
+	for i = #ripples, 1, -1 do
+		local t = ripples[i]
+		if t.Parent then
+			t.OffsetStudsU, t.OffsetStudsV = (now * 0.7) % B, (now * 0.4) % B
+		else
+			table.remove(ripples, i)
+		end
+	end
 	if edge.Visible then edgeStroke.Transparency = 0.35 + math.sin(now * 5) * 0.2 end -- under 1 pulse per second
 	-- DIG idle pulse and the tutorial card bob
 	if digBtn.Visible and not digHeld then scaler(digBtn).Scale = 1 + math.max(0, math.sin(now * 3)) * 0.035 end
@@ -1150,8 +1227,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		if holding then
 			if holding.UserInputType == Enum.UserInputType.MouseButton1 then p, res = blockAtCross() else p, res = blockAt(holdPos) end
 		elseif digHeld then
-			p, res = blockAtCross()
-			if not p then p, res = blockBelow() end
+			p, res = digTarget()
 		end
 		if p then
 			nextTry = now + C.DIG_COOLDOWN + 0.03

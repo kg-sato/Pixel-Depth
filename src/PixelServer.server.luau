@@ -222,7 +222,7 @@ local function buildBlock(s, k, r, c, d, fake)
 		updateFaces(s, p, r, c, d, kind)
 		if kind == "gild" or kind == "egg" then -- rare: glowing block with a rarity outline and a true 1 IN N tag (the client draws the tag)
 			local l = Instance.new("PointLight")
-			l.Color, l.Range, l.Brightness = kind == "gild" and Color3.fromRGB(255, 210, 110) or Color3.fromRGB(255, 220, 236), 14, 1.4
+			l.Color, l.Range, l.Brightness = kind == "gild" and Color3.fromRGB(255, 210, 110) or Color3.fromRGB(255, 220, 236), 10, 0.6
 			l.Parent = p
 			p:SetAttribute("Tag", "1 IN " .. (kind == "gild" and GILD_ODDS or EGG_ODDS))
 			p:SetAttribute("TagColor", kind == "gild" and Color3.fromRGB(255, 206, 70) or Color3.fromRGB(255, 157, 176))
@@ -257,12 +257,14 @@ local function buildDeco(s, k, r, c, d)
 	local L = layerOf(r)
 	local wall = C.LAYERS[L][4][1][2]
 	if kind == "water" then
-		local w = decoPart(f, Vector3.new(B, B * 0.72, B), CFrame.new(pos.X, floorY + B * 0.36, pos.Z), Color3.fromRGB(96, 186, 214))
-		w.Transparency, w.Material, w.Name = 0.38, Enum.Material.Glass, "Water"
+		local w = decoPart(f, Vector3.new(B, B * 0.6, B), CFrame.new(pos.X, floorY + B * 0.3, pos.Z), Color3.fromRGB(70, 150, 200))
+		w.Transparency, w.Name = 0.5, "Water"
+		local surf = decoPart(f, Vector3.new(B, 0.05, B), CFrame.new(pos.X, floorY + B * 0.6 + 0.03, pos.Z), Color3.fromRGB(150, 225, 240))
+		surf.Transparency, surf.Name = 0.55, "WaterSurface"
 		local t = Instance.new("Texture")
-		t.Texture, t.Face, t.StudsPerTileU, t.StudsPerTileV, t.Transparency = C.TEX.water_top, Enum.NormalId.Top, B, B, 0.15
-		t.Parent = w
-		w:SetAttribute("Ripple", true)
+		t.Texture, t.Face, t.StudsPerTileU, t.StudsPerTileV, t.Transparency = C.TEX.water_top, Enum.NormalId.Top, B, B, 0.1
+		t.Parent = surf
+		surf:SetAttribute("Ripple", true)
 	elseif r < ROWS and not isOpen(kindAt(s, r + 1, c, d)) and r >= C.CAVE_START then
 		local x = rng:NextNumber()
 		local tint = C.PASTEL[rng:NextInteger(1, #C.PASTEL)]
@@ -926,7 +928,7 @@ local function onJoin(plr)
 		plr:SetAttribute("InMine", false)
 		local head = ch:FindFirstChild("Head") or hrp
 		local lantern = Instance.new("PointLight") -- the miner's lantern: the mine is dark, light comes from you and the glowing things
-		lantern.Name, lantern.Color, lantern.Range, lantern.Brightness, lantern.Shadows = "Lantern", Color3.fromRGB(255, 220, 180), 30, 1.6, true
+		lantern.Name, lantern.Color, lantern.Range, lantern.Brightness, lantern.Shadows = "Lantern", Color3.fromRGB(255, 220, 180), 28, 1.1, true
 		lantern.Parent = head
 		equipPick(s)
 		sendState(s)
@@ -978,6 +980,26 @@ while true do
 				end
 				hrp.CFrame = CFrame.new(cellPos(s, devRow, E1, E2) + Vector3.new(B / 2, 0, B / 2))
 				s.pr = -99
+			end
+			local devCave = plr:GetAttribute("DevCave") -- go to the first open cave floor at or below that row
+			if devCave and hrp then
+				plr:SetAttribute("DevCave", nil)
+				local best
+				for r = devCave, math.min(devCave + 60, ROWS - 1) do
+					for c = 2, W - 1 do
+						for d = 2, W - 1 do
+							if not best and genAt(s, keyOf(r, c, d), r, c, d) == "air" and genAt(s, keyOf(r - 1, c, d), r - 1, c, d) == "air" and not isOpen(kindAt(s, r + 1, c, d)) then
+								best = { r, c, d }
+							end
+						end
+					end
+					if best then break end
+				end
+				if best then
+					hrp.CFrame = CFrame.new(cellPos(s, best[1], best[2], best[3]) + Vector3.new(0, 1, 0))
+					plr:SetAttribute("InMine", true)
+					s.pr = -99
+				end
 			end
 			local devEggs = plr:GetAttribute("DevEggs")
 			if devEggs then
