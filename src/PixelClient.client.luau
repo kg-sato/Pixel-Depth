@@ -718,73 +718,201 @@ local function syncPets()
 	end
 end
 
--- Hatch show (EGG-02): found, squash and stretch, crack, silhouette, reveal, celebrate
+-- Hatch show v2 (EGG-02). Beats from motionbykrit's "make a card reveal feel epic" (Roblox Dev/Research/VFX and Animation/
+-- Reveal Juice - motionbykrit (2026-11-08).md): 1 build-up (the egg floats up off its plinth, shakes harder and harder and
+-- leaks its rarity colour), 2 hang then snap (it squashes and holds a beat, then stretches and pops), 3 light burst (a short
+-- flash, rays, a ring rolling across the plinth), 4 foil shine (a rainbow sheen sweeps the card as the pet tilts, Epic and up),
+-- 5 sound on every beat (ticks that climb in pitch, a whoosh on the snap, a boom on the burst, a chime). Rarer pets get a
+-- longer build-up, more shake, a bigger glow and more confetti, so the player feels the tier before they see it.
 local function hatchShow(name)
 	hatchBusy = true
 	local p = C.PETS[name]
 	local rc = rarityColor(p[1])
+	local tier = 1
+	for i, t in C.RARITIES do if t[1] == p[1] then tier = i end end
+	local k = (tier - 1) / (#C.RARITIES - 1) -- 0 for Common, 1 for Secret
+	local buildT = 1.1 + k * 1.1
 	local ov = new("TextButton", top, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, Text = "", AutoButtonColor = false, ZIndex = 20 })
-	tween(ov, 0.3, { BackgroundTransparency = 0.15 })
-	local rays = new("Frame", ov, { Size = UDim2.fromScale(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.45), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 21 })
-	new("UIAspectRatioConstraint", rays, { AspectRatio = 1 })
-	for i = 0, 5 do
-		local bar = new("Frame", rays, { Size = UDim2.fromScale(1.6, 0.07), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = i * 30, BackgroundColor3 = rc, BorderSizePixel = 0, ZIndex = 21, BackgroundTransparency = 1 })
-		new("UIGradient", bar, { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.25), NumberSequenceKeypoint.new(1, 1) }) })
-		task.delay(2.4, function() tween(bar, 0.45, { BackgroundTransparency = 0 }) end)
+	tween(ov, 0.3, { BackgroundTransparency = 0.12 })
+	local stage = new("Frame", ov, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 20 }) -- shaken as one piece
+	local function circle(size, trans)
+		local c = new("Frame", stage, { Size = UDim2.fromScale(size, size), Position = UDim2.fromScale(0.5, 0.47), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = rc, BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 21 })
+		new("UIAspectRatioConstraint", c, { AspectRatio = 1 })
+		new("UICorner", c, { CornerRadius = UDim.new(0.5, 0) })
+		return c, trans
 	end
-	local vp = new("ViewportFrame", ov, {
-		Size = UDim2.fromScale(0.42, 0.42), Position = UDim2.fromScale(0.5, 0.45), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1,
-		Ambient = Color3.fromRGB(190, 180, 210), LightColor = WHITE, LightDirection = Vector3.new(-1, -1, -1), ZIndex = 22,
+	local glows = { { circle(0.62, 0.9) }, { circle(0.44, 0.8) }, { circle(0.28, 0.7) } } -- a soft radial glow from stacked discs
+	local rays = new("Frame", stage, { Size = UDim2.fromScale(0.6, 0.6), Position = UDim2.fromScale(0.5, 0.47), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 21 })
+	new("UIAspectRatioConstraint", rays, { AspectRatio = 1 })
+	local raySc = new("UIScale", rays, { Scale = 0 })
+	for i = 0, 7 do
+		local bar = new("Frame", rays, { Size = UDim2.fromScale(1.7, i % 2 == 0 and 0.09 or 0.05), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = i * 22.5, BackgroundColor3 = i % 2 == 0 and rc or WHITE, BorderSizePixel = 0, ZIndex = 21 })
+		new("UIGradient", bar, { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.15), NumberSequenceKeypoint.new(1, 1) }) })
+	end
+	-- the reveal card behind the pet: dark face, rarity border, clipped so the foil sheen stays on it
+	local card = new("Frame", stage, { Size = UDim2.fromScale(0.26, 0.5), Position = UDim2.fromScale(0.5, 0.45), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(44, 32, 66), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 22 })
+	new("UIAspectRatioConstraint", card, { AspectRatio = 0.72 })
+	new("UICorner", card, { CornerRadius = UDim.new(0.06, 0) })
+	local cardStroke = new("UIStroke", card, { Color = rc, Thickness = 4, Transparency = 1 })
+	local cardSc = new("UIScale", card, { Scale = 1.4 })
+	local sheen = new("Frame", card, { Size = UDim2.fromScale(0.45, 1.6), Position = UDim2.fromScale(-0.6, -0.3), Rotation = 18, BackgroundColor3 = WHITE, BackgroundTransparency = 0.55, BorderSizePixel = 0, ZIndex = 23, Visible = false })
+	new("UIGradient", sheen, {
+		Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 140, 190)), ColorSequenceKeypoint.new(0.25, Color3.fromRGB(255, 230, 140)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 255, 210)), ColorSequenceKeypoint.new(0.75, Color3.fromRGB(140, 200, 255)), ColorSequenceKeypoint.new(1, Color3.fromRGB(210, 150, 255)) }),
+		Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.2), NumberSequenceKeypoint.new(1, 1) }),
+	})
+	-- the floor ring that rolls out across the plinth on the burst (an ellipse, so it reads as lying on the ground)
+	local ring = new("Frame", stage, { Size = UDim2.fromScale(0.1, 0.03), Position = UDim2.fromScale(0.5, 0.66), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 24 })
+	new("UICorner", ring, { CornerRadius = UDim.new(0.5, 0) })
+	local ringStroke = new("UIStroke", ring, { Color = rc:Lerp(WHITE, 0.4), Thickness = 5, Transparency = 1 })
+	local vp = new("ViewportFrame", stage, {
+		Size = UDim2.fromScale(0.42, 0.42), Position = UDim2.fromScale(0.5, 0.47), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1,
+		Ambient = Color3.fromRGB(190, 180, 210), LightColor = WHITE, LightDirection = Vector3.new(-1, -1, -1), ZIndex = 25,
 	})
 	new("UIAspectRatioConstraint", vp, { AspectRatio = 1 })
+	local vpSc = new("UIScale", vp, { Scale = 0.3 })
+	tween(vpSc, 0.4, { Scale = 1 }, Enum.EasingStyle.Back) -- the egg and plinth drop in
 	local world = new("WorldModel", vp, {})
 	local vcam = new("Camera", vp, { FieldOfView = 30 })
 	vp.CurrentCamera = vcam
-	vcam.CFrame = CFrame.lookAt(Vector3.new(0, 0.8, -9), Vector3.new(0, 0.6, 0))
+	vcam.CFrame = CFrame.lookAt(Vector3.new(0, 1.2, -9), Vector3.new(0, 0.6, 0))
+	local plinth = new("Part", world, { Anchored = true, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.5, 3.6, 3.6), Color = Color3.fromRGB(96, 76, 128), CFrame = CFrame.new(0, -1.05, 0) * CFrame.Angles(0, 0, math.rad(90)) })
+	local rim = new("Part", world, { Anchored = true, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.12, 3.9, 3.9), Color = rc, Material = Enum.Material.Neon, Transparency = 0.85, CFrame = CFrame.new(0, -0.78, 0) * CFrame.Angles(0, 0, math.rad(90)) })
 	local egg = new("Part", world, { Anchored = true, Size = Vector3.new(2.2, 2.8, 2.2), Color = C.EGG_COLOR, CFrame = CFrame.new(0, 0.6, 0) })
 	local eggMesh = new("SpecialMesh", egg, { MeshType = Enum.MeshType.Sphere })
-	local title = text(ov, "A FOSSIL EGG!", UDim2.fromScale(0.5, 0.08), UDim2.fromScale(0.5, 0.12), Vector2.new(0.5, 0), CREAM, 700)
-	title.ZIndex = 23
+	local leak = new("Part", world, { Anchored = true, Size = Vector3.new(2.45, 3.05, 2.45), Color = rc, Material = Enum.Material.Neon, Transparency = 1, CFrame = egg.CFrame }) -- rarity light leaking through the shell
+	local leakMesh = new("SpecialMesh", leak, { MeshType = Enum.MeshType.Sphere })
+	local cracks = {}
+	for i = 1, 4 do -- crack lines that appear one by one during the build-up
+		local a = i * 1.7
+		cracks[i] = new("Part", world, { Anchored = true, Size = Vector3.new(0.12, 0.8 + i * 0.15, 0.12), Color = rc:Lerp(WHITE, 0.3), Material = Enum.Material.Neon, Transparency = 1, CFrame = CFrame.new(math.sin(a) * 0.3, 0.9 + (i % 2) * 0.4, -1.08) * CFrame.Angles(0, 0, (i % 2 == 0 and 1 or -1) * 0.5) })
+	end
+	local title = text(ov, "A FOSSIL EGG!", UDim2.fromScale(0.5, 0.08), UDim2.fromScale(0.5, 0.09), Vector2.new(0.5, 0), CREAM, 700)
+	title.ZIndex = 26
+	pop(title, 0.6, 0.4)
+
+	-- 1 BUILD-UP: float, shake harder, leak light; ticks climb in pitch and speed
 	local t0 = os.clock()
+	local phase = "build"
+	local hold0 = 0
 	local conn = RunService.RenderStepped:Connect(function()
 		local t = os.clock() - t0
-		if egg.Parent then
-			local amp = math.min(t / 1.4, 1)
-			egg.CFrame = CFrame.new(0, 0.6, 0) * CFrame.Angles(0, 0, math.sin(t * 22) * amp * 0.35)
-			local sq = 1 + math.sin(t * 11) * 0.12 * amp -- squash and stretch, volume kept
-			eggMesh.Scale = Vector3.new(1 / math.sqrt(sq), sq, 1 / math.sqrt(sq))
+		local u = math.clamp(t / buildT, 0, 1)
+		if phase == "build" and egg.Parent then
+			local amp = (0.03 + 0.34 * u * u * u) * (0.7 + k * 0.6)
+			local lift = 0.6 + 0.8 * (1 - (1 - u) ^ 3)
+			local cf = CFrame.new(math.sin(t * (20 + 50 * u)) * amp * 0.35, lift, 0) * CFrame.Angles(0, 0, math.sin(t * (16 + 40 * u)) * amp)
+			egg.CFrame, leak.CFrame = cf, cf
+			leak.Transparency = 1 - u * (0.12 + k * 0.12) -- a thin halo; the cracks carry the light
+			for i, c in cracks do
+				c.CFrame = cf * CFrame.new(math.sin(i * 1.7) * 0.3, (i % 2) * 0.4 + 0.2, -1.08) * CFrame.Angles(0, 0, (i % 2 == 0 and 1 or -1) * 0.5)
+				c.Transparency = u > i / 5 and 0 or 1
+			end
+			for i, g in glows do g[1].BackgroundTransparency = 1 - (1 - g[2]) * u * (0.6 + k * 0.6) end
+			stage.Position = UDim2.fromOffset(math.sin(t * 53) * u * u * u * 7 * (0.5 + k), math.cos(t * 41) * u * u * u * 5 * (0.5 + k))
+		elseif phase == "hold" and egg.Parent then -- 2 HANG: squash down and hold still, the light pulsing
+			local h = math.clamp((os.clock() - hold0) / 0.22, 0, 1)
+			h = h * h -- ease in to the squash, then the hold
+			eggMesh.Scale = Vector3.new(1 + 0.3 * h, 1 - 0.3 * h, 1 + 0.3 * h)
+			leakMesh.Scale = eggMesh.Scale
+			leak.Transparency = 0.84 + math.sin(os.clock() * 30) * 0.06
+			stage.Position = UDim2.fromOffset(0, 0)
 		end
-		rays.Rotation = t * 40
+		rays.Rotation = t * (25 + k * 30)
+		rim.Transparency = 0.85 - math.min(u, 1) * 0.25
 	end)
-	task.wait(1.5)
-	local flash = new("Frame", ov, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 0, ZIndex = 30 })
-	tween(flash, 0.4, { BackgroundTransparency = 1 })
+	while os.clock() - t0 < buildT do
+		local u = (os.clock() - t0) / buildT
+		sfx("hit", 0.8 + u * 0.9)
+		task.wait(0.32 - u * 0.22)
+	end
+	phase, hold0 = "hold", os.clock()
+	title.Text = "..."
+	task.wait(0.34 + k * 0.2) -- 0.22 s squash, then a dead hold
+	-- SNAP: stretch up for a frame, a whoosh, then the burst
+	sfx("swing", 1.4)
+	tween(eggMesh, 0.08, { Scale = Vector3.new(0.65, 1.45, 0.65) }, Enum.EasingStyle.Exponential, Enum.EasingDirection.In)
+	task.wait(0.08)
+	phase = "done"
+
+	-- 3 LIGHT BURST: a short white flash, rays scale in, the ring rolls out, the card flips in behind the pet
+	local flash = new("Frame", ov, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = rc:Lerp(WHITE, 0.75), BackgroundTransparency = 0, ZIndex = 30 })
+	tween(flash, 0.12, { BackgroundTransparency = 1 })
+	task.delay(0.25, function() flash:Destroy() end)
+	sfx("breakRock", 0.7)
+	sfx("upgrade")
 	egg:Destroy()
+	leak:Destroy()
+	for _, c in cracks do c:Destroy() end
+	raySc.Scale = 0.1
+	tween(raySc, 0.3, { Scale = 0.8 + k * 0.5 }, Enum.EasingStyle.Back)
+	task.spawn(function() -- a decaying screen kick on the burst
+		for i = 1, 8 do
+			local a = (1 - i / 8) * 9
+			stage.Position = UDim2.fromOffset((math.random() - 0.5) * 2 * a, (math.random() - 0.5) * 2 * a)
+			task.wait(1 / 60)
+		end
+		stage.Position = UDim2.fromOffset(0, 0)
+	end)
+	for i, g in glows do tween(g[1], 0.3, { BackgroundTransparency = g[2] - 0.15 * k }) end
+	ringStroke.Transparency = 0
+	ringStroke.Thickness = 8
+	tween(ring, 0.6, { Size = UDim2.fromScale(0.75, 0.2) }, Enum.EasingStyle.Circular)
+	tween(ringStroke, 0.6, { Transparency = 1, Thickness = 2 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+	if tier >= 4 then -- a second, slower ring for Legendary and up
+		local r2 = ring:Clone()
+		r2.Parent = stage
+		r2.Size = UDim2.fromScale(0.1, 0.03)
+		local s2 = r2:FindFirstChildOfClass("UIStroke")
+		s2.Transparency, s2.Thickness = 0, 5
+		task.delay(0.12, function()
+			tween(r2, 0.8, { Size = UDim2.fromScale(0.8, 0.22) }, Enum.EasingStyle.Quart)
+			tween(s2, 0.8, { Transparency = 1, Thickness = 1 })
+		end)
+	end
+	card.BackgroundTransparency, cardStroke.Transparency = 0.1, 0
+	tween(cardSc, 0.45, { Scale = 1 }, Enum.EasingStyle.Back)
 	local m = petModel(name)
-	m:PivotTo(CFrame.Angles(0, math.rad(200), 0))
+	m:PivotTo(CFrame.Angles(0, math.rad(20), 0))
 	m.Parent = world
-	vp.ImageColor3 = Color3.new() -- silhouette first, always the real pet (no fake near-miss)
-	title.Text = "???"
-	task.wait(0.9)
-	tween(vp, 0.45, { ImageColor3 = WHITE })
+	vcam.FieldOfView = 70 -- the pet punches in big and settles (camera zoom, so the model keeps its pivot)
+	tween(vcam, 0.45, { FieldOfView = 30 }, Enum.EasingStyle.Back)
 	title.Text = string.upper(name)
 	title.TextColor3 = rc
-	sfx("upgrade")
-	sfx("sparkle")
-	pop(title, 0.4)
-	local sub = text(ov, p[1]:upper() .. "  -  " .. p[2]:upper(), UDim2.fromScale(0.5, 0.06), UDim2.fromScale(0.5, 0.74), Vector2.new(0.5, 0), rc)
-	sub.ZIndex = 23
-	for i = 1, 16 do -- confetti squares
-		local a = i / 16 * math.pi * 2
-		local q = new("Frame", ov, { Size = UDim2.fromScale(0.012, 0.02), Position = UDim2.fromScale(0.5, 0.45), BackgroundColor3 = ({ rc, PINK, MINT, BUTTER })[i % 4 + 1], BorderSizePixel = 0, ZIndex = 24 })
-		tween(q, 0.9, { Position = UDim2.fromScale(0.5 + math.cos(a) * 0.3, 0.45 + math.sin(a) * 0.35), BackgroundTransparency = 1, Rotation = 180 })
+	pop(title, 1.6, 0.45)
+	local sub = text(ov, p[1]:upper() .. "  -  " .. p[2]:upper(), UDim2.fromScale(0.5, 0.06), UDim2.fromScale(0.5, 0.76), Vector2.new(0.5, 0), rc)
+	sub.ZIndex = 26
+	pop(sub, 0.5, 0.35)
+	task.delay(0.15, function() sfx("sparkle") end)
+	local nConf = 12 + tier * 4
+	for i = 1, nConf do -- confetti squares that fly out and fall
+		local a = i / nConf * math.pi * 2 + math.random() * 0.3
+		local dist = 0.22 + math.random() * 0.18
+		local q = new("Frame", ov, { Size = UDim2.fromScale(0.011, 0.019), Position = UDim2.fromScale(0.5, 0.47), BackgroundColor3 = ({ rc, PINK, MINT, BUTTER })[i % 4 + 1], BorderSizePixel = 0, ZIndex = 27 })
+		local mid = UDim2.fromScale(0.5 + math.cos(a) * dist, 0.47 + math.sin(a) * dist * 1.2)
+		tween(q, 0.45, { Position = mid, Rotation = 120 }, Enum.EasingStyle.Quart)
+		task.delay(0.45, function()
+			tween(q, 0.9, { Position = mid + UDim2.fromScale(0, 0.18), BackgroundTransparency = 1, Rotation = 300 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+			task.delay(1, function() q:Destroy() end)
+		end)
 	end
-	local hint = text(ov, "TAP TO CONTINUE", UDim2.fromScale(0.3, 0.04), UDim2.fromScale(0.5, 0.86), Vector2.new(0.5, 0), CREAM)
-	hint.ZIndex = 23
+	local hint = text(ov, "TAP TO CONTINUE", UDim2.fromScale(0.3, 0.04), UDim2.fromScale(0.5, 0.87), Vector2.new(0.5, 0), CREAM)
+	hint.ZIndex = 26
+	hint.TextTransparency = 1
+	task.delay(0.8, function() tween(hint, 0.3, { TextTransparency = 0 }) end)
+
+	-- 4 FOIL SHINE (Epic and up): the pet tilts and a rainbow sheen sweeps the card, again every couple of seconds
+	local shine = tier >= 3
 	local spinT = os.clock()
 	local spin = RunService.RenderStepped:Connect(function()
 		local t = os.clock() - spinT
-		m:PivotTo(CFrame.new(0, math.abs(math.sin(t * 4)) * 0.4, 0) * CFrame.Angles(0, math.rad(200) + math.sin(t * 1.5) * 0.5, 0))
+		card.Rotation = math.sin(t * 1.6) * 3
+		m:ScaleTo(1 + math.sin(t * 5) * 0.035) -- breathing, so the pet never freezes
+		m:PivotTo(CFrame.new(0, math.abs(math.sin(t * 4)) * 0.35 * math.exp(-t * 0.8) + math.sin(t * 4.5) * 0.08, 0) * CFrame.Angles(0, math.rad(20) + math.sin(t * 1.6) * 0.45, math.sin(t * 1.6) * 0.06))
+		if shine then
+			local s = (t * 0.8) % 1.15 -- sweeps back to back with a short gap
+			sheen.Visible = s < 1
+			sheen.Position = UDim2.fromScale(-0.6 + s * 1.8, -0.3)
+		end
 	end)
 	local closed = false
 	local function close()
@@ -797,7 +925,7 @@ local function hatchShow(name)
 		syncPets()
 	end
 	task.delay(0.6, function() ov.Activated:Connect(close) end)
-	task.delay(4, close)
+	task.delay(4.5, close)
 end
 
 -- First-person pickaxe (a local copy of the held pickaxe in front of the camera) with a wind-up, strike and recover swing
@@ -983,7 +1111,7 @@ PPS.PromptShown:Connect(function(prompt, inputType)
 	local bubble = new("Frame", root, { Name = "Bubble", Size = UDim2.fromScale(0.76, 0.78), Position = UDim2.fromScale(1, 0.02), AnchorPoint = Vector2.new(1, 0) })
 	skin(bubble, "card")
 	local action = text(bubble, prompt.ActionText, UDim2.fromScale(0.8, 0.36), UDim2.fromScale(0.5, 0.36), Vector2.new(0.5, 0.5), INK, 700, false)
-	local object = text(bubble, prompt.ObjectText, UDim2.fromScale(0.76, 0.22), UDim2.fromScale(0.5, 0.66), Vector2.new(0.5, 0.5), INK:Lerp(PLUM_SOFT, 0.35), 700, false)
+	local object = text(bubble, prompt.ObjectText, UDim2.fromScale(0.76, 0.22), UDim2.fromScale(0.5, 0.66), Vector2.new(0.5, 0.5), INK, 700, false) -- full ink: the soft plum was too faint on the butter bubble (Gemini HUD v5 r1)
 	if prompt.ObjectText == "" then
 		object.Visible = false
 		action.Position = UDim2.fromScale(0.5, 0.46)

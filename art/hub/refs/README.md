@@ -41,3 +41,12 @@ One tile = 4 to 8 studs. Shared ramps with the mine textures (`pd_art.py`), grou
 | R4 | 5.0 | 4.7 | 6.3 | 6.0 | 5.3 | 6.3 | 5.7 | 5.4 | 5.6 |
 | R5 | 5.0 | 4.7 | 5.3 | 4.7 | 5.0 | 6.0 | 6.7 | 5.4 | 5.3 |
 Plateau after R3 (the grader's fix lists started contradicting earlier rounds). A pairwise check (R3 vs R5, `pair_r3_r5.md`) picked R5 for the forge, incubator, notice board, campfire and backdrop, and R3 for the sell sign and the cabin layout; the final build merges those. Whole-hub space scored 6, 6, 8, 7, 7. Blocked below 8: next lever is modelled meshes (Claude Design 3D board, then Blender) for the skulls, chimneys and nests, which blocky parts cannot sculpt.
+
+## 5. Trees and paths (v5, 2026-11-08)
+References. Trees (Sketchfab, https://sketchfab.com/3d-models/<uid>): Japanese voxel garden 617dfd100efa4e3fb1f8483b3ae7e558, Voxel Pink Sakura Tree 961b1374cd27420088490c64d2bcc97e, Voxel Tutorial Scene 2 5dc809e5f286460c9365bfa682e86816, Bridge d865697486fa42e4b504ed06a867fd7c, Victorian Garden 9698af805ace4c52a032199a1f4d1a04. AI references (local FLUX, `spike/gen_tree_path_refs.sh`): `art/hub/pdv5_trees_s81.jpg` (best) and `s82`, `art/hub/pdv5_paths_s91.jpg` and `s92` (best).
+| Round | Trees | Paths | Change |
+|---|---|---|---|
+| R1 | 2.9 | 3.6 | first v2 build (3 slab clumps per crown) |
+| R2 | 3.2 | 4.5 | canopies of ~1 stud cubes in height bands, tapered S trunks; lanes: dark bed, slate tint, edge tufts, pebble ends, stair treads |
+| R3 | 3.5 | 4.0 | blossom pads on longer branches, green wisteria crown with tapered racemes, bigger round trees, slate boulder bonsai; raised cream stepping stones |
+Logs: `art/hub/grades/trees_r*.md`, `paths_r*.md`. Trees still climb but slowly; the grader asks for 70 to 110 micro cubes per canopy, which is a Blender voxel mesh job, not Parts (perf: Play was 40 fps at v5).

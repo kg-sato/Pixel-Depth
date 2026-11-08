@@ -1,0 +1,6 @@
+Grade the PATHS ONLY (lanes, stepping stones, stairs, the cobble square) in a Roblox voxel camp town against the reference images. Be harsh: 5 = average, 7 = good, 8 = rare. Do not be kind.
+Game look: cosy voxel camp at night, pastel palette, bird's-eye camera.
+References: Games/Pixel Depth/art/hub/pdv5_paths_s91.jpg and pdv5_paths_s92.jpg (AI concept sheets: irregular cobble lanes with mossy gaps and ragged edges, cream stepping stones in grass, dirt path with pebbles, stone steps with a lantern).
+Builds: Games/Pixel Depth/captures/v4/pa3_sheet.jpg (top-left lane by the sell stall, top-right stepping stones and stream lane, bottom-left stairs up to the quest kiosk, bottom-right a cobble lane on the east rise) and t2r1_spawn.png (overview from the in-game camera).
+Ignore buildings and trees. Score 1-10: stone shape and irregularity, edges (ragged, tufts, moss), width variation and curves, material contrast with grass, stairs, readability as routes, cohesion with the references, appeal. Then the 5 most important concrete fixes buildable from Roblox Parts and 32 px textures. Compact table plus fix list.
+Rounds so far: 3.6, 4.5. Since round 2: stepping stones are raised cream slabs with a lighter top and a dirt bed. Score fresh.

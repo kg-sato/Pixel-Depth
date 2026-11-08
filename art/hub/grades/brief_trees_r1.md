@@ -1,0 +1,5 @@
+Grade the TREES ONLY in a Roblox voxel camp town against the reference images. Be harsh: 5 = average, 7 = good, 8 = rare. Do not be kind.
+Game look: cosy voxel camp at night, pastel palette (lilac/plum shadows, mint, rose pink, butter, warm lantern light), bird's-eye camera.
+References: Games/Pixel Depth/art/hub/pdv5_trees_s81.jpg and pdv5_trees_s82.jpg (AI concept sheets: round mint tree, cherry blossom, wisteria, bonsai on a rock).
+Builds: Games/Pixel Depth/captures/v4/tr3_sheet.jpg (close-ups: top-left wisteria, top-right two blossom trees, bottom-left round tree, bottom-right bonsai) and tr2_sheet.jpg (older trees near the root wall).
+Ignore buildings, paths and lighting except where they hurt the trees. Score 1-10: silhouette, canopy build (many small cubes, layering), colour shading (dark under, light top), trunks and roots, kind variety (each kind readable), placement in the town, cohesion with the references, appeal. Then the 5 most important concrete fixes, each buildable from Roblox Parts (sizes, counts, colours). Compact table plus fix list.

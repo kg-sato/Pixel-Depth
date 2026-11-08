@@ -345,10 +345,14 @@ function Hub.build(parent, origin)
 		local top = k + 1
 		skin(vox(terr, "Stair", Vector3.new(8, top, 2), CFrame.new(W(6, top / 2, -21 - k * 2)), PAL.stone[2]), "stonebrick", 3, SIDES, wallTint)
 		for _, x in { 1.5, 10.5 } do skin(vox(terr, "Cheek", Vector3.new(1, top + 0.6, 2), CFrame.new(W(x, (top + 0.6) / 2, -21 - k * 2)), PAL.stone[2]), "stonebrick", 3, SIDES, wallTint) end
+		-- a pale tread slab on each step that overhangs the riser (nosing), so every step casts a line of shadow
+		skin(vox(terr, "Tread", Vector3.new(8, 0.3, 2.35), CFrame.new(W(6, top + 0.15, -20.85 - k * 2)), Color3.fromRGB(226, 216, 232)), "flagstone", 3, { N.Top }, Color3.fromRGB(255, 250, 255))
+		if k % 2 == 0 then vox(terr, "RiserMoss", Vector3.new(1.4, 0.35, 0.3), CFrame.new(W(3 + k * 1.3, top - 0.2, -19.85 - k * 2)), PAL.moss[2], { CanCollide = false }) end
 	end
 	for k = 0, 1 do -- two steps up onto the east rise
 		local top = 1 + k
 		skin(vox(terr, "Stair", Vector3.new(2, top, 8), CFrame.new(W(25 + k * 2, top / 2, 7)), PAL.stone[2]), "stonebrick", 3, SIDES, wallTint)
+		skin(vox(terr, "Tread", Vector3.new(2.35, 0.3, 8), CFrame.new(W(24.85 + k * 2, top + 0.15, 7)), Color3.fromRGB(226, 216, 232)), "flagstone", 3, { N.Top }, Color3.fromRGB(255, 250, 255))
 	end
 
 	-- the stream: water over the meadow with stone banks, reeds and lily pads; it walks the town from the west roots to the south
@@ -420,14 +424,25 @@ function Hub.build(parent, origin)
 			local yy = O.Y + (y or groundTop(mid.X - O.X, mid.Z - O.Z)) + 0.15 + (i % 2) * 0.02
 			local cf = CFrame.lookAt(Vector3.new(mid.X, yy, mid.Z), Vector3.new(c.X, yy, c.Z))
 			local w = width * (1 + 0.45 * (1 - u) ^ 6 + 0.3 * u ^ 8 + 0.12 * math.sin(u * 6 + width))
-			skin(vox(ground, "Lane", Vector3.new(w, 0.3, (c - prev).Magnitude + 1.2), cf, AVG[tex]), tex, 5, { N.Top })
-			for _, side in { -1, 1 } do -- ragged edges: loose stones half in the grass, or a tuft creeping over the edge
+			local laneTint = Color3.fromRGB(214, 220, 240) -- cools the lilac cobbles toward slate (Gemini paths r1)
+			skin(vox(ground, "Lane", Vector3.new(w, 0.3, (c - prev).Magnitude + 1.2), cf, AVG[tex]), tex, 5, { N.Top }, laneTint)
+			vox(ground, "LaneBed", Vector3.new(w + 0.9, 0.26, (c - prev).Magnitude + 1.4), cf * CFrame.new(0, -0.06, 0), Color3.fromRGB(58, 66, 62), { CanCollide = false })
+			for _, side in { -1, 1 } do -- ragged edges: loose stones half in the grass, and tufts creeping over the edge
 				local h = hash(i, side, c.X + c.Z)
 				local e = cf * CFrame.new(side * (w / 2 + 0.2 + h * 0.5), -0.05, (h - 0.5) * 1.6)
-				if h < 0.55 then
+				if h < 0.45 then
 					tvox(ground, "EdgeStone", Vector3.new(1 + h * 0.9, 0.32, 0.9 + h * 0.8), e * CFrame.Angles(0, h * 2.5, 0), tex, 3)
-				elseif h < 0.8 then
-					vox(ground, "EdgeTuft", Vector3.new(1.1, 0.5, 0.9), e * CFrame.new(-side * 0.5, 0.15, 0), shadeOf("grass", i, side, 5), { CanCollide = false })
+				end
+				if h > 0.3 then
+					vox(ground, "EdgeTuft", Vector3.new(1.2 + h * 0.6, 0.45, 0.8 + h * 0.5), cf * CFrame.new(side * (w / 2 - 0.15), 0.12, (0.5 - h) * 1.4), shadeOf("grass", i, side, 5), { CanCollide = false })
+				end
+			end
+			if i == 1 or i == n then -- a dirt patch with a pebble cluster where the lane runs out into the grass
+				local e = cf * CFrame.new(0, -0.08, i == 1 and -1.5 or 1.5)
+				vox(ground, "Dirt", Vector3.new(w + 1.2, 0.2, 2.2), e, Color3.fromRGB(104, 78, 84), { CanCollide = false })
+				for k = 0, 4 do
+					local hh = hash(k, i, c.X)
+					vox(ground, "Pebble", Vector3.new(0.4 + hh * 0.35, 0.3, 0.4 + hh * 0.3), e * CFrame.new((hh - 0.5) * w, 0.2, (hash(k, c.Z, 2) - 0.5) * 1.6) * CFrame.Angles(0, hh * 3, 0), Color3.fromRGB(196, 190, 212), { CanCollide = false })
 				end
 			end
 			if i % 4 == 2 and hash(i, 3, c.X) > 0.35 then -- a flower clump beside the lane
@@ -447,7 +462,10 @@ function Hub.build(parent, origin)
 			local c = bez(pts, i / n)
 			local h = hash(i, c.X, c.Z)
 			local yy = O.Y + (y or groundTop(c.X - O.X, c.Z - O.Z)) + 0.12
-			skin(vox(ground, "SteppingStone", Vector3.new(2 + h * 0.7, 0.24, 1.7 + h * 0.6), CFrame.new(c.X + (h - 0.5) * 0.8, yy, c.Z) * CFrame.Angles(0, h * 3, 0), Color3.fromRGB(226, 216, 232)), "flagstone", 3, { N.Top }, Color3.fromRGB(255, 250, 255))
+			local scf = CFrame.new(c.X + (h - 0.5) * 0.8, yy + 0.12, c.Z) * CFrame.Angles(0, (h - 0.5) * 0.25, 0)
+			vox(ground, "SteppingStone", Vector3.new(2 + h * 0.4, 0.5, 1.8 + h * 0.4), scf, Color3.fromRGB(220, 212, 192))
+			vox(ground, "StoneTop", Vector3.new(1.6 + h * 0.4, 0.06, 1.3 + h * 0.4), scf * CFrame.new(-0.1, 0.27, -0.1), Color3.fromRGB(240, 234, 216), { CanCollide = false })
+			vox(ground, "StoneBed", Vector3.new(2.8 + h * 0.4, 0.06, 2.6 + h * 0.4), scf * CFrame.new(0, -0.22, 0), Color3.fromRGB(104, 78, 84), { CanCollide = false })
 		end
 	end
 	lane({ P(-13, 3), P(-18, 1), P(-23, 4), P(-28, 3) }, 5, "cobble_lane") -- to the sell stall (the ore cart rails run along it)
@@ -468,72 +486,93 @@ function Hub.build(parent, origin)
 	-- Kinds: round (mint), blossom (pink, petals on the ground), wisteria (lilac, hanging strands), bonsai (flat layered pads).
 	local trees = group("Trees")
 	local TREE_COLS = {
-		round = { Color3.fromRGB(34, 92, 90), Color3.fromRGB(52, 130, 116), Color3.fromRGB(90, 176, 144), Color3.fromRGB(150, 226, 186) },
-		blossom = { Color3.fromRGB(196, 84, 120), Color3.fromRGB(236, 128, 158), Color3.fromRGB(252, 184, 202), Color3.fromRGB(255, 226, 234) },
-		wisteria = { Color3.fromRGB(96, 80, 160), Color3.fromRGB(148, 126, 210), Color3.fromRGB(196, 178, 240), Color3.fromRGB(236, 224, 255) },
-		bonsai = { Color3.fromRGB(28, 80, 84), Color3.fromRGB(44, 116, 106), Color3.fromRGB(78, 160, 132), Color3.fromRGB(130, 210, 170) },
+		round = { Color3.fromRGB(40, 90, 85), Color3.fromRGB(115, 215, 170), Color3.fromRGB(180, 245, 210), Color3.fromRGB(245, 255, 200) },
+		blossom = { Color3.fromRGB(155, 75, 120), Color3.fromRGB(255, 170, 205), Color3.fromRGB(255, 225, 235), Color3.fromRGB(255, 245, 210) },
+		wisteria = { Color3.fromRGB(56, 112, 96), Color3.fromRGB(96, 160, 128), Color3.fromRGB(135, 200, 156), Color3.fromRGB(190, 236, 196) }, -- a green crown; the flowers hang below
+		wisteriaFlower = { Color3.fromRGB(135, 95, 180), Color3.fromRGB(185, 145, 225), Color3.fromRGB(225, 195, 250) },
+		bonsai = { Color3.fromRGB(40, 104, 96), Color3.fromRGB(66, 146, 120), Color3.fromRGB(112, 190, 146), Color3.fromRGB(170, 228, 180) },
 	}
-	local function clump(c, r, cols, seed)
-		local function L(name, size, off, col, rot) vox(trees, name, size, CFrame.new(c + off) * CFrame.Angles(0, rot, 0), col, { CanCollide = false }) end
-		L("LeafLow", Vector3.new(r * 1.6, r * 0.55, r * 1.6), Vector3.new(0, -r * 0.42, 0), cols[1], seed)
-		L("LeafMid", Vector3.new(r * 2, r * 0.62, r * 2), Vector3.zero, cols[2], seed + 0.4)
-		L("LeafTop", Vector3.new(r * 1.4, r * 0.5, r * 1.4), Vector3.new(0, r * 0.52, 0), cols[3], seed + 0.8)
-		for k = 1, 3 do
-			local a = seed * 7 + k * 2.1
-			L("LeafBit", Vector3.new(r * 0.5, r * 0.45, r * 0.5), Vector3.new(math.cos(a) * r * 0.98, (k - 2) * r * 0.32, math.sin(a) * r * 0.98), k == 3 and cols[4] or cols[2], a)
+	local LEAF = { CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false }
+	local function clump(c, r, cols, seed, flat)
+		-- a shell of small leaf cubes (about 1 stud) on a golden spiral round a dark core, shaded in bands by height
+		-- (refs pdv5_trees_s81/82; Gemini trees r1: many small cubes, dark under, light top, cubes poking out of the outline)
+		local fy = flat or 0.8
+		vox(trees, "LeafCore", Vector3.new(r * 1.45, r * 1.45 * fy, r * 1.45), CFrame.new(c) * CFrame.Angles(0, seed, 0), cols[1], LEAF)
+		local n = math.clamp(math.floor(r * r * 2.8), 10, 24)
+		for k = 1, n do
+			local y = 1 - 2 * (k - 0.5) / n
+			local rr = math.sqrt(1 - y * y)
+			local a = k * 2.39996 + seed
+			local d = Vector3.new(math.cos(a) * rr, y * fy, math.sin(a) * rr)
+			local h = hash(k, seed * 10, r)
+			local band = d.Y < -0.3 * fy and 1 or (d.Y < 0.15 * fy and 2 or (d.Y < 0.55 * fy and 3 or 4))
+			if h > 0.8 and band < 4 then band += 1 end
+			local sz = 0.8 + h * 0.5
+			vox(trees, "Leaf", Vector3.one * sz, CFrame.new(c + d * r * (0.78 + h * 0.2)) * CFrame.Angles(0, (h - 0.5) * 0.5, 0), cols[band], LEAF)
 		end
 	end
 	local function tree(x, z, sc, kind)
 		kind = kind == true and "blossom" or (kind or "round")
+		if kind == "round" then sc *= 1.35 end
 		local cols = TREE_COLS[kind]
 		local base = W(x, groundTop(x, z), z)
 		local seed = hash(x, z, 9) * 6
 		local lean = Vector3.new(math.cos(seed), 0, math.sin(seed)) * 0.6 * sc
 		local h = (kind == "bonsai" and 4.5 or 6.5) * sc
 		local tw = (kind == "bonsai" and 2.2 or 1.7) * sc
-		local barkTint = Color3.fromRGB(230, 210, 220)
-		local mid = base + Vector3.new(0, h * 0.5, 0) + lean
+		local barkTint = Color3.fromRGB(196, 172, 190)
 		local top = base + Vector3.new(0, h, 0) + lean * 0.3
-		for _, seg in { { base, mid, tw }, { mid, top, tw * 0.8 } } do -- two bent trunk segments
+		local side = Vector3.new(-lean.Z, 0, lean.X)
+		local p1 = base + Vector3.new(0, h * 0.34, 0) + lean * 0.7
+		local p2 = base + Vector3.new(0, h * 0.68, 0) + lean * 0.9 + side * 0.5
+		for _, seg in { { base, p1, tw }, { p1, p2, tw * 0.8 }, { p2, top, tw * 0.62 } } do -- three tapered trunk segments in an S-curve
 			local a, b = seg[1], seg[2]
 			skin(vox(trees, "Trunk", Vector3.new(seg[3], seg[3], (b - a).Magnitude + seg[3] * 0.5), CFrame.lookAt((a + b) / 2, b), AVG.bark), "bark", 4, SIDES, barkTint)
 		end
-		for k = 0, 3 do -- root flare
-			local a = seed + k * math.pi / 2
+		for k = 0, 3 do -- four uneven roots that slope down into the grass
+			local a = seed + k * 1.57 + (hash(k, x, z) - 0.5) * 0.8
 			local d = Vector3.new(math.cos(a), 0, math.sin(a))
-			skin(vox(trees, "Root", Vector3.new(tw * 0.55, tw * 0.45, tw * 1.2), CFrame.lookAt(base + d * tw * 0.75 + Vector3.new(0, tw * 0.15, 0), base + d * tw * 2), AVG.bark), "bark", 4, { N.Top, N.Left, N.Right }, barkTint)
+			local len = tw * (0.8 + hash(k, z, x) * 0.7)
+			skin(vox(trees, "Root", Vector3.new(tw * 0.45, tw * 0.38, len), CFrame.lookAt(base + d * (tw * 0.35 + len * 0.4) + Vector3.new(0, tw * 0.22, 0), base + d * (tw + len) - Vector3.new(0, tw * 0.5, 0)), AVG.bark), "bark", 4, { N.Top, N.Left, N.Right }, barkTint)
 		end
 		local crown = {}
 		if kind == "round" then
 			crown = { { top + Vector3.new(0, 1.4 * sc, 0), 2.7 }, { top + Vector3.new(2.1, 0.2, 0.8) * sc, 1.9 }, { top + Vector3.new(-1.9, 0.4, -1.1) * sc, 2 }, { top + Vector3.new(0.4, 0.9, -2.2) * sc, 1.7 }, { top + Vector3.new(-0.6, 3, 0.6) * sc, 1.6 } }
-		elseif kind == "bonsai" then
-			for k, o in { { 0, 0.4, 0, 3.2 }, { 2.6, -1.4, 1, 2.2 }, { -2.4, -0.6, -1.2, 2.4 } } do -- flat layered pads on short branches
+		elseif kind == "bonsai" then -- a mossy rock under the roots, short branches with flattened leaf clumps
+			for q, b in { { 2.6, 1.2, 2.2, 0, 0 }, { 1.7, 1.5, 1.6, 0.5, 0.3 }, { 1.4, 0.9, 1.3, -0.7, -0.4 } } do -- a weathered slate boulder
+				vox(trees, "BonsaiRock", Vector3.new(b[1], b[2], b[3]) * tw, CFrame.new(base + Vector3.new(b[4] * tw, b[2] * tw * 0.45, b[5] * tw)) * CFrame.Angles(0, seed + q * 0.7, 0), ({ Color3.fromRGB(110, 118, 130), Color3.fromRGB(136, 144, 158), Color3.fromRGB(92, 98, 112) })[q])
+			end
+			vox(trees, "Moss", Vector3.new(tw * 1.8, 0.3, tw * 1.5), CFrame.new(base + Vector3.new(0, tw * 1.1, 0)) * CFrame.Angles(0, seed + 0.4, 0), cols[3], { CanCollide = false })
+			for k, o in { { 0, 0.6, 0, 2.2 }, { 2.8, -1.2, 1, 1.5 }, { -2.6, -0.4, -1.3, 1.6 } } do
 				local pc = top + Vector3.new(o[1], o[2], o[3]) * sc
-				skin(vox(trees, "Branch", Vector3.new(0.6 * sc, 0.6 * sc, (pc - top).Magnitude + 0.3), CFrame.lookAt((pc + top) / 2, pc), AVG.bark), "bark", 4, SIDES, barkTint)
-				vox(trees, "Pad", Vector3.new(o[4] * 2, 0.7, o[4] * 1.7) * Vector3.new(sc, 1, sc), CFrame.new(pc) * CFrame.Angles(0, seed + k, 0), cols[2], { CanCollide = false })
-				vox(trees, "PadTop", Vector3.new(o[4] * 1.5, 0.6, o[4] * 1.2) * Vector3.new(sc, 1, sc), CFrame.new(pc + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, seed + k + 0.3, 0), cols[3], { CanCollide = false })
-				vox(trees, "PadUnder", Vector3.new(o[4] * 1.6, 0.4, o[4] * 1.3) * Vector3.new(sc, 1, sc), CFrame.new(pc - Vector3.new(0, 0.5, 0)) * CFrame.Angles(0, seed + k + 0.6, 0), cols[1], { CanCollide = false })
+				if k > 1 then skin(vox(trees, "Branch", Vector3.new(0.6 * sc, 0.6 * sc, (pc - top).Magnitude + 0.3), CFrame.lookAt((pc + top) / 2, pc), AVG.bark), "bark", 4, SIDES, barkTint) end
+				table.insert(crown, { pc, o[4] })
 			end
 		else -- blossom and wisteria: three branches spread sideways, a clump on each and one on top
 			crown = { { top + Vector3.new(0, 1.6 * sc, 0), 2.2 } }
 			for k = 0, 2 do
 				local a = seed + k * 2.1
-				local tip = top + Vector3.new(math.cos(a) * 3.2, 0.6 + (k % 2) * 0.8, math.sin(a) * 3.2) * sc
+				local reach = kind == "blossom" and 4.3 or 3.4
+				local tip = top + Vector3.new(math.cos(a) * reach, 0.4 + (k % 2) * 1.1, math.sin(a) * reach) * sc
 				skin(vox(trees, "Branch", Vector3.new(0.7 * sc, 0.7 * sc, (tip - top).Magnitude + 0.4), CFrame.lookAt((tip + top) / 2, tip), AVG.bark), "bark", 4, SIDES, barkTint)
-				table.insert(crown, { tip + Vector3.new(0, 0.6 * sc, 0), 1.8 })
+				table.insert(crown, { tip + Vector3.new(0, 0.6 * sc, 0), kind == "blossom" and 1.5 or 1.8 })
 			end
 		end
-		for k, cl in crown do clump(cl[1], cl[2] * sc, cols, seed + k) end
-		if kind == "wisteria" then -- hanging flower strands under the clumps, lilac fading to pink at the tips
+		for k, cl in crown do clump(cl[1], cl[2] * sc, cols, seed + k, kind == "bonsai" and 0.42 or nil) end
+		if kind == "wisteria" then -- tapered racemes hanging from each clump: deep lilac, lavender, pale tip, a few loose petals below
+			local fl = TREE_COLS.wisteriaFlower
 			for k = 1, #crown do
-				for j = 0, 2 do
-					local a = seed + k * 1.7 + j * 2.1
-					local sp = crown[k][1] + Vector3.new(math.cos(a) * crown[k][2] * sc * 0.7, -crown[k][2] * sc * 0.5, math.sin(a) * crown[k][2] * sc * 0.7)
-					for q = 0, 2 do
-						vox(trees, "Strand", Vector3.new(0.6, 0.9, 0.6), CFrame.new(sp - Vector3.new(0, q * 0.85, 0)), q == 2 and PAL.pink[2] or cols[2 + (q % 2)], { CanCollide = false })
-					end
+				for j = 0, 5 do
+					local a = seed + k * 1.7 + j * 1.05
+					local rr = crown[k][2] * sc * (j % 2 == 0 and 0.85 or 0.5)
+					local sp = crown[k][1] + Vector3.new(math.cos(a) * rr, -crown[k][2] * sc * 0.45, math.sin(a) * rr)
+					local L = 0.8 + hash(j, k, x) * 0.8
+					vox(trees, "Raceme", Vector3.new(0.8, 1.5 * L, 0.8), CFrame.new(sp - Vector3.new(0, 0.75 * L, 0)), fl[1], LEAF)
+					vox(trees, "Raceme", Vector3.new(0.6, 1.5 * L, 0.6), CFrame.new(sp - Vector3.new(0, 2.25 * L, 0)), fl[2], LEAF)
+					vox(trees, "Raceme", Vector3.new(0.4, 1 * L, 0.4), CFrame.new(sp - Vector3.new(0, 3.25 * L, 0)), fl[3], LEAF)
 				end
 			end
+			for q = 0, 4 do vox(trees, "Petal", Vector3.new(0.5, 0.12, 0.5), CFrame.new(base + Vector3.new((hash(q, x, 3) - 0.5) * 7 * sc, 0.08, (hash(q, z, 4) - 0.5) * 7 * sc)), fl[3], LEAF) end
 		end
 		if kind == "blossom" then
 			for k = 0, 5 do vox(trees, "Petal", Vector3.new(0.6, 0.12, 0.6), CFrame.new(base + Vector3.new((hash(k, x, 1) - 0.5) * 8 * sc, 0.08, (hash(k, z, 2) - 0.5) * 8 * sc)), cols[3], { CanCollide = false }) end
@@ -545,7 +584,8 @@ function Hub.build(parent, origin)
 	end
 	for _, t in { { -24, -44, 1.1 }, { -54, -44, 1.3, "wisteria" }, { -58, -16, 1, "blossom" }, { -60, 36, 1.2 }, { -48, 54, 1, "blossom" }, { -14, 66, 1.1, "bonsai" }, { 22, 66, 1.2 },
 		{ 44, 56, 1, "wisteria" }, { 60, 48, 1.3 }, { 58, -20, 1, "bonsai" }, { 54, -42, 1.2, "blossom" }, { -8, -58, 1.3 }, { 22, -62, 1.1, "wisteria" }, { 20, -18, 0.9, "blossom" },
-		{ 18, 24, 0.8, "bonsai" }, { -48, -18, 0.8, "blossom" }, { 62, 12, 1.1 }, { -66, 6, 1.1, "wisteria" } } do
+		{ 18, 24, 0.8, "bonsai" }, { -48, -18, 0.8, "blossom" }, { 62, 12, 1.1 }, { -66, 6, 1.1, "wisteria" },
+		{ -38, 54, 0.9, "blossom" }, { 14, 56, 0.8 }, { 44, 12, 0.85, "wisteria" } } do
 		tree(t[1], t[2], t[3], t[4])
 	end
 
@@ -1353,6 +1393,45 @@ function Hub.build(parent, origin)
 	for _, p in { W(-12, 0.6, -14), W(-13.6, 0.6, -12), W(14, 0.6, -10), W(-26, 0.6, 10), W(26, 0.6, -6) } do barrel(props, p) end
 	for _, c in { { 13, 15 }, { -15, -15 }, { 24, -20 }, { -30, -6 } } do
 		for k = 0, 2 do tvox(props, "Crate", Vector3.new(2.2, 2.2, 2.2), CFrame.new(W(c[1] + (k % 2) * 2.3, 1.7 + math.floor(k / 2) * 2.2, c[2])) * CFrame.Angles(0, k * 0.2, 0), "wood_frame", 2) end
+	end
+	-- mining clutter clusters in the grass gaps between the lanes (Gemini town v5 r1: "fill the dead grass voids"): ore sacks,
+	-- crate and barrel piles, a tool rack, a pickaxe in a stump, a wheelbarrow of ore. Spots found free with an overlap scan.
+	local SACK = Color3.fromRGB(214, 190, 160)
+	local function cluster(x, z, kind, seed)
+		local y = groundTop(x, z)
+		local base = CFrame.new(W(x, y, z)) * CFrame.Angles(0, seed, 0)
+		local function at(dx, dy, dz) return base * CFrame.new(dx, dy, dz) end
+		if kind == "sacks" then
+			for k, o in { { 0, 0 }, { 1.3, 0.3 }, { 0.6, 1.2 }, { 0.65, 0.5, 1 } } do
+				vox(props, "OreSack", Vector3.new(1.2, 1.1, 1.1), at(o[1], 0.55 + (o[3] or 0) * 1, o[2]) * CFrame.Angles(0, k * 0.5, 0.08), SACK)
+				vox(props, "SackTie", Vector3.new(0.5, 0.3, 0.5), at(o[1], 1.2 + (o[3] or 0) * 1, o[2]), Color3.fromRGB(150, 110, 96), { CanCollide = false })
+			end
+			vox(props, "LooseOre", Vector3.new(0.6, 0.6, 0.6), at(-1, 0.3, 0.8), ORE[(seed * 10) % 3 // 1 + 1], { Material = Enum.Material.Neon })
+		elseif kind == "crates" then
+			for k = 0, 2 do tvox(props, "Crate", Vector3.new(2, 2, 2), at((k % 2) * 2.1, 1 + math.floor(k / 2) * 2, 0) * CFrame.Angles(0, k * 0.25, 0), "wood_frame", 2) end
+			barrel(props, W(x, y, z) + (base.RightVector * -1.9) + Vector3.new(0, 0, 0))
+		elseif kind == "tools" then -- a rack of picks and shovels leaning on a rail
+			for _, dx in { -1.2, 1.2 } do tvox(props, "RackPost", Vector3.new(0.35, 2.4, 0.35), at(dx, 1.2, 0), "beam", 1) end
+			tvox(props, "RackRail", Vector3.new(3, 0.3, 0.3), at(0, 2.1, 0), "beam", 1)
+			for k = 0, 2 do
+				tvox(props, "ToolHandle", Vector3.new(0.22, 2.6, 0.22), at(-0.8 + k * 0.8, 1.3, 0.35) * CFrame.Angles(-0.3, 0, 0), "beam", 1)
+				vox(props, "ToolHead", k == 1 and Vector3.new(0.5, 0.7, 0.12) or Vector3.new(1.3, 0.25, 0.25), at(-0.8 + k * 0.8, 2.55, 0.0), Color3.fromRGB(170, 176, 196))
+			end
+		elseif kind == "stump" then -- a stump with a pickaxe stuck in it and a lantern
+			skin(vox(props, "Stump", Vector3.new(1.8, 1.1, 1.8), at(0, 0.55, 0), AVG.bark), "bark", 3, SIDES)
+			vox(props, "StumpTop", Vector3.new(1.6, 0.1, 1.6), at(0, 1.12, 0), Color3.fromRGB(226, 196, 160))
+			tvox(props, "ToolHandle", Vector3.new(0.22, 1.8, 0.22), at(0.2, 1.8, 0) * CFrame.Angles(0, 0, 0.4), "beam", 1)
+			vox(props, "ToolHead", Vector3.new(1.4, 0.25, 0.25), at(-0.15, 2.55, 0) * CFrame.Angles(0, 0, 0.4), Color3.fromRGB(170, 176, 196))
+			cubeLantern(props, W(x, y, z) + base.RightVector * 1.6 + Vector3.new(0, 0.5, 0), nil, 0.8)
+		elseif kind == "barrow" then -- a wheelbarrow full of glowing ore
+			tvox(props, "Barrow", Vector3.new(1.8, 0.9, 2.4), at(0, 1.1, 0) * CFrame.Angles(0.12, 0, 0), "planks", 2)
+			tvox(props, "BarrowWheel", Vector3.new(0.3, 1, 1), at(0, 0.5, -1.4), "iron", 1)
+			for _, dx in { -0.7, 0.7 } do tvox(props, "BarrowArm", Vector3.new(0.2, 0.2, 1.6), at(dx, 1, 1.8) * CFrame.Angles(0.25, 0, 0), "beam", 1) end
+			for k = 0, 3 do vox(props, "CartOre", Vector3.new(0.7, 0.7, 0.7), at((k % 2 - 0.5) * 0.7, 1.75, (k // 2 - 0.5) * 0.9), ORE[k % 3 + 1], { Material = k == 1 and Enum.Material.Neon or Enum.Material.SmoothPlastic }) end
+		end
+	end
+	for i, c in { { -22, -9, "barrow" }, { -22, 38, "sacks" }, { -1, 30, "stump" }, { 23, -11, "tools" }, { 32, 46, "crates" }, { 42, 48, "sacks" }, { 37, 12, "barrow" }, { -43, 48, "crates" }, { -40, 50, "stump" } } do
+		cluster(c[1], c[2], c[3], i * 1.3)
 	end
 	for _, b in { { -18, -26 }, { 16, -24 }, { 22, 18 }, { -50, -12 }, { 26, 36 }, { 2, 56 }, { 36, -22 }, { -30, -40 } } do -- bush clumps round the lanes
 		bush(props, W(b[1], groundTop(b[1], b[2]), b[2]), b[1] * 3 + b[2])
