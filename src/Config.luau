@@ -214,4 +214,18 @@ C.CAM_YAW = 0 -- fixed: the camera sits south of the player looking north (towar
 C.FP_FOV = 80
 
 
+
+-- Caves (cave exploration rework; vault Projects/Pixel-_/Briefs/Cave Exploration Rework.md and Cave Rework Reference Board)
+C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
+-- Cave lighting preset, applied by the client on entering the caves and undone at camp. From the lighting video the user sent
+-- (https://www.youtube.com/watch?v=adgCWET34rU): realistic style, tinted ambient so shadows keep colour, low diffuse, punchy
+-- contrast with a subtle tint, a small low-threshold bloom so glows read as colour, a light depth of field for big halls.
+C.CAVE_LIGHT = {
+	Lighting = { LightingStyle = Enum.LightingStyle.Realistic, Ambient = Color3.fromRGB(40, 30, 64), OutdoorAmbient = Color3.fromRGB(36, 28, 60), Brightness = 0, EnvironmentDiffuseScale = 0.15, EnvironmentSpecularScale = 0.2, ExposureCompensation = 0.25 },
+	Atmosphere = { Density = 0.42, Offset = 0, Color = Color3.fromRGB(52, 36, 86), Decay = Color3.fromRGB(26, 16, 46), Glare = 0, Haze = 0.8 },
+	Bloom = { Intensity = 0.7, Size = 30, Threshold = 1.05 },
+	ColorCorrection = { Brightness = 0.03, Contrast = 0.2, Saturation = 0.12, TintColor = Color3.fromRGB(240, 230, 255) },
+	DepthOfField = { FarIntensity = 0.22, FocusDistance = 36, InFocusRadius = 40, NearIntensity = 0 },
+}
+
 return C
