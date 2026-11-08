@@ -7,7 +7,7 @@ C.GAP = 0.14 -- blocks are this much smaller than the grid: the dark backing sho
 C.GRASS = Color3.fromRGB(96, 168, 70) -- grass cap on the surface row
 C.COLS = 24 -- shaft width in blocks
 C.LAYER_ROWS = 60 -- rows per layer
-C.SHAFT_GAP = 6 -- empty blocks between two players' shafts
+C.SHAFT_GAP = 44 -- blocks between two players' shafts: room for each camp
 C.START_COL = 12 -- column of the glowing first block
 C.WINDOW = true -- spike result: only rows near the player exist as Parts (false = build all 420 rows, for the perf test)
 C.WIN_UP, C.WIN_DOWN, C.SURFACE_KEEP = 24, 36, 14 -- rows kept above/below the player, plus the top rows
@@ -52,6 +52,60 @@ C.PREFILL = 4 -- endowed progress: the backpack starts 4/10
 -- Digging
 C.DIG_COOLDOWN = 0.18 -- seconds between player hits (server enforced)
 C.REACH = 10.5 -- studs from the character to a block centre
+-- Pixel textures (art/pd_roblox.py, 32 px art upscaled to 256 px, uploaded 2026-11-08)
+C.TEX = {
+	alfglow_base0 = "rbxassetid://115448677967942",
+	alfglow_base1 = "rbxassetid://116137791322669",
+	alfglow_cave = "rbxassetid://119731660691538",
+	alfglow_ore2 = "rbxassetid://78671331929628",
+	alfglow_ore3 = "rbxassetid://122569762912059",
+	alfglow_wall = "rbxassetid://124606952204558",
+	amber_egg = "rbxassetid://137275619825022",
+	egg = "rbxassetid://133159489355843",
+	gap_base0 = "rbxassetid://86263487399020",
+	gap_base1 = "rbxassetid://115434686248068",
+	gap_cave = "rbxassetid://84549082803895",
+	gap_ore2 = "rbxassetid://91042989913114",
+	gap_ore3 = "rbxassetid://104676267101288",
+	gap_wall = "rbxassetid://113995212761456",
+	geode = "rbxassetid://78363054348832",
+	gilded = "rbxassetid://104834810775012",
+	glitter_base0 = "rbxassetid://108229779387007",
+	glitter_base1 = "rbxassetid://102371739818038",
+	glitter_cave = "rbxassetid://78267242360414",
+	glitter_ore2 = "rbxassetid://137203044287926",
+	glitter_ore3 = "rbxassetid://136573985203323",
+	glitter_wall = "rbxassetid://73545759491045",
+	grass = "rbxassetid://92381973212663",
+	mimir_base0 = "rbxassetid://88310716788544",
+	mimir_base1 = "rbxassetid://109364233169915",
+	mimir_cave = "rbxassetid://103318361919949",
+	mimir_ore2 = "rbxassetid://104529713147357",
+	mimir_ore3 = "rbxassetid://82077890386388",
+	mimir_wall = "rbxassetid://110152055952088",
+	muspell_base0 = "rbxassetid://131239051548805",
+	muspell_base1 = "rbxassetid://82241285691013",
+	muspell_cave = "rbxassetid://106022458176030",
+	muspell_ore2 = "rbxassetid://86207315038924",
+	muspell_ore3 = "rbxassetid://126610860277549",
+	muspell_wall = "rbxassetid://110526095462296",
+	rootholm_base0 = "rbxassetid://100643173961275",
+	rootholm_base1 = "rbxassetid://107682120131175",
+	rootholm_cave = "rbxassetid://101267996849412",
+	rootholm_ore2 = "rbxassetid://92245197400696",
+	rootholm_ore3 = "rbxassetid://77865950981893",
+	rootholm_wall = "rbxassetid://125225384058070",
+	titan_base0 = "rbxassetid://134513044302817",
+	titan_base1 = "rbxassetid://94581744877286",
+	titan_cave = "rbxassetid://112349192772371",
+	titan_ore2 = "rbxassetid://129226927260437",
+	titan_ore3 = "rbxassetid://81273911948508",
+	titan_wall = "rbxassetid://134779103740583",
+}
+C.LAYER_TEX = { "rootholm", "titan", "glitter", "muspell", "mimir", "alfglow", "gap" }
+C.CAMP_W = 20 -- blocks of camp ground on each side of the shaft
+C.SHRINE_ROWS = { 22, 84, 146, 208, 270, 332, 394 } -- one hidden shrine room per layer (spec: structures hide under mist)
+
 -- Pickaxe ladder: Wood and Stone are part-built; the ten magical pickaxes are the Pickaxe Forge models (ServerStorage.Pickaxes)
 C.PICKS = {
 	{ name = "Wood Pickaxe", power = 1, cost = 0 },
@@ -141,7 +195,7 @@ C.NIGHT_RATE = 0.5 -- gold per minute for each point of crew dig power per secon
 
 -- Camera (near-orthographic, tilted so block tops and sides show; movement stays on the plane)
 C.CAM_FOV = 22
-C.CAM_DIST = 160
+C.CAM_DIST = 120 -- about 11 rows visible: the miner reads at phone size
 C.CAM_YAW = math.rad(16) -- turn toward the right side faces
 C.CAM_PITCH = math.rad(20) -- look down onto the top faces
 
