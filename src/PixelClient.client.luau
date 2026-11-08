@@ -834,6 +834,60 @@ local function hatchShow(name)
 	task.wait(0.08)
 	phase = "done"
 
+	-- TIER CLIMB (Rare and up, from ropilotai's rare rolling reels): the egg hides, a four-point star flare steps up through the
+	-- rarity colours one flash at a time until it reaches this pet's tier, so the tier rises in front of the player.
+	-- Mythic and Secret first cut to near black with a caption, so the colour flood lands harder.
+	if tier >= 2 then
+		vp.Visible = false
+		for _, g in glows do g[1].BackgroundTransparency = 1 end
+		if tier >= 5 then
+			local dark = new("Frame", ov, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(8, 5, 14), BackgroundTransparency = 1, ZIndex = 21 })
+			tween(dark, 0.25, { BackgroundTransparency = 0.05 })
+			title.Text = tier >= 6 and "THE ROOTS AWAKEN..." or "THE DEEP STIRS..."
+			title.TextColor3 = CREAM
+			pop(title, 0.8, 0.5)
+			task.wait(0.9)
+			task.delay(1.6 + tier * 0.1, function() tween(dark, 0.3, { BackgroundTransparency = 1 }); task.delay(0.35, function() dark:Destroy() end) end)
+		end
+		local bloom = new("Frame", ov, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 22 })
+		local flare = new("Frame", ov, { Size = UDim2.fromScale(0.55, 0.55), Position = UDim2.fromScale(0.5, 0.47), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 24 })
+		new("UIAspectRatioConstraint", flare, { AspectRatio = 1 })
+		local fSc = new("UIScale", flare, { Scale = 0.5 })
+		local parts = {}
+		for i, sz in { { 1, 0.035 }, { 0.035, 1 }, { 0.55, 0.02 }, { 0.02, 0.55 } } do -- long and short spikes of the star
+			local b = new("Frame", flare, { Size = UDim2.fromScale(sz[1], sz[2]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = i > 2 and 45 or 0, BorderSizePixel = 0, ZIndex = 24 })
+			new("UIGradient", b, { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 1) }), Rotation = sz[1] > sz[2] and 0 or 90 })
+			table.insert(parts, b)
+		end
+		local core = new("Frame", flare, { Size = UDim2.fromScale(0.2, 0.2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 25 })
+		new("UICorner", core, { CornerRadius = UDim.new(0.5, 0) })
+		local halo = new("Frame", flare, { Size = UDim2.fromScale(0.6, 0.6), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 23 })
+		new("UICorner", halo, { CornerRadius = UDim.new(0.5, 0) })
+		local haloStroke = new("UIStroke", halo, { Thickness = 2, Transparency = 0.4 })
+		local label = text(ov, "", UDim2.fromScale(0.3, 0.045), UDim2.fromScale(0.5, 0.66), Vector2.new(0.5, 0), CREAM, 700)
+		label.ZIndex = 26
+		for i = 1, tier do
+			local col = C.RARITIES[i][3]
+			for _, b in parts do b.BackgroundColor3 = col end
+			core.BackgroundColor3, haloStroke.Color = col:Lerp(WHITE, 0.6), col
+			label.Text, label.TextColor3 = string.upper(C.RARITIES[i][1]), col
+			pop(label, 1.3, 0.25)
+			fSc.Scale = 0.55 + i * 0.12
+			tween(fSc, 0.28, { Scale = 0.45 + i * 0.12 }, Enum.EasingStyle.Back)
+			tween(halo, 0.3, { Size = UDim2.fromScale(0.6 + i * 0.12, 0.6 + i * 0.12) })
+			flare.Rotation = (i % 2) * 8
+			bloom.BackgroundColor3, bloom.BackgroundTransparency = col, 0.55 -- the whole screen flashes the tier colour
+			tween(bloom, 0.3, { BackgroundTransparency = 0.9 })
+			sfx("hit", 1 + i * 0.18)
+			if i > 1 then sfx("sparkle", 0.8 + i * 0.1) end
+			task.wait(i == tier and 0.5 or 0.34)
+		end
+		label:Destroy()
+		flare:Destroy()
+		bloom:Destroy()
+		vp.Visible = true
+	end
+
 	-- 3 LIGHT BURST: a short white flash, rays scale in, the ring rolls out, the card flips in behind the pet
 	local flash = new("Frame", ov, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = rc:Lerp(WHITE, 0.75), BackgroundTransparency = 0, ZIndex = 30 })
 	tween(flash, 0.12, { BackgroundTransparency = 1 })
@@ -879,7 +933,9 @@ local function hatchShow(name)
 	title.Text = string.upper(name)
 	title.TextColor3 = rc
 	pop(title, 1.6, 0.45)
-	local sub = text(ov, p[1]:upper() .. "  -  " .. p[2]:upper(), UDim2.fromScale(0.5, 0.06), UDim2.fromScale(0.5, 0.76), Vector2.new(0.5, 0), rc)
+	local pct = C.RARITIES[tier][2]
+	local odds = pct >= 5 and "" or ("  -  1 IN " .. commas(math.floor(100 / pct + 0.5)))
+	local sub = text(ov, p[1]:upper() .. "  -  " .. p[2]:upper() .. odds, UDim2.fromScale(0.5, 0.06), UDim2.fromScale(0.5, 0.76), Vector2.new(0.5, 0), rc)
 	sub.ZIndex = 26
 	pop(sub, 0.5, 0.35)
 	task.delay(0.15, function() sfx("sparkle") end)
@@ -905,7 +961,6 @@ local function hatchShow(name)
 	local spinT = os.clock()
 	local spin = RunService.RenderStepped:Connect(function()
 		local t = os.clock() - spinT
-		card.Rotation = math.sin(t * 1.6) * 3
 		m:ScaleTo(1 + math.sin(t * 5) * 0.035) -- breathing, so the pet never freezes
 		m:PivotTo(CFrame.new(0, math.abs(math.sin(t * 4)) * 0.35 * math.exp(-t * 0.8) + math.sin(t * 4.5) * 0.08, 0) * CFrame.Angles(0, math.rad(20) + math.sin(t * 1.6) * 0.45, math.sin(t * 1.6) * 0.06))
 		if shine then

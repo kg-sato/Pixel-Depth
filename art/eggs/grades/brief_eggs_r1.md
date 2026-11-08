@@ -1,0 +1,5 @@
+Grade AI reference images for the 3D egg models of a Roblox voxel mining game. Be harsh: 5 = average, 7 = good, 8 = rare. Do not be kind.
+Game look: voxel (chunky cubes), cosy, pastel night palette (lilac and plum shadows, mint, rose, butter), eggs hatch into crew pets; ten eggs from Common to Secret.
+The owner's references: Games/Pixel Depth/art/eggs/refs/pins_sheet.jpg (pixel-art themed eggs: cosmic swirl with mist, lava cracks, vine-wrapped, gem socket, crystal scales, obsidian, golden spiral, thorn nest, skull fossil, pastel striped).
+Candidates: Games/Pixel Depth/art/eggs/eggs_r1_sheet.jpg (20 tiles, two variants per egg, labelled 01_fossil ... 10_bone with seeds).
+For each of the ten eggs: pick the better variant, then score it 1-10 on theme read at a glance, voxel/pixel cohesion (chunky cubes, not smooth sculpt), silhouette, palette fit, buildability as a voxel 3D model (under 20k triangles), and overall. Then say which eggs need a new prompt and what to change (one line each). Compact table.
