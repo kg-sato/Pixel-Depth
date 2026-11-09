@@ -210,7 +210,7 @@ function M.start(E)
 			new("UIStroke", chip, { Color = h >= n and DEEP_MINT or Color3.fromRGB(242, 139, 130), Thickness = 2 })
 			local ic = new("ImageLabel", chip, { Image = C.ORE_ICON[k] or "", BackgroundTransparency = 1, Size = UDim2.fromScale(0.34, 1.3), Position = UDim2.fromScale(0.04, 0.5), AnchorPoint = Vector2.new(0, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 4 })
 			new("UIAspectRatioConstraint", ic, { AspectRatio = 1 })
-			local t = text(chip, math.min(h, n) .. "/" .. n, UDim2.fromScale(0.56, 0.72), UDim2.fromScale(0.68, 0.5), Vector2.new(0.5, 0.5), h >= n and DEEP_MINT or Color3.fromRGB(224, 96, 110), 700, false)
+			local t = text(chip, math.min(h, n) .. "/" .. n, UDim2.fromScale(0.56, 0.72), UDim2.fromScale(0.68, 0.5), Vector2.new(0.5, 0.5), h >= n and DEEP_MINT or INK, 700, false) -- dark counts read better than pale red (Gemini)
 			t.ZIndex = 4
 			chip:SetAttribute("Ore", C.oreName(k))
 		end

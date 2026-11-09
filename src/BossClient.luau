@@ -124,9 +124,9 @@ function M.start(E)
 			prompt(true)
 			openDoor(true)
 			sfx("upgrade", 1)
-			toast("THE DEEP GATE IS OPEN!", GOLD, true)
-			toast("+" .. a .. " COINS  +" .. b .. " GEMS", GOLD, false, 0.7)
-			toast("LANTERN FOUND! Old Gran's first lost lantern", MINT, false, 1.4)
+			toast("THE DEEP GATE IS OPEN!", GOLD, true) -- one at a time (Gemini: the three stacked into each other)
+			task.delay(2.2, function() toast("+" .. a .. " COINS  +" .. b .. " GEMS", GOLD, true) end)
+			task.delay(4.4, function() toast("LANTERN FOUND! Old Gran's first lost lantern", MINT, true) end)
 		elseif kind == "bossLose" then
 			bar.Visible = false
 			eyes(false)

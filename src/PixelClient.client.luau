@@ -1635,7 +1635,7 @@ do
 			local flick = math.noise(now * 6, 1.7) * 0.18 + math.noise(now * 17, 4.2) * 0.08
 			lantern.Color = Color3.fromRGB(255, 196, 120)
 			lantern.Range = C.TORCH.minRange + (C.TORCH.range - C.TORCH.minRange) * cave.fuel ^ 0.7 + flick * 2 + job.light
-			lantern.Brightness = 0.25 + 0.6 * cave.fuel + flick * 0.4 -- soft: the torch sits low in the hand, close to the floor, and blew it out
+			lantern.Brightness = 0.22 + 0.5 * cave.fuel + flick * 0.3 -- soft: close things blew out white (the floor, then chests and tents; Gemini 2026-11-09)
 		end
 		torchFill.Size = UDim2.fromScale(cave.fuel, 1)
 		torchFill.BackgroundColor3 = cave.fuel > 0.3 and Color3.fromRGB(255, 176, 70) or Color3.fromRGB(255, 110, 90)
@@ -1729,6 +1729,12 @@ end
 					end
 				end
 			end
+		elseif kind == "coopBonus" then
+			toast("CO-OP BONUS  x" .. dep .. " ORE", MINT, true)
+		elseif kind == "shrineGems" then
+			toast("+" .. dep .. " GEMS FROM THE SHRINE", PINK, false, 0.8)
+		elseif kind == "shrineEmpty" then
+			toast("The shrine is empty. It refills in " .. dep .. " min", LILAC, false)
 		elseif kind == "caveFrenzy" then
 			toast("FRENZY!  x1.5 ORE FOR " .. dep .. " S", GOLD, true)
 			shake(0.3)

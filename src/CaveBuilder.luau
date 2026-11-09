@@ -821,6 +821,43 @@ function Cave.build(parent, origin, seed)
 			if math.abs(d.X) < 8 and math.abs(d.Y) < 6 and math.abs(d.Z) < 5 then p:Destroy() end
 		end
 	end
+	do -- hidden shrines: a rune stone, a plinth and a little chest in a quiet nook far from camp, away from the deposits
+		local SH = D.shrines
+		local made = 0
+		for _, sp in spots do
+			if made >= SH.count then break end
+			local c = sp.c
+			local pos = W(c.i, c.j, c.f)
+			local far = (c.i * c.i + c.j * c.j) * CELL * CELL > SH.minDist * SH.minDist
+			local clear = true
+			for _, q in placed do if (q - pos).Magnitude < 12 then clear = false break end end
+			if far and clear then
+				made += 1
+				table.insert(placed, pos)
+				local wall = Vector3.new(sp.o[1], 0, sp.o[2])
+				local foot = pos + wall * (CELL / 2 - 1.2)
+				local base = CFrame.lookAt(foot, foot - wall) -- faces out of the wall
+				local L = D.layer[c.theme] or 1
+				part("Shrines", "ShrineStone", Vector3.new(3, 4.4, 0.8), base * CFrame.new(0, 2.2, 0.9), PAL.rock[3], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
+				local rune = part("Shrines", "ShrineRune", Vector3.new(1.2, 1.6, 0.2), base * CFrame.new(0, 2.8, 0.4), PAL.lightViolet, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+				glow(rune, PAL.lightViolet, 10, 0.7)
+				part("Shrines", "ShrinePlinth", Vector3.new(3.4, 0.8, 2.2), base * CFrame.new(0, 0.4, -0.4), PAL.rock[2], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
+				local chest = part("Shrines", "ShrineChest", Vector3.new(1.8, 1.1, 1.2), base * CFrame.new(0, 1.35, -0.6), PAL.plank)
+				local lid = part("Shrines", "ShrineLid", Vector3.new(1.9, 0.45, 1.3), base * CFrame.new(0, 2.12, -0.6), PAL.barkLt)
+				part("Shrines", "ShrineTrim", Vector3.new(0.3, 0.3, 0.1), base * CFrame.new(0, 1.7, -1.25), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+				lid.Name = "ShrineLid" .. made
+				chest:SetAttribute("Lid", lid.Name)
+				chest:SetAttribute("Layer", L)
+				local pr = Instance.new("ProximityPrompt")
+				pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode = "Open", "Hidden Shrine", Enum.KeyCode.E
+				pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.HoldDuration = 8, false, 0.6
+				pr.Style = Enum.ProximityPromptStyle.Custom
+				pr:SetAttribute("CaveShrine", true)
+				pr.Parent = chest
+			end
+		end
+		model:SetAttribute("Shrines", made)
+	end
 	model:SetAttribute("ZFixed", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(model)) -- no z-fighting (the user, 2026-11-08)
 	model:SetAttribute("Deposits", #placed)
 	model:SetAttribute("Reachable", qi - 1)

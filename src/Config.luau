@@ -314,6 +314,8 @@ C.DEPOSIT = {
 	strikes = 3, chunks = 1, bonus = 1, strikePeriod = 1.0, arc = 15, -- Perfect Strike: swings, ore per swing, extra ore per PERFECT, needle turn (s), gold arc (deg)
 	rush = { 8, 12 }, rushChunks = 4, rushBeat = 1.0, -- Vein Rush: beats, base ore, seconds per beat
 	regrow = 420, -- seconds until a deposit you mined grows back for you (roadmap i75: inside the hour)
+	shrines = { count = 3, minDist = 90, regrow = 3600, gold = 60, gems = 2 }, -- hidden shrines: how many, studs from camp at least, per-player regrow, coins (x3 per layer), gems
+	coop = { window = 20, mult = 1.5 }, -- two players on the same deposit within 20 s: both get x1.5 ore
 	gilded = { count = 2, every = 300, mult = 2, gems = 1 }, -- gilded veins: how many at a time, seconds between picks, ore x, extra gems
 	frenzy = { deposits = 3, window = 60, time = 20, mult = 1.5 }, -- three deposits inside a minute: x1.5 ore for 20 s
 	grades = { { "FLAWLESS", 0, 2, 3 }, { "PRISTINE", 1, 1.5, 2 }, { "STANDARD", 3, 1, 1 }, { "CHIPPED", math.huge, 0.5, 0 } }, -- name, most slips, ore multiplier, stars

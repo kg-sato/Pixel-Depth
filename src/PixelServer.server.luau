@@ -780,6 +780,28 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	if s and prompt:GetAttribute("RideUp") and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] then startEscape(s) end
 end)
 Players.PlayerRemoving:Connect(function(plr) riding[plr], escaping[plr] = nil, nil end)
+game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- a hidden cave shrine: coins and gems, once an hour each
+	if not prompt:GetAttribute("CaveShrine") then return end
+	local s = data[plr]
+	local chest = prompt.Parent
+	if not s or not plr:GetAttribute("InCave") then return end
+	s.shrinesOpen = s.shrinesOpen or {}
+	if (s.shrinesOpen[chest] or 0) > os.clock() then
+		FxR:FireClient(plr, "shrineEmpty", math.ceil((s.shrinesOpen[chest] - os.clock()) / 60))
+		return
+	end
+	local SH = C.DEPOSIT.shrines
+	s.shrinesOpen[chest] = os.clock() + SH.regrow
+	local L = chest:GetAttribute("Layer") or 1
+	local gold = SH.gold * 3 ^ (L - 1)
+	s.gold += gold
+	s.gems += SH.gems
+	A.earn(s, "Coins", gold, s.gold, "CaveShrine")
+	A.earn(s, "Gems", SH.gems, s.gems, "CaveShrine")
+	FxR:FireClient(plr, "chest", chest, gold, C.LAYERS[L][1])
+	FxR:FireClient(plr, "shrineGems", SH.gems)
+	sendState(s)
+end)
 local Gloom = require(game:GetService("ServerScriptService"):WaitForChild("Gloom")) -- gloomlings, HP, the catch, flares (phase 6)
 Shop.init({ data = data, fx = FxR, sendState = sendState })
 require(game:GetService("ServerScriptService"):WaitForChild("Boss")).init({ data = data, fx = FxR, sendState = sendState, hrpOf = hrpOf, analytics = A, strikes = C.DEPOSIT.strikes,
@@ -857,6 +879,10 @@ local function finishMinigame(s)
 	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) + 0.5)
 	local job = PetJobs.perks(crewOf(s)) -- Kobold +1 ore, Goldbristle +1 on rare, Ninering doubles every 9th deposit
 	count += job.ore + (idx == 3 and job.rareOre or 0)
+	if mg.coop then -- a friend is working this deposit too: x1.5 ore for you both
+		count = math.floor(count * D.coop.mult + 0.5)
+		FxR:FireClient(s.player, "coopBonus", D.coop.mult)
+	end
 	local gilded = mg.dep:GetAttribute("Gilded") == true
 	if gilded then count = math.floor(count * D.gilded.mult) end -- a gilded vein pays double
 	local nowC = os.clock()
@@ -896,14 +922,24 @@ for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
 		if not s or not hrp or s.mg or (s.claimed[dep] and os.clock() < s.claimed[dep]) or not plr:GetAttribute("InCave") then return end
 		if (hrp.Position - core.Position).Magnitude > D.reach + 4 then return end
 		local now = workspace:GetServerTimeNow()
+		local starts = dep:GetAttribute("CoopStarts") or "" -- recent starts on this deposit, "userId:time;..." (co-op bonus)
+		local coop, keep = false, {}
+		for uid, t in string.gmatch(starts, "(%d+):([%d%.]+)") do
+			if now - tonumber(t) < D.coop.window then
+				table.insert(keep, uid .. ":" .. t)
+				if tonumber(uid) ~= plr.UserId then coop = true end
+			end
+		end
+		table.insert(keep, plr.UserId .. ":" .. string.format("%.1f", now))
+		dep:SetAttribute("CoopStarts", table.concat(keep, ";"))
 		if dep:GetAttribute("Ore") < 3 then
 			local period = D.strikePeriod * PetJobs.perks(crewOf(s)).strike -- Kepri Scarab slows the needle
-			s.mg = { kind = "strike", dep = dep, t0 = now, arc = s.rng:NextNumber() * 360, zone = C.strikeArc(s.lv[tostring(s.equip)]), period = period, swings = 0, perfects = 0, last = 0, deadline = now + D.strikes * 4 * period + 2 }
+			s.mg = { kind = "strike", dep = dep, t0 = now, arc = s.rng:NextNumber() * 360, zone = C.strikeArc(s.lv[tostring(s.equip)]), period = period, swings = 0, perfects = 0, last = 0, deadline = now + D.strikes * 4 * period + 2, coop = coop }
 			FxR:FireClient(plr, "mgStart", dep, "strike", now, s.mg.arc, s.mg.zone, period)
 		else
 			local seq = {} -- the side of the red crack on each beat: 1 left, 2 right; chiseling that side slips
 			for i = 1, s.rng:NextInteger(D.rush[1], D.rush[2]) do seq[i] = s.rng:NextInteger(1, 2) end
-			s.mg = { kind = "rush", dep = dep, t0 = now, seq = seq, deadline = now + #seq * D.rushBeat + 3 }
+			s.mg = { kind = "rush", dep = dep, t0 = now, seq = seq, deadline = now + #seq * D.rushBeat + 3, coop = coop }
 			FxR:FireClient(plr, "mgStart", dep, "rush", now, seq)
 		end
 	end)
