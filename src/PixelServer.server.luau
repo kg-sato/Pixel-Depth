@@ -761,6 +761,8 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	if s and prompt:GetAttribute("RideUp") and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] then startEscape(s) end
 end)
 Players.PlayerRemoving:Connect(function(plr) riding[plr], escaping[plr] = nil, nil end)
+local Gloom = require(game:GetService("ServerScriptService"):WaitForChild("Gloom")) -- gloomlings, HP, the catch, flares (phase 6)
+Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
 
 enterMine = function(s)
 	local hrp = hrpOf(s.player)
@@ -1314,6 +1316,7 @@ local PET_SCAN = { { 1, 0, 0 }, { 0, 1, 0 }, { 0, -1, 0 }, { 0, 0, 1 }, { 0, 0, 
 while true do
 	task.wait(0.1)
 	local now = os.clock()
+	Gloom.step(0.1)
 	for plr, s in data do
 		local hrp = hrpOf(plr)
 		if IS_STUDIO then -- Studio-only test hooks: set these attributes on the server
@@ -1374,7 +1377,10 @@ while true do
 		end
 		if hrp and plr:GetAttribute("InCave") and s.bag > 0 then -- Camp 1's ring banks the unbanked ore (CMP-01)
 			local o = C.CAVE_ORIGIN
-			if Vector2.new(hrp.Position.X - o.X, hrp.Position.Z - o.Z).Magnitude < C.CAMP_RING and math.abs(hrp.Position.Y - o.Y) < 30 then sell(s) end
+			if Vector2.new(hrp.Position.X - o.X, hrp.Position.Z - o.Z).Magnitude < C.CAMP_RING and math.abs(hrp.Position.Y - o.Y) < 30 then
+				s.tips.banked = true -- the torch dims and gloomlings come only after the first bank (the Gloom)
+				sell(s)
+			end
 		end
 		if hrp and not plr:GetAttribute("InCave") then
 			local r, c, d = cellOf(s, hrp.Position)

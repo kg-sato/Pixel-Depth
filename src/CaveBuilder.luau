@@ -145,6 +145,37 @@ function Cave.build(parent, origin, seed)
 		sparks.Size, sparks.Lifetime, sparks.Speed = NumberSequence.new(0.25, 0), NumberRange.new(1.5, 2.5), NumberRange.new(3, 6)
 		sparks.SpreadAngle, sparks.Acceleration = Vector2.new(15, 15), Vector3.new(0, 1, 0)
 		sparks.Parent = flame
+		-- Wick the glowworm (Camp 1's keeper): pale mint segments, a glowing tail tip, big eyes and antennae, facing the rail station
+		do
+			local wick = CFrame.lookAt(fire + Vector3.new(9, 0, -4), W(-1, -7, 0)) -- out of the fire's glare (it washed him white)
+			local BODY, STRIPE = Color3.fromRGB(120, 196, 140), Color3.fromRGB(90, 168, 118)
+			local tip = part("Camp", "WickTail", Vector3.new(0.9, 0.9, 0.9), wick * CFrame.new(0, 0.45, 2.6), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+			glow(tip, PAL.warm, 10, 0.8)
+			part("Camp", "WickSeg", Vector3.new(1.1, 1.1, 1.1), wick * CFrame.new(0, 0.55, 1.8), STRIPE)
+			part("Camp", "WickSeg", Vector3.new(1.3, 1.3, 1.3), wick * CFrame.new(0, 0.75, 0.9), BODY)
+			part("Camp", "WickSeg", Vector3.new(1.5, 1.5, 1.5), wick * CFrame.new(0, 1.1, 0), STRIPE)
+			part("Camp", "WickHead", Vector3.new(1.9, 1.7, 1.7), wick * CFrame.new(0, 2.1, -0.6), BODY)
+			for _, x in { -0.42, 0.42 } do
+				part("Camp", "WickEye", Vector3.new(0.4, 0.52, 0.08), wick * CFrame.new(x, 2.3, -1.47), Color3.fromRGB(62, 42, 86), DECO)
+				part("Camp", "WickShine", Vector3.new(0.15, 0.15, 0.06), wick * CFrame.new(x + 0.08, 2.43, -1.52), Color3.new(1, 1, 1), DECO)
+				part("Camp", "WickFeeler", Vector3.new(0.12, 0.9, 0.12), wick * CFrame.new(x * 1.1, 3.3, -0.5) * CFrame.Angles(0, 0, -x * 0.5), STRIPE, DECO)
+				part("Camp", "WickFeelerTip", Vector3.new(0.3, 0.3, 0.3), wick * CFrame.new(x * 1.45, 3.75, -0.5), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+			end
+			part("Camp", "WickSmile", Vector3.new(0.5, 0.12, 0.06), wick * CFrame.new(0, 1.8, -1.47), Color3.fromRGB(62, 42, 86), DECO)
+		end
+		-- Smudge, the gloomling who is scared of the dark, peeks in from the edge of the ring by a lantern post
+		do
+			local a = 0.3 + math.pi / 3
+			local at = origin + Vector3.new(math.cos(a) * (8.6 * CELL - 2.5), 1, math.sin(a) * (8.6 * CELL - 2.5))
+			local smudge = CFrame.lookAt(at, fire)
+			local SOOT = Color3.fromRGB(30, 24, 44)
+			part("Camp", "SmudgeHead", Vector3.new(1.6, 1.6, 1.6), smudge, SOOT, { Shape = Enum.PartType.Ball })
+			for k = 1, 5 do
+				local b = k / 5 * math.pi * 2
+				part("Camp", "SmudgeFluff", Vector3.new(0.5, 0.5, 0.5), smudge * CFrame.new(math.cos(b) * 0.75, math.sin(b * 2) * 0.35, math.sin(b) * 0.75) * CFrame.Angles(b, b, 0), SOOT, DECO)
+			end
+			for _, x in { -0.28, 0.28 } do part("Camp", "SmudgeEye", Vector3.new(0.26, 0.36, 0.08), smudge * CFrame.new(x, 0.1, -0.78), Color3.fromRGB(255, 236, 160), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false }) end
+		end
 		-- pastel pup tents (CMP-01): two sloped roofs, a dark doorway, a little flag
 		local function tent(i, j, turn, col)
 			local base = CFrame.new(W(i, j, 0)) * CFrame.Angles(0, turn, 0)

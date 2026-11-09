@@ -2169,6 +2169,7 @@ do
 			cave.relitAt = now
 		end
 		cave.wasInCamp = here
+		if plr:GetAttribute("TorchFrozen") then cave.relitAt = now end -- the server: no dimming until the first bank
 		local age = plr:GetAttribute("DevTorchAge") -- Studio test hook: age the torch by this many seconds
 		if age then cave.relitAt = now - age plr:SetAttribute("DevTorchAge", nil) end
 		cave.fuel = math.clamp(1 - (now - cave.relitAt) / C.TORCH.time, 0, 1)
@@ -3179,6 +3180,21 @@ end)
 	end
 	plr:GetAttributeChangedSignal("InCave"):Connect(update)
 	task.defer(update)
+end)()
+
+;(function() -- the Gloom client (ReplicatedStorage.Shared.GloomClient): HP pill, FLARE, soot sprites, BONK and catch, Wick and Smudge
+	local mod = RS.Shared:WaitForChild("GloomClient", 10)
+	if not mod then return end
+	task.spawn(function() -- start waits for the server's Flare remote; never hold up the rest of this script
+	local ok, err = pcall(function()
+		require(mod).start({
+			R = R, C = C, plr = plr, cave = cave, caveHud = caveHud, panel = panel, fit = fit, S = S, new = new, text = text, button = button,
+			setKind = setKind, tween = tween, burst = burst, sfx = sfx, shake = shake, toast = toast, commas = commas, hrp = hrp,
+			INK = INK, PINK = PINK, GOLD = GOLD, CREAM = CREAM, FONT = FONT,
+		})
+	end)
+	if not ok then warn("[GloomClient] " .. tostring(err)) end
+	end)
 end)()
 
 task.delay(4, function() -- the minecart ride's far stage and the escape tunnel, built early so their lanterns are lit by the first ride

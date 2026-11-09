@@ -264,6 +264,10 @@ C.ESCAPE = { dist = 1050, speed = 30, bonus = { 10, 40 } }
 -- swimming in the grotto lake (CaveSwim): seconds of air, seconds to refill, swim / rise / sink speeds (studs/s), and the share of
 -- the unbanked ore lost when you pass out (the same rule as a gloomling catch)
 C.SWIM = { air = 14, refill = 2.5, speed = 12, rise = 9, sink = 1.2, loss = 0.25 }
+-- the Gloom (ServerScriptService.Gloom): HP, damage per BONK, share of unbanked ore lost when caught, golden shield seconds, flares
+-- per dive and their reach, creep speed at UNEASY and SCARED (studs/s; you walk 16), BONK reach, daze after a BONK, seconds
+-- between spawns
+C.GLOOM = { hp = 100, hit = 34, loss = 0.25, shield = 3, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6 }
 C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
 C.MAP_VIEW = 160 -- studs across the cave minimap (HUD-01); floors show once your torchlight reaches them (fog of war)
