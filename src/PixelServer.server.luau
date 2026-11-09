@@ -664,22 +664,72 @@ end)
 
 local enterMine -- defined below
 local riding = {} -- players on the minecart ride down (MinecartRide on the client): anchored until the client says it arrived
-local function endRide(plr)
-	if not riding[plr] then return end
+local function endRide(plr, trip) -- trip: only end that ride (a stale timer must not end a later one)
+	if not riding[plr] or (trip and riding[plr] ~= trip) then return end
 	riding[plr] = nil
 	local hrp = hrpOf(plr)
 	if hrp then hrp.Anchored = false end
 end
-SurfaceR.OnServerEvent:Connect(function(plr, dir) -- the rail lift button: "down" into your mine, otherwise up to camp
+-- the minecart escape (ride up from the caves): the server keeps the clock, checks the run was possible and pays the bonus
+local escaping = {}
+local function standIn(plr, cf) -- anchor the character standing in a cart whose rail base is cf
+	local hrp = hrpOf(plr)
+	if not hrp then return end
+	local hum = plr.Character:FindFirstChildOfClass("Humanoid")
+	hrp.AssemblyLinearVelocity = Vector3.zero
+	hrp.Anchored = true
+	hrp.CFrame = cf * CFrame.new(0, 1.05 + hrp.Size.Y / 2 + (hum and hum.HipHeight or 2), 0.3)
+end
+local function finishEscape(plr, report)
+	local e = escaping[plr]
+	if not e then return end
+	escaping[plr] = nil
+	local s = data[plr]
+	local bonus = 0
+	local el = os.clock() - e.t0
+	if s and type(report) == "table" and el >= C.ESCAPE.dist / (C.ESCAPE.speed * 1.6) then
+		local dodges = math.clamp(math.floor(tonumber(report.dodges) or 0), 0, math.floor(el))
+		local boosts = math.clamp(math.floor(tonumber(report.boosts) or 0), 0, math.floor(el / 2))
+		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2, C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
+		s.gold += bonus
+	end
+	if HUB_CART then standIn(plr, HUB_CART:GetPivot()) else local h = hrpOf(plr) if h then h.CFrame = spawnCFrame() end end
+	plr:SetAttribute("InMine", false)
+	plr:SetAttribute("InCave", false)
+	local trip = {}
+	riding[plr] = trip -- anchored in the town cart until the client's burst out of the shaft ends ("arrived")
+	task.delay(12, function() endRide(plr, trip) end)
+	if s then sendState(s) end -- the bag pill switches back from the cave's unbanked count
+	FxR:FireClient(plr, "escapeDone", bonus)
+end
+local function startEscape(s)
+	local plr = s.player
+	if escaping[plr] or riding[plr] then return end
+	local body = workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild("CartBody", true)
+	if body then standIn(plr, body.CFrame * CFrame.new(0, -1.65, 0)) end
+	local e = { t0 = os.clock() }
+	escaping[plr] = e
+	FxR:FireClient(plr, "escape", math.random(1, 1e6))
+	task.delay(150, function() if escaping[plr] == e then finishEscape(plr, nil) end end) -- a client that never reports still gets home (no bonus)
+end
+SurfaceR.OnServerEvent:Connect(function(plr, dir, report) -- the rail lift button: "down" into your mine, otherwise up to camp
 	local s = data[plr]
 	local hrp = hrpOf(plr)
-	if dir == "arrived" then -- the ride down has ended on this client
+	if dir == "arrived" then -- the ride down (or the burst out of the shaft) has ended on this client
 		endRide(plr)
 		return
 	end
-	if riding[plr] then return end
+	if dir == "escaped" then
+		finishEscape(plr, report)
+		return
+	end
+	if riding[plr] or escaping[plr] then return end
 	if s and dir == "down" then
 		enterMine(s)
+		return
+	end
+	if s and plr:GetAttribute("InCave") and caveLanding then -- the ride up is the minecart escape
+		startEscape(s)
 		return
 	end
 	if s and hrp then
@@ -691,6 +741,12 @@ SurfaceR.OnServerEvent:Connect(function(plr, dir) -- the rail lift button: "down
 	end
 end)
 
+game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- Camp 1's parked cart: Ride up
+	local s = data[plr]
+	if s and prompt:GetAttribute("RideUp") and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] then startEscape(s) end
+end)
+Players.PlayerRemoving:Connect(function(plr) riding[plr], escaping[plr] = nil, nil end)
+
 enterMine = function(s)
 	local hrp = hrpOf(s.player)
 	if not hrp or riding[s.player] or s.player:GetAttribute("InMine") or s.player:GetAttribute("InCave") then return end
@@ -699,7 +755,8 @@ enterMine = function(s)
 		local plr = s.player
 		local full = not s.tips.ride or plr:GetAttribute("DevFullRide") == true -- test hook: always the full first ride
 		s.tips.ride = true
-		riding[plr] = true
+		local trip = {}
+		riding[plr] = trip
 		hrp.AssemblyLinearVelocity = Vector3.zero
 		hrp.Anchored = true
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
@@ -707,15 +764,15 @@ enterMine = function(s)
 		FxR:FireClient(plr, "ride", full)
 		task.delay(full and 2.15 or 1.25, function()
 			local h = hrpOf(plr)
-			if not h or not data[plr] then
-				riding[plr] = nil
+			if not h or not data[plr] or riding[plr] ~= trip then
+				if riding[plr] == trip then riding[plr] = nil end
 				return
 			end
 			h.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
 			plr:SetAttribute("InCave", true)
 			sendState(s) -- the bag pill turns into the unbanked ore count in the caves
 		end)
-		task.delay(14, function() endRide(plr) end) -- a client that never reports back still gets its legs back
+		task.delay(14, function() endRide(plr, trip) end) -- a client that never reports back still gets its legs back
 		return
 	end
 	s.pr = -99 -- render the landing now

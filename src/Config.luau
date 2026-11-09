@@ -258,6 +258,9 @@ C.FP_FOV = 80
 -- Caves (cave exploration rework; vault Projects/Pixel-_/Briefs/Cave Exploration Rework.md and Cave Rework Reference Board)
 C.CAVES_ON = true -- the lift goes to the shared caves; false brings back the private block mines
 C.TORCH = { time = 300, range = 18, minRange = 6 } -- full light to the dimmest glow in 5 minutes (the user, 2026-11-08); wooden torch radius 18 studs (LGT-02)
+-- the minecart escape on the ride up (MinecartEscape): track length (studs), base speed (studs/s), coin bonus range;
+-- the server pays only when the run took at least dist / (speed * 1.6) seconds (every boost stacked the whole way)
+C.ESCAPE = { dist = 1050, speed = 30, bonus = { 10, 40 } }
 C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
 C.MAP_VIEW = 160 -- studs across the cave minimap (HUD-01); floors show once your torchlight reaches them (fog of war)

@@ -187,7 +187,13 @@ function Cave.build(parent, origin, seed)
 		end
 		-- the parked cart: a lilac tub with a butter rim on four dark wheels
 		local cart = st * CFrame.new(0, 0, railZ1 - 3)
-		part("Camp", "CartBody", Vector3.new(3, 1.8, 3.6), cart * CFrame.new(0, 1.65, 0), Color3.fromRGB(150, 128, 200))
+		local body = part("Camp", "CartBody", Vector3.new(3, 1.8, 3.6), cart * CFrame.new(0, 1.65, 0), Color3.fromRGB(150, 128, 200))
+		local pr = Instance.new("ProximityPrompt") -- ride up: the minecart escape (the server binds prompts with a RideUp attribute)
+		pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode = "Ride up", "Minecart", Enum.KeyCode.F
+		pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.HoldDuration = 12, false, 0
+		pr.Style = Enum.ProximityPromptStyle.Custom
+		pr:SetAttribute("RideUp", true)
+		pr.Parent = body
 		part("Camp", "CartRimF", Vector3.new(3.2, 0.35, 0.3), cart * CFrame.new(0, 2.6, -1.8), PAL.warm:Lerp(PAL.cream, 0.3), { Material = Enum.Material.Metal })
 		part("Camp", "CartRimB", Vector3.new(3.2, 0.35, 0.3), cart * CFrame.new(0, 2.6, 1.8), PAL.warm:Lerp(PAL.cream, 0.3), { Material = Enum.Material.Metal })
 		for _, w in { { -1.35, -1.1 }, { 1.35, -1.1 }, { -1.35, 1.1 }, { 1.35, 1.1 } } do

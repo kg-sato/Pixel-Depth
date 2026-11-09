@@ -3070,6 +3070,29 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		local L, bonus = ...
 		toast("NEW LAYER: " .. C.LAYERS[L][1]:upper(), GOLD, true)
 		toast("Depth reward +" .. commas(bonus) .. " gold", MINT, false, 1.2)
+	elseif kind == "escape" then -- the ride up: the minecart escape minigame (ReplicatedStorage.Shared.MinecartEscape)
+		local seed = ...
+		local mod = RS.Shared:FindFirstChild("MinecartEscape")
+		local hub = workspace:FindFirstChild("Hub")
+		cave.escapeBonus = nil -- the server's answer arrives as Fx "escapeDone"
+		task.spawn(function()
+			local ok, err = pcall(function()
+				require(mod).play({
+					seed = seed, cart = hub and hub:FindFirstChild("HubCart", true), sfx = sfx,
+					report = function(r) R.Surface:FireServer("escaped", r) end,
+					result = function() return cave.escapeBonus end,
+					restore = function() setMode(modeNow()) end,
+				})
+			end)
+			if not ok then
+				warn("[MinecartEscape] " .. tostring(err))
+				if not cave.escapeBonus then R.Surface:FireServer("escaped", nil) end
+			end
+			R.Surface:FireServer("arrived")
+			if ok and cave.escapeBonus and cave.escapeBonus > 0 then toast("ESCAPE BONUS  +" .. commas(cave.escapeBonus) .. " COINS", GOLD, true) end
+		end)
+	elseif kind == "escapeDone" then
+		cave.escapeBonus = (...) or 0
 	elseif kind == "ride" then -- the minecart ride down to Camp 1 (ReplicatedStorage.Shared.MinecartRide)
 		local full = ...
 		local mod = RS.Shared:FindFirstChild("MinecartRide")
@@ -3102,9 +3125,11 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 	end
 end)
 
-task.delay(4, function() -- the minecart ride's far stage, built early so its lanterns are lit by the first ride
-	local mod = RS.Shared:FindFirstChild("MinecartRide")
-	if mod then pcall(function() require(mod).prepare() end) end
+task.delay(4, function() -- the minecart ride's far stage and the escape tunnel, built early so their lanterns are lit by the first ride
+	for _, n in { "MinecartRide", "MinecartEscape" } do
+		local mod = RS.Shared:FindFirstChild(n)
+		if mod then pcall(function() require(mod).prepare() end) end
+	end
 end)
 
 -- Hub idle animations: spinning wheel, bobbing eggs and crystals, flickering fires, swaying lanterns, dancing flames
