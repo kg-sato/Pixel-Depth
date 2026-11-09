@@ -188,13 +188,13 @@ local function openPanel(o)
 	o.Visible = true
 	o.ZIndex = 5
 	local sc = scaler(o)
-	sc.Scale = 0.55
-	tween(sc, 0.38, { Scale = 1 }, Enum.EasingStyle.Back)
+	sc.Scale = 0.9 -- a small, quick grow reads as premium; 0.55 felt like a toy pop (VFX note 2026-11-08)
+	tween(sc, 0.28, { Scale = 1 }, Enum.EasingStyle.Back)
 end
 local function closePanel(o)
 	local sc = scaler(o)
-	tween(sc, 0.14, { Scale = 0.7 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
-	task.delay(0.14, function()
+	tween(sc, 0.15, { Scale = 0.9 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+	task.delay(0.15, function()
 		o.Visible = false
 		sc.Scale = 1
 	end)
@@ -1573,7 +1573,9 @@ end)
 	end
 
 	-- the world blurs behind the open forge
-	local blur = Lighting:FindFirstChild("ForgeBlur") or new("BlurEffect", Lighting, { Name = "ForgeBlur", Size = 0 })
+	local blur = new("BlurEffect", cam, { Name = "ForgeBlur", Size = 0 })
+	local BLUR = UIS.TouchEnabled and 10 or 12
+	workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function() blur.Parent = workspace.CurrentCamera end)
 	local spin
 	local function open()
 		tab = tab == "charm" and "pick" or tab
@@ -1581,7 +1583,7 @@ end)
 		openPanel(forge)
 		det.Position = UDim2.fromScale(0.7, 0.17)
 		tween(det, 0.4, { Position = UDim2.fromScale(0.668, 0.17) }, Enum.EasingStyle.Quint)
-		tween(blur, 0.3, { Size = 12 })
+		tween(blur, 0.3, { Size = BLUR })
 		if spin then spin:Disconnect() end
 		spin = RunService.RenderStepped:Connect(function()
 			local t = os.clock()
@@ -1702,7 +1704,8 @@ end)
 		cRows[2].text.Text, cRows[2].medal.Visible = row2 or "", row2 ~= nil
 		cel.Visible, cel.BackgroundTransparency = true, 1
 		tween(cel, 0.25, { BackgroundTransparency = 0.14 })
-		for _, o in { cRays, cGlow, cArt, cTitle, cLv, cStats, cNice } do scaler(o).Scale = 0 end
+		for _, o in { cRays, cGlow, cArt, cTitle, cLv, cStats, cNice } do scaler(o).Scale = 0.6 end
+		for _, o in { cTitle, cLv, cStats, cNice } do o.Visible = false end
 		tween(scaler(cRays), 0.5, { Scale = 1 }, Enum.EasingStyle.Back)
 		tween(scaler(cGlow), 0.4, { Scale = 1 }, Enum.EasingStyle.Back)
 		task.delay(0.1, function()
@@ -1711,25 +1714,25 @@ end)
 			tween(s, 0.25, { Scale = 1.18 }, Enum.EasingStyle.Quad).Completed:Connect(function() tween(s, 0.3, { Scale = 1 }, Enum.EasingStyle.Back) end)
 		end)
 		task.delay(0.3, function()
-			cTitle.Position = S(640, 20)
-			tween(cTitle, 0.45, { Position = S(640, 62) }, Enum.EasingStyle.Back)
-			tween(scaler(cTitle), 0.35, { Scale = 1 }, Enum.EasingStyle.Back)
+			cTitle.Visible, cTitle.Position = true, S(640, 62)
+			scaler(cTitle).Scale = 1.4
+			tween(scaler(cTitle), 0.18, { Scale = 1 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In) -- the slam
 			confetti()
 			sfx("sparkle", 1.1)
 		end)
 		task.delay(0.55, function() -- the level ribbon unfurls sideways
 			local s = scaler(cLv)
-			s.Scale = 1
+			s.Scale, cLv.Visible = 1, lvText ~= nil
 			cLv.Size = S(60, 58)
 			tween(cLv, 0.35, { Size = S(320, 58) }, Enum.EasingStyle.Back)
 		end)
 		task.delay(0.75, function()
-			cStats.Position = S(640, 520)
+			cStats.Visible, cStats.Position = true, S(640, 520)
 			tween(cStats, 0.35, { Position = S(640, 494) }, Enum.EasingStyle.Quint)
 			tween(scaler(cStats), 0.3, { Scale = 1 }, Enum.EasingStyle.Back)
 			sfx("coin", 1.2)
 		end)
-		task.delay(1.1, function() tween(scaler(cNice), 0.4, { Scale = 1 }, Enum.EasingStyle.Back) end)
+		task.delay(1.1, function() cNice.Visible = true tween(scaler(cNice), 0.3, { Scale = 1 }, Enum.EasingStyle.Back) end)
 		if cSpin then cSpin:Disconnect() end
 		cSpin = RunService.RenderStepped:Connect(function()
 			cRaysA.Rotation = os.clock() * 16 % 360

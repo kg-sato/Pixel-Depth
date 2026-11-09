@@ -253,7 +253,7 @@ C.DEPOSIT = {
 C.CAVE_LIGHT = {
 	Lighting = { LightingStyle = Enum.LightingStyle.Realistic, Ambient = Color3.fromRGB(40, 30, 64), OutdoorAmbient = Color3.fromRGB(36, 28, 60), Brightness = 0, EnvironmentDiffuseScale = 0.15, EnvironmentSpecularScale = 0.2, ExposureCompensation = 0.25 },
 	Atmosphere = { Density = 0.42, Offset = 0, Color = Color3.fromRGB(52, 36, 86), Decay = Color3.fromRGB(26, 16, 46), Glare = 0, Haze = 0.8 },
-	Bloom = { Intensity = 0.7, Size = 30, Threshold = 1.05 },
+	Bloom = { Intensity = 0.45, Size = 22, Threshold = 1.05 }, -- was 0.7 / 30: neon and lit floors smeared into glare (VFX note 2026-11-08)
 	ColorCorrection = { Brightness = 0.03, Contrast = 0.2, Saturation = 0.12, TintColor = Color3.fromRGB(240, 230, 255) },
 	DepthOfField = { FarIntensity = 0.22, FocusDistance = 36, InFocusRadius = 40, NearIntensity = 0 },
 }
