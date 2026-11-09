@@ -54,13 +54,14 @@ local SKIN = {
 	sky = "rbxassetid://128441056159318", off = "rbxassetid://111104085286106", keycap = "rbxassetid://139715689953072", keycapDown = "rbxassetid://125800119532458",
 	slot = "rbxassetid://93694333526600", tab = "rbxassetid://123295883549695", tabOn = "rbxassetid://124239785302537", ribbonPink = "rbxassetid://91362224784143",
 	ribbonLilac = "rbxassetid://138043867629077",
+	pillButter = "rbxassetid://89904114967253", pillLilac = "rbxassetid://129953065739484", pillMint = "rbxassetid://86008192630288", pillPink = "rbxassetid://103351763502280", -- puffy tone-on-tone pills (kit round 4)
 }
 local SLICE = {
 	panel = { 64, 64, 136, 126 }, card = { 50, 50, 126, 78 }, pill = { 40, 31, 136, 37 }, dark = { 36, 36, 76, 64 },
 	mint = { 42, 40, 118, 52 }, pink = { 42, 40, 118, 52 }, lilac = { 42, 40, 118, 52 }, butter = { 42, 40, 118, 52 },
 	sky = { 42, 40, 118, 52 }, off = { 42, 40, 118, 52 }, keycap = { 24, 24, 48, 44 }, keycapDown = { 24, 24, 48, 50 },
 	slot = { 32, 32, 72, 72 }, tab = { 38, 36, 98, 46 }, tabOn = { 38, 36, 98, 46 }, ribbonPink = { 100, 30, 252, 50 },
-	ribbonLilac = { 100, 30, 252, 50 },
+	ribbonLilac = { 100, 30, 252, 50 }, pillButter = { 40, 33, 136, 41 }, pillLilac = { 40, 33, 136, 41 }, pillMint = { 40, 33, 136, 41 }, pillPink = { 40, 33, 136, 41 },
 	button = { 42, 40, 118, 52 },
 }
 local DEEP = { -- each button colour's deep shade, for its label outline
@@ -281,7 +282,7 @@ local function keyCap(parent, key, size, pos)
 end
 
 -- HUD (board HUD artboard): gold and egg pills, bag pill, left rail, layer pill and depth strip, tutorial card, DIG, crosshair
-local goldPill = panel(gui, S(170, 46), S(20, 18), nil, "pill")
+local goldPill = panel(gui, S(170, 46), S(20, 18), nil, "pillButter")
 fit(goldPill, 170, 46)
 local coinIcon = icon(goldPill, "coin", UDim2.fromScale(0.2, 0.68), UDim2.fromScale(0.06, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", coinIcon, { AspectRatio = 1 })
@@ -289,7 +290,7 @@ local goldText = text(goldPill, "0", UDim2.fromScale(0.64, 0.56), UDim2.fromScal
 goldText.TextXAlignment = Enum.TextXAlignment.Left
 goldPill.Name = "GoldPill"
 
-local eggPill = panel(gui, S(112, 46), S(200, 18), nil, "pill")
+local eggPill = panel(gui, S(112, 46), S(200, 18), nil, "pillPink")
 fit(eggPill, 112, 46)
 local eggIc = icon(eggPill, "egg", UDim2.fromScale(0.3, 0.68), UDim2.fromScale(0.08, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", eggIc, { AspectRatio = 1 })
@@ -297,7 +298,7 @@ local eggText = text(eggPill, "0", UDim2.fromScale(0.5, 0.56), UDim2.fromScale(0
 eggText.TextXAlignment = Enum.TextXAlignment.Left
 eggPill.Name, eggPill.Visible = "EggPill", false
 
-local bagPill = panel(gui, S(292, 56), S(20, 74), nil, "pill")
+local bagPill = panel(gui, S(292, 56), S(20, 74), nil, "pillLilac")
 fit(bagPill, 292, 56)
 bagPill.Name = "BagPill"
 local bagIc = icon(bagPill, "bag", UDim2.fromScale(0.13, 0.66), UDim2.fromScale(0.04, 0.5), Vector2.new(0, 0.5))
@@ -314,7 +315,7 @@ local railLift = button(gui, "SURFACE", S(76, 76), S(20, 232), nil, "sky", "surf
 for _, b in { railForge, railLift } do fit(b, 1, 1) end
 railForge.Name, railLift.Name = "Upgrades", "Surface"
 
-local layerPill = panel(gui, S(300, 46), S(1260, 18), Vector2.new(1, 0), "pill")
+local layerPill = panel(gui, S(300, 46), S(1260, 18), Vector2.new(1, 0), "pillLilac")
 fit(layerPill, 300, 46)
 local layerNum = text(layerPill, "CAMP", UDim2.fromScale(0.27, 0.46), UDim2.fromScale(0.05, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
 layerNum.TextXAlignment = Enum.TextXAlignment.Left
@@ -1122,8 +1123,8 @@ sellBtn.Activated:Connect(function() R.Sell:FireServer() end)
 -- Keyboard: first person locks the mouse, so every rail button also has a key (shown on the button on PC)
 local KEYS = { [Enum.KeyCode.G] = railForge, [Enum.KeyCode.Q] = railLift }
 if UIS.KeyboardEnabled then
-	for key, b in KEYS do keyCap(b, key.Name, UDim2.fromScale(0.27, 0.27), UDim2.fromScale(0.8, 0.17)) end
-	keyCap(digBtn, "E", UDim2.fromScale(0.13, 0.5), UDim2.fromScale(0.93, 0.16))
+	for key, b in KEYS do keyCap(b, key.Name, UDim2.fromScale(0.24, 0.24), UDim2.fromScale(0.76, 0.22)) end
+	keyCap(digBtn, "E", UDim2.fromScale(0.11, 0.42), UDim2.fromScale(0.88, 0.48))
 end
 UIS.InputBegan:Connect(function(input, gp)
 	if gp or hatchBusy then return end
@@ -1335,7 +1336,7 @@ end)
 	local closeBtn = closeButton(forge, "Close")
 	closeBtn.Position = UDim2.fromScale(0.978, 0.06)
 	local function pill(x, w, iconName, color)
-		local p = panel(forge, UDim2.fromScale(w, 0.095), UDim2.fromScale(x, 0.085), Vector2.new(0, 0.5), "pill")
+		local p = panel(forge, UDim2.fromScale(w, 0.095), UDim2.fromScale(x, 0.085), Vector2.new(0, 0.5), iconName == "gem" and "pillPink" or "pillButter")
 		local ic = icon(p, iconName, UDim2.fromScale(0.3, 0.8), UDim2.fromScale(0.05, 0.5), Vector2.new(0, 0.5))
 		new("UIAspectRatioConstraint", ic, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 		local t = text(p, "0", UDim2.fromScale(0.56, 0.52), UDim2.fromScale(0.4, 0.5), Vector2.new(0, 0.5), color, 700, false)
@@ -1775,7 +1776,7 @@ end)()
 local caveHud, cave, caveLighting, caveStep -- one scope for the cave HUD keeps the script under Luau's 200-local limit
 do
 	caveHud = new("Frame", gui, { Name = "CaveHud", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Visible = false })
-	local torchPill = panel(caveHud, S(270, 52), S(20, 470), nil, "pill")
+	local torchPill = panel(caveHud, S(270, 52), S(20, 470), nil, "pillButter")
 	fit(torchPill, 270, 52)
 	torchPill.Name = "TorchPill"
 	local flameBox = new("Frame", torchPill, { Size = UDim2.fromScale(0.12, 0.62), Position = UDim2.fromScale(0.05, 0.5), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.fromRGB(255, 150, 60), BorderSizePixel = 0, ZIndex = 3 })
@@ -1786,7 +1787,7 @@ do
 	local torchTrack = new("Frame", torchPill, { Size = UDim2.fromScale(0.72, 0.2), Position = UDim2.fromScale(0.22, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
 	local torchFill = new("Frame", torchTrack, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 176, 70), BorderSizePixel = 0, ZIndex = 3 })
 
-	local fearPill = panel(caveHud, S(270, 52), S(20, 528), nil, "pill")
+	local fearPill = panel(caveHud, S(270, 52), S(20, 528), nil, "pillLilac")
 	fit(fearPill, 270, 52)
 	fearPill.Name = "FearPill"
 	local face = new("Frame", fearPill, { Size = UDim2.fromScale(0.15, 0.7), Position = UDim2.fromScale(0.04, 0.5), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 3 })
@@ -1899,7 +1900,7 @@ end
 	local campIcon = icon(mapPanel, "camp", UDim2.fromScale(0.2, 0.2), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5)) -- the smooth campfire icon
 	campIcon.Name, campIcon.ZIndex = "CampIcon", 6
 	new("UIAspectRatioConstraint", campIcon, { AspectRatio = 1 })
-	local campPill = panel(caveHud, S(168, 34), S(1262, 324), Vector2.new(1, 0), "pill")
+	local campPill = panel(caveHud, S(168, 34), S(1262, 324), Vector2.new(1, 0), "pillButter")
 	fit(campPill, 168, 34)
 	campPill.Name = "CampPill"
 	local campDist = text(campPill, "CAMP", UDim2.fromScale(0.84, 0.5), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), Color3.fromRGB(184, 122, 26), 700, false)

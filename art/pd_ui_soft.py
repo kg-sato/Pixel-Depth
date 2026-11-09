@@ -99,6 +99,10 @@ for n, (o, l, t, b) in P.items():  # softer outline (toward the lip colour) and 
     save(n, shape(160, 100, 34, 5, 10, mix(o, l, 0.3), l, t, b, gloss=0.42, inner=H("#ffffff", 150)), (42, 40, 118, 52))
 # HUD pill: lilac-white, rounded ends
 save("pill", shape(176, 76, 30, 5, 7, H("#7d64b8"), H("#c9b9f2"), H("#ffffff"), H("#efe8ff"), gloss=0.0, inner=H("#ffffff")), (40, 31, 136, 37))
+# puffy tone-on-tone HUD pills (kit round 4, 2026-11-08): face, lip and outline all in one hue, a taller lip and a gloss band
+for n, (o_, l_, t_, b_) in {"pillButter": ("#c48a2e", "#e9b95a", "#fff6d6", "#ffe39a"), "pillLilac": ("#6f58b0", "#a690e2", "#f5f0ff", "#ddd0fb"),
+                            "pillMint": ("#3f9c7c", "#6fcca6", "#effff8", "#c4f1dc"), "pillPink": ("#c25674", "#e98aa2", "#fff1f4", "#ffd0db")}.items():
+    save(n, shape(176, 80, 32, 5, 9, H(o_), H(l_), H(t_), H(b_), gloss=0.36, inner=H("#ffffff")), (40, 33, 136, 41))
 # popup panel: cream face inside a lilac frame band
 save("panel", shape(200, 200, 46, 6, 10, H("#6f58b0"), H("#8f78d0"), H("#fffaf3"), H("#fbefe3"), gloss=0.0, frame=12, frame_top=H("#d2c4fb"), frame_bot=H("#b29cec"), inner=H("#ffffff", 200)), (64, 64, 136, 126))
 # card: cream face in a butter frame (tooltips, banners)
