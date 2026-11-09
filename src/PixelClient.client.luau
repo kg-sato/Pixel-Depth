@@ -2641,6 +2641,18 @@ end)
 	task.defer(update)
 end)()
 
+;(function() -- the gem shop (ReplicatedStorage.Shared.GemShop): opened from the gem pill
+	task.spawn(function()
+		local mod = RS.Shared:WaitForChild("GemShop", 10)
+		if not mod then return end
+		local ok, err = pcall(function()
+			require(mod).start({ C = C, R = R, plr = plr, gui = gui, new = new, S = S, fit = fit, panel = panel, button = button, text = text, icon = icon,
+				openPanel = openPanel, closePanel = closePanel, closeButton = closeButton, ribbonTitle = ribbonTitle, toast = toast, sfx = sfx, INK = INK, GOLD = GOLD })
+		end)
+		if not ok then warn("[GemShop] " .. tostring(err)) end
+	end)
+end)()
+
 ;(function() -- the Gloom client (ReplicatedStorage.Shared.GloomClient): HP pill, FLARE, soot sprites, BONK and catch, Wick and Smudge
 	local mod = RS.Shared:WaitForChild("GloomClient", 10)
 	if not mod then return end

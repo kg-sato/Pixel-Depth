@@ -264,6 +264,9 @@ C.CHEST_GOLD = 40 -- gold per chest, times the streak (capped at 7)
 -- Spent on forge levels (C.FORGE) and on egg rolls when you have no egg.
 C.GEMS = { rare = 2, perfect = 1, chest = 2 }
 C.EGG_GEMS = 10 -- one egg roll with gems
+-- gem packs for Robux (ServerScriptService.Shop): id = the Developer Product id from the Creator Dashboard; 0 = not created yet
+-- (the pack shows SOON). Prices are a proposal for the owner to set.
+C.GEM_PACKS = { { gems = 40, robux = 49, id = 0 }, { gems = 120, robux = 129, id = 0 }, { gems = 320, robux = 299, id = 0 } }
 
 -- Night Shaft (spec 5.7): your crew keeps digging while you are away; a report waits when you come back
 C.NIGHT_CAP = 8 * 3600 -- seconds counted at most

@@ -46,6 +46,7 @@ local hub = HubBuilder.build(workspace, Vector3.zero)
 local HUB_SPAWN = hub:FindFirstChild("SpawnPoint").CFrame
 local HUB_SELL = hub:FindFirstChild("SellPoint", true)
 local PetJobs = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("PetJobs")) -- crew pets' cave jobs (phase 7)
+local Shop = require(game:GetService("ServerScriptService"):WaitForChild("Shop")) -- gems for Robux, receipts, paid random items
 local function crewOf(s) local n = {} for i, p in s.pets do n[i] = p.name end return n end
 local HUB_CART = hub:FindFirstChild("HubCart", true) -- the minecart the ride down starts from (HubBuilder)
 
@@ -773,6 +774,7 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 end)
 Players.PlayerRemoving:Connect(function(plr) riding[plr], escaping[plr] = nil, nil end)
 local Gloom = require(game:GetService("ServerScriptService"):WaitForChild("Gloom")) -- gloomlings, HP, the catch, flares (phase 6)
+Shop.init({ data = data, fx = FxR, sendState = sendState })
 Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, perks = function(s) return PetJobs.perks(crewOf(s)) end, busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
 
 enterMine = function(s)
@@ -1214,6 +1216,9 @@ local STATION = {
 		if os.clock() < (s.nextHatch or 0) then return end
 		if s.eggs > 0 then
 			s.eggs -= 1
+		elseif s.gems >= C.EGG_GEMS and not Shop.gemRollsAllowed(s.player) then -- paid random items restricted here
+			FxR:FireClient(s.player, "gemRollsOff")
+			return
 		elseif s.gems >= C.EGG_GEMS then
 			s.gems -= C.EGG_GEMS
 			FxR:FireClient(s.player, "gemSpent", C.EGG_GEMS)
