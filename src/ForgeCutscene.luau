@@ -105,25 +105,36 @@ function M.play(opt)
 		l.Parent = fl
 	end
 
-	-- the smith: a voxel chibi (butter apron, pink bandana, cream beard), the right arm swings the hammer about the shoulder
+	-- the smith: Bolt the raccoon (the user's pick, 2026-11-08): grey fur, a dark mask with bright eyes, a white muzzle, round ears,
+	-- a ringed tail, a butter apron and a pink bandana; the right arm swings the hammer about the shoulder
 	local smith = {}
-	local skinC, apron = Color3.fromRGB(255, 214, 186), Color3.fromRGB(255, 217, 112)
+	local skinC, apron = Color3.fromRGB(150, 146, 168), Color3.fromRGB(255, 217, 112) -- skinC: Bolt's fur
+	local FUR_D, FUR_L, MASK = Color3.fromRGB(96, 90, 116), Color3.fromRGB(196, 192, 210), Color3.fromRGB(64, 56, 82)
 	local function piece(name, size, off, color, props)
 		local p = part(world, size, CFrame.new(), color, props)
 		p.Name = name
 		table.insert(smith, { p = p, off = off, arm = name:sub(1, 3) == "Arm" or name:sub(1, 3) == "Ham" })
 		return p
 	end
-	piece("Body", Vector3.new(2.4, 2.2, 1.6), CFrame.new(0, 2.6, 0), Color3.fromRGB(150, 110, 170))
+	piece("Body", Vector3.new(2.4, 2.2, 1.6), CFrame.new(0, 2.6, 0), skinC)
 	piece("Apron", Vector3.new(2.0, 1.9, 0.2), CFrame.new(0, 2.5, -0.85), apron)
-	piece("Head", Vector3.new(2.5, 2.3, 2.3), CFrame.new(0, 4.85, 0), skinC)
-	piece("Bandana", Vector3.new(2.6, 0.7, 2.4), CFrame.new(0, 5.95, 0), Color3.fromRGB(255, 157, 176))
-	piece("Beard", Vector3.new(2.1, 1.1, 0.5), CFrame.new(0, 4.15, -1.2), Color3.fromRGB(255, 247, 238))
-	piece("EyeL", Vector3.new(0.3, 0.45, 0.1), CFrame.new(-0.5, 5.05, -1.17), INK)
-	piece("EyeR", Vector3.new(0.3, 0.45, 0.1), CFrame.new(0.5, 5.05, -1.17), INK)
-	piece("LegL", Vector3.new(0.9, 1.4, 1.0), CFrame.new(-0.6, 0.75, 0), Color3.fromRGB(110, 80, 120))
-	piece("LegR", Vector3.new(0.9, 1.4, 1.0), CFrame.new(0.6, 0.75, 0), Color3.fromRGB(110, 80, 120))
-	piece("ArmL", Vector3.new(0.8, 1.8, 0.8), CFrame.new(-1.6, 2.6, 0), skinC)
+	piece("Head", Vector3.new(2.6, 2.2, 2.3), CFrame.new(0, 4.8, 0), FUR_L)
+	piece("Mask", Vector3.new(2.62, 0.7, 0.12), CFrame.new(0, 4.95, -1.17), MASK)
+	for _, x in { -0.55, 0.55 } do
+		piece("Eye", Vector3.new(0.38, 0.44, 0.08), CFrame.new(x, 4.95, -1.25), WHITE)
+		piece("Pupil", Vector3.new(0.2, 0.28, 0.06), CFrame.new(x, 4.93, -1.3), INK)
+		piece("Ear", Vector3.new(0.75, 0.75, 0.5), CFrame.new(x * 1.65, 6.2, 0), FUR_D)
+		piece("EarIn", Vector3.new(0.42, 0.42, 0.06), CFrame.new(x * 1.65, 6.15, -0.27), Color3.fromRGB(255, 190, 205))
+	end
+	piece("Muzzle", Vector3.new(1.2, 0.65, 0.45), CFrame.new(0, 4.2, -1.3), Color3.fromRGB(250, 246, 240))
+	piece("Nose", Vector3.new(0.46, 0.28, 0.24), CFrame.new(0, 4.55, -1.48), INK) -- on the muzzle's top edge
+	piece("Bandana", Vector3.new(2.66, 0.45, 2.36), CFrame.new(0, 5.72, 0), Color3.fromRGB(255, 157, 176))
+	for k = 1, 4 do -- the ringed tail curls up behind
+		piece("Tail", Vector3.new(0.85, 0.85, 0.85), CFrame.new(0, 1.4 + k * 0.5, 0.95 + k * 0.42) * CFrame.Angles(0.3 * k, 0, 0), k % 2 == 0 and MASK or FUR_L)
+	end
+	piece("LegL", Vector3.new(0.9, 1.4, 1.0), CFrame.new(-0.6, 0.75, 0), FUR_D)
+	piece("LegR", Vector3.new(0.9, 1.4, 1.0), CFrame.new(0.6, 0.75, 0), FUR_D)
+	piece("PawL", Vector3.new(0.8, 1.8, 0.8), CFrame.new(-1.6, 2.6, 0), skinC) -- the left arm hangs at the side
 	piece("ArmR", Vector3.new(0.8, 1.8, 0.8), CFrame.new(0, -0.8, 0), skinC) -- relative to the right shoulder pivot
 	piece("HammerHandle", Vector3.new(0.3, 2.4, 0.3), CFrame.new(0, -1.9, -0.9) * CFrame.Angles(math.pi / 2, 0, 0), Color3.fromRGB(170, 122, 92))
 	piece("HammerHead", Vector3.new(1.2, 0.9, 0.9), CFrame.new(0, -1.9, -2.0), metalLt)
@@ -304,6 +315,7 @@ function M.play(opt)
 	-- the clock: t advances with real time except during the hit-stop; Skip jumps to act 5
 	local T_END = 8.0
 	local t, last, holdUntil, fired, done = 0, os.clock(), 0, {}, false
+	local quickJumped = false -- opt.quick (an upgrade): from the swap straight to the drop, slam and reveal
 	local camCF, fov, kick, shake = CFrame.new(), 70, 0, 0
 	local function once(key, at, fn)
 		if t >= at and not fired[key] then
@@ -323,6 +335,12 @@ function M.play(opt)
 		local dt = math.min(now - last, 0.1)
 		last = now
 		if now >= holdUntil then t += dt end
+		if opt.quick and not quickJumped and t >= 0.9 then
+			quickJumped = true
+			t = 5.0
+			for _, s in streaks do s.hit = true end
+			for i = 1, 3 do fired["sq" .. i] = true end
+		end
 		cam.CameraType = Enum.CameraType.Scriptable
 
 		-- act 1: the star wipe grows out of the screen, the scene swaps behind it, then it shrinks away

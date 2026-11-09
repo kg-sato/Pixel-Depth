@@ -236,6 +236,41 @@ local function villager(name, cf, body, hat, skin_)
 	return m
 end
 
+-- Bolt the raccoon, the town smith (the user's pick, 2026-11-08): grey fur, a dark mask with bright eyes, a white muzzle, round
+-- ears, a ringed tail, a butter apron and a pink headband; faces +Z like the villagers
+local function raccoon(name, cf)
+	local m = Instance.new("Model")
+	m.Name = name
+	local FUR, FUR_D, FUR_L, MASK = Color3.fromRGB(150, 146, 168), Color3.fromRGB(96, 90, 116), Color3.fromRGB(196, 192, 210), Color3.fromRGB(64, 56, 82)
+	local function at(x, y, z) return cf * CFrame.new(x, y, z) end
+	for _, x in { -0.45, 0.45 } do vox(m, "Leg", Vector3.new(0.7, 1, 0.8), at(x, 0.5, 0), FUR_D) end
+	vox(m, "Body", Vector3.new(2, 1.8, 1.3), at(0, 1.9, 0), FUR)
+	vox(m, "Apron", Vector3.new(1.4, 1.4, 0.1), at(0, 1.75, 0.7), Color3.fromRGB(255, 217, 112))
+	for _, x in { -1.25, 1.25 } do vox(m, "Arm", Vector3.new(0.55, 1.4, 0.6), at(x, 2, 0), FUR) end
+	vox(m, "Head", Vector3.new(2.4, 2.1, 2.2), at(0, 3.95, 0), FUR_L)
+	vox(m, "Mask", Vector3.new(2.42, 0.62, 0.1), at(0, 4.1, 1.12), MASK, { CanCollide = false })
+	for _, x in { -0.5, 0.5 } do
+		vox(m, "Eye", Vector3.new(0.36, 0.4, 0.08), at(x, 4.1, 1.18), Color3.new(1, 1, 1), { CanCollide = false })
+		vox(m, "Pupil", Vector3.new(0.2, 0.26, 0.06), at(x, 4.08, 1.23), INK, { CanCollide = false })
+		vox(m, "Ear", Vector3.new(0.7, 0.7, 0.5), at(x * 1.7, 5.25, 0), FUR_D)
+		vox(m, "EarIn", Vector3.new(0.4, 0.4, 0.06), at(x * 1.7, 5.2, 0.27), PAL.pink[3], { CanCollide = false })
+	end
+	vox(m, "Muzzle", Vector3.new(1.1, 0.6, 0.4), at(0, 3.45, 1.25), Color3.fromRGB(250, 246, 240))
+	vox(m, "Nose", Vector3.new(0.46, 0.26, 0.24), at(0, 3.78, 1.42), INK, { CanCollide = false }) -- on the muzzle's top edge (lower read as a mouth)
+	vox(m, "Band", Vector3.new(2.46, 0.4, 2.26), at(0, 4.73, 0), PAL.pink[2])
+	for k = 1, 4 do -- the ringed tail curls up behind
+		vox(m, "Tail", Vector3.new(0.8, 0.8, 0.8), at(0, 0.9 + k * 0.45, -0.85 - k * 0.42) * CFrame.Angles(-0.3 * k, 0, 0), k % 2 == 0 and MASK or FUR_L, { CanCollide = false })
+	end
+	local bang = Instance.new("Model")
+	bang.Name = "Quest"
+	vox(bang, "Bar", Vector3.new(0.5, 1.2, 0.5), at(0, 7.6, 0), GOLD, { CanCollide = false, Material = Enum.Material.Neon })
+	vox(bang, "Dot", Vector3.new(0.5, 0.5, 0.5), at(0, 6.6, 0), GOLD, { CanCollide = false, Material = Enum.Material.Neon })
+	bang:SetAttribute("Bob", 0.3)
+	bang.Parent = m
+	m.Parent = model
+	return m
+end
+
 local function leafClump(g, c, r, V)
 	for i = -r, r do for j = -r, r do for k = -r, r do
 		local d = math.sqrt(i * i + j * j * 1.6 + k * k)
@@ -913,7 +948,7 @@ function Hub.build(parent, origin)
 			for _, dx in { -1.6, 1.6 } do vox(g, "SignChain", Vector3.new(0.15, 1.2, 0.15), CFrame.new(sp + Vector3.new(dx, 1.35, 0)), PAL.stone[1], { CanCollide = false }) end
 		end
 		prompt(anvil, "Upgrade", "Forge", "forge")
-		villager("Bolt", at(1.8, 1.4, 4.6), Color3.fromRGB(110, 120, 170), Color3.fromRGB(96, 70, 60))
+		raccoon("Bolt", at(1.8, 1.4, 4.6))
 	end
 
 	-- 5. Trophy hall (north-east; ref art/hub/pdv4_trophy_s61.jpg): a wide stone hall, stepped plum shingle roof, three horned

@@ -1808,8 +1808,19 @@ end)
 	end)
 	local function row(label, a, b) return label .. "  " .. a .. '  <font color="' .. hex(PLUM_SOFT) .. '">></font>  <font color="' .. hex(DEEP_MINT) .. '">' .. b .. " \u{25B2}</font>" end
 	forgeUI.fx = function(kind, a, b)
-		if kind == "upgraded" then -- a = tier, b = new level
-			celebrate("LEVEL UP!", PICK_ART[a] or ICON.pick, "LV " .. (b - 1) .. "  >  LV " .. b, row("Ore Value", val(a, b - 1), val(a, b)), row("Strike Zone", zone(b - 1), zone(b)))
+		if kind == "upgraded" then -- a = tier, b = new level: a quick anvil scene (ForgeCutscene, opt.quick), then the overlay
+			local function show() celebrate("LEVEL UP!", PICK_ART[a] or ICON.pick, "LV " .. (b - 1) .. "  >  LV " .. b, row("Ore Value", val(a, b - 1), val(a, b)), row("Strike Zone", zone(b - 1), zone(b))) end
+			local fc = RS.Shared:FindFirstChild("ForgeCutscene")
+			if fc and C.PICKS[a] then
+				task.spawn(function()
+					local r = rarityOf("pick", a)
+					local ok, err = pcall(function() require(fc).play({ name = C.PICKS[a].name, model = C.PICKS[a].model, rarity = { "LEVEL " .. b, r[2], r[3] }, sfx = sfx, quick = true }) end)
+					if not ok then warn("[ForgeCutscene] " .. tostring(err)) end
+					show()
+				end)
+			else
+				show()
+			end
 		elseif kind == "bought" then -- a = name, b = "pick" or "pack"; the Fx arrives before the new state
 			local list, i = b == "pick" and C.PICKS or C.PACKS, 1
 			for k, d in list do if d.name == a then i = k end end
@@ -1933,7 +1944,8 @@ end)()
 	fit(collect, 220, 64)
 	local busy, spin = false, nil
 	local flyLayer = new("ScreenGui", gui.Parent, { Name = "RewardFly", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 13 })
-	local function fly(iconName, from, toObj, n, delay0)
+	local fly
+	fly = function(iconName, from, toObj, n, delay0)
 		local inset = GuiService:GetGuiInset()
 		for k = 1, n do
 			task.delay(delay0 + k * 0.05, function()
@@ -1950,6 +1962,7 @@ end)()
 			end)
 		end
 	end
+	forgeUI.fly = fly -- shared: selling ore flies coins too
 	local function show(gold, streak, gems)
 		if busy then return end
 		busy = true
@@ -2065,7 +2078,7 @@ end)()
 			if gems and gems > 0 then
 				task.delay(1.0, function()
 					toast("+" .. gems .. " GEM" .. (gems > 1 and "S" or "") .. "!", DEEP_GEM, true)
-					local inset = GuiService:GetGuiInset()
+					local inset = game:GetService("GuiService"):GetGuiInset()
 					local c = workspace.CurrentCamera.ViewportSize / 2
 					fly("gem", UDim2.fromOffset(c.X, c.Y + inset.Y), gemPill, gems * 2, 0)
 				end)
@@ -2993,7 +3006,14 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		local gold = ...
 		toast("+" .. commas(gold) .. " GOLD", GOLD, true)
 		sfx("coin", 0.9)
-		task.delay(0.12, function() sfx("coin", 1.1) end)
+		if forgeUI.fly and bagPill.Visible then -- coins fly from the bag into the gold pill (each lands with a coin tick)
+			local inset = game:GetService("GuiService"):GetGuiInset()
+			local from = bagPill.AbsolutePosition + bagPill.AbsoluteSize / 2 + inset
+			forgeUI.fly("coin", UDim2.fromOffset(from.X, from.Y), goldPill, math.clamp(math.floor(gold / 4), 5, 12), 0.05)
+			pop(bagPill, 0.85)
+		else
+			task.delay(0.12, function() sfx("coin", 1.1) end)
+		end
 		local h = hrp()
 		if h then burst(h.Position + Vector3.new(0, 3, 0), Vector3.yAxis, GOLD, 30) end
 	elseif kind == "bought" then
