@@ -98,6 +98,20 @@ function G.init(c)
 		if not s or not hrp or not plr:GetAttribute("InCave") or ctx.busy(plr) then return end
 		local g = st(s)
 		if g.flares <= 0 or os.clock() - (g.lastFlare or 0) < 0.8 then return end
+		for other, os2 in ctx.data do -- a rescue: free every grabbed player in reach (yourself too)
+			local og = os2.gloom
+			local ohrp = ctx.hrpOf(other)
+			if og and og.grabbedUntil and ohrp and (ohrp.Position - hrp.Position).Magnitude < C.GLOOM.flareRange then
+				og.grabbedUntil = nil
+				og.hp = C.GLOOM.hp
+				og.shieldUntil = serverNow() + C.GLOOM.shield
+				other:SetAttribute("GrabbedUntil", nil)
+				publish(other, og)
+				scatter(other)
+				ctx.fx:FireClient(other, "rescued", plr.Name, other == plr)
+				if other ~= plr then ctx.fx:FireClient(plr, "rescuedFriend", other.Name) end
+			end
+		end
 		g.flares -= 1
 		g.lastFlare = os.clock()
 		publish(plr, g)
@@ -152,6 +166,15 @@ function G.step(dt)
 			end
 		end
 	end
+	-- grabbed players: the catch lands when the window runs out
+	for plr, s in ctx.data do
+		local g = s.gloom
+		if g and g.grabbedUntil and serverNow() >= g.grabbedUntil then
+			g.grabbedUntil = nil
+			plr:SetAttribute("GrabbedUntil", nil)
+			caught(plr, s, g)
+		end
+	end
 	-- gloomlings: creep, BONK, stun, pancake, flee
 	for p, m in mobs do
 		local plr = m.target
@@ -173,12 +196,15 @@ function G.step(dt)
 			local side = Vector3.new(-to.Z, 0, to.X).Unit * math.sin(nowC * 2.3 + m.seed) * 0.35 -- a little weave
 			local step = (to.Unit + side).Unit * math.min(speed * dt, math.max(dist - 1.5, 0))
 			p.CFrame = CFrame.lookAt(pos + step, hrp.Position)
-			if dist < C.GLOOM.reach and serverNow() > g.shieldUntil then -- BONK
+			if dist < C.GLOOM.reach and serverNow() > g.shieldUntil and not g.grabbedUntil then -- BONK
 				g.hp = math.max(0, g.hp - C.GLOOM.hit)
 				m.state, m.t0, m.from = "stun", nowC, pos
 				p:SetAttribute("State", "stun")
-				if g.hp <= 0 then
-					caught(plr, s, g)
+				if g.hp <= 0 then -- GRABBED: a flare (yours or a friend's) within C.GLOOM.grab seconds frees you
+					g.grabbedUntil = serverNow() + C.GLOOM.grab
+					plr:SetAttribute("GrabbedUntil", g.grabbedUntil)
+					publish(plr, g)
+					ctx.fx:FireClient(plr, "grabbed", C.GLOOM.grab)
 				else
 					publish(plr, g)
 					ctx.fx:FireClient(plr, "gloomBonk", g.hp)

@@ -9,6 +9,7 @@ function M.start(E)
 	local INK, PINK, GOLD, CREAM, FONT = E.INK, E.PINK, E.GOLD, E.CREAM, E.FONT
 	local UIS, RunService = game:GetService("UserInputService"), game:GetService("RunService")
 	local FlareR = R:WaitForChild("Flare", 30)
+	local MINT_C = Color3.fromRGB(127, 220, 180)
 	local SOOT, EYE = Color3.fromRGB(44, 42, 62), Color3.fromRGB(214, 196, 140) -- charcoal; eyes a soft gold (pale neon bloomed to white)
 	-- HP pill above the torch
 	local hpPill = panel(caveHud, S(270, 52), S(20, 412), nil, "pillPink")
@@ -131,6 +132,16 @@ function M.start(E)
 				end
 			end
 		end
+		-- held by a gloomling: slow feet and a pink pulse
+		local held = (plr:GetAttribute("GrabbedUntil") or 0) - workspace:GetServerTimeNow()
+		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+		if held > 0 then
+			hitFlash.BackgroundTransparency = math.min(hitFlash.BackgroundTransparency, 0.72 + 0.12 * math.sin(now * 12))
+			if hum and hum.WalkSpeed > 4 then hum:SetAttribute("FreeSpeed", hum.WalkSpeed) hum.WalkSpeed = 4 end
+		elseif hum and hum:GetAttribute("FreeSpeed") then
+			hum.WalkSpeed = hum:GetAttribute("FreeSpeed")
+			hum:SetAttribute("FreeSpeed", nil)
+		end
 		-- the golden shield after a catch
 		local left = (plr:GetAttribute("ShieldUntil") or 0) - workspace:GetServerTimeNow()
 		shieldStroke.Transparency = left > 0 and (0.35 + 0.25 * math.sin(now * 10)) or 1
@@ -151,6 +162,17 @@ function M.start(E)
 			hitFlash.BackgroundTransparency = 0.35
 			toast(a < 0 and "FAFNIR BLOCKED THE CATCH!" or (a > 0 and ("BONK! A GLOOMLING GRABBED " .. commas(a) .. " ORE") or "BONK! A GLOOMLING GOT YOU"), a < 0 and GOLD or PINK, true)
 			toast("Golden shield for 3 s: run!", GOLD, false, 0.9)
+		elseif kind == "grabbed" then -- held for a few seconds: a flare now saves the ore
+			shake(0.6)
+			sfx("breakRock", 0.6)
+			hitFlash.BackgroundTransparency = 0.3
+			toast("GRABBED!  FLARE NOW (R) OR A FRIEND CAN FLARE YOU FREE", PINK, true)
+		elseif kind == "rescued" then
+			toast(b and "FLARED FREE! NOTHING LOST" or ("RESCUED BY " .. string.upper(a) .. "!"), MINT_C, true)
+			sfx("sparkle", 1.2)
+		elseif kind == "rescuedFriend" then
+			toast("YOU RESCUED " .. string.upper(a) .. "!", MINT_C, true)
+			sfx("sparkle", 1.3)
 		elseif kind == "flareFx" then -- a pocket sunrise: a white-gold ball swells and fades, sparks fly, the cave lights up
 			local pos = a
 			local ball = new("Part", workspace, { Shape = Enum.PartType.Ball, Size = Vector3.one, CFrame = CFrame.new(pos), Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Material = Enum.Material.Neon, Color = Color3.fromRGB(255, 240, 200) })
