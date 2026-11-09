@@ -459,6 +459,24 @@ function Cave.build(parent, origin, seed)
 			local rim = part("Chasm", "RimFill", Vector3.new(1, 1, 1), cf(10 + k * 3.6, (k % 2 == 0 and 1 or -1) * 6, -12 - (k % 3) * 12), PAL.lilac, { Transparency = 1, CanCollide = false, CanQuery = false })
 			glow(rim, Color3.fromRGB(150, 110, 195), 36, 1.3)
 		end
+		do -- kill floor (playtest 2): touching the chasm bottom ends the dive like passing out in the lake (PixelServer); dark mist hides it
+			local kf = part("Chasm", "KillFloor", Vector3.new(34, 4, 24), cf(19, 0, -79), PAL.plum or Color3.fromRGB(40, 24, 60), { Transparency = 1, CanCollide = false, CanQuery = false })
+			kf:SetAttribute("KillFloor", true)
+			local mist = Instance.new("ParticleEmitter")
+			mist.Name = "DeepMist"
+			mist.Rate, mist.Lifetime, mist.Speed, mist.SpreadAngle = 7, NumberRange.new(4, 7), NumberRange.new(0.3, 0.9), Vector2.new(180, 20)
+			mist.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 6), NumberSequenceKeypoint.new(1, 12) })
+			mist.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.55), NumberSequenceKeypoint.new(1, 1) })
+			mist.Color, mist.LightEmission, mist.LightInfluence = ColorSequence.new(Color3.fromRGB(34, 20, 52), Color3.fromRGB(70, 40, 100)), 0, 0.3
+			mist.RotSpeed, mist.Rotation = NumberRange.new(-12, 12), NumberRange.new(0, 360)
+			mist.Shape, mist.ShapeStyle = Enum.ParticleEmitterShape.Box, Enum.ParticleEmitterShapeStyle.Volume
+			mist.Parent = kf
+			local wisp = mist:Clone() -- slow purple wisps curling up out of the mist
+			wisp.Name, wisp.Rate, wisp.LightEmission = "DeepWisp", 2, 0.4
+			wisp.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.6), NumberSequenceKeypoint.new(1, 1.6) })
+			wisp.Color, wisp.Speed = ColorSequence.new(Color3.fromRGB(150, 100, 210)), NumberRange.new(1, 2)
+			wisp.Parent = kf
+		end
 		for k, y in { 30, -20, -55 } do -- soft lilac fills down the drop so the walls read as lilac and plum, never pitch black
 			local fill = part("Chasm", "Fill", Vector3.new(1, 1, 1), cf(14 + k * 5, (k - 2) * 3, y), PAL.lilac, { Transparency = 1, CanCollide = false, CanQuery = false })
 			glow(fill, Color3.fromRGB(150, 120, 220), 60, 0.7)
@@ -857,6 +875,19 @@ function Cave.build(parent, origin, seed)
 			end
 		end
 		model:SetAttribute("Shrines", made)
+	end
+	do -- playtest 2 (board 6): a cave again. Every glow that is not ore (crystals, moss, mushrooms, streams, fills, lamps) drops to about half
+		local depF = model:FindFirstChild("Deposits")
+		for _, o in model:GetDescendants() do
+			if depF and o:IsDescendantOf(depF) then continue end
+			if o:IsA("PointLight") or o:IsA("SpotLight") or o:IsA("SurfaceLight") then
+				o.Brightness *= 0.55
+				o.Range *= 0.8
+				if o.Range >= 40 then o.Shadows = true end -- the big fills lit through rock, flattening the walls
+			elseif o:IsA("BasePart") and o.Material == Enum.Material.Neon then
+				o.Color = o.Color:Lerp(Color3.new(0, 0, 0), 0.32)
+			end
+		end
 	end
 	model:SetAttribute("ZFixed", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(model)) -- no z-fighting (the user, 2026-11-08)
 	model:SetAttribute("Deposits", #placed)

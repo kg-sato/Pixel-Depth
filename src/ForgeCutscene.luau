@@ -110,10 +110,13 @@ function M.play(opt)
 	local smith = {}
 	local skinC, apron = Color3.fromRGB(150, 146, 168), Color3.fromRGB(255, 217, 112) -- skinC: Bolt's fur
 	local FUR_D, FUR_L, MASK = Color3.fromRGB(96, 90, 116), Color3.fromRGB(196, 192, 210), Color3.fromRGB(64, 56, 82)
+	local HEADP = { Head = true, Mask = true, Eye = true, Pupil = true, Ear = true, EarIn = true, Muzzle = true, Nose = true, Bandana = true }
 	local function piece(name, size, off, color, props)
 		local p = part(world, size, CFrame.new(), color, props)
 		p.Name = name
-		table.insert(smith, { p = p, off = off, arm = name:sub(1, 3) == "Arm" or name:sub(1, 3) == "Ham" })
+		local arm = name:sub(1, 3) == "Arm" or name:sub(1, 3) == "Ham"
+		local grp = (arm and "arm") or (name == "PawL" and "pawL") or (HEADP[name] and "head") or (name == "Tail" and "tail") or "body"
+		table.insert(smith, { p = p, off = off, arm = arm, grp = grp, size = size, ear = name:sub(1, 3) == "Ear", eye = name == "Eye" or name == "Pupil" })
 		return p
 	end
 	piece("Body", Vector3.new(2.4, 2.2, 1.6), CFrame.new(0, 2.6, 0), skinC)
@@ -382,11 +385,37 @@ function M.play(opt)
 		local reach = rise * 2.4 -- the hammer arm raised up and forward while floating
 		local aside = smooth(6.0, 6.5, t)
 		local base = smithBase * CFrame.new(7 * aside, smithY, -2 * aside) * CFrame.Angles(0, -0.5 * aside, 0)
+		-- Bolt acts the forging out (playtest 2, board 7: "he just stands still"): he always breathes, blinks, flicks an ear and sways
+		-- his tail; on the beats he crouches to gather, presses the core three times, looks up as the hammer rises, lunges into the
+		-- slam (a squash), then wipes his brow with his tail wagging
+		local breathe = math.sin(t * 4.2) * 0.06
+		local crouch = smooth(1.6, 2.2, t) * (1 - smooth(2.4, 2.8, t))
+		local squeeze = 0
+		for _, at in { 3.9, 4.4, 4.9 } do
+			local d = t - at
+			if d > 0 and d < 0.4 then squeeze = math.max(squeeze, math.sin(d / 0.4 * math.pi)) end
+		end
+		local slamSq = (t > 5.85 and t < 6.25) and math.sin((t - 5.85) / 0.4 * math.pi) or 0
+		local lift = (t > 5.45 and t < 5.9) and smooth(5.45, 5.8, t) or 0
+		local proud = smooth(6.3, 6.6, t) * (1 - smooth(7.0, 7.3, t))
+		local bodyCF = CFrame.new(0, breathe - crouch * 0.3 - squeeze * 0.18 - slamSq * 0.3 + lift * 0.25, 0) * CFrame.Angles(-slamSq * 0.22 + proud * 0.12, 0, 0)
+		local headCF = bodyCF * CFrame.new(0, breathe * 0.6 - squeeze * 0.12, 0) * CFrame.Angles(lift * 0.4 - slamSq * 0.15, math.sin(t * 1.3) * 0.08, 0)
+		local tailA = math.sin(t * (proud > 0 and 9 or 2.4)) * (0.15 + proud * 0.3)
+		local earA = (t % 3.1 < 0.12) and 0.35 or 0
+		local blink = (t % 3.7 < 0.1) or (t % 5.3 < 0.1)
+		local armL = crouch * 1.1 + squeeze * 1.3 + proud * 2.6 -- reaches for the core, presses, then wipes the brow
 		for _, sp in smith do
 			if sp.arm then
-				sp.p.CFrame = base * shoulder * CFrame.Angles(swing + reach, 0, 0) * sp.off
+				sp.p.CFrame = base * bodyCF * shoulder * CFrame.Angles(swing + reach + squeeze * 0.6, 0, -squeeze * 0.35) * sp.off
+			elseif sp.grp == "pawL" then
+				sp.p.CFrame = base * bodyCF * CFrame.new(-1.6, 3.4, 0) * CFrame.Angles(armL, 0, squeeze * 0.35 + proud * 0.4) * CFrame.new(0, -0.8, 0)
+			elseif sp.grp == "head" then
+				sp.p.CFrame = base * headCF * sp.off * (sp.ear and CFrame.Angles(0, 0, earA) or CFrame.identity)
+				if sp.eye then sp.p.Size = Vector3.new(sp.size.X, blink and 0.06 or sp.size.Y, sp.size.Z) end
+			elseif sp.grp == "tail" then
+				sp.p.CFrame = base * bodyCF * CFrame.new(0, 1.4, 0.9) * CFrame.Angles(0, tailA, 0) * CFrame.new(0, -1.4, -0.9) * sp.off
 			else
-				sp.p.CFrame = base * sp.off
+				sp.p.CFrame = base * (sp.p.Name:sub(1, 3) == "Leg" and CFrame.identity or bodyCF) * sp.off
 			end
 		end
 		glowRing.CFrame = base * CFrame.new(0, 0.2, 0) * CFrame.Angles(0, 0, math.pi / 2)

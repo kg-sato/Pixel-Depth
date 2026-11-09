@@ -114,21 +114,28 @@ local function gables(g, at, x, d, y0, tex, step)
 	step = step or 1
 	for _, s in { -1, 1 } do
 		for i = 0, math.floor(d / 2 / step) - 1 do
-			tvox(g, "Gable", Vector3.new(0.9, step, d - i * 2 * step), at(s * x, y0 + (i + 0.5) * step, 0), tex, 4)
+			tvox(g, "Gable", Vector3.new(0.9, step - 0.04, d - i * 2 * step - 0.04), at(s * x, y0 + (i + 0.5) * step, 0), tex, 4) -- 0.02 inside the roof step faces (playtest 2 z-fighting)
 		end
 	end
 end
 
 local function sign(g, text, cf, w, h, fg, plain)
-	local board = plain and vox(g, "Sign", Vector3.new(w, h, 0.4), cf, plain, { CanCollide = false }) or tvox(g, "Sign", Vector3.new(w, h, 0.4), cf, "planks", 2, { CanCollide = false })
-	vox(g, "SignFrame", Vector3.new(w + 0.5, h + 0.5, 0.3), cf, INK, { CanCollide = false })
+	-- playtest 2 (board 6): readable from the bird's-eye camera: 1.4x bigger, a cream plate (or the given colour), ink Fredoka
+	-- letters, a thick plum rim, a trim strip in the sign's colour, the camera-side face tilted up 45 degrees toward the steep camera (vertical
+	-- signs read as slivers from above); the face is lit by its own SurfaceGui background, so it stays cream at night
+	w, h = w * 1.4, h * 1.4
+	cf = cf * CFrame.Angles(math.rad(cf.LookVector.Z > 0 and 45 or -45), 0, 0) -- the face the camera sees (it sits south: C.CAM_YAW 0, pitch 52) tilts up toward it
+	local board = vox(g, "Sign", Vector3.new(w, h, 0.4), cf, plain or PAL.cream[2], { CanCollide = false })
+	vox(g, "SignFrame", Vector3.new(w + 0.8, h + 0.8, 0.3), cf, INK, { CanCollide = false })
+	if fg then vox(g, "SignTrim", Vector3.new(w, 0.3, 0.46), cf * CFrame.new(0, -h / 2 + 0.25, 0), fg, { CanCollide = false }) end
 	for _, face in { N.Back, N.Front } do
 		local sg = Instance.new("SurfaceGui")
 		sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence = face, Enum.SurfaceGuiSizingMode.PixelsPerStud, 40, 0
 		local t = Instance.new("TextLabel")
 		t.Name = "Label"
 		t.Size, t.BackgroundTransparency, t.Text, t.TextScaled = UDim2.fromScale(1, 1), 1, text, true
-		t.Font, t.TextColor3, t.TextStrokeTransparency, t.TextStrokeColor3 = Enum.Font.Arcade, fg or PAL.cream[2], 0, INK
+		t.Font, t.TextColor3, t.TextStrokeTransparency = Enum.Font.FredokaOne, INK, 1
+		t.BackgroundTransparency, t.BackgroundColor3 = 0, plain or Color3.fromRGB(255, 247, 236)
 		local pad = Instance.new("UIPadding")
 		pad.PaddingLeft, pad.PaddingRight, pad.PaddingTop, pad.PaddingBottom = UDim.new(0.08, 0), UDim.new(0.08, 0), UDim.new(0.15, 0), UDim.new(0.15, 0)
 		pad.Parent = t
@@ -301,7 +308,7 @@ end
 local function bush(g, p, seed)
 	for i = -1, 1 do for k = -1, 1 do
 		if hash(seed + i, 3, k) > 0.2 then
-			vox(g, "Bush", Vector3.new(2, 2, 2), CFrame.new(p + Vector3.new(i * 1.9, 1 + (i == 0 and k == 0 and 1.5 or 0), k * 1.9)), shadeOf("leaf", seed + i, 1, k), { CanCollide = false })
+			vox(g, "Bush", Vector3.new(2, 2, 2) + Vector3.one * ((i + k) % 2) * 0.08, CFrame.new(p + Vector3.new(i * 1.9, 1 + (i == 0 and k == 0 and 1.5 or 0) + ((i + k) % 2) * 0.05, k * 1.9)), shadeOf("leaf", seed + i, 1, k), { CanCollide = false })
 		end
 	end end
 	if hash(seed, 9, 9) > 0.5 then vox(g, "Berry", Vector3.new(0.6, 0.6, 0.6), CFrame.new(p + Vector3.new(0.8, 2.3, 1.2)), PAL.pink[2], { CanCollide = false }) end
@@ -398,7 +405,7 @@ function Hub.build(parent, origin)
 		for i = 1, n do
 			local c = bez(pts, i / n)
 			local mid = (prev + c) / 2
-			local y = O.Y + 0.68 + (i % 2) * 0.01
+			local y = O.Y + 0.68 + (i % 2) * 0.04 -- playtest 2: neighbouring water and bank pieces 0.04 apart (0.01 flickered by the egg garden)
 			local cf = CFrame.lookAt(Vector3.new(mid.X, y, mid.Z), Vector3.new(c.X, y, c.Z))
 			local w = vox(water, "Water", Vector3.new(width, 0.2, (c - prev).Magnitude + 0.8), cf, Color3.fromRGB(120, 206, 226), { CanCollide = false, Transparency = 0.12, Material = Enum.Material.Glass })
 			local t = Instance.new("Texture")
@@ -407,12 +414,12 @@ function Hub.build(parent, origin)
 			local seg = (c - prev).Magnitude
 			for _, sd in { -1, 1 } do
 				local h = hash(i, sd, c.X)
-				vox(water, "BankBed", Vector3.new(1.5, 0.34, seg + 1.4), cf * CFrame.new(sd * (width / 2 + 0.55), 0.02, 0), Color3.fromRGB(74, 70, 92), { CanCollide = false })
-				tvox(water, "Bank", Vector3.new(1.3 + h * 0.6, 0.6 + h * 0.6, 2.6), cf * CFrame.new(sd * (width / 2 + 0.5), 0.2, 0) * CFrame.Angles(0, (h - 0.5) * 0.5, 0), "cobble", 2)
+				vox(water, "BankBed", Vector3.new(1.5 - (i % 3) * 0.04, 0.34, seg + 1.4), cf * CFrame.new(sd * (width / 2 + 0.55), 0.02 + (i % 3) * 0.035, 0), Color3.fromRGB(74, 70, 92), { CanCollide = false })
+				tvox(water, "Bank", Vector3.new(1.3 + h * 0.6, 0.6 + h * 0.6 + (i % 3) * 0.05, 2.6), cf * CFrame.new(sd * (width / 2 + 0.5), 0.2, 0) * CFrame.Angles(0, (h - 0.5) * 0.5, 0), "cobble", 2)
 				if i < n then -- the joint: a stone at the bend so the outside edge stays closed
 					local nxt = bez(pts, (i + 1) / n)
 					local jcf = CFrame.lookAt(Vector3.new(c.X, y, c.Z), Vector3.new(c.X, y, c.Z) + Vector3.new(nxt.X - prev.X, 0, nxt.Z - prev.Z))
-					tvox(water, "BankJoint", Vector3.new(1.5, 0.5 + h * 0.4, 1.8), jcf * CFrame.new(sd * (width / 2 + 0.55), 0.18, 0), "cobble", 2)
+					tvox(water, "BankJoint", Vector3.new(1.44, 0.5 + h * 0.4 + 0.07, 1.8), jcf * CFrame.new(sd * (width / 2 + 0.55), 0.18, 0), "cobble", 2)
 				end
 				if h > 0.78 then
 					for k = 0, 2 do vox(water, "Reed", Vector3.new(0.25, 1.6 + k * 0.4, 0.25), cf * CFrame.new(sd * (width / 2 + 1.4), 0.9, k * 0.5 - 0.5), PAL.moss[(k % 3) + 1], { CanCollide = false }) end
@@ -463,18 +470,18 @@ function Hub.build(parent, origin)
 			local u = i / n
 			local c = bez(pts, u)
 			local mid = (prev + c) / 2
-			local yy = O.Y + (y or groundTop(mid.X - O.X, mid.Z - O.Z)) + 0.15 + (i % 2) * 0.02
+			local yy = O.Y + (y or groundTop(mid.X - O.X, mid.Z - O.Z)) + 0.15 + (i % 2) * 0.04 -- playtest 2: layers 0.04+ apart (0.01-0.02 flickered on the egg garden paths)
 			local cf = CFrame.lookAt(Vector3.new(mid.X, yy, mid.Z), Vector3.new(c.X, yy, c.Z))
 			local w = width * (1 + 0.45 * (1 - u) ^ 6 + 0.3 * u ^ 8 + 0.12 * math.sin(u * 6 + width))
 			local laneTint = Color3.fromRGB(214, 220, 240) -- cools the lilac cobbles toward slate (Gemini paths r1)
 			skin(vox(ground, "Lane", Vector3.new(w, 0.3, (c - prev).Magnitude + 1.2), cf, AVG[tex]), tex, 5, { N.Top }, laneTint)
-			vox(ground, "LaneBed", Vector3.new(w + 0.9, 0.26, (c - prev).Magnitude + 1.4), cf * CFrame.new(0, -0.06, 0), Color3.fromRGB(58, 66, 62), { CanCollide = false })
+			vox(ground, "LaneBed", Vector3.new(w + 0.9, 0.2, (c - prev).Magnitude + 1.4), cf * CFrame.new(0, -0.1, 0), Color3.fromRGB(58, 66, 62), { CanCollide = false })
 			if i < n then -- joint slab on the bend, turned halfway between the two segments: closes the wedge on the outside of curves
 				local nxt = bez(pts, (i + 1) / n)
-				local jy = yy - 0.01
+				local jy = yy - 0.08 -- the joint sits clearly under both lane tops and above both beds
 				local jcf = CFrame.lookAt(Vector3.new(c.X, jy, c.Z), Vector3.new(c.X, jy, c.Z) + Vector3.new(nxt.X - prev.X, 0, nxt.Z - prev.Z))
-				skin(vox(ground, "LaneJoint", Vector3.new(w, 0.3, math.min(w, 2.4)), jcf, AVG[tex]), tex, 5, { N.Top }, laneTint)
-				vox(ground, "LaneBed", Vector3.new(w + 0.9, 0.26, math.min(w, 2.4) + 0.4), jcf * CFrame.new(0, -0.06, 0), Color3.fromRGB(58, 66, 62), { CanCollide = false })
+				skin(vox(ground, "LaneJoint", Vector3.new(w - 0.06, 0.3, math.min(w, 2.4)), jcf, AVG[tex]), tex, 5, { N.Top }, laneTint) -- 0.03 inside the lane edge: on straight runs its sides matched the lane's
+				vox(ground, "LaneBed", Vector3.new(w + 0.84, 0.2, math.min(w, 2.4) + 0.4), jcf * CFrame.new(0, -0.1, 0), Color3.fromRGB(58, 66, 62), { CanCollide = false })
 			end
 			for _, side in { -1, 1 } do -- ragged edges: loose stones half in the grass, and tufts creeping over the edge
 				local h = hash(i, side, c.X + c.Z)
@@ -487,11 +494,11 @@ function Hub.build(parent, origin)
 				end
 			end
 			if i == 1 or i == n then -- a dirt patch with a pebble cluster where the lane runs out into the grass
-				local e = cf * CFrame.new(0, -0.08, i == 1 and -1.5 or 1.5)
+				local e = cf * CFrame.new(0, -0.13, i == 1 and -1.5 or 1.5)
 				vox(ground, "Dirt", Vector3.new(w + 1.2, 0.2, 2.2), e, Color3.fromRGB(104, 78, 84), { CanCollide = false })
 				for k = 0, 4 do
 					local hh = hash(k, i, c.X)
-					vox(ground, "Pebble", Vector3.new(0.4 + hh * 0.35, 0.3, 0.4 + hh * 0.3), e * CFrame.new((hh - 0.5) * w, 0.2, (hash(k, c.Z, 2) - 0.5) * 1.6) * CFrame.Angles(0, hh * 3, 0), Color3.fromRGB(196, 190, 212), { CanCollide = false })
+					vox(ground, "Pebble", Vector3.new(0.4 + hh * 0.35, 0.3, 0.4 + hh * 0.3), e * CFrame.new((hh - 0.5) * w, 0.2 + k * 0.03, (hash(k, c.Z, 2) - 0.5) * 1.6) * CFrame.Angles(0, hh * 3, 0), Color3.fromRGB(196, 190, 212), { CanCollide = false })
 				end
 			end
 			if i % 4 == 2 and hash(i, 3, c.X) > 0.35 then -- a flower clump beside the lane
@@ -948,7 +955,8 @@ function Hub.build(parent, origin)
 			for _, dx in { -1.6, 1.6 } do vox(g, "SignChain", Vector3.new(0.15, 1.2, 0.15), CFrame.new(sp + Vector3.new(dx, 1.35, 0)), PAL.stone[1], { CanCollide = false }) end
 		end
 		prompt(anvil, "Upgrade", "Forge", "forge")
-		raccoon("Bolt", at(1.8, 1.4, 4.6))
+		local bolt = raccoon("Bolt", at(1.8, 1.4, 4.6))
+		prompt(bolt:FindFirstChild("Body"), "Sell ore", "Bolt", "sell") -- playtest 2: sell at Bolt (pick stacks or SELECT ALL)
 	end
 
 	-- 5. Trophy hall (north-east; ref art/hub/pdv4_trophy_s61.jpg): a wide stone hall, stepped plum shingle roof, three horned
@@ -1013,7 +1021,7 @@ function Hub.build(parent, origin)
 			local col = k % 2 == 1 and PAL.pink or PAL.lilac
 			vox(g, "Banner", Vector3.new(1.8, 3.6, 0.15), at(x, 9.9, 0.6), col[2], { CanCollide = false })
 			for _, d in { -0.55, 0.55 } do vox(g, "BannerTail", Vector3.new(0.7, 0.8, 0.15), at(x + d, 7.7, 0.6), col[2], { CanCollide = false }) end
-			vox(g, "BannerHem", Vector3.new(1.8, 0.3, 0.17), at(x, 11.55, 0.62), col[1], { CanCollide = false })
+			vox(g, "BannerHem", Vector3.new(1.86, 0.3, 0.17), at(x, 11.55, 0.62), col[1], { CanCollide = false })
 			for _, px in { { -0.3, 0.3 }, { 0.3, 0.3 }, { -0.55, 0.05 }, { 0, 0.05 }, { 0.55, 0.05 }, { -0.3, -0.2 }, { 0.3, -0.2 }, { 0, -0.45 } } do
 				vox(g, "Heart", Vector3.new(0.27, 0.27, 0.1), at(x + px[1] * 0.85, 10.2 + px[2] * 0.85, 0.71), PAL.cream[3], { CanCollide = false })
 			end
@@ -1214,19 +1222,22 @@ function Hub.build(parent, origin)
 		cubeLantern(g, at(8.7, 8.1, 2.6).Position, 0.4, 0.8)
 		-- the relic chest: a domed gold-banded lid with light leaking from the seam
 		local gold, deep = Color3.fromRGB(229, 178, 56), Color3.fromRGB(156, 109, 31)
-		local chest = tvox(g, "Chest", Vector3.new(3.8, 2.2, 2.6), at(0, 2.5, 3.8), "planks_light", 2)
-		tvox(g, "ChestLid", Vector3.new(3.9, 0.6, 2.7), at(0, 3.9, 3.8), "planks_light", 2)
-		tvox(g, "ChestLid2", Vector3.new(3.9, 0.5, 2.1), at(0, 4.45, 3.8), "planks_light", 2)
-		tvox(g, "ChestLid3", Vector3.new(3.9, 0.4, 1.3), at(0, 4.9, 3.8), "planks_light", 2)
-		for _, cx in { -1.75, 1.75 } do for _, cz in { -1.15, 1.15 } do vox(g, "ChestCorner", Vector3.new(0.5, 2.3, 0.5), at(cx, 2.5, 3.8 + cz), deep, { Material = Enum.Material.Metal }) end end
-		vox(g, "ChestTrim", Vector3.new(4, 0.3, 2.8), at(0, 3.62, 3.8), gold, { Material = Enum.Material.Metal })
+		-- the relic chest stands about 7 studs right of the spawn (crates stand at 9 to 11), facing it, so it no longer blocks the QUESTS board (playtest 2)
+		local gC = group("DailyChest")
+		local atC = stationAt(7, 14.5, 0, 16, groundTop(7, 14.5))
+		local chest = tvox(gC, "Chest", Vector3.new(3.8, 2.2, 2.6), atC(0, 2.5 - 0.3, 3.8 - 3.8), "planks_light", 2)
+		tvox(gC, "ChestLid", Vector3.new(3.9, 0.6, 2.7), atC(0, 3.9 - 0.3, 3.8 - 3.8), "planks_light", 2)
+		tvox(gC, "ChestLid2", Vector3.new(3.9, 0.5, 2.1), atC(0, 4.45 - 0.3, 3.8 - 3.8), "planks_light", 2)
+		tvox(gC, "ChestLid3", Vector3.new(3.9, 0.4, 1.3), atC(0, 4.9 - 0.3, 3.8 - 3.8), "planks_light", 2)
+		for _, cx in { -1.75, 1.75 } do for _, cz in { -1.15, 1.15 } do vox(gC, "ChestCorner", Vector3.new(0.5, 2.3, 0.5), atC(cx, 2.5 - 0.3, 3.8 + cz - 3.8), deep, { Material = Enum.Material.Metal }) end end
+		vox(gC, "ChestTrim", Vector3.new(4, 0.3, 2.8), atC(0, 3.62 - 0.3, 3.8 - 3.8), gold, { Material = Enum.Material.Metal })
 		for _, x in { -1.6, 0, 1.6 } do
-			vox(g, "ChestBand", Vector3.new(0.45, 3.7, 2.8), at(x, 3.25, 3.8), gold, { Material = Enum.Material.Metal })
+			vox(gC, "ChestBand", Vector3.new(0.45, 3.7, 2.8), atC(x, 3.25 - 0.3, 3.8 - 3.8), gold, { Material = Enum.Material.Metal })
 		end
-		local seam = vox(g, "ChestSeam", Vector3.new(3.85, 0.12, 2.65), at(0, 3.82, 3.8), Color3.fromRGB(255, 230, 130), { CanCollide = false })
+		local seam = vox(gC, "ChestSeam", Vector3.new(3.85, 0.12, 2.65), atC(0, 3.82 - 0.3, 3.8 - 3.8), Color3.fromRGB(255, 230, 130), { CanCollide = false })
 		glow(seam, Color3.fromRGB(255, 230, 130), 10, 1.6)
-		vox(g, "ChestLock", Vector3.new(0.9, 1, 0.2), at(0, 3.3, 5.15), gold, { Material = Enum.Material.Metal })
-		vox(g, "Keyhole", Vector3.new(0.22, 0.45, 0.1), at(0, 3.25, 5.27), INK, { CanCollide = false })
+		vox(gC, "ChestLock", Vector3.new(0.9, 1, 0.2), atC(0, 3.3 - 0.3, 5.15 - 3.8), gold, { Material = Enum.Material.Metal })
+		vox(gC, "Keyhole", Vector3.new(0.22, 0.45, 0.1), atC(0, 3.25 - 0.3, 5.27 - 3.8), INK, { CanCollide = false })
 		local shine = Instance.new("ParticleEmitter")
 		shine.Rate, shine.Lifetime, shine.Speed, shine.SpreadAngle = 5, NumberRange.new(0.8, 1.6), NumberRange.new(0.6, 1.4), Vector2.new(70, 70)
 		shine.Color, shine.LightEmission, shine.EmissionDirection = ColorSequence.new(GOLD), 1, N.Top

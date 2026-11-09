@@ -31,8 +31,7 @@ local function publish(plr, g) -- the HUD reads these attributes
 	plr:SetAttribute("ShieldUntil", g.shieldUntil)
 end
 local function inCamp(pos)
-	local o = C.CAVE_ORIGIN
-	return Vector2.new(pos.X - o.X, pos.Z - o.Z).Magnitude < C.CAMP_RING and math.abs(pos.Y - o.Y) < 30
+	return C.campAt(pos) ~= nil
 end
 local function fearOf(s, g)
 	if not s.tips.banked then return 0, 1 end

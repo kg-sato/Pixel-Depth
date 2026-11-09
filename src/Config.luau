@@ -228,6 +228,7 @@ C.SAVE_STORE = "PixelDepths_v2" -- v2 (the user, 2026-11-08): test saves wiped f
 -- C.LAYERS (1.1 Rootflint, 1.2 Ashcoal, 1.3 Kobold-copper, 2.1 Titan clay, 2.2 Bog-iron, 2.3 Rune-tin, 3.x Glitterhall ...).
 -- About half the ore you mine while saving the coins, so coins stay the usual last gate.
 C.PICK_ORE = {
+	[2] = { ["1.1"] = 8 }, -- Stone (playtest 2: the first upgrade teaches that pickaxes need ore)
 	[3] = { ["1.1"] = 6, ["1.2"] = 4 }, -- Ashcoal
 	[4] = { ["1.2"] = 8, ["1.3"] = 3 }, -- Kobold-Copper
 	[5] = { ["2.1"] = 8, ["2.2"] = 5 }, -- Bog-Iron (chasm and grotto ore)
@@ -303,6 +304,14 @@ C.BOSS = { needTier = 6, knots = 3, zone = 13, period = 0.85, perfects = 2, wind
 C.GLOOM = { hp = 100, hit = 34, loss = 0.25, shield = 3, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6, grab = 3 }
 C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
+C.CAVE2_ORIGIN = Vector3.new(-3000, 0, 1200) -- Camp 2 (Clay Caves), clear of Camp 1's caves (z -56..252); the camp is not built yet
+C.CAMPS = { { origin = C.CAVE_ORIGIN, ring = C.CAMP_RING }, { origin = C.CAVE2_ORIGIN, ring = C.CAMP_RING } }
+function C.campAt(pos) -- which camp's safe ring holds this position (1 or 2), or nil
+	for i, c in C.CAMPS do
+		if Vector2.new(pos.X - c.origin.X, pos.Z - c.origin.Z).Magnitude < c.ring and math.abs(pos.Y - c.origin.Y) < 30 then return i end
+	end
+	return nil
+end
 C.MAP_VIEW = 160 -- studs across the cave minimap (HUD-01); floors show once your torchlight reaches them (fog of war)
 -- Ore deposits (stage 4, refs ORE-01/02, EXT-01/02, board artboard CaveUI): crystal clusters hidden against cave walls,
 -- a starburst glint every `glint` seconds. The cave piece sets the layer (deeper pieces hold later layers), depth raises
@@ -324,7 +333,7 @@ C.DEPOSIT = {
 -- (https://www.youtube.com/watch?v=adgCWET34rU): realistic style, tinted ambient so shadows keep colour, low diffuse, punchy
 -- contrast with a subtle tint, a small low-threshold bloom so glows read as colour, a light depth of field for big halls.
 C.CAVE_LIGHT = {
-	Lighting = { LightingStyle = Enum.LightingStyle.Realistic, Ambient = Color3.fromRGB(40, 30, 64), OutdoorAmbient = Color3.fromRGB(36, 28, 60), Brightness = 0, EnvironmentDiffuseScale = 0.15, EnvironmentSpecularScale = 0.2, ExposureCompensation = 0.25 },
+	Lighting = { LightingStyle = Enum.LightingStyle.Realistic, Ambient = Color3.fromRGB(22, 16, 36), OutdoorAmbient = Color3.fromRGB(18, 14, 32), Brightness = 0, EnvironmentDiffuseScale = 0.08, EnvironmentSpecularScale = 0.15, ExposureCompensation = 0.05, ShadowSoftness = 0.15 }, -- playtest 2: was 40,30,64 / 36,28,60 / 0.15 / 0.25, too bright for a cave
 	Atmosphere = { Density = 0.42, Offset = 0, Color = Color3.fromRGB(52, 36, 86), Decay = Color3.fromRGB(26, 16, 46), Glare = 0, Haze = 0.8 },
 	Bloom = { Intensity = 0.45, Size = 22, Threshold = 1.05 }, -- was 0.7 / 30: neon and lit floors smeared into glare (VFX note 2026-11-08)
 	ColorCorrection = { Brightness = 0.03, Contrast = 0.2, Saturation = 0.12, TintColor = Color3.fromRGB(240, 230, 255) },

@@ -659,10 +659,15 @@ local function sell(s)
 	local moved = s.bagOres
 	for k, n in moved do s.ores[k] = (s.ores[k] or 0) + n end -- banked ore also goes into the ore bank (forging needs it)
 	s.bagOres = {}
-	s.gold += s.bagV
-	A.earn(s, "Coins", s.bagV, s.gold, s.player:GetAttribute("InCave") and "CaveBank" or "SellStall")
+	-- playtest 2 (the user, 2026-11-09): banking keeps the ore for forging and for selling at Bolt; coins come from selling
+	-- (SellPick below). The old block mines (C.CAVES_ON false) still pay on banking.
+	local paid = C.CAVES_ON and 0 or s.bagV
+	if paid > 0 then
+		s.gold += paid
+		A.earn(s, "Coins", paid, s.gold, "SellStall")
+	end
 	if s.player:GetAttribute("InCave") then A.step(s, "FirstBank") end
-	FxR:FireClient(s.player, "sold", s.bagV, s.bag, moved)
+	FxR:FireClient(s.player, "sold", paid, s.bag, moved)
 	s.bag, s.bagV = 0, 0
 	if s.step <= 3 then s.step = 4 end
 	sendState(s)
@@ -686,6 +691,7 @@ local function endRide(plr, trip) -- trip: only end that ride (a stale timer mus
 	riding[plr] = nil
 	local hrp = hrpOf(plr)
 	if hrp then hrp.Anchored = false end
+	plr:SetAttribute("Seated", nil) -- the client stops the sit pose
 end
 -- the minecart escape (ride up from the caves): the server keeps the clock, checks the run was possible and pays the bonus
 local escaping = {}
@@ -695,7 +701,8 @@ local function standIn(plr, cf) -- anchor the character standing in a cart whose
 	local hum = plr.Character:FindFirstChildOfClass("Humanoid")
 	hrp.AssemblyLinearVelocity = Vector3.zero
 	hrp.Anchored = true
-	hrp.CFrame = cf * CFrame.new(0, 1.05 + hrp.Size.Y / 2 + (hum and hum.HipHeight or 2), 0.3)
+	hrp.CFrame = cf * CFrame.new(0, 1.05 + hrp.Size.Y / 2 + 0.7, 0.3) -- seated (playtest 2: "the player should be sitting down")
+	plr:SetAttribute("Seated", true) -- the client plays the sit pose on its own character (replicates to everyone)
 end
 local function finishEscape(plr, report)
 	local e = escaping[plr]
@@ -779,6 +786,69 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	local s = data[plr]
 	if s and prompt:GetAttribute("RideUp") and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] then startEscape(s) end
 end)
+do -- selling at Bolt (playtest 2, board PT2_Sell): the player picks stacks from the ore bank; the server checks each and pays
+	local SellPickR = remote("SellPick")
+	local spots = {}
+	for _, d in hub:GetDescendants() do
+		if d:IsA("BasePart") and d:GetAttribute("Station") == "sell" then table.insert(spots, d) end
+	end
+	local function orePrice(s, key) -- the same formula the client shows: layer value x 3 per layer x the held pickaxe
+		local L, i = string.match(key, "^(%d+)%.(%d+)$")
+		L, i = tonumber(L), tonumber(i)
+		local o = L and C.LAYERS[L] and C.LAYERS[L][4][i]
+		if not o then return nil end
+		return math.max(1, math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) + 0.5))
+	end
+	SellPickR.OnServerEvent:Connect(function(plr, list)
+		local s = data[plr]
+		local hrp = hrpOf(plr)
+		if not s or not hrp or typeof(list) ~= "table" or plr:GetAttribute("InCave") or os.clock() < (s.sellCool or 0) then return end
+		s.sellCool = os.clock() + 0.5
+		local near = false
+		for _, p in spots do if (p.Position - hrp.Position).Magnitude < 26 then near = true end end
+		if not near then return end -- only at Bolt or the sell stall
+		local gold, moved, kinds = 0, {}, 0
+		for k, n in list do
+			kinds += 1
+			if kinds > 40 then break end
+			if typeof(k) == "string" and #k <= 8 and typeof(n) == "number" and n == n and n >= 1 then
+				local have = s.ores[k] or 0
+				local take = math.min(math.floor(n), have)
+				local p = take > 0 and orePrice(s, k)
+				if p then
+					s.ores[k] = have - take > 0 and have - take or nil
+					moved[k] = take
+					gold += take * p
+				end
+			end
+		end
+		if gold <= 0 then return end
+		s.gold += gold
+		A.earn(s, "Coins", gold, s.gold, "SellAtBolt")
+		FxR:FireClient(plr, "soldPick", gold, moved)
+		sendState(s)
+	end)
+end
+do -- kill floor at the chasm bottom (playtest 2): a fall ends the dive like passing out in the lake (a quarter of the unbanked ore)
+	local caves = workspace:FindFirstChild("Caves")
+	for _, kf in caves and caves:GetDescendants() or {} do
+		if kf:IsA("BasePart") and kf:GetAttribute("KillFloor") then
+			kf.Touched:Connect(function(hit)
+				local plr = hit.Parent and Players:GetPlayerFromCharacter(hit.Parent)
+				local s = plr and data[plr]
+				local hrp = plr and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+				if not s or not hrp or not caveLanding or riding[plr] or escaping[plr] or os.clock() < (s.fellAt or 0) then return end
+				s.fellAt = os.clock() + 3
+				local lost = loseShare(s, C.SWIM.loss)
+				hrp.AssemblyLinearVelocity = Vector3.zero
+				hrp.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
+				FxR:FireClient(plr, "drowned", lost, "fell")
+				A.event(s, "FellDeep", lost)
+				sendState(s)
+			end)
+		end
+	end
+end
 Players.PlayerRemoving:Connect(function(plr) riding[plr], escaping[plr] = nil, nil end)
 game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- a hidden cave shrine: coins and gems, once an hour each
 	if not prompt:GetAttribute("CaveShrine") then return end
@@ -1275,7 +1345,9 @@ local function dailyChest(s)
 end
 
 local STATION = {
-	sell = function(s) sell(s) end,
+	sell = function(s) -- Bolt and the sell stall open the sell screen (InventoryUI): pick stacks from the ore bank
+		if C.CAVES_ON then FxR:FireClient(s.player, "openSell") else sell(s) end
+	end,
 	forge = function(s) FxR:FireClient(s.player, "openForge") end,
 	map = function(s) FxR:FireClient(s.player, "map", s.deepest) end,
 	chest = dailyChest,
@@ -1537,9 +1609,10 @@ while true do
 		if s.mg and workspace:GetServerTimeNow() > s.mg.deadline then -- a minigame left unfinished pays what it earned (Vein Rush: Chipped)
 			finishMinigame(s)
 		end
-		if hrp and plr:GetAttribute("InCave") and s.bag > 0 then -- Camp 1's ring banks the unbanked ore (CMP-01)
-			local o = C.CAVE_ORIGIN
-			if Vector2.new(hrp.Position.X - o.X, hrp.Position.Z - o.Z).Magnitude < C.CAMP_RING and math.abs(hrp.Position.Y - o.Y) < 30 then
+		if hrp and plr:GetAttribute("InCave") then -- the camp rings (CMP-01) bank the unbanked ore
+			local camp = C.campAt(hrp.Position)
+			if plr:GetAttribute("Camp") ~= camp then plr:SetAttribute("Camp", camp) end -- 1 or 2 inside a ring, nil out in the caves
+			if camp and s.bag > 0 then
 				s.tips.banked = true -- the torch dims and gloomlings come only after the first bank (the Gloom)
 				sell(s)
 			end

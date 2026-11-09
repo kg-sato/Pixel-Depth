@@ -226,6 +226,38 @@ local function buildStage()
 end
 
 -- a client copy of a model with no prompts or scripts, every part anchored and out of the physics
+local SIT_ANIM = { [Enum.HumanoidRigType.R15] = "rbxassetid://2506281703", [Enum.HumanoidRigType.R6] = "rbxassetid://178130996" } -- Roblox's own sit poses
+local function sitDown(rider) -- the rider's copy plays the sit pose: its root stays anchored, the limbs follow their joints (playtest 2)
+	local hum = rider:FindFirstChildOfClass("Humanoid")
+	local root = rider:FindFirstChild("HumanoidRootPart")
+	if not hum or not root then return false end
+	for _, p in rider:GetDescendants() do
+		if p:IsA("BasePart") and p ~= root then p.Anchored = false end
+	end
+	local function play() -- an Animator only loads once the copy is in the world
+		local an = hum:FindFirstChildOfClass("Animator") or Instance.new("Animator")
+		an.Parent = hum
+		local a = Instance.new("Animation")
+		a.AnimationId = SIT_ANIM[hum.RigType] or SIT_ANIM[Enum.HumanoidRigType.R15]
+		local ok, tr = pcall(function() return an:LoadAnimation(a) end)
+		if ok and tr then
+			tr.Priority, tr.Looped = Enum.AnimationPriority.Action4, true
+			tr:Play(0)
+		end
+	end
+	if rider:IsDescendantOf(game) then
+		play()
+	else
+		local c
+		c = rider.AncestryChanged:Connect(function()
+			if rider:IsDescendantOf(game) then
+				c:Disconnect()
+				play()
+			end
+		end)
+	end
+	return true
+end
 local function ghost(model)
 	local was = model.Archivable
 	model.Archivable = true
@@ -278,7 +310,8 @@ function M.play(opt)
 	local riderOff = CFrame.new(0, 3.3, 0.3)
 	if rider and char then
 		local hrp, hum = char:FindFirstChild("HumanoidRootPart"), char:FindFirstChildOfClass("Humanoid")
-		if hrp and hum then riderOff = CFrame.new(0, 1.05 + hrp.Size.Y / 2 + hum.HipHeight, 0.3) end
+		local sat = rider and sitDown(rider)
+		if hrp and hum then riderOff = CFrame.new(0, 1.05 + hrp.Size.Y / 2 + (sat and 0.7 or hum.HipHeight), 0.3) end -- seated: hips just above the cart floor
 		rider.Parent = world
 		hideModel(char, hidden)
 	end

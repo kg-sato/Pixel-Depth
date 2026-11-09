@@ -1,6 +1,6 @@
 #!/bin/sh
 # Rebuild the Pixel Depths place in an open Studio (Edit mode) from this repo: scripts from src/, ProfileStore from Vendor/,
-# and the ten forge pickaxes (uploaded models) into ServerStorage.Pickaxes. Needed because the place file is only saved by the owner.
+# and the twelve forge pickaxes (uploaded models) into ServerStorage.Pickaxes. Needed because the place file is only saved by the owner.
 # Usage (Git Bash, from the Roblox workspace root): sh "Games/Pixel Depth/spike/rebuild_place.sh"
 set -e
 cd "$(dirname "$0")/../../.."
@@ -42,8 +42,8 @@ python tools/studio_live.py execute_luau --file "$T/mk.luau" code '{"datamodel_t
 python tools/studio_push.py ReplicatedStorage.Shared.Config "$G/Config.luau" ReplicatedStorage.Shared.PixelText "$G/PixelText.luau" ReplicatedStorage.Shared.ForgeCutscene "$G/ForgeCutscene.luau" ReplicatedStorage.Shared.MinecartRide "$G/MinecartRide.luau" ReplicatedStorage.Shared.MinecartEscape "$G/MinecartEscape.luau" ReplicatedStorage.Shared.CaveSwim "$G/CaveSwim.luau" ReplicatedStorage.Shared.GloomClient "$G/GloomClient.luau" ReplicatedStorage.Shared.ForgeUI "$G/ForgeUI.luau" ReplicatedStorage.Shared.PetJobs "$G/PetJobs.luau" ReplicatedStorage.Shared.GemShop "$G/GemShop.luau" ServerScriptService.Shop "$G/Shop.luau" ServerScriptService.Analytics "$G/Analytics.luau" ServerScriptService.Boss "$G/Boss.luau" ReplicatedStorage.Shared.BossClient "$G/BossClient.luau" \
   ServerScriptService.ProfileStore Vendor/ProfileStore.luau ServerScriptService.HubBuilder "$G/HubBuilder.luau" ServerScriptService.CaveBuilder "$G/CaveBuilder.luau" ServerScriptService.ZFix "$G/ZFix.luau" ServerScriptService.Gloom "$G/Gloom.luau" ServerScriptService.PixelServer "$G/PixelServer.server.luau" \
   StarterPlayer.StarterPlayerScripts.PixelClient "$G/PixelClient.client.luau"
-# model asset ids from the 2026-11-08 round-3 upload (tools/uploads.json)
-for pair in HeartGemPickaxe:101768114810250 StarlightPickaxe:81295531773852 MoonlitPickaxe:70495499058268 RoseThornPickaxe:112314007926438 \
+# model asset ids from the 2026-11-08 round-3 upload plus Wood/Stone (22:34 upload) (tools/uploads.json)
+for pair in WoodPickaxe:113162012195652 StonePickaxe:76455911506852 HeartGemPickaxe:101768114810250 StarlightPickaxe:81295531773852 MoonlitPickaxe:70495499058268 RoseThornPickaxe:112314007926438 \
             PearlTidePickaxe:72299060876910 GalaxyPickaxe:116319680368162 SakuraPickaxe:105086268168654 LotusCrystalPickaxe:108157861136669 \
             RoyalHeartPickaxe:116953172891323 SilverWingPickaxe:82182646923493; do
   n=${pair%%:*}; id=${pair##*:}

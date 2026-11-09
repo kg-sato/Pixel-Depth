@@ -314,6 +314,7 @@ local railForge = button(gui, "FORGE", S(76, 76), S(20, 146), nil, "lilac", "pic
 local railLift = button(gui, "SURFACE", S(76, 76), S(20, 232), nil, "sky", "surface", true)
 for _, b in { railForge, railLift } do fit(b, 1, 1) end
 railForge.Name, railLift.Name = "Upgrades", "Surface"
+railForge.Visible = false -- playtest 2: the forge opens at Bolt only; SURFACE stays alone on the rail
 
 local layerPill = panel(gui, S(300, 46), S(1260, 18), Vector2.new(1, 0), "pillLilac")
 fit(layerPill, 300, 46)
@@ -1121,7 +1122,7 @@ railLift.Activated:Connect(function() R.Surface:FireServer((inMine or inCave) an
 sellBtn.Activated:Connect(function() R.Sell:FireServer() end)
 
 -- Keyboard: first person locks the mouse, so every rail button also has a key (shown on the button on PC)
-local KEYS = { [Enum.KeyCode.G] = railForge, [Enum.KeyCode.Q] = railLift }
+local KEYS = { [Enum.KeyCode.Q] = railLift }
 if UIS.KeyboardEnabled then
 	for key, b in KEYS do keyCap(b, key.Name, UDim2.fromScale(0.24, 0.24), UDim2.fromScale(0.76, 0.22)) end
 	keyCap(digBtn, "E", UDim2.fromScale(0.11, 0.42), UDim2.fromScale(0.88, 0.48))
@@ -1241,7 +1242,7 @@ local STEPS = {
 	"Tap the glowing block to dig!",
 	"Dig down to the shiny gold vein!",
 	"Backpack full! Sell your ore!",
-	"Open the Forge and buy a new pickaxe!",
+	"Visit Bolt at the forge for a new pickaxe!", -- playtest 2: no FORGE button any more; the tracker shows what it needs
 	"A fossil egg is buried below. Dig it out!",
 	"Your crew digs with you. Go deeper!",
 }
@@ -1803,6 +1804,10 @@ end
 				end
 			end
 		end
+		if map.hl then -- the ore outline breathes (board 8)
+			local b = 0.2 + 0.22 * (0.5 + 0.5 * math.sin(now * 3.9))
+			for _, h in map.hl do if h.Enabled then h.OutlineTransparency = b end end
+		end
 		if now < map.next then return end
 		map.next = now + 0.15
 		local lantern = plr.Character and plr.Character:FindFirstChild("Lantern", true)
@@ -1829,6 +1834,33 @@ end
 				rp.FilterDescendantsInstances = { plr.Character, g.dep }
 				local to = g.at
 				g.seen = workspace:Raycast(camPos, to - camPos, rp) == nil
+			else
+				g.seen = false -- out of range: never trust an old sighting (stars showed through walls)
+			end
+		end
+		-- ore highlight (playtest 2, board 6): the nearest 25 deposits within 45 studs get a rarity outline; Occluded, never through rock
+		map.hl = map.hl or {}
+		local near = {}
+		for _, g in map.deps do
+			if not g.claimed then
+				local d = (g.core.Position - p).Magnitude
+				if d < 45 then table.insert(near, { g = g, d = d }) end
+			end
+		end
+		table.sort(near, function(a, b) return a.d < b.d end)
+		for i = 1, 25 do
+			local e, h = near[i], map.hl[i]
+			if e and not h then
+				h = new("Highlight", fx, { Name = "OreHighlight", DepthMode = Enum.HighlightDepthMode.Occluded, FillTransparency = 0.9 })
+				map.hl[i] = h
+			end
+			if h then
+				h.Adornee = e and e.g.dep or nil
+				h.Enabled = e ~= nil
+				if e then
+					local col = (e.g.dep:GetAttribute("Gilded") and GOLD) or (e.g.rar >= 3 and BUTTER) or (e.g.rar == 2 and MINT) or CREAM
+					h.OutlineColor, h.FillColor = col, col
+				end
 			end
 		end
 		for _, g in map.deps do -- a found deposit stays on the map as a dot in its ore colour until you mine it
@@ -1845,15 +1877,23 @@ end
 	local held = {}
 	local function freeze(on)
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+		local CAS = game:GetService("ContextActionService")
 		if hum and on then
-			held.walk, held.jump = hum.WalkSpeed, hum.JumpHeight
-			hum.WalkSpeed, hum.JumpHeight = 0, 0
+			held.walk, held.jump, held.jp = hum.WalkSpeed, hum.JumpHeight, hum.JumpPower
+			hum.WalkSpeed, hum.JumpHeight, hum.JumpPower = 0, 0, 0 -- the place uses JumpPower (CharacterUseJumpPower), so both go to 0 (playtest 2)
+			hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, false)
+			CAS:BindActionAtPriority("PixelMgLock", function(_, st)
+				if st == Enum.UserInputState.Begin and held.strike then held.strike() end
+				return Enum.ContextActionResult.Sink -- Space and A belong to the minigame, never to the jump
+			end, false, Enum.ContextActionPriority.High.Value + 100, Enum.KeyCode.Space, Enum.KeyCode.ButtonA)
 		elseif hum and held.walk then
-			hum.WalkSpeed, hum.JumpHeight = held.walk, held.jump
+			hum.WalkSpeed, hum.JumpHeight, hum.JumpPower = held.walk, held.jump, held.jp
+			hum:SetStateEnabled(Enum.HumanoidStateType.Jumping, true)
 			held.walk = nil
 		end
+		if not on then CAS:UnbindAction("PixelMgLock") end
 		cave.mgBusy = on -- prompts pause (the camera loop owns ProximityPromptService.Enabled)
-		for _, n in { "TorchPill", "FearPill", "Minimap", "CampPill", "GoldPill", "BagPill", "Upgrades", "Surface" } do -- focus: every HUD widget steps back while a minigame is up
+		for _, n in { "TorchPill", "FearPill", "Minimap", "CampPill", "GoldPill", "Surface", "InventoryButton" } do -- Tracker and HeavyPill hide themselves (they are not always on) -- focus: every HUD widget steps back while a minigame is up
 			local o = caveHud:FindFirstChild(n) or gui:FindFirstChild(n)
 			if o then o.Visible = not on end
 		end
@@ -2125,13 +2165,14 @@ end
 		sfx("swing", 1.2)
 		pop(dial, 1.05, 0.15)
 	end
+	held.strike = strike -- the minigame lock's Space/A binding strikes through this
 	strikeBtn.Activated:Connect(strike)
 	leftBtn.Activated:Connect(function() chisel(1) end)
 	rightBtn.Activated:Connect(function() chisel(2) end)
 	UIS.InputBegan:Connect(function(input, gp)
 		if not mg or gp then return end
 		local k, t = input.KeyCode, input.UserInputType
-		if mg.kind == "strike" and (k == Enum.KeyCode.Space or k == Enum.KeyCode.E or k == Enum.KeyCode.ButtonA or k == Enum.KeyCode.ButtonR2 or t == Enum.UserInputType.MouseButton1) then
+		if mg.kind == "strike" and (k == Enum.KeyCode.E or k == Enum.KeyCode.ButtonR2 or t == Enum.UserInputType.MouseButton1) then -- Space and A: the PixelMgLock action
 			strike()
 		elseif mg.kind == "rush" then
 			if k == Enum.KeyCode.A or k == Enum.KeyCode.Left or k == Enum.KeyCode.ButtonL1 or k == Enum.KeyCode.DPadLeft or t == Enum.UserInputType.MouseButton1 then
@@ -2245,10 +2286,10 @@ end)()
 	local TipR = R:WaitForChild("Tip")
 	local keys = UIS.KeyboardEnabled
 	local TIPS = {
-		camp = { "camp", "CAMP IS SAFE: ORE YOU CARRY IS BANKED HERE" },
-		torch = { "camp", "YOUR TORCH BURNS DOWN: COME BACK TO CAMP TO RELIGHT IT" },
-		ore = { "gem", keys and "SPARKLES MEAN ORE! WALK UP AND PRESS E" or "SPARKLES MEAN ORE! WALK UP AND TAP EXTRACT" },
-		fear = { "crew", "THE DARK IS SCARY: HEAD BACK TO THE LIGHT" },
+		camp = { "camp", "WICK: CAMP IS SAFE! BANK YOUR ORE WITH ME" },
+		torch = { "camp", "WICK: TORCH LOW? COME BACK, I'LL RELIGHT IT!" },
+		ore = { "gem", keys and "WICK: SPARKLES ARE ORE! PRESS E" or "WICK: SPARKLES ARE ORE! TAP EXTRACT" },
+		fear = { "crew", "WICK: EEK, THE DARK! FLARE IT OR RUN TO LIGHT" },
 	}
 	local banner = panel(caveHud, S(700, 66), S(640, 96), Vector2.new(0.5, 0), "ribbonLilac")
 	fit(banner, 700, 66)
@@ -2487,12 +2528,12 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		if newBest then toast("NEW BEST!  " .. combo .. " COMBO", PINK, true, 1.3) end
 	elseif kind == "sold" then
 		local gold, _, moved = ...
-		toast("+" .. commas(gold) .. " GOLD", GOLD, true)
+		if gold > 0 then toast("+" .. commas(gold) .. " GOLD", GOLD, true) end
 		local parts = {}
 		for k, n in moved or {} do if n > 0 then table.insert(parts, n .. " " .. C.oreName(k)) end end
 		if #parts > 0 then toast("ORE BANK  +" .. table.concat(parts, "  +"), MINT, false, 0.6) end
 		sfx("coin", 0.9)
-		if forgeUI.fly and bagPill.Visible then -- coins fly from the bag into the gold pill (each lands with a coin tick)
+		if gold > 0 and forgeUI.fly and bagPill.Visible then -- coins fly from the bag into the gold pill (each lands with a coin tick)
 			local inset = game:GetService("GuiService"):GetGuiInset()
 			local from = bagPill.AbsolutePosition + bagPill.AbsoluteSize / 2 + inset
 			forgeUI.fly("coin", UDim2.fromOffset(from.X, from.Y), goldPill, math.clamp(math.floor(gold / 4), 5, 12), 0.05)
@@ -2597,9 +2638,9 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 			R.Surface:FireServer("arrived")
 			if ok and cave.escapeBonus and cave.escapeBonus > 0 then toast("ESCAPE BONUS  +" .. commas(cave.escapeBonus) .. " COINS", GOLD, true) end
 		end)
-	elseif kind == "drowned" then -- out of air in the lake: the server woke us at Camp 1
-		local lost = ...
-		fadeText.Text = "YOU PASSED OUT..."
+	elseif kind == "drowned" then -- out of air in the lake, or a fall to the chasm floor: the server woke us at Camp 1
+		local lost, why = ...
+		fadeText.Text = why == "fell" and "YOU FELL INTO THE DARK..." or "YOU PASSED OUT..."
 		fade.BackgroundTransparency = 0
 		fadeText.TextTransparency = 0
 		task.delay(1.1, function()
@@ -2607,7 +2648,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 			tween(fadeText, 0.6, { TextTransparency = 1, TextStrokeTransparency = 1 })
 			task.delay(0.61, function() fadeText.TextStrokeTransparency = 0 end)
 		end)
-		toast(lost > 0 and ("The lake took " .. commas(lost) .. " ore") or "You woke up at camp", PINK, true, 1.2)
+		toast(lost > 0 and ((why == "fell" and "The deep took " or "The lake took ") .. commas(lost) .. " ore") or "You woke up at camp", PINK, true, 1.2)
 	elseif kind == "escapeDone" then
 		cave.escapeBonus = (...) or 0
 	elseif kind == "ride" then -- the minecart ride down to Camp 1 (ReplicatedStorage.Shared.MinecartRide)
@@ -2705,6 +2746,43 @@ end)()
 	end)
 	if not ok then warn("[GloomClient] " .. tostring(err)) end
 	end)
+end)()
+;(function() -- playtest 2: the inventory (bag, ore bank, items, selling at Bolt) and the upgrade tracker (ReplicatedStorage.Shared)
+	local E = {
+		C = C, R = R, plr = plr, gui = gui, new = new, S = S, fit = fit, text = text, panel = panel, button = button, setKind = setKind,
+		openPanel = openPanel, closePanel = closePanel, ribbonTitle = ribbonTitle, closeButton = closeButton, toast = toast, sfx = sfx,
+		pop = pop, tween = tween, commas = commas, INK = INK, WHITE = WHITE, MINT = MINT, PINK = PINK, BUTTER = BUTTER, GOLD = GOLD,
+		bagPill = bagPill, goldPill = goldPill, burst = burst, shake = shake, ICON = ICON, fly = function(...) if forgeUI.fly then forgeUI.fly(...) end end,
+		isBusy = function() return cave ~= nil and cave.mgBusy == true end,
+	}
+	do -- sitting in the minecart (playtest 2): the server sets Seated while it holds us in a cart; our own Animator plays the sit pose
+		local SIT = { [Enum.HumanoidRigType.R15] = "rbxassetid://2506281703", [Enum.HumanoidRigType.R6] = "rbxassetid://178130996" }
+		local track
+		local function sync()
+			local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+			local an = hum and hum:FindFirstChildOfClass("Animator")
+			if plr:GetAttribute("Seated") and an and not track then
+				local a = new("Animation", nil, { AnimationId = SIT[hum.RigType] or SIT[Enum.HumanoidRigType.R15] })
+				local ok, tr = pcall(function() return an:LoadAnimation(a) end)
+				if ok and tr then
+					track = tr
+					tr.Priority, tr.Looped = Enum.AnimationPriority.Action4, true
+					tr:Play(0.15)
+				end
+			elseif not plr:GetAttribute("Seated") and track then
+				track:Stop(0.2)
+				track = nil
+			end
+		end
+		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
+		plr.CharacterAdded:Connect(function() track = nil end)
+	end
+	for _, name in { "InventoryUI", "UpgradeTracker" } do
+		task.spawn(function()
+			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
+			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
+		end)
+	end
 end)()
 
 task.delay(4, function() -- the minecart ride's far stage and the escape tunnel, built early so their lanterns are lit by the first ride
