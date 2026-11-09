@@ -32,3 +32,14 @@ blender/out/**/*_game_side.png
 # Studio lock files
 *.lock
 art/gen/_compare*.jpg
+
+# third-party references stay local only (public repo): Delve frames, Pinterest pins, reference clip sheets
+art/forge/refs/delve_*
+art/forge/refs/pin_*
+art/forge/refs/cutscene/*.jpg
+art/forge/concepts/ref_badge.jpg
+art/forge/concepts/ref_book.jpg
+art/forge/concepts/ref_delve_*
+art/forge/concepts/ref_levelup.jpg
+art/forge/concepts/ref_soft_panel.jpg
+art/forge/concepts/ref_upgrade_card.jpg
