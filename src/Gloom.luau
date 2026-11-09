@@ -81,6 +81,7 @@ local function caught(plr, s, g)
 	publish(plr, g)
 	scatter(plr)
 	ctx.fx:FireClient(plr, "caught", lost)
+	if ctx.analytics then ctx.analytics.event(s, "GloomCatch", lost) end
 	ctx.sendState(s)
 end
 
@@ -109,6 +110,7 @@ function G.init(c)
 				publish(other, og)
 				scatter(other)
 				ctx.fx:FireClient(other, "rescued", plr.Name, other == plr)
+				if ctx.analytics then ctx.analytics.event(os2, other == plr and "GloomSelfRescue" or "GloomRescue") end
 				if other ~= plr then ctx.fx:FireClient(plr, "rescuedFriend", other.Name) end
 			end
 		end

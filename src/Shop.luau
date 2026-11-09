@@ -27,6 +27,8 @@ local function grantOnce(s, purchaseId, gems) -- true once a save holding this r
 		d.gems = s.gems -- the receipt and the gems live in the same document, so they save together
 		ctx.sendState(s)
 		ctx.fx:FireClient(s.player, "gemsBought", gems)
+		local A = require(game:GetService("ServerScriptService"):WaitForChild("Analytics"))
+		A.earn(s, "Gems", gems, s.gems, "GemPack_" .. gems, A.IAP)
 	end
 	local function holds(data) return data and data.receipts and table.find(data.receipts, purchaseId) ~= nil end
 	if holds(profile.LastSavedData) then return true end

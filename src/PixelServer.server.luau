@@ -47,6 +47,7 @@ local HUB_SPAWN = hub:FindFirstChild("SpawnPoint").CFrame
 local HUB_SELL = hub:FindFirstChild("SellPoint", true)
 local PetJobs = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("PetJobs")) -- crew pets' cave jobs (phase 7)
 local Shop = require(game:GetService("ServerScriptService"):WaitForChild("Shop")) -- gems for Robux, receipts, paid random items
+local A = require(game:GetService("ServerScriptService"):WaitForChild("Analytics")) -- funnel, economy and custom events (phase 11)
 local function crewOf(s) local n = {} for i, p in s.pets do n[i] = p.name end return n end
 local HUB_CART = hub:FindFirstChild("HubCart", true) -- the minecart the ride down starts from (HubBuilder)
 
@@ -659,6 +660,8 @@ local function sell(s)
 	for k, n in moved do s.ores[k] = (s.ores[k] or 0) + n end -- banked ore also goes into the ore bank (forging needs it)
 	s.bagOres = {}
 	s.gold += s.bagV
+	A.earn(s, "Coins", s.bagV, s.gold, s.player:GetAttribute("InCave") and "CaveBank" or "SellStall")
+	if s.player:GetAttribute("InCave") then A.step(s, "FirstBank") end
 	FxR:FireClient(s.player, "sold", s.bagV, s.bag, moved)
 	s.bag, s.bagV = 0, 0
 	if s.step <= 3 then s.step = 4 end
@@ -706,6 +709,9 @@ local function finishEscape(plr, report)
 		local boosts = math.clamp(math.floor(tonumber(report.boosts) or 0), 0, math.floor(el / 2))
 		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2, C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
 		s.gold += bonus
+		A.earn(s, "Coins", bonus, s.gold, "EscapeBonus")
+		A.event(s, "EscapeSeconds", math.floor(el))
+		A.step(s, "Escaped")
 	end
 	if HUB_CART then standIn(plr, HUB_CART:GetPivot()) else local h = hrpOf(plr) if h then h.CFrame = spawnCFrame() end end
 	plr:SetAttribute("InMine", false)
@@ -747,6 +753,7 @@ SurfaceR.OnServerEvent:Connect(function(plr, dir, report) -- the rail lift butto
 		hrp.AssemblyLinearVelocity = Vector3.zero
 		hrp.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
 		FxR:FireClient(plr, "drowned", lost)
+		A.event(s, "Drowned", lost)
 		sendState(s)
 		return
 	end
@@ -775,7 +782,7 @@ end)
 Players.PlayerRemoving:Connect(function(plr) riding[plr], escaping[plr] = nil, nil end)
 local Gloom = require(game:GetService("ServerScriptService"):WaitForChild("Gloom")) -- gloomlings, HP, the catch, flares (phase 6)
 Shop.init({ data = data, fx = FxR, sendState = sendState })
-Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, perks = function(s) return PetJobs.perks(crewOf(s)) end, busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
+Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, analytics = A, perks = function(s) return PetJobs.perks(crewOf(s)) end, busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
 
 enterMine = function(s)
 	local hrp = hrpOf(s.player)
@@ -792,6 +799,7 @@ enterMine = function(s)
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 		if HUB_CART then hrp.CFrame = HUB_CART:GetPivot() * CFrame.new(0, 1.05 + hrp.Size.Y / 2 + (hum and hum.HipHeight or 2), 0.3) end
 		FxR:FireClient(plr, "ride", full)
+		A.step(s, "RodeDown")
 		task.delay(full and 2.15 or 1.25, function()
 			local h = hrpOf(plr)
 			if not h or not data[plr] or riding[plr] ~= trip then
@@ -865,6 +873,9 @@ local function finishMinigame(s)
 	s.claimed[mg.dep] = os.clock() + D.regrow -- grows back for this player after D.regrow seconds
 	local gems = (idx == 3 and C.GEMS.rare or 0) + ((grade == D.strikes or grade == D.grades[1][1]) and C.GEMS.perfect or 0) + (gilded and D.gilded.gems or 0)
 	s.gems += gems
+	A.earn(s, "Gems", gems, s.gems, idx == 3 and "RareDeposit" or "PerfectGrade")
+	A.event(s, "DepositGrade_" .. tostring(grade))
+	A.step(s, "FirstDeposit")
 	FxR:FireClient(s.player, "mgEnd", mg.dep, o[1], count, count * v, o[2], grade, gems)
 	sendState(s)
 end
@@ -1076,6 +1087,8 @@ BuyR.OnServerEvent:Connect(function(plr, what, arg)
 			local cost = C.upgradeCost(arg, lv)
 			if not cost or s.gems < cost then return end
 			s.gems -= cost
+			A.spend(s, "Gems", cost, s.gems, "ForgeLevel")
+			A.step(s, "FirstUpgrade")
 			s.lv[tostring(arg)] = lv + 1
 			FxR:FireClient(plr, "upgraded", arg, lv + 1)
 		end
@@ -1097,6 +1110,8 @@ BuyR.OnServerEvent:Connect(function(plr, what, arg)
 		for k, n in need do s.ores[k] -= n end
 	end
 	s.gold -= nxt.cost
+	A.spend(s, "Coins", nxt.cost, s.gold, what == "pick" and ("Pickaxe_" .. (s.pick + 1)) or ("Pack_" .. (s.pack + 1)))
+	if what == "pick" then A.step(s, "FirstPickaxe") end
 	s[what] += 1
 	if what == "pick" then
 		s.equip = s.pick -- a new pickaxe goes straight into the hand
@@ -1213,6 +1228,8 @@ local function dailyChest(s)
 	local gems = C.GEMS.chest * s.streak
 	s.gold += gold
 	s.gems += gems
+	A.earn(s, "Coins", gold, s.gold, "DailyChest")
+	A.earn(s, "Gems", gems, s.gems, "DailyChest")
 	FxR:FireClient(s.player, "dailyChest", gold, s.streak, gems)
 	sendState(s)
 end
@@ -1232,6 +1249,7 @@ local STATION = {
 			return
 		elseif s.gems >= C.EGG_GEMS then
 			s.gems -= C.EGG_GEMS
+			A.spend(s, "Gems", C.EGG_GEMS, s.gems, "EggRoll")
 			FxR:FireClient(s.player, "gemSpent", C.EGG_GEMS)
 		else
 			FxR:FireClient(s.player, "noEggs", C.EGG_GEMS - s.gems)
@@ -1315,6 +1333,7 @@ local function onJoin(plr)
 		end
 	end
 	data[plr] = s
+	A.step(s, "Joined")
 	local t0 = os.clock()
 	buildStatic(s)
 	refresh(s)
