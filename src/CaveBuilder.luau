@@ -139,7 +139,7 @@ function Cave.build(parent, origin, seed)
 		for k = 0, 2 do part("Camp", "Log", Vector3.new(0.9, 0.9, 4), CFrame.new(fire + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, k * 2.1, 0.25), PAL.bark) end
 		local flame = part("Camp", "Flame", Vector3.new(1.8, 2.6, 1.8), CFrame.new(fire + Vector3.new(0, 2, 0)) * CFrame.Angles(0, 0.6, 0), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		part("Camp", "FlameCore", Vector3.new(0.9, 1.6, 0.9), CFrame.new(fire + Vector3.new(0, 2.6, 0)), Color3.fromRGB(255, 240, 190), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
-		glow(flame, Color3.fromRGB(255, 185, 95), 34, 1.7, true) -- was 3.4: the floor and held items washed out yellow near the fire (i65)
+		glow(flame, Color3.fromRGB(255, 185, 95), 32, 1.15, true) -- was 3.4 then 1.7: the camp blew out to white (i65, Gemini r2 2026-11-09)
 		local sparks = Instance.new("ParticleEmitter")
 		sparks.Color, sparks.LightEmission, sparks.Rate = ColorSequence.new(PAL.warm), 1, 6
 		sparks.Size, sparks.Lifetime, sparks.Speed = NumberSequence.new(0.25, 0), NumberRange.new(1.5, 2.5), NumberRange.new(3, 6)
@@ -218,7 +218,7 @@ function Cave.build(parent, origin, seed)
 		end
 		-- the parked cart: a lilac tub with a butter rim on four dark wheels
 		local cart = st * CFrame.new(0, 0, railZ1 - 3)
-		local body = part("Camp", "CartBody", Vector3.new(3, 1.8, 3.6), cart * CFrame.new(0, 1.65, 0), Color3.fromRGB(150, 128, 200))
+		local body = part("Camp", "CartBody", Vector3.new(3, 1.8, 3.6), cart * CFrame.new(0, 1.65, 0), Color3.fromRGB(122, 102, 172))
 		local pr = Instance.new("ProximityPrompt") -- ride up: the minecart escape (the server binds prompts with a RideUp attribute)
 		pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode = "Ride up", "Minecart", Enum.KeyCode.F
 		pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.HoldDuration = 12, false, 0
@@ -240,21 +240,35 @@ function Cave.build(parent, origin, seed)
 			glow(l, PAL.warm, 16, 0.7)
 		end
 		part("Camp", "TunnelBeam", Vector3.new(7.6, 0.9, 0.9), st * CFrame.new(0, 7.4, railZ0), PAL.barkLt)
-		local sign = part("Camp", "StationSign", Vector3.new(5.6, 1.5, 0.3), st * CFrame.new(0, 8.9, railZ0 + 0.35), PAL.cream)
+		local sign = part("Camp", "StationSign", Vector3.new(5.6, 1.5, 0.3), st * CFrame.new(0, 8.9, railZ0 + 0.35), PAL.bark)
 		local sg = Instance.new("SurfaceGui")
 		sg.Face, sg.PixelsPerStud, sg.LightInfluence = Enum.NormalId.Back, 40, 0
 		local tl = Instance.new("TextLabel")
 		tl.Size, tl.BackgroundTransparency, tl.Text, tl.TextScaled, tl.Font = UDim2.fromScale(1, 1), 1, "CAMP 1 STATION", true, Enum.Font.FredokaOne
-		tl.TextColor3 = Color3.fromRGB(111, 88, 176)
+		tl.TextColor3 = Color3.fromRGB(255, 217, 112)
 		tl.Parent = sg
 		sg.Parent = sign
 		-- the platform beside the rails: riders step off here (LiftLanding keeps its name for the server)
 		part("Camp", "Platform", Vector3.new(5, 1, 12), st * CFrame.new(4.6, 0.5, 0), PAL.plank:Lerp(PAL.bark, 0.65))
+		-- station dressing (Gemini r1: "a desolate void"): crates of ore and a sack on the platform, a bench, glowing mushrooms by
+		-- the tunnel mouth, a barrel at the buffers
+		for k, c in { { 5.6, 1.6, 4.2, 1.2, PAL.plank }, { 5.3, 1.45, 3.1, 0.9, PAL.barkLt }, { 5.7, 2.75, 4.0, 0.8, PAL.plank:Lerp(PAL.cream, 0.3) } } do
+			part("Camp", "StationCrate", Vector3.new(c[4], c[4], c[4]), st * CFrame.new(c[1], c[2] - 0.6 + c[4] / 2, c[3]) * CFrame.Angles(0, k * 0.35, 0), c[5])
+		end
+		part("Camp", "CrateOre", Vector3.new(0.5, 0.4, 0.5), st * CFrame.new(5.62, 2.55, 4.18) * CFrame.Angles(0, 0.4, 0), PAL.lightTeal, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+		part("Camp", "Sack", Vector3.new(1, 1.1, 0.9), st * CFrame.new(3.6, 1.55, -4.6) * CFrame.Angles(0, 0.5, 0.1), PAL.cream:Lerp(PAL.plank, 0.35))
+		part("Camp", "BenchSeat", Vector3.new(1, 0.3, 3.2), st * CFrame.new(6.4, 1.85, -1.5), PAL.barkLt)
+		for _, z in { -2.8, -0.2 } do part("Camp", "BenchLeg", Vector3.new(0.8, 0.85, 0.3), st * CFrame.new(6.4, 1.425, z), PAL.bark) end
+		for k, m in { { -3.6, -10.2, 1.2, PAL.lightMint }, { -4.4, -9.4, 0.8, PAL.lightViolet }, { 3.7, -10.0, 1.0, PAL.lightTeal } } do
+			part("Camp", "StationStem", Vector3.new(0.35, m[3], 0.35), st * CFrame.new(m[1], m[3] / 2, m[2]), PAL.cream)
+			part("Camp", "StationCap", Vector3.new(m[3] * 0.9, 0.35, m[3] * 0.9), st * CFrame.new(m[1], m[3] + 0.15, m[2]) * CFrame.Angles(0, k, 0), m[4], { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+		end
+		part("Camp", "StationBarrel", Vector3.new(1.3, 1.7, 1.3), st * CFrame.new(-2.9, 0.85, railZ1 + 0.6), PAL.barkLt, { Shape = Enum.PartType.Cylinder, Orientation = Vector3.new(0, 0, 90) })
 		for _, z in { -5, 5 } do -- lantern posts on the platform light the arrival
 			part("Camp", "PlatformPost", Vector3.new(0.6, 5, 0.6), st * CFrame.new(6.6, 3.5, z), PAL.bark)
 			part("Camp", "PlatformArm", Vector3.new(1.6, 0.4, 0.4), st * CFrame.new(5.9, 5.8, z), PAL.bark)
-			local l = part("Camp", "PlatformLamp", Vector3.new(0.8, 1, 0.8), st * CFrame.new(5.3, 5.1, z), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
-			glow(l, PAL.warm, 22, 1.2)
+			local l = part("Camp", "PlatformLamp", Vector3.new(0.8, 1, 0.8), st * CFrame.new(5.3, 5.1, z), PAL.warm:Lerp(PAL.cream, 0.5), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+			glow(l, Color3.fromRGB(255, 226, 196), 18, 0.6) -- soft: the warm lamps turned the deck orange (Gemini r1)
 		end
 		for k = -2, 2 do -- plank seams across the deck
 			part("Camp", "PlankSeam", Vector3.new(5.1, 0.08, 0.16), st * CFrame.new(4.6, 1.02, k * 2.4), PAL.bark:Lerp(Color3.new(0, 0, 0), 0.35), DECO)
@@ -278,13 +292,13 @@ function Cave.build(parent, origin, seed)
 			local p = origin + Vector3.new(math.cos(a) * (ringR + 3), 0, math.sin(a) * (ringR + 3))
 			part("Camp", "LanternPost", Vector3.new(0.6, 6, 0.6), p + Vector3.new(0, 3, 0), PAL.bark)
 			local l = part("Camp", "Lantern", Vector3.new(1.2, 1.4, 1.2), p + Vector3.new(0, 6.4, 0), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false })
-			glow(l, PAL.warm, 26, 0.8)
+			glow(l, PAL.warm, 24, 0.55)
 		end
 		local fill = part("Camp", "WarmFill", Vector3.new(1, 1, 1), W(0, 0, 22), PAL.warm, { Transparency = 1, CanCollide = false, CanQuery = false })
-		glow(fill, Color3.fromRGB(255, 200, 150), 70, 0.8)
+		glow(fill, Color3.fromRGB(255, 200, 150), 70, 0.5)
 		for _, at in { { -5, 5 }, { 5, 6 }, { -6.5, -1.5 } } do -- a lantern glow by each tent
 			local l = part("Camp", "TentLamp", Vector3.new(0.8, 1, 0.8), W(at[1], at[2], 1.2) + Vector3.new(2.5, 0, 2.5), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
-			glow(l, PAL.warm, 22, 1.2)
+			glow(l, PAL.warm, 20, 0.8)
 		end
 		return exits
 	end
@@ -588,7 +602,9 @@ function Cave.build(parent, origin, seed)
 			nCeil += 1
 			if hash(c.i, c.j, 20) > 0.9 then -- a stalactite
 				local len = 4 + math.floor(hash(c.i, c.j, 21) * 4) * 3
-				part("Ceiling", "Stalactite", Vector3.new(CELL * 0.75, len, CELL * 0.75), W(c.i, c.j, cq - len / 2), PAL.rock[2], { CastShadow = false })
+				-- rock-textured and tapered (Gemini r1-r3 kept reading the plain lit block as "a white placeholder hanging from the ceiling")
+				part("Ceiling", "Stalactite", Vector3.new(CELL * 0.75, len, CELL * 0.75), W(c.i, c.j, cq - len / 2), PAL.rock[1], { CastShadow = false, Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
+				part("Ceiling", "StalactiteTip", Vector3.new(CELL * 0.4, 2, CELL * 0.4), W(c.i, c.j, cq - len - 0.9), PAL.rock[1], { CastShadow = false, Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
 			end
 		end
 	end

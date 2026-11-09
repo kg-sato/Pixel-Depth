@@ -61,7 +61,7 @@ local function buildPiece(f, k, rng)
 		local s = rng:NextNumber() < 0.5 and -1 or 1
 		local col = CRYSTAL[rng:NextInteger(1, #CRYSTAL)]
 		for i = 1, 3 do
-			part(m, Vector3.new(0.8, rng:NextNumber(1.4, 2.6), 0.8), cf * CFrame.new(s * 4.4, rng:NextNumber(1, 5), rng:NextNumber(-1.5, 1.5)) * CFrame.Angles(0, 0, s * rng:NextNumber(0.5, 1)), col, { Material = Enum.Material.Neon })
+			part(m, Vector3.new(0.8, rng:NextNumber(1.4, 2.6), 0.8), cf * CFrame.new(s * 4.4, rng:NextNumber(1, 5), rng:NextNumber(-1.5, 1.5)) * CFrame.Angles(0, 0, s * rng:NextNumber(0.5, 1)), col:Lerp(Color3.new(1, 1, 1), 0.35), i == 1 and { Material = Enum.Material.Neon, Size = Vector3.new(0.45, 1.2, 0.45) } or { Material = Enum.Material.Glass, Transparency = 0.25 })
 		end
 	end
 	m.Parent = f
@@ -262,6 +262,9 @@ function M.play(opt)
 		local rock = Instance.new("Model")
 		local r1 = part(rock, Vector3.new(2.6, 2.1, 2.4), CFrame.new(ORIGIN.X + x, ORIGIN.Y + 9, z) * CFrame.Angles(0.3, 0.6, 0.2), ROCKC[3], { Material = Enum.Material.Slate, MaterialVariant = "PixelCaveRock" })
 		part(rock, Vector3.new(1.7, 1.4, 1.7), r1.CFrame * CFrame.new(0.7, 0.7, -0.4) * CFrame.Angles(0.4, 0.2, 0.5), ROCKC[2], { Material = Enum.Material.Slate, MaterialVariant = "PixelCaveRock" })
+		for k = 1, 2 do -- glowing pink cracks so a falling rock reads at a glance (Gemini r1)
+			part(rock, Vector3.new(0.18, 2.3, 0.18), r1.CFrame * CFrame.new(k == 1 and -0.5 or 0.6, 0, -1.22) * CFrame.Angles(0, 0, k == 1 and 0.5 or -0.4), Color3.fromRGB(255, 119, 168), { Material = Enum.Material.Neon })
+		end
 		rock.PrimaryPart = r1
 		rock.Parent = world
 		table.insert(hazards, { kind = "rock", lane = lane, at = at, ring = ring, rock = rock, base = r1.CFrame, threat = threat })
@@ -412,7 +415,7 @@ function M.play(opt)
 			shakeAmp = math.max(0, shakeAmp - dt * 1.2)
 			local sh = calm and 0 or shakeAmp + math.min(speed / 48, 1) * 0.02
 			cam.CameraType = Enum.CameraType.Scriptable
-			cam.CFrame = cartCF * CFrame.new(0, 3.3, 0.6) * CFrame.Angles(-0.06, 0, roll) * CFrame.Angles((math.random() - 0.5) * sh * 0.06, (math.random() - 0.5) * sh * 0.06, 0)
+			cam.CFrame = cartCF * CFrame.new(0, 3.8, 0.6) * CFrame.Angles(-0.06, 0, roll) * CFrame.Angles((math.random() - 0.5) * sh * 0.06, (math.random() - 0.5) * sh * 0.06, 0)
 			cam.FieldOfView = C.FP_FOV + (calm and 0 or math.min(#boostUntil, 3) * 2)
 			if dist >= E.dist then -- out of the tunnel: tell the server, wait for it to move us to town, then burst out of the shaft
 				phase = "wait"
@@ -468,21 +471,35 @@ function M.play(opt)
 			shakeAmp = math.max(0, shakeAmp - dt * 1.2)
 			cam.CFrame = CFrame.lookAt(eye, cf.Position + Vector3.new(0, 1.5, 0)) * CFrame.Angles((math.random() - 0.5) * shakeAmp * 0.06, (math.random() - 0.5) * shakeAmp * 0.06, 0)
 			if u > 1 and not card then
-				card = frame({ Size = UDim2.fromScale(0.34, 0.36), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, ZIndex = 6 })
+				card = frame({ Size = UDim2.fromScale(0.34, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, ZIndex = 6 })
 				round(card, 0.1)
-				stroke(card, INK, 4)
+				stroke(card, Color3.fromRGB(158, 142, 194), 4)
 				local sc = Instance.new("UIScale")
 				sc.Scale = 0.6
 				sc.Parent = card
 				game:GetService("TweenService"):Create(sc, TweenInfo.new(0.35, Enum.EasingStyle.Back), { Scale = 1 }):Play()
-				label(card, "ESCAPED!", UDim2.fromScale(0.8, 0.2), UDim2.fromScale(0.5, 0.16), INK, 7)
+				label(card, "ESCAPED!", UDim2.fromScale(0.8, 0.18), UDim2.fromScale(0.5, 0.2), INK, 7)
+				local stars = hits == 0 and 3 or (hits <= 2 and 2 or 1) -- a clean run is three stars
+				for k = 1, 3 do
+					local st = label(card, "\u{2605}", UDim2.fromScale(0.13, 0.17), UDim2.fromScale(0.36 + (k - 1) * 0.14, 0.05), k <= stars and Color3.fromRGB(255, 196, 70) or Color3.fromRGB(220, 212, 236), 8)
+					stroke(st, INK, 2)
+				end
+				local sub = frame({ Parent = card, Size = UDim2.fromScale(0.86, 0.46), Position = UDim2.fromScale(0.5, 0.56), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 249, 230), ZIndex = 6 })
+				round(sub, 0.12)
+				local go = Instance.new("TextButton")
+				go.Size, go.Position, go.AnchorPoint, go.ZIndex = UDim2.fromScale(0.46, 0.12), UDim2.fromScale(0.5, 0.9), Vector2.new(0.5, 0.5), 8
+				go.BackgroundColor3, go.Font, go.TextScaled, go.Text, go.TextColor3, go.AutoButtonColor = Color3.fromRGB(120, 224, 143), Enum.Font.FredokaOne, true, "CONTINUE", Color3.new(1, 1, 1)
+				round(go, 0.3)
+				stroke(go, Color3.fromRGB(63, 156, 124), 3)
+				go.Parent = card
+				go.Activated:Connect(function() done = true end)
 				local rows = { { "TIME", string.format("%.1f s", runTime) }, { "DODGES", tostring(dodges) }, { "BOOSTS", tostring(boosts) }, { "BONUS", "+" .. tostring(bonus or 0) .. " COINS" } }
 				for i, r in rows do
-					label(card, r[1], UDim2.fromScale(0.4, 0.12), UDim2.fromScale(0.3, 0.3 + i * 0.13), Color3.fromRGB(122, 98, 160), 7)
-					label(card, r[2], UDim2.fromScale(0.45, 0.12), UDim2.fromScale(0.7, 0.3 + i * 0.13), i == 4 and Color3.fromRGB(214, 140, 40) or INK, 7)
+					label(card, r[1], UDim2.fromScale(0.4, 0.085), UDim2.fromScale(0.3, 0.30 + i * 0.104), Color3.fromRGB(122, 98, 160), 7)
+					label(card, r[2], UDim2.fromScale(0.45, 0.085), UDim2.fromScale(0.7, 0.30 + i * 0.104), i == 4 and Color3.fromRGB(214, 140, 40) or INK, 7)
 				end
 			end
-			if u > 4.2 then done = true end
+			if u > 7 then done = true end -- CONTINUE ends it sooner
 		end
 	end)
 	local started = os.clock()

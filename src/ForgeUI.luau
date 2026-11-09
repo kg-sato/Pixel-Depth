@@ -202,7 +202,7 @@ function M.start(E)
 		for _, k in keys do
 			local h, n = have[k] or 0, need[k]
 			if h < n then ok = false end
-			table.insert(parts, string.format('<font color="%s">%d/%d</font> %s', h >= n and hex(DEEP_MINT) or "#e0507a", math.min(h, n), n, C.oreName(k)))
+			table.insert(parts, string.format('<font color="%s">%d/%d</font> %s', h >= n and hex(DEEP_MINT) or "#f28b82", math.min(h, n), n, C.oreName(k)))
 		end
 		return "NEEDS  " .. table.concat(parts, "   "), ok
 	end

@@ -9,7 +9,7 @@ function M.start(E)
 	local INK, PINK, GOLD, CREAM, FONT = E.INK, E.PINK, E.GOLD, E.CREAM, E.FONT
 	local UIS, RunService = game:GetService("UserInputService"), game:GetService("RunService")
 	local FlareR = R:WaitForChild("Flare", 30)
-	local SOOT, EYE = Color3.fromRGB(30, 24, 44), Color3.fromRGB(255, 236, 160)
+	local SOOT, EYE = Color3.fromRGB(44, 42, 62), Color3.fromRGB(214, 196, 140) -- charcoal; eyes a soft gold (pale neon bloomed to white)
 	-- HP pill above the torch
 	local hpPill = panel(caveHud, S(270, 52), S(20, 412), nil, "pillPink")
 	fit(hpPill, 270, 52)
@@ -74,10 +74,14 @@ function M.start(E)
 			table.insert(fluff, { part = f, off = f.CFrame })
 		end
 		local eyes = {}
-		for _, x in { -0.38, 0.38 } do
-			local e = p(Vector3.new(0.34, 0.48, 0.1), CFrame.new(x, 0.15, -1.08), EYE, { Material = Enum.Material.Neon })
+		for _, x in { -0.4, 0.4 } do -- two round eyes, each with a dark pupil
+			local e = p(Vector3.new(0.12, 0.5, 0.5), CFrame.new(x, 0.15, -1.06) * CFrame.Angles(0, math.pi / 2, 0), EYE, { Material = Enum.Material.Neon, Shape = Enum.PartType.Cylinder })
 			table.insert(eyes, { part = e, off = e.CFrame })
+			local pu = p(Vector3.new(0.1, 0.24, 0.24), CFrame.new(x + 0.03, 0.12, -1.12) * CFrame.Angles(0, math.pi / 2, 0), Color3.fromRGB(26, 18, 40), { Shape = Enum.PartType.Cylinder })
+			table.insert(eyes, { part = pu, off = pu.CFrame })
 		end
+		local puff = new("ParticleEmitter", body, { Rate = 6, Lifetime = NumberRange.new(0.8, 1.4), Speed = NumberRange.new(0.5, 1.2), SpreadAngle = Vector2.new(180, 180),
+			Size = NumberSequence.new(0.5, 1.1), Transparency = NumberSequence.new(0.45, 1), Color = ColorSequence.new(Color3.fromRGB(96, 80, 130)), LightInfluence = 0.3 }) -- soot puffs
 		return { m = m, body = body, mesh = mesh, fluff = fluff, eyes = eyes }
 	end
 	local function burstAt(pos, color, n) burst(pos, Vector3.yAxis, color, n) end
@@ -122,7 +126,7 @@ function M.start(E)
 				local shut = now > v.blink and now < v.blink + 0.12
 				if now > v.blink + 0.12 then v.blink = now + 2 + math.random() * 2 end
 				for _, e in v.eyes do
-					e.part.CFrame = base * CFrame.new(e.off.Position * Vector3.new(sxz, sy, 1))
+					e.part.CFrame = base * CFrame.new(e.off.Position * Vector3.new(sxz, sy, 1)) * e.off.Rotation
 					e.part.Transparency = (shut or state == "flee") and 1 or 0
 				end
 			end
@@ -175,7 +179,7 @@ function M.start(E)
 			for name, lines in LINES do
 				local head = caves and caves:FindFirstChild(name .. "Head", true)
 				if head and not bubbles[name] then
-					local bb = new("BillboardGui", head, { Name = "Bubble", Size = UDim2.fromScale(7, 1.6), StudsOffset = Vector3.new(0, 2.6, 0), AlwaysOnTop = false, MaxDistance = 40, LightInfluence = 0, Enabled = false })
+					local bb = new("BillboardGui", head, { Name = "Bubble", Size = UDim2.fromScale(5.6, 1.25), StudsOffset = Vector3.new(0, 3.6, 0), AlwaysOnTop = false, MaxDistance = 40, LightInfluence = 0, Enabled = false })
 					local bg = new("Frame", bb, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = CREAM, BorderSizePixel = 0 })
 					new("UICorner", bg, { CornerRadius = UDim.new(0.4, 0) })
 					new("UIStroke", bg, { Color = INK, Thickness = 2 })
