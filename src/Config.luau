@@ -203,7 +203,7 @@ C.HATCH_TIME = 5 -- seconds of the hatch show before the pet starts digging
 
 -- Saving (ProfileStore; Studio without API access uses its mock store)
 C.SAVE_STORE = "PixelDepths_v1"
-C.SAVE_TEMPLATE = { gold = 0, gems = 0, lv = {}, equip = 0, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
+C.SAVE_TEMPLATE = { gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
 
 -- Layer hazards. Layer 2, Titan's Stir: after you dig, the block above may shake loose and drop one row.
 -- Standing under it stuns you briefly and spills part of the bag (no damage, kid friendly).

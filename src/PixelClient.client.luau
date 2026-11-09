@@ -1299,8 +1299,11 @@ end)
 ;(function()
 	local PICK_ART = {} -- forge card art per pickaxe tier (transparent renders, art/forge/icons; ids in art/forge/icons/asset_ids.json)
 	for i, id in { 71741313949634, 75499323664879, 138546318953293, 132794152773137, 84853376787476, 74629621321599, 85151061239109, 89557713111747, 123094633576038, 86622635171966, 113248414659515, 110656342327557 } do PICK_ART[i] = "rbxassetid://" .. id end
+	local CARD_ART = {} -- head-focused crops for the grid cards (art/forge/icons/card_XX.png); Wood and Stone use their icons
+	for i, id in { [3] = 90808534460092, [4] = 119884085006157, [5] = 107875989974673, [6] = 70457182821389, [7] = 119481801915093, [8] = 114644891397243, [9] = 104983066807882, [10] = 133530729937666, [11] = 80049267894218, [12] = 135052327149896 } do CARD_ART[i] = "rbxassetid://" .. id end
+	local FX_GLOW, FX_RAYS = "rbxassetid://77591933607769", "rbxassetid://98789616938156" -- soft radial glow and feathered rays (art/forge/fx)
 	local Lighting = game:GetService("Lighting")
-	local DEEP_MINT = Color3.fromRGB(40, 128, 104)
+	local DEEP_MINT = Color3.fromRGB(32, 156, 92) -- gains read as bright green
 	local function rarityOf(what, i) return C.RARITIES[what == "pick" and C.PICK_RARITY[i] or math.min(i, #C.RARITIES)] end
 	local function tones(col) return col:Lerp(WHITE, 0.74), col:Lerp(INK, 0.18) end -- card fill, card rim
 	local function short(name) return (name:gsub(" Pickaxe", "")) end
@@ -1376,19 +1379,16 @@ end)
 		new("UIStroke", glow, { Color = WHITE, Thickness = 3 })
 		local nm = text(face, "", UDim2.fromScale(0.9, 0.13), UDim2.fromScale(0.5, 0.06), Vector2.new(0.5, 0), INK, 700, false)
 		nm.ZIndex = 6
-		local art = new("ImageLabel", face, { Name = "Art", BackgroundTransparency = 1, Size = UDim2.fromScale(0.84, 0.64), Position = UDim2.fromScale(0.5, 0.52), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 5 })
-		local lvBox = panel(face, UDim2.fromScale(0.44, 0.17), UDim2.fromScale(0.05, 0.95), Vector2.new(0, 1), "dark")
+		local art = new("ImageLabel", face, { Name = "Art", BackgroundTransparency = 1, Size = UDim2.fromScale(0.94, 0.7), Position = UDim2.fromScale(0.5, 0.53), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 5 })
+		local lvBox = panel(face, UDim2.fromScale(0.38, 0.17), UDim2.fromScale(0.04, 0.96), Vector2.new(0, 1), "dark")
 		lvBox.ZIndex = 6
 		local lv = text(lvBox, "LV 1", UDim2.fromScale(0.8, 0.62), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), WHITE, 700, false)
 		lv.ZIndex = 7
 		local ok = check(face, UDim2.fromScale(0.22, 0.22), UDim2.fromScale(0.95, 0.96), Vector2.new(1, 1))
 		ok.ZIndex = 7
-		local eq = new("Frame", face, { Name = "Equipped", Size = UDim2.fromScale(0.26, 0.26), Position = UDim2.fromScale(0.96, 0.97), AnchorPoint = Vector2.new(1, 1), BackgroundColor3 = MINT, BorderSizePixel = 0, ZIndex = 7 })
-		new("UIAspectRatioConstraint", eq, { AspectRatio = 1 })
-		round(eq)
-		new("UIStroke", eq, { Color = WHITE, Thickness = 2 })
-		local eqIc = icon(eq, "pick", UDim2.fromScale(0.78, 0.78), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
-		eqIc.ZIndex = 8
+		local eq = panel(face, UDim2.fromScale(0.56, 0.17), UDim2.fromScale(0.97, 0.96), Vector2.new(1, 1), "mint")
+		eq.Name, eq.ZIndex = "Equipped", 7
+		text(eq, "EQUIPPED", UDim2.fromScale(0.86, 0.56), UDim2.fromScale(0.5, 0.46), Vector2.new(0.5, 0.5), WHITE).ZIndex = 8
 		local price = panel(face, UDim2.fromScale(0.62, 0.18), UDim2.fromScale(0.96, 0.96), Vector2.new(1, 1), "butter")
 		price.ZIndex = 7
 		local pic = icon(price, "coin", UDim2.fromScale(0.3, 0.74), UDim2.fromScale(0.07, 0.48), Vector2.new(0, 0.5))
@@ -1413,16 +1413,12 @@ end)
 	det.Name = "Detail"
 	local stage = new("Frame", det, { Name = "Stage", Size = UDim2.fromScale(0.9, 0.42), Position = UDim2.fromScale(0.5, 0.235), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 2 })
 	local glows = {}
-	for k, g in { { 1.0, 0.72 }, { 0.78, 0.55 }, { 0.54, 0.3 } } do
-		local c = new("Frame", stage, { Size = UDim2.fromScale(g[1], g[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = g[2], BorderSizePixel = 0, ZIndex = 2 })
-		new("UIAspectRatioConstraint", c, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-		round(c)
-		glows[k] = c
-	end
-	local rays = new("Frame", stage, { Name = "Rays", Size = UDim2.fromScale(1.15, 1.15), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 2 })
+	local rays = new("ImageLabel", stage, { Name = "Rays", Image = FX_RAYS, ImageTransparency = 0.35, BackgroundTransparency = 1, Size = UDim2.fromScale(1.3, 1.3), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 2 })
 	new("UIAspectRatioConstraint", rays, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-	for k = 0, 5 do
-		new("Frame", rays, { Size = UDim2.fromScale(1, 0.05), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = k * 30, BackgroundColor3 = WHITE, BackgroundTransparency = 0.72, BorderSizePixel = 0, ZIndex = 2 })
+	for k, g in { { 1.25, 0.1 }, { 0.7, 0.25 } } do -- a wide soft glow in the rarity colour, a brighter core
+		local c = new("ImageLabel", stage, { Image = FX_GLOW, ImageTransparency = g[2], BackgroundTransparency = 1, Size = UDim2.fromScale(g[1], g[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
+		new("UIAspectRatioConstraint", c, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+		glows[k] = c
 	end
 	local big = new("ImageLabel", stage, { Name = "Art", BackgroundTransparency = 1, Size = UDim2.fromScale(0.95, 0.95), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 4 })
 	local bigSc = scaler(big)
@@ -1466,7 +1462,7 @@ end)
 	local function setRow(k, label, iconName, from, to)
 		local r = rows[k]
 		r.label.Text, r.icon.Image = label, ICON[iconName]
-		r.value.Text = to and to ~= from and (from .. '  <font color="' .. hex(PLUM_SOFT) .. '">></font>  <font color="' .. hex(DEEP_MINT) .. '">' .. to .. "</font>") or from
+		r.value.Text = to and to ~= from and (from .. '  <font color="' .. hex(PLUM_SOFT) .. '">></font>  <font color="' .. hex(DEEP_MINT) .. '">' .. to .. " \u{25B2}</font>") or from
 	end
 	local function val(i, lv) return string.format("x%.1f", C.pickValue(i, lv)) end
 	local function zone(lv) return math.floor(C.strikeArc(lv) + 0.5) .. "°" end
@@ -1477,7 +1473,7 @@ end)
 		if not def or not state then return end
 		local r = rarityOf(tab, i)
 		local fill, rim = tones(r[3])
-		for k, g in glows do g.BackgroundColor3 = k == 3 and r[3]:Lerp(WHITE, 0.5) or fill end
+		glows[1].ImageColor3, glows[2].ImageColor3, rays.ImageColor3 = r[3]:Lerp(WHITE, 0.35), r[3]:Lerp(WHITE, 0.75), r[3]:Lerp(WHITE, 0.55)
 		big.Image = tab == "pick" and PICK_ART[i] or ICON.bag
 		dName.Text = def.name
 		rar.BackgroundColor3, rarT.Text = rim, r[1]:upper()
@@ -1551,7 +1547,7 @@ end)
 				local fill, rim = tones(rarityOf(tab, i)[3])
 				cd.face.BackgroundColor3, cd.rim.Color, cd.lip.BackgroundColor3 = fill, rim, rim
 				cd.name.Text = short(def.name):upper()
-				cd.art.Image = tab == "pick" and PICK_ART[i] or ICON.bag
+				cd.art.Image = tab == "pick" and (CARD_ART[i] or PICK_ART[i]) or ICON.bag
 				local own, nxt = i <= cur, i == cur + 1
 				cd.art.ImageColor3 = (own or nxt) and WHITE or rim:Lerp(WHITE, 0.25)
 				cd.art.ImageTransparency = (own or nxt) and 0 or 0.35
@@ -1647,16 +1643,14 @@ end)
 	-- light rays and the item pop, the title ribbon drops, confetti falls, the level ribbon unfurls, the stats count up, NICE! pops.
 	local celGui = new("ScreenGui", gui.Parent, { Name = "ForgeCelebrate", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 11, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
 	local cel = new("Frame", celGui, { Name = "Stage", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, BorderSizePixel = 0, Visible = false, ZIndex = 20, Active = true }) -- Active: clicks never fall through to the forge
-	local cRays = new("Frame", cel, { Size = S(560, 560), Position = S(640, 250), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 20 })
+	local cRays = new("Frame", cel, { Size = S(640, 640), Position = S(640, 250), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 20 })
 	new("UIAspectRatioConstraint", cRays, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-	for k = 0, 8 do
-		local ray = new("Frame", cRays, { Size = UDim2.fromScale(1, 0.08), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = k * 20, BackgroundColor3 = ({ PINK, LILAC, BUTTER })[k % 3 + 1], BackgroundTransparency = 0.35, BorderSizePixel = 0, ZIndex = 20 })
-		new("UIGradient", ray, { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.25), NumberSequenceKeypoint.new(1, 1) }) })
-	end
+	local cRaysA = new("ImageLabel", cRays, { Image = FX_RAYS, ImageColor3 = Color3.fromRGB(255, 196, 228), BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 20 })
+	local cRaysB = new("ImageLabel", cRays, { Image = FX_RAYS, ImageColor3 = Color3.fromRGB(255, 232, 160), ImageTransparency = 0.3, BackgroundTransparency = 1, Size = UDim2.fromScale(0.8, 0.8), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 15, ZIndex = 20 })
 	local cGlow = new("Frame", cel, { Size = S(340, 340), Position = S(640, 250), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 21 })
 	new("UIAspectRatioConstraint", cGlow, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-	for _, g in { { 1, 0.82, PINK }, { 0.74, 0.7, LILAC }, { 0.5, 0.5, Color3.fromRGB(255, 226, 240) }, { 0.28, 0.25, WHITE } } do -- a soft radial burst
-		round(new("Frame", cGlow, { Size = UDim2.fromScale(g[1], g[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = g[3], BackgroundTransparency = g[2], BorderSizePixel = 0, ZIndex = 21 }))
+	for _, g in { { 1.5, 0.15, PINK }, { 0.95, 0.1, Color3.fromRGB(255, 220, 240) }, { 0.5, 0, WHITE } } do -- a soft radial burst
+		new("ImageLabel", cGlow, { Image = FX_GLOW, ImageColor3 = g[3], ImageTransparency = g[2], BackgroundTransparency = 1, Size = UDim2.fromScale(g[1], g[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 21 })
 	end
 	local cArt = new("ImageLabel", cel, { BackgroundTransparency = 1, Size = S(340, 340), Position = S(640, 252), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 22 })
 	new("UIAspectRatioConstraint", cArt, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
@@ -1706,7 +1700,7 @@ end)
 		for k, r in { row1, row2 } do cRows[k].text.Text, cRows[k].medal.Visible = r or "", r ~= nil end
 		cRows[2].text.Text, cRows[2].medal.Visible = row2 or "", row2 ~= nil
 		cel.Visible, cel.BackgroundTransparency = true, 1
-		tween(cel, 0.25, { BackgroundTransparency = 0.22 })
+		tween(cel, 0.25, { BackgroundTransparency = 0.14 })
 		for _, o in { cRays, cGlow, cArt, cTitle, cLv, cStats, cNice } do scaler(o).Scale = 0 end
 		tween(scaler(cRays), 0.5, { Scale = 1 }, Enum.EasingStyle.Back)
 		tween(scaler(cGlow), 0.4, { Scale = 1 }, Enum.EasingStyle.Back)
@@ -1736,7 +1730,10 @@ end)
 		end)
 		task.delay(1.1, function() tween(scaler(cNice), 0.4, { Scale = 1 }, Enum.EasingStyle.Back) end)
 		if cSpin then cSpin:Disconnect() end
-		cSpin = RunService.RenderStepped:Connect(function() cRays.Rotation = os.clock() * 18 % 360 end)
+		cSpin = RunService.RenderStepped:Connect(function()
+			cRaysA.Rotation = os.clock() * 16 % 360
+			cRaysB.Rotation = -os.clock() * 10 % 360
+		end)
 	end
 	cNice.Activated:Connect(function()
 		tween(cel, 0.2, { BackgroundTransparency = 1 })
@@ -1746,7 +1743,7 @@ end)
 			if cSpin then cSpin:Disconnect() cSpin = nil end
 		end)
 	end)
-	local function row(label, a, b) return label .. "  " .. a .. '  <font color="' .. hex(PLUM_SOFT) .. '">></font>  <font color="' .. hex(DEEP_MINT) .. '">' .. b .. "</font>" end
+	local function row(label, a, b) return label .. "  " .. a .. '  <font color="' .. hex(PLUM_SOFT) .. '">></font>  <font color="' .. hex(DEEP_MINT) .. '">' .. b .. " \u{25B2}</font>" end
 	forgeUI.fx = function(kind, a, b)
 		if kind == "upgraded" then -- a = tier, b = new level
 			celebrate("LEVEL UP!", PICK_ART[a] or ICON.pick, "LV " .. (b - 1) .. "  >  LV " .. b, row("Ore Value", val(a, b - 1), val(a, b)), row("Strike Zone", zone(b - 1), zone(b)))
@@ -2117,7 +2114,7 @@ end
 		new("UICorner", pips[i], { CornerRadius = UDim.new(0.5, 0) })
 		new("UIStroke", pips[i], { Color = Color3.fromRGB(111, 88, 176), Thickness = 3 })
 	end
-	local psHintBar = panel(ps, S(440, 36), S(640, 512), Vector2.new(0.5, 0.5), "dark")
+	local psHintBar = panel(ps, S(440, 36), S(640, 152), Vector2.new(0.5, 0.5), "dark")
 	fit(psHintBar, 440, 36)
 	psHintBar.ZIndex = 12
 	local psHint = text(psHintBar, UIS.KeyboardEnabled and "SPACE OR CLICK ON THE GOLD" or "TAP STRIKE ON THE GOLD", UDim2.fromScale(0.88, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), CREAM)
@@ -2144,7 +2141,7 @@ end
 			task.delay(0.5, function() r:Destroy() end)
 		end)
 	end
-	local strikeBtn = button(ps, "STRIKE!", S(220, 82), S(1130, 470), Vector2.new(1, 1), "mint")
+	local strikeBtn = button(ps, "STRIKE!", S(250, 74), S(640, 546), Vector2.new(0.5, 0.5), "mint", "hammer") -- under the dial (kit round 4)
 	strikeBtn.ZIndex = 12
 
 	-- Vein Rush (EXT-02): the vein drops a segment per chisel; red cracks sit on one side, chisel the other
@@ -2159,10 +2156,10 @@ end
 	for i = 1, 3 do
 		stars[i] = new("ImageLabel", quality, { Image = SPRITE.star, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.09, 0.56), Position = UDim2.fromScale(0.73 + i * 0.065, 0.46), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
 	end
-	local timeBar = panel(vr, S(420, 30), S(640, 112), Vector2.new(0.5, 0), "dark")
-	fit(timeBar, 420, 30)
+	local timeBar = panel(vr, S(460, 42), S(640, 110), Vector2.new(0.5, 0), "dark")
+	fit(timeBar, 460, 42)
 	timeBar.ZIndex = 12
-	local timeTrack = new("Frame", timeBar, { Size = UDim2.fromScale(0.9, 0.36), Position = UDim2.fromScale(0.5, 0.45), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(30, 20, 48), BorderSizePixel = 0, ZIndex = 2 })
+	local timeTrack = new("Frame", timeBar, { Size = UDim2.fromScale(0.9, 0.5), Position = UDim2.fromScale(0.5, 0.45), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(30, 20, 48), BorderSizePixel = 0, ZIndex = 2 })
 	new("UICorner", timeTrack, { CornerRadius = UDim.new(0.5, 0) })
 	local timeFill = new("Frame", timeTrack, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = MINT, BorderSizePixel = 0, ZIndex = 3 })
 	new("UICorner", timeFill, { CornerRadius = UDim.new(0.5, 0) })
@@ -2188,22 +2185,23 @@ end
 		for side = 1, 2 do
 			local c = new("Frame", column, { Size = UDim2.fromScale(0.34, 0.17), Position = UDim2.fromScale(side == 1 and 0.17 or 0.83, y - 0.085), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 11 })
 			for n, w in { 0.9, 0.62, 0.32 } do -- a red crystal spike jutting out of the vein, stepped like pixels
-				local spike = new("Frame", c, { Size = UDim2.fromScale(w, 0.22), Position = UDim2.fromScale(side == 1 and 1 or 0, 0.2 + n * 0.17), AnchorPoint = Vector2.new(side == 1 and 1 or 0, 0.5), BackgroundColor3 = n == 1 and Color3.fromRGB(255, 90, 110) or Color3.fromRGB(220, 60, 84), BorderSizePixel = 0, ZIndex = 11 })
+				local spike = new("Frame", c, { Size = UDim2.fromScale(w, 0.22), Position = UDim2.fromScale(side == 1 and 1 or 0, 0.2 + n * 0.17), AnchorPoint = Vector2.new(side == 1 and 1 or 0, 0.5), BackgroundColor3 = n == 1 and Color3.fromRGB(255, 140, 120) or Color3.fromRGB(240, 106, 100), BorderSizePixel = 0, ZIndex = 11 })
 				new("UICorner", spike, { CornerRadius = UDim.new(0.5, 0) })
-				new("UIStroke", spike, { Color = Color3.fromRGB(110, 20, 50), Thickness = 2 })
+				new("UIStroke", spike, { Color = Color3.fromRGB(150, 56, 70), Thickness = 2 }) -- soft coral, not alarm red (kit round 4)
 			end
 			cracks[side] = c
 		end
 		slots[k] = { seg = seg, cracks = cracks, lite = lite, dark = dark, lines = lines }
 	end
-	local miner = new("ImageLabel", column, { Image = ICON.pick, BackgroundTransparency = 1, ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.17, 0.16), Position = UDim2.fromScale(0.12, 1), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 13 })
+	local miner = new("ImageLabel", column, { Image = ICON.pick, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.17, 0.16), Position = UDim2.fromScale(0.12, 1), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 13 })
 	local beatBar = panel(vr, S(200, 36), S(640, 480), Vector2.new(0.5, 0.5), "dark")
 	fit(beatBar, 200, 36)
 	beatBar.ZIndex = 12
 	local beatText = text(beatBar, "BEAT 1 / 10", UDim2.fromScale(0.84, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), CREAM)
 	beatText.ZIndex = 3
-	local leftBtn = button(vr, "< CHISEL LEFT", S(300, 86), S(190, 470), Vector2.new(0, 1), "mint") -- clear of the vein and the stick/jump zones
-	local rightBtn = button(vr, "CHISEL RIGHT >", S(300, 86), S(1090, 470), Vector2.new(1, 1), "pink")
+	local leftBtn = button(vr, "< CHISEL LEFT", S(300, 86), S(190, 470), Vector2.new(0, 1), "mint", "chisel") -- clear of the vein and the stick/jump zones
+	local rightBtn = button(vr, "CHISEL RIGHT >", S(300, 86), S(1090, 470), Vector2.new(1, 1), "pink", "chisel")
+	rightBtn.Icon.Rotation = 90 -- the chisel points the other way
 	leftBtn.ZIndex, rightBtn.ZIndex = 12, 12
 	if UIS.KeyboardEnabled then
 		keyCap(leftBtn, "A", UDim2.fromScale(0.1, 0.5), UDim2.fromScale(0.06, 0.12))
@@ -2220,7 +2218,11 @@ end
 	fit(swatch, 1, 1)
 	new("UICorner", swatch, { CornerRadius = UDim.new(0.5, 0) })
 	new("UIStroke", swatch, { Color = Color3.fromRGB(111, 88, 176), Thickness = 4 })
+	new("UIGradient", swatch, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(150, 140, 175)) }) -- glossy: lit on top, shaded below
+	local swGlow = new("ImageLabel", result, { Image = "rbxassetid://77591933607769", BackgroundTransparency = 1, ImageTransparency = 0.2, Size = UDim2.fromScale(0.42, 1.04), Position = UDim2.fromScale(0.18, 0.55), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 2 })
+	new("UIAspectRatioConstraint", swGlow, { AspectRatio = 1 })
 	local swLite = new("Frame", swatch, { Size = UDim2.fromScale(0.44, 0.3), Position = UDim2.fromScale(0.3, 0.26), AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, BackgroundTransparency = 0.25, ZIndex = 4 })
+	new("UICorner", new("Frame", swatch, { Size = UDim2.fromScale(0.12, 0.12), Position = UDim2.fromScale(0.62, 0.22), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = WHITE, BackgroundTransparency = 0.1, BorderSizePixel = 0, ZIndex = 4 }), { CornerRadius = UDim.new(0.5, 0) })
 	new("UICorner", swLite, { CornerRadius = UDim.new(0.5, 0) })
 	local rOre = text(result, "+6 ORE", UDim2.fromScale(0.6, 0.2), UDim2.fromScale(0.33, 0.2), nil, INK, 700, false)
 	rOre.TextXAlignment = Enum.TextXAlignment.Left
@@ -2238,7 +2240,7 @@ end
 	local function showResult(oreName, count, value, col, gradeText, nStars)
 		resultSeq += 1
 		local my = resultSeq
-		swatch.BackgroundColor3, swLite.BackgroundColor3 = col, col:Lerp(WHITE, 0.45)
+		swatch.BackgroundColor3, swLite.BackgroundColor3, swGlow.ImageColor3 = col:Lerp(WHITE, 0.15), col:Lerp(WHITE, 0.55), col
 		rOre.Text = "+" .. count .. " " .. string.upper(oreName)
 		rGold.Text = commas(value) .. " GOLD"
 		rGrade.Text = gradeText
@@ -2417,6 +2419,132 @@ end
 			timeFill.Size = UDim2.fromScale(math.clamp(left, 0, 1), 1)
 			timeFill.BackgroundColor3 = left > 0.3 and MINT or PINK
 			if left <= 0 then sendRush() end
+		end
+	end
+end)()
+
+-- First-visit cave tips and minigame how-to cards (feedback batch item 11, roadmap i49). A lilac ribbon banner under the location
+-- pill teaches one thing at a time the first time it matters: camp banks ore, the torch burns down, fear in the dark, sparkles
+-- are ore. Each minigame shows a how-to card beside it on its first run. Seen tips are saved on the server (state.tips).
+;(function()
+	local TipR = R:WaitForChild("Tip")
+	local keys = UIS.KeyboardEnabled
+	local TIPS = {
+		camp = { "camp", "CAMP IS SAFE: ORE YOU CARRY IS BANKED HERE" },
+		torch = { "camp", "YOUR TORCH BURNS DOWN: COME BACK TO CAMP TO RELIGHT IT" },
+		ore = { "gem", keys and "SPARKLES MEAN ORE! WALK UP AND PRESS E" or "SPARKLES MEAN ORE! WALK UP AND TAP EXTRACT" },
+		fear = { "crew", "THE DARK IS SCARY: HEAD BACK TO THE LIGHT" },
+	}
+	local banner = panel(caveHud, S(700, 66), S(640, 96), Vector2.new(0.5, 0), "ribbonLilac")
+	fit(banner, 700, 66)
+	banner.Name, banner.Visible, banner.ZIndex = "TipBanner", false, 6
+	local bIcon = icon(banner, "camp", UDim2.fromScale(0.08, 0.7), UDim2.fromScale(0.17, 0.42), Vector2.new(0.5, 0.5))
+	new("UIAspectRatioConstraint", bIcon, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+	bIcon.ZIndex = 7
+	local bText = text(banner, "", UDim2.fromScale(0.62, 0.4), UDim2.fromScale(0.54, 0.42), Vector2.new(0.5, 0.5), WHITE)
+	bText.TextStrokeColor3, bText.ZIndex = DEEP.ribbonLilac, 7
+	local shown, queue, busy = {}, {}, false
+	local function seen(name) return shown[name] or (state and state.tips and state.tips[name]) end
+	local function nextTip()
+		if busy or #queue == 0 then return end
+		busy = true
+		local name = table.remove(queue, 1)
+		bIcon.Image, bText.Text = ICON[TIPS[name][1]], TIPS[name][2]
+		banner.Visible = true
+		banner.Position = S(640, 70)
+		tween(banner, 0.4, { Position = S(640, 96) }, Enum.EasingStyle.Back)
+		pop(banner, 0.6, 0.35)
+		sfx("sparkle", 1.25)
+		task.delay(5.5, function()
+			tween(scaler(banner), 0.18, { Scale = 0.6 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
+			task.delay(0.2, function()
+				banner.Visible = false
+				scaler(banner).Scale = 1
+				busy = false
+				nextTip()
+			end)
+		end)
+	end
+	local function tip(name)
+		if seen(name) then return end
+		shown[name] = true
+		TipR:FireServer(name)
+		if TIPS[name] then -- the minigame how-to names are only marked seen, they have no banner
+			table.insert(queue, name)
+			nextTip()
+		end
+	end
+
+	-- how-to cards beside the minigames, first run of each
+	local HOWTO = {
+		strike = { "PERFECT STRIKE", { { "hammer", "The needle spins round the dial" }, { "star", "Strike when it crosses the GOLD" }, { "gem", "3 swings: each PERFECT gives bonus ore" } } },
+		rush = { "VEIN RUSH", { { "chisel", "A red crack shows on one side" }, { "chisel", "Chisel the OTHER side, fast!" }, { "star", "No slips = FLAWLESS, 3 stars" } } },
+	}
+	local card = panel(caveHud, S(330, 250), S(36, 140), nil, "panel")
+	fit(card, 330, 250)
+	card.Name, card.Visible, card.ZIndex = "HowTo", false, 13
+	local cTitle = ribbonTitle(card, "HOW TO PLAY", "ribbonPink", 0.78)
+	cTitle.ZIndex = 14
+	local cName = text(card, "", UDim2.fromScale(0.84, 0.11), UDim2.fromScale(0.5, 0.16), Vector2.new(0.5, 0), PLUM_SOFT, 700, false)
+	cName.ZIndex = 14
+	local rows = {}
+	for k = 1, 3 do
+		local y = 0.36 + (k - 1) * 0.2
+		local m = new("Frame", card, { Size = UDim2.fromScale(0.16, 0.16), Position = UDim2.fromScale(0.13, y), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = ({ BUTTER, MINT, PINK })[k], BorderSizePixel = 0, ZIndex = 14 })
+		new("UIAspectRatioConstraint", m, { AspectRatio = 1 })
+		new("UICorner", m, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", m, { Color = WHITE, Thickness = 2 })
+		local ic = icon(m, "star", UDim2.fromScale(0.8, 0.8), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
+		ic.ZIndex = 15
+		local num = text(m, tostring(k), UDim2.fromScale(0.45, 0.45), UDim2.fromScale(0.92, 0.12), Vector2.new(0.5, 0.5), WHITE)
+		num.ZIndex = 16
+		local t = text(card, "", UDim2.fromScale(0.68, 0.15), UDim2.fromScale(0.25, y), Vector2.new(0, 0.5), INK, 700, false)
+		t.TextXAlignment, t.TextWrapped, t.ZIndex = Enum.TextXAlignment.Left, true, 14
+		rows[k] = { icon = ic, text = t }
+	end
+	local current
+	local prevMg = cave.mg
+	cave.mg = function(kind, ...)
+		prevMg(kind, ...)
+		if kind == "mgStart" then
+			local _, which = ...
+			if HOWTO[which] and not seen(which) then
+				current = which
+				cName.Text = HOWTO[which][1]
+				for k, r in rows do r.icon.Image, r.text.Text = ICON[HOWTO[which][2][k][1]], HOWTO[which][2][k][2] end
+				rows[2].icon.Rotation = which == "rush" and 90 or 0 -- the second chisel points the other way
+				card.Visible = true
+				pop(card, 0.6, 0.35)
+				for k, r in rows do -- the steps arrive one by one
+					r.text.TextTransparency = 1
+					task.delay(0.15 + k * 0.18, function() tween(r.text, 0.25, { TextTransparency = 0 }) end)
+				end
+			end
+		elseif kind == "mgEnd" and current then
+			tip(current) -- seen once it has been played through
+			current = nil
+			closePanel(card)
+		end
+	end
+
+	-- triggers, checked on the cave tick
+	local prevTick = cave.tick
+	local inside = true
+	cave.tick = function(now, h)
+		prevTick(now, h)
+		if cave.mgBusy then banner.Visible = false end -- the minigame title sits there
+		if not state then return end
+		local o = C.CAVE_ORIGIN
+		local here = Vector2.new(h.Position.X - o.X, h.Position.Z - o.Z).Magnitude < C.CAMP_RING
+		tip("camp")
+		if inside and not here then tip("torch") end
+		inside = here
+		if (cave.fear or 0) >= 0.25 then tip("fear") end
+		local g = caveHud:FindFirstChild("Glints")
+		if g and not seen("ore") then
+			for _, s in g:GetChildren() do
+				if s.Visible then tip("ore") break end
+			end
 		end
 	end
 end)()

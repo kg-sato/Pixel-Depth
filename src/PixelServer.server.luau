@@ -430,7 +430,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	if not d then return end
 	d.gold, d.pick, d.pack, d.best, d.hatched, d.pity, d.step = s.gold, s.pick, s.pack, s.best, s.hatched, s.pity, s.step
 	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
-	d.gems, d.lv, d.equip = s.gems, s.lv, s.equip
+	d.gems, d.lv, d.equip, d.tips = s.gems, s.lv, s.equip, s.tips
 	local names = {}
 	for i, p in s.pets do names[i] = p.name end
 	d.pets = names
@@ -443,7 +443,7 @@ local function sendState(s)
 	StateR:FireClient(s.player, {
 		gold = s.gold, bag = s.bag, cap = cap(s), pick = s.pick, pack = s.pack, step = s.step, target = target(s),
 		pets = pets, ox = s.ox, oz = s.oz, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs,
-		deepest = s.deepest, goal = s.goal, gems = s.gems, lv = s.lv, equip = s.equip,
+		deepest = s.deepest, goal = s.goal, gems = s.gems, lv = s.lv, equip = s.equip, tips = s.tips,
 	})
 end
 
@@ -691,6 +691,14 @@ end
 -- each player extracts each deposit once. Its prompt starts a minigame; the server keeps the clock, the gold arc and the
 -- crack sequence, grades the result and pays ore from the deposit's own attributes into the unbanked bag (no bag limit).
 local ExtractR = remote("Extract")
+local TIP_NAMES = { camp = true, torch = true, ore = true, fear = true, strike = true, rush = true }
+remote("Tip").OnServerEvent:Connect(function(plr, name) -- the client marks a tip as seen; only known names, saved with the profile
+	local s = data[plr]
+	if s and type(name) == "string" and TIP_NAMES[name] and not s.tips[name] then
+		s.tips[name] = true
+		save(s)
+	end
+end)
 local D = C.DEPOSIT
 local function finishMinigame(s)
 	local mg = s.mg
@@ -1121,6 +1129,7 @@ local function onJoin(plr)
 		profile = profile, critKey = 0, critT0 = 0, lastHit = 0, eggs = d.eggs, shrines = {}, deepest = d.deepest or 0, streak = d.streak or 0,
 		claimed = {}, -- cave deposits this player has extracted (loot is per player)
 		gems = d.gems or 0, lv = d.lv or {}, -- forge levels keyed by pickaxe tier as a string (DataStore-safe keys)
+		tips = d.tips or {}, -- first-visit tips and how-to cards already shown
 	}
 	s.equip = (d.equip or 0) >= 1 and math.min(d.equip, s.pick) or s.pick
 	for _, n in d.pets do
