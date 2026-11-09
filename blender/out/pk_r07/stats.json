@@ -1,0 +1,27 @@
+{
+ "name": "TitanClayPickaxe",
+ "objects": 52,
+ "parts": 19,
+ "tris": 9150,
+ "per_part": {
+  "wood_efd7b4_0": 80,
+  "satin_dc8670_0": 452,
+  "satin_f3dfc0_0": 1812,
+  "stone_d9826c_6": 224,
+  "stone_d9826c_0": 892,
+  "stone_eba58e_0": 472,
+  "stone_c46e5a_0": 472,
+  "stone_d27c66_0": 60,
+  "stone_e0907a_0": 648,
+  "satin_f8ecdc_0": 652,
+  "satin_e88a78_0": 324,
+  "satin_9cba84_0": 656,
+  "satin_8fae78_0": 10,
+  "satin_a6c48e_0": 164,
+  "stone_c8705a_0": 164,
+  "pearl_fff4ea_0": 324,
+  "stone_c97560_0": 1312,
+  "rosegold_eba792_0": 332,
+  "pearl_d9826c_0": 100
+ }
+}

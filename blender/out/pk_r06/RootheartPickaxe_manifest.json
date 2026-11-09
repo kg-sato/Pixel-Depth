@@ -1,0 +1,40 @@
+{
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#fff2c0",
+   "#d0f6dc"
+  ],
+  "light": "#ffc860",
+  "light_power": 30,
+  "glow": "#ffe0a0"
+ },
+ "name": "RootheartPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 13444,
+ "palette": "RootheartPickaxe_palette.png",
+ "parts": {
+  "RootheartPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 12708,
+   "transparency": 0.0
+  },
+  "RootheartPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 332,
+   "transparency": 0.25
+  },
+  "RootheartPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 404,
+   "transparency": 0.0
+  }
+ }
+}

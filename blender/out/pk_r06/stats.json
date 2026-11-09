@@ -1,0 +1,28 @@
+{
+ "name": "RootheartPickaxe",
+ "objects": 92,
+ "parts": 20,
+ "tris": 13444,
+ "per_part": {
+  "wood_d39360_0": 80,
+  "satin_a8dfb6_0": 1480,
+  "wood_b8744a_0": 524,
+  "wood_c07c50_0": 240,
+  "wood_c88350_6": 224,
+  "wood_c98466_0": 568,
+  "wood_b06e50_0": 472,
+  "wood_a8684c_0": 472,
+  "wood_e2a674_0": 3456,
+  "crystal_ffa62e_12": 164,
+  "satin_8fbf6e_0": 10,
+  "irid_a8d68e_0": 984,
+  "irid_b9e0a0_0": 492,
+  "satin_f3ead2_0": 132,
+  "irid_8fe0b0_4": 972,
+  "satin_9ccf6a_0": 492,
+  "wood_c98652_0": 1980,
+  "gold_e6bb6a_0": 404,
+  "crystal_ffc850_0": 168,
+  "wood_8a5a3a_0": 130
+ }
+}

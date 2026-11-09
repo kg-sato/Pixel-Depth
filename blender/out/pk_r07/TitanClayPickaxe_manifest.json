@@ -1,0 +1,35 @@
+{
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ffe0d4",
+   "#fff0dc"
+  ],
+  "light": "#ffc8b0",
+  "light_power": 20,
+  "glow": "#ffd8c8"
+ },
+ "name": "TitanClayPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 9150,
+ "palette": "TitanClayPickaxe_palette.png",
+ "parts": {
+  "TitanClayPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 8818,
+   "transparency": 0.0
+  },
+  "TitanClayPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 332,
+   "transparency": 0.0
+  }
+ }
+}
