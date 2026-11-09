@@ -1248,7 +1248,7 @@ local STEPS = {
 local stepShown, stepDoneAt, stepExpired = "", nil, false
 local function stepMessage()
 	if not state then return "" end
-	if not inMine and state.step <= 2 then return "Jump into the glowing mine shaft!" end
+	if not inMine and state.step <= 2 then return C.CAVES_ON and "Ride the lift down into the mine!" or "Jump into the glowing mine shaft!" end
 	if not inMine and state.step == 5 then return "Ride the lift back down to find the egg!" end
 	return STEPS[state.step] or ""
 end
@@ -2059,8 +2059,8 @@ end
 			held.walk = nil
 		end
 		cave.mgBusy = on -- prompts pause (the camera loop owns ProximityPromptService.Enabled)
-		for _, n in { "TorchPill", "FearPill", "Minimap", "CampPill" } do -- focus: the run's own HUD steps back while a minigame is up
-			local o = caveHud:FindFirstChild(n)
+		for _, n in { "TorchPill", "FearPill", "Minimap", "CampPill", "GoldPill", "BagPill", "Upgrades", "Surface" } do -- focus: every HUD widget steps back while a minigame is up
+			local o = caveHud:FindFirstChild(n) or gui:FindFirstChild(n)
 			if o then o.Visible = not on end
 		end
 		if vm then -- the held pickaxe covered the STRIKE button
@@ -2121,7 +2121,7 @@ end
 	local psHintBar = panel(ps, S(440, 36), S(640, 152), Vector2.new(0.5, 0.5), "dark")
 	fit(psHintBar, 440, 36)
 	psHintBar.ZIndex = 12
-	local psHint = text(psHintBar, UIS.KeyboardEnabled and "SPACE OR CLICK ON THE GOLD" or "TAP STRIKE ON THE GOLD", UDim2.fromScale(0.88, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), CREAM)
+	local psHint = text(psHintBar, UIS.KeyboardEnabled and "STRIKE (OR SPACE) WHEN THE NEEDLE IS ON GOLD" or "TAP STRIKE WHEN THE NEEDLE IS ON GOLD", UDim2.fromScale(0.88, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), CREAM)
 	psHint.ZIndex = 3
 	-- UI juice: pastel pixel confetti and expanding rings from a point on screen
 	local CONFETTI = { BUTTER, MINT, PINK, LILAC, SKY, CREAM }
@@ -2277,6 +2277,9 @@ end
 			for side = 1, 2 do
 				sl.cracks[side].Visible = on and mg.seq[beat] == side
 				sl.lines[side].Visible = on and mg.seq[beat] == side
+				for _, sp in sl.cracks[side]:GetChildren() do -- only the next two cracks are bold; the look-ahead stays faint
+					sp.BackgroundTransparency = k <= 2 and 0 or 0.65
+				end
 			end
 		end
 		local g = gradeOf(mg.slips)
@@ -2446,7 +2449,7 @@ end)()
 	new("UIAspectRatioConstraint", bIcon, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 	bIcon.ZIndex = 7
 	local bText = text(banner, "", UDim2.fromScale(0.62, 0.4), UDim2.fromScale(0.54, 0.42), Vector2.new(0.5, 0.5), WHITE)
-	bText.TextStrokeColor3, bText.ZIndex = DEEP.ribbonLilac, 7
+	bText.TextColor3, bText.TextStrokeTransparency, bText.ZIndex = INK, 1, 7 -- ink on the light ribbon reads at phone size
 	local shown, queue, busy = {}, {}, false
 	local function seen(name) return shown[name] or (state and state.tips and state.tips[name]) end
 	local function nextTip()
