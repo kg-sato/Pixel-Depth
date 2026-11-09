@@ -60,4 +60,16 @@ for _, m in game.ServerStorage.Pickaxes:GetChildren() do
 	for _, p in m:GetDescendants() do if p:IsA("MeshPart") then n += 1 end end
 	table.insert(out, m.Name .. " parts=" .. n .. " primary=" .. tostring(h and h.Name))
 end
+-- the Ashcoal model's Neon part came with a SurfaceAppearance whose emissive map points at a missing asset ("rbxassetid://5"):
+-- it flooded the console in Play. Rebuild every SurfaceAppearance with only its readable maps (2026-11-09).
+for _, d in game.ServerStorage.Pickaxes:GetDescendants() do
+	if d:IsA("SurfaceAppearance") then
+		local s = Instance.new("SurfaceAppearance")
+		for _, k in { "ColorMap", "NormalMap", "MetalnessMap", "RoughnessMap", "AlphaMode", "Color" } do pcall(function() s[k] = d[k] end) end
+		s.Name = d.Name
+		local parent = d.Parent
+		d:Destroy()
+		s.Parent = parent
+	end
+end
 return table.concat(out, "; ")
