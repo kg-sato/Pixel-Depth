@@ -1,0 +1,40 @@
+{
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ffe2c8",
+   "#d8f6e4"
+  ],
+  "light": "#ffd2a8",
+  "light_power": 30,
+  "glow": "#ffd2a8"
+ },
+ "name": "CopperPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 6778,
+ "palette": "CopperPickaxe_palette.png",
+ "parts": {
+  "CopperPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 4314,
+   "transparency": 0.0
+  },
+  "CopperPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 2280,
+   "transparency": 0.0
+  },
+  "CopperPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 184,
+   "transparency": 0.25
+  }
+ }
+}

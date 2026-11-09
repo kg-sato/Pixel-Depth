@@ -1305,6 +1305,7 @@ end)
 		StarlightPickaxe = { 132794152773137, 119884085006157 }, MoonlitPickaxe = { 84853376787476, 107875989974673 },
 		GalaxyPickaxe = { 89557713111747, 114644891397243 }, RoyalHeartPickaxe = { 113248414659515, 80049267894218 },
 		SilverWingPickaxe = { 110656342327557, 135052327149896 },
+		CopperPickaxe = { 86517658742403, 76083498097914 }, BogIronPickaxe = { 91548313668205, 138795024880397 },
 	}
 	local PICK_ART, CARD_ART = {}, {}
 	for i, d in C.PICKS do
@@ -1811,8 +1812,18 @@ end)
 			local list, i = b == "pick" and C.PICKS or C.PACKS, 1
 			for k, d in list do if d.name == a then i = k end end
 			local was = math.max(i - 1, 1)
-			if b == "pick" then
-				celebrate("NEW PICKAXE!", PICK_ART[i] or ICON.pick, short(a):upper(), row("Ore Value", val(was, lvOf(was)), val(i, 1)), "Equipped and ready to dig")
+			if b == "pick" then -- the forging cutscene first (ReplicatedStorage.Shared.ForgeCutscene), then the overlay
+				local function show() celebrate("NEW PICKAXE!", PICK_ART[i] or ICON.pick, short(a):upper(), row("Ore Value", val(was, lvOf(was)), val(i, 1)), "Equipped and ready to dig") end
+				local fc = RS.Shared:FindFirstChild("ForgeCutscene")
+				if fc and C.PICKS[i] then
+					task.spawn(function()
+						local ok, err = pcall(function() require(fc).play({ name = a, model = C.PICKS[i].model, rarity = rarityOf("pick", i), sfx = sfx }) end)
+						if not ok then warn("[ForgeCutscene] " .. tostring(err)) end
+						show()
+					end)
+				else
+					show()
+				end
 			else
 				celebrate("NEW BACKPACK!", ICON.bag, a:upper(), row("Bag Space", tostring(list[was].cap), tostring(list[i].cap)), nil)
 			end

@@ -12,6 +12,8 @@ local FX = {
 	SilverWingPickaxe = { glow = "#2f6bff", light = "#2f6bff", spark = { "#ffffff", "#cfe0ff" } },
 	WoodPickaxe = { glow = "#9fe3c4", light = "#ffe6a8", spark = { "#ffffff", "#d8f5e6" } }, -- starters: a soft glint only
 	StonePickaxe = { glow = "#ffb0cc", light = "#f0d8ff", spark = { "#ffffff", "#e6dcff" } },
+	CopperPickaxe = { glow = "#ffc8a0", light = "#ffd6a0", spark = { "#ffffff", "#ffe6c8" } },
+	BogIronPickaxe = { glow = "#c8f0b0", light = "#e0f0c8", spark = { "#ffffff", "#e6f5dc" } },
 }
 local out = {}
 for _, m in game.ServerStorage.Pickaxes:GetChildren() do

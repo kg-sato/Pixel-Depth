@@ -1,0 +1,26 @@
+{
+ "name": "CopperPickaxe",
+ "objects": 49,
+ "parts": 18,
+ "tris": 6778,
+ "per_part": {
+  "birch_efdfc8_0": 80,
+  "rosegold_d98a62_0": 960,
+  "rosegold_f0a87e_0": 164,
+  "birch_efdfc8_6": 224,
+  "rosegold_eba792_0": 384,
+  "copper_eea072_0": 568,
+  "copper_f5b48a_0": 568,
+  "copper_ffd0b0_0": 472,
+  "copper_c9784e_0": 472,
+  "rosegold_e6986e_0": 772,
+  "wood_a8c88a_0": 10,
+  "irid_a8d68e_0": 328,
+  "irid_b9e0a0_0": 164,
+  "satin_fbf1dc_0": 492,
+  "crystal_e25b78_7": 164,
+  "crystal_ffe08a_14": 20,
+  "satin_f6a676_0": 788,
+  "satin_bfe6c8_0": 148
+ }
+}

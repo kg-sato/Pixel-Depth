@@ -16,6 +16,7 @@ local function ensure(parent, cls, name)
 end
 ensure(shared, "ModuleScript", "Config")
 ensure(shared, "ModuleScript", "PixelText")
+ensure(shared, "ModuleScript", "ForgeCutscene")
 ensure(game.ServerScriptService, "ModuleScript", "ProfileStore")
 ensure(game.ServerScriptService, "ModuleScript", "HubBuilder")
 ensure(game.ServerScriptService, "ModuleScript", "CaveBuilder")
@@ -26,7 +27,7 @@ ensure(game.ServerStorage, "Folder", "Pickaxes")
 return "ok"
 EOF
 python tools/studio_live.py execute_luau --file "$T/mk.luau" code '{"datamodel_type": "Edit"}'
-python tools/studio_push.py ReplicatedStorage.Shared.Config "$G/Config.luau" ReplicatedStorage.Shared.PixelText "$G/PixelText.luau" \
+python tools/studio_push.py ReplicatedStorage.Shared.Config "$G/Config.luau" ReplicatedStorage.Shared.PixelText "$G/PixelText.luau" ReplicatedStorage.Shared.ForgeCutscene "$G/ForgeCutscene.luau" \
   ServerScriptService.ProfileStore Vendor/ProfileStore.luau ServerScriptService.HubBuilder "$G/HubBuilder.luau" ServerScriptService.CaveBuilder "$G/CaveBuilder.luau" ServerScriptService.ZFix "$G/ZFix.luau" ServerScriptService.PixelServer "$G/PixelServer.server.luau" \
   StarterPlayer.StarterPlayerScripts.PixelClient "$G/PixelClient.client.luau"
 # model asset ids from the 2026-11-08 round-3 upload (tools/uploads.json)

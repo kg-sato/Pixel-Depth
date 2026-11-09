@@ -1,0 +1,353 @@
+{
+ "name": "SapphirePickaxe",
+ "ref": "art/gen/ladder/pick_07.png",
+ "length": 3.6,
+ "handle_r": 0.085,
+ "tilt": 10,
+ "yaw": 20,
+ "seed": 17,
+ "vfx": {
+  "sparkles": 16,
+  "colors": [
+   "#ffffff",
+   "#cfe0ff",
+   "#9cc4ff"
+  ],
+  "light": "#6f9bff",
+  "light_power": 40,
+  "glow": "#6f9bff",
+  "bg_top": "#26305c",
+  "bg_bottom": "#0c1024"
+ },
+ "handle": {
+  "mat": "silver",
+  "r_bottom": 0.08,
+  "wrap": {
+   "mat": "satin",
+   "color": "#5f8ff0",
+   "w": 0.05,
+   "turns": 4.5,
+   "z0": 0.45,
+   "z1": 3.05
+  },
+  "bands": [
+   {
+    "z": 3.2,
+    "mat": "silver",
+    "r": 0.03
+   },
+   {
+    "z": 0.3,
+    "mat": "silver",
+    "r": 0.026
+   }
+  ]
+ },
+ "pommel": {
+  "type": "orb",
+  "mat": "silver",
+  "r": 0.13,
+  "collar": "silver"
+ },
+ "arm": {
+  "len": 1.45,
+  "rise": 0.2,
+  "droop": 0.62,
+  "width": 0.34,
+  "top": 0.5,
+  "taper": 0.9,
+  "belly": 0.2,
+  "thick": 0.07,
+  "bend": 2.0,
+  "facet": true,
+  "mat": "crystal",
+  "color": "#5a8af5",
+  "glow": 0.3,
+  "core": {
+   "mat": "crystal",
+   "color": "#3462d8",
+   "frac": 0.5
+  },
+  "edge": "#eef2ff",
+  "edge_mat": "silver",
+  "edge_glow": 0.0,
+  "edge2": "#dfe3ef",
+  "edge2_mat": "silver"
+ },
+ "center": [
+  {
+   "type": "collar",
+   "at": [
+    0,
+    -0.05
+   ],
+   "r": 0.11,
+   "h": 0.26,
+   "mat": "silver"
+  },
+  {
+   "type": "wing",
+   "at": [
+    -0.16,
+    0.1
+   ],
+   "y": -0.1,
+   "side": -1,
+   "n": 6,
+   "len": 0.55,
+   "angle": 48,
+   "spread": 12,
+   "shrink": 0.09,
+   "w": 0.055,
+   "mat": "pearl",
+   "color": "#f6f8ff",
+   "bend": 0.06
+  },
+  {
+   "type": "wing",
+   "at": [
+    0.16,
+    0.1
+   ],
+   "y": -0.1,
+   "side": 1,
+   "n": 6,
+   "len": 0.55,
+   "angle": 48,
+   "spread": 12,
+   "shrink": 0.09,
+   "w": 0.055,
+   "mat": "pearl",
+   "color": "#f6f8ff",
+   "bend": 0.06
+  },
+  {
+   "type": "spikes",
+   "at": [
+    0,
+    0.2
+   ],
+   "n": 3,
+   "from": 55,
+   "to": 125,
+   "r": 0.04,
+   "len": 0.34,
+   "w": 0.04,
+   "edge_len": 0.55,
+   "mat": "silver",
+   "glow": 0
+  },
+  {
+   "type": "scroll",
+   "at": [
+    0,
+    -0.06
+   ],
+   "dx": 0.17,
+   "r": 0.07,
+   "turns": 1.2,
+   "w": 0.016,
+   "mat": "silver",
+   "y": -0.12
+  },
+  {
+   "type": "gem",
+   "shape": "circle",
+   "at": [
+    0,
+    0.06
+   ],
+   "y": -0.15,
+   "size": 0.13,
+   "color": "#2f6bff",
+   "glow": 1.0,
+   "frame": "#dfe3ef",
+   "frame_mat": "silver",
+   "frame_scale": 1.38
+  },
+  {
+   "type": "diamond",
+   "at": [
+    0,
+    -0.22
+   ],
+   "y": -0.13,
+   "size": 0.04,
+   "color": "#4f86ff",
+   "glow": 1.0
+  },
+  {
+   "type": "diamond",
+   "at": [
+    0,
+    -3.71
+   ],
+   "y": -0.135,
+   "size": 0.045,
+   "color": "#4f86ff",
+   "glow": 1.0
+  },
+  {
+   "type": "star",
+   "at": [
+    0.45,
+    -0.52
+   ],
+   "y": -0.105,
+   "size": 0.065,
+   "points": 4,
+   "ratio": 0.35,
+   "color": "#4f86ff",
+   "glow": 0.9
+  },
+  {
+   "type": "wing",
+   "at": [
+    -0.08,
+    -3.66
+   ],
+   "y": -0.1,
+   "side": -1,
+   "n": 3,
+   "len": 0.17,
+   "angle": 60,
+   "spread": 22,
+   "shrink": 0.15,
+   "w": 0.03,
+   "mat": "pearl",
+   "color": "#f6f8ff",
+   "bend": 0.02
+  },
+  {
+   "type": "wing",
+   "at": [
+    0.08,
+    -3.66
+   ],
+   "y": -0.1,
+   "side": 1,
+   "n": 3,
+   "len": 0.17,
+   "angle": 60,
+   "spread": 22,
+   "shrink": 0.15,
+   "w": 0.03,
+   "mat": "pearl",
+   "color": "#f6f8ff",
+   "bend": 0.02
+  }
+ ],
+ "bow": {
+  "at": [
+   0,
+   -0.55
+  ],
+  "size": 0.3,
+  "height": 0.5,
+  "color": "#eef3ff",
+  "gem": "#3f7bff",
+  "gem_shape": "diamond",
+  "lift": 0.22,
+  "y": -0.1,
+  "tails": [
+   {
+    "pts": [
+     [
+      -0.06,
+      -0.6
+     ],
+     [
+      -0.3,
+      -0.85
+     ],
+     [
+      -0.36,
+      -1.1
+     ],
+     [
+      -0.55,
+      -1.2
+     ]
+    ],
+    "width": 0.12,
+    "twist": 1.6,
+    "waves": 2.0
+   },
+   {
+    "pts": [
+     [
+      0.06,
+      -0.6
+     ],
+     [
+      0.26,
+      -0.9
+     ],
+     [
+      0.2,
+      -1.25
+     ],
+     [
+      0.32,
+      -1.55
+     ]
+    ],
+    "width": 0.12,
+    "twist": 1.6,
+    "waves": 2.0
+   }
+  ]
+ },
+ "ribbons": [
+  {
+   "pts": [
+    [
+     -0.04,
+     -0.62
+    ],
+    [
+     -0.22,
+     -0.95
+    ],
+    [
+     -0.5,
+     -1.25
+    ],
+    [
+     -0.75,
+     -1.38
+    ]
+   ],
+   "width": 0.12,
+   "color": "#7aa6f5",
+   "twist": 1.4
+  }
+ ],
+ "charms": [
+  {
+   "anchor": [
+    0.45,
+    -0.1
+   ],
+   "len": 0.3,
+   "charm": "circle",
+   "mat": "silver",
+   "color": "#dfe3ef",
+   "glow": 0,
+   "size": 0.12,
+   "chain": "silver"
+  },
+  {
+   "anchor": [
+    0.63,
+    -0.17
+   ],
+   "len": 0.42,
+   "charm": "star",
+   "color": "#5a8cff",
+   "glow": 0.9,
+   "size": 0.07,
+   "chain": "silver"
+  }
+ ]
+}

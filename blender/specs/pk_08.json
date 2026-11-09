@@ -1,0 +1,346 @@
+{
+ "name": "FireglassPickaxe",
+ "ref": "art/gen/ladder/pick_08.png",
+ "length": 3.6,
+ "handle_r": 0.088,
+ "tilt": 10,
+ "yaw": 20,
+ "seed": 18,
+ "vfx": {
+  "sparkles": 16,
+  "colors": [
+   "#ffffff",
+   "#ffd0c0",
+   "#ffae96"
+  ],
+  "light": "#ff9a7a",
+  "light_power": 50,
+  "glow": "#ff9a7a",
+  "bg_top": "#3a2236",
+  "bg_bottom": "#120a12"
+ },
+ "handle": {
+  "mat": "wood",
+  "color": "#8a2f2c",
+  "r_bottom": 0.082,
+  "wrap": {
+   "mat": "rosegold",
+   "w": 0.026,
+   "turns": 4,
+   "z0": 0.42,
+   "z1": 3.0
+  },
+  "sleeves": [
+   {
+    "z0": 3.05,
+    "z1": 3.32,
+    "r": 0.106,
+    "mat": "rosegold"
+   },
+   {
+    "z0": 0.08,
+    "z1": 0.32,
+    "r": 0.1,
+    "mat": "rosegold"
+   }
+  ],
+  "bands": [
+   {
+    "z": 3.05,
+    "mat": "rosegold",
+    "r": 0.022,
+    "scale": 1.25
+   },
+   {
+    "z": 0.32,
+    "mat": "rosegold",
+    "r": 0.022,
+    "scale": 1.2
+   }
+  ]
+ },
+ "pommel": {
+  "type": "orb",
+  "mat": "crystal",
+  "color": "#d9a3b4",
+  "glow": 0.0,
+  "r": 0.14,
+  "collar": "rosegold"
+ },
+ "arm": {
+  "len": 1.5,
+  "rise": 0.2,
+  "droop": 0.62,
+  "width": 0.34,
+  "top": 0.5,
+  "taper": 0.9,
+  "belly": 0.2,
+  "thick": 0.07,
+  "bend": 2.0,
+  "mat": "crystal",
+  "color": "#a87892",
+  "glow": 0.3,
+  "core": {
+   "mat": "crystal",
+   "color": "#ffa27e",
+   "glow": 1.2,
+   "frac": 0.32
+  },
+  "edge": "#eba792",
+  "edge_mat": "rosegold",
+  "edge_glow": 0.0,
+  "edge2": "#eba792",
+  "edge2_mat": "rosegold"
+ },
+ "center": [
+  {
+   "type": "collar",
+   "at": [
+    0,
+    -0.08
+   ],
+   "r": 0.115,
+   "h": 0.3,
+   "mat": "rosegold"
+  },
+  {
+   "type": "scroll",
+   "at": [
+    0,
+    -0.02
+   ],
+   "dx": 0.2,
+   "r": 0.08,
+   "turns": 1.2,
+   "w": 0.018,
+   "mat": "rosegold",
+   "y": -0.1
+  },
+  {
+   "type": "orb",
+   "at": [
+    0,
+    0.1
+   ],
+   "y": -0.06,
+   "r": 0.17,
+   "mat": "crystal",
+   "color": "#d9a3b4",
+   "glow": 0.0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0,
+    0.07
+   ],
+   "y": -0.12,
+   "r": 0.07,
+   "mat": "crystal",
+   "color": "#ff8a66",
+   "glow": 1.3
+  },
+  {
+   "type": "ring",
+   "at": [
+    0,
+    0.1
+   ],
+   "y": -0.06,
+   "r": 0.175,
+   "w": 0.024,
+   "mat": "rosegold"
+  },
+  {
+   "type": "spike",
+   "at": [
+    0,
+    0.27
+   ],
+   "y": -0.06,
+   "dir": [
+    0,
+    0,
+    1
+   ],
+   "len": 0.13,
+   "r": 0.03,
+   "mat": "crystal",
+   "color": "#f2b8c8",
+   "glow": 0.6
+  },
+  {
+   "type": "scroll",
+   "at": [
+    0.03,
+    0.5
+   ],
+   "y": -0.06,
+   "mirror": false,
+   "side": 1,
+   "r": 0.09,
+   "turns": 1.1,
+   "grow": 0.3,
+   "rot": 200,
+   "w": 0.012,
+   "mat": "irid",
+   "color": "#f6d3dc",
+   "glow": 0.4
+  },
+  {
+   "type": "orb",
+   "at": [
+    0,
+    -0.5
+   ],
+   "y": -0.17,
+   "r": 0.048,
+   "mat": "rosegold"
+  },
+  {
+   "type": "orb",
+   "at": [
+    0,
+    -3.72
+   ],
+   "y": 0.0,
+   "r": 0.055,
+   "mat": "crystal",
+   "color": "#ff8a66",
+   "glow": 1.3
+  },
+  {
+   "type": "burst",
+   "at": [
+    0,
+    -3.6
+   ],
+   "n": 5,
+   "from": 215,
+   "to": 325,
+   "r0": 0.03,
+   "r1": 0.13,
+   "w": 0.04,
+   "vary": 0.1,
+   "mat": "rosegold",
+   "colors": [
+    "#eba792"
+   ],
+   "glow": 0,
+   "y": -0.12
+  },
+  {
+   "type": "drop",
+   "at": [
+    0.4,
+    -0.63
+   ],
+   "y": -0.07,
+   "size": 0.08,
+   "color": "#ffb59e",
+   "glow": 1.2
+  },
+  {
+   "type": "ring",
+   "at": [
+    0.66,
+    -0.68
+   ],
+   "y": -0.07,
+   "r": 0.06,
+   "w": 0.012,
+   "mat": "rosegold"
+  }
+ ],
+ "bow": {
+  "at": [
+   0,
+   -0.5
+  ],
+  "size": 0.34,
+  "height": 0.5,
+  "color": "#ff7c6c",
+  "lift": 0.22,
+  "y": -0.1,
+  "tails": [
+   {
+    "pts": [
+     [
+      -0.06,
+      -0.55
+     ],
+     [
+      -0.3,
+      -0.85
+     ],
+     [
+      -0.28,
+      -1.2
+     ],
+     [
+      -0.5,
+      -1.5
+     ]
+    ],
+    "width": 0.12,
+    "twist": 1.6,
+    "waves": 2.0
+   },
+   {
+    "pts": [
+     [
+      0.06,
+      -0.55
+     ],
+     [
+      0.3,
+      -0.9
+     ],
+     [
+      0.22,
+      -1.3
+     ],
+     [
+      0.4,
+      -1.75
+     ]
+    ],
+    "width": 0.12,
+    "twist": 1.6,
+    "waves": 2.0
+   }
+  ]
+ },
+ "charms": [
+  {
+   "anchor": [
+    0.4,
+    -0.1
+   ],
+   "len": 0.45,
+   "charm": "none",
+   "chain": "rosegold"
+  },
+  {
+   "anchor": [
+    0.53,
+    -0.14
+   ],
+   "len": 0.26,
+   "charm": "circle",
+   "color": "#ff9a7a",
+   "glow": 1.5,
+   "size": 0.04,
+   "chain": "rosegold"
+  },
+  {
+   "anchor": [
+    0.66,
+    -0.2
+   ],
+   "len": 0.42,
+   "charm": "none",
+   "chain": "rosegold"
+  }
+ ]
+}

@@ -1,0 +1,32 @@
+{
+ "name": "BogIronPickaxe",
+ "objects": 52,
+ "parts": 24,
+ "tris": 9528,
+ "per_part": {
+  "wood_dca46c_0": 80,
+  "satin_e8957a_0": 508,
+  "iron_8a7d80_0": 240,
+  "satin_8fb07a_0": 1024,
+  "iron_b2a29e_6": 224,
+  "rosegold_eba792_0": 240,
+  "iron_ab9a94_0": 568,
+  "iron_b9aaa4_0": 568,
+  "iron_d6c8c0_0": 472,
+  "iron_7d6e6a_0": 472,
+  "iron_7e6e6c_0": 60,
+  "iron_6f6466_0": 20,
+  "iron_978a8c_0": 20,
+  "rosegold_e8a888_0": 492,
+  "irid_a8d68e_0": 164,
+  "irid_b9e0a0_0": 164,
+  "satin_f6ead8_0": 44,
+  "satin_ee9a84_0": 324,
+  "satin_fff4ea_0": 972,
+  "iron_c9bab4_0": 1620,
+  "satin_e48c70_0": 788,
+  "crystal_f0b8a0_10": 80,
+  "silver_dfe3ef_0": 284,
+  "pearl_df8468_0": 100
+ }
+}

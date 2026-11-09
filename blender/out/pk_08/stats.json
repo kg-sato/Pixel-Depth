@@ -1,0 +1,20 @@
+{
+ "name": "FireglassPickaxe",
+ "objects": 58,
+ "parts": 12,
+ "tris": 8228,
+ "per_part": {
+  "wood_8a2f2c_0": 80,
+  "rosegold_eba792_0": 4260,
+  "crystal_d9a3b4_0": 548,
+  "crystal_a87892_3": 568,
+  "crystal_ffa27e_12": 568,
+  "crystal_ff8a66_13": 648,
+  "crystal_f2b8c8_6": 12,
+  "irid_f6d3dc_4": 176,
+  "rosegold_eba792_12": 324,
+  "crystal_ffb59e_12": 164,
+  "satin_ff7c6c_0": 788,
+  "crystal_ff9a7a_15": 92
+ }
+}

@@ -1,0 +1,42 @@
+{
+ "vfx": {
+  "sparkles": 16,
+  "colors": [
+   "#ffffff",
+   "#cfe0ff",
+   "#9cc4ff"
+  ],
+  "light": "#6f9bff",
+  "light_power": 40,
+  "glow": "#6f9bff",
+  "bg_top": "#26305c",
+  "bg_bottom": "#0c1024"
+ },
+ "name": "SapphirePickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 7410,
+ "palette": "SapphirePickaxe_palette.png",
+ "parts": {
+  "SapphirePickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 3282,
+   "transparency": 0.0
+  },
+  "SapphirePickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 2668,
+   "transparency": 0.0
+  },
+  "SapphirePickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 1460,
+   "transparency": 0.25
+  }
+ }
+}

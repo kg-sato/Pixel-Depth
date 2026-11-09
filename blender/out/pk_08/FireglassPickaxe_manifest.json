@@ -1,0 +1,47 @@
+{
+ "vfx": {
+  "sparkles": 16,
+  "colors": [
+   "#ffffff",
+   "#ffd0c0",
+   "#ffae96"
+  ],
+  "light": "#ff9a7a",
+  "light_power": 50,
+  "glow": "#ff9a7a",
+  "bg_top": "#3a2236",
+  "bg_bottom": "#120a12"
+ },
+ "name": "FireglassPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 8228,
+ "palette": "FireglassPickaxe_palette.png",
+ "parts": {
+  "FireglassPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 1044,
+   "transparency": 0.0
+  },
+  "FireglassPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 4584,
+   "transparency": 0.0
+  },
+  "FireglassPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 2508,
+   "transparency": 0.25
+  },
+  "FireglassPickaxe_Neon": {
+   "roblox_material": "Neon",
+   "tris": 92,
+   "transparency": 0.0
+  }
+ }
+}

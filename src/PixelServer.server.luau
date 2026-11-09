@@ -14,6 +14,15 @@ local HubBuilder = require(game:GetService("ServerScriptService"):WaitForChild("
 local CaveBuilder = require(game:GetService("ServerScriptService"):WaitForChild("CaveBuilder"))
 local Store = ProfileStore.New(C.SAVE_STORE, C.SAVE_TEMPLATE)
 
+do -- the forge cutscene (client, ReplicatedStorage.Shared.ForgeCutscene) shows the real pickaxe models: a copy for clients
+	local lib = SS:FindFirstChild("Pickaxes")
+	if lib and not RS:FindFirstChild("PickaxeArt") then
+		local art = lib:Clone()
+		art.Name = "PickaxeArt"
+		art.Parent = RS
+	end
+end
+
 local B, W = C.B, C.MINE_W
 local ROWS = #C.LAYERS * C.LAYER_ROWS
 local E1, E2, DROP = C.ENTRY[1], C.ENTRY[2], C.ENTRY_DROP

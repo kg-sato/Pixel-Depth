@@ -1,0 +1,22 @@
+{
+ "name": "SapphirePickaxe",
+ "objects": 65,
+ "parts": 14,
+ "tris": 7410,
+ "per_part": {
+  "silver_dfe3ef_0": 2586,
+  "satin_5f8ff0_0": 508,
+  "silver_dfe3ef_6": 224,
+  "crystal_5a8af5_3": 568,
+  "crystal_3462d8_0": 568,
+  "silver_eef2ff_0": 472,
+  "pearl_f6f8ff_0": 1224,
+  "crystal_2f6bff_10": 164,
+  "crystal_4f86ff_10": 40,
+  "crystal_4f86ff_9": 44,
+  "satin_eef3ff_0": 788,
+  "crystal_3f7bff_10": 20,
+  "satin_7aa6f5_0": 148,
+  "crystal_5a8cff_9": 56
+ }
+}

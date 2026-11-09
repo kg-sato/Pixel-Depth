@@ -1,0 +1,40 @@
+{
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ffd8cc",
+   "#d8f0c8"
+  ],
+  "light": "#ffc8b8",
+  "light_power": 20,
+  "glow": "#ffc8b8"
+ },
+ "name": "BogIronPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 9528,
+ "palette": "BogIronPickaxe_palette.png",
+ "parts": {
+  "BogIronPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 8432,
+   "transparency": 0.0
+  },
+  "BogIronPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 1016,
+   "transparency": 0.0
+  },
+  "BogIronPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 80,
+   "transparency": 0.25
+  }
+ }
+}
