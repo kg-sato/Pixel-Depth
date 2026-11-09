@@ -130,6 +130,22 @@ function G.init(c)
 	end)
 end
 
+function G.hurt(plr, amount) -- the Root Warden's slam (ServerScriptService.Boss); returns the HP left
+	local s = ctx.data[plr]
+	if not s then return 0 end
+	local g = st(s)
+	g.hp = math.max(0, g.hp - amount)
+	publish(plr, g)
+	return g.hp
+end
+function G.heal(plr)
+	local s = ctx.data[plr]
+	if not s then return end
+	local g = st(s)
+	g.hp = C.GLOOM.hp
+	publish(plr, g)
+end
+
 function G.step(dt)
 	local nowC = os.clock()
 	-- players: torch, camp, spawning
@@ -150,7 +166,8 @@ function G.step(dt)
 			if dev and dev ~= g.devAge then g.devAge = dev g.relitAt = serverNow() - dev g.inCamp = false end
 			if here then
 				g.relitAt = serverNow()
-				if g.hp < C.GLOOM.hp or g.flares < C.GLOOM.flares then g.hp, g.flares = C.GLOOM.hp, C.GLOOM.flares publish(plr, g) end
+				-- full HP and flares at camp (not mid-fight with the Root Warden, who sleeps inside the ring)
+				if not s.boss and (g.hp < C.GLOOM.hp or g.flares < C.GLOOM.flares) then g.hp, g.flares = C.GLOOM.hp, C.GLOOM.flares publish(plr, g) end
 				scatter(plr)
 			elseif g.inCamp then -- just left the ring: the HUD's torch counts from here
 				plr:SetAttribute("RelitAt", g.relitAt)

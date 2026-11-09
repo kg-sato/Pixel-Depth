@@ -176,6 +176,102 @@ function Cave.build(parent, origin, seed)
 			end
 			for _, x in { -0.28, 0.28 } do part("Camp", "SmudgeEye", Vector3.new(0.26, 0.36, 0.08), smudge * CFrame.new(x, 0.1, -0.78), Color3.fromRGB(255, 236, 160), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false }) end
 		end
+		-- The Deep Gate and the Root Warden (roadmap phase 9, the user 2026-11-08: the next camp needs a boss fight that needs the
+		-- camp's top pickaxe; ServerScriptService.Boss runs the fight). In Camp 1's west wall: a door of tangled roots with amber
+		-- knots, a CLAY CAVES sign, and the sleeping Warden in front of it. Behind the door: a short timbered alcove that ends at a
+		-- fence and a COMING SOON sign (Camp 2 is roadmap phase 10).
+		do
+			local door = CFrame.new(origin + Vector3.new(-41, 0, 14)) * CFrame.Angles(0, -math.pi / 2, 0) -- faces +X, into the camp
+			local ROOT, ROOT_D, AMBER = Color3.fromRGB(82, 66, 80), Color3.fromRGB(60, 48, 64), Color3.fromRGB(255, 186, 92) -- dusky plum bark: brown read orange under the torch
+			local g = group("Gate")
+			local function gp(name, size, cf, color, props)
+				local p = part("Gate", name, size, cf, color, props)
+				return p
+			end
+			-- the rock frame round the opening (10 wide, 11 tall)
+			for _, x in { -6.2, 6.2 } do gp("GateCheek", Vector3.new(2.4, 11, 3), door * CFrame.new(x, 5.5, 0.6), PAL.rock[2], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant }) end
+			gp("GateLintel", Vector3.new(14.8, 2.4, 3), door * CFrame.new(0, 12.2, 0.6), PAL.rock[2], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
+			local sign = gp("GateSign", Vector3.new(7, 1.6, 0.3), door * CFrame.new(0, 12.2, -1.0), PAL.bark)
+			local sg = Instance.new("SurfaceGui")
+			sg.Face, sg.PixelsPerStud, sg.LightInfluence = Enum.NormalId.Front, 40, 0
+			local tl = Instance.new("TextLabel")
+			tl.Size, tl.BackgroundTransparency, tl.Text, tl.TextScaled, tl.Font = UDim2.fromScale(1, 1), 1, "DEEP GATE  -  CLAY CAVES", true, Enum.Font.FredokaOne
+			tl.TextColor3 = Color3.fromRGB(255, 217, 112)
+			tl.Parent = sg
+			sg.Parent = sign
+			-- the root door: thick roots woven across the opening, amber knots glowing where they cross (the door opens per player)
+			local roots = {}
+			for k = 0, 5 do
+				local y = 1.2 + k * 1.8
+				local tilt = (k % 2 == 0 and 1 or -1) * 0.22
+				table.insert(roots, gp("DoorRoot", Vector3.new(11, 1.3, 1.3), door * CFrame.new(0, y, 0) * CFrame.Angles(0, 0, tilt), k % 2 == 0 and ROOT or ROOT_D, { Material = Enum.Material.Wood }))
+			end
+			for k = -2, 2 do
+				table.insert(roots, gp("DoorRoot", Vector3.new(1.1, 11, 1.1), door * CFrame.new(k * 2.2, 5.6, 0.4) * CFrame.Angles(0, 0, k * 0.06), ROOT_D, { Material = Enum.Material.Wood }))
+			end
+			for k, at in { { -2.2, 3 }, { 2.2, 6.6 }, { 0, 9.2 } } do
+				local kn = gp("DoorKnot", Vector3.new(1.1, 1.1, 1.1), door * CFrame.new(at[1], at[2], -0.7), AMBER, { Material = Enum.Material.Neon, Shape = Enum.PartType.Ball, CanCollide = false, CastShadow = false })
+				table.insert(roots, kn)
+			end
+			for _, p in roots do p:SetAttribute("GateDoor", true) end
+			local dark = gp("GateDark", Vector3.new(10, 11, 0.6), door * CFrame.new(0, 5.5, 1.6), Color3.fromRGB(14, 8, 22))
+			dark:SetAttribute("GateDoor", true)
+			-- the alcove behind: floor, walls, roof, a fence and the COMING SOON sign
+			local back = door * CFrame.new(0, 0, 8)
+			gp("AlcoveFloor", Vector3.new(10, 1, 14), back * CFrame.new(0, -0.5, 0), PAL.rock[1], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
+			for _, x in { -5.6, 5.6 } do gp("AlcoveWall", Vector3.new(1.2, 11, 14), back * CFrame.new(x, 5.5, 0), PAL.rock[2], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant }) end
+			gp("AlcoveRoof", Vector3.new(12.4, 1.2, 14), back * CFrame.new(0, 11.6, 0), PAL.rock[1], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
+			gp("AlcoveEnd", Vector3.new(10, 11, 1), back * CFrame.new(0, 5.5, 7.5), PAL.rock[1], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
+			for _, x in { -3.5, 0, 3.5 } do gp("FencePost", Vector3.new(0.5, 3.4, 0.5), back * CFrame.new(x, 1.7, 3), PAL.bark) end
+			for _, y in { 1.2, 2.6 } do gp("FenceRail", Vector3.new(8.4, 0.35, 0.3), back * CFrame.new(0, y, 3.1), PAL.barkLt) end
+			local soon = gp("SoonSign", Vector3.new(4.6, 1.6, 0.25), back * CFrame.new(0, 3.9, 2.8), PAL.cream)
+			local sg2 = sg:Clone()
+			sg2.Face = Enum.NormalId.Front
+			sg2.TextLabel.Text, sg2.TextLabel.TextColor3 = "CLAY CAVES: COMING SOON", Color3.fromRGB(111, 88, 176)
+			sg2.Parent = soon
+			local lamp = gp("AlcoveLamp", Vector3.new(0.8, 1, 0.8), back * CFrame.new(0, 8.5, 5), PAL.warm:Lerp(PAL.cream, 0.5), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+			glow(lamp, Color3.fromRGB(255, 226, 196), 16, 0.6)
+			-- the Root Warden: a hulking moss-backed root golem asleep in front of the door, three amber knots on its chest
+			local w = Instance.new("Model")
+			w.Name = "Warden"
+			local base = CFrame.new(origin + Vector3.new(-33, 0, 14)) * CFrame.Angles(0, -math.pi / 2, 0) -- faces +X
+			local function wp(name, size, cf, color, props)
+				local p = part("Gate", name, size, base * cf, color, props)
+				p.Parent = w
+				return p
+			end
+			local body = wp("WardenBody", Vector3.new(7, 5.5, 5), CFrame.new(0, 3.6, 0), ROOT)
+			wp("WardenMoss", Vector3.new(7.4, 1.2, 5.4), CFrame.new(0, 6.6, 0.3), Color3.fromRGB(96, 150, 104), { Material = Enum.Material.Grass })
+			wp("WardenHead", Vector3.new(4.2, 3.4, 3.6), CFrame.new(0, 7.6, -1.4), ROOT_D)
+			for _, x in { -0.9, 0.9 } do -- closed eyes (slits); the client lights them when it wakes
+				wp("WardenEye", Vector3.new(0.9, 0.25, 0.1), CFrame.new(x, 7.9, -3.24), Color3.fromRGB(40, 28, 46), DECO)
+			end
+			for _, x in { -1, 1 } do
+				wp("WardenArm", Vector3.new(1.8, 5.2, 1.8), CFrame.new(x * 4.4, 3.2, -0.6) * CFrame.Angles(0, 0, x * 0.18), ROOT_D)
+				wp("WardenFist", Vector3.new(2.4, 1.8, 2.4), CFrame.new(x * 4.9, 0.9, -1.2), ROOT)
+				wp("WardenLeg", Vector3.new(2, 1.6, 2.2), CFrame.new(x * 2, 0.8, 0.6), ROOT_D)
+			end
+			for k, at in { { -1.8, 4.6 }, { 1.8, 3.4 }, { 0, 2.2 } } do -- the knots: Perfect Strike targets (attributes drive the minigame UI)
+				local km = Instance.new("Model")
+				km.Name = "Knot" .. k
+				local kn = part("Gate", "KnotCore", Vector3.new(1.4, 1.4, 1.4), base * CFrame.new(at[1], at[2], -2.6), AMBER, { Material = Enum.Material.Neon, Shape = Enum.PartType.Ball, CanCollide = false, CastShadow = false })
+				kn.Parent = km
+				km.PrimaryPart = kn
+				km:SetAttribute("Layer", 1)
+				km:SetAttribute("Ore", 3)
+				km:SetAttribute("OreName", "Root Knot")
+				km.Parent = w
+				glow(kn, AMBER, 8, 0.6)
+			end
+			local pr = Instance.new("ProximityPrompt")
+			pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode = "Challenge", "Root Warden", Enum.KeyCode.F
+			pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.HoldDuration = 14, false, 0.5
+			pr.Style = Enum.ProximityPromptStyle.Custom
+			pr:SetAttribute("BossGate", true)
+			pr.Parent = body
+			w.PrimaryPart = body
+			w.Parent = g
+		end
 		-- pastel pup tents (CMP-01): two sloped roofs, a dark doorway, a little flag
 		local function tent(i, j, turn, col)
 			local base = CFrame.new(W(i, j, 0)) * CFrame.Angles(0, turn, 0)
@@ -716,6 +812,13 @@ function Cave.build(parent, origin, seed)
 			l.Name = "Glint"
 			dep.PrimaryPart = core
 			dep.Parent = group("Deposits")
+		end
+	end
+	do -- carve the cave wall out of the Deep Gate's opening and alcove (the rock cells there would block the door)
+		local box = CFrame.new(origin + Vector3.new(-48.5, 5.5, 14)) -- the alcove's centre, 15 x 11 x 10 studs
+		for _, p in group("Walls"):GetChildren() do
+			local d = box:PointToObjectSpace(p.Position)
+			if math.abs(d.X) < 8 and math.abs(d.Y) < 6 and math.abs(d.Z) < 5 then p:Destroy() end
 		end
 	end
 	model:SetAttribute("ZFixed", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(model)) -- no z-fighting (the user, 2026-11-08)

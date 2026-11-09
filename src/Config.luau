@@ -294,6 +294,10 @@ C.SWIM = { air = 14, refill = 2.5, speed = 12, rise = 9, sink = 1.2, loss = 0.25
 -- the Gloom (ServerScriptService.Gloom): HP, damage per BONK, share of unbanked ore lost when caught, golden shield seconds, flares
 -- per dive and their reach, creep speed at UNEASY and SCARED (studs/s; you walk 16), BONK reach, daze after a BONK, seconds
 -- between spawns
+-- the Root Warden at Camp 1's Deep Gate (ServerScriptService.Boss): the pickaxe tier you must hold (6 = Rootheart), knots to
+-- crack, the knots' Perfect Strike (zone degrees, needle period, PERFECTs out of 3 to crack one), the slam (wind-up seconds,
+-- reach in studs, HP it costs), how far you may walk off, and the reward
+C.BOSS = { needTier = 6, knots = 3, zone = 13, period = 0.85, perfects = 2, windup = 1.1, slamReach = 22, slamHit = 34, leash = 34, gold = 500, gems = 25 }
 C.GLOOM = { hp = 100, hit = 34, loss = 0.25, shield = 3, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6, grab = 3 }
 C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)

@@ -2199,6 +2199,10 @@ end
 				for i = 1, math.min(count, 6) do task.delay(i * 0.07, function() oreFly(core.Position, col) end) end
 			end
 			sfx("breakRock", 0.9)
+			if dep:GetAttribute("OreName") == "Root Knot" then -- a Root Warden knot: no ore card (BossClient shows the result)
+				task.delay(0.5, close)
+				return
+			end
 			task.delay(0.3, function() sfx("coin", 1.1) end)
 			task.delay(mg and mg.kind == "strike" and 0.5 or 0.7, function()
 				close()
@@ -2656,6 +2660,18 @@ end)
 	end
 	plr:GetAttributeChangedSignal("InCave"):Connect(update)
 	task.defer(update)
+end)()
+
+;(function() -- the Root Warden fight's look (ReplicatedStorage.Shared.BossClient)
+	task.spawn(function()
+		local mod = RS.Shared:WaitForChild("BossClient", 10)
+		if not mod then return end
+		local ok, err = pcall(function()
+			require(mod).start({ R = R, plr = plr, gui = gui, new = new, S = S, fit = fit, panel = panel, text = text, toast = toast, sfx = sfx, shake = shake,
+				burst = burst, tween = tween, INK = INK, PINK = PINK, GOLD = GOLD, MINT = MINT, getState = function() return state end })
+		end)
+		if not ok then warn("[BossClient] " .. tostring(err)) end
+	end)
 end)()
 
 ;(function() -- the gem shop (ReplicatedStorage.Shared.GemShop): opened from the gem pill

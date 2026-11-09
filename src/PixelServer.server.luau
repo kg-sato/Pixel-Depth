@@ -782,6 +782,9 @@ end)
 Players.PlayerRemoving:Connect(function(plr) riding[plr], escaping[plr] = nil, nil end)
 local Gloom = require(game:GetService("ServerScriptService"):WaitForChild("Gloom")) -- gloomlings, HP, the catch, flares (phase 6)
 Shop.init({ data = data, fx = FxR, sendState = sendState })
+require(game:GetService("ServerScriptService"):WaitForChild("Boss")).init({ data = data, fx = FxR, sendState = sendState, hrpOf = hrpOf, analytics = A, strikes = C.DEPOSIT.strikes,
+	hurt = function(plr, n) return Gloom.hurt(plr, n) end, heal = function(plr) Gloom.heal(plr) end,
+	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
 Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, analytics = A, perks = function(s) return PetJobs.perks(crewOf(s)) end, busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
 
 enterMine = function(s)
@@ -837,6 +840,7 @@ local function finishMinigame(s)
 	local mg = s.mg
 	if not mg then return end
 	s.mg = nil
+	if mg.boss then return mg.boss(s, mg) end -- a Root Warden knot (ServerScriptService.Boss), not ore
 	local count, grade
 	if mg.kind == "strike" then
 		count, grade = D.strikes * D.chunks + mg.perfects * D.bonus, mg.perfects
@@ -1424,6 +1428,13 @@ while true do
 			if dev then
 				plr:SetAttribute("DevGold", nil)
 				s.gold += dev
+				sendState(s)
+			end
+			local devEquip = plr:GetAttribute("DevEquip") -- own and hold this pickaxe tier (to test the Root Warden)
+			if devEquip then
+				plr:SetAttribute("DevEquip", nil)
+				s.pick = math.max(s.pick, devEquip)
+				s.equip = devEquip
 				sendState(s)
 			end
 			if plr:GetAttribute("DevRegrow") then -- every deposit this player mined grows back now
