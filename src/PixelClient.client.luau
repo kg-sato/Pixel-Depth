@@ -1886,7 +1886,7 @@ end)()
 	-- the daily chest show, in its own layer above everything
 	local layer = new("ScreenGui", gui.Parent, { Name = "DailyChest", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 12, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Enabled = false })
 	local scrim = new("TextButton", layer, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, Text = "", AutoButtonColor = false })
-	local rays = new("ImageLabel", layer, { Image = FX_RAYS, ImageColor3 = Color3.fromRGB(255, 226, 150), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(620, 620), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
+	local rays = new("ImageLabel", layer, { Image = FX_RAYS, ImageColor3 = Color3.fromRGB(255, 196, 228), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(560, 560), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
 	new("UIAspectRatioConstraint", rays, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 	local glow = new("ImageLabel", layer, { Image = FX_GLOW, ImageColor3 = Color3.fromRGB(255, 220, 160), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(420, 420), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
 	new("UIAspectRatioConstraint", glow, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
@@ -1896,8 +1896,11 @@ end)()
 	fit(title, 440, 84)
 	local titleT = text(title, "DAILY CHEST", UDim2.fromScale(0.62, 0.52), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), WHITE)
 	titleT.TextStrokeColor3 = DEEP.ribbonPink
-	local reward = panel(layer, S(420, 70), S(640, 430), Vector2.new(0.5, 0.5), "panel")
-	fit(reward, 420, 70)
+	local card = panel(layer, S(640, 210), S(640, 486), Vector2.new(0.5, 0.5), "panel") -- the kit card holding rewards, streak and COLLECT
+	fit(card, 640, 210)
+	card.Visible = false
+	local reward = panel(layer, S(420, 64), S(640, 418), Vector2.new(0.5, 0.5), "pill")
+	fit(reward, 420, 64)
 	local rCoin = icon(reward, "coin", UDim2.fromScale(0.12, 0.62), UDim2.fromScale(0.12, 0.5), Vector2.new(0.5, 0.5))
 	new("UIAspectRatioConstraint", rCoin, { AspectRatio = 1 })
 	local rGold = text(reward, "", UDim2.fromScale(0.3, 0.5), UDim2.fromScale(0.2, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
@@ -1907,13 +1910,23 @@ end)()
 	local rGems = text(reward, "", UDim2.fromScale(0.3, 0.5), UDim2.fromScale(0.66, 0.5), Vector2.new(0, 0.5), DEEP_GEM, 700, false)
 	rGems.TextXAlignment = Enum.TextXAlignment.Left
 	local track = new("Frame", layer, { Size = S(560, 56), Position = S(640, 500), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1 })
+	local bar = new("Frame", track, { Size = UDim2.fromScale(6 / 7, 0.22), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(226, 218, 246), BorderSizePixel = 0 })
+	new("UICorner", bar, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", bar, { Color = LILAC, Thickness = 2 })
+	local barFill = new("Frame", bar, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = BUTTER, BorderSizePixel = 0 })
+	new("UICorner", barFill, { CornerRadius = UDim.new(0.5, 0) })
+	local streakT = text(track, "", UDim2.fromScale(0.4, 0.36), UDim2.fromScale(0.5, -0.22), Vector2.new(0.5, 0.5), PLUM_SOFT, 700, false)
 	local days = {}
 	for d = 1, 7 do
 		local c = new("Frame", track, { Size = UDim2.fromScale(0.11, 0.9), Position = UDim2.fromScale((d - 0.5) / 7, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0 })
 		new("UIAspectRatioConstraint", c, { AspectRatio = 1 })
 		new("UICorner", c, { CornerRadius = UDim.new(0.5, 0) })
 		local st = new("UIStroke", c, { Thickness = 3 })
-		local l = text(c, d == 7 and "7" or tostring(d), UDim2.fromScale(0.6, 0.55), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), WHITE)
+		local l = text(c, tostring(d), UDim2.fromScale(0.6, 0.55), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), WHITE)
+		if d == 7 then -- the day 7 jackpot: a little chest instead of the number
+			l.Visible = false
+			new("ImageLabel", c, { Image = CHEST.closed, BackgroundTransparency = 1, Size = UDim2.fromScale(1.25, 1.25), Position = UDim2.fromScale(0.5, 0.45), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 3 })
+		end
 		days[d] = { c = c, st = st, l = l }
 	end
 	local collect = button(layer, "COLLECT", S(220, 64), S(640, 560), Vector2.new(0.5, 0.5), "mint", "coin")
@@ -1945,7 +1958,9 @@ end)()
 		rays.ImageTransparency, glow.ImageTransparency, scrim.BackgroundTransparency = 1, 1, 1
 		titleT.Text = "DAY " .. streak .. " CHEST"
 		rGold.Text, rGems.Text = "+" .. commas(gold), "+" .. commas(gems)
-		for _, o in { title, reward, track, collect } do o.Visible = false end
+		for _, o in { title, reward, track, collect, card } do o.Visible = false end
+		barFill.Size = UDim2.fromScale(0, 1)
+		streakT.Text = streak >= 7 and "7 DAY STREAK! JACKPOT" or (streak .. " DAY STREAK  -  DAY 7 JACKPOT")
 		tween(scrim, 0.25, { BackgroundTransparency = 0.25 })
 		-- drop in
 		chest.Position = S(640, 120)
@@ -1983,12 +1998,26 @@ end)()
 			local from = S(640, 250)
 			fly("coin", from, goldPill, 10, 0.1)
 			fly("gem", from, gemPill, math.min(8, gems), 0.25)
-			reward.Visible = true
+			card.Visible, reward.Visible = true, true
+			pop(card, 0.8, 0.3)
 			pop(reward, 0.6, 0.35)
+			shake(0.6)
+			for k = 1, 8 do -- four-point sparkles pop round the open chest
+				local a = k / 8 * math.pi * 2
+				local sp = new("ImageLabel", layer, { Image = SPRITE.sparkle, BackgroundTransparency = 1, Size = S(46, 46), Position = S(640 + math.cos(a) * 150, 262 + math.sin(a) * 120), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5 })
+				new("UIAspectRatioConstraint", sp, { AspectRatio = 1 })
+				scaler(sp).Scale = 0
+				task.delay(k * 0.04, function()
+					tween(scaler(sp), 0.25, { Scale = 1.2 }, Enum.EasingStyle.Back).Completed:Connect(function()
+						tween(scaler(sp), 0.35, { Scale = 0 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In).Completed:Connect(function() sp:Destroy() end)
+					end)
+				end)
+			end
 		end)
 		-- the streak track fills up to today, today pops
 		task.delay(2.1, function()
 			track.Visible = true
+			tween(barFill, 0.5, { Size = UDim2.fromScale(math.clamp((streak - 1) / 6, 0, 1), 1) }, Enum.EasingStyle.Quad)
 			for d, o in days do
 				local done, today = d < streak, d == streak
 				o.c.BackgroundColor3 = (done or today) and (d == 7 and PINK or BUTTER) or Color3.fromRGB(226, 218, 246)
@@ -2006,10 +2035,10 @@ end)()
 	local function hide()
 		if not collect.Visible then return end
 		tween(scrim, 0.2, { BackgroundTransparency = 1 })
-		for _, o in { chest, title, reward, track, collect, rays, glow } do tween(scaler(o), 0.18, { Scale = 0 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In) end
+		for _, o in { chest, title, reward, track, collect, rays, glow, card } do tween(scaler(o), 0.18, { Scale = 0 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In) end
 		task.delay(0.22, function()
 			layer.Enabled = false
-			for _, o in { chest, title, reward, track, collect, rays, glow } do scaler(o).Scale = 1 end
+			for _, o in { chest, title, reward, track, collect, rays, glow, card } do scaler(o).Scale = 1 end
 			if spin then spin:Disconnect() spin = nil end
 			busy = false
 		end)
