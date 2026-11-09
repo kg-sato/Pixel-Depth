@@ -362,7 +362,8 @@ function M.play(opt)
 		if t > 5.45 and t < 5.85 then swing = -2.2 * smooth(5.45, 5.8, t) -- raise
 		elseif t >= 5.85 then swing = -2.2 + 3.0 * smooth(5.85, 5.95, t) - 0.8 * smooth(6.2, 6.8, t) end -- slam, settle
 		local reach = rise * 2.4 -- the hammer arm raised up and forward while floating
-		local base = smithBase * CFrame.new(0, smithY, 0)
+		local aside = smooth(6.0, 6.5, t)
+		local base = smithBase * CFrame.new(7 * aside, smithY, -2 * aside) * CFrame.Angles(0, -0.5 * aside, 0)
 		for _, sp in smith do
 			if sp.arm then
 				sp.p.CFrame = base * shoulder * CFrame.Angles(swing + reach, 0, 0) * sp.off
@@ -405,6 +406,12 @@ function M.play(opt)
 		bbRays.ImageTransparency = vis and (1 - 0.7 * compact) or 1
 		bbRays.Rotation = t * 60
 		billboard.Size = UDim2.fromScale(6 + coreR * 6, 6 + coreR * 6)
+		if t >= 6.0 and t < 7.5 then -- the reveal: the glow and rays come back behind the pickaxe
+			local r = smooth(6.0, 6.3, t) * (1 - smooth(7.3, 7.5, t))
+			core.CFrame = CFrame.new(anvilTop + Vector3.new(0, 4.2, 0.6))
+			bbGlow.ImageTransparency, bbRays.ImageTransparency = 1 - 0.75 * r, 1 - 0.6 * r
+			billboard.Size = UDim2.fromScale(10 + 4 * r, 10 + 4 * r)
+		end
 		for _, m in motes do
 			local on = t > 2.4 and t < 5.6
 			m.p.Transparency = on and 0 or 1
@@ -447,9 +454,9 @@ function M.play(opt)
 		end
 		local pb = pillar:GetAttribute("Born")
 		if pb then
-			local u = math.clamp((t - pb) / 0.9, 0, 1)
-			pillar.Size = Vector3.new(60, 4 + 6 * u, 4 + 6 * u)
-			pillar.Transparency = 0.15 + 0.85 * u
+			local u = math.clamp((t - pb) / 0.5, 0, 1)
+			pillar.Size = Vector3.new(60, 1.6 * (1 - u) + 0.2, 1.6 * (1 - u) + 0.2)
+			pillar.Transparency = 0.3 + 0.7 * math.sqrt(u)
 		end
 		once("reveal", 6.0, function()
 			sfx("upgrade", 1)
@@ -459,7 +466,7 @@ function M.play(opt)
 			local u = math.clamp((t - 6.0) / 0.5, 0, 1)
 			local show = t >= 6.0
 			local s = show and math.max(0.05, backOut(u)) or 0.05
-			pick:ScaleTo(pickScale0 * s * (4 / math.max(pickSize.Y, 0.1)))
+			pick:ScaleTo(pickScale0 * s * (5.5 / math.max(pickSize.Y, 0.1)))
 			local spin = smooth(6.0, 7.2, t) * math.pi * 2
 			pick:PivotTo(CFrame.new(anvilTop + Vector3.new(0, 1.5 + 2.6 * smooth(6.0, 6.6, t) + math.sin(t * 2) * 0.15, 0)) * CFrame.Angles(0, math.pi + spin, math.rad(-20)))
 			for _, d in pick:GetDescendants() do
