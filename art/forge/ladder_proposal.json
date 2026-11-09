@@ -1,0 +1,521 @@
+[
+ {
+  "tier": 1,
+  "name": "Wood Pickaxe",
+  "rarity": "Common",
+  "power": 1,
+  "cost": 0,
+  "materials": [],
+  "layer": "Rootholm",
+  "set": "starter",
+  "value": 1.0,
+  "opens": null,
+  "minutes": 0,
+  "cumulative_hours": 0.0,
+  "ornament": 1,
+  "concept": "art/gen/pick_wood.png",
+  "art": "Existing concept, keep. Pale birch handle with leaf carvings, cream-white curved head, butter-yellow bow, mint ribbon spiral, acorn charm, flower pommel. Ornament 1: the plain baseline of the set.",
+  "status": "proposal"
+ },
+ {
+  "tier": 2,
+  "name": "Stone Pickaxe",
+  "rarity": "Common",
+  "power": 2,
+  "cost": 20,
+  "materials": [],
+  "layer": "Rootholm",
+  "set": "starter",
+  "value": 1.41,
+  "opens": null,
+  "minutes": 1.2,
+  "cumulative_hours": 0.02,
+  "ornament": 1,
+  "concept": "art/gen/pick_stone.png",
+  "art": "Existing concept, keep. Lilac-grey Rootflint stone head with a soft pearly sheen, birch handle, lilac ribbon cross-wraps, buckle bow, pebble charm, stone pommel. Ornament 1.",
+  "status": "proposal"
+ },
+ {
+  "tier": 3,
+  "name": "Copper Pickaxe",
+  "rarity": "Common",
+  "power": 3,
+  "cost": 80,
+  "materials": [
+   {
+    "ore": "Kobold-copper",
+    "count": 3
+   },
+   {
+    "ore": "Ashcoal",
+    "count": 8
+   }
+  ],
+  "layer": "Rootholm",
+  "set": "ore",
+  "value": 1.73,
+  "opens": "Titan's Rest",
+  "minutes": 3.5,
+  "cumulative_hours": 0.08,
+  "ornament": 2,
+  "concept": null,
+  "art": "Apricot-peach (#F5B48A, from Kobold-copper) with cream and mint; motif: a kobold's tiny lantern; smooth hammered copper arms with soft dimples; birch handle with two copper bands; apricot satin bow, rosy gem in the collar, one tiny lantern charm. Ornament 2. Key to Titan's Rest.",
+  "status": "proposal"
+ },
+ {
+  "tier": 4,
+  "name": "Bog-Iron Pickaxe",
+  "rarity": "Common",
+  "power": 5,
+  "cost": 250,
+  "materials": [
+   {
+    "ore": "Bog-iron",
+    "count": 4
+   },
+   {
+    "ore": "Titan clay",
+    "count": 6
+   }
+  ],
+  "layer": "Titan's Rest",
+  "set": "ore",
+  "value": 2.24,
+  "opens": null,
+  "minutes": 2.5,
+  "cumulative_hours": 0.12,
+  "ornament": 2,
+  "concept": null,
+  "art": "Warm grey-lilac iron (#B9AAA4) with terracotta pink (#EBA58E, Titan clay); motif: moss and a sprouting mushroom; chunky rounded iron arms with puffy rivets; wood handle with a clay-pink wrap; terracotta bow, a little mushroom sprouting on the collar, one clay bead charm. Ornament 2.",
+  "status": "proposal"
+ },
+ {
+  "tier": 5,
+  "name": "Rune-Tin Pickaxe",
+  "rarity": "Common",
+  "power": 8,
+  "cost": 800,
+  "materials": [
+   {
+    "ore": "Rune-tin",
+    "count": 7
+   },
+   {
+    "ore": "Bog-iron",
+    "count": 10
+   }
+  ],
+  "layer": "Titan's Rest",
+  "set": "ore",
+  "value": 2.83,
+  "opens": "Glitterhall",
+  "minutes": 6.2,
+  "cumulative_hours": 0.23,
+  "ornament": 3,
+  "concept": null,
+  "art": "Pale silver-cream tin (#E6E6DC) with powder-blue rune glow (#B4CCF2); motif: rounded cute runes and a giant's footprint; polished tin arms engraved with softly glowing runes (the first pick that glows); pale wood handle with silver bands and a blue ribbon spiral; sky-blue bow, round moonstone in the collar, two charms (rune tile, silver bell). Ornament 3. Key to Glitterhall.",
+  "status": "proposal"
+ },
+ {
+  "tier": 6,
+  "name": "Amethyst Pickaxe",
+  "rarity": "Rare",
+  "power": 12,
+  "cost": 2500,
+  "materials": [
+   {
+    "ore": "Bard's amethyst",
+    "count": 8
+   },
+   {
+    "ore": "Frostquartz",
+    "count": 10
+   }
+  ],
+  "layer": "Glitterhall",
+  "set": "ore",
+  "value": 3.46,
+  "opens": null,
+  "minutes": 5.1,
+  "cumulative_hours": 0.31,
+  "ornament": 3,
+  "concept": null,
+  "art": "Lilac amethyst (#C9A6E8) with lavender ribbons and gold accents; motif: a bard's music notes and a crystal cluster; faceted amethyst crystal arms; lilac-wrapped handle with thin gold bands; lilac bow, an amethyst point rising from the collar, two charms (gold music note, mini crystal), a few sparkles. Ornament 3.",
+  "status": "proposal"
+ },
+ {
+  "tier": 7,
+  "name": "Sapphire Pickaxe",
+  "rarity": "Rare",
+  "power": 18,
+  "cost": 8000,
+  "materials": [
+   {
+    "ore": "Valkyrie sapphire",
+    "count": 14
+   },
+   {
+    "ore": "Frostquartz",
+    "count": 30
+   }
+  ],
+  "layer": "Glitterhall",
+  "set": "ore",
+  "value": 4.24,
+  "opens": "Muspell",
+  "minutes": 13.4,
+  "cumulative_hours": 0.53,
+  "ornament": 4,
+  "concept": null,
+  "art": "Cornflower blue (#9CC4FF) with silver and white; motif: a Valkyrie feather and a round shield; clear faceted sapphire arms with silver edges; silver-capped handle with a blue satin spiral; white-blue bow, two small feathers hugging the collar (a quiet nod to Silver Wing), round sapphire in the collar, two charms (shield, star drop). Ornament 4. Key to Muspell.",
+  "status": "proposal"
+ },
+ {
+  "tier": 8,
+  "name": "Fireglass Pickaxe",
+  "rarity": "Rare",
+  "power": 28,
+  "cost": 25000,
+  "materials": [
+   {
+    "ore": "Fireglass",
+    "count": 18
+   },
+   {
+    "ore": "Surt shard",
+    "count": 20
+   }
+  ],
+  "layer": "Muspell",
+  "set": "ore",
+  "value": 5.29,
+  "opens": null,
+  "minutes": 11.4,
+  "cumulative_hours": 0.72,
+  "ornament": 4,
+  "concept": null,
+  "art": "Smoky rose glass (#B38AA3) with a warm peach ember inside (#FFAE96); motif: an ember asleep in glass, curls of steam; translucent glass arms with the ember glowing through; dark cherry-wood handle with rose-gold bands; coral bow, three charms (glass flame drop, ember bead, rose-gold ring), soft steam swirls. Ornament 4.",
+  "status": "proposal"
+ },
+ {
+  "tier": 9,
+  "name": "Ruby Pickaxe",
+  "rarity": "Rare",
+  "power": 42,
+  "cost": 80000,
+  "materials": [
+   {
+    "ore": "Muspell ruby",
+    "count": 30
+   },
+   {
+    "ore": "Fireglass",
+    "count": 50
+   }
+  ],
+  "layer": "Muspell",
+  "set": "ore",
+  "value": 6.48,
+  "opens": "Mimir's Well",
+  "minutes": 29.2,
+  "cumulative_hours": 1.21,
+  "ornament": 5,
+  "concept": null,
+  "art": "Strawberry pink-red (#F57A8C) with rose gold and cream; motif: a little flame shaped like a heart; faceted ruby arms; rose-gold handle with a pink satin spiral; big pink bow with long tails, heart-cut ruby in the collar (foreshadows Royal Heart), three charms (flame, heart, gold bead), tiny ember sparkles. Ornament 5. Key to Mimir's Well.",
+  "status": "proposal"
+ },
+ {
+  "tier": 10,
+  "name": "Coral Pickaxe",
+  "rarity": "Epic",
+  "power": 65,
+  "cost": 250000,
+  "materials": [
+   {
+    "ore": "Norn coral",
+    "count": 40
+   },
+   {
+    "ore": "Mimir's pearl",
+    "count": 50
+   }
+  ],
+  "layer": "Mimir's Well",
+  "set": "ore",
+  "value": 8.06,
+  "opens": null,
+  "minutes": 24.8,
+  "cumulative_hours": 1.62,
+  "ornament": 5,
+  "concept": null,
+  "art": "Coral pink (#F7A6B5) with aqua (#8ED6D6) and pearl white; motif: coral branches, seashells, bubbles; arms sculpted as smooth coral branches that still read as a pick; pearly white handle with an aqua ribbon; a seashell in the collar, three charms (shell, pearl, bubble), bubbles floating round the head. Ornament 5.",
+  "status": "proposal"
+ },
+ {
+  "tier": 11,
+  "name": "Fatestone Pickaxe",
+  "rarity": "Epic",
+  "power": 100,
+  "cost": 800000,
+  "materials": [
+   {
+    "ore": "Fatestone",
+    "count": 70
+   },
+   {
+    "ore": "Mimir's pearl",
+    "count": 150
+   }
+  ],
+  "layer": "Mimir's Well",
+  "set": "ore",
+  "value": 10.0,
+  "opens": "Alfglow",
+  "minutes": 63.8,
+  "cumulative_hours": 2.69,
+  "ornament": 6,
+  "concept": null,
+  "art": "Moonlit white-silver (#EEF2F8) with teal (#7CC6CC) and soft gold; motif: the Norns' three threads and a spindle; milky white stone arms wrapped by one golden thread; silver handle with three twined ribbons (white, teal, gold); spindle-shaped collar, three charms on fine chains (tiny hourglass, star, pearl), faint glowing thread lines. Ornament 6. Key to Alfglow.",
+  "status": "proposal"
+ },
+ {
+  "tier": 12,
+  "name": "Jade Pickaxe",
+  "rarity": "Epic",
+  "power": 150,
+  "cost": 2500000,
+  "materials": [
+   {
+    "ore": "Elf-jade",
+    "count": 80
+   },
+   {
+    "ore": "Glowcap",
+    "count": 100
+   }
+  ],
+  "layer": "Alfglow",
+  "set": "ore",
+  "value": 12.25,
+  "opens": null,
+  "minutes": 53.6,
+  "cumulative_hours": 3.58,
+  "ornament": 6,
+  "concept": null,
+  "art": "Mint jade (#A8EBA0) with glowcap lilac (#B79BD8); motif: elf leaves, glowing mushrooms, fireflies; leaf-shaped translucent jade arms; plum wood handle wrapped in a mint vine with tiny leaves; leaf bow, a glowing mushroom cap on the collar, an elf-lantern charm plus two more, fireflies drifting round it. Ornament 6.",
+  "status": "proposal"
+ },
+ {
+  "tier": 13,
+  "name": "Opal Pickaxe",
+  "rarity": "Epic",
+  "power": 230,
+  "cost": 8000000,
+  "materials": [
+   {
+    "ore": "Spore-opal",
+    "count": 150
+   },
+   {
+    "ore": "Elf-jade",
+    "count": 250
+   }
+  ],
+  "layer": "Alfglow",
+  "set": "ore",
+  "value": 15.17,
+  "opens": "The Great Gap",
+  "minutes": 140.0,
+  "cumulative_hours": 5.91,
+  "ornament": 7,
+  "concept": null,
+  "art": "Iridescent opal pink (#F7B4E6) with rainbow flecks and lilac; motif: spore lights and a moth; opal crystal arms that shift colour as they turn; lilac handle with opal bead inlays and long ribbon tails; moth-wing bow, three chains of glowing spore orbs, a few spores floating round the head. Ornament 7. Key to the Great Gap.",
+  "status": "proposal"
+ },
+ {
+  "tier": 14,
+  "name": "Voidcrystal Pickaxe",
+  "rarity": "Epic",
+  "power": 350,
+  "cost": 25000000,
+  "materials": [
+   {
+    "ore": "Voidcrystal",
+    "count": 180
+   },
+   {
+    "ore": "Gap-dust",
+    "count": 250
+   }
+  ],
+  "layer": "The Great Gap",
+  "set": "ore",
+  "value": 18.71,
+  "opens": null,
+  "minutes": 117.8,
+  "cumulative_hours": 7.87,
+  "ornament": 7,
+  "concept": null,
+  "art": "Magenta-violet (#D88BE8) with deep plum and starry specks; motif: a pocket of void with tiny stars (foreshadows Galaxy); magenta crystal arms with little stars inside; dark plum handle with silver star studs; violet bow, a chain of four charms (star, crescent, crystal drop, bead), one small crystal orbiting the head. Ornament 7, and no wings, crowns, planets or big flower heads: those stay with the sky set.",
+  "status": "proposal"
+ },
+ {
+  "tier": 15,
+  "name": "Starlight Pickaxe",
+  "rarity": "Legendary",
+  "power": 600,
+  "cost": 40000000,
+  "materials": [
+   {
+    "ore": "Worldheart",
+    "count": 120
+   },
+   {
+    "ore": "Voidcrystal",
+    "count": 200
+   },
+   {
+    "ore": "Bard's amethyst",
+    "count": 20
+   }
+  ],
+  "layer": "The Great Gap",
+  "set": "sky",
+  "value": 24.49,
+  "opens": null,
+  "minutes": 152.8,
+  "cumulative_hours": 10.42,
+  "ornament": 8,
+  "concept": "art/gen/pick_02.png",
+  "art": "Existing concept and render (blender/out/pick_02), keep. Magenta-pink star crystal flower in a thin gold ring, tall crystal spike, twisted purple-magenta spiral handle with gold bands, pink star pommel. Sky set, ornament 8.",
+  "status": "proposal"
+ },
+ {
+  "tier": 16,
+  "name": "Moonlit Pickaxe",
+  "rarity": "Legendary",
+  "power": 1000,
+  "cost": 65000000,
+  "materials": [
+   {
+    "ore": "Worldheart",
+    "count": 150
+   },
+   {
+    "ore": "Voidcrystal",
+    "count": 250
+   },
+   {
+    "ore": "Fatestone",
+    "count": 30
+   }
+  ],
+  "layer": "The Great Gap",
+  "set": "sky",
+  "value": 31.62,
+  "opens": null,
+  "minutes": 189.6,
+  "cumulative_hours": 13.58,
+  "ornament": 8,
+  "concept": "art/gen/pick_03.png",
+  "art": "Existing concept and render (blender/out/pick_03), keep. Silver-blue crescent arms with white flowers and crystals, twisted silver handle, chains with crescent and crystal charms, flowing white ribbon. Sky set, ornament 8.",
+  "status": "proposal"
+ },
+ {
+  "tier": 17,
+  "name": "Galaxy Pickaxe",
+  "rarity": "Mythic",
+  "power": 1700,
+  "cost": 100000000,
+  "materials": [
+   {
+    "ore": "Worldheart",
+    "count": 180
+   },
+   {
+    "ore": "Voidcrystal",
+    "count": 350
+   },
+   {
+    "ore": "Spore-opal",
+    "count": 60
+   }
+  ],
+  "layer": "The Great Gap",
+  "set": "sky",
+  "value": 41.23,
+  "opens": null,
+  "minutes": 225.9,
+  "cumulative_hours": 17.35,
+  "ornament": 9,
+  "concept": "art/gen/pick_06.png",
+  "art": "Existing concept and render (blender/out/pick_06), keep. Nebula arms full of stars, planet-orb gems set along a dark handle, star chains. Sky set, ornament 9.",
+  "status": "proposal"
+ },
+ {
+  "tier": 18,
+  "name": "Royal Heart Pickaxe",
+  "rarity": "Mythic",
+  "power": 2800,
+  "cost": 160000000,
+  "materials": [
+   {
+    "ore": "Worldheart",
+    "count": 220
+   },
+   {
+    "ore": "Gap-dust",
+    "count": 500
+   },
+   {
+    "ore": "Muspell ruby",
+    "count": 20
+   }
+  ],
+  "layer": "The Great Gap",
+  "set": "sky",
+  "value": 52.92,
+  "opens": null,
+  "minutes": 277.2,
+  "cumulative_hours": 21.97,
+  "ornament": 9,
+  "concept": "art/gen/pick_09.png",
+  "art": "Existing concept and render (blender/out/pick_09), keep. Silver crown holding a big faceted pink heart gem, small diamonds and pink crystals, pink satin ribbon round a silver handle. Sky set, ornament 9.",
+  "status": "proposal"
+ },
+ {
+  "tier": 19,
+  "name": "Silver Wing Pickaxe",
+  "rarity": "Secret",
+  "power": 4800,
+  "cost": 250000000,
+  "materials": [
+   {
+    "ore": "Worldheart",
+    "count": 270
+   },
+   {
+    "ore": "Gap-dust",
+    "count": 700
+   },
+   {
+    "ore": "Valkyrie sapphire",
+    "count": 10
+   },
+   {
+    "ore": "Fatestone",
+    "count": 20
+   }
+  ],
+  "layer": "The Great Gap",
+  "set": "sky",
+  "value": 69.28,
+  "opens": null,
+  "minutes": 337.5,
+  "cumulative_hours": 27.59,
+  "ornament": 10,
+  "concept": "art/gen/pick_10.png",
+  "art": "Existing concept and render (blender/out/pick_10), keep. Silver angel wings round a round blue sapphire with a small crown, translucent blue ribbons, silver chains with crystal drops, long slim silver handle. Sky set, ornament 10: the most magical pick in the game.",
+  "status": "proposal"
+ }
+]

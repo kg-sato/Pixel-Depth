@@ -1298,10 +1298,20 @@ end)
 -- Coins buy the next pickaxe, gems level an owned one, any owned pickaxe can be held; the server checks every action.
 -- Its own function: the main chunk is at Luau's 200-register limit.
 ;(function()
-	local PICK_ART = {} -- forge card art per pickaxe tier (transparent renders, art/forge/icons; ids in art/forge/icons/asset_ids.json)
-	for i, id in { 84674903872144, 76950059301165, 138546318953293, 132794152773137, 84853376787476, 74629621321599, 85151061239109, 89557713111747, 123094633576038, 86622635171966, 113248414659515, 110656342327557 } do PICK_ART[i] = "rbxassetid://" .. id end
-	local CARD_ART = {} -- head-focused crops for the grid cards (art/forge/icons/card_XX.png)
-	for i, id in { [1] = 74345038954875, [2] = 103286217212511, [3] = 90808534460092, [4] = 119884085006157, [5] = 107875989974673, [6] = 70457182821389, [7] = 119481801915093, [8] = 114644891397243, [9] = 104983066807882, [10] = 133530729937666, [11] = 80049267894218, [12] = 135052327149896 } do CARD_ART[i] = "rbxassetid://" .. id end
+	-- forge art per pickaxe model: { full icon, head-focused card crop } (transparent renders, art/forge/icons, ids in asset_ids.json);
+	-- a tier without its render yet shows the generic pick icon
+	local ART = {
+		WoodPickaxe = { 84674903872144, 74345038954875 }, StonePickaxe = { 76950059301165, 103286217212511 },
+		StarlightPickaxe = { 132794152773137, 119884085006157 }, MoonlitPickaxe = { 84853376787476, 107875989974673 },
+		GalaxyPickaxe = { 89557713111747, 114644891397243 }, RoyalHeartPickaxe = { 113248414659515, 80049267894218 },
+		SilverWingPickaxe = { 110656342327557, 135052327149896 },
+	}
+	local PICK_ART, CARD_ART = {}, {}
+	for i, d in C.PICKS do
+		local a = d.model and ART[d.model]
+		PICK_ART[i] = a and ("rbxassetid://" .. a[1]) or ICON.pick
+		CARD_ART[i] = a and ("rbxassetid://" .. a[2]) or ICON.pick
+	end
 	local FX_GLOW, FX_RAYS = "rbxassetid://77591933607769", "rbxassetid://98789616938156" -- soft radial glow and feathered rays (art/forge/fx)
 	local Lighting = game:GetService("Lighting")
 	local DEEP_MINT = Color3.fromRGB(32, 156, 92) -- gains read as bright green
@@ -1453,7 +1463,7 @@ end)
 	rarT.ZIndex = 3
 	local rows = {}
 	for k = 1, 2 do
-		local r = panel(det, UDim2.fromScale(0.92, 0.075), UDim2.fromScale(0.5, 0.635 + (k - 1) * 0.085), Vector2.new(0.5, 0.5), "pill")
+		local r = panel(det, UDim2.fromScale(0.92, 0.072), UDim2.fromScale(0.5, 0.62 + (k - 1) * 0.08), Vector2.new(0.5, 0.5), "pill")
 		local ic = icon(r, k == 1 and "coin" or "star", UDim2.fromScale(0.1, 0.72), UDim2.fromScale(0.035, 0.5), Vector2.new(0, 0.5))
 		new("UIAspectRatioConstraint", ic, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 		local l = text(r, "", UDim2.fromScale(0.46, 0.5), UDim2.fromScale(0.15, 0.5), Vector2.new(0, 0.5), INK, 700, false)
@@ -1462,18 +1472,35 @@ end)
 		v.TextXAlignment, v.RichText = Enum.TextXAlignment.Right, true
 		rows[k] = { frame = r, icon = ic, label = l, value = v }
 	end
-	local lvLabel = text(det, "", UDim2.fromScale(0.5, 0.045), UDim2.fromScale(0.06, 0.765), nil, INK, 700, false)
+	local lvLabel = text(det, "", UDim2.fromScale(0.5, 0.038), UDim2.fromScale(0.06, 0.743), nil, INK, 700, false)
 	lvLabel.TextXAlignment = Enum.TextXAlignment.Left
 	local pips = {}
 	for k = 1, C.FORGE.maxLv do
-		local p = new("Frame", det, { Size = UDim2.fromScale(0.08, 0.034), Position = UDim2.fromScale(0.06 + (k - 1) * 0.0889, 0.823), BorderSizePixel = 0, ZIndex = 2 })
+		local p = new("Frame", det, { Size = UDim2.fromScale(0.08, 0.032), Position = UDim2.fromScale(0.06 + (k - 1) * 0.0889, 0.788), BorderSizePixel = 0, ZIndex = 2 })
 		round(p, 0.45)
 		pips[k] = { frame = p, stroke = new("UIStroke", p, { Thickness = 2 }) }
 	end
-	local act = button(det, "UPGRADE", UDim2.fromScale(0.58, 0.105), UDim2.fromScale(0.05, 0.965), Vector2.new(0, 1), "mint", "gem")
+	local act = button(det, "UPGRADE", UDim2.fromScale(0.58, 0.15), UDim2.fromScale(0.05, 0.975), Vector2.new(0, 1), "mint", "gem")
 	act.Name = "Action"
-	local eqB = button(det, "EQUIP", UDim2.fromScale(0.33, 0.105), UDim2.fromScale(0.95, 0.965), Vector2.new(1, 1), "butter")
+	local eqB = button(det, "EQUIP", UDim2.fromScale(0.33, 0.15), UDim2.fromScale(0.95, 0.975), Vector2.new(1, 1), "butter")
 	eqB.Name = "Equip"
+	-- two lines on the action button: the verb, then the price with its currency (Gemini r3: one line read cramped)
+	act.Label.Visible = false
+	local actTop = text(act, "", UDim2.fromScale(0.86, 0.4), UDim2.fromScale(0.5, 0.33), Vector2.new(0.5, 0.5), WHITE)
+	local actCost = text(act, "", UDim2.fromScale(0.42, 0.32), UDim2.fromScale(0.55, 0.7), Vector2.new(0, 0.5), WHITE)
+	actCost.TextXAlignment = Enum.TextXAlignment.Left
+	local ai = act:FindFirstChild("Icon")
+	ai.Size, ai.Position, ai.AnchorPoint = UDim2.fromScale(0.2, 0.38), UDim2.fromScale(0.52, 0.7), Vector2.new(1, 0.5)
+	local function splitAct()
+		local a, b = act.Text:match("^(.-)%s%s+(%S+)$")
+		actTop.Text, actCost.Text, actCost.Visible = a or act.Text, b or "", b ~= nil
+		actTop.Position = b and UDim2.fromScale(0.5, 0.33) or UDim2.fromScale(0.5, 0.48)
+		local deep = DEEP[act:GetAttribute("Kind")] or INK
+		actTop.TextStrokeColor3, actCost.TextStrokeColor3 = deep, deep
+	end
+	act:GetPropertyChangedSignal("Text"):Connect(splitAct)
+	act:GetAttributeChangedSignal("Kind"):Connect(splitAct)
+	splitAct()
 	local mode = {} -- what the action button does right now
 
 	local function setRow(k, label, iconName, from, to)
@@ -1501,7 +1528,7 @@ end)
 		lvLabel.Visible = showLv
 		for _, p in pips do p.frame.Visible = showLv end
 		eqB.Visible = tab == "pick" and own
-		act.Size = eqB.Visible and UDim2.fromScale(0.58, 0.105) or UDim2.fromScale(0.9, 0.105)
+		act.Size = eqB.Visible and UDim2.fromScale(0.58, 0.15) or UDim2.fromScale(0.9, 0.15)
 		local actIcon = act:FindFirstChild("Icon")
 		if tab == "pick" then
 			local lv = own and lvOf(i) or 1

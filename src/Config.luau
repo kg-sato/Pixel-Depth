@@ -119,27 +119,37 @@ C.PASTEL = {
 	Color3.fromRGB(255, 157, 176), Color3.fromRGB(140, 227, 192), Color3.fromRGB(201, 184, 242), Color3.fromRGB(255, 224, 138),
 }
 
--- Pickaxe ladder: Wood and Stone are part-built; the ten magical pickaxes are the Pickaxe Forge models (ServerStorage.Pickaxes)
+-- Pickaxe ladder v2 (the user, 2026-11-08): Wood and Stone, twelve ore pickaxes keyed to the seven layers, then the five sky
+-- pickaxes kept as the endgame (Starlight, Moonlit, Galaxy, Royal Heart, Silver Wing). Numbers from the research note
+-- Briefs/Pickaxe Progression (2026-11-08) (art/forge/ladder_proposal.json); ore material costs are proposed there, not used yet.
+-- Models live in ServerStorage.Pickaxes by the model name; a tier without its model yet falls back to the part-built pick.
 C.PICKS = {
-	{ name = "Wood Pickaxe", power = 1, cost = 0, model = "WoodPickaxe" },
-	{ name = "Stone Pickaxe", power = 2, cost = 20, model = "StonePickaxe" },
-	{ name = "Heart Gem Pickaxe", power = 4, cost = 150, model = "HeartGemPickaxe" },
-	{ name = "Starlight Pickaxe", power = 7, cost = 600, model = "StarlightPickaxe" },
-	{ name = "Moonlit Pickaxe", power = 12, cost = 2000, model = "MoonlitPickaxe" },
-	{ name = "Rose Thorn Pickaxe", power = 20, cost = 6000, model = "RoseThornPickaxe" },
-	{ name = "Pearl Tide Pickaxe", power = 32, cost = 15000, model = "PearlTidePickaxe" },
-	{ name = "Galaxy Pickaxe", power = 50, cost = 40000, model = "GalaxyPickaxe" },
-	{ name = "Sakura Pickaxe", power = 80, cost = 100000, model = "SakuraPickaxe" },
-	{ name = "Lotus Crystal Pickaxe", power = 125, cost = 250000, model = "LotusCrystalPickaxe" },
-	{ name = "Royal Heart Pickaxe", power = 200, cost = 600000, model = "RoyalHeartPickaxe" },
-	{ name = "Silver Wing Pickaxe", power = 320, cost = 1500000, model = "SilverWingPickaxe" },
+	{ name = "Wood Pickaxe", power = 1, cost = 0, model = "WoodPickaxe" }, -- Common; Rootholm
+	{ name = "Stone Pickaxe", power = 2, cost = 20, model = "StonePickaxe" }, -- Common; Rootholm
+	{ name = "Copper Pickaxe", power = 3, cost = 80, model = "CopperPickaxe" }, -- Common; Rootholm
+	{ name = "Bog-Iron Pickaxe", power = 5, cost = 250, model = "BogIronPickaxe" }, -- Common; Titan's Rest
+	{ name = "Rune-Tin Pickaxe", power = 8, cost = 800, model = "RuneTinPickaxe" }, -- Common; Titan's Rest
+	{ name = "Amethyst Pickaxe", power = 12, cost = 2500, model = "AmethystPickaxe" }, -- Rare; Glitterhall
+	{ name = "Sapphire Pickaxe", power = 18, cost = 8000, model = "SapphirePickaxe" }, -- Rare; Glitterhall
+	{ name = "Fireglass Pickaxe", power = 28, cost = 25000, model = "FireglassPickaxe" }, -- Rare; Muspell
+	{ name = "Ruby Pickaxe", power = 42, cost = 80000, model = "RubyPickaxe" }, -- Rare; Muspell
+	{ name = "Coral Pickaxe", power = 65, cost = 250000, model = "CoralPickaxe" }, -- Epic; Mimir's Well
+	{ name = "Fatestone Pickaxe", power = 100, cost = 800000, model = "FatestonePickaxe" }, -- Epic; Mimir's Well
+	{ name = "Jade Pickaxe", power = 150, cost = 2500000, model = "JadePickaxe" }, -- Epic; Alfglow
+	{ name = "Opal Pickaxe", power = 230, cost = 8000000, model = "OpalPickaxe" }, -- Epic; Alfglow
+	{ name = "Voidcrystal Pickaxe", power = 350, cost = 25000000, model = "VoidcrystalPickaxe" }, -- Epic; The Great Gap
+	{ name = "Starlight Pickaxe", power = 600, cost = 40000000, model = "StarlightPickaxe" }, -- Legendary; The Great Gap
+	{ name = "Moonlit Pickaxe", power = 1000, cost = 65000000, model = "MoonlitPickaxe" }, -- Legendary; The Great Gap
+	{ name = "Galaxy Pickaxe", power = 1700, cost = 100000000, model = "GalaxyPickaxe" }, -- Mythic; The Great Gap
+	{ name = "Royal Heart Pickaxe", power = 2800, cost = 160000000, model = "RoyalHeartPickaxe" }, -- Mythic; The Great Gap
+	{ name = "Silver Wing Pickaxe", power = 4800, cost = 250000000, model = "SilverWingPickaxe" }, -- Secret; The Great Gap
 }
 C.PICK_SCALE = 0.75 -- the 3.6-stud forge models shrunk to fit the miner's hand
 -- Forge v2 (2026-11-08): coins buy the next pickaxe, gems level an owned one (LV 1 to 10). In the caves the equipped pickaxe
 -- multiplies the gold value of every ore it extracts (square root of its dig power); each level adds 10% value and widens the
 -- Perfect Strike gold zone by 2 degrees. Rarity per pickaxe indexes C.RARITIES (card rims, gem cost scale).
 C.FORGE = { maxLv = 10, gems = { 3, 4, 6, 8, 11, 15, 20, 26, 34 }, lvValue = 0.1, lvArc = 2 }
-C.PICK_RARITY = { 1, 1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6 }
+C.PICK_RARITY = { 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 5, 5, 6 }
 function C.pickValue(tier, lv) -- ore value multiplier in the caves
 	return math.sqrt(C.PICKS[tier].power) * (1 + C.FORGE.lvValue * ((lv or 1) - 1))
 end
