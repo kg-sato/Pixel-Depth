@@ -28,9 +28,9 @@ def shot(name):
     print(name, lua(HUD + "return 'cave='..tostring(p:GetAttribute('InCave'))..' | '..t(g:FindFirstChild('BagPill',true))..' | gold '..t(g:FindFirstChild('GoldPill',true))..' | fps '..math.floor(workspace:GetRealPhysicsFPS())", "Client"))
 
 
-def face_deposit():  # prompts only show for things on screen: turn the first-person camera to the nearest deposit
+def face_deposit(which="true"):  # prompts only show for things on screen: turn the first-person camera to the nearest matching deposit
     lua("local h=game.Players.LocalPlayer.Character.HumanoidRootPart local best,bd for _,d in workspace.Caves.Deposits:GetChildren() do "
-        "local m=(d.PrimaryPart.Position-h.Position).Magnitude if not bd or m<bd then best,bd=d,m end end "
+        "if " + which + " then local m=(d.PrimaryPart.Position-h.Position).Magnitude if not bd or m<bd then best,bd=d,m end end end "
         "local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.Position,best.PrimaryPart.Position)", "Client")
     time.sleep(0.5)
 
@@ -43,8 +43,12 @@ def go_to(which):  # stand 4 studs out from a deposit, facing it; returns its or
     return lua("local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart local best,bd "
                "for _,d in workspace.Caves.Deposits:GetChildren() do local ok=" + which + " "
                "if ok then local dist=(d.PrimaryPart.Position-Vector3.new(-3000,0,0)).Magnitude if not bd or dist<bd then best,bd=d,dist end end end "
-               "if not best then return 'none' end local c=best.PrimaryPart local lv=c.CFrame.LookVector "
-               "local at=c.Position-Vector3.new(lv.X,0,lv.Z).Unit*2.6+Vector3.new(0,3,0) h.CFrame=CFrame.lookAt(at,c.Position) "
+               "if not best then return 'none' end local c=best.PrimaryPart local rp=RaycastParams.new() rp.FilterDescendantsInstances={p.Character,workspace.Caves.Deposits} "
+               "local at for _,dir in {-c.CFrame.LookVector*Vector3.new(1,0,1),Vector3.xAxis,-Vector3.xAxis,Vector3.zAxis,-Vector3.zAxis} do "
+               "if not at and dir.Magnitude>0.1 then local t=c.Position+dir.Unit*3.2+Vector3.new(0,2,0) "
+               "if not workspace:Raycast(c.Position+Vector3.new(0,2,0),t-(c.Position+Vector3.new(0,2,0)),rp) then local f=workspace:Raycast(t,Vector3.new(0,-8,0),rp) "
+               "if f then at=f.Position+Vector3.new(0,3,0) end end end end "
+               "at=at or c.Position+Vector3.new(0,4,0) h.CFrame=CFrame.lookAt(at,Vector3.new(c.Position.X,at.Y,c.Position.Z)) "
                "task.wait(0.6) return 'd='..math.floor((h.Position-c.Position).Magnitude)..' '..best:GetAttribute('OreName')..' ore'..best:GetAttribute('Ore')..' L'..best:GetAttribute('Layer')..' at '..math.floor(bd)..' studs'")
 
 
@@ -55,7 +59,7 @@ time.sleep(2.5)
 shot("camp_map")
 print("common", go_to("d:GetAttribute('Ore')<3"))
 time.sleep(1.2)
-face_deposit()
+face_deposit("d:GetAttribute('Ore')<3")
 shot("deposit")
 key("E")
 time.sleep(0.7)
@@ -71,7 +75,7 @@ rare = go_to("d:GetAttribute('Ore')==3")
 print("rare", rare)
 if rare != "none":
     time.sleep(1.0)
-    face_deposit()
+    face_deposit("d:GetAttribute('Ore')==3")
     key("E")
     time.sleep(0.7)
     key("A")  # first beat through the real input path (a slip or a clean chisel, whichever the cracks say)

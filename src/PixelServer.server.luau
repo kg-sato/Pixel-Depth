@@ -839,6 +839,74 @@ equipPick = function(s)
 	m.Parent = ch
 end
 
+-- The torch (the user, 2026-11-08: pickaxe in the right hand, torch in the left). Its flame carries the "Lantern" light the
+-- client dims in the caves. Below ground both tools are in hand; in town the pickaxe rides on the back and the torch is put away.
+local function buildTorch(ch)
+	local hand = ch:FindFirstChild("LeftHand") or ch:FindFirstChild("Left Arm")
+	if not hand then return end
+	local old = ch:FindFirstChild("HeldTorch")
+	if old then old:Destroy() end
+	local m = Instance.new("Model")
+	m.Name = "HeldTorch"
+	local function tp(name, size, color, mat)
+		local p = Instance.new("Part")
+		p.Name, p.Size, p.Color, p.Material = name, size, color, mat or Enum.Material.SmoothPlastic
+		p.CanCollide, p.CanQuery, p.CanTouch, p.Massless, p.CastShadow = false, false, false, true, false
+		p.TopSurface, p.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
+		p.Parent = m
+		return p
+	end
+	local handle = tp("Handle", Vector3.new(0.32, 1.7, 0.32), Color3.fromRGB(122, 84, 58))
+	local pieces = {
+		{ tp("Wrap", Vector3.new(0.46, 0.36, 0.46), Color3.fromRGB(78, 56, 44)), 0.72 },
+		{ tp("Flame", Vector3.new(0.52, 0.56, 0.52), Color3.fromRGB(255, 150, 60), Enum.Material.Neon), 1.12 },
+		{ tp("Core", Vector3.new(0.3, 0.34, 0.3), Color3.fromRGB(255, 236, 160), Enum.Material.Neon), 1.16 },
+	}
+	for _, piece in pieces do
+		local wd = Instance.new("Weld")
+		wd.Part0, wd.Part1, wd.C0 = handle, piece[1], CFrame.new(0, piece[2], 0)
+		wd.Parent = piece[1]
+	end
+	local flame = m:FindFirstChild("Flame")
+	local light = Instance.new("PointLight")
+	light.Name, light.Color, light.Range, light.Brightness, light.Shadows = "Lantern", Color3.fromRGB(255, 220, 180), 28, 1.1, true
+	light.Parent = flame
+	local sparks = Instance.new("ParticleEmitter")
+	sparks.Name, sparks.Rate, sparks.Lifetime, sparks.Speed = "Sparks", 6, NumberRange.new(0.4, 0.8), NumberRange.new(1, 2.5)
+	sparks.Size, sparks.LightEmission = NumberSequence.new(0.12, 0), 1
+	sparks.Color, sparks.SpreadAngle, sparks.Acceleration = ColorSequence.new(Color3.fromRGB(255, 200, 110)), Vector2.new(25, 25), Vector3.new(0, 3, 0)
+	sparks.Parent = flame
+	m.PrimaryPart = handle
+	local w = Instance.new("Weld")
+	w.Name, w.Part0, w.Part1 = "TorchGrip", hand, handle
+	w.C0 = CFrame.new(0, -hand.Size.Y * 0.4, 0) * CFrame.Angles(math.rad(-70), 0, 0) * CFrame.new(0, 0.45, 0) -- forward and a little up from the fist
+	w.Parent = handle
+	m.Parent = ch
+end
+local function mountGear(s)
+	local ch = s.player.Character
+	if not ch then return end
+	local under = s.player:GetAttribute("InCave") == true or s.player:GetAttribute("InMine") == true
+	local pick = ch:FindFirstChild("HeldPickaxe")
+	local grip = pick and pick:FindFirstChild("PickGrip", true)
+	local hand = ch:FindFirstChild("RightHand") or ch:FindFirstChild("Right Arm")
+	local back = ch:FindFirstChild("UpperTorso") or ch:FindFirstChild("Torso")
+	if grip and hand and back then
+		if under then
+			grip.Part0, grip.C0 = hand, grip:GetAttribute("BaseC0")
+		else -- slung across the back, head up over the left shoulder
+			grip.Part0, grip.C0 = back, CFrame.new(0, 0.1, back.Size.Z / 2 + 0.3) * CFrame.Angles(0, 0, math.rad(40)) * CFrame.Angles(0, math.rad(90), 0)
+		end
+	end
+	local torch = ch:FindFirstChild("HeldTorch")
+	if torch then
+		for _, p in torch:GetDescendants() do
+			if p:IsA("BasePart") then p.Transparency = under and 0 or 1 end
+			if p:IsA("PointLight") or p:IsA("ParticleEmitter") then p.Enabled = under end
+		end
+	end
+end
+
 BuyR.OnServerEvent:Connect(function(plr, what)
 	local s = data[plr]
 	local list = (what == "pick" and C.PICKS) or (what == "pack" and C.PACKS)
@@ -847,7 +915,10 @@ BuyR.OnServerEvent:Connect(function(plr, what)
 	if not nxt or s.gold < nxt.cost then return end
 	s.gold -= nxt.cost
 	s[what] += 1
-	if what == "pick" then equipPick(s) end
+	if what == "pick" then
+		equipPick(s)
+		mountGear(s)
+	end
 	if s.step == 4 then s.step = #s.pets > 0 and 6 or 5 end
 	FxR:FireClient(plr, "bought", nxt.name, what)
 	sendState(s)
@@ -1056,11 +1127,10 @@ local function onJoin(plr)
 		hrp.CFrame = spawnCFrame()
 		plr:SetAttribute("InMine", false)
 		plr:SetAttribute("InCave", false)
-		local head = ch:FindFirstChild("Head") or hrp
-		local lantern = Instance.new("PointLight") -- the miner's lantern: the mine is dark, light comes from you and the glowing things
-		lantern.Name, lantern.Color, lantern.Range, lantern.Brightness, lantern.Shadows = "Lantern", Color3.fromRGB(255, 220, 180), 28, 1.1, true
-		lantern.Parent = head
+		ch:WaitForChild("LeftHand", 5)
+		buildTorch(ch) -- the miner's light: the caves are dark, light comes from your torch and the glowing things
 		equipPick(s)
+		mountGear(s)
 		sendState(s)
 		if s.nightReport then
 			FxR:FireClient(plr, "night", s.nightReport[1], s.nightReport[2], #s.pets)
@@ -1068,6 +1138,8 @@ local function onJoin(plr)
 		end
 	end
 	plr.CharacterAdded:Connect(spawned)
+	plr:GetAttributeChangedSignal("InCave"):Connect(function() mountGear(s) end)
+	plr:GetAttributeChangedSignal("InMine"):Connect(function() mountGear(s) end)
 	if plr.Character then task.spawn(spawned, plr.Character) end
 	task.defer(sendState, s)
 end

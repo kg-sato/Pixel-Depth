@@ -208,8 +208,8 @@ local function button(parent, label, size, pos, anchor, kind, iconName, vertical
 	skin(b, kind or "mint")
 	local lab
 	if iconName and vertical then
-		icon(b, iconName, UDim2.fromScale(0.5, 0.46), UDim2.fromScale(0.5, 0.1), Vector2.new(0.5, 0))
-		lab = text(b, label, UDim2.fromScale(0.86, 0.24), UDim2.fromScale(0.5, 0.62), Vector2.new(0.5, 0), WHITE)
+		icon(b, iconName, UDim2.fromScale(0.5, 0.42), UDim2.fromScale(0.5, 0.34), Vector2.new(0.5, 0.5))
+		lab = text(b, label, UDim2.fromScale(0.8, 0.19), UDim2.fromScale(0.5, 0.67), Vector2.new(0.5, 0.5), WHITE)
 	elseif iconName then
 		local ic = icon(b, iconName, UDim2.fromScale(0.3, 0.62), UDim2.fromScale(0.08, 0.5), Vector2.new(0, 0.5))
 		new("UIAspectRatioConstraint", ic, { AspectRatio = 1 })
@@ -1159,7 +1159,7 @@ buyBtn.Activated:Connect(function() R.Buy:FireServer(tabWhat) end)
 -- Keyboard: first person locks the mouse, so every rail button also has a key (shown on the button on PC)
 local KEYS = { [Enum.KeyCode.G] = railForge, [Enum.KeyCode.Q] = railLift }
 if UIS.KeyboardEnabled then
-	for key, b in KEYS do keyCap(b, key.Name, UDim2.fromScale(0.34, 0.34), UDim2.fromScale(0.92, 0.1)) end
+	for key, b in KEYS do keyCap(b, key.Name, UDim2.fromScale(0.27, 0.27), UDim2.fromScale(0.8, 0.17)) end
 	keyCap(digBtn, "E", UDim2.fromScale(0.13, 0.5), UDim2.fromScale(0.93, 0.16))
 end
 UIS.InputBegan:Connect(function(input, gp)
@@ -1191,11 +1191,11 @@ PPS.PromptShown:Connect(function(prompt, inputType)
 	local sc = new("UIScale", root, { Scale = 0.35 })
 	local bubble = new("Frame", root, { Name = "Bubble", Size = UDim2.fromScale(0.76, 0.78), Position = UDim2.fromScale(1, 0.02), AnchorPoint = Vector2.new(1, 0) })
 	skin(bubble, "card")
-	local action = text(bubble, prompt.ActionText, UDim2.fromScale(0.8, 0.36), UDim2.fromScale(0.5, 0.36), Vector2.new(0.5, 0.5), INK, 700, false)
-	local object = text(bubble, prompt.ObjectText, UDim2.fromScale(0.76, 0.22), UDim2.fromScale(0.5, 0.66), Vector2.new(0.5, 0.5), INK, 700, false) -- full ink: the soft plum was too faint on the butter bubble (Gemini HUD v5 r1)
+	local action = text(bubble, prompt.ActionText, UDim2.fromScale(0.72, 0.36), UDim2.fromScale(0.57, 0.36), Vector2.new(0.5, 0.5), INK, 700, false)
+	local object = text(bubble, prompt.ObjectText, UDim2.fromScale(0.68, 0.22), UDim2.fromScale(0.57, 0.66), Vector2.new(0.5, 0.5), INK, 700, false) -- full ink: the soft plum was too faint on the butter bubble (Gemini HUD v5 r1)
 	if prompt.ObjectText == "" then
 		object.Visible = false
-		action.Position = UDim2.fromScale(0.5, 0.46)
+		action.Position = UDim2.fromScale(0.57, 0.46)
 	end
 	new("ImageLabel", root, {
 		Name = "Pointer", BackgroundTransparency = 1, Image = SPRITE.pointer, ScaleType = Enum.ScaleType.Fit,
@@ -1205,7 +1205,7 @@ PPS.PromptShown:Connect(function(prompt, inputType)
 		BackgroundTransparency = 1, Image = SPRITE.sparkle, ScaleType = Enum.ScaleType.Fit,
 		Size = UDim2.fromScale(0.13, 0.34), Position = UDim2.fromScale(0.97, 0.04), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4,
 	})
-	local cap = new("Frame", root, { Name = "Key", Size = UDim2.fromScale(0.28, 0.86), Position = UDim2.fromScale(0.02, 0.42), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
+	local cap = new("Frame", root, { Name = "Key", Size = UDim2.fromScale(0.2, 0.56), Position = UDim2.fromScale(0.27, 0.41), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
 	skin(cap, "keycap")
 	new("UIAspectRatioConstraint", cap, { AspectRatio = 16 / 17 })
 	if inputType == Enum.ProximityPromptInputType.Gamepad then
@@ -1475,13 +1475,12 @@ do
 		cave.fuel = math.clamp(1 - (now - cave.relitAt) / C.TORCH.time, 0, 1)
 		cave.fear = here and 0 or math.clamp((1 - cave.fuel) * 1.15 - 0.1, 0, 1)
 		-- the torch: the head lantern shrinks and dims with the fuel and flickers like a flame (LGT-01)
-		local hd = head()
-		local lantern = hd and hd:FindFirstChild("Lantern")
+		local lantern = plr.Character and plr.Character:FindFirstChild("Lantern", true) -- on the torch in the left hand
 		if lantern then
 			local flick = math.noise(now * 6, 1.7) * 0.18 + math.noise(now * 17, 4.2) * 0.08
 			lantern.Color = Color3.fromRGB(255, 196, 120)
 			lantern.Range = C.TORCH.minRange + (C.TORCH.range - C.TORCH.minRange) * cave.fuel ^ 0.7 + flick * 2
-			lantern.Brightness = 0.3 + 0.9 * cave.fuel + flick * 0.6 -- soft: at full strength it blew out nearby surfaces
+			lantern.Brightness = 0.25 + 0.6 * cave.fuel + flick * 0.4 -- soft: the torch sits low in the hand, close to the floor, and blew it out
 		end
 		torchFill.Size = UDim2.fromScale(cave.fuel, 1)
 		torchFill.BackgroundColor3 = cave.fuel > 0.3 and Color3.fromRGB(255, 176, 70) or Color3.fromRGB(255, 110, 90)
@@ -1623,8 +1622,7 @@ end
 		end
 		if now < map.next then return end
 		map.next = now + 0.15
-		local hd = head()
-		local lantern = hd and hd:FindFirstChild("Lantern")
+		local lantern = plr.Character and plr.Character:FindFirstChild("Lantern", true)
 		local r = (lantern and lantern.Range or C.TORCH.range) + 10
 		for i = #map.floors, 1, -1 do -- fog of war: reveal floors your light reaches, then forget them
 			local f = map.floors[i]
@@ -2066,6 +2064,13 @@ local function setMode(mine, inCaves)
 		cam.CameraType = Enum.CameraType.Scriptable
 		cam.FieldOfView = C.CAM_FOV
 		if vm then vm:Destroy() vm = nil vmTier = nil end
+		if cave.tvm then cave.tvm:Destroy() cave.tvm = nil end
+		-- the first-person camera left the character invisible and turning with the camera (it always faced north in town):
+		-- the Scriptable town camera stops the camera scripts, so undo both here
+		pcall(function() UserSettings():GetService("UserGameSettings").RotationType = Enum.RotationType.MovementRelative end)
+		for _, p in (plr.Character and plr.Character:GetDescendants() or {}) do
+			if p:IsA("BasePart") or p:IsA("Decal") then p.LocalTransparencyModifier = 0 end
+		end
 	end
 end
 local function modeNow() return plr:GetAttribute("InMine") == true or plr:GetAttribute("InCave") == true, plr:GetAttribute("InCave") == true end
@@ -2317,6 +2322,28 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		UIS.MouseIconEnabled = free
 	else
 		UIS.MouseIconEnabled = true
+	end
+	-- first-person torch in the left hand (the light itself stays on the character's torch)
+	if (inMine or inCave) and not cave.tvm and plr.Character and plr.Character:FindFirstChild("HeldTorch") then
+		cave.tvm = plr.Character.HeldTorch:Clone()
+		for _, d in cave.tvm:GetDescendants() do
+			if d:IsA("PointLight") or (d:IsA("JointInstance") and d.Name == "TorchGrip") then d:Destroy() end
+		end
+		for _, d in cave.tvm:GetDescendants() do
+			if d:IsA("BasePart") then d.Anchored, d.Transparency, d.CastShadow = d == cave.tvm.PrimaryPart, 0, false end
+			if d.Name == "Flame" then d.Color = Color3.fromRGB(205, 112, 42) end -- dimmer neon: a full-bright flame at the lens blooms into a blob
+			if d.Name == "Core" then d.Color = Color3.fromRGB(235, 190, 120) end
+		end
+		cave.tvm:ScaleTo(0.6)
+		cave.tvm.Name = "ViewTorch"
+		cave.tvm.Parent = cam
+	end
+	if cave.tvm and (inMine or inCave) and not cave.mgBusy then
+		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+		local bob = hum and hum.MoveDirection.Magnitude > 0.1 and math.sin(now * 10 + 1.5) * 0.07 or math.sin(now * 2 + 1) * 0.02
+		cave.tvm:PivotTo(cam.CFrame * CFrame.new(-1.15, -1.05 + bob, -2.4) * CFrame.Angles(0.3, 0.25, -0.15))
+	elseif cave.tvm then
+		cave.tvm:PivotTo(CFrame.new(0, -1e4, 0)) -- out of sight during minigames
 	end
 	-- first-person pickaxe swing: wind-up, fast strike, short hold, recover; walking bob
 	if vm and (inMine or inCave) then

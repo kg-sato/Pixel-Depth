@@ -370,8 +370,14 @@ function Cave.build(parent, origin, seed)
 		end
 		-- giant mushrooms: a cream stalk, a wide glowing cap with darker gills under it and pale spots on top
 		local CAPS = { PAL.capMint, PAL.capTeal, PAL.capLilac, PAL.capPink, PAL.capMint }
+		local function floorAt(u, v) -- floor height under piece cell (u, v), relative to the piece base
+			local i, j = toIJ(math.floor(u + 0.5), math.floor(v + 0.5))
+			local c = cells[key(i, j)]
+			return c and c.f - y0 or hy
+		end
 		for k, at in { { 22, -6, 26 }, { 30, 7, 34 }, { 36, -8, 22 }, { 26, 9, 18 }, { 33, 0, 40 } } do
 			local h, capW = at[3], 10 + at[3] * 0.3
+			local hy = floorAt(at[1], at[2]) -- stand on the real floor (the hall floor rolls up to 4 studs either way)
 			for s = 0, math.floor(h / 4) do
 				part("Mushrooms", "Stalk", Vector3.new(3.6 - s * 0.05, 4.2, 3.6 - s * 0.05), cf(at[1], at[2], hy + s * 4 + 2) * CFrame.Angles(0, s * 0.15, (s % 2 - 0.5) * 0.05), lerpC(PAL.cream, Color3.fromRGB(200, 186, 214), hash(k, s, 12)))
 			end
@@ -402,7 +408,7 @@ function Cave.build(parent, origin, seed)
 		end
 		for k = 0, 13 do -- little glowing mushrooms on the floor
 			local u, v = 16 + hash(k, 1, 15) * 24, (hash(k, 2, 15) - 0.5) * 24
-			local small = cf(u, v, hy + 0.5)
+			local small = cf(u, v, floorAt(u, v))
 			part("Mushrooms", "SmallStalk", Vector3.new(0.6, 1.4, 0.6), small * CFrame.new(0, 0.7, 0), PAL.cream, DECO)
 			part("Mushrooms", "SmallCap", Vector3.new(2, 0.7, 2), small * CFrame.new(0, 1.6, 0), CAPS[k % 5 + 1], { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		end
@@ -617,6 +623,7 @@ function Cave.build(parent, origin, seed)
 			dep.Parent = group("Deposits")
 		end
 	end
+	model:SetAttribute("ZFixed", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(model)) -- no z-fighting (the user, 2026-11-08)
 	model:SetAttribute("Deposits", #placed)
 	model:SetAttribute("Reachable", qi - 1)
 	model:SetAttribute("Floors", nFloor)

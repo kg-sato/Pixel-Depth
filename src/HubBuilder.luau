@@ -369,9 +369,16 @@ function Hub.build(parent, origin)
 			local t = Instance.new("Texture")
 			t.Texture, t.Face, t.StudsPerTileU, t.StudsPerTileV, t.Transparency = "rbxassetid://102263231288805", N.Top, 6, 6, 0.4
 			t.Parent = w
+			local seg = (c - prev).Magnitude
 			for _, sd in { -1, 1 } do
 				local h = hash(i, sd, c.X)
-				tvox(water, "Bank", Vector3.new(1.3 + h, 0.6 + h * 0.6, 2.2), cf * CFrame.new(sd * (width / 2 + 0.5), 0.2, 0) * CFrame.Angles(0, h, 0), "cobble", 2)
+				vox(water, "BankBed", Vector3.new(1.5, 0.34, seg + 1.4), cf * CFrame.new(sd * (width / 2 + 0.55), 0.02, 0), Color3.fromRGB(74, 70, 92), { CanCollide = false })
+				tvox(water, "Bank", Vector3.new(1.3 + h * 0.6, 0.6 + h * 0.6, 2.6), cf * CFrame.new(sd * (width / 2 + 0.5), 0.2, 0) * CFrame.Angles(0, (h - 0.5) * 0.5, 0), "cobble", 2)
+				if i < n then -- the joint: a stone at the bend so the outside edge stays closed
+					local nxt = bez(pts, (i + 1) / n)
+					local jcf = CFrame.lookAt(Vector3.new(c.X, y, c.Z), Vector3.new(c.X, y, c.Z) + Vector3.new(nxt.X - prev.X, 0, nxt.Z - prev.Z))
+					tvox(water, "BankJoint", Vector3.new(1.5, 0.5 + h * 0.4, 1.8), jcf * CFrame.new(sd * (width / 2 + 0.55), 0.18, 0), "cobble", 2)
+				end
 				if h > 0.78 then
 					for k = 0, 2 do vox(water, "Reed", Vector3.new(0.25, 1.6 + k * 0.4, 0.25), cf * CFrame.new(sd * (width / 2 + 1.4), 0.9, k * 0.5 - 0.5), PAL.moss[(k % 3) + 1], { CanCollide = false }) end
 				end
@@ -427,6 +434,13 @@ function Hub.build(parent, origin)
 			local laneTint = Color3.fromRGB(214, 220, 240) -- cools the lilac cobbles toward slate (Gemini paths r1)
 			skin(vox(ground, "Lane", Vector3.new(w, 0.3, (c - prev).Magnitude + 1.2), cf, AVG[tex]), tex, 5, { N.Top }, laneTint)
 			vox(ground, "LaneBed", Vector3.new(w + 0.9, 0.26, (c - prev).Magnitude + 1.4), cf * CFrame.new(0, -0.06, 0), Color3.fromRGB(58, 66, 62), { CanCollide = false })
+			if i < n then -- joint slab on the bend, turned halfway between the two segments: closes the wedge on the outside of curves
+				local nxt = bez(pts, (i + 1) / n)
+				local jy = yy - 0.01
+				local jcf = CFrame.lookAt(Vector3.new(c.X, jy, c.Z), Vector3.new(c.X, jy, c.Z) + Vector3.new(nxt.X - prev.X, 0, nxt.Z - prev.Z))
+				skin(vox(ground, "LaneJoint", Vector3.new(w, 0.3, math.min(w, 2.4)), jcf, AVG[tex]), tex, 5, { N.Top }, laneTint)
+				vox(ground, "LaneBed", Vector3.new(w + 0.9, 0.26, math.min(w, 2.4) + 0.4), jcf * CFrame.new(0, -0.06, 0), Color3.fromRGB(58, 66, 62), { CanCollide = false })
+			end
 			for _, side in { -1, 1 } do -- ragged edges: loose stones half in the grass, and tufts creeping over the edge
 				local h = hash(i, side, c.X + c.Z)
 				local e = cf * CFrame.new(side * (w / 2 + 0.2 + h * 0.5), -0.05, (h - 0.5) * 1.6)
@@ -1473,6 +1487,7 @@ function Hub.build(parent, origin)
 	-- 15. Spawn point south of the shaft, facing it
 	vox(model, "SpawnPoint", Vector3.new(1, 1, 1), CFrame.lookAt(W(0, 3.6, 16), W(0, 3.6, 0)), PAL.wood[1], { Transparency = 1, CanCollide = false, CanQuery = false })
 
+	model:SetAttribute("ZFixed", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(model)) -- no z-fighting (the user, 2026-11-08)
 	model.Parent = parent
 	return model
 end
