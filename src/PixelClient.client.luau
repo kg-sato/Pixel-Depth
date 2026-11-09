@@ -73,10 +73,11 @@ local SPRITE = {
 	pointer = "rbxassetid://128266643608103", close = "rbxassetid://132260797395561",
 	star = "rbxassetid://100737048426546", starOff = "rbxassetid://89117534881571",
 }
-local ICON = {
-	coin = "rbxassetid://127130970164674", gem = "rbxassetid://112281160766494", pick = "rbxassetid://135042498218444", bag = "rbxassetid://90942769596950",
-	crew = "rbxassetid://110749239504965", surface = "rbxassetid://93205212525623", egg = "rbxassetid://93427201556099", star = "rbxassetid://76832160806647",
-	dice = "rbxassetid://80139731330207", map = "rbxassetid://86298215875780",
+local ICON = { -- smooth soft-kit icons (art/icons_soft, ids in art/icons_soft/asset_ids.json; 2026-11-08 replaced the pixel set)
+	coin = "rbxassetid://108767995994321", gem = "rbxassetid://109272506073747", pick = "rbxassetid://82124767195252", bag = "rbxassetid://70678886244636",
+	crew = "rbxassetid://121813663831714", surface = "rbxassetid://113100619996978", egg = "rbxassetid://81100985418912", star = "rbxassetid://98230996667759",
+	dice = "rbxassetid://124755060203655", map = "rbxassetid://109855398030402", camp = "rbxassetid://125775176311436", chisel = "rbxassetid://131827804757525",
+	hammer = "rbxassetid://118028256132989", lock = "rbxassetid://129198159082909",
 }
 local INK, CREAM, WHITE = Color3.fromRGB(62, 42, 86), Color3.fromRGB(255, 247, 238), Color3.new(1, 1, 1)
 local MINT, PINK, LILAC, BUTTER, SKY = Color3.fromRGB(127, 220, 180), Color3.fromRGB(255, 157, 176), Color3.fromRGB(185, 164, 238), Color3.fromRGB(255, 217, 112), Color3.fromRGB(142, 200, 255)
@@ -171,7 +172,7 @@ end
 local function icon(parent, name, size, pos, anchor)
 	return new("ImageLabel", parent, {
 		Name = "Icon", BackgroundTransparency = 1, Image = ICON[name], Size = size, Position = pos, AnchorPoint = anchor or Vector2.zero,
-		ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit, ZIndex = 2,
+		ScaleType = Enum.ScaleType.Fit, ZIndex = 2,
 	})
 end
 local function scaler(o)
@@ -410,38 +411,11 @@ local sellBtn = button(sellPop, "SELL", UDim2.fromScale(0.56, 0.3), UDim2.fromSc
 sellBtn.Name = "Sell"
 text(sellPop, "Rides the lift up to the sell stall", UDim2.fromScale(0.84, 0.08), UDim2.fromScale(0.5, 0.86), Vector2.new(0.5, 0), PLUM_SOFT, 500, false)
 
--- Forge (board Forge artboard): tabs, four tier cards, stats, UPGRADE
-local forge = panel(gui, S(680, 420), S(640, 300), Vector2.new(0.5, 0.5), "panel")
-fit(forge, 680, 420)
+-- Forge v2: the panel is made here (other code checks forge.Visible), its contents in the forge function further down
+local forge = panel(gui, S(1140, 520), S(640, 304), Vector2.new(0.5, 0.5), "panel")
+fit(forge, 1140, 520)
 forge.Visible, forge.Name = false, "Forge"
-ribbonTitle(forge, "FORGE", "ribbonPink", 0.4)
-deco(forge, "wisteria", UDim2.fromScale(0.1, 0.1), UDim2.fromScale(0.015, 0.06), -12)
-local closeBtn = closeButton(forge, "Close")
-local tabs, tabWhat = {}, "pick"
-for i, t in { { "pick", "PICKAXE" }, { "pack", "BACKPACK" } } do
-	local tb = button(forge, t[2], UDim2.fromScale(0.2, 0.09), UDim2.fromScale(0.05 + (i - 1) * 0.215, 0.18), nil, i == 1 and "tabOn" or "tab")
-	tb.Name = "Tab" .. t[2]
-	tabs[t[1]] = tb
-end
-local cards = {}
-for i = 1, 4 do
-	local cd = panel(forge, UDim2.fromScale(0.215, 0.3), UDim2.fromScale(0.05 + (i - 1) * 0.228, 0.3), nil, "slot")
-	cd.Name = "Card" .. i
-	local nm = text(cd, "", UDim2.fromScale(0.86, 0.13), UDim2.fromScale(0.5, 0.08), Vector2.new(0.5, 0), INK, 700, false)
-	local ic = icon(cd, "pick", UDim2.fromScale(0.5, 0.42), UDim2.fromScale(0.5, 0.26), Vector2.new(0.5, 0))
-	new("UIAspectRatioConstraint", ic, { AspectRatio = 1 })
-	local st = text(cd, "", UDim2.fromScale(0.8, 0.17), UDim2.fromScale(0.5, 0.76), Vector2.new(0.5, 0), MINT)
-	cards[i] = { frame = cd, name = nm, icon = ic, status = st }
-end
-local stats = panel(forge, UDim2.fromScale(0.58, 0.26), UDim2.fromScale(0.05, 0.66), nil, "card")
-local statA = text(stats, "", UDim2.fromScale(0.9, 0.26), UDim2.fromScale(0.05, 0.1), nil, INK, 700, false)
-statA.TextXAlignment = Enum.TextXAlignment.Left
-local statB = text(stats, "", UDim2.fromScale(0.9, 0.3), UDim2.fromScale(0.05, 0.38), nil, Color3.fromRGB(40, 128, 104), 700, false)
-statB.TextXAlignment = Enum.TextXAlignment.Left
-local statC = text(stats, "", UDim2.fromScale(0.9, 0.18), UDim2.fromScale(0.05, 0.7), nil, PLUM_SOFT, 500, false)
-statC.TextXAlignment = Enum.TextXAlignment.Left
-local buyBtn = button(forge, "UPGRADE", UDim2.fromScale(0.3, 0.26), UDim2.fromScale(0.95, 0.66), Vector2.new(1, 0), "mint", "coin")
-buyBtn.Name = "Buy"
+local forgeUI = { open = function() end, toggle = function() end, refresh = function() end, fx = function() end }
 
 -- Egg odds (spec 5.4 and 5.12: every random item shows its odds; pity is visible)
 do
@@ -1139,22 +1113,11 @@ end)
 digBtn.MouseButton1Up:Connect(function() digHeld = false end)
 digBtn.MouseLeave:Connect(function() digHeld = false end)
 
-local refreshForge
-railForge.Activated:Connect(function()
-	if forge.Visible then closePanel(forge) else refreshForge(); openPanel(forge) end
-end)
-closeBtn.Activated:Connect(function() closePanel(forge) end)
+railForge.Activated:Connect(function() forgeUI.toggle() end)
 oddsClose.Activated:Connect(function() closePanel(odds) end)
 mapClose.Activated:Connect(function() closePanel(mapP) end)
 railLift.Activated:Connect(function() R.Surface:FireServer((inMine or inCave) and "up" or "down") end)
 sellBtn.Activated:Connect(function() R.Sell:FireServer() end)
-for what, tb in tabs do
-	tb.Activated:Connect(function()
-		tabWhat = what
-		refreshForge()
-	end)
-end
-buyBtn.Activated:Connect(function() R.Buy:FireServer(tabWhat) end)
 
 -- Keyboard: first person locks the mouse, so every rail button also has a key (shown on the button on PC)
 local KEYS = { [Enum.KeyCode.G] = railForge, [Enum.KeyCode.Q] = railLift }
@@ -1168,7 +1131,7 @@ UIS.InputBegan:Connect(function(input, gp)
 	if k == Enum.KeyCode.Q then
 		R.Surface:FireServer((inMine or inCave) and "up" or "down")
 	elseif k == Enum.KeyCode.G then
-		if forge.Visible then closePanel(forge) else refreshForge(); openPanel(forge) end
+		forgeUI.toggle()
 	elseif k == Enum.KeyCode.Return and sellPop.Visible then
 		R.Sell:FireServer()
 	end
@@ -1288,53 +1251,6 @@ local function stepMessage()
 	if not inMine and state.step == 5 then return "Ride the lift back down to find the egg!" end
 	return STEPS[state.step] or ""
 end
-local TIER_TINT = { -- one colour per pickaxe (Pickaxe Forge palette)
-	Color3.fromRGB(230, 180, 130), Color3.fromRGB(200, 200, 215), Color3.fromRGB(255, 150, 180), Color3.fromRGB(255, 230, 140),
-	Color3.fromRGB(200, 180, 255), Color3.fromRGB(255, 120, 150), Color3.fromRGB(150, 230, 230), Color3.fromRGB(170, 130, 255),
-	Color3.fromRGB(255, 190, 220), Color3.fromRGB(170, 255, 210), Color3.fromRGB(255, 110, 120), Color3.fromRGB(235, 240, 255),
-}
-local function tierIcon(card, def, owned, isNext, locked)
-	card.icon.ImageColor3 = card.icon:GetAttribute("Tint") or WHITE
-	card.icon.ImageTransparency = 0
-	setKind(card.frame, isNext and "card" or "slot")
-end
-refreshForge = function()
-	if not state then return end
-	for what, tb in tabs do
-		setKind(tb, what == tabWhat and "tabOn" or "tab")
-		local lab = tb:FindFirstChild("Label")
-		if lab then lab.TextColor3 = what == tabWhat and INK or WHITE; lab.TextStrokeTransparency = what == tabWhat and 1 or 0 end
-	end
-	local list = tabWhat == "pick" and C.PICKS or C.PACKS
-	local cur = state[tabWhat]
-	for i, card in cards do
-		local idx = cur + i - 1 -- the tier you own, the next one, then two more
-		local def = list[idx]
-		card.frame.Visible = def ~= nil
-		if def then
-			card.name.Text = def.name:upper():gsub(" PICKAXE", ""):gsub("THE ", "")
-			card.icon.Image = tabWhat == "pick" and ICON.pick or ICON.bag
-			card.icon:SetAttribute("Tint", TIER_TINT[idx] and tabWhat == "pick" and TIER_TINT[idx] or WHITE)
-			local owned, isNext, locked = idx <= cur, idx == cur + 1, idx > cur + 1
-			card.status.Text = owned and "OWNED" or commas(def.cost)
-			card.status.TextColor3 = owned and Color3.fromRGB(63, 156, 132) or (isNext and GOLD or PLUM_SOFT)
-			tierIcon(card, def, owned, isNext, locked)
-		end
-	end
-	local nxt = list[cur + 1]
-	if tabWhat == "pick" then
-		statA.Text = "DIG POWER  " .. list[cur].power .. (nxt and ("  >  " .. nxt.power) or "")
-		statB.Text = nxt and ("+" .. math.floor((nxt.power / list[cur].power - 1) * 100) .. "% FASTER DIGGING") or "MAXED"
-		statC.Text = nxt and ("Next: " .. nxt.name) or "The strongest pickaxe!"
-	else
-		statA.Text = "CAPACITY  " .. list[cur].cap .. (nxt and ("  >  " .. nxt.cap) or "")
-		statB.Text = nxt and ("+" .. (nxt.cap - list[cur].cap) .. " ORE PER TRIP") or "MAXED"
-		statC.Text = nxt and ("Next: " .. nxt.name) or "The biggest bag!"
-	end
-	buyBtn.Text = nxt and ("BUY " .. commas(nxt.cost)) or "MAX"
-	setKind(buyBtn, (nxt and state.gold >= nxt.cost) and "mint" or (nxt and "butter" or "off"))
-end
-
 R.State.OnClientEvent:Connect(function(s)
 	local prev = state
 	state = s
@@ -1371,11 +1287,492 @@ R.State.OnClientEvent:Connect(function(s)
 	eggPill.Visible = (s.eggs or 0) > 0
 	eggText.Text = tostring(s.eggs or 0)
 	pityText.Text = "Legendary or better in " .. math.max(1, C.PITY - (s.pity or 0)) .. " eggs at most"
-	if forge.Visible then refreshForge() end
+	forgeUI.refresh()
 	syncPets()
 end)
 
--- Caves (cave rework, refs LGT-01, HUD-01): torch meter and fear badge bottom left, compass ribbon to camp at the top.
+-- Forge v2 (2026-11-08; board Forge2 artboard): the user's Delve forge video for the structure (art/forge/refs), two ChatGPT
+-- concepts in our soft kit (art/forge/concepts) for the look, reward clips from Pinterest (art/forge/refs/motion) for the motion.
+-- Category tabs, a grid of gear cards with rarity rims, a detail card with before/after stats, the level track and the actions.
+-- Coins buy the next pickaxe, gems level an owned one, any owned pickaxe can be held; the server checks every action.
+-- Its own function: the main chunk is at Luau's 200-register limit.
+;(function()
+	local PICK_ART = {} -- forge card art per pickaxe tier (transparent renders, art/forge/icons; ids in art/forge/icons/asset_ids.json)
+	for i, id in { 71741313949634, 75499323664879, 138546318953293, 132794152773137, 84853376787476, 74629621321599, 85151061239109, 89557713111747, 123094633576038, 86622635171966, 113248414659515, 110656342327557 } do PICK_ART[i] = "rbxassetid://" .. id end
+	local Lighting = game:GetService("Lighting")
+	local DEEP_MINT = Color3.fromRGB(40, 128, 104)
+	local function rarityOf(what, i) return C.RARITIES[what == "pick" and C.PICK_RARITY[i] or math.min(i, #C.RARITIES)] end
+	local function tones(col) return col:Lerp(WHITE, 0.74), col:Lerp(INK, 0.18) end -- card fill, card rim
+	local function short(name) return (name:gsub(" Pickaxe", "")) end
+	local function shortNum(n) return n >= 1e6 and (string.format("%.1fM", n / 1e6):gsub("%.0M", "M")) or (n >= 1e4 and (math.floor(n / 1e3) .. "K") or commas(n)) end
+	local function lvOf(i) return state and state.lv and state.lv[tostring(i)] or 1 end
+	local function hex(c) return string.format("#%02x%02x%02x", c.R * 255, c.G * 255, c.B * 255) end
+	local function round(o, r) return new("UICorner", o, { CornerRadius = UDim.new(r or 0.5, 0) }) end
+	local function shake(o) -- "not enough": a quick sideways wobble
+		local p = o.Position
+		for k, dx in { 0.014, -0.011, 0.008, -0.004, 0 } do task.delay(k * 0.05, function() o.Position = p + UDim2.fromScale(dx, 0) end) end
+	end
+	local function check(parent, size, pos, anchor) -- a mint coin with a white tick drawn from two bars
+		local c = new("Frame", parent, { Name = "Check", Size = size, Position = pos, AnchorPoint = anchor, BackgroundColor3 = MINT, BorderSizePixel = 0, ZIndex = 5 })
+		new("UIAspectRatioConstraint", c, { AspectRatio = 1 })
+		round(c)
+		new("UIStroke", c, { Color = DEEP_MINT, Thickness = 2 })
+		for _, b in { { 0.16, 0.36, 0.36, 0.6, -45 }, { 0.16, 0.62, 0.6, 0.48, 40 } } do
+			round(new("Frame", c, { Size = UDim2.fromScale(b[1], b[2]), Position = UDim2.fromScale(b[3], b[4]), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = b[5], BackgroundColor3 = WHITE, BorderSizePixel = 0, ZIndex = 6 }))
+		end
+		return c
+	end
+	local tab, selBy, cards, tabBtn = "pick", {}, {}, {}
+
+	-- frame: ribbon, close, coin and gem pills
+	local ribbon = ribbonTitle(forge, "FORGE", "ribbonPink", 0.3)
+	for _, x in { 0.17, 0.83 } do
+		new("ImageLabel", ribbon, { Name = "Star", BackgroundTransparency = 1, Image = SPRITE.star, Size = UDim2.fromScale(0.13, 0.62), Position = UDim2.fromScale(x, 0.4), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 5 })
+	end
+	local closeBtn = closeButton(forge, "Close")
+	closeBtn.Position = UDim2.fromScale(0.978, 0.06)
+	local function pill(x, w, iconName, color)
+		local p = panel(forge, UDim2.fromScale(w, 0.095), UDim2.fromScale(x, 0.085), Vector2.new(0, 0.5), "pill")
+		local ic = icon(p, iconName, UDim2.fromScale(0.3, 0.8), UDim2.fromScale(0.05, 0.5), Vector2.new(0, 0.5))
+		new("UIAspectRatioConstraint", ic, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+		local t = text(p, "0", UDim2.fromScale(0.56, 0.52), UDim2.fromScale(0.4, 0.5), Vector2.new(0, 0.5), color, 700, false)
+		t.TextXAlignment = Enum.TextXAlignment.Left
+		return p, t
+	end
+	local coinP, coinT = pill(0.67, 0.15, "coin", Color3.fromRGB(184, 122, 26))
+	local gemP, gemT = pill(0.83, 0.12, "gem", Color3.fromRGB(214, 74, 126))
+
+	-- left: category tabs
+	for i, t in { { "pick", "PICKAXES", "pick" }, { "pack", "BACKPACKS", "bag" }, { "charm", "CHARMS", "star" } } do
+		local b = button(forge, t[2], UDim2.fromScale(0.175, 0.15), UDim2.fromScale(0.025, 0.2 + (i - 1) * 0.18), nil, "lilac", t[3])
+		b.Name = "Tab" .. t[2]
+		tabBtn[t[1]] = b
+		if t[1] == "charm" then
+			local l = icon(b, "lock", UDim2.fromScale(0.2, 0.46), UDim2.fromScale(0.95, 0.12), Vector2.new(0.5, 0.5))
+			new("UIAspectRatioConstraint", l, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+			l.ZIndex = 4
+		end
+	end
+
+	-- middle: the gear grid (4 x 3), one card per tier
+	local tray = panel(forge, UDim2.fromScale(0.44, 0.78), UDim2.fromScale(0.215, 0.17), nil, "slot")
+	tray.Name = "Grid"
+	for i = 1, 12 do
+		local col, row = (i - 1) % 4, (i - 1) // 4
+		local b = new("TextButton", tray, {
+			Name = "Card" .. i, Text = "", AutoButtonColor = false, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5),
+			Size = UDim2.fromScale(0.215, 0.29), Position = UDim2.fromScale(0.035 + (col + 0.5) * 0.2325, 0.04 + (row + 0.5) * 0.3133), ZIndex = 2,
+		})
+		round(new("Frame", b, { Name = "Shadow", Size = UDim2.fromScale(1, 1), Position = UDim2.new(0.5, 0, 0.5, 5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(70, 48, 110), BackgroundTransparency = 0.72, BorderSizePixel = 0, ZIndex = 2 }), 0.14)
+		local face = new("Frame", b, { Name = "Face", Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3 })
+		round(face, 0.14)
+		local rim = new("UIStroke", face, { ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Thickness = 3 })
+		new("UIGradient", face, { Rotation = 90, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)), ColorSequenceKeypoint.new(0.55, Color3.fromRGB(246, 242, 250)), ColorSequenceKeypoint.new(1, Color3.fromRGB(214, 206, 228)) }) })
+		round(new("Frame", face, { Name = "Gloss", Size = UDim2.fromScale(0.86, 0.075), Position = UDim2.fromScale(0.5, 0.03), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = WHITE, BackgroundTransparency = 0.35, BorderSizePixel = 0, ZIndex = 4 }))
+		local lip = new("Frame", face, { Name = "Lip", Size = UDim2.fromScale(0.9, 0.06), Position = UDim2.fromScale(0.5, 0.985), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 0.55, BorderSizePixel = 0, ZIndex = 4 })
+		round(lip)
+		local glow = new("Frame", b, { Name = "Selected", Size = UDim2.new(1, 10, 1, 10), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 3, Visible = false })
+		round(glow, 0.16)
+		new("UIStroke", glow, { Color = WHITE, Thickness = 3 })
+		local nm = text(face, "", UDim2.fromScale(0.9, 0.13), UDim2.fromScale(0.5, 0.06), Vector2.new(0.5, 0), INK, 700, false)
+		nm.ZIndex = 6
+		local art = new("ImageLabel", face, { Name = "Art", BackgroundTransparency = 1, Size = UDim2.fromScale(0.84, 0.64), Position = UDim2.fromScale(0.5, 0.52), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 5 })
+		local lvBox = panel(face, UDim2.fromScale(0.44, 0.17), UDim2.fromScale(0.05, 0.95), Vector2.new(0, 1), "dark")
+		lvBox.ZIndex = 6
+		local lv = text(lvBox, "LV 1", UDim2.fromScale(0.8, 0.62), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), WHITE, 700, false)
+		lv.ZIndex = 7
+		local ok = check(face, UDim2.fromScale(0.22, 0.22), UDim2.fromScale(0.95, 0.96), Vector2.new(1, 1))
+		ok.ZIndex = 7
+		local eq = new("Frame", face, { Name = "Equipped", Size = UDim2.fromScale(0.26, 0.26), Position = UDim2.fromScale(0.96, 0.97), AnchorPoint = Vector2.new(1, 1), BackgroundColor3 = MINT, BorderSizePixel = 0, ZIndex = 7 })
+		new("UIAspectRatioConstraint", eq, { AspectRatio = 1 })
+		round(eq)
+		new("UIStroke", eq, { Color = WHITE, Thickness = 2 })
+		local eqIc = icon(eq, "pick", UDim2.fromScale(0.78, 0.78), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5))
+		eqIc.ZIndex = 8
+		local price = panel(face, UDim2.fromScale(0.62, 0.18), UDim2.fromScale(0.96, 0.96), Vector2.new(1, 1), "butter")
+		price.ZIndex = 7
+		local pic = icon(price, "coin", UDim2.fromScale(0.3, 0.74), UDim2.fromScale(0.07, 0.48), Vector2.new(0, 0.5))
+		new("UIAspectRatioConstraint", pic, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+		pic.ZIndex = 8
+		local pt = text(price, "", UDim2.fromScale(0.6, 0.56), UDim2.fromScale(0.62, 0.46), Vector2.new(0.5, 0.5), WHITE)
+		pt.ZIndex = 8
+		local lock = icon(face, "lock", UDim2.fromScale(0.22, 0.22), UDim2.fromScale(0.5, 0.56), Vector2.new(0.5, 0.5))
+		new("UIAspectRatioConstraint", lock, { AspectRatio = 1 })
+		lock.ZIndex = 8
+		local sc = scaler(b)
+		cards[i] = { lip = lip, btn = b, rim = rim, glow = glow, name = nm, art = art, lvBox = lvBox, lv = lv, ok = ok, eq = eq, price = price, priceT = pt, lock = lock, sc = sc }
+		b.MouseEnter:Connect(function() if not glow.Visible then tween(sc, 0.12, { Scale = 1.04 }) end end)
+		b.MouseLeave:Connect(function() if not glow.Visible then tween(sc, 0.15, { Scale = 1 }) end end)
+		b.MouseButton1Down:Connect(function() tween(sc, 0.07, { Scale = 0.94 }) if sfxClick then sfxClick() end end)
+		face:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() rim.Thickness = math.max(2, face.AbsoluteSize.Y * 0.03) end)
+		cards[i].face = face
+	end
+
+	-- right: the detail card for the selected tier
+	local det = panel(forge, UDim2.fromScale(0.305, 0.78), UDim2.fromScale(0.668, 0.17), nil, "panel")
+	det.Name = "Detail"
+	local stage = new("Frame", det, { Name = "Stage", Size = UDim2.fromScale(0.9, 0.42), Position = UDim2.fromScale(0.5, 0.235), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 2 })
+	local glows = {}
+	for k, g in { { 1.0, 0.72 }, { 0.78, 0.55 }, { 0.54, 0.3 } } do
+		local c = new("Frame", stage, { Size = UDim2.fromScale(g[1], g[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = g[2], BorderSizePixel = 0, ZIndex = 2 })
+		new("UIAspectRatioConstraint", c, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+		round(c)
+		glows[k] = c
+	end
+	local rays = new("Frame", stage, { Name = "Rays", Size = UDim2.fromScale(1.15, 1.15), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 2 })
+	new("UIAspectRatioConstraint", rays, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+	for k = 0, 5 do
+		new("Frame", rays, { Size = UDim2.fromScale(1, 0.05), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = k * 30, BackgroundColor3 = WHITE, BackgroundTransparency = 0.72, BorderSizePixel = 0, ZIndex = 2 })
+	end
+	local big = new("ImageLabel", stage, { Name = "Art", BackgroundTransparency = 1, Size = UDim2.fromScale(0.95, 0.95), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 4 })
+	local bigSc = scaler(big)
+	local twinkles = {}
+	for k, p in { { 0.12, 0.2, 0.13 }, { 0.88, 0.32, 0.1 }, { 0.2, 0.82, 0.09 }, { 0.84, 0.86, 0.12 } } do
+		local s = new("ImageLabel", stage, { BackgroundTransparency = 1, Image = SPRITE.sparkle, Size = UDim2.fromScale(p[3], p[3]), Position = UDim2.fromScale(p[1], p[2]), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 5 })
+		new("UIAspectRatioConstraint", s, { AspectRatio = 1 })
+		twinkles[k] = scaler(s)
+	end
+	local dName = text(det, "", UDim2.fromScale(0.92, 0.075), UDim2.fromScale(0.5, 0.47), Vector2.new(0.5, 0.5), INK, 700, false)
+	local rar = new("Frame", det, { Name = "Rarity", Size = UDim2.fromScale(0.36, 0.062), Position = UDim2.fromScale(0.5, 0.548), AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 2 })
+	round(rar)
+	new("UIStroke", rar, { Color = WHITE, Thickness = 2 })
+	local rarT = text(rar, "", UDim2.fromScale(0.8, 0.66), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), WHITE)
+	rarT.ZIndex = 3
+	local rows = {}
+	for k = 1, 2 do
+		local r = panel(det, UDim2.fromScale(0.92, 0.075), UDim2.fromScale(0.5, 0.635 + (k - 1) * 0.085), Vector2.new(0.5, 0.5), "pill")
+		local ic = icon(r, k == 1 and "coin" or "star", UDim2.fromScale(0.1, 0.72), UDim2.fromScale(0.035, 0.5), Vector2.new(0, 0.5))
+		new("UIAspectRatioConstraint", ic, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+		local l = text(r, "", UDim2.fromScale(0.46, 0.5), UDim2.fromScale(0.15, 0.5), Vector2.new(0, 0.5), INK, 700, false)
+		l.TextXAlignment = Enum.TextXAlignment.Left
+		local v = text(r, "", UDim2.fromScale(0.44, 0.5), UDim2.fromScale(0.95, 0.5), Vector2.new(1, 0.5), INK, 700, false)
+		v.TextXAlignment, v.RichText = Enum.TextXAlignment.Right, true
+		rows[k] = { frame = r, icon = ic, label = l, value = v }
+	end
+	local lvLabel = text(det, "", UDim2.fromScale(0.5, 0.045), UDim2.fromScale(0.06, 0.765), nil, INK, 700, false)
+	lvLabel.TextXAlignment = Enum.TextXAlignment.Left
+	local pips = {}
+	for k = 1, C.FORGE.maxLv do
+		local p = new("Frame", det, { Size = UDim2.fromScale(0.08, 0.034), Position = UDim2.fromScale(0.06 + (k - 1) * 0.0889, 0.823), BorderSizePixel = 0, ZIndex = 2 })
+		round(p, 0.45)
+		pips[k] = { frame = p, stroke = new("UIStroke", p, { Thickness = 2 }) }
+	end
+	local act = button(det, "UPGRADE", UDim2.fromScale(0.58, 0.105), UDim2.fromScale(0.05, 0.965), Vector2.new(0, 1), "mint", "gem")
+	act.Name = "Action"
+	local eqB = button(det, "EQUIP", UDim2.fromScale(0.33, 0.105), UDim2.fromScale(0.95, 0.965), Vector2.new(1, 1), "butter")
+	eqB.Name = "Equip"
+	local mode = {} -- what the action button does right now
+
+	local function setRow(k, label, iconName, from, to)
+		local r = rows[k]
+		r.label.Text, r.icon.Image = label, ICON[iconName]
+		r.value.Text = to and to ~= from and (from .. '  <font color="' .. hex(PLUM_SOFT) .. '">></font>  <font color="' .. hex(DEEP_MINT) .. '">' .. to .. "</font>") or from
+	end
+	local function val(i, lv) return string.format("x%.1f", C.pickValue(i, lv)) end
+	local function zone(lv) return math.floor(C.strikeArc(lv) + 0.5) .. "°" end
+
+	local function detail(i, animate)
+		local list = tab == "pick" and C.PICKS or C.PACKS
+		local def = list[i]
+		if not def or not state then return end
+		local r = rarityOf(tab, i)
+		local fill, rim = tones(r[3])
+		for k, g in glows do g.BackgroundColor3 = k == 3 and r[3]:Lerp(WHITE, 0.5) or fill end
+		big.Image = tab == "pick" and PICK_ART[i] or ICON.bag
+		dName.Text = def.name
+		rar.BackgroundColor3, rarT.Text = rim, r[1]:upper()
+		local cur = state[tab]
+		local own, nxt = i <= cur, i == cur + 1
+		local eqI = math.clamp(state.equip or cur, 1, cur)
+		local showLv = tab == "pick" and own
+		lvLabel.Visible = showLv
+		for _, p in pips do p.frame.Visible = showLv end
+		eqB.Visible = tab == "pick" and own
+		act.Size = eqB.Visible and UDim2.fromScale(0.58, 0.105) or UDim2.fromScale(0.9, 0.105)
+		local actIcon = act:FindFirstChild("Icon")
+		if tab == "pick" then
+			local lv = own and lvOf(i) or 1
+			if own then
+				local maxed = lv >= C.FORGE.maxLv
+				setRow(1, "Ore Value", "coin", val(i, lv), not maxed and val(i, lv + 1) or nil)
+				setRow(2, "Strike Zone", "star", zone(lv), not maxed and zone(lv + 1) or nil)
+				lvLabel.Text = "LV " .. lv .. " / " .. C.FORGE.maxLv
+				for k, p in pips do
+					p.frame.BackgroundColor3 = k <= lv and BUTTER or Color3.fromRGB(226, 218, 246)
+					p.stroke.Color = k <= lv and Color3.fromRGB(196, 138, 46) or LILAC
+				end
+				local cost = C.upgradeCost(i, lv)
+				mode = { kind = cost and "upgrade" or "none", cost = cost }
+				act.Text = cost and ("UPGRADE  " .. cost) or "MAX LEVEL"
+				setKind(act, cost and ((state.gems or 0) >= cost and "mint" or "off") or "off")
+				if actIcon then actIcon.Image, actIcon.Visible = ICON.gem, cost ~= nil end
+				eqB.Text = i == eqI and "EQUIPPED" or "EQUIP"
+				setKind(eqB, i == eqI and "off" or "butter")
+			else
+				setRow(1, "Ore Value", "coin", val(eqI, lvOf(eqI)), val(i, 1))
+				setRow(2, "Strike Zone", "star", zone(lvOf(eqI)), zone(1))
+				mode = nxt and { kind = "buy", cost = def.cost } or { kind = "none" }
+				act.Text = nxt and ("BUY  " .. shortNum(def.cost)) or ("BUY " .. short(list[cur + 1] and list[cur + 1].name or "") .. " FIRST"):upper()
+				setKind(act, nxt and (state.gold >= def.cost and "mint" or "off") or "off")
+				if actIcon then actIcon.Image, actIcon.Visible = ICON.coin, nxt end
+			end
+		else
+			setRow(1, "Bag Space", "bag", tostring(list[cur].cap), not own and tostring(def.cap) or nil)
+			setRow(2, "In the caves", "star", "no limit")
+			mode = nxt and { kind = "buy", cost = def.cost } or { kind = "none" }
+			act.Text = own and "OWNED" or (nxt and ("BUY  " .. shortNum(def.cost)) or "LOCKED")
+			setKind(act, nxt and (state.gold >= def.cost and "mint" or "off") or "off")
+			if actIcon then actIcon.Image, actIcon.Visible = ICON.coin, nxt end
+		end
+		if animate then -- the new item pops onto the stage
+			bigSc.Scale = 0.55
+			tween(bigSc, 0.4, { Scale = 1 }, Enum.EasingStyle.Back)
+			for _, g in glows do
+				local s = scaler(g)
+				s.Scale = 0.6
+				tween(s, 0.45, { Scale = 1 }, Enum.EasingStyle.Back)
+			end
+		end
+	end
+
+	local function refresh(animate)
+		if not state then return end
+		coinT.Text, gemT.Text = commas(state.gold), commas(state.gems or 0)
+		for key, b in tabBtn do setKind(b, key == tab and "butter" or (key == "charm" and "off" or "lilac")) end
+		local list = tab == "pick" and C.PICKS or C.PACKS
+		local cur = state[tab]
+		local eqI = tab == "pick" and math.clamp(state.equip or cur, 1, cur) or cur
+		local sel = math.min(selBy[tab] or eqI, #list)
+		selBy[tab] = sel
+		for i, cd in cards do
+			local def = list[i]
+			cd.btn.Visible = def ~= nil
+			if def then
+				local fill, rim = tones(rarityOf(tab, i)[3])
+				cd.face.BackgroundColor3, cd.rim.Color, cd.lip.BackgroundColor3 = fill, rim, rim
+				cd.name.Text = short(def.name):upper()
+				cd.art.Image = tab == "pick" and PICK_ART[i] or ICON.bag
+				local own, nxt = i <= cur, i == cur + 1
+				cd.art.ImageColor3 = (own or nxt) and WHITE or rim:Lerp(WHITE, 0.25)
+				cd.art.ImageTransparency = (own or nxt) and 0 or 0.35
+				cd.lvBox.Visible = own
+				cd.lv.Text = tab == "pick" and ("LV " .. lvOf(i)) or (def.cap .. " ORE")
+				cd.ok.Visible = own and not (tab == "pick" and i == eqI)
+				cd.eq.Visible = tab == "pick" and own and i == eqI
+				if cd.eq.Visible then cd.rim.Color = Color3.fromRGB(63, 186, 140) end
+				cd.price.Visible = nxt
+				cd.priceT.Text = shortNum(def.cost)
+				cd.lock.Visible = not own and not nxt
+				cd.glow.Visible = i == sel
+				if animate then
+					cd.sc.Scale = 0.4
+					task.delay(i * 0.035, function() tween(cd.sc, 0.32, { Scale = i == sel and 1.06 or 1 }, Enum.EasingStyle.Back) end)
+				else
+					tween(cd.sc, 0.2, { Scale = i == sel and 1.06 or 1 }, Enum.EasingStyle.Back)
+				end
+			end
+		end
+		detail(sel, animate)
+	end
+
+	-- the world blurs behind the open forge
+	local blur = Lighting:FindFirstChild("ForgeBlur") or new("BlurEffect", Lighting, { Name = "ForgeBlur", Size = 0 })
+	local spin
+	local function open()
+		tab = tab == "charm" and "pick" or tab
+		refresh(true)
+		openPanel(forge)
+		det.Position = UDim2.fromScale(0.7, 0.17)
+		tween(det, 0.4, { Position = UDim2.fromScale(0.668, 0.17) }, Enum.EasingStyle.Quint)
+		tween(blur, 0.3, { Size = 12 })
+		if spin then spin:Disconnect() end
+		spin = RunService.RenderStepped:Connect(function()
+			local t = os.clock()
+			rays.Rotation = t * 14 % 360
+			for k, s in twinkles do s.Scale = 0.55 + 0.45 * math.abs(math.sin(t * 2 + k * 1.3)) end
+		end)
+	end
+	local function close()
+		closePanel(forge)
+		tween(blur, 0.2, { Size = 0 })
+		if spin then spin:Disconnect() spin = nil end
+	end
+	forgeUI.open, forgeUI.close = open, close
+	forgeUI.toggle = function() if forge.Visible then close() else open() end end
+	forgeUI.refresh = function() if forge.Visible then refresh(false) end end
+	closeBtn.Activated:Connect(close)
+
+	for key, b in tabBtn do
+		b.Activated:Connect(function()
+			if key == "charm" then
+				shake(b)
+				toast("CHARMS ARE COMING SOON", LILAC)
+				return
+			end
+			if tab ~= key then
+				tab = key
+				refresh(true)
+			end
+		end)
+	end
+	for i, cd in cards do
+		cd.btn.Activated:Connect(function()
+			if selBy[tab] ~= i then
+				selBy[tab] = i
+				refresh(false)
+				detail(i, true)
+			else
+				tween(cd.sc, 0.3, { Scale = 1.06 }, Enum.EasingStyle.Back)
+			end
+		end)
+	end
+	act.Activated:Connect(function()
+		local i = selBy[tab]
+		if mode.kind == "buy" then
+			if state.gold < mode.cost then shake(act) pop(coinP, 1.2) toast("NOT ENOUGH COINS", PINK) return end
+			R.Buy:FireServer(tab)
+		elseif mode.kind == "upgrade" then
+			if (state.gems or 0) < mode.cost then shake(act) pop(gemP, 1.2) toast("NOT ENOUGH GEMS", PINK) return end
+			R.Buy:FireServer("upgrade", i)
+		else
+			shake(act)
+		end
+	end)
+	eqB.Activated:Connect(function()
+		local i = selBy[tab]
+		if tab == "pick" and state and i <= state.pick and i ~= state.equip then R.Buy:FireServer("equip", i) end
+	end)
+
+	-- LEVEL UP / NEW PICKAXE celebration (concept forge_concept_b; motion from the badge and level-up clips): the scrim fades in,
+	-- light rays and the item pop, the title ribbon drops, confetti falls, the level ribbon unfurls, the stats count up, NICE! pops.
+	local celGui = new("ScreenGui", gui.Parent, { Name = "ForgeCelebrate", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 11, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
+	local cel = new("Frame", celGui, { Name = "Stage", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, BorderSizePixel = 0, Visible = false, ZIndex = 20, Active = true }) -- Active: clicks never fall through to the forge
+	local cRays = new("Frame", cel, { Size = S(560, 560), Position = S(640, 250), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 20 })
+	new("UIAspectRatioConstraint", cRays, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+	for k = 0, 8 do
+		local ray = new("Frame", cRays, { Size = UDim2.fromScale(1, 0.08), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = k * 20, BackgroundColor3 = ({ PINK, LILAC, BUTTER })[k % 3 + 1], BackgroundTransparency = 0.35, BorderSizePixel = 0, ZIndex = 20 })
+		new("UIGradient", ray, { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0.25), NumberSequenceKeypoint.new(1, 1) }) })
+	end
+	local cGlow = new("Frame", cel, { Size = S(340, 340), Position = S(640, 250), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 21 })
+	new("UIAspectRatioConstraint", cGlow, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+	for _, g in { { 1, 0.82, PINK }, { 0.74, 0.7, LILAC }, { 0.5, 0.5, Color3.fromRGB(255, 226, 240) }, { 0.28, 0.25, WHITE } } do -- a soft radial burst
+		round(new("Frame", cGlow, { Size = UDim2.fromScale(g[1], g[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = g[3], BackgroundTransparency = g[2], BorderSizePixel = 0, ZIndex = 21 }))
+	end
+	local cArt = new("ImageLabel", cel, { BackgroundTransparency = 1, Size = S(340, 340), Position = S(640, 252), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 22 })
+	new("UIAspectRatioConstraint", cArt, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+	local cTitle = panel(cel, S(470, 92), S(640, 62), Vector2.new(0.5, 0.5), "ribbonPink")
+	fit(cTitle, 470, 92)
+	cTitle.ZIndex = 23
+	local cTitleT = text(cTitle, "LEVEL UP!", UDim2.fromScale(0.62, 0.52), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), WHITE)
+	cTitleT.TextStrokeColor3, cTitleT.ZIndex = DEEP.ribbonPink, 24
+	local cLv = panel(cel, S(320, 58), S(640, 420), Vector2.new(0.5, 0.5), "ribbonLilac")
+	fit(cLv, 320, 58)
+	cLv.ZIndex = 23
+	local cLvT = text(cLv, "", UDim2.fromScale(0.62, 0.52), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), WHITE)
+	cLvT.TextStrokeColor3, cLvT.ZIndex = DEEP.ribbonLilac, 24
+	local cStats = panel(cel, S(440, 92), S(640, 494), Vector2.new(0.5, 0.5), "panel")
+	fit(cStats, 440, 92)
+	cStats.ZIndex = 23
+	local cRows = {}
+	for k = 1, 2 do -- an icon medallion, then the change
+		local m = new("Frame", cStats, { Size = UDim2.fromScale(0.09, 0.36), Position = UDim2.fromScale(0.1, 0.3 + (k - 1) * 0.38), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = k == 1 and BUTTER or PINK, BorderSizePixel = 0, ZIndex = 24 })
+		new("UIAspectRatioConstraint", m, { AspectRatio = 1 })
+		round(m)
+		new("UIStroke", m, { Color = k == 1 and Color3.fromRGB(196, 138, 46) or DEEP.pink, Thickness = 2 })
+		icon(m, k == 1 and "coin" or "star", UDim2.fromScale(0.8, 0.8), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5)).ZIndex = 25
+		local t = text(cStats, "", UDim2.fromScale(0.76, 0.3), UDim2.fromScale(0.55, 0.3 + (k - 1) * 0.38), Vector2.new(0.5, 0.5), INK, 700, false)
+		t.RichText, t.ZIndex = true, 24
+		cRows[k] = { text = t, medal = m }
+	end
+	local cNice = button(cel, "NICE!", S(220, 64), S(640, 566), Vector2.new(0.5, 0.5), "mint")
+	fit(cNice, 220, 64)
+	cNice.ZIndex = 23
+	local cSpin
+	local function confetti()
+		for k = 1, 46 do
+			local c = new("Frame", cel, {
+				Size = S(10 + math.random(0, 8), 6 + math.random(0, 6)), Position = UDim2.fromScale(math.random(), -0.05 - math.random() * 0.2),
+				Rotation = math.random(0, 360), BackgroundColor3 = ({ MINT, PINK, LILAC, BUTTER, SKY })[k % 5 + 1], BorderSizePixel = 0, ZIndex = 25,
+			})
+			round(c, 0.3)
+			local t = 1.6 + math.random() * 1.4
+			tween(c, t, { Position = UDim2.fromScale(c.Position.X.Scale + (math.random() - 0.5) * 0.2, 1.05), Rotation = c.Rotation + math.random(-540, 540) }, Enum.EasingStyle.Sine, Enum.EasingDirection.In)
+			task.delay(t, function() c:Destroy() end)
+		end
+	end
+	local function celebrate(title, art, lvText, row1, row2)
+		cTitleT.Text, cArt.Image, cLvT.Text = title, art, lvText
+		cLv.Visible = lvText ~= nil
+		for k, r in { row1, row2 } do cRows[k].text.Text, cRows[k].medal.Visible = r or "", r ~= nil end
+		cRows[2].text.Text, cRows[2].medal.Visible = row2 or "", row2 ~= nil
+		cel.Visible, cel.BackgroundTransparency = true, 1
+		tween(cel, 0.25, { BackgroundTransparency = 0.22 })
+		for _, o in { cRays, cGlow, cArt, cTitle, cLv, cStats, cNice } do scaler(o).Scale = 0 end
+		tween(scaler(cRays), 0.5, { Scale = 1 }, Enum.EasingStyle.Back)
+		tween(scaler(cGlow), 0.4, { Scale = 1 }, Enum.EasingStyle.Back)
+		task.delay(0.1, function()
+			sfx("upgrade")
+			local s = scaler(cArt)
+			tween(s, 0.25, { Scale = 1.18 }, Enum.EasingStyle.Quad).Completed:Connect(function() tween(s, 0.3, { Scale = 1 }, Enum.EasingStyle.Back) end)
+		end)
+		task.delay(0.3, function()
+			cTitle.Position = S(640, 20)
+			tween(cTitle, 0.45, { Position = S(640, 62) }, Enum.EasingStyle.Back)
+			tween(scaler(cTitle), 0.35, { Scale = 1 }, Enum.EasingStyle.Back)
+			confetti()
+			sfx("sparkle", 1.1)
+		end)
+		task.delay(0.55, function() -- the level ribbon unfurls sideways
+			local s = scaler(cLv)
+			s.Scale = 1
+			cLv.Size = S(60, 58)
+			tween(cLv, 0.35, { Size = S(320, 58) }, Enum.EasingStyle.Back)
+		end)
+		task.delay(0.75, function()
+			cStats.Position = S(640, 520)
+			tween(cStats, 0.35, { Position = S(640, 494) }, Enum.EasingStyle.Quint)
+			tween(scaler(cStats), 0.3, { Scale = 1 }, Enum.EasingStyle.Back)
+			sfx("coin", 1.2)
+		end)
+		task.delay(1.1, function() tween(scaler(cNice), 0.4, { Scale = 1 }, Enum.EasingStyle.Back) end)
+		if cSpin then cSpin:Disconnect() end
+		cSpin = RunService.RenderStepped:Connect(function() cRays.Rotation = os.clock() * 18 % 360 end)
+	end
+	cNice.Activated:Connect(function()
+		tween(cel, 0.2, { BackgroundTransparency = 1 })
+		for _, o in { cRays, cGlow, cArt, cTitle, cLv, cStats, cNice } do tween(scaler(o), 0.18, { Scale = 0 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In) end
+		task.delay(0.22, function()
+			cel.Visible = false
+			if cSpin then cSpin:Disconnect() cSpin = nil end
+		end)
+	end)
+	local function row(label, a, b) return label .. "  " .. a .. '  <font color="' .. hex(PLUM_SOFT) .. '">></font>  <font color="' .. hex(DEEP_MINT) .. '">' .. b .. "</font>" end
+	forgeUI.fx = function(kind, a, b)
+		if kind == "upgraded" then -- a = tier, b = new level
+			celebrate("LEVEL UP!", PICK_ART[a] or ICON.pick, "LV " .. (b - 1) .. "  >  LV " .. b, row("Ore Value", val(a, b - 1), val(a, b)), row("Strike Zone", zone(b - 1), zone(b)))
+		elseif kind == "bought" then -- a = name, b = "pick" or "pack"; the Fx arrives before the new state
+			local list, i = b == "pick" and C.PICKS or C.PACKS, 1
+			for k, d in list do if d.name == a then i = k end end
+			local was = math.max(i - 1, 1)
+			if b == "pick" then
+				celebrate("NEW PICKAXE!", PICK_ART[i] or ICON.pick, short(a):upper(), row("Ore Value", val(was, lvOf(was)), val(i, 1)), "Equipped and ready to dig")
+			else
+				celebrate("NEW BACKPACK!", ICON.bag, a:upper(), row("Bag Space", tostring(list[was].cap), tostring(list[i].cap)), nil)
+			end
+			selBy[b] = i
+		elseif kind == "equipped" then
+			local cd = cards[a]
+			if cd and tab == "pick" then
+				task.defer(function() pop(cd.eq, 1.5, 0.35) end)
+			end
+			sfx("sparkle", 1.3)
+		end
+		if forge.Visible then refresh(false) end
+	end
+end)()
+
+
+-- Caves (cave rework, refs LGT-01, HUD-01): torch meter and fear badge bottom left; the compass to camp lives on the minimap.
 -- The torch dims from full to its dimmest glow over C.TORCH.time (5 minutes); inside Camp 1's ring it relights and fear clears.
 -- shortcut: the torch and fear run on the client for the prototype; move them to the server when gloomling catches cost ore.
 local caveHud, cave, caveLighting, caveStep -- one scope for the cave HUD keeps the script under Luau's 200-local limit
@@ -1406,19 +1803,6 @@ do
 	local fearTrack = new("Frame", fearPill, { Size = UDim2.fromScale(0.71, 0.2), Position = UDim2.fromScale(0.23, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
 	local fearFill = new("Frame", fearTrack, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = LILAC, BorderSizePixel = 0, ZIndex = 3 })
 
-	-- compass ribbon: ticks for the four directions and a tent marker pointing to Camp 1
-	local compass = panel(caveHud, S(440, 40), S(640, 92), Vector2.new(0.5, 0), "pill")
-	fit(compass, 440, 40)
-	compass.Name, compass.ClipsDescendants = "Compass", true
-	local compassMarks = {}
-	for _, m in { { "N", 0 }, { "E", math.pi / 2 }, { "S", math.pi }, { "W", -math.pi / 2 } } do
-		local l = text(compass, m[1], UDim2.fromScale(0.06, 0.6), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), LILAC)
-		compassMarks[#compassMarks + 1] = { label = l, a = m[2] }
-	end
-	local campMark = new("Frame", compass, { Size = UDim2.fromScale(0.11, 0.8), AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 4 })
-	new("UICorner", campMark, { CornerRadius = UDim.new(0, 4) })
-	local campText = text(campMark, "CAMP", UDim2.fromScale(0.9, 0.7), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), INK, 700, false)
-	campText.ZIndex = 5
 	local relitBanner = panel(caveHud, S(420, 54), S(640, 150), Vector2.new(0.5, 0), "card")
 	fit(relitBanner, 420, 54)
 	relitBanner.Visible = false
@@ -1455,7 +1839,6 @@ do
 		local o = C.CAVE_ORIGIN
 		return Vector2.new(pos.X - o.X, pos.Z - o.Z).Magnitude < C.CAMP_RING and math.abs(pos.Y - o.Y) < 30
 	end
-	local function wrapAngle(a) return (a + math.pi) % (2 * math.pi) - math.pi end
 	caveStep = function(now)
 		local h = hrp()
 		if not h then return end
@@ -1493,21 +1876,6 @@ do
 		for _, e in eyes do e.Size = UDim2.fromScale(0.16 + cave.fear * 0.08, 0.2 + cave.fear * 0.12) end
 		mouth.Size = UDim2.fromScale(0.4 - cave.fear * 0.18, 0.1 + cave.fear * 0.18)
 		face.Rotation = cave.fear > 0.6 and math.sin(now * 40) * 4 * (cave.fear - 0.6) or 0
-		-- compass: marks slide by the angle between the camera heading and each direction
-		local lv = cam.CFrame.LookVector
-		local heading = math.atan2(lv.X, -lv.Z)
-		local span = math.rad(110)
-		for _, m in compassMarks do
-			local d = wrapAngle(m.a - heading)
-			m.label.Visible = math.abs(d) < span / 2
-			m.label.Position = UDim2.fromScale(0.5 + d / span, 0.5)
-		end
-		local to = C.CAVE_ORIGIN - h.Position
-		local ca = math.atan2(to.X, -to.Z)
-		local d = wrapAngle(ca - heading)
-		campMark.Position = UDim2.fromScale(0.5 + math.clamp(d / span, -0.44, 0.44), 0.5)
-		campMark.BackgroundColor3 = math.abs(d) < span / 2 and BUTTER or Color3.fromRGB(255, 236, 190)
-		campText.Text = here and "CAMP" or ("CAMP " .. math.floor(to.Magnitude / 4 + 0.5) .. "m")
 		if cave.tick then cave.tick(now, h) end
 	end
 end
@@ -1526,6 +1894,20 @@ end
 	local view = new("Frame", mapPanel, { Size = UDim2.fromScale(0.8, 0.8), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(18, 13, 28), BorderSizePixel = 0, ClipsDescendants = true, ZIndex = 2 })
 	new("UIStroke", view, { Color = INK, Thickness = 2 })
 	local canvas = new("Frame", view, { BackgroundTransparency = 1, ZIndex = 2 })
+	-- compass on the minimap (the user, 2026-11-08: the top ribbon goes): north is always up, so N sits on the top rim; the camp
+	-- campfire icon shows where Camp 1 is and sticks to the rim, pointing the way, once it leaves the view
+	local north = panel(mapPanel, UDim2.fromScale(0.24, 0.16), UDim2.fromScale(0.5, 0.03), Vector2.new(0.5, 0.5), "pink")
+	north.ZIndex = 6
+	text(north, "N", UDim2.fromScale(0.6, 0.62), UDim2.fromScale(0.5, 0.46), Vector2.new(0.5, 0.5), WHITE).ZIndex = 7
+	local campIcon = icon(mapPanel, "camp", UDim2.fromScale(0.2, 0.2), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5)) -- the smooth campfire icon
+	campIcon.Name, campIcon.ZIndex = "CampIcon", 6
+	new("UIAspectRatioConstraint", campIcon, { AspectRatio = 1 })
+	local campPill = panel(caveHud, S(168, 34), S(1262, 324), Vector2.new(1, 0), "pill")
+	fit(campPill, 168, 34)
+	campPill.Name = "CampPill"
+	local campDist = text(campPill, "CAMP", UDim2.fromScale(0.84, 0.5), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
+	-- each cave area its own colour (the user, 2026-11-08): camp butter, tunnels lilac, chasm teal, grotto aqua, mushroom hall pink
+	local AREA = { camp = BUTTER, tunnel = LILAC, chasm = Color3.fromRGB(104, 214, 196), grotto = Color3.fromRGB(120, 200, 255), mush = Color3.fromRGB(255, 160, 200), squeeze = Color3.fromRGB(214, 160, 190) }
 	local me = new("Frame", view, { Size = UDim2.fromScale(0.2, 0.2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 5 })
 	local meDot = new("Frame", me, { Size = UDim2.fromScale(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.55), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 5 })
 	new("UIStroke", meDot, { Color = INK, Thickness = 1 })
@@ -1573,22 +1955,18 @@ end
 			local a = Vector2.new(p.Position.X - p.Size.X / 2, p.Position.Z - p.Size.Z / 2)
 			local b = Vector2.new(p.Position.X + p.Size.X / 2, p.Position.Z + p.Size.Z / 2)
 			x0, z0, x1, z1 = math.min(x0, a.X), math.min(z0, a.Y), math.max(x1, b.X), math.max(z1, b.Y)
-			table.insert(map.floors, { a = a, b = b, top = p.Position.Y + p.Size.Y / 2 })
+			table.insert(map.floors, { a = a, b = b, top = p.Position.Y + p.Size.Y / 2, theme = p:GetAttribute("Theme") })
 		end
 		if #map.floors == 0 then return end
 		map.lo, map.span = Vector2.new(x0, z0), Vector2.new(x1 - x0, z1 - z0)
 		canvas.Size = UDim2.fromScale(map.span.X / C.MAP_VIEW, map.span.Y / C.MAP_VIEW)
-		local o = C.CAVE_ORIGIN -- the camp: a butter tent marker, always known
-		local pos, size = onMap(o.X, o.Z, 9)
-		local camp = new("Frame", canvas, { Position = pos, Size = size, BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 4 })
-		new("UIStroke", camp, { Color = INK, Thickness = 1 })
 		local depF = caves:FindFirstChild("Deposits")
 		for k, dep in depF and depF:GetChildren() or {} do
 			local core = dep.PrimaryPart or dep:FindFirstChild("Core")
 			if core then
 				local col = C.LAYERS[dep:GetAttribute("Layer")][4][dep:GetAttribute("Ore")][2]
 				local bb, star, sc = starburst(core, col)
-				table.insert(map.deps, { dep = dep, core = core, col = col, light = core:FindFirstChildOfClass("PointLight"), bb = bb, at = bb:GetAttribute("At"), star = star, sc = sc, phase = (k * 0.618) % 1 * D.glint })
+				table.insert(map.deps, { dep = dep, core = core, col = col, light = core:FindFirstChildOfClass("PointLight"), bb = bb, at = bb:GetAttribute("At"), star = star, sc = sc, phase = (k * 0.618) % 1 * D.glint, rar = dep:GetAttribute("Ore") or 1 })
 			end
 		end
 	end
@@ -1601,22 +1979,32 @@ end
 		canvas.Position = UDim2.fromScale(0.5 - (p.X - map.lo.X) / C.MAP_VIEW, 0.5 - (p.Z - map.lo.Y) / C.MAP_VIEW)
 		local lv = cam.CFrame.LookVector
 		me.Rotation = math.deg(math.atan2(lv.X, -lv.Z))
+		local to = C.CAVE_ORIGIN - p
+		local cv = Vector2.new(to.X, to.Z) / C.MAP_VIEW -- camp offset in view widths
+		local edge = math.max(math.abs(cv.X), math.abs(cv.Y))
+		if edge > 0.42 then cv *= 0.42 / edge end -- off the view: stick to the rim, pointing the way
+		campIcon.Position = UDim2.fromScale(0.5 + cv.X * 0.8, 0.5 + cv.Y * 0.8)
+		local dist = Vector2.new(to.X, to.Z).Magnitude
+		campDist.Text = dist < C.CAMP_RING and "SAFE AT CAMP" or ("CAMP " .. math.floor(dist / 4 + 0.5) .. "m")
 		local hold = plr:GetAttribute("DevGlint") and 0.25 -- Studio test hook: freeze every glint at its peak for captures
 		for _, g in map.deps do -- glints run every frame (cheap: a scale and a light per deposit)
 			if not g.claimed then
 				local ph = hold or (now + g.phase) % D.glint
-				local s = ph < 0.5 and math.sin(ph / 0.5 * math.pi) or 0
+				local burst = ph < 0.5 and math.sin(ph / 0.5 * math.pi) or 0
+				-- a constant twinkle between bursts (the user, 2026-11-08: shine all the time, stronger for rarer ore)
+				local idle = (0.16 + 0.1 * g.rar) * (0.75 + 0.25 * math.sin(now * 2.4 + g.phase * 3))
+				local s = math.max(idle, burst)
 				local v, on = cam:WorldToScreenPoint(g.at) -- the HUD sits under the top bar inset, like the prompts
-				g.bb.Visible = s > 0 and g.seen == true and on
-				if g.bb.Visible then -- 7 studs across at its distance
-					local px = math.min(7 * cam.ViewportSize.Y / (2 * v.Z * math.tan(math.rad(cam.FieldOfView) / 2)), cam.ViewportSize.Y * 0.2)
+				g.bb.Visible = g.seen == true and on
+				if g.bb.Visible then -- 5.5 to 8.5 studs across at its distance, by rarity
+					local px = math.min((4 + 1.5 * g.rar) * cam.ViewportSize.Y / (2 * v.Z * math.tan(math.rad(cam.FieldOfView) / 2)), cam.ViewportSize.Y * 0.22)
 					g.bb.Position, g.bb.Size = UDim2.fromOffset(v.X, v.Y), UDim2.fromOffset(px, px)
 					g.sc.Scale = s
-					g.star.Rotation = ph * 50
+					g.star.Rotation = now * 12 + ph * 50
 				end
 				if g.light then
-					g.light.Brightness = 0.35 + s * 2.5
-					g.light.Range = 7 + s * 7
+					g.light.Brightness = 0.5 + 0.45 * g.rar + burst * 2.5
+					g.light.Range = 7 + 2 * g.rar + burst * 7
 				end
 			end
 		end
@@ -1635,7 +2023,7 @@ end
 				new("Frame", canvas, {
 					Position = UDim2.fromScale((f.a.X - map.lo.X) / map.span.X, (f.a.Y - map.lo.Y) / map.span.Y),
 					Size = UDim2.fromScale((f.b.X - f.a.X) / map.span.X, (f.b.Y - f.a.Y) / map.span.Y),
-					BackgroundColor3 = Color3.fromRGB(70, 56, 104):Lerp(LILAC, math.clamp((f.top + 40) / 50, 0, 1)), BorderSizePixel = 0, ZIndex = 2,
+					BackgroundColor3 = Color3.fromRGB(40, 30, 62):Lerp(AREA[f.theme] or LILAC, 0.45 + 0.55 * math.clamp((f.top + 40) / 50, 0, 1)), BorderSizePixel = 0, ZIndex = 2,
 				})
 			end
 		end
@@ -1670,7 +2058,7 @@ end
 			held.walk = nil
 		end
 		cave.mgBusy = on -- prompts pause (the camera loop owns ProximityPromptService.Enabled)
-		for _, n in { "TorchPill", "FearPill", "Minimap" } do -- focus: the run's own HUD steps back while a minigame is up
+		for _, n in { "TorchPill", "FearPill", "Minimap", "CampPill" } do -- focus: the run's own HUD steps back while a minigame is up
 			local o = caveHud:FindFirstChild(n)
 			if o then o.Visible = not on end
 		end
@@ -1698,10 +2086,15 @@ end
 		new("UICorner", new("Frame", t, { Size = UDim2.fromScale(d, d), Position = UDim2.fromScale(0.5, 0.115), BackgroundColor3 = Color3.fromRGB(111, 88, 176), BackgroundTransparency = i % 3 == 0 and 0.1 or 0.45, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 11 }), { CornerRadius = UDim.new(0.5, 0) })
 	end
 	local arcPivot = new("Frame", dial, { Name = "Arc", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 11 })
-	for a = -6.75, 6.76, 1.5 do -- the 15 degree gold arc as a fan of thin spokes, darker gold on its two edges
-		local f = new("Frame", arcPivot, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Rotation = a, ZIndex = 11 })
-		new("Frame", f, { Size = UDim2.fromScale(0.022, 0.36), Position = UDim2.fromScale(0.5, 0.08), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = math.abs(a) > 6 and GOLD or BUTTER, BorderSizePixel = 0, ZIndex = 11 })
+	local function drawArc(z) -- the gold zone (15 degrees, wider with forge levels) as a fan of thin spokes, darker gold on its edges
+		arcPivot:ClearAllChildren()
+		local h = z / 2 - 0.75
+		for a = -h, h + 0.01, 1.5 do
+			local f = new("Frame", arcPivot, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Rotation = a, ZIndex = 11 })
+			new("Frame", f, { Size = UDim2.fromScale(0.022, 0.36), Position = UDim2.fromScale(0.5, 0.08), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = math.abs(a) > h - 0.8 and GOLD or BUTTER, BorderSizePixel = 0, ZIndex = 11 })
+		end
 	end
+	drawArc(D.arc)
 	local needle = new("Frame", dial, { Name = "Needle", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 12 })
 	new("UICorner", new("Frame", needle, { Size = UDim2.fromScale(0.04, 0.4), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 12 }), { CornerRadius = UDim.new(0.5, 0) })
 	local hub = new("Frame", dial, { Size = UDim2.fromScale(0.11, 0.11), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 13 })
@@ -1948,12 +2341,13 @@ end
 
 	cave.mg = function(kind, ...)
 		if kind == "mgStart" then
-			local dep, which, t0, param = ...
+			local dep, which, t0, param, zone = ...
 			local col = C.LAYERS[dep:GetAttribute("Layer")][4][dep:GetAttribute("Ore")][2]
 			mg = { kind = which, dep = dep, t0 = t0, col = col, cool = 0 }
 			freeze(true)
 			if which == "strike" then
 				mg.arc = param
+				drawArc(zone or D.arc)
 				for _, p in pips do p.BackgroundColor3 = CREAM end
 				psTitle.Text = "PERFECT STRIKE  -  " .. string.upper(dep:GetAttribute("OreName"))
 				ps.Visible = true
@@ -2157,10 +2551,11 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		if h then burst(h.Position + Vector3.new(0, 3, 0), Vector3.yAxis, GOLD, 30) end
 	elseif kind == "bought" then
 		local name = ...
-		toast(name:upper() .. "!", MINT, true)
-		sfx("upgrade")
+		forgeUI.fx("bought", name, select(2, ...))
 		task.delay(0.3, buildViewmodel)
-		for i, card in cards do if i == 2 then pop(card.frame, 1.3) end end
+	elseif kind == "upgraded" or kind == "equipped" then
+		forgeUI.fx(kind, ...)
+		if kind == "equipped" then task.delay(0.3, buildViewmodel) end
 	elseif kind == "full" then
 		pop(bagPill, 1.2) -- the popup already says it; no toast spam while you keep digging
 		if not sellPop.Visible then openPanel(sellPop) end
@@ -2209,8 +2604,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 			burst(p.Position, Vector3.yAxis, C.PETS[pet.model.Name][6], 8)
 		end
 	elseif kind == "openForge" then
-		refreshForge()
-		openPanel(forge)
+		if not forge.Visible then forgeUI.open() end
 	elseif kind == "map" then
 		local deepest = ...
 		local L = layerOf(math.max(deepest or 1, 1))

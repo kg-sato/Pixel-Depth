@@ -430,6 +430,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	if not d then return end
 	d.gold, d.pick, d.pack, d.best, d.hatched, d.pity, d.step = s.gold, s.pick, s.pack, s.best, s.hatched, s.pity, s.step
 	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
+	d.gems, d.lv, d.equip = s.gems, s.lv, s.equip
 	local names = {}
 	for i, p in s.pets do names[i] = p.name end
 	d.pets = names
@@ -442,7 +443,7 @@ local function sendState(s)
 	StateR:FireClient(s.player, {
 		gold = s.gold, bag = s.bag, cap = cap(s), pick = s.pick, pack = s.pack, step = s.step, target = target(s),
 		pets = pets, ox = s.ox, oz = s.oz, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs,
-		deepest = s.deepest, goal = s.goal,
+		deepest = s.deepest, goal = s.goal, gems = s.gems, lv = s.lv, equip = s.equip,
 	})
 end
 
@@ -612,7 +613,7 @@ DigR.OnServerEvent:Connect(function(plr, part)
 		return
 	end
 	-- hit-timing crit, decided on the server clock: the ring restarts on a new block and after each crit
-	local dmg, crit = C.PICKS[s.pick].power, false
+	local dmg, crit = C.PICKS[s.equip].power, false
 	local t = workspace:GetServerTimeNow()
 	if s.critKey ~= k then
 		s.critKey, s.critT0 = k, t
@@ -708,7 +709,7 @@ local function finishMinigame(s)
 	end
 	local L, idx = mg.dep:GetAttribute("Layer"), mg.dep:GetAttribute("Ore")
 	local o = C.LAYERS[L][4][idx]
-	local v = o[4] * 3 ^ (L - 1)
+	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) + 0.5)
 	s.bag += count
 	s.bagV += count * v
 	s.claimed[mg.dep] = true
@@ -729,8 +730,8 @@ for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
 		if (hrp.Position - core.Position).Magnitude > D.reach + 4 then return end
 		local now = workspace:GetServerTimeNow()
 		if dep:GetAttribute("Ore") < 3 then
-			s.mg = { kind = "strike", dep = dep, t0 = now, arc = s.rng:NextNumber() * 360, swings = 0, perfects = 0, last = 0, deadline = now + D.strikes * 4 + 2 }
-			FxR:FireClient(plr, "mgStart", dep, "strike", now, s.mg.arc)
+			s.mg = { kind = "strike", dep = dep, t0 = now, arc = s.rng:NextNumber() * 360, zone = C.strikeArc(s.lv[tostring(s.equip)]), swings = 0, perfects = 0, last = 0, deadline = now + D.strikes * 4 + 2 }
+			FxR:FireClient(plr, "mgStart", dep, "strike", now, s.mg.arc, s.mg.zone)
 		else
 			local seq = {} -- the side of the red crack on each beat: 1 left, 2 right; chiseling that side slips
 			for i = 1, s.rng:NextInteger(D.rush[1], D.rush[2]) do seq[i] = s.rng:NextInteger(1, 2) end
@@ -752,7 +753,7 @@ ExtractR.OnServerEvent:Connect(function(plr, what, arg)
 		local window = math.clamp(plr:GetNetworkPing() * 2 + 0.08, 0.08, 0.35)
 		local t = (type(arg) == "number" and arg == arg) and math.clamp(arg, now - window, now) or now
 		local needle = ((t - mg.t0) / D.strikePeriod % 1) * 360
-		local perfect = math.abs((needle - mg.arc + 180) % 360 - 180) <= D.arc / 2 + 2
+		local perfect = math.abs((needle - mg.arc + 180) % 360 - 180) <= mg.zone / 2 + 2
 		mg.swings += 1
 		if perfect then mg.perfects += 1 end
 		mg.arc = (mg.arc + 90 + s.rng:NextNumber() * 180) % 360
@@ -814,9 +815,9 @@ equipPick = function(s)
 	if not hand then return end
 	local old = ch:FindFirstChild("HeldPickaxe")
 	if old then old:Destroy() end
-	local m = pickModel(s.pick)
+	local m = pickModel(s.equip)
 	m.Name = "HeldPickaxe"
-	m:SetAttribute("Tier", s.pick)
+	m:SetAttribute("Tier", s.equip)
 	local cf, size = m:GetBoundingBox()
 	local root = m.PrimaryPart or m:FindFirstChildWhichIsA("BasePart", true)
 	for _, p in m:GetDescendants() do
@@ -907,8 +908,27 @@ local function mountGear(s)
 	end
 end
 
-BuyR.OnServerEvent:Connect(function(plr, what)
+BuyR.OnServerEvent:Connect(function(plr, what, arg)
 	local s = data[plr]
+	if s and (what == "upgrade" or what == "equip") then -- forge v2: level an owned pickaxe with gems, or hold another owned one
+		if type(arg) ~= "number" or arg ~= arg or arg % 1 ~= 0 or arg < 1 or arg > s.pick then return end
+		if what == "equip" then
+			if arg == s.equip then return end
+			s.equip = arg
+			equipPick(s)
+			mountGear(s)
+			FxR:FireClient(plr, "equipped", arg)
+		else
+			local lv = s.lv[tostring(arg)] or 1
+			local cost = C.upgradeCost(arg, lv)
+			if not cost or s.gems < cost then return end
+			s.gems -= cost
+			s.lv[tostring(arg)] = lv + 1
+			FxR:FireClient(plr, "upgraded", arg, lv + 1)
+		end
+		sendState(s)
+		return
+	end
 	local list = (what == "pick" and C.PICKS) or (what == "pack" and C.PACKS)
 	if not s or not list then return end
 	local nxt = list[s[what] + 1]
@@ -916,6 +936,7 @@ BuyR.OnServerEvent:Connect(function(plr, what)
 	s.gold -= nxt.cost
 	s[what] += 1
 	if what == "pick" then
+		s.equip = s.pick -- a new pickaxe goes straight into the hand
 		equipPick(s)
 		mountGear(s)
 	end
@@ -1099,7 +1120,9 @@ local function onJoin(plr)
 		frenzyUntil = 0, combo = 0, bank = 0, best = d.best, nextDig = 0, hatched = d.hatched, pity = d.pity,
 		profile = profile, critKey = 0, critT0 = 0, lastHit = 0, eggs = d.eggs, shrines = {}, deepest = d.deepest or 0, streak = d.streak or 0,
 		claimed = {}, -- cave deposits this player has extracted (loot is per player)
+		gems = d.gems or 0, lv = d.lv or {}, -- forge levels keyed by pickaxe tier as a string (DataStore-safe keys)
 	}
+	s.equip = (d.equip or 0) >= 1 and math.min(d.equip, s.pick) or s.pick
 	for _, n in d.pets do
 		if C.PETS[n] and #s.pets < C.MAX_PETS then table.insert(s.pets, { name = n, next = os.clock() + 2 }) end
 	end
@@ -1168,6 +1191,12 @@ while true do
 			if dev then
 				plr:SetAttribute("DevGold", nil)
 				s.gold += dev
+				sendState(s)
+			end
+			local devGems = plr:GetAttribute("DevGems")
+			if devGems then
+				plr:SetAttribute("DevGems", nil)
+				s.gems += devGems
 				sendState(s)
 			end
 			local devRow = plr:GetAttribute("DevRow") -- dig a pocket at that row under the entrance and go there

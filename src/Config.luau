@@ -135,6 +135,21 @@ C.PICKS = {
 	{ name = "Silver Wing Pickaxe", power = 320, cost = 1500000, model = "SilverWingPickaxe" },
 }
 C.PICK_SCALE = 0.75 -- the 3.6-stud forge models shrunk to fit the miner's hand
+-- Forge v2 (2026-11-08): coins buy the next pickaxe, gems level an owned one (LV 1 to 10). In the caves the equipped pickaxe
+-- multiplies the gold value of every ore it extracts (square root of its dig power); each level adds 10% value and widens the
+-- Perfect Strike gold zone by 2 degrees. Rarity per pickaxe indexes C.RARITIES (card rims, gem cost scale).
+C.FORGE = { maxLv = 10, gems = { 3, 4, 6, 8, 11, 15, 20, 26, 34 }, lvValue = 0.1, lvArc = 2 }
+C.PICK_RARITY = { 1, 1, 2, 2, 3, 3, 3, 4, 4, 5, 5, 6 }
+function C.pickValue(tier, lv) -- ore value multiplier in the caves
+	return math.sqrt(C.PICKS[tier].power) * (1 + C.FORGE.lvValue * ((lv or 1) - 1))
+end
+function C.upgradeCost(tier, lv) -- gems to go from lv to lv + 1, nil at the max level
+	local g = C.FORGE.gems[lv or 1]
+	return g and math.floor(g * (1 + (C.PICK_RARITY[tier] - 1) * 0.5) + 0.5)
+end
+function C.strikeArc(lv) -- the Perfect Strike gold zone in degrees
+	return C.DEPOSIT.arc + C.FORGE.lvArc * ((lv or 1) - 1)
+end
 
 -- Hit-timing crit (spec 5.1): a ring closes on the block every CRIT_PERIOD seconds; a deliberate tap while it is closed crits.
 -- The server checks the phase on its own clock; hits less than CRIT_GAP apart (spam or hold) never crit.
@@ -188,7 +203,7 @@ C.HATCH_TIME = 5 -- seconds of the hatch show before the pet starts digging
 
 -- Saving (ProfileStore; Studio without API access uses its mock store)
 C.SAVE_STORE = "PixelDepths_v1"
-C.SAVE_TEMPLATE = { gold = 0, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
+C.SAVE_TEMPLATE = { gold = 0, gems = 0, lv = {}, equip = 0, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
 
 -- Layer hazards. Layer 2, Titan's Stir: after you dig, the block above may shake loose and drop one row.
 -- Standing under it stuns you briefly and spills part of the bag (no damage, kid friendly).

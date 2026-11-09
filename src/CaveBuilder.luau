@@ -139,7 +139,7 @@ function Cave.build(parent, origin, seed)
 		for k = 0, 2 do part("Camp", "Log", Vector3.new(0.9, 0.9, 4), CFrame.new(fire + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, k * 2.1, 0.25), PAL.bark) end
 		local flame = part("Camp", "Flame", Vector3.new(1.8, 2.6, 1.8), CFrame.new(fire + Vector3.new(0, 2, 0)) * CFrame.Angles(0, 0.6, 0), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		part("Camp", "FlameCore", Vector3.new(0.9, 1.6, 0.9), CFrame.new(fire + Vector3.new(0, 2.6, 0)), Color3.fromRGB(255, 240, 190), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
-		glow(flame, Color3.fromRGB(255, 185, 95), 40, 3.4, true)
+		glow(flame, Color3.fromRGB(255, 185, 95), 34, 1.7, true) -- was 3.4: the floor and held items washed out yellow near the fire (i65)
 		local sparks = Instance.new("ParticleEmitter")
 		sparks.Color, sparks.LightEmission, sparks.Rate = ColorSequence.new(PAL.warm), 1, 6
 		sparks.Size, sparks.Lifetime, sparks.Speed = NumberSequence.new(0.25, 0), NumberRange.new(1.5, 2.5), NumberRange.new(3, 6)
@@ -173,7 +173,7 @@ function Cave.build(parent, origin, seed)
 		glow(group("Camp"):FindFirstChild("Lamp"), PAL.warm, 18, 1)
 		-- lift winch on the south side: an A-frame, a drum, the rope up into the dark, the landing platform (players arrive here)
 		local lift = CFrame.new(W(-1, -7, 0))
-		part("Camp", "LiftDeck", Vector3.new(10, 1, 10), lift * CFrame.new(0, 0.5, 0), PAL.plank)
+		part("Camp", "LiftDeck", Vector3.new(10, 1, 10), lift * CFrame.new(0, 0.5, 0), PAL.plank:Lerp(PAL.bark, 0.4))
 		for _, x in { -4.5, 4.5 } do
 			for _, z in { -4.5, 4.5 } do part("Camp", "LiftPost", Vector3.new(0.8, 14, 0.8), lift * CFrame.new(x, 7, z), PAL.bark) end
 		end
@@ -186,7 +186,7 @@ function Cave.build(parent, origin, seed)
 		local ringR = 8.6 * CELL
 		for k = 0, 47 do
 			local a = k / 48 * math.pi * 2
-			part("Camp", "Rune", Vector3.new(4.6, 0.2, 0.7), CFrame.new(origin + Vector3.new(math.cos(a) * ringR, 0.12, math.sin(a) * ringR)) * CFrame.Angles(0, -a + math.pi / 2, 0), Color3.fromRGB(190, 230, 120), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false, Transparency = 0.05 })
+			part("Camp", "Rune", Vector3.new(4.6, 0.2, 0.7), CFrame.new(origin + Vector3.new(math.cos(a) * ringR, 0.12, math.sin(a) * ringR)) * CFrame.Angles(0, -a + math.pi / 2, 0), Color3.fromRGB(150, 225, 170), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false, Transparency = 0.4 }) -- softer: the bloom smeared the ring into yellow glare (i65)
 		end
 		local zone = part("Camp", "SafeZone", Vector3.new(ringR * 2, 30, ringR * 2), CFrame.new(origin + Vector3.new(0, 15, 0)), PAL.mint, { Transparency = 1, CanCollide = false, CanQuery = false, CastShadow = false })
 		zone.Shape = Enum.PartType.Cylinder
@@ -199,10 +199,10 @@ function Cave.build(parent, origin, seed)
 			local p = origin + Vector3.new(math.cos(a) * (ringR + 3), 0, math.sin(a) * (ringR + 3))
 			part("Camp", "LanternPost", Vector3.new(0.6, 6, 0.6), p + Vector3.new(0, 3, 0), PAL.bark)
 			local l = part("Camp", "Lantern", Vector3.new(1.2, 1.4, 1.2), p + Vector3.new(0, 6.4, 0), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false })
-			glow(l, PAL.warm, 28, 1.3)
+			glow(l, PAL.warm, 26, 0.8)
 		end
 		local fill = part("Camp", "WarmFill", Vector3.new(1, 1, 1), W(0, 0, 22), PAL.warm, { Transparency = 1, CanCollide = false, CanQuery = false })
-		glow(fill, Color3.fromRGB(255, 200, 150), 70, 1.1)
+		glow(fill, Color3.fromRGB(255, 200, 150), 70, 0.8)
 		for _, at in { { -5, 5 }, { 5, 6 }, { -6.5, -1.5 } } do -- a lantern glow by each tent
 			local l = part("Camp", "TentLamp", Vector3.new(0.8, 1, 0.8), W(at[1], at[2], 1.2) + Vector3.new(2.5, 0, 2.5), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 			glow(l, PAL.warm, 22, 1.2)
@@ -485,7 +485,7 @@ function Cave.build(parent, origin, seed)
 			local mossy = math.noise(c.i * 0.15, c.j * 0.15, seed * 0.013) > 0.5 - th.moss
 			local col = mossy and PAL.moss[1 + math.floor(hash(c.i, c.j, 17) * 3)] or lerpC(th[1], th[2], hash(c.i, c.j, 18))
 			local depth = 16
-			part("Floor", "Floor", Vector3.new(w * CELL, depth, h * CELL), W(c.i + (w - 1) / 2, c.j + (h - 1) / 2, c.f - depth / 2), col, ROCK)
+			part("Floor", "Floor", Vector3.new(w * CELL, depth, h * CELL), W(c.i + (w - 1) / 2, c.j + (h - 1) / 2, c.f - depth / 2), col, ROCK):SetAttribute("Theme", c.theme) -- the minimap colours each area
 			nFloor += 1
 		end
 	end
@@ -610,7 +610,7 @@ function Cave.build(parent, origin, seed)
 				return p
 			end
 			shard(Vector3.new(2.2, 0.8, 1.6), base * CFrame.new(0, 0.3 * k, 0), PAL.rock[2], { CastShadow = false })
-			local core = shard(Vector3.new(0.9, 1.9, 0.9), base * CFrame.new(0, 1.15 * k, -0.1) * CFrame.Angles(0.15, 0, 0.1), idx == 3 and ore[2]:Lerp(Color3.new(0, 0, 0), 0.2) or dark, { Material = Enum.Material.Neon, CastShadow = false })
+			local core = shard(Vector3.new(0.9, 1.9, 0.9), base * CFrame.new(0, 1.15 * k, -0.1) * CFrame.Angles(0.15, 0, 0.1), ore[2]:Lerp(Color3.new(0, 0, 0), 0.28 - idx * 0.08), { Material = Enum.Material.Neon, CastShadow = false }) -- brighter cores, rarest brightest
 			core.Name = "Core"
 			for s = 1, 1 + idx do -- shards lean out from the wall, tallest in the middle
 				local a = (s / (1 + idx) - 0.5) * 2.4
