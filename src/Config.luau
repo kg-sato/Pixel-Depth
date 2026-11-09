@@ -126,14 +126,14 @@ C.PASTEL = {
 C.PICKS = {
 	{ name = "Wood Pickaxe", power = 1, cost = 0, model = "WoodPickaxe" }, -- Common; Camp 1 Root Hollow
 	{ name = "Stone Pickaxe", power = 2, cost = 20, model = "StonePickaxe" }, -- Common; Camp 1 Root Hollow
-	{ name = "Rootflint Pickaxe", power = 3, cost = 60, model = "RootflintPickaxe" }, -- Common; Camp 1 Root Hollow
-	{ name = "Ashcoal Pickaxe", power = 4, cost = 150, model = "AshcoalPickaxe" }, -- Common; Camp 1 Root Hollow
-	{ name = "Kobold-Copper Pickaxe", power = 6, cost = 350, model = "CopperPickaxe" }, -- Common; Camp 1 Root Hollow
+	{ name = "Ashcoal Pickaxe", power = 3, cost = 60, model = "AshcoalPickaxe" }, -- Common; Camp 1 Root Hollow
+	{ name = "Kobold-Copper Pickaxe", power = 4, cost = 150, model = "CopperPickaxe" }, -- Common; Camp 1 Root Hollow
+	{ name = "Bog-Iron Pickaxe", power = 6, cost = 350, model = "BogIronPickaxe" }, -- Common; Camp 1 Root Hollow
 	{ name = "Rootheart Pickaxe", power = 8, cost = 800, model = "RootheartPickaxe" }, -- Rare; Camp 1 Root Hollow
-	{ name = "Titan Clay Pickaxe", power = 11, cost = 2000, model = "TitanClayPickaxe" }, -- Common; Camp 2 Clay Caves
-	{ name = "Bog-Iron Pickaxe", power = 14, cost = 4000, model = "BogIronPickaxe" }, -- Common; Camp 2 Clay Caves
-	{ name = "Mossback Pickaxe", power = 18, cost = 8000, model = "MossbackPickaxe" }, -- Rare; Camp 2 Clay Caves
-	{ name = "Rune-Tin Pickaxe", power = 23, cost = 15000, model = "RuneTinPickaxe" }, -- Rare; Camp 2 Clay Caves
+	{ name = "Mossback Pickaxe", power = 11, cost = 2000, model = "MossbackPickaxe" }, -- Common; Camp 2 Clay Caves
+	{ name = "Kiln Pickaxe", power = 14, cost = 4000, model = "KilnPickaxe" }, -- Common; Camp 2 Clay Caves
+	{ name = "Rune-Tin Pickaxe", power = 18, cost = 8000, model = "RuneTinPickaxe" }, -- Rare; Camp 2 Clay Caves
+	{ name = "Geode Pickaxe", power = 23, cost = 15000, model = "GeodePickaxe" }, -- Rare; Camp 2 Clay Caves
 	{ name = "Fossil Pickaxe", power = 29, cost = 28000, model = "FossilPickaxe" }, -- Rare; Camp 2 Clay Caves
 	{ name = "Titan Hammer Pickaxe", power = 36, cost = 50000, model = "TitanHammerPickaxe" }, -- Epic; Camp 2 Clay Caves
 	{ name = "Frostquartz Pickaxe", power = 45, cost = 100000, model = "FrostquartzPickaxe" }, -- Rare; Camp 3 Glitterhall
