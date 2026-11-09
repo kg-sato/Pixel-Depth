@@ -14,5 +14,14 @@
  "star": "98230996667759",
  "surface": "113100619996978",
  "chest_closed": "97587431872757",
- "chest_open": "130450967787337"
+ "chest_open": "130450967787337",
+ "ore_rootflint": "75783670652886",
+ "ore_ashcoal": "78471713808749",
+ "ore_kobold_copper": "87100596939076",
+ "ore_titan_clay": "100049353460587",
+ "ore_bog_iron": "138271387658933",
+ "ore_rune_tin": "84304854874096",
+ "ore_frostquartz": "105789721830747",
+ "ore_bards_amethyst": "105263817138186",
+ "ore_valkyrie_sapphire": "139140232453040"
 }

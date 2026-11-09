@@ -205,6 +205,9 @@ function M.start(E)
 					local bg = new("Frame", bb, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = CREAM, BorderSizePixel = 0 })
 					new("UICorner", bg, { CornerRadius = UDim.new(0.4, 0) })
 					new("UIStroke", bg, { Color = INK, Thickness = 2 })
+					local tail = new("Frame", bb, { Size = UDim2.fromScale(0.07, 0.3), Position = UDim2.fromScale(0.5, 0.97), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 45, BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 0 }) -- a tail pointing down at the speaker
+					new("UIAspectRatioConstraint", tail, { AspectRatio = 1 })
+					new("UIStroke", tail, { Color = INK, Thickness = 2 })
 					local t = new("TextLabel", bg, { Size = UDim2.fromScale(0.9, 0.7), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Font = FONT, TextScaled = true, TextColor3 = INK, Text = lines[1] })
 					bubbles[name] = { bb = bb, t = t, i = 1, next = 0, head = head }
 				end

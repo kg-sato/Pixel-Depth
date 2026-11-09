@@ -191,7 +191,30 @@ function M.start(E)
 		rows[k] = { frame = r, icon = ic, label = l, value = v }
 	end
 	local oreNeed = text(det, "", UDim2.fromScale(0.9, 0.05), UDim2.fromScale(0.5, 0.77), Vector2.new(0.5, 0.5), INK, 700, false)
-	oreNeed.RichText, oreNeed.Name = true, "OreNeed"
+	oreNeed.RichText, oreNeed.Name, oreNeed.TextTransparency = true, "OreNeed", 1 -- kept for tests; the chips below draw it
+	local chips = new("Frame", det, { Name = "OreChips", Size = UDim2.fromScale(0.92, 0.07), Position = UDim2.fromScale(0.5, 0.77), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Visible = false, ZIndex = 3 })
+	new("UIListLayout", chips, { FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Center, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0.03, 0) })
+	local function drawChips(i)
+		for _, c in chips:GetChildren() do if c:IsA("Frame") then c:Destroy() end end
+		local need = C.PICK_ORE[i]
+		chips.Visible = need ~= nil
+		if not need then return end
+		local keys = {}
+		for k in need do table.insert(keys, k) end
+		table.sort(keys)
+		local have = getState().ores or {}
+		for _, k in keys do
+			local h, n = have[k] or 0, need[k]
+			local chip = new("Frame", chips, { Size = UDim2.fromScale(0.3, 1), BackgroundColor3 = Color3.fromRGB(255, 250, 243), BorderSizePixel = 0, ZIndex = 3 })
+			round(chip)
+			new("UIStroke", chip, { Color = h >= n and DEEP_MINT or Color3.fromRGB(242, 139, 130), Thickness = 2 })
+			local ic = new("ImageLabel", chip, { Image = C.ORE_ICON[k] or "", BackgroundTransparency = 1, Size = UDim2.fromScale(0.34, 1.3), Position = UDim2.fromScale(0.04, 0.5), AnchorPoint = Vector2.new(0, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 4 })
+			new("UIAspectRatioConstraint", ic, { AspectRatio = 1 })
+			local t = text(chip, math.min(h, n) .. "/" .. n, UDim2.fromScale(0.56, 0.72), UDim2.fromScale(0.68, 0.5), Vector2.new(0.5, 0.5), h >= n and DEEP_MINT or Color3.fromRGB(224, 96, 110), 700, false)
+			t.ZIndex = 4
+			chip:SetAttribute("Ore", C.oreName(k))
+		end
+	end
 	local function oreLine(i) -- "NEEDS 6/6 Rootflint  3/4 Ashcoal", short counts in pink; ok = every count is there
 		local need = C.PICK_ORE[i]
 		if not need then return nil, true end
@@ -261,6 +284,7 @@ function M.start(E)
 		local showLv = tab == "pick" and own
 		lvLabel.Visible = showLv
 		oreNeed.Visible = false
+		chips.Visible = false
 		for _, p in pips do p.frame.Visible = showLv end
 		eqB.Visible = tab == "pick" and own
 		act.Size = eqB.Visible and UDim2.fromScale(0.58, 0.15) or UDim2.fromScale(0.9, 0.15)
@@ -292,6 +316,7 @@ function M.start(E)
 				setKind(act, nxt and oreOk and (getState().gold >= def.cost and "mint" or "off") or "off")
 				if actIcon then actIcon.Image, actIcon.Visible = ICON.coin, nxt and oreOk end
 				oreNeed.Text, oreNeed.Visible = line or "", line ~= nil
+				if nxt then drawChips(i) end
 			end
 		else
 			setRow(1, "Bag Space", "bag", tostring(list[cur].cap), not own and tostring(def.cap) or nil)

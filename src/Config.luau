@@ -241,6 +241,8 @@ C.PICK_ORE = {
 	[25] = { ["5.3"] = 60, ["3.2"] = 100 }, [26] = { ["5.3"] = 90, ["5.1"] = 300 }, [27] = { ["5.3"] = 120, ["6.3"] = 30 },
 	[28] = { ["5.3"] = 160, ["4.3"] = 200 }, [29] = { ["5.3"] = 220, ["3.3"] = 200 },
 }
+-- ore icons for the forge's have/need chips (art/icons_soft, ChatGPT via Codex imagegen, 2026-11-09)
+C.ORE_ICON = { ["1.1"] = "rbxassetid://75783670652886", ["1.2"] = "rbxassetid://78471713808749", ["1.3"] = "rbxassetid://87100596939076", ["2.1"] = "rbxassetid://100049353460587", ["2.2"] = "rbxassetid://138271387658933", ["2.3"] = "rbxassetid://84304854874096", ["3.1"] = "rbxassetid://105789721830747", ["3.2"] = "rbxassetid://105263817138186", ["3.3"] = "rbxassetid://139140232453040" }
 function C.oreName(key) -- "1.2" -> "Ashcoal"
 	local L, i = string.match(key, "^(%d+)%.(%d+)$")
 	local layer = C.LAYERS[tonumber(L)]

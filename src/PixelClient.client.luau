@@ -410,7 +410,7 @@ deco(sellPop, "wisteria", nil, UDim2.fromScale(0.02, 0.06), -12)
 local sellInfo = text(sellPop, "", UDim2.fromScale(0.62, 0.12), UDim2.fromScale(0.29, 0.26), nil, INK, 700, false)
 local sellBtn = button(sellPop, "SELL", UDim2.fromScale(0.56, 0.3), UDim2.fromScale(0.5, 0.82), Vector2.new(0.5, 1), "mint", "surface")
 sellBtn.Name = "Sell"
-text(sellPop, "Rides the lift up to the sell stall", UDim2.fromScale(0.84, 0.08), UDim2.fromScale(0.5, 0.86), Vector2.new(0.5, 0), PLUM_SOFT, 500, false)
+text(sellPop, "Takes you up to the sell stall", UDim2.fromScale(0.84, 0.08), UDim2.fromScale(0.5, 0.86), Vector2.new(0.5, 0), PLUM_SOFT, 500, false)
 
 -- Forge v2: the panel is made here (other code checks forge.Visible), its contents in the forge function further down
 local forge = panel(gui, S(1140, 520), S(640, 304), Vector2.new(0.5, 0.5), "panel")
