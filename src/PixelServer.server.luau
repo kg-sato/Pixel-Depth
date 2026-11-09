@@ -730,7 +730,9 @@ local function finishMinigame(s)
 	s.bag += count
 	s.bagV += count * v
 	s.claimed[mg.dep] = true
-	FxR:FireClient(s.player, "mgEnd", mg.dep, o[1], count, count * v, o[2], grade)
+	local gems = (idx == 3 and C.GEMS.rare or 0) + ((grade == D.strikes or grade == D.grades[1][1]) and C.GEMS.perfect or 0)
+	s.gems += gems
+	FxR:FireClient(s.player, "mgEnd", mg.dep, o[1], count, count * v, o[2], grade, gems)
 	sendState(s)
 end
 local caveDeposits = caveLanding and workspace.Caves:FindFirstChild("Deposits")
@@ -1064,8 +1066,10 @@ local function dailyChest(s)
 	s.streak = d.chestDay == day - 1 and math.min((d.streak or 0) + 1, 7) or math.max(d.streak or 0, 1) -- a missed day only pauses the streak
 	d.chestDay, d.streak = day, s.streak
 	local gold = C.CHEST_GOLD * s.streak * 3 ^ (layerOf(math.max(s.deepest, 1)) - 1)
+	local gems = C.GEMS.chest * s.streak
 	s.gold += gold
-	FxR:FireClient(s.player, "dailyChest", gold, s.streak)
+	s.gems += gems
+	FxR:FireClient(s.player, "dailyChest", gold, s.streak, gems)
 	sendState(s)
 end
 
@@ -1076,9 +1080,16 @@ local STATION = {
 	chest = dailyChest,
 	enter = function(s) enterMine(s) end,
 	hatch = function(s)
-		if s.eggs <= 0 then FxR:FireClient(s.player, "noEggs"); return end
 		if os.clock() < (s.nextHatch or 0) then return end
-		s.eggs -= 1
+		if s.eggs > 0 then
+			s.eggs -= 1
+		elseif s.gems >= C.EGG_GEMS then
+			s.gems -= C.EGG_GEMS
+			FxR:FireClient(s.player, "gemSpent", C.EGG_GEMS)
+		else
+			FxR:FireClient(s.player, "noEggs", C.EGG_GEMS - s.gems)
+			return
+		end
 		s.nextHatch = os.clock() + C.HATCH_TIME + 1
 		hatch(s)
 		sendState(s)

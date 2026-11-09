@@ -1843,6 +1843,209 @@ end)
 end)()
 
 
+-- Gems in the HUD and the daily chest show (feedback batch phase 3, roadmap i52-i53). The gem pill counts up and pops when
+-- the server grants gems (rare deposit, perfect grade, daily chest); the daily chest drops in, shakes three times harder each
+-- time, bursts open with a flash and rays, coins and gems fly into the pills, and a 7-day streak track shows the run.
+;(function()
+	local GuiService = game:GetService("GuiService")
+	local CHEST = { closed = "rbxassetid://97587431872757", open = "rbxassetid://130450967787337" } -- art/icons_soft/out (ChatGPT)
+	task.spawn(function() -- load the chest art up front, or the open frame blinks empty on first use
+		local warm = {}
+		for _, id in CHEST do table.insert(warm, new("ImageLabel", nil, { Image = id })) end
+		pcall(function() game:GetService("ContentProvider"):PreloadAsync(warm) end)
+	end)
+	local FX_GLOW, FX_RAYS = "rbxassetid://77591933607769", "rbxassetid://98789616938156"
+	local DEEP_GEM = Color3.fromRGB(214, 74, 126)
+	-- the gem pill, right of the gold pill
+	local gemPill = panel(gui, S(128, 46), S(198, 18), nil, "pillPink")
+	fit(gemPill, 128, 46)
+	gemPill.Name = "GemPill"
+	local gemIc = icon(gemPill, "gem", UDim2.fromScale(0.34, 0.74), UDim2.fromScale(0.06, 0.5), Vector2.new(0, 0.5))
+	new("UIAspectRatioConstraint", gemIc, { AspectRatio = 1 })
+	local gemText = text(gemPill, "0", UDim2.fromScale(0.5, 0.56), UDim2.fromScale(0.44, 0.5), Vector2.new(0, 0.5), DEEP_GEM, 700, false)
+	gemText.TextXAlignment = Enum.TextXAlignment.Left
+	eggPill.Position = S(320, 84) -- the egg pill moves under the gem pill's row, right of the bag
+	local shown, goal = nil, 0
+	RunService.RenderStepped:Connect(function(dt)
+		if shown and shown ~= goal then
+			shown += (goal - shown) * math.min(1, dt * 8)
+			if math.abs(goal - shown) < 0.5 then shown = goal end
+			gemText.Text = commas(math.floor(shown + 0.5))
+		end
+	end)
+	R.State.OnClientEvent:Connect(function(s)
+		local g = s.gems or 0
+		if shown == nil then shown = g gemText.Text = commas(g) end
+		if g > goal and shown then
+			pop(gemPill, 1.2)
+			tween(gemIc, 0.3, { Rotation = 20 }).Completed:Connect(function() tween(gemIc, 0.4, { Rotation = 0 }, Enum.EasingStyle.Elastic) end)
+		end
+		goal = g
+	end)
+
+	-- the daily chest show, in its own layer above everything
+	local layer = new("ScreenGui", gui.Parent, { Name = "DailyChest", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 12, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Enabled = false })
+	local scrim = new("TextButton", layer, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, Text = "", AutoButtonColor = false })
+	local rays = new("ImageLabel", layer, { Image = FX_RAYS, ImageColor3 = Color3.fromRGB(255, 226, 150), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(620, 620), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
+	new("UIAspectRatioConstraint", rays, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+	local glow = new("ImageLabel", layer, { Image = FX_GLOW, ImageColor3 = Color3.fromRGB(255, 220, 160), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(420, 420), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
+	new("UIAspectRatioConstraint", glow, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+	local chest = new("ImageLabel", layer, { Image = CHEST.closed, BackgroundTransparency = 1, Size = S(250, 250), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit })
+	new("UIAspectRatioConstraint", chest, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+	local title = panel(layer, S(440, 84), S(640, 70), Vector2.new(0.5, 0.5), "ribbonPink")
+	fit(title, 440, 84)
+	local titleT = text(title, "DAILY CHEST", UDim2.fromScale(0.62, 0.52), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), WHITE)
+	titleT.TextStrokeColor3 = DEEP.ribbonPink
+	local reward = panel(layer, S(420, 70), S(640, 430), Vector2.new(0.5, 0.5), "panel")
+	fit(reward, 420, 70)
+	local rCoin = icon(reward, "coin", UDim2.fromScale(0.12, 0.62), UDim2.fromScale(0.12, 0.5), Vector2.new(0.5, 0.5))
+	new("UIAspectRatioConstraint", rCoin, { AspectRatio = 1 })
+	local rGold = text(reward, "", UDim2.fromScale(0.3, 0.5), UDim2.fromScale(0.2, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
+	rGold.TextXAlignment = Enum.TextXAlignment.Left
+	local rGemI = icon(reward, "gem", UDim2.fromScale(0.12, 0.62), UDim2.fromScale(0.58, 0.5), Vector2.new(0.5, 0.5))
+	new("UIAspectRatioConstraint", rGemI, { AspectRatio = 1 })
+	local rGems = text(reward, "", UDim2.fromScale(0.3, 0.5), UDim2.fromScale(0.66, 0.5), Vector2.new(0, 0.5), DEEP_GEM, 700, false)
+	rGems.TextXAlignment = Enum.TextXAlignment.Left
+	local track = new("Frame", layer, { Size = S(560, 56), Position = S(640, 500), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1 })
+	local days = {}
+	for d = 1, 7 do
+		local c = new("Frame", track, { Size = UDim2.fromScale(0.11, 0.9), Position = UDim2.fromScale((d - 0.5) / 7, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0 })
+		new("UIAspectRatioConstraint", c, { AspectRatio = 1 })
+		new("UICorner", c, { CornerRadius = UDim.new(0.5, 0) })
+		local st = new("UIStroke", c, { Thickness = 3 })
+		local l = text(c, d == 7 and "7" or tostring(d), UDim2.fromScale(0.6, 0.55), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), WHITE)
+		days[d] = { c = c, st = st, l = l }
+	end
+	local collect = button(layer, "COLLECT", S(220, 64), S(640, 560), Vector2.new(0.5, 0.5), "mint", "coin")
+	fit(collect, 220, 64)
+	local busy, spin = false, nil
+	local flyLayer = new("ScreenGui", gui.Parent, { Name = "RewardFly", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 13 })
+	local function fly(iconName, from, toObj, n, delay0)
+		local inset = GuiService:GetGuiInset()
+		for k = 1, n do
+			task.delay(delay0 + k * 0.05, function()
+				local to = toObj.AbsolutePosition + toObj.AbsoluteSize * Vector2.new(0.15, 0.5) + inset
+				local ic = icon(flyLayer, iconName, UDim2.fromOffset(34, 34), from, Vector2.new(0.5, 0.5))
+				ic.ZIndex = 20
+				local mid = from + UDim2.fromOffset(math.random(-160, 160), -math.random(80, 180))
+				tween(ic, 0.35, { Position = mid, Rotation = math.random(-90, 90) }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out).Completed:Connect(function()
+					tween(ic, 0.4, { Position = UDim2.fromOffset(to.X, to.Y), Size = UDim2.fromOffset(20, 20) }, Enum.EasingStyle.Quad, Enum.EasingDirection.In).Completed:Connect(function()
+						ic:Destroy()
+						sfx("coin", 1 + k * 0.03)
+					end)
+				end)
+			end)
+		end
+	end
+	local function show(gold, streak, gems)
+		if busy then return end
+		busy = true
+		layer.Enabled = true
+		chest.Image, chest.Rotation = CHEST.closed, 0
+		rays.ImageTransparency, glow.ImageTransparency, scrim.BackgroundTransparency = 1, 1, 1
+		titleT.Text = "DAY " .. streak .. " CHEST"
+		rGold.Text, rGems.Text = "+" .. commas(gold), "+" .. commas(gems)
+		for _, o in { title, reward, track, collect } do o.Visible = false end
+		tween(scrim, 0.25, { BackgroundTransparency = 0.25 })
+		-- drop in
+		chest.Position = S(640, 120)
+		scaler(chest).Scale = 0.8
+		tween(chest, 0.45, { Position = S(640, 268) }, Enum.EasingStyle.Bounce)
+		tween(scaler(chest), 0.45, { Scale = 1 }, Enum.EasingStyle.Back)
+		title.Visible = true
+		pop(title, 0.6, 0.35)
+		-- three shakes, each harder and higher in pitch
+		for k = 1, 3 do
+			task.delay(0.55 + (k - 1) * 0.32, function()
+				sfx("swing", 0.8 + k * 0.15)
+				local a = 4 + k * 3
+				tween(scaler(chest), 0.08, { Scale = 1 + k * 0.04 })
+				tween(chest, 0.06, { Rotation = a }).Completed:Connect(function()
+					tween(chest, 0.06, { Rotation = -a }).Completed:Connect(function()
+						tween(chest, 0.1, { Rotation = 0 }, Enum.EasingStyle.Back)
+					end)
+				end)
+			end)
+		end
+		-- burst open: a flash, rays and glow, the lid flips (open art), coins and gems fly to the pills
+		task.delay(1.6, function()
+			chest.Image = CHEST.open
+			sfx("upgrade", 1)
+			sfx("sparkle", 1.2)
+			scaler(chest).Scale = 1.25
+			tween(scaler(chest), 0.35, { Scale = 1 }, Enum.EasingStyle.Back)
+			glow.ImageTransparency, rays.ImageTransparency = 0, 0.2
+			scaler(glow).Scale = 0.4
+			tween(scaler(glow), 0.4, { Scale = 1 }, Enum.EasingStyle.Back)
+			tween(glow, 0.6, { ImageTransparency = 0.35 })
+			if spin then spin:Disconnect() end
+			spin = RunService.RenderStepped:Connect(function() rays.Rotation = os.clock() * 20 % 360 end)
+			local from = S(640, 250)
+			fly("coin", from, goldPill, 10, 0.1)
+			fly("gem", from, gemPill, math.min(8, gems), 0.25)
+			reward.Visible = true
+			pop(reward, 0.6, 0.35)
+		end)
+		-- the streak track fills up to today, today pops
+		task.delay(2.1, function()
+			track.Visible = true
+			for d, o in days do
+				local done, today = d < streak, d == streak
+				o.c.BackgroundColor3 = (done or today) and (d == 7 and PINK or BUTTER) or Color3.fromRGB(226, 218, 246)
+				o.st.Color = (done or today) and Color3.fromRGB(196, 138, 46) or LILAC
+				o.l.TextColor3 = (done or today) and WHITE or PLUM_SOFT
+				scaler(o.c).Scale = 0.3
+				task.delay(d * 0.05, function() tween(scaler(o.c), 0.3, { Scale = today and 1.25 or 1 }, Enum.EasingStyle.Back) end)
+			end
+		end)
+		task.delay(2.6, function()
+			collect.Visible = true
+			pop(collect, 0.5, 0.3)
+		end)
+	end
+	local function hide()
+		if not collect.Visible then return end
+		tween(scrim, 0.2, { BackgroundTransparency = 1 })
+		for _, o in { chest, title, reward, track, collect, rays, glow } do tween(scaler(o), 0.18, { Scale = 0 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In) end
+		task.delay(0.22, function()
+			layer.Enabled = false
+			for _, o in { chest, title, reward, track, collect, rays, glow } do scaler(o).Scale = 1 end
+			if spin then spin:Disconnect() spin = nil end
+			busy = false
+		end)
+	end
+	collect.Activated:Connect(hide)
+	scrim.Activated:Connect(hide)
+
+	R.Fx.OnClientEvent:Connect(function(kind, ...)
+		if kind == "dailyChest" then
+			local gold, streak, gems = ...
+			show(gold, streak, gems or 0)
+		elseif kind == "chestWait" then
+			local secs = ...
+			toast("Next chest in " .. math.floor(secs / 3600) .. " h " .. math.floor(secs % 3600 / 60) .. " m", LILAC)
+		elseif kind == "noEggs" then
+			local short = ...
+			toast(short and ("An egg roll costs " .. C.EGG_GEMS .. " gems: " .. short .. " more to go!") or "No eggs yet!", LILAC, true)
+			pop(gemPill, 1.2)
+		elseif kind == "gemSpent" then
+			local n = ...
+			toast("-" .. n .. " GEMS: ROLLING AN EGG", PINK)
+		elseif kind == "mgEnd" then
+			local gems = select(7, ...)
+			if gems and gems > 0 then
+				task.delay(1.0, function()
+					toast("+" .. gems .. " GEM" .. (gems > 1 and "S" or "") .. "!", DEEP_GEM, true)
+					local inset = GuiService:GetGuiInset()
+					local c = workspace.CurrentCamera.ViewportSize / 2
+					fly("gem", UDim2.fromOffset(c.X, c.Y + inset.Y), gemPill, gems * 2, 0)
+				end)
+			end
+		end
+	end)
+	gemPill:SetAttribute("Ready", true)
+end)()
+
 -- Caves (cave rework, refs LGT-01, HUD-01): torch meter and fear badge bottom left; the compass to camp lives on the minimap.
 -- The torch dims from full to its dimmest glow over C.TORCH.time (5 minutes); inside Camp 1's ring it relights and fear clears.
 -- shortcut: the torch and fear run on the client for the prototype; move them to the server when gloomling catches cost ore.
@@ -2825,8 +3028,6 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		local L = layerOf(math.max(deepest or 1, 1))
 		for i, row in mapRows do row.BackgroundTransparency = i > L and 0.6 or 0 end
 		openPanel(mapP)
-	elseif kind == "noEggs" then
-		toast("No eggs yet. Fossil eggs are buried in the mine!", LILAC, true)
 	elseif kind == "chest" then
 		local chest, gold, layer = ...
 		local lid = chest and chest.Parent and chest.Parent:FindFirstChild(chest:GetAttribute("Lid") or "ChestLid")
@@ -2840,13 +3041,6 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		local L, bonus = ...
 		toast("NEW LAYER: " .. C.LAYERS[L][1]:upper(), GOLD, true)
 		toast("Depth reward +" .. commas(bonus) .. " gold", MINT, false, 1.2)
-	elseif kind == "dailyChest" then
-		local gold, streak = ...
-		toast("DAILY CHEST  +" .. commas(gold) .. " GOLD", GOLD, true)
-		toast("Streak " .. streak .. " day" .. (streak == 1 and "" or "s") .. "!", PINK, false, 1.1)
-	elseif kind == "chestWait" then
-		local secs = ...
-		toast("Next chest in " .. math.floor(secs / 3600) .. " h " .. math.floor(secs % 3600 / 60) .. " m", LILAC)
 	elseif kind == "lift" then
 		local down = ...
 		fadeText.Text = down and "RIDING THE LIFT DOWN..." or "BACK TO CAMP!"

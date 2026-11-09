@@ -235,6 +235,11 @@ C.STIR_LOSS = 0.2 -- share of the bag spilled
 
 -- Daily relic chest (Miro board: non-punitive, pick 1 of 3, 24 h; a missed day only pauses the streak)
 C.CHEST_GOLD = 40 -- gold per chest, times the streak (capped at 7)
+-- Gems (feedback batch phase 3, 2026-11-08): the second currency. Earned in play, the server decides every grant:
+-- a rare deposit, a perfect grade (Perfect Strike 3/3, FLAWLESS Vein Rush) and the daily chest (gems x streak day).
+-- Spent on forge levels (C.FORGE) and on egg rolls when you have no egg.
+C.GEMS = { rare = 2, perfect = 1, chest = 2 }
+C.EGG_GEMS = 10 -- one egg roll with gems
 
 -- Night Shaft (spec 5.7): your crew keeps digging while you are away; a report waits when you come back
 C.NIGHT_CAP = 8 * 3600 -- seconds counted at most
