@@ -3091,6 +3091,17 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 			R.Surface:FireServer("arrived")
 			if ok and cave.escapeBonus and cave.escapeBonus > 0 then toast("ESCAPE BONUS  +" .. commas(cave.escapeBonus) .. " COINS", GOLD, true) end
 		end)
+	elseif kind == "drowned" then -- out of air in the lake: the server woke us at Camp 1
+		local lost = ...
+		fadeText.Text = "YOU PASSED OUT..."
+		fade.BackgroundTransparency = 0
+		fadeText.TextTransparency = 0
+		task.delay(1.1, function()
+			tween(fade, 0.6, { BackgroundTransparency = 1 })
+			tween(fadeText, 0.6, { TextTransparency = 1, TextStrokeTransparency = 1 })
+			task.delay(0.61, function() fadeText.TextStrokeTransparency = 0 end)
+		end)
+		toast(lost > 0 and ("The lake took " .. commas(lost) .. " ore") or "You woke up at camp", PINK, true, 1.2)
 	elseif kind == "escapeDone" then
 		cave.escapeBonus = (...) or 0
 	elseif kind == "ride" then -- the minecart ride down to Camp 1 (ReplicatedStorage.Shared.MinecartRide)
@@ -3124,6 +3135,31 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		end)
 	end
 end)
+
+;(function() -- swimming in the grotto lake with an air bar (ReplicatedStorage.Shared.CaveSwim), on while in the caves
+	local stop
+	local swimGui = new("ScreenGui", plr:WaitForChild("PlayerGui"), { Name = "SwimGui", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 4 })
+	local function update()
+		local on = plr:GetAttribute("InCave") == true
+		if on and not stop then
+			local mod = RS.Shared:FindFirstChild("CaveSwim")
+			local caves = workspace:FindFirstChild("Caves")
+			local water = caves and caves:FindFirstChild("Water", true)
+			if mod and water then
+				stop = require(mod).start({
+					water = water, gui = swimGui, sfx = sfx,
+					drown = function() R.Surface:FireServer("drown") end,
+					active = function() return not cave.mgBusy end,
+				})
+			end
+		elseif not on and stop then
+			stop()
+			stop = nil
+		end
+	end
+	plr:GetAttributeChangedSignal("InCave"):Connect(update)
+	task.defer(update)
+end)()
 
 task.delay(4, function() -- the minecart ride's far stage and the escape tunnel, built early so their lanterns are lit by the first ride
 	for _, n in { "MinecartRide", "MinecartEscape" } do

@@ -723,6 +723,21 @@ SurfaceR.OnServerEvent:Connect(function(plr, dir, report) -- the rail lift butto
 		finishEscape(plr, report)
 		return
 	end
+	if dir == "drown" then -- out of air in the grotto lake: lose a share of the unbanked ore, wake at Camp 1
+		local water = workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild("Water", true)
+		if not s or not hrp or not water or not caveLanding or not plr:GetAttribute("InCave") or riding[plr] or escaping[plr] then return end
+		local p = water.CFrame:PointToObjectSpace(hrp.Position)
+		local surf = water.Position.Y + water.Size.Y / 2
+		if math.abs(p.X) > water.Size.X / 2 or math.abs(p.Z) > water.Size.Z / 2 or hrp.Position.Y > surf + 2 then return end -- not in the lake
+		local lost = math.floor(s.bag * C.SWIM.loss)
+		if s.bag > 0 then s.bagV -= math.floor(s.bagV * lost / s.bag) end
+		s.bag -= lost
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
+		FxR:FireClient(plr, "drowned", lost)
+		sendState(s)
+		return
+	end
 	if riding[plr] or escaping[plr] then return end
 	if s and dir == "down" then
 		enterMine(s)
