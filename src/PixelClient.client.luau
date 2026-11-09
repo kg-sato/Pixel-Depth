@@ -1299,9 +1299,9 @@ end)
 -- Its own function: the main chunk is at Luau's 200-register limit.
 ;(function()
 	local PICK_ART = {} -- forge card art per pickaxe tier (transparent renders, art/forge/icons; ids in art/forge/icons/asset_ids.json)
-	for i, id in { 71741313949634, 75499323664879, 138546318953293, 132794152773137, 84853376787476, 74629621321599, 85151061239109, 89557713111747, 123094633576038, 86622635171966, 113248414659515, 110656342327557 } do PICK_ART[i] = "rbxassetid://" .. id end
-	local CARD_ART = {} -- head-focused crops for the grid cards (art/forge/icons/card_XX.png); Wood and Stone use their icons
-	for i, id in { [3] = 90808534460092, [4] = 119884085006157, [5] = 107875989974673, [6] = 70457182821389, [7] = 119481801915093, [8] = 114644891397243, [9] = 104983066807882, [10] = 133530729937666, [11] = 80049267894218, [12] = 135052327149896 } do CARD_ART[i] = "rbxassetid://" .. id end
+	for i, id in { 84674903872144, 76950059301165, 138546318953293, 132794152773137, 84853376787476, 74629621321599, 85151061239109, 89557713111747, 123094633576038, 86622635171966, 113248414659515, 110656342327557 } do PICK_ART[i] = "rbxassetid://" .. id end
+	local CARD_ART = {} -- head-focused crops for the grid cards (art/forge/icons/card_XX.png)
+	for i, id in { [1] = 74345038954875, [2] = 103286217212511, [3] = 90808534460092, [4] = 119884085006157, [5] = 107875989974673, [6] = 70457182821389, [7] = 119481801915093, [8] = 114644891397243, [9] = 104983066807882, [10] = 133530729937666, [11] = 80049267894218, [12] = 135052327149896 } do CARD_ART[i] = "rbxassetid://" .. id end
 	local FX_GLOW, FX_RAYS = "rbxassetid://77591933607769", "rbxassetid://98789616938156" -- soft radial glow and feathered rays (art/forge/fx)
 	local Lighting = game:GetService("Lighting")
 	local DEEP_MINT = Color3.fromRGB(32, 156, 92) -- gains read as bright green
@@ -1326,7 +1326,8 @@ end)
 		end
 		return c
 	end
-	local tab, selBy, cards, tabBtn = "pick", {}, {}, {}
+	local tab, selBy, cards, tabBtn, pageBy = "pick", {}, {}, {}, {}
+	local pager, pagerT, refreshPage -- the page pill under the grid (set below)
 
 	-- frame: ribbon, close, coin and gem pills
 	local ribbon = ribbonTitle(forge, "FORGE", "ribbonPink", 0.3)
@@ -1407,6 +1408,21 @@ end)
 		b.MouseButton1Down:Connect(function() tween(sc, 0.07, { Scale = 0.94 }) if sfxClick then sfxClick() end end)
 		face:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() rim.Thickness = math.max(2, face.AbsoluteSize.Y * 0.03) end)
 		cards[i].face = face
+	end
+
+	pager = panel(forge, UDim2.fromScale(0.15, 0.07), UDim2.fromScale(0.435, 0.955), Vector2.new(0.5, 0.5), "pillLilac")
+	pager.Name, pager.ZIndex = "Pager", 4
+	pagerT = text(pager, "1 / 2", UDim2.fromScale(0.4, 0.6), UDim2.fromScale(0.5, 0.46), Vector2.new(0.5, 0.5), INK, 700, false)
+	pagerT.ZIndex = 5
+	for k, d in { { 0.13, -1, "<" }, { 0.87, 1, ">" } } do
+		local b = button(pager, d[3], UDim2.fromScale(0.26, 1.15), UDim2.fromScale(d[1], 0.46), Vector2.new(0.5, 0.5), "lilac")
+		b.Name, b.ZIndex = k == 1 and "PagePrev" or "PageNext", 5
+		b.Activated:Connect(function()
+			local list = tab == "pick" and C.PICKS or C.PACKS
+			local pages = math.max(1, math.ceil(#list / 12))
+			pageBy[tab] = math.clamp((pageBy[tab] or 1) + d[2], 1, pages)
+			refreshPage()
+		end)
 	end
 
 	-- right: the detail card for the selected tier
@@ -1533,6 +1549,8 @@ end)
 	end
 
 	local function refresh(animate)
+		local flip = animate == "page" -- a page turn: stagger the cards, keep the chosen page
+		if flip then animate = true end
 		if not state then return end
 		coinT.Text, gemT.Text = commas(state.gold), commas(state.gems or 0)
 		for key, b in tabBtn do setKind(b, key == tab and "butter" or (key == "charm" and "off" or "lilac")) end
@@ -1541,7 +1559,15 @@ end)
 		local eqI = tab == "pick" and math.clamp(state.equip or cur, 1, cur) or cur
 		local sel = math.min(selBy[tab] or eqI, #list)
 		selBy[tab] = sel
-		for i, cd in cards do
+		local pages = math.max(1, math.ceil(#list / 12))
+		if (animate and not flip) or not pageBy[tab] then pageBy[tab] = math.ceil(sel / 12) end -- open on the page of the selected tier
+		pageBy[tab] = math.clamp(pageBy[tab], 1, pages)
+		pager.Visible = pages > 1
+		pagerT.Text = pageBy[tab] .. " / " .. pages
+		local base = (pageBy[tab] - 1) * 12
+		for slot, cd in cards do
+			local i = base + slot
+			cd.tier = i
 			local def = list[i]
 			cd.btn.Visible = def ~= nil
 			if def then
@@ -1563,7 +1589,7 @@ end)
 				cd.glow.Visible = i == sel
 				if animate then
 					cd.sc.Scale = 0.4
-					task.delay(i * 0.035, function() tween(cd.sc, 0.32, { Scale = i == sel and 1.06 or 1 }, Enum.EasingStyle.Back) end)
+					task.delay(slot * 0.035, function() tween(cd.sc, 0.32, { Scale = i == sel and 1.06 or 1 }, Enum.EasingStyle.Back) end)
 				else
 					tween(cd.sc, 0.2, { Scale = i == sel and 1.06 or 1 }, Enum.EasingStyle.Back)
 				end
@@ -1571,6 +1597,8 @@ end)
 		end
 		detail(sel, animate)
 	end
+
+	refreshPage = function() refresh("page") end
 
 	-- the world blurs behind the open forge
 	local blur = new("BlurEffect", cam, { Name = "ForgeBlur", Size = 0 })
@@ -1614,8 +1642,9 @@ end)
 			end
 		end)
 	end
-	for i, cd in cards do
+	for _, cd in cards do
 		cd.btn.Activated:Connect(function()
+			local i = cd.tier
 			if selBy[tab] ~= i then
 				selBy[tab] = i
 				refresh(false)
@@ -1762,7 +1791,8 @@ end)
 			end
 			selBy[b] = i
 		elseif kind == "equipped" then
-			local cd = cards[a]
+			local cd
+			for _, c in cards do if c.tier == a then cd = c end end
 			if cd and tab == "pick" then
 				task.defer(function() pop(cd.eq, 1.5, 0.35) end)
 			end
@@ -2377,15 +2407,25 @@ end
 			psPop.Visible = true
 			pop(psPop, perfect and 1.8 or 1.2, 0.3)
 			task.delay(0.45, function() psPop.Visible = false end)
-			if perfect then
-				sfx("clink", 1.5)
+			if perfect then -- the hit recipe from the VFX note: hit-stop, FOV punch, a soft brightness lift, rising pitch
+				mg.streak = (mg.streak or 0) + 1
+				mg.freezeUntil = os.clock() + 0.07 -- the needle holds for 70 ms; UI and sound keep going
+				sfx("clink", 1.5 * (1 + 0.06 * (mg.streak - 1)))
 				sfx("sparkle", 1.25)
-				shake(0.35)
+				shake(0.3)
+				fovKick = -4 -- a punch in, then the camera eases back
+				local cc = game:GetService("Lighting"):FindFirstChildOfClass("ColorCorrectionEffect")
+				if cc then
+					local b = cc.Brightness
+					tween(cc, 0.06, { Brightness = b + 0.06 }).Completed:Connect(function() tween(cc, 0.12, { Brightness = b }) end)
+				end
+				if mg.streak >= 3 then uiRing(ps, S(640, 290), PINK, 0.16) end
 				uiRing(ps, S(640, 290), BUTTER)
 				uiRing(ps, S(640, 290), CREAM, 0.08)
 				uiBurst(ps, S(640, 290), CONFETTI, 24, 0.34)
 				psPop.Rotation = math.random(-8, 8)
 			else
+				mg.streak = 0
 				sfx("hit", 0.9)
 				uiBurst(ps, S(640, 290), { LILAC, PLUM_SOFT }, 6, 0.14)
 				psPop.Rotation = 0
@@ -2419,7 +2459,7 @@ end
 		glints.Visible = not (ps.Visible or vr.Visible or result.Visible)
 		mapStep(now, h)
 		if mg and mg.kind == "strike" then
-			needle.Rotation = ((workspace:GetServerTimeNow() - mg.t0) / D.strikePeriod % 1) * 360
+			if not (mg.freezeUntil and os.clock() < mg.freezeUntil) then needle.Rotation = ((workspace:GetServerTimeNow() - mg.t0) / D.strikePeriod % 1) * 360 end
 			arcPivot.Rotation = mg.arc
 		elseif mg and mg.kind == "rush" then
 			local left = 1 - (workspace:GetServerTimeNow() - mg.t0) / (#mg.seq * D.rushBeat)

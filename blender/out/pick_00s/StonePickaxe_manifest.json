@@ -1,0 +1,40 @@
+{
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ead8ff",
+   "#ffd8ec"
+  ],
+  "light": "#e0c8ff",
+  "light_power": 12,
+  "glow": "#e0c8ff"
+ },
+ "name": "StonePickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 7164,
+ "palette": "StonePickaxe_palette.png",
+ "parts": {
+  "StonePickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 6240,
+   "transparency": 0.0
+  },
+  "StonePickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 904,
+   "transparency": 0.0
+  },
+  "StonePickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 20,
+   "transparency": 0.25
+  }
+ }
+}

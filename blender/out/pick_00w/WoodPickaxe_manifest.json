@@ -1,0 +1,40 @@
+{
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#fff2c8",
+   "#d8f6e4"
+  ],
+  "light": "#fff0c8",
+  "light_power": 30,
+  "glow": "#fff2c8"
+ },
+ "name": "WoodPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 5892,
+ "palette": "WoodPickaxe_palette.png",
+ "parts": {
+  "WoodPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 5408,
+   "transparency": 0.0
+  },
+  "WoodPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 240,
+   "transparency": 0.0
+  },
+  "WoodPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 244,
+   "transparency": 0.25
+  }
+ }
+}

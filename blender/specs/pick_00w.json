@@ -1,0 +1,325 @@
+{
+ "name": "WoodPickaxe",
+ "ref": "art/gen/pick_wood.png",
+ "length": 3.6,
+ "handle_r": 0.07,
+ "tilt": 15,
+ "yaw": 20,
+ "seed": 11,
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#fff2c8",
+   "#d8f6e4"
+  ],
+  "light": "#fff0c8",
+  "light_power": 30,
+  "glow": "#fff2c8"
+ },
+ "handle": {
+  "mat": "wood",
+  "color": "#e89c4c",
+  "r_bottom": 0.066,
+  "wrap": {
+   "mat": "satin",
+   "color": "#b6ebc0",
+   "w": 0.05,
+   "turns": 5,
+   "z0": 0.5,
+   "z1": 2.85
+  }
+ },
+ "pommel": {
+  "type": "orb",
+  "mat": "wood",
+  "color": "#e0954c",
+  "r": 0.15,
+  "collar": "gold"
+ },
+ "arm": {
+  "len": 1.4,
+  "rise": 0.25,
+  "droop": 0.54,
+  "width": 0.32,
+  "top": 0.5,
+  "taper": 1.3,
+  "belly": 0.25,
+  "thick": 0.065,
+  "mat": "wood",
+  "color": "#dcc0a0",
+  "edge": "#f3e3cc",
+  "edge_mat": "irid",
+  "edge_glow": 0.0,
+  "edge2": "#dcc0ae",
+  "edge2_mat": "wood",
+  "bend": 1.6
+ },
+ "center": [
+  {
+   "type": "collar",
+   "at": [
+    0,
+    0.0
+   ],
+   "r": 0.105,
+   "h": 0.3,
+   "mat": "wood",
+   "color": "#d39a5c"
+  },
+  {
+   "type": "drop",
+   "at": [
+    0,
+    -0.06
+   ],
+   "y": -0.13,
+   "size": 0.2,
+   "rot": 180,
+   "mat": "wood",
+   "color": "#ecd0a8",
+   "glow": 0,
+   "frame": "#c98a50",
+   "frame_mat": "wood",
+   "frame_scale": 1.2,
+   "depth": 0.045
+  },
+  {
+   "type": "burst",
+   "at": [
+    0,
+    -0.06
+   ],
+   "n": 3,
+   "r0": 0.02,
+   "r1": 0.13,
+   "w": 0.035,
+   "from": 60,
+   "to": 120,
+   "vary": 0.1,
+   "mat": "wood",
+   "colors": [
+    "#c98a50"
+   ],
+   "glow": 0,
+   "y": -0.17
+  },
+  {
+   "type": "spike",
+   "at": [
+    0,
+    0.17
+   ],
+   "dir": [
+    0.15,
+    0,
+    1
+   ],
+   "len": 0.24,
+   "r": 0.012,
+   "mat": "wood",
+   "color": "#8fc07a",
+   "glow": 0,
+   "facets": 5,
+   "y": 0
+  },
+  {
+   "type": "flower",
+   "at": [
+    0,
+    -3.7275
+   ],
+   "y": -0.16,
+   "size": 0.09,
+   "points": 6,
+   "mat": "wood",
+   "color": "#c98a50",
+   "glow": 0
+  },
+  {
+   "type": "gem",
+   "at": [
+    0,
+    -3.7275
+   ],
+   "y": -0.19,
+   "size": 0.04,
+   "color": "#9fe8c8",
+   "glow": 0.6
+  },
+  {
+   "type": "drop",
+   "at": [
+    -0.11,
+    0.42
+   ],
+   "rot": 50,
+   "size": 0.068,
+   "mat": "irid",
+   "color": "#a8d68e",
+   "glow": 0,
+   "y": -0.02
+  },
+  {
+   "type": "drop",
+   "at": [
+    0.14,
+    0.46
+   ],
+   "rot": -50,
+   "size": 0.088,
+   "mat": "irid",
+   "color": "#b9e0a0",
+   "glow": 0,
+   "y": -0.02
+  },
+  {
+   "type": "drop",
+   "at": [
+    -0.2,
+    -0.16
+   ],
+   "rot": 125,
+   "size": 0.13,
+   "mat": "wood",
+   "color": "#dcae78",
+   "glow": 0,
+   "y": -0.1,
+   "depth": 0.02,
+   "sz": 0.75
+  },
+  {
+   "type": "drop",
+   "at": [
+    0.2,
+    -0.16
+   ],
+   "rot": -125,
+   "size": 0.13,
+   "mat": "wood",
+   "color": "#dcae78",
+   "glow": 0,
+   "y": -0.1,
+   "depth": 0.02,
+   "sz": 0.75
+  },
+  {
+   "type": "drop",
+   "at": [
+    0.55,
+    -0.36
+   ],
+   "rot": -40,
+   "size": 0.06,
+   "mat": "irid",
+   "color": "#b9e0a0",
+   "glow": 0,
+   "y": -0.09
+  }
+ ],
+ "bow": {
+  "at": [
+   0,
+   -0.58
+  ],
+  "size": 0.3,
+  "color": "#f7d264",
+  "gem": "#fff3c4",
+  "lift": 0.25,
+  "y": -0.1,
+  "tails": [
+   {
+    "pts": [
+     [
+      -0.06,
+      -0.62
+     ],
+     [
+      -0.28,
+      -0.85
+     ],
+     [
+      -0.26,
+      -1.1
+     ],
+     [
+      -0.12,
+      -1.25
+     ]
+    ],
+    "width": 0.11,
+    "twist": 1.8,
+    "waves": 2.0
+   },
+   {
+    "pts": [
+     [
+      0.06,
+      -0.62
+     ],
+     [
+      0.28,
+      -0.9
+     ],
+     [
+      0.2,
+      -1.15
+     ],
+     [
+      0.3,
+      -1.3
+     ]
+    ],
+    "width": 0.11,
+    "twist": 1.8,
+    "waves": 2.0
+   }
+  ],
+  "height": 0.45
+ },
+ "ribbons": [
+  {
+   "pts": [
+    [
+     -0.04,
+     -0.66
+    ],
+    [
+     -0.3,
+     -0.85
+    ],
+    [
+     -0.5,
+     -1.15
+    ],
+    [
+     -0.72,
+     -1.3
+    ]
+   ],
+   "width": 0.13,
+   "color": "#b6ebc0",
+   "twist": 1.4
+  }
+ ],
+ "charms": [
+  {
+   "anchor": [
+    0.48,
+    -0.08
+   ],
+   "len": 0.34,
+   "charm": "acorn",
+   "chain": "wood",
+   "bead_mat": "wood",
+   "color": "#e8b468",
+   "size": 0.13,
+   "chain_color": "#a8743f",
+   "wire": 0.008,
+   "bead": 0.012,
+   "swing": 0.06,
+   "step": 0.025,
+   "bead_color": "#a8743f"
+  }
+ ]
+}

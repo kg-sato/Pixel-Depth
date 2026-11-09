@@ -15,6 +15,7 @@ S = json.load(open(argv[0], encoding="utf-8"))
 OUT = argv[1]
 SAMPLES = int(argv[2]) if len(argv) > 2 else 64
 GAME = "game" in argv[3:]
+ICON = "icon" in argv[3:]  # forge card art: one transparent square render, tilted diagonal, then stop
 os.makedirs(OUT, exist_ok=True)
 scene = bpy.context.scene
 for o in list(bpy.data.objects):
@@ -47,10 +48,20 @@ def material(kind, c=None, glow=0.0):
     b.inputs["Base Color"].default_value = HL.rgb(*v)
     metal = kind in METAL
     b.inputs["Metallic"].default_value = 1.0 if metal else 0.0
-    b.inputs["Roughness"].default_value = {"crystal": 0.05, "satin": 0.42, "irid": 0.38, "glitter": 0.45, "pearl": 0.18, "dark": 0.3}.get(kind, 0.26)
+    b.inputs["Roughness"].default_value = {"crystal": 0.05, "satin": 0.42, "irid": 0.38, "glitter": 0.45, "pearl": 0.18, "dark": 0.3, "wood": 0.6, "stone": 0.5}.get(kind, 0.26)
     if not metal:
         b.inputs["Specular IOR Level"].default_value = 0.3  # broad soft highlights wash pastel blades out
-    b.inputs["Coat Weight"].default_value = 0.0 if (kind == "satin" or metal) else 0.25
+    b.inputs["Coat Weight"].default_value = 0.0 if (kind in ("satin", "wood") or metal) else 0.25
+    if kind == "wood":  # soft grain lines (render only; the game part keeps the flat colour)
+        wv, tc = n.nodes.new("ShaderNodeTexWave"), n.nodes.new("ShaderNodeTexCoord")
+        n.links.new(tc.outputs["Object"], wv.inputs["Vector"])
+        wv.inputs["Scale"].default_value, wv.inputs["Distortion"].default_value = 22.0, 2.5
+        ramp = n.nodes.new("ShaderNodeValToRGB")
+        ramp.color_ramp.elements[0].color = HL.rgb(*[int(x * 0.88) for x in v])
+        ramp.color_ramp.elements[1].color = HL.rgb(*v)
+        ramp.color_ramp.elements[0].position = 0.25
+        n.links.new(wv.outputs["Fac"], ramp.inputs["Fac"])
+        n.links.new(ramp.outputs["Color"], b.inputs["Base Color"])
     if kind in ("irid", "pearl"):  # iridescent sheen
         b.inputs["Thin Film Thickness"].default_value = 360.0 if kind == "pearl" else 480.0
         b.inputs["Thin Film IOR"].default_value = 1.4
@@ -246,6 +257,8 @@ def outline(shape, size, n=24, points=5, ratio=0.45):
         return outer + inner
     if shape == "oval":
         return [(size * 0.8 * math.cos(i / n * 2 * math.pi), size * math.sin(i / n * 2 * math.pi)) for i in range(n)]
+    if shape == "rect":  # buckle plate, wider than tall
+        return [(size * 1.2, size * 0.8), (-size * 1.2, size * 0.8), (-size * 1.2, -size * 0.8), (size * 1.2, -size * 0.8)]
     return [(size * math.cos(i / n * 2 * math.pi), size * math.sin(i / n * 2 * math.pi)) for i in range(n)]  # circle
 
 
@@ -401,7 +414,7 @@ def scroll(c, at):
 def chain(pts, c):
     """bead chain along a path: a thin wire with small beads"""
     path = spline(pts, 10)
-    sweep("Wire", path, tube_sec(lambda t: c.get("wire", 0.005), 4), material(c.get("chain", "gold")))
+    sweep("Wire", path, tube_sec(lambda t: c.get("wire", 0.005), 4), material(c.get("chain", "gold"), c.get("chain_color")))  # chain_color: a tinted cord
     acc, step, last = 0.0, c.get("step", 0.055), path[0]
     for p in path[1:]:
         acc += (p - last).length
@@ -426,6 +439,14 @@ def charm(kind, end, c):
         sphere(end + Vector((0, 0, -s * 0.3)), s * 0.35, material("gold"), seg=8, rings=4)
         bpy.ops.mesh.primitive_cone_add(vertices=10, radius1=s * 0.55, radius2=s * 0.18, depth=s * 2.4, location=end + Vector((0, 0, -s * 1.9)))
         keep(bpy.context.object, material("satin", c.get("color", "#f4a9c8")))
+    elif kind in ("acorn", "pebble"):  # egg-shaped nut under a cap, or a river pebble with a white stripe
+        c0 = end + Vector((0, 0, -s * 1.0))
+        sphere(c0, s * 0.62, material(c.get("mat", "wood" if kind == "acorn" else "stone"), c.get("color", "#e8b468" if kind == "acorn" else "#b5aec6")), seg=12, rings=8, scale=(1, 1, 1.3))
+        if kind == "acorn":
+            sphere(end + Vector((0, 0, -s * 0.32)), s * 0.7, material("wood", c.get("cap", "#9a6a3e")), seg=12, rings=6, scale=(1, 1, 0.55))
+            spike(end + Vector((0, 0, -s * 0.05)), (0, 0, 1), s * 0.35, s * 0.08, material("wood", c.get("cap", "#9a6a3e")), k=5)
+        else:
+            torus(c0, s * 0.6, s * 0.035, material("pearl", "#fbf8ff"), rot=(0.35, 0, 0), seg=16, minor=4)
 
 
 def bow(bw):
@@ -457,7 +478,7 @@ def bow(bw):
 
 def ribbon(rb):
     y = rb.get("y", -0.06)
-    pts = spline([hp(x, z, y) for x, z in rb["pts"]], rb.get("per", 6))
+    pts = spline([hp(p[0], p[1], p[2] if len(p) > 2 else y) for p in rb["pts"]], rb.get("per", 6))  # optional per-point y wraps a strap round the head
     wd, tw = rb.get("width", 0.12) / 2, rb.get("twist", 0.9)
     sweep("Ribbon", pts, strip_sec(lambda t: wd * (1 - 0.25 * t), 0.006, lambda t: tw * math.sin(t * math.pi * rb.get("waves", 1.5))), material(rb.get("mat", "satin"), rb.get("color", "#f7c8e6"), rb.get("glow", 0.0)))
 
@@ -522,9 +543,9 @@ for c in S.get("center", []):
         shape = c.get("shape", t if t != "gem" else "circle")
         if "frame" in c:
             gem2d("Frame", shape, c["size"] * c.get("frame_scale", 1.22), at + Vector((0, 0.035, 0)), material(c.get("frame_mat", "gold"), c["frame"]), facet=False, table=0.85, depth=c["size"] * 0.25, rot=c.get("rot", 0), n=28, points=c.get("points", 5), ratio=c.get("ratio", 0.45))
-        gem2d(t.title(), shape, c["size"], at, M(c, "crystal", "#f0b2ff", 1.0), rot=c.get("rot", 0), n=28, points=c.get("points", 5), ratio=c.get("ratio", 0.45), sx=c.get("sx", 1.0), sz=c.get("sz", 1.0))
+        gem2d(t.title(), shape, c["size"], at, M(c, "crystal", "#f0b2ff", 1.0), depth=c.get("depth"), rot=c.get("rot", 0), n=28, points=c.get("points", 5), ratio=c.get("ratio", 0.45), sx=c.get("sx", 1.0), sz=c.get("sz", 1.0))
     elif t in ("orb", "pearl"):
-        sphere(at, c.get("r", 0.12), material("pearl", c.get("color", "#fff4fa")) if t == "pearl" else M(c, "crystal", "#c8e0ff", 1.2), seg=18, rings=10)
+        sphere(at, c.get("r", 0.12), material("pearl", c.get("color", "#fff4fa")) if t == "pearl" else M(c, "crystal", "#c8e0ff", 1.2), seg=18, rings=10, scale=tuple(c.get("scale", (1, 1, 1))))
     elif t == "ring":
         torus(at, c.get("r", 0.2), c.get("w", 0.02), M(c, "gold"), rot=(math.pi / 2, 0, 0), seg=28)
     elif t == "spike":
@@ -657,6 +678,20 @@ half = max((zmax - zmin) / 2, xext * 1.5) * 1.12
 dist = half / math.tan(math.atan(18 / 50))
 tilt = math.radians(S.get("tilt", -15))
 shots = {"hero": (0, tilt, math.radians(S.get("yaw", 22))), "front": (0, 0, 0), "side": (0, 0, math.radians(90))}
+if ICON:
+    scene.render.film_transparent = True
+    scene.render.resolution_x = scene.render.resolution_y = 512
+    piv.rotation_euler = (0, math.radians(-38), math.radians(S.get("yaw", 22)))
+    bpy.context.view_layer.update()
+    pts = [(o.matrix_world @ v.co) for o in OBJS for v in o.data.vertices]
+    half = max(max(abs(v.x - ctr.x) for v in pts), max(abs(v.z - ctr.z) for v in pts)) * 1.06
+    dist = half / math.tan(math.atan(18 / 50))
+    cam.location = ctr + Vector((0, -dist, 0))
+    cam.rotation_euler = (ctr - cam.location).to_track_quat("-Z", "Y").to_euler()
+    scene.render.filepath = os.path.join(OUT, f"{S['name']}_icon.png")
+    bpy.ops.render.render(write_still=True)
+    print("ICON", scene.render.filepath)
+    sys.exit(0)
 for label, rot in shots.items():
     piv.rotation_euler = rot
     cam.location = ctr + Vector((0, -dist, dist * 0.08))

@@ -1,0 +1,21 @@
+{
+ "name": "StonePickaxe",
+ "objects": 39,
+ "parts": 13,
+ "tris": 7164,
+ "per_part": {
+  "wood_efdcc8_0": 80,
+  "satin_ad8ad8_0": 2256,
+  "stone_9792b5_6": 224,
+  "silver_dfe3ef_0": 904,
+  "stone_9792b5_0": 892,
+  "irid_aaa5c6_0": 568,
+  "irid_d9c8ff_3": 472,
+  "stone_85809f_0": 472,
+  "crystal_ff8fbf_5": 20,
+  "satin_b58ae6_0": 884,
+  "pearl_ffffff_0": 96,
+  "stone_b5aec6_0": 168,
+  "pearl_fbf8ff_0": 128
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "name": "WoodPickaxe",
+ "objects": 45,
+ "parts": 20,
+ "tris": 5892,
+ "per_part": {
+  "wood_e89c4c_0": 80,
+  "satin_b6ebc0_0": 712,
+  "wood_e0954c_6": 224,
+  "gold_e6bb6a_0": 240,
+  "wood_dcc0a0_0": 568,
+  "irid_f3e3cc_0": 472,
+  "wood_dcc0ae_0": 472,
+  "wood_d39a5c_0": 44,
+  "wood_c98a50_0": 352,
+  "wood_ecd0a8_0": 164,
+  "wood_8fc07a_0": 10,
+  "crystal_9fe8c8_6": 164,
+  "irid_a8d68e_0": 164,
+  "irid_b9e0a0_0": 328,
+  "wood_dcae78_0": 328,
+  "satin_f7d264_0": 788,
+  "crystal_fff3c4_10": 80,
+  "wood_a8743f_0": 404,
+  "wood_e8b468_0": 168,
+  "wood_9a6a3e_0": 130
+ }
+}

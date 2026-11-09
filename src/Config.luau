@@ -121,8 +121,8 @@ C.PASTEL = {
 
 -- Pickaxe ladder: Wood and Stone are part-built; the ten magical pickaxes are the Pickaxe Forge models (ServerStorage.Pickaxes)
 C.PICKS = {
-	{ name = "Wood Pickaxe", power = 1, cost = 0 },
-	{ name = "Stone Pickaxe", power = 2, cost = 20 },
+	{ name = "Wood Pickaxe", power = 1, cost = 0, model = "WoodPickaxe" },
+	{ name = "Stone Pickaxe", power = 2, cost = 20, model = "StonePickaxe" },
 	{ name = "Heart Gem Pickaxe", power = 4, cost = 150, model = "HeartGemPickaxe" },
 	{ name = "Starlight Pickaxe", power = 7, cost = 600, model = "StarlightPickaxe" },
 	{ name = "Moonlit Pickaxe", power = 12, cost = 2000, model = "MoonlitPickaxe" },
