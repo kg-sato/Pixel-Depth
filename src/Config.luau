@@ -220,6 +220,18 @@ C.CAVES_ON = true -- the lift goes to the shared caves; false brings back the pr
 C.TORCH = { time = 300, range = 18, minRange = 6 } -- full light to the dimmest glow in 5 minutes (the user, 2026-11-08); wooden torch radius 18 studs (LGT-02)
 C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
+C.MAP_VIEW = 160 -- studs across the cave minimap (HUD-01); floors show once your torchlight reaches them (fog of war)
+-- Ore deposits (stage 4, refs ORE-01/02, EXT-01/02, board artboard CaveUI): crystal clusters hidden against cave walls,
+-- a starburst glint every `glint` seconds. The cave piece sets the layer (deeper pieces hold later layers), depth raises
+-- the rare odds. Common and uncommon ore play Perfect Strike, rare ore plays Vein Rush. The server decides all loot.
+C.DEPOSIT = {
+	layer = { tunnel = 1, squeeze = 1, chasm = 2, grotto = 2, mush = 3 }, -- C.LAYERS index per cave theme
+	rare = 0.16, rareDeep = 0.2, uncommon = 0.34, -- ore3 chance (+rareDeep at 40 studs down), then ore2 chance
+	spacing = 18, max = 40, reach = 10, glint = 3, -- studs apart, per cave, prompt distance, seconds between glints
+	strikes = 3, chunks = 1, bonus = 1, strikePeriod = 1.0, arc = 15, -- Perfect Strike: swings, ore per swing, extra ore per PERFECT, needle turn (s), gold arc (deg)
+	rush = { 8, 12 }, rushChunks = 4, rushBeat = 1.0, -- Vein Rush: beats, base ore, seconds per beat
+	grades = { { "FLAWLESS", 0, 2, 3 }, { "PRISTINE", 1, 1.5, 2 }, { "STANDARD", 3, 1, 1 }, { "CHIPPED", math.huge, 0.5, 0 } }, -- name, most slips, ore multiplier, stars
+}
 -- Cave lighting preset, applied by the client on entering the caves and undone at camp. From the lighting video the user sent
 -- (https://www.youtube.com/watch?v=adgCWET34rU): realistic style, tinted ambient so shadows keep colour, low diffuse, punchy
 -- contrast with a subtle tint, a small low-threshold bloom so glows read as colour, a light depth of field for big halls.

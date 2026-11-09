@@ -675,6 +675,7 @@ enterMine = function(s)
 		hrp.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
 		s.player:SetAttribute("InCave", true)
 		FxR:FireClient(s.player, "lift", true)
+		sendState(s) -- the bag pill turns into the unbanked ore count in the caves
 		return
 	end
 	s.pr = -99 -- render the landing now
@@ -683,6 +684,90 @@ enterMine = function(s)
 	s.player:SetAttribute("InMine", true)
 	FxR:FireClient(s.player, "lift", true)
 end
+
+-- Cave ore deposits (stage 4, refs ORE-01/02, EXT-01/02, board artboard CaveUI). Deposits are shared, loot is per player:
+-- each player extracts each deposit once. Its prompt starts a minigame; the server keeps the clock, the gold arc and the
+-- crack sequence, grades the result and pays ore from the deposit's own attributes into the unbanked bag (no bag limit).
+local ExtractR = remote("Extract")
+local D = C.DEPOSIT
+local function finishMinigame(s)
+	local mg = s.mg
+	if not mg then return end
+	s.mg = nil
+	local count, grade
+	if mg.kind == "strike" then
+		count, grade = D.strikes * D.chunks + mg.perfects * D.bonus, mg.perfects
+	else
+		for _, g in D.grades do
+			if (mg.slips or math.huge) <= g[2] then
+				count, grade = math.max(1, math.floor(D.rushChunks * g[3] + 0.5)), g[1]
+				break
+			end
+		end
+	end
+	local L, idx = mg.dep:GetAttribute("Layer"), mg.dep:GetAttribute("Ore")
+	local o = C.LAYERS[L][4][idx]
+	local v = o[4] * 3 ^ (L - 1)
+	s.bag += count
+	s.bagV += count * v
+	s.claimed[mg.dep] = true
+	FxR:FireClient(s.player, "mgEnd", mg.dep, o[1], count, count * v, o[2], grade)
+	sendState(s)
+end
+local caveDeposits = caveLanding and workspace.Caves:FindFirstChild("Deposits")
+for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
+	local core = dep.PrimaryPart
+	local pr = Instance.new("ProximityPrompt")
+	pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.GamepadKeyCode = "Extract", dep:GetAttribute("OreName"), Enum.KeyCode.E, Enum.KeyCode.ButtonX
+	pr.RequiresLineOfSight, pr.MaxActivationDistance, pr.HoldDuration = false, D.reach, 0
+	pr.Style = Enum.ProximityPromptStyle.Custom -- drawn by PixelClient
+	pr.Parent = core
+	pr.Triggered:Connect(function(plr)
+		local s, hrp = data[plr], hrpOf(plr)
+		if not s or not hrp or s.mg or s.claimed[dep] or not plr:GetAttribute("InCave") then return end
+		if (hrp.Position - core.Position).Magnitude > D.reach + 4 then return end
+		local now = workspace:GetServerTimeNow()
+		if dep:GetAttribute("Ore") < 3 then
+			s.mg = { kind = "strike", dep = dep, t0 = now, arc = s.rng:NextNumber() * 360, swings = 0, perfects = 0, last = 0, deadline = now + D.strikes * 4 + 2 }
+			FxR:FireClient(plr, "mgStart", dep, "strike", now, s.mg.arc)
+		else
+			local seq = {} -- the side of the red crack on each beat: 1 left, 2 right; chiseling that side slips
+			for i = 1, s.rng:NextInteger(D.rush[1], D.rush[2]) do seq[i] = s.rng:NextInteger(1, 2) end
+			s.mg = { kind = "rush", dep = dep, t0 = now, seq = seq, deadline = now + #seq * D.rushBeat + 3 }
+			FxR:FireClient(plr, "mgStart", dep, "rush", now, seq)
+		end
+	end)
+end
+ExtractR.OnServerEvent:Connect(function(plr, what, arg)
+	local s = data[plr]
+	local mg = s and s.mg
+	if not mg then return end
+	local now = workspace:GetServerTimeNow()
+	if what == "strike" and mg.kind == "strike" then
+		if now - mg.last < 0.25 then return end
+		mg.last = now
+		-- the moment the player pressed, trusted only within their network delay
+		-- shortcut: a cheater can pick the best moment inside that 0.08-0.35 s window; send server-timed swing windows if it matters
+		local window = math.clamp(plr:GetNetworkPing() * 2 + 0.08, 0.08, 0.35)
+		local t = (type(arg) == "number" and arg == arg) and math.clamp(arg, now - window, now) or now
+		local needle = ((t - mg.t0) / D.strikePeriod % 1) * 360
+		local perfect = math.abs((needle - mg.arc + 180) % 360 - 180) <= D.arc / 2 + 2
+		mg.swings += 1
+		if perfect then mg.perfects += 1 end
+		mg.arc = (mg.arc + 90 + s.rng:NextNumber() * 180) % 360
+		FxR:FireClient(plr, "mgStrike", mg.swings, perfect, mg.arc)
+		if mg.swings >= D.strikes then finishMinigame(s) end
+	elseif what == "rush" and mg.kind == "rush" and type(arg) == "table" then
+		local slips = 0
+		for i, crack in mg.seq do
+			if (arg[i] ~= 1 and arg[i] ~= 2) or arg[i] == crack then slips += 1 end
+		end
+		local took = now - mg.t0
+		if took > #mg.seq * D.rushBeat + 1.5 or took < #mg.seq * 0.12 then slips = math.huge end -- out of time, or faster than hands
+		mg.slips = slips
+		finishMinigame(s)
+	end
+end)
 
 -- Held pickaxe: Wood and Stone are built from parts, the magical ones are ServerStorage.Pickaxes models (uploaded forge GLBs)
 local function pickModel(i)
@@ -941,6 +1026,7 @@ local function onJoin(plr)
 		pick = math.clamp(d.pick, 1, #C.PICKS), pack = math.clamp(d.pack, 1, #C.PACKS), pets = {}, step = d.step,
 		frenzyUntil = 0, combo = 0, bank = 0, best = d.best, nextDig = 0, hatched = d.hatched, pity = d.pity,
 		profile = profile, critKey = 0, critT0 = 0, lastHit = 0, eggs = d.eggs, shrines = {}, deepest = d.deepest or 0, streak = d.streak or 0,
+		claimed = {}, -- cave deposits this player has extracted (loot is per player)
 	}
 	for _, n in d.pets do
 		if C.PETS[n] and #s.pets < C.MAX_PETS then table.insert(s.pets, { name = n, next = os.clock() + 2 }) end
@@ -1050,6 +1136,13 @@ while true do
 				s.eggs += devEggs
 				sendState(s)
 			end
+		end
+		if s.mg and workspace:GetServerTimeNow() > s.mg.deadline then -- a minigame left unfinished pays what it earned (Vein Rush: Chipped)
+			finishMinigame(s)
+		end
+		if hrp and plr:GetAttribute("InCave") and s.bag > 0 then -- Camp 1's ring banks the unbanked ore (CMP-01)
+			local o = C.CAVE_ORIGIN
+			if Vector2.new(hrp.Position.X - o.X, hrp.Position.Z - o.Z).Magnitude < C.CAMP_RING and math.abs(hrp.Position.Y - o.Y) < 30 then sell(s) end
 		end
 		if hrp and not plr:GetAttribute("InCave") then
 			local r, c, d = cellOf(s, hrp.Position)

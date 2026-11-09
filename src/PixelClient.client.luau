@@ -1336,9 +1336,10 @@ R.State.OnClientEvent:Connect(function(s)
 	end
 	setGold(s.gold)
 	if not prev then goldShown = s.gold end
-	bagText.Text = "BAG " .. s.bag .. " / " .. s.cap
-	local full = s.bag >= s.cap
-	tween(bagFill, 0.25, { Size = UDim2.fromScale(math.clamp(s.bag / s.cap, 0, 1), 1), BackgroundColor3 = full and PINK or BUTTER }, Enum.EasingStyle.Back)
+	local caving = plr:GetAttribute("InCave") == true -- no bag limit in the caves: the pill counts the ore not yet banked at camp
+	bagText.Text = caving and ("ORE " .. s.bag .. "  UNBANKED") or ("BAG " .. s.bag .. " / " .. s.cap)
+	local full = not caving and s.bag >= s.cap
+	tween(bagFill, 0.25, { Size = UDim2.fromScale(math.clamp(s.bag / (caving and 40 or s.cap), 0, 1), 1), BackgroundColor3 = full and PINK or BUTTER }, Enum.EasingStyle.Back)
 	if full and not sellPop.Visible then openPanel(sellPop) end
 	if not full and sellPop.Visible then closePanel(sellPop) end
 	sellInfo.Text = s.bag .. " ORE READY TO SELL"
@@ -1483,8 +1484,483 @@ do
 		campMark.Position = UDim2.fromScale(0.5 + math.clamp(d / span, -0.44, 0.44), 0.5)
 		campMark.BackgroundColor3 = math.abs(d) < span / 2 and BUTTER or Color3.fromRGB(255, 236, 190)
 		campText.Text = here and "CAMP" or ("CAMP " .. math.floor(to.Magnitude / 4 + 0.5) .. "m")
+		if cave.tick then cave.tick(now, h) end
 	end
 end
+
+-- Cave minimap (HUD-01, fog of war), ore glints (ORE-01) and the two extraction minigames: Perfect Strike (EXT-01) and Vein Rush
+-- (EXT-02). Spec: the design board's CaveUI artboard. The server grades every swing and chisel; this only draws and sends input.
+-- A function of its own, not a do block: the main chunk is at Luau's 200-register limit.
+;(function()
+	local D = C.DEPOSIT
+	local ExtractR = R:WaitForChild("Extract")
+	local PPS2 = game:GetService("ProximityPromptService")
+	-- minimap: top right under the location pill, north up; a floor shows once your torchlight reaches it
+	local mapPanel = panel(caveHud, S(168, 168), S(1262, 150), Vector2.new(1, 0), "panel")
+	fit(mapPanel, 168, 168)
+	mapPanel.Name = "Minimap"
+	local view = new("Frame", mapPanel, { Size = UDim2.fromScale(0.8, 0.8), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(18, 13, 28), BorderSizePixel = 0, ClipsDescendants = true, ZIndex = 2 })
+	new("UIStroke", view, { Color = INK, Thickness = 2 })
+	local canvas = new("Frame", view, { BackgroundTransparency = 1, ZIndex = 2 })
+	local me = new("Frame", view, { Size = UDim2.fromScale(0.2, 0.2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 5 })
+	local meDot = new("Frame", me, { Size = UDim2.fromScale(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.55), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 5 })
+	new("UIStroke", meDot, { Color = INK, Thickness = 1 })
+	new("Frame", me, { Size = UDim2.fromScale(0.24, 0.28), Position = UDim2.fromScale(0.5, 0.16), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 5 })
+	local map = { floors = {}, deps = {}, next = 0 }
+	local function onMap(x, z, w) -- a square of w studs at world (x, z) on the canvas
+		return UDim2.fromScale((x - w / 2 - map.lo.X) / map.span.X, (z - w / 2 - map.lo.Y) / map.span.Y), UDim2.fromScale(w / map.span.X, w / map.span.Y)
+	end
+
+	-- a starburst glint on each deposit every D.glint seconds (ORE-01): a cream 4-point star that grows and fades, its light flaring.
+	-- Drawn in screen space at the deposit (like the prompts) and hidden by a raycast when rock is in the way: a 3D billboard
+	-- got cut by the walls next to the cluster.
+	local glints = new("Frame", caveHud, { Name = "Glints", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 1 })
+	local function starburst(core, col)
+		local out = core.CFrame.LookVector * Vector3.new(1, 0, 1) -- the cluster faces its wall: the star sits just in front of it
+		local bb = new("Frame", glints, { Name = "Glint", BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5), Visible = false, ZIndex = 1 })
+		bb:SetAttribute("At", core.Position + (out.Magnitude > 0.1 and -out.Unit * 1.5 or Vector3.zero) + Vector3.new(0, 0.8, 0))
+		local star = new("Frame", bb, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1 })
+		local sc = new("UIScale", star, {})
+		for _, h in { { 0.7, 0.8 }, { 0.36, 0.55 } } do -- a soft glow in the ore colour behind the rays
+			new("UICorner", new("Frame", star, { Size = UDim2.fromScale(h[1], h[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = col:Lerp(CREAM, 0.3), BackgroundTransparency = h[2], BorderSizePixel = 0 }), { CornerRadius = UDim.new(0.5, 0) })
+		end
+		for _, r in { { 1.3, 0.05, 0 }, { 0.05, 0.85, 0 }, { 0.42, 0.04, 45 }, { 0.42, 0.04, -45 } } do -- long thin rays, the horizontal one longest
+			new("Frame", star, { Size = UDim2.fromScale(r[1], r[2]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = r[3], BackgroundColor3 = col:Lerp(CREAM, 0.65), BorderSizePixel = 0 })
+		end
+		new("Frame", star, { Size = UDim2.fromScale(0.14, 0.14), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 45, BackgroundColor3 = WHITE, BorderSizePixel = 0 })
+		return bb, star, sc
+	end
+	local function claim(g) -- this player has mined it: hide it for them only
+		g.claimed = true
+		for _, p in g.dep:GetDescendants() do
+			if p:IsA("BasePart") then p.Transparency = 1 end
+			if p:IsA("ProximityPrompt") or p:IsA("PointLight") then p.Enabled = false end
+		end
+		g.bb.Visible = false
+		if g.dot then g.dot:Destroy() g.dot = nil end
+	end
+	local function mapBuild(caves)
+		canvas:ClearAllChildren()
+		for _, g in map.deps do if g.bb then g.bb:Destroy() end end
+		map.caves, map.floors, map.deps = caves, {}, {}
+		local x0, z0, x1, z1 = math.huge, math.huge, -math.huge, -math.huge
+		local floorF = caves:FindFirstChild("Floor")
+		for _, p in floorF and floorF:GetChildren() or {} do
+			local a = Vector2.new(p.Position.X - p.Size.X / 2, p.Position.Z - p.Size.Z / 2)
+			local b = Vector2.new(p.Position.X + p.Size.X / 2, p.Position.Z + p.Size.Z / 2)
+			x0, z0, x1, z1 = math.min(x0, a.X), math.min(z0, a.Y), math.max(x1, b.X), math.max(z1, b.Y)
+			table.insert(map.floors, { a = a, b = b, top = p.Position.Y + p.Size.Y / 2 })
+		end
+		if #map.floors == 0 then return end
+		map.lo, map.span = Vector2.new(x0, z0), Vector2.new(x1 - x0, z1 - z0)
+		canvas.Size = UDim2.fromScale(map.span.X / C.MAP_VIEW, map.span.Y / C.MAP_VIEW)
+		local o = C.CAVE_ORIGIN -- the camp: a butter tent marker, always known
+		local pos, size = onMap(o.X, o.Z, 9)
+		local camp = new("Frame", canvas, { Position = pos, Size = size, BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 4 })
+		new("UIStroke", camp, { Color = INK, Thickness = 1 })
+		local depF = caves:FindFirstChild("Deposits")
+		for k, dep in depF and depF:GetChildren() or {} do
+			local core = dep.PrimaryPart or dep:FindFirstChild("Core")
+			if core then
+				local col = C.LAYERS[dep:GetAttribute("Layer")][4][dep:GetAttribute("Ore")][2]
+				local bb, star, sc = starburst(core, col)
+				table.insert(map.deps, { dep = dep, core = core, col = col, light = core:FindFirstChildOfClass("PointLight"), bb = bb, at = bb:GetAttribute("At"), star = star, sc = sc, phase = (k * 0.618) % 1 * D.glint })
+			end
+		end
+	end
+	local function mapStep(now, h)
+		local caves = workspace:FindFirstChild("Caves")
+		if not caves then return end
+		if caves ~= map.caves then mapBuild(caves) end
+		if not map.lo then return end
+		local p = h.Position
+		canvas.Position = UDim2.fromScale(0.5 - (p.X - map.lo.X) / C.MAP_VIEW, 0.5 - (p.Z - map.lo.Y) / C.MAP_VIEW)
+		local lv = cam.CFrame.LookVector
+		me.Rotation = math.deg(math.atan2(lv.X, -lv.Z))
+		local hold = plr:GetAttribute("DevGlint") and 0.25 -- Studio test hook: freeze every glint at its peak for captures
+		for _, g in map.deps do -- glints run every frame (cheap: a scale and a light per deposit)
+			if not g.claimed then
+				local ph = hold or (now + g.phase) % D.glint
+				local s = ph < 0.5 and math.sin(ph / 0.5 * math.pi) or 0
+				local v, on = cam:WorldToScreenPoint(g.at) -- the HUD sits under the top bar inset, like the prompts
+				g.bb.Visible = s > 0 and g.seen == true and on
+				if g.bb.Visible then -- 7 studs across at its distance
+					local px = 7 * cam.ViewportSize.Y / (2 * v.Z * math.tan(math.rad(cam.FieldOfView) / 2))
+					g.bb.Position, g.bb.Size = UDim2.fromOffset(v.X, v.Y), UDim2.fromOffset(px, px)
+					g.sc.Scale = s
+					g.star.Rotation = ph * 50
+				end
+				if g.light then
+					g.light.Brightness = 0.35 + s * 2.5
+					g.light.Range = 7 + s * 7
+				end
+			end
+		end
+		if now < map.next then return end
+		map.next = now + 0.15
+		local hd = head()
+		local lantern = hd and hd:FindFirstChild("Lantern")
+		local r = (lantern and lantern.Range or C.TORCH.range) + 10
+		for i = #map.floors, 1, -1 do -- fog of war: reveal floors your light reaches, then forget them
+			local f = map.floors[i]
+			local dx = math.max(f.a.X - p.X, 0, p.X - f.b.X)
+			local dz = math.max(f.a.Y - p.Z, 0, p.Z - f.b.Y)
+			local dy = f.top - (p.Y - 3)
+			if dx * dx + dz * dz + dy * dy < r * r then
+				map.floors[i] = map.floors[#map.floors]
+				map.floors[#map.floors] = nil
+				new("Frame", canvas, {
+					Position = UDim2.fromScale((f.a.X - map.lo.X) / map.span.X, (f.a.Y - map.lo.Y) / map.span.Y),
+					Size = UDim2.fromScale((f.b.X - f.a.X) / map.span.X, (f.b.Y - f.a.Y) / map.span.Y),
+					BackgroundColor3 = Color3.fromRGB(70, 56, 104):Lerp(LILAC, math.clamp((f.top + 40) / 50, 0, 1)), BorderSizePixel = 0, ZIndex = 2,
+				})
+			end
+		end
+		local camPos = cam.CFrame.Position
+		local rp = RaycastParams.new()
+		for _, g in map.deps do -- line of sight to each glint, so the always-on-top star never shows through rock
+			if not g.claimed and (g.core.Position - camPos).Magnitude < 150 then
+				rp.FilterDescendantsInstances = { plr.Character, g.dep }
+				local to = g.at
+				g.seen = workspace:Raycast(camPos, to - camPos, rp) == nil
+			end
+		end
+		for _, g in map.deps do -- a found deposit stays on the map as a dot in its ore colour until you mine it
+			if not g.claimed and not g.dot and (g.core.Position - p).Magnitude < r then
+				local pos, size = onMap(g.core.Position.X, g.core.Position.Z, 5)
+				g.dot = new("Frame", canvas, { Position = pos, Size = size, BackgroundColor3 = g.col, BorderSizePixel = 0, ZIndex = 3 })
+				new("UIStroke", g.dot, { Color = CREAM, Thickness = 1 })
+			end
+		end
+	end
+
+	-- minigames: one live at a time; movement and prompts pause while it runs
+	local mg
+	local held = {}
+	local function freeze(on)
+		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+		if hum and on then
+			held.walk, held.jump = hum.WalkSpeed, hum.JumpHeight
+			hum.WalkSpeed, hum.JumpHeight = 0, 0
+		elseif hum and held.walk then
+			hum.WalkSpeed, hum.JumpHeight = held.walk, held.jump
+			held.walk = nil
+		end
+		PPS2.Enabled = not on
+		if vm then -- the held pickaxe covered the STRIKE button
+			if on then vm.Parent = nil else vm.Parent = cam end
+		end
+		local compass = caveHud:FindFirstChild("Compass") -- the minigame title sits where the compass ribbon is
+		if compass then compass.Visible = not on end
+	end
+	-- Perfect Strike (EXT-01): a needle turns once per second; strike while it crosses the 15 degree gold arc
+	local ps = new("Frame", caveHud, { Name = "PerfectStrike", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Visible = false, ZIndex = 10 })
+	local dial = new("Frame", ps, { Size = S(300, 300), Position = S(640, 290), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 10 })
+	fit(dial, 1, 1)
+	new("UICorner", dial, { CornerRadius = UDim.new(0.5, 0) })
+	for _, ring in { { 0.95, CREAM }, { 0.89, Color3.fromRGB(42, 31, 61) }, { 0.4, Color3.fromRGB(29, 22, 41) } } do
+		new("UICorner", new("Frame", dial, { Size = UDim2.fromScale(ring[1], ring[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = ring[2], BorderSizePixel = 0, ZIndex = 10 }), { CornerRadius = UDim.new(0.5, 0) })
+	end
+	for i = 0, 23 do -- rim ticks every 15 degrees, longer every 45
+		local t = new("Frame", dial, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Rotation = i * 15, ZIndex = 11 })
+		new("Frame", t, { Size = UDim2.fromScale(0.014, i % 3 == 0 and 0.06 or 0.035), Position = UDim2.fromScale(0.5, 0.065), BackgroundColor3 = CREAM, BackgroundTransparency = 0.35, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0), ZIndex = 11 })
+	end
+	local arcPivot = new("Frame", dial, { Name = "Arc", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 11 })
+	for a = -6.75, 6.76, 1.5 do -- the 15 degree gold arc as a fan of thin spokes, darker gold on its two edges
+		local f = new("Frame", arcPivot, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Rotation = a, ZIndex = 11 })
+		new("Frame", f, { Size = UDim2.fromScale(0.022, 0.385), Position = UDim2.fromScale(0.5, 0.065), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = math.abs(a) > 6 and GOLD or BUTTER, BorderSizePixel = 0, ZIndex = 11 })
+	end
+	local needle = new("Frame", dial, { Name = "Needle", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 12 })
+	new("Frame", needle, { Size = UDim2.fromScale(0.035, 0.43), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = WHITE, BorderSizePixel = 0, ZIndex = 12 })
+	local hub = new("Frame", dial, { Size = UDim2.fromScale(0.08, 0.08), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 13 })
+	new("UIStroke", hub, { Color = INK, Thickness = 2 })
+	local psTitleBar = panel(ps, S(560, 50), S(640, 110), Vector2.new(0.5, 0.5), "pill")
+	fit(psTitleBar, 560, 50)
+	local psTitle = text(psTitleBar, "PERFECT STRIKE", UDim2.fromScale(0.86, 0.44), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), INK, 700, false)
+	psTitle.ZIndex = 3
+	local psPop = text(ps, "PERFECT!", S(360, 52), S(640, 290), Vector2.new(0.5, 0.5), BUTTER)
+	psPop.ZIndex, psPop.Visible = 14, false
+	local pips = {}
+	for i = 1, D.strikes do
+		pips[i] = new("Frame", ps, { Size = S(22, 22), Position = S(640 + (i - (D.strikes + 1) / 2) * 34, 468), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 12 })
+		fit(pips[i], 1, 1)
+		new("UIStroke", pips[i], { Color = INK, Thickness = 2 })
+	end
+	local psHintBar = panel(ps, S(440, 36), S(640, 506), Vector2.new(0.5, 0.5), "dark")
+	fit(psHintBar, 440, 36)
+	local psHint = text(psHintBar, UIS.KeyboardEnabled and "SPACE OR CLICK ON THE GOLD" or "TAP STRIKE ON THE GOLD", UDim2.fromScale(0.88, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), CREAM)
+	psHint.ZIndex = 3
+	-- UI juice: pastel pixel confetti and expanding rings from a point on screen
+	local CONFETTI = { BUTTER, MINT, PINK, LILAC, SKY, CREAM }
+	local function uiBurst(parent, at, cols, n, reach)
+		for _ = 1, n do
+			local sz = 0.008 + math.random() * 0.012
+			local f = new("Frame", parent, { Size = UDim2.fromScale(sz, sz * 2.16), Position = at, AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = cols[math.random(#cols)], BorderSizePixel = 0, Rotation = math.random(0, 90), ZIndex = 16 })
+			local a, d = math.random() * math.pi * 2, (0.5 + math.random() * 0.5) * (reach or 0.22)
+			tween(f, 0.5 + math.random() * 0.25, { Position = at + UDim2.fromScale(math.cos(a) * d * 0.46, math.sin(a) * d + 0.05), Rotation = f.Rotation + math.random(-180, 180), BackgroundTransparency = 1 }, Enum.EasingStyle.Quad)
+			task.delay(0.8, function() f:Destroy() end)
+		end
+	end
+	local function uiRing(parent, at, col, delay)
+		task.delay(delay or 0, function()
+			local r = new("Frame", parent, { Size = S(120, 120), Position = at, AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 15 })
+			fit(r, 1, 1)
+			new("UICorner", r, { CornerRadius = UDim.new(0.5, 0) })
+			local st = new("UIStroke", r, { Color = col, Thickness = 6 })
+			tween(r, 0.45, { Size = S(420, 420) }, Enum.EasingStyle.Quad)
+			tween(st, 0.45, { Transparency = 1, Thickness = 1 })
+			task.delay(0.5, function() r:Destroy() end)
+		end)
+	end
+	local strikeBtn = button(ps, "STRIKE!", S(220, 82), S(1130, 470), Vector2.new(1, 1), "mint")
+	strikeBtn.ZIndex = 12
+
+	-- Vein Rush (EXT-02): the vein drops a segment per chisel; red cracks sit on one side, chisel the other
+	local vr = new("Frame", caveHud, { Name = "VeinRush", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Visible = false, ZIndex = 10 })
+	local quality = panel(vr, S(560, 84), S(640, 18), Vector2.new(0.5, 0), "card")
+	fit(quality, 560, 84)
+	local qText = text(quality, "VEIN RUSH  FLAWLESS", UDim2.fromScale(0.62, 0.34), UDim2.fromScale(0.06, 0.16), nil, INK, 700, false)
+	qText.TextXAlignment = Enum.TextXAlignment.Left
+	local stars = {}
+	for i = 1, 3 do
+		stars[i] = new("ImageLabel", quality, { Image = ICON.star, BackgroundTransparency = 1, ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.07, 0.42), Position = UDim2.fromScale(0.76 + i * 0.06, 0.32), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
+	end
+	local timeTrack = new("Frame", quality, { Size = UDim2.fromScale(0.88, 0.16), Position = UDim2.fromScale(0.5, 0.7), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
+	local timeFill = new("Frame", timeTrack, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = MINT, BorderSizePixel = 0, ZIndex = 3 })
+	local column = new("Frame", vr, { Size = S(280, 380), Position = S(640, 450), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, ZIndex = 10 })
+	local slots = {}
+	for k = 1, 5 do -- slot 1 is the bottom segment, the one you chisel now
+		local y = 1 - (k - 1) * 0.18
+		local seg = new("Frame", column, { Size = UDim2.fromScale(0.32, 0.17), Position = UDim2.fromScale(0.5, y), AnchorPoint = Vector2.new(0.5, 1), BorderSizePixel = 0, ZIndex = 11 })
+		new("UIStroke", seg, { Color = INK, Thickness = 2 })
+		-- a cut crystal: a light top band, a dark bottom band and a pale diagonal facet
+		local lite = new("Frame", seg, { Size = UDim2.fromScale(1, 0.24), BorderSizePixel = 0, ZIndex = 12 })
+		local dark = new("Frame", seg, { Size = UDim2.fromScale(1, 0.24), Position = UDim2.fromScale(0, 0.76), BorderSizePixel = 0, ZIndex = 12 })
+		new("Frame", seg, { Size = UDim2.fromScale(0.14, 0.62), Position = UDim2.fromScale(0.28, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 24, BackgroundColor3 = WHITE, BackgroundTransparency = 0.55, BorderSizePixel = 0, ZIndex = 12 })
+		local lines = {}
+		for side = 1, 2 do -- the red fracture running into the vein on the cracked side
+			lines[side] = new("Frame", seg, { Size = UDim2.fromScale(0.3, 0.1), Position = UDim2.fromScale(side == 1 and 0 or 1, 0.55), AnchorPoint = Vector2.new(side == 1 and 0 or 1, 0.5), Rotation = side == 1 and -14 or 14, BackgroundColor3 = Color3.fromRGB(230, 50, 80), BorderSizePixel = 0, ZIndex = 13 })
+		end
+		local cracks = {}
+		for side = 1, 2 do
+			local c = new("Frame", column, { Size = UDim2.fromScale(0.34, 0.17), Position = UDim2.fromScale(side == 1 and 0.17 or 0.83, y - 0.085), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 11 })
+			for n, w in { 0.9, 0.62, 0.32 } do -- a red crystal spike jutting out of the vein, stepped like pixels
+				local spike = new("Frame", c, { Size = UDim2.fromScale(w, 0.22), Position = UDim2.fromScale(side == 1 and 1 or 0, 0.2 + n * 0.17), AnchorPoint = Vector2.new(side == 1 and 1 or 0, 0.5), BackgroundColor3 = n == 1 and Color3.fromRGB(255, 90, 110) or Color3.fromRGB(220, 60, 84), BorderSizePixel = 0, ZIndex = 11 })
+				new("UIStroke", spike, { Color = Color3.fromRGB(110, 20, 50), Thickness = 2 })
+			end
+			cracks[side] = c
+		end
+		slots[k] = { seg = seg, cracks = cracks, lite = lite, dark = dark, lines = lines }
+	end
+	local miner = new("ImageLabel", column, { Image = ICON.pick, BackgroundTransparency = 1, ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.17, 0.16), Position = UDim2.fromScale(0.12, 1), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 13 })
+	local beatBar = panel(vr, S(200, 36), S(640, 480), Vector2.new(0.5, 0.5), "dark")
+	fit(beatBar, 200, 36)
+	local beatText = text(beatBar, "BEAT 1 / 10", UDim2.fromScale(0.84, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), CREAM)
+	beatText.ZIndex = 3
+	local leftBtn = button(vr, "< CHISEL LEFT", S(300, 86), S(190, 470), Vector2.new(0, 1), "mint") -- clear of the vein and the stick/jump zones
+	local rightBtn = button(vr, "CHISEL RIGHT >", S(300, 86), S(1090, 470), Vector2.new(1, 1), "pink")
+	leftBtn.ZIndex, rightBtn.ZIndex = 12, 12
+	if UIS.KeyboardEnabled then
+		keyCap(leftBtn, "A", UDim2.fromScale(0.1, 0.5), UDim2.fromScale(0.06, 0.12))
+		keyCap(rightBtn, "D", UDim2.fromScale(0.1, 0.5), UDim2.fromScale(0.94, 0.12))
+	end
+	-- the result card (both minigames): ore swatch, amount, gold value, grade and stars
+	local result = panel(caveHud, S(470, 150), S(640, 262), Vector2.new(0.5, 0.5), "card")
+	fit(result, 470, 150)
+	result.Name, result.Visible, result.ZIndex = "ExtractResult", false, 15
+	local swatch = new("Frame", result, { Size = UDim2.fromScale(0.15, 0.48), Position = UDim2.fromScale(0.07, 0.5), AnchorPoint = Vector2.new(0, 0.5), BorderSizePixel = 0, ZIndex = 3 })
+	new("UIStroke", swatch, { Color = INK, Thickness = 3 })
+	local swLite = new("Frame", swatch, { Size = UDim2.fromScale(1, 0.28), BorderSizePixel = 0, ZIndex = 4 })
+	local rOre = text(result, "+6 ORE", UDim2.fromScale(0.66, 0.26), UDim2.fromScale(0.27, 0.12), nil, INK, 700, false)
+	rOre.TextXAlignment = Enum.TextXAlignment.Left
+	icon(result, "coin", UDim2.fromScale(0.07, 0.2), UDim2.fromScale(0.27, 0.42))
+	local rGold = text(result, "72 GOLD", UDim2.fromScale(0.5, 0.18), UDim2.fromScale(0.36, 0.43), nil, INK, 700, false)
+	rGold.TextXAlignment = Enum.TextXAlignment.Left
+	local rGrade = text(result, "PRISTINE VEIN", UDim2.fromScale(0.42, 0.17), UDim2.fromScale(0.27, 0.7), nil, PLUM_SOFT, 700, false)
+	rGrade.TextXAlignment = Enum.TextXAlignment.Left
+	local rStars = {}
+	for i = 1, 3 do
+		rStars[i] = new("ImageLabel", result, { Image = ICON.star, BackgroundTransparency = 1, ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.07, 0.22), Position = UDim2.fromScale(0.74 + i * 0.065, 0.78), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
+	end
+	local resultSeq = 0
+	local function showResult(oreName, count, value, col, gradeText, nStars)
+		resultSeq += 1
+		local my = resultSeq
+		swatch.BackgroundColor3, swLite.BackgroundColor3 = col, col:Lerp(WHITE, 0.45)
+		rOre.Text = "+" .. count .. " " .. string.upper(oreName)
+		rGold.Text = commas(value) .. " GOLD"
+		rGrade.Text = gradeText
+		for i, st in rStars do
+			st.ImageColor3, st.ImageTransparency = i <= nStars and WHITE or PLUM_SOFT, i <= nStars and 0 or 0.4
+			if i <= nStars then task.delay(0.15 + i * 0.12, function() pop(st, 1.8, 0.3) sfx("sparkle", 1 + i * 0.12) end) end
+		end
+		result.Visible = true
+		pop(result, 0.5, 0.35)
+		uiBurst(caveHud, S(640, 262), CONFETTI, 18 + nStars * 6, 0.3)
+		task.delay(2.2, function() if resultSeq == my then closePanel(result) end end)
+	end
+	local function gradeOf(slips)
+		for _, g in D.grades do
+			if slips <= g[2] then return g end
+		end
+	end
+	local function drawVein()
+		for k, sl in slots do
+			local beat = mg.i + k
+			local on = beat <= #mg.seq
+			sl.seg.Visible = on
+			local base = mg.col:Lerp(LILAC, 0.2):Lerp(beat % 2 == 0 and WHITE or Color3.new(0, 0, 0), 0.12)
+			sl.seg.BackgroundColor3, sl.lite.BackgroundColor3, sl.dark.BackgroundColor3 = base, base:Lerp(WHITE, 0.4), base:Lerp(INK, 0.35)
+			for side = 1, 2 do
+				sl.cracks[side].Visible = on and mg.seq[beat] == side
+				sl.lines[side].Visible = on and mg.seq[beat] == side
+			end
+		end
+		local g = gradeOf(mg.slips)
+		qText.Text = "VEIN RUSH  " .. g[1]
+		for i, st in stars do st.ImageColor3, st.ImageTransparency = i <= g[4] and WHITE or PLUM_SOFT, i <= g[4] and 0 or 0.4 end
+		beatText.Text = "BEAT " .. math.min(mg.i + 1, #mg.seq) .. " / " .. #mg.seq
+	end
+	local function close()
+		if not mg then return end
+		mg = nil
+		ps.Visible, vr.Visible = false, false
+		freeze(false)
+	end
+	cave.mgClose = close
+	local function sendRush()
+		if mg and mg.kind == "rush" and not mg.sent then
+			mg.sent = true
+			ExtractR:FireServer("rush", mg.choices)
+		end
+	end
+	local function chisel(side)
+		if not mg or mg.kind ~= "rush" or mg.sent then return end
+		mg.i += 1
+		mg.choices[mg.i] = side
+		miner.Position = UDim2.fromScale(side == 1 and 0.12 or 0.88, 1)
+		miner.Rotation = side == 1 and -30 or 30
+		tween(miner, 0.15, { Rotation = 0 }, Enum.EasingStyle.Back)
+		local at = S(640 + (side == 1 and -50 or 50), 420)
+		if mg.seq[mg.i] == side then -- hit the crack: a slip
+			mg.slips += 1
+			sfx("hit", 0.6)
+			shake(0.5)
+			uiBurst(vr, at, { Color3.fromRGB(255, 90, 110), PINK }, 10, 0.16)
+			miner.ImageColor3 = PINK
+			tween(miner, 0.3, { ImageColor3 = WHITE })
+		else
+			sfx("clink", 1.1 + mg.i * 0.04)
+			uiBurst(vr, at, { mg.col:Lerp(WHITE, 0.3), mg.col, CREAM }, 9, 0.18)
+		end
+		column.Position = S(640, 450 - 72) -- the vein drops one segment
+		tween(column, 0.12, { Position = S(640, 450) }, Enum.EasingStyle.Quad)
+		drawVein()
+		if mg.i >= #mg.seq then sendRush() end
+	end
+	local function strike()
+		if not mg or mg.kind ~= "strike" or mg.done or os.clock() < mg.cool then return end
+		mg.cool = os.clock() + 0.28
+		ExtractR:FireServer("strike", workspace:GetServerTimeNow())
+		sfx("swing", 1.2)
+		pop(dial, 1.05, 0.15)
+	end
+	strikeBtn.Activated:Connect(strike)
+	leftBtn.Activated:Connect(function() chisel(1) end)
+	rightBtn.Activated:Connect(function() chisel(2) end)
+	UIS.InputBegan:Connect(function(input, gp)
+		if not mg or gp then return end
+		local k, t = input.KeyCode, input.UserInputType
+		if mg.kind == "strike" and (k == Enum.KeyCode.Space or k == Enum.KeyCode.E or k == Enum.KeyCode.ButtonA or k == Enum.KeyCode.ButtonR2 or t == Enum.UserInputType.MouseButton1) then
+			strike()
+		elseif mg.kind == "rush" then
+			if k == Enum.KeyCode.A or k == Enum.KeyCode.Left or k == Enum.KeyCode.ButtonL1 or k == Enum.KeyCode.DPadLeft or t == Enum.UserInputType.MouseButton1 then
+				chisel(1)
+			elseif k == Enum.KeyCode.D or k == Enum.KeyCode.Right or k == Enum.KeyCode.ButtonR1 or k == Enum.KeyCode.DPadRight or t == Enum.UserInputType.MouseButton2 then
+				chisel(2)
+			end
+		end
+	end)
+
+	cave.mg = function(kind, ...)
+		if kind == "mgStart" then
+			local dep, which, t0, param = ...
+			local col = C.LAYERS[dep:GetAttribute("Layer")][4][dep:GetAttribute("Ore")][2]
+			mg = { kind = which, dep = dep, t0 = t0, col = col, cool = 0 }
+			freeze(true)
+			if which == "strike" then
+				mg.arc = param
+				for _, p in pips do p.BackgroundColor3 = CREAM end
+				psTitle.Text = "PERFECT STRIKE  -  " .. string.upper(dep:GetAttribute("OreName"))
+				ps.Visible = true
+				pop(dial, 0.6, 0.3)
+			else
+				mg.seq, mg.i, mg.slips, mg.choices = param, 0, 0, {}
+				vr:SetAttribute("Seq", table.concat(param, "")) -- for the Play test script (the player sees the cracks anyway)
+				drawVein()
+				vr.Visible = true
+				pop(column, 0.7, 0.3)
+			end
+			sfx("sparkle", 1.1)
+		elseif kind == "mgStrike" and mg and mg.kind == "strike" then
+			local n, perfect, arc = ...
+			mg.arc = arc
+			if pips[n] then pips[n].BackgroundColor3 = perfect and BUTTER or LILAC end
+			psPop.Text, psPop.TextColor3 = perfect and "PERFECT!" or "OK", perfect and BUTTER or LILAC
+			psPop.Visible = true
+			pop(psPop, perfect and 1.8 or 1.2, 0.3)
+			task.delay(0.45, function() psPop.Visible = false end)
+			if perfect then
+				sfx("clink", 1.5)
+				sfx("sparkle", 1.25)
+				shake(0.35)
+				uiRing(ps, S(640, 290), BUTTER)
+				uiRing(ps, S(640, 290), CREAM, 0.08)
+				uiBurst(ps, S(640, 290), CONFETTI, 24, 0.34)
+				psPop.Rotation = math.random(-8, 8)
+			else
+				sfx("hit", 0.9)
+				uiBurst(ps, S(640, 290), { LILAC, PLUM_SOFT }, 6, 0.14)
+				psPop.Rotation = 0
+			end
+			if n >= D.strikes then mg.done = true end
+		elseif kind == "mgEnd" then
+			local dep, oreName, count, value, col, grade = ...
+			for _, g in map.deps do if g.dep == dep then claim(g) end end
+			local core = dep.PrimaryPart
+			if core then
+				burst(core.Position, Vector3.yAxis, col, 26)
+				shockwave(core.Position, col)
+				for i = 1, math.min(count, 6) do task.delay(i * 0.07, function() oreFly(core.Position, col) end) end
+			end
+			sfx("breakRock", 0.9)
+			task.delay(0.3, function() sfx("coin", 1.1) end)
+			task.delay(mg and mg.kind == "strike" and 0.5 or 0.7, function()
+				close()
+				if type(grade) == "number" then
+					showResult(oreName, count, value, col, grade .. " / " .. D.strikes .. " PERFECT", grade)
+				else
+					local n = 0
+					for _, g in D.grades do if g[1] == grade then n = g[4] end end
+					showResult(oreName, count, value, col, grade .. " VEIN", n)
+				end
+			end)
+		end
+	end
+
+	cave.tick = function(now, h)
+		mapStep(now, h)
+		if mg and mg.kind == "strike" then
+			needle.Rotation = ((workspace:GetServerTimeNow() - mg.t0) / D.strikePeriod % 1) * 360
+			arcPivot.Rotation = mg.arc
+		elseif mg and mg.kind == "rush" then
+			local left = 1 - (workspace:GetServerTimeNow() - mg.t0) / (#mg.seq * D.rushBeat)
+			timeFill.Size = UDim2.fromScale(math.clamp(left, 0, 1), 1)
+			timeFill.BackgroundColor3 = left > 0.3 and MINT or PINK
+			if left <= 0 then sendRush() end
+		end
+	end
+end)()
 
 -- Camera modes: bird's-eye follow camera in the hub, first person in the mine and the caves
 local lookDownUntil = 0
@@ -1502,6 +1978,7 @@ local function setMode(mine, inCaves)
 	end
 	caveLighting(inCave)
 	caveHud.Visible = inCave
+	if not inCave and cave.mgClose then cave.mgClose() end
 	strip.Visible = not inCave -- the block-mine depth strip has no meaning in the caves
 	if inCave then cave.relitAt, cave.wasInCamp = os.clock(), true end
 	mine = inMine or inCave
@@ -1535,7 +2012,9 @@ setMode(modeNow())
 
 -- Server FX events
 R.Fx.OnClientEvent:Connect(function(kind, ...)
-	if kind == "ring" then
+	if kind == "mgStart" or kind == "mgStrike" or kind == "mgEnd" then -- cave extraction minigames
+		cave.mg(kind, ...)
+	elseif kind == "ring" then
 		local p, t0 = ...
 		critPart, critT0, critUntil = p, t0, os.clock() + 2.5
 	elseif kind == "hit" then

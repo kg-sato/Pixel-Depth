@@ -6,7 +6,9 @@
 -- How it is built: a 2.5D raster of 4-stud cells. Each open cell has a floor height and a ceiling height; pieces and tunnels
 -- stamp into the raster, then floors, ceilings and walls are built from it as voxel columns. Floors move in 1-stud steps so the
 -- player can walk them; neighbouring cells with the same height merge (up to 3x3) to keep the part count down.
+-- Ore deposits (stage 4) sit against walls the player can walk to from camp; each carries Layer, Ore and OreName attributes.
 local Cave = {}
+local C = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Config"))
 
 local CELL = 4
 local PAL = {
@@ -539,6 +541,84 @@ function Cave.build(parent, origin, seed)
 			end
 		end
 	end
+	-- ore deposits (ORE-01/02): crystal clusters against walls of cells you can walk to from camp (a flood fill over steps a
+	-- player can jump, 6 studs or less), at least D.spacing apart, out of the camp; dark shards round a dim core so only the glint gives them away
+	local D = C.DEPOSIT
+	local FOUR = { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }
+	local reach, queue, qi = { [key(0, 0)] = true }, { at(0, 0) }, 1
+	while queue[qi] do
+		local c = queue[qi]
+		qi += 1
+		for _, o in FOUR do
+			local n = at(c.i + o[1], c.j + o[2])
+			if n and not reach[key(n.i, n.j)] and math.abs(n.f - c.f) <= 6 then
+				reach[key(n.i, n.j)] = true
+				table.insert(queue, n)
+			end
+		end
+	end
+	local spots = {}
+	for _, c in list do
+		if reach[key(c.i, c.j)] and D.layer[c.theme] and (c.i * c.i + c.j * c.j) * CELL * CELL > 48 * 48 then
+			for _, o in FOUR do
+				if not at(c.i + o[1], c.j + o[2]) then
+					table.insert(spots, { c = c, o = o })
+					break
+				end
+			end
+		end
+	end
+	for k = #spots, 2, -1 do
+		local m = rng:NextInteger(1, k)
+		spots[k], spots[m] = spots[m], spots[k]
+	end
+	local placed = {}
+	for _, sp in spots do
+		if #placed >= D.max then break end
+		local c = sp.c
+		local pos = W(c.i, c.j, c.f)
+		local free = true
+		for _, q in placed do
+			if (q - pos).Magnitude < D.spacing then free = false break end
+		end
+		if free then
+			table.insert(placed, pos)
+			local L = D.layer[c.theme]
+			local rareP = D.rare + D.rareDeep * math.clamp(-c.f / 40, 0, 1)
+			local roll = rng:NextNumber()
+			local idx = roll < rareP and 3 or (roll < rareP + D.uncommon and 2 or 1)
+			local ore = C.LAYERS[L][4][idx]
+			local dep = Instance.new("Model")
+			dep.Name = "Deposit"
+			dep:SetAttribute("Layer", L)
+			dep:SetAttribute("Ore", idx)
+			dep:SetAttribute("OreName", ore[1])
+			local wall = Vector3.new(sp.o[1], 0, sp.o[2])
+			local foot = pos + wall * (CELL / 2 - 0.9)
+			local base = CFrame.lookAt(foot, foot + wall)
+			local k = 0.85 + idx * 0.3
+			local dark = ore[2]:Lerp(Color3.new(0, 0, 0), 0.35)
+			local function shard(size, cf, col, props)
+				local p = part("Deposits", "Shard", size * k, cf, col, props)
+				p.Parent = dep
+				return p
+			end
+			shard(Vector3.new(2.2, 0.8, 1.6), base * CFrame.new(0, 0.3 * k, 0), PAL.rock[2], { CastShadow = false })
+			local core = shard(Vector3.new(0.9, 1.9, 0.9), base * CFrame.new(0, 1.15 * k, -0.1) * CFrame.Angles(0.15, 0, 0.1), idx == 3 and ore[2]:Lerp(Color3.new(0, 0, 0), 0.2) or dark, { Material = Enum.Material.Neon, CastShadow = false })
+			core.Name = "Core"
+			for s = 1, 1 + idx do -- shards lean out from the wall, tallest in the middle
+				local a = (s / (1 + idx) - 0.5) * 2.4
+				local h = 1 + hash(c.i, c.j, s + 40) * 1.1
+				shard(Vector3.new(0.7, h, 0.7), base * CFrame.new(math.sin(a) * 0.8, h * 0.45 * k, math.cos(a) * 0.3 - 0.4) * CFrame.Angles(0.35, 0, -a * 0.4), lerpC(dark, ore[2], hash(c.i, s, 41) * 0.6), { CastShadow = false })
+			end
+			local l = glow(core, ore[2], 7, 0.35)
+			l.Name = "Glint"
+			dep.PrimaryPart = core
+			dep.Parent = group("Deposits")
+		end
+	end
+	model:SetAttribute("Deposits", #placed)
+	model:SetAttribute("Reachable", qi - 1)
 	model:SetAttribute("Floors", nFloor)
 	model:SetAttribute("Ceilings", nCeil)
 	model:SetAttribute("Walls", nWall)
