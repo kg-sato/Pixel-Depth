@@ -223,7 +223,31 @@ C.HATCH_TIME = 5 -- seconds of the hatch show before the pet starts digging
 
 -- Saving (ProfileStore; Studio without API access uses its mock store)
 C.SAVE_STORE = "PixelDepths_v2" -- v2 (the user, 2026-11-08): test saves wiped for the new pickaxe ladder, gems and forge levels
-C.SAVE_TEMPLATE = { gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
+-- Forging costs ore as well as coins (the user's yes, 2026-11-08; Briefs/Pickaxe Progression "Materials and the ore bank").
+-- Banking at camp (or selling in town) still pays coins AND keeps each chunk in a per-ore bank; keys are "layer.ore" into
+-- C.LAYERS (1.1 Rootflint, 1.2 Ashcoal, 1.3 Kobold-copper, 2.1 Titan clay, 2.2 Bog-iron, 2.3 Rune-tin, 3.x Glitterhall ...).
+-- About half the ore you mine while saving the coins, so coins stay the usual last gate.
+C.PICK_ORE = {
+	[3] = { ["1.1"] = 6, ["1.2"] = 4 }, -- Ashcoal
+	[4] = { ["1.2"] = 8, ["1.3"] = 3 }, -- Kobold-Copper
+	[5] = { ["2.1"] = 8, ["2.2"] = 5 }, -- Bog-Iron (chasm and grotto ore)
+	[6] = { ["1.3"] = 8, ["2.2"] = 8, ["2.3"] = 3 }, -- Rootheart, Camp 1's key
+	[7] = { ["2.1"] = 20, ["2.2"] = 10 }, [8] = { ["2.1"] = 30, ["2.3"] = 6 }, [9] = { ["2.2"] = 20, ["2.3"] = 12 },
+	[10] = { ["2.3"] = 15, ["3.1"] = 20 }, [11] = { ["2.1"] = 60, ["3.2"] = 12 }, [12] = { ["2.3"] = 30, ["3.2"] = 20, ["3.3"] = 6 },
+	[13] = { ["3.1"] = 60, ["3.2"] = 20 }, [14] = { ["3.1"] = 60, ["3.2"] = 40 }, [15] = { ["3.2"] = 60, ["3.3"] = 15 },
+	[16] = { ["3.1"] = 120, ["3.3"] = 30 }, [17] = { ["3.3"] = 40, ["4.1"] = 30 }, [18] = { ["3.3"] = 60, ["4.2"] = 30, ["4.3"] = 8 },
+	[19] = { ["4.1"] = 120, ["4.2"] = 40 }, [20] = { ["4.1"] = 150, ["4.2"] = 80 }, [21] = { ["4.2"] = 120, ["4.3"] = 25 },
+	[22] = { ["4.2"] = 150, ["4.3"] = 50 }, [23] = { ["4.3"] = 80, ["5.1"] = 60 }, [24] = { ["4.3"] = 120, ["5.2"] = 60, ["5.3"] = 15 },
+	[25] = { ["5.3"] = 60, ["3.2"] = 100 }, [26] = { ["5.3"] = 90, ["5.1"] = 300 }, [27] = { ["5.3"] = 120, ["6.3"] = 30 },
+	[28] = { ["5.3"] = 160, ["4.3"] = 200 }, [29] = { ["5.3"] = 220, ["3.3"] = 200 },
+}
+function C.oreName(key) -- "1.2" -> "Ashcoal"
+	local L, i = string.match(key, "^(%d+)%.(%d+)$")
+	local layer = C.LAYERS[tonumber(L)]
+	local o = layer and layer[4][tonumber(i)]
+	return o and o[1] or key
+end
+C.SAVE_TEMPLATE = { gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
 
 -- Layer hazards. Layer 2, Titan's Stir: after you dig, the block above may shake loose and drop one row.
 -- Standing under it stuns you briefly and spills part of the bag (no damage, kid friendly).

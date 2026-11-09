@@ -64,9 +64,7 @@ local function spawn(plr, hrp)
 end
 
 local function caught(plr, s, g)
-	local lost = math.floor(s.bag * C.GLOOM.loss)
-	if s.bag > 0 then s.bagV -= math.floor(s.bagV * lost / s.bag) end
-	s.bag -= lost
+	local lost = ctx.lose(s, C.GLOOM.loss)
 	g.hp = C.GLOOM.hp
 	g.shieldUntil = serverNow() + C.GLOOM.shield
 	publish(plr, g)

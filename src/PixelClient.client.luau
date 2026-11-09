@@ -2455,8 +2455,11 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		toast("FRENZY  +" .. bank .. " ORE VALUE", GOLD, true)
 		if newBest then toast("NEW BEST!  " .. combo .. " COMBO", PINK, true, 1.3) end
 	elseif kind == "sold" then
-		local gold = ...
+		local gold, _, moved = ...
 		toast("+" .. commas(gold) .. " GOLD", GOLD, true)
+		local parts = {}
+		for k, n in moved or {} do if n > 0 then table.insert(parts, n .. " " .. C.oreName(k)) end end
+		if #parts > 0 then toast("ORE BANK  +" .. table.concat(parts, "  +"), MINT, false, 0.6) end
 		sfx("coin", 0.9)
 		if forgeUI.fly and bagPill.Visible then -- coins fly from the bag into the gold pill (each lands with a coin tick)
 			local inset = game:GetService("GuiService"):GetGuiInset()

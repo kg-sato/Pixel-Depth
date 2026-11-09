@@ -190,6 +190,22 @@ function M.start(E)
 		v.TextXAlignment, v.RichText = Enum.TextXAlignment.Right, true
 		rows[k] = { frame = r, icon = ic, label = l, value = v }
 	end
+	local oreNeed = text(det, "", UDim2.fromScale(0.9, 0.05), UDim2.fromScale(0.5, 0.77), Vector2.new(0.5, 0.5), INK, 700, false)
+	oreNeed.RichText, oreNeed.Name = true, "OreNeed"
+	local function oreLine(i) -- "NEEDS 6/6 Rootflint  3/4 Ashcoal", short counts in pink; ok = every count is there
+		local need = C.PICK_ORE[i]
+		if not need then return nil, true end
+		local have, parts, ok = getState().ores or {}, {}, true
+		local keys = {}
+		for k in need do table.insert(keys, k) end
+		table.sort(keys)
+		for _, k in keys do
+			local h, n = have[k] or 0, need[k]
+			if h < n then ok = false end
+			table.insert(parts, string.format('<font color="%s">%d/%d</font> %s', h >= n and hex(DEEP_MINT) or "#e0507a", math.min(h, n), n, C.oreName(k)))
+		end
+		return "NEEDS  " .. table.concat(parts, "   "), ok
+	end
 	local lvLabel = text(det, "", UDim2.fromScale(0.5, 0.038), UDim2.fromScale(0.06, 0.743), nil, INK, 700, false)
 	lvLabel.TextXAlignment = Enum.TextXAlignment.Left
 	local pips = {}
@@ -244,6 +260,7 @@ function M.start(E)
 		local eqI = math.clamp(getState().equip or cur, 1, cur)
 		local showLv = tab == "pick" and own
 		lvLabel.Visible = showLv
+		oreNeed.Visible = false
 		for _, p in pips do p.frame.Visible = showLv end
 		eqB.Visible = tab == "pick" and own
 		act.Size = eqB.Visible and UDim2.fromScale(0.58, 0.15) or UDim2.fromScale(0.9, 0.15)
@@ -269,10 +286,12 @@ function M.start(E)
 			else
 				setRow(1, "Ore Value", "coin", val(eqI, lvOf(eqI)), val(i, 1))
 				setRow(2, "Strike Zone", "star", zone(lvOf(eqI)), zone(1))
-				mode = nxt and { kind = "buy", cost = def.cost } or { kind = "none" }
-				act.Text = nxt and ("BUY  " .. shortNum(def.cost)) or ("BUY " .. short(list[cur + 1] and list[cur + 1].name or "") .. " FIRST"):upper()
-				setKind(act, nxt and (getState().gold >= def.cost and "mint" or "off") or "off")
-				if actIcon then actIcon.Image, actIcon.Visible = ICON.coin, nxt end
+				local line, oreOk = oreLine(i)
+				mode = nxt and { kind = oreOk and "buy" or "needOre", cost = def.cost } or { kind = "none" }
+				act.Text = nxt and (oreOk and ("BUY  " .. shortNum(def.cost)) or "NEED ORE") or ("BUY " .. short(list[cur + 1] and list[cur + 1].name or "") .. " FIRST"):upper()
+				setKind(act, nxt and oreOk and (getState().gold >= def.cost and "mint" or "off") or "off")
+				if actIcon then actIcon.Image, actIcon.Visible = ICON.coin, nxt and oreOk end
+				oreNeed.Text, oreNeed.Visible = line or "", line ~= nil
 			end
 		else
 			setRow(1, "Bag Space", "bag", tostring(list[cur].cap), not own and tostring(def.cap) or nil)
@@ -404,6 +423,9 @@ function M.start(E)
 		if mode.kind == "buy" then
 			if getState().gold < mode.cost then shake(act) pop(coinP, 1.2) toast("NOT ENOUGH COINS", PINK) return end
 			R.Buy:FireServer(tab)
+		elseif mode.kind == "needOre" then
+			shake(act)
+			toast("MINE MORE ORE FIRST: BANK IT AT CAMP", PINK)
 		elseif mode.kind == "upgrade" then
 			if (getState().gems or 0) < mode.cost then shake(act) pop(gemP, 1.2) toast("NOT ENOUGH GEMS", PINK) return end
 			R.Buy:FireServer("upgrade", i)

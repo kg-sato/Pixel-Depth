@@ -440,7 +440,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	if not d then return end
 	d.gold, d.pick, d.pack, d.best, d.hatched, d.pity, d.step = s.gold, s.pick, s.pack, s.best, s.hatched, s.pity, s.step
 	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
-	d.gems, d.lv, d.equip, d.tips = s.gems, s.lv, s.equip, s.tips
+	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
 	local names = {}
 	for i, p in s.pets do names[i] = p.name end
 	d.pets = names
@@ -454,6 +454,7 @@ local function sendState(s)
 		gold = s.gold, bag = s.bag, cap = cap(s), pick = s.pick, pack = s.pack, step = s.step, target = target(s),
 		pets = pets, ox = s.ox, oz = s.oz, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs,
 		deepest = s.deepest, goal = s.goal, gems = s.gems, lv = s.lv, equip = s.equip, tips = s.tips,
+		ores = s.ores, bagOres = s.bagOres,
 	})
 end
 
@@ -642,10 +643,20 @@ DigR.OnServerEvent:Connect(function(plr, part)
 	hit(s, r, c, d, dmg, "you", crit)
 end)
 
+local function loseShare(s, frac) -- a gloomling catch or passing out in the lake: lose a share of the unbanked ore, per kind too
+	local lost = math.floor(s.bag * frac)
+	if s.bag > 0 then s.bagV -= math.floor(s.bagV * lost / s.bag) end
+	s.bag -= lost
+	for k, n in s.bagOres do s.bagOres[k] = n - math.floor(n * frac) end
+	return lost
+end
 local function sell(s)
 	if s.bag <= 0 then return end
+	local moved = s.bagOres
+	for k, n in moved do s.ores[k] = (s.ores[k] or 0) + n end -- banked ore also goes into the ore bank (forging needs it)
+	s.bagOres = {}
 	s.gold += s.bagV
-	FxR:FireClient(s.player, "sold", s.bagV, s.bag)
+	FxR:FireClient(s.player, "sold", s.bagV, s.bag, moved)
 	s.bag, s.bagV = 0, 0
 	if s.step <= 3 then s.step = 4 end
 	sendState(s)
@@ -729,9 +740,7 @@ SurfaceR.OnServerEvent:Connect(function(plr, dir, report) -- the rail lift butto
 		local p = water.CFrame:PointToObjectSpace(hrp.Position)
 		local surf = water.Position.Y + water.Size.Y / 2
 		if math.abs(p.X) > water.Size.X / 2 or math.abs(p.Z) > water.Size.Z / 2 or hrp.Position.Y > surf + 2 then return end -- not in the lake
-		local lost = math.floor(s.bag * C.SWIM.loss)
-		if s.bag > 0 then s.bagV -= math.floor(s.bagV * lost / s.bag) end
-		s.bag -= lost
+		local lost = loseShare(s, C.SWIM.loss)
 		hrp.AssemblyLinearVelocity = Vector3.zero
 		hrp.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
 		FxR:FireClient(plr, "drowned", lost)
@@ -762,7 +771,7 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 end)
 Players.PlayerRemoving:Connect(function(plr) riding[plr], escaping[plr] = nil, nil end)
 local Gloom = require(game:GetService("ServerScriptService"):WaitForChild("Gloom")) -- gloomlings, HP, the catch, flares (phase 6)
-Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
+Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
 
 enterMine = function(s)
 	local hrp = hrpOf(s.player)
@@ -832,6 +841,8 @@ local function finishMinigame(s)
 	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) + 0.5)
 	s.bag += count
 	s.bagV += count * v
+	local key = L .. "." .. idx
+	s.bagOres[key] = (s.bagOres[key] or 0) + count
 	s.claimed[mg.dep] = true
 	local gems = (idx == 3 and C.GEMS.rare or 0) + ((grade == D.strikes or grade == D.grades[1][1]) and C.GEMS.perfect or 0)
 	s.gems += gems
@@ -1055,6 +1066,16 @@ BuyR.OnServerEvent:Connect(function(plr, what, arg)
 	if not s or not list then return end
 	local nxt = list[s[what] + 1]
 	if not nxt or s.gold < nxt.cost then return end
+	local need = what == "pick" and C.PICK_ORE[s.pick + 1] -- forging also spends ore from the bank
+	if need then
+		for k, n in need do
+			if (s.ores[k] or 0) < n then
+				FxR:FireClient(plr, "needOre", k, n - (s.ores[k] or 0))
+				return
+			end
+		end
+		for k, n in need do s.ores[k] -= n end
+	end
 	s.gold -= nxt.cost
 	s[what] += 1
 	if what == "pick" then
@@ -1253,6 +1274,7 @@ local function onJoin(plr)
 		claimed = {}, -- cave deposits this player has extracted (loot is per player)
 		gems = d.gems or 0, lv = d.lv or {}, -- forge levels keyed by pickaxe tier as a string (DataStore-safe keys)
 		tips = d.tips or {}, -- first-visit tips and how-to cards already shown
+		ores = d.ores or {}, bagOres = {}, -- the ore bank per kind ("layer.ore" keys) and the unbanked cave ore per kind
 	}
 	s.equip = (d.equip or 0) >= 1 and math.min(d.equip, s.pick) or s.pick
 	for _, n in d.pets do
@@ -1324,6 +1346,12 @@ while true do
 			if dev then
 				plr:SetAttribute("DevGold", nil)
 				s.gold += dev
+				sendState(s)
+			end
+			local devOres = plr:GetAttribute("DevOres") -- that many of every Camp 1 ore into the ore bank
+			if devOres then
+				plr:SetAttribute("DevOres", nil)
+				for _, k in { "1.1", "1.2", "1.3", "2.1", "2.2", "2.3" } do s.ores[k] = (s.ores[k] or 0) + devOres end
 				sendState(s)
 			end
 			local devGems = plr:GetAttribute("DevGems")
