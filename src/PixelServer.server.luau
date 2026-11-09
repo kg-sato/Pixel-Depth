@@ -845,14 +845,25 @@ local function finishMinigame(s)
 	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) + 0.5)
 	local job = PetJobs.perks(crewOf(s)) -- Kobold +1 ore, Goldbristle +1 on rare, Ninering doubles every 9th deposit
 	count += job.ore + (idx == 3 and job.rareOre or 0)
+	local gilded = mg.dep:GetAttribute("Gilded") == true
+	if gilded then count = math.floor(count * D.gilded.mult) end -- a gilded vein pays double
+	local nowC = os.clock()
+	if (s.caveFrenzy or 0) > nowC then count = math.floor(count * D.frenzy.mult + 0.5) end
+	s.recent = s.recent or {}
+	table.insert(s.recent, nowC)
+	while #s.recent > 0 and nowC - s.recent[1] > D.frenzy.window do table.remove(s.recent, 1) end
+	if #s.recent >= D.frenzy.deposits and (s.caveFrenzy or 0) <= nowC then -- three deposits in a minute: FRENZY
+		s.caveFrenzy, s.recent = nowC + D.frenzy.time, {}
+		FxR:FireClient(s.player, "caveFrenzy", D.frenzy.time)
+	end
 	s.deposits = (s.deposits or 0) + 1
 	if job.ninth and s.deposits % 9 == 0 then count *= 2 end
 	s.bag += count
 	s.bagV += count * v
 	local key = L .. "." .. idx
 	s.bagOres[key] = (s.bagOres[key] or 0) + count
-	s.claimed[mg.dep] = true
-	local gems = (idx == 3 and C.GEMS.rare or 0) + ((grade == D.strikes or grade == D.grades[1][1]) and C.GEMS.perfect or 0)
+	s.claimed[mg.dep] = os.clock() + D.regrow -- grows back for this player after D.regrow seconds
+	local gems = (idx == 3 and C.GEMS.rare or 0) + ((grade == D.strikes or grade == D.grades[1][1]) and C.GEMS.perfect or 0) + (gilded and D.gilded.gems or 0)
 	s.gems += gems
 	FxR:FireClient(s.player, "mgEnd", mg.dep, o[1], count, count * v, o[2], grade, gems)
 	sendState(s)
@@ -867,7 +878,7 @@ for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
 	pr.Parent = core
 	pr.Triggered:Connect(function(plr)
 		local s, hrp = data[plr], hrpOf(plr)
-		if not s or not hrp or s.mg or s.claimed[dep] or not plr:GetAttribute("InCave") then return end
+		if not s or not hrp or s.mg or (s.claimed[dep] and os.clock() < s.claimed[dep]) or not plr:GetAttribute("InCave") then return end
 		if (hrp.Position - core.Position).Magnitude > D.reach + 4 then return end
 		local now = workspace:GetServerTimeNow()
 		if dep:GetAttribute("Ore") < 3 then
@@ -1351,6 +1362,42 @@ while true do
 	task.wait(0.1)
 	local now = os.clock()
 	Gloom.step(0.1)
+	for plr, s in data do -- mined deposits grow back per player
+		for dep, at in s.claimed do
+			if os.clock() >= at then
+				s.claimed[dep] = nil
+				FxR:FireClient(plr, "regrow", dep)
+			end
+		end
+	end
+	if caveDeposits and now >= (caveDeposits:GetAttribute("GildNext") or 0) then -- gilded veins: a couple of deposits sparkle gold for a while
+		caveDeposits:SetAttribute("GildNext", now + D.gilded.every)
+		local deps = caveDeposits:GetChildren()
+		for _, d in deps do
+			if d:GetAttribute("Gilded") then
+				d:SetAttribute("Gilded", nil)
+				local fx = d.PrimaryPart and d.PrimaryPart:FindFirstChild("GildFx")
+				if fx then fx:Destroy() end
+				local pr = d.PrimaryPart and d.PrimaryPart:FindFirstChildOfClass("ProximityPrompt")
+				if pr then pr.ObjectText = d:GetAttribute("OreName") end
+			end
+		end
+		for _ = 1, math.min(D.gilded.count, #deps) do
+			local d = deps[math.random(1, #deps)]
+			if d.PrimaryPart then
+				d:SetAttribute("Gilded", true)
+				local e = Instance.new("ParticleEmitter")
+				e.Name, e.Rate, e.LightEmission, e.LightInfluence = "GildFx", 14, 1, 0
+				e.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+				e.Color = ColorSequence.new(Color3.fromRGB(255, 214, 90), Color3.fromRGB(255, 244, 190))
+				e.Size, e.Lifetime, e.Speed = NumberSequence.new(0.6, 0), NumberRange.new(0.6, 1.2), NumberRange.new(1, 3)
+				e.SpreadAngle = Vector2.new(180, 180)
+				e.Parent = d.PrimaryPart
+				local pr = d.PrimaryPart:FindFirstChildOfClass("ProximityPrompt")
+				if pr then pr.ObjectText = "Gilded " .. tostring(d:GetAttribute("OreName")) end
+			end
+		end
+	end
 	for plr, s in data do
 		local hrp = hrpOf(plr)
 		if IS_STUDIO then -- Studio-only test hooks: set these attributes on the server
@@ -1359,6 +1406,10 @@ while true do
 				plr:SetAttribute("DevGold", nil)
 				s.gold += dev
 				sendState(s)
+			end
+			if plr:GetAttribute("DevRegrow") then -- every deposit this player mined grows back now
+				plr:SetAttribute("DevRegrow", nil)
+				for dep in s.claimed do s.claimed[dep] = 0 end
 			end
 			local devPet = plr:GetAttribute("DevPet") -- a crew pet by name (C.PETS), to test cave jobs
 			if devPet then

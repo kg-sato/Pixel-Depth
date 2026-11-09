@@ -1708,15 +1708,32 @@ end
 		new("Frame", star, { Size = UDim2.fromScale(0.14, 0.14), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 45, BackgroundColor3 = WHITE, BorderSizePixel = 0 })
 		return bb, star, sc
 	end
-	local function claim(g) -- this player has mined it: hide it for them only
+	local function claim(g) -- this player has mined it: hide it for them only (it grows back: Fx "regrow")
 		g.claimed = true
+		g.wasT = g.wasT or {}
 		for _, p in g.dep:GetDescendants() do
-			if p:IsA("BasePart") then p.Transparency = 1 end
+			if p:IsA("BasePart") then g.wasT[p] = g.wasT[p] or p.Transparency p.Transparency = 1 end
 			if p:IsA("ProximityPrompt") or p:IsA("PointLight") then p.Enabled = false end
 		end
 		g.bb.Visible = false
 		if g.dot then g.dot:Destroy() g.dot = nil end
 	end
+	R.Fx.OnClientEvent:Connect(function(kind, dep)
+		if kind == "regrow" then
+			for _, g in map.deps do
+				if g.dep == dep and g.claimed then
+					g.claimed = false
+					for _, p in g.dep:GetDescendants() do
+						if p:IsA("BasePart") and g.wasT and g.wasT[p] then p.Transparency = g.wasT[p] end
+						if p:IsA("ProximityPrompt") or p:IsA("PointLight") then p.Enabled = true end
+					end
+				end
+			end
+		elseif kind == "caveFrenzy" then
+			toast("FRENZY!  x1.5 ORE FOR " .. dep .. " S", GOLD, true)
+			shake(0.3)
+		end
+	end)
 	local function mapBuild(caves)
 		canvas:ClearAllChildren()
 		for _, g in map.deps do if g.bb then g.bb:Destroy() end end
