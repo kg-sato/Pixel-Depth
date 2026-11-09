@@ -664,6 +664,7 @@ SurfaceR.OnServerEvent:Connect(function(plr, dir) -- the rail lift button: "down
 		plr:SetAttribute("InMine", false)
 		plr:SetAttribute("InCave", false)
 		FxR:FireClient(plr, "lift", false)
+		sendState(s) -- the bag pill switches back from the cave's unbanked count
 	end
 end)
 

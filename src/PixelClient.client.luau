@@ -45,24 +45,33 @@ local function commas(n)
 	return out:sub(1, 1) == "," and out:sub(2) or out
 end
 
--- Pastel pixel kit v2 (art/ui_pixel from art/pd_ui_pixel.py, 2026-11-08; refs: Sprout Lands UI, Pastel GUI bundle, Delightful Spring GUI)
--- and the pixel icons (art/ui). SLICE is each skin's 9-slice centre in image pixels (4 image pixels per art pixel).
+-- Soft pastel UI kit v3 (art/ui_soft from art/pd_ui_soft.py, 2026-11-08; the user: the pixel style did not fit the HUD).
+-- Refs: art/ui_soft/refs.md (casual soft GUI kits and three local FLUX sheets): rounded glossy shapes, outlines in a deeper shade
+-- of their own colour, a white rim on top, a darker lip below, soft plum shadows. SLICE is each skin's 9-slice centre in image pixels.
 local SKIN = {
-	panel = "rbxassetid://93707876200453", card = "rbxassetid://79842358679900", pill = "rbxassetid://121063443574094", dark = "rbxassetid://78739618153197",
-	mint = "rbxassetid://125080117344457", pink = "rbxassetid://82843958291721", lilac = "rbxassetid://121757186743891",
-	butter = "rbxassetid://126269484976180", sky = "rbxassetid://102098077170418", off = "rbxassetid://98706078302447",
-	keycap = "rbxassetid://93046503035392", keycapDown = "rbxassetid://107782006531078", slot = "rbxassetid://117192697959697",
-	tab = "rbxassetid://116763633161127", tabOn = "rbxassetid://121777325322315",
-	ribbonPink = "rbxassetid://127357668395417", ribbonLilac = "rbxassetid://109247493789977",
+	panel = "rbxassetid://113415316875605", card = "rbxassetid://81633677346028", pill = "rbxassetid://119090200856398", dark = "rbxassetid://121498621263299",
+	mint = "rbxassetid://83808029416788", pink = "rbxassetid://136217450602282", lilac = "rbxassetid://77616401786163", butter = "rbxassetid://83179311853804",
+	sky = "rbxassetid://128441056159318", off = "rbxassetid://111104085286106", keycap = "rbxassetid://139715689953072", keycapDown = "rbxassetid://125800119532458",
+	slot = "rbxassetid://93694333526600", tab = "rbxassetid://123295883549695", tabOn = "rbxassetid://124239785302537", ribbonPink = "rbxassetid://91362224784143",
+	ribbonLilac = "rbxassetid://138043867629077",
 }
 local SLICE = {
-	panel = { 36, 36, 76, 76 }, card = { 28, 28, 68, 60 }, pill = { 28, 24, 68, 36 }, dark = { 16, 16, 48, 48 }, keycap = { 20, 20, 44, 40 }, keycapDown = { 20, 20, 44, 40 },
-	slot = { 16, 16, 48, 48 }, tab = { 24, 20, 56, 36 }, tabOn = { 24, 20, 56, 36 }, ribbonPink = { 40, 16, 136, 48 }, ribbonLilac = { 40, 16, 136, 48 },
-	button = { 28, 24, 68, 48 },
+	panel = { 64, 64, 136, 126 }, card = { 50, 50, 126, 78 }, pill = { 40, 31, 136, 37 }, dark = { 36, 36, 76, 64 },
+	mint = { 42, 40, 118, 52 }, pink = { 42, 40, 118, 52 }, lilac = { 42, 40, 118, 52 }, butter = { 42, 40, 118, 52 },
+	sky = { 42, 40, 118, 52 }, off = { 42, 40, 118, 52 }, keycap = { 24, 24, 48, 44 }, keycapDown = { 24, 24, 48, 50 },
+	slot = { 32, 32, 72, 72 }, tab = { 38, 36, 98, 46 }, tabOn = { 38, 36, 98, 46 }, ribbonPink = { 100, 30, 252, 50 },
+	ribbonLilac = { 100, 30, 252, 50 },
+	button = { 42, 40, 118, 52 },
+}
+local DEEP = { -- each button colour's deep shade, for its label outline
+	mint = Color3.fromRGB(63, 156, 124), pink = Color3.fromRGB(194, 86, 116), lilac = Color3.fromRGB(111, 88, 176),
+	butter = Color3.fromRGB(196, 138, 46), sky = Color3.fromRGB(74, 131, 196), off = Color3.fromRGB(124, 111, 147),
+	ribbonPink = Color3.fromRGB(194, 86, 116), ribbonLilac = Color3.fromRGB(111, 88, 176),
 }
 local SPRITE = {
-	wisteria = "rbxassetid://133392597906841", sakura = "rbxassetid://113252916003793", sparkle = "rbxassetid://80767555598583",
-	pointer = "rbxassetid://102380117320913", close = "rbxassetid://128975550462771",
+	wisteria = "rbxassetid://133392597906841", sakura = "rbxassetid://113252916003793", sparkle = "rbxassetid://101352828199322",
+	pointer = "rbxassetid://128266643608103", close = "rbxassetid://132260797395561",
+	star = "rbxassetid://100737048426546", starOff = "rbxassetid://89117534881571",
 }
 local ICON = {
 	coin = "rbxassetid://127130970164674", gem = "rbxassetid://112281160766494", pick = "rbxassetid://135042498218444", bag = "rbxassetid://90942769596950",
@@ -72,7 +81,7 @@ local ICON = {
 local INK, CREAM, WHITE = Color3.fromRGB(62, 42, 86), Color3.fromRGB(255, 247, 238), Color3.new(1, 1, 1)
 local MINT, PINK, LILAC, BUTTER, SKY = Color3.fromRGB(127, 220, 180), Color3.fromRGB(255, 157, 176), Color3.fromRGB(185, 164, 238), Color3.fromRGB(255, 217, 112), Color3.fromRGB(142, 200, 255)
 local GOLD, PLUM_SOFT = Color3.fromRGB(255, 206, 84), Color3.fromRGB(122, 98, 150)
-local FONT = Enum.Font.Arcade -- fallback metrics only; PixelText draws the visible glyphs
+local FONT = Enum.Font.FredokaOne -- the rounded game font of the soft kit (was the Pixelify bitmap font)
 
 local gui = Instance.new("ScreenGui")
 gui.Name, gui.ResetOnSpawn, gui.ZIndexBehavior = "PixelHUD", false, Enum.ZIndexBehavior.Sibling
@@ -91,16 +100,16 @@ local function S(x, y) -- board pixels (1280 x 592 phone landscape) to scale
 	return UDim2.fromScale(x / 1280, y / 592)
 end
 local skinned = {} -- every skin image, so the art pixel size follows the screen height (a weak table loses Instance keys)
-local function pixelScale() -- one art pixel = 4 image pixels x this; kept to whole screen pixels so every frame shares one pixel grid
-	return math.clamp(math.floor(workspace.CurrentCamera.ViewportSize.Y / 250 + 0.5), 1, 4) / 4
+local function pixelScale() -- skin and sprite image pixels to screen pixels: the soft kit is drawn at 4x, so 0.45 at 720 px high
+	return 0.45 * math.clamp(workspace.CurrentCamera.ViewportSize.Y / 720, 0.5, 3)
 end
-local SPRITE_PX = { wisteria = { 64, 52 }, sakura = { 48, 40 }, sparkle = { 28, 28 }, pointer = { 40, 24 }, close = { 48, 48 } } -- image pixels
+local SPRITE_PX = { wisteria = { 64, 52 }, sakura = { 48, 40 }, sparkle = { 64, 64 }, pointer = { 80, 48 }, close = { 96, 100 } } -- image pixels
+local strokes = {} -- text outlines, thickness follows the screen height
 local gridded = {} -- sprites sized on the same pixel grid as the skins
 local function skin(o, kind)
 	o.BackgroundTransparency = 1
 	local s = o:FindFirstChild("Skin") or new("ImageLabel", o, {
-		Name = "Skin", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Slice,
-		ResampleMode = Enum.ResamplerMode.Pixelated, ZIndex = 0,
+		Name = "Skin", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Slice, ZIndex = 0,
 	})
 	local r = SLICE[kind] or SLICE.button
 	s.SliceCenter, s.SliceScale = Rect.new(r[1], r[2], r[3], r[4]), pixelScale()
@@ -110,6 +119,8 @@ local function skin(o, kind)
 		s.Destroying:Connect(function() skinned[s] = nil end)
 	end
 	o:SetAttribute("Kind", kind)
+	local lab = o:FindFirstChild("Label")
+	if lab and DEEP[kind] then lab.TextStrokeColor3 = DEEP[kind] end
 	return s
 end
 local function gridSize(o, name)
@@ -126,6 +137,7 @@ task.spawn(function() -- the camera (and its viewport size) can be replaced or r
 			last = k
 			for sk in skinned do sk.SliceScale = k end
 			for o, name in gridded do gridSize(o, name) end
+			for st in strokes do st.Thickness = math.max(1, k * 4.4) end
 		end
 		task.wait(0.5)
 	end
@@ -140,7 +152,16 @@ local function text(parent, s, size, pos, anchor, color, weight, stroke)
 		BackgroundTransparency = 1, Font = FONT, TextScaled = true, Text = s, TextColor3 = color or INK,
 		TextStrokeTransparency = stroke == false and 1 or 0, TextStrokeColor3 = INK, ZIndex = 2,
 	})
-	return PixelText.attach(l, weight or 700)
+	-- a rounded ink outline that follows the label's stroke and text transparency (fades and toggles keep working)
+	local st = new("UIStroke", l, { Color = INK, LineJoinMode = Enum.LineJoinMode.Round, Thickness = math.max(1, pixelScale() * 4.4) })
+	local function sync() st.Transparency = math.max(l.TextStrokeTransparency, l.TextTransparency) end
+	l:GetPropertyChangedSignal("TextStrokeTransparency"):Connect(sync)
+	l:GetPropertyChangedSignal("TextTransparency"):Connect(sync)
+	l:GetPropertyChangedSignal("TextStrokeColor3"):Connect(function() st.Color = l.TextStrokeColor3 end)
+	sync()
+	strokes[st] = true
+	st.Destroying:Connect(function() strokes[st] = nil end)
+	return l
 end
 local function panel(parent, size, pos, anchor, kind)
 	local f = new("Frame", parent, { Size = size, Position = pos, AnchorPoint = anchor or Vector2.zero })
@@ -197,6 +218,7 @@ local function button(parent, label, size, pos, anchor, kind, iconName, vertical
 		lab = text(b, label, UDim2.fromScale(0.84, 0.5), UDim2.fromScale(0.5, 0.47), Vector2.new(0.5, 0.5), WHITE)
 	end
 	lab.Name = "Label"
+	lab.TextStrokeColor3 = DEEP[kind or "mint"] or INK
 	b:GetPropertyChangedSignal("Text"):Connect(function() lab.Text = b.Text end)
 	local sc = scaler(b)
 	b.MouseEnter:Connect(function() tween(sc, 0.12, { Scale = 1.06 }) end)
@@ -213,6 +235,7 @@ local function setKind(b, kind)
 end
 -- A sprite (flower cluster, sparkle) pinned over a corner of a frame, poking out over the edge like the reference kits
 local function deco(parent, name, size, pos, rot)
+	if true then return nil end -- the pixel flower sprites do not fit the soft kit (2026-11-08); kept for a smooth flower set later
 	local d = new("ImageLabel", parent, {
 		Name = "Deco", BackgroundTransparency = 1, Image = SPRITE[name], Position = pos, AnchorPoint = Vector2.new(0.5, 0.5),
 		ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Stretch, ZIndex = 4, -- unrotated: rotation would break the pixel grid
@@ -225,14 +248,15 @@ local function ribbonTitle(parent, label, kind, width)
 	local r = new("Frame", parent, { Name = "Ribbon", Size = UDim2.fromScale(width or 0.6, 0.15), Position = UDim2.fromScale(0.5, 0.01), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
 	skin(r, kind or "ribbonPink")
 	local t = text(r, label, UDim2.fromScale(0.7, 0.46), UDim2.fromScale(0.5, 0.4), Vector2.new(0.5, 0.5), WHITE)
+	t.TextStrokeColor3 = DEEP[kind or "ribbonPink"] or INK
 	t.ZIndex = 4
 	return r, t
 end
 -- The butter close button (a pixel sprite), top-right corner of a panel
 local function closeButton(parent, name)
 	local b = new("ImageButton", parent, {
-		Name = name, BackgroundTransparency = 1, Image = SPRITE.close, ResampleMode = Enum.ResamplerMode.Pixelated, AutoButtonColor = false,
-		Position = UDim2.fromScale(0.975, 0.03), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4,
+		Name = name, BackgroundTransparency = 1, Image = SPRITE.close, AutoButtonColor = false,
+		Position = UDim2.fromScale(0.955, 0.075), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4,
 	})
 	gridSize(b, "close")
 	local sc = scaler(b)
@@ -260,7 +284,7 @@ local goldPill = panel(gui, S(170, 46), S(20, 18), nil, "pill")
 fit(goldPill, 170, 46)
 local coinIcon = icon(goldPill, "coin", UDim2.fromScale(0.2, 0.68), UDim2.fromScale(0.06, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", coinIcon, { AspectRatio = 1 })
-local goldText = text(goldPill, "0", UDim2.fromScale(0.64, 0.56), UDim2.fromScale(0.3, 0.5), Vector2.new(0, 0.5), GOLD)
+local goldText = text(goldPill, "0", UDim2.fromScale(0.64, 0.56), UDim2.fromScale(0.3, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
 goldText.TextXAlignment = Enum.TextXAlignment.Left
 goldPill.Name = "GoldPill"
 
@@ -277,9 +301,10 @@ fit(bagPill, 292, 56)
 bagPill.Name = "BagPill"
 local bagIc = icon(bagPill, "bag", UDim2.fromScale(0.13, 0.66), UDim2.fromScale(0.04, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", bagIc, { AspectRatio = 1 })
-local bagText = text(bagPill, "BAG", UDim2.fromScale(0.6, 0.32), UDim2.fromScale(0.21, 0.16), nil, WHITE)
+local bagText = text(bagPill, "BAG", UDim2.fromScale(0.72, 0.4), UDim2.fromScale(0.21, 0.08), nil, INK, 700, false)
 bagText.TextXAlignment = Enum.TextXAlignment.Left
-local bagTrack = new("Frame", bagPill, { Size = UDim2.fromScale(0.72, 0.22), Position = UDim2.fromScale(0.21, 0.6), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
+local bagTrack = new("Frame", bagPill, { Size = UDim2.fromScale(0.72, 0.2), Position = UDim2.fromScale(0.21, 0.6), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
+new("UICorner", bagTrack, { CornerRadius = UDim.new(0.5, 0) })
 local bagFill = new("Frame", bagTrack, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 3 })
 new("Frame", bagFill, { Size = UDim2.fromScale(1, 0.3), Position = UDim2.fromScale(0, 0.7), BackgroundColor3 = Color3.fromRGB(217, 150, 46), BorderSizePixel = 0, ZIndex = 4, BackgroundTransparency = 0.2 })
 
@@ -290,9 +315,9 @@ railForge.Name, railLift.Name = "Upgrades", "Surface"
 
 local layerPill = panel(gui, S(300, 46), S(1260, 18), Vector2.new(1, 0), "pill")
 fit(layerPill, 300, 46)
-local layerNum = text(layerPill, "CAMP", UDim2.fromScale(0.27, 0.42), UDim2.fromScale(0.05, 0.5), Vector2.new(0, 0.5), GOLD)
+local layerNum = text(layerPill, "CAMP", UDim2.fromScale(0.27, 0.46), UDim2.fromScale(0.05, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
 layerNum.TextXAlignment = Enum.TextXAlignment.Left
-local layerName = text(layerPill, "", UDim2.fromScale(0.4, 0.42), UDim2.fromScale(0.35, 0.5), Vector2.new(0, 0.5), WHITE)
+local layerName = text(layerPill, "", UDim2.fromScale(0.4, 0.42), UDim2.fromScale(0.35, 0.5), Vector2.new(0, 0.5), INK, 700, false)
 layerName.TextXAlignment = Enum.TextXAlignment.Left
 local layerDepth = text(layerPill, "", UDim2.fromScale(0.18, 0.42), UDim2.fromScale(0.95, 0.5), Vector2.new(1, 0.5), LILAC)
 layerDepth.TextXAlignment = Enum.TextXAlignment.Right
@@ -1121,7 +1146,7 @@ end)
 closeBtn.Activated:Connect(function() closePanel(forge) end)
 oddsClose.Activated:Connect(function() closePanel(odds) end)
 mapClose.Activated:Connect(function() closePanel(mapP) end)
-railLift.Activated:Connect(function() R.Surface:FireServer(inMine and "up" or "down") end)
+railLift.Activated:Connect(function() R.Surface:FireServer((inMine or inCave) and "up" or "down") end)
 sellBtn.Activated:Connect(function() R.Sell:FireServer() end)
 for what, tb in tabs do
 	tb.Activated:Connect(function()
@@ -1141,7 +1166,7 @@ UIS.InputBegan:Connect(function(input, gp)
 	if gp or hatchBusy then return end
 	local k = input.KeyCode
 	if k == Enum.KeyCode.Q then
-		R.Surface:FireServer(inMine and "up" or "down")
+		R.Surface:FireServer((inMine or inCave) and "up" or "down")
 	elseif k == Enum.KeyCode.G then
 		if forge.Visible then closePanel(forge) else refreshForge(); openPanel(forge) end
 	elseif k == Enum.KeyCode.Return and sellPop.Visible then
@@ -1173,11 +1198,11 @@ PPS.PromptShown:Connect(function(prompt, inputType)
 		action.Position = UDim2.fromScale(0.5, 0.46)
 	end
 	new("ImageLabel", root, {
-		Name = "Pointer", BackgroundTransparency = 1, Image = SPRITE.pointer, ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit,
+		Name = "Pointer", BackgroundTransparency = 1, Image = SPRITE.pointer, ScaleType = Enum.ScaleType.Fit,
 		Size = UDim2.fromScale(0.12, 0.2), Position = UDim2.fromScale(0.62, 0.74), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 2,
 	})
 	local spark = new("ImageLabel", bubble, {
-		BackgroundTransparency = 1, Image = SPRITE.sparkle, ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit,
+		BackgroundTransparency = 1, Image = SPRITE.sparkle, ScaleType = Enum.ScaleType.Fit,
 		Size = UDim2.fromScale(0.13, 0.34), Position = UDim2.fromScale(0.97, 0.04), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4,
 	})
 	local cap = new("Frame", root, { Name = "Key", Size = UDim2.fromScale(0.28, 0.86), Position = UDim2.fromScale(0.02, 0.42), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
@@ -1362,7 +1387,7 @@ do
 	local flameBox = new("Frame", torchPill, { Size = UDim2.fromScale(0.12, 0.62), Position = UDim2.fromScale(0.05, 0.5), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.fromRGB(255, 150, 60), BorderSizePixel = 0, ZIndex = 3 })
 	new("UIAspectRatioConstraint", flameBox, { AspectRatio = 0.75 })
 	local flameCore = new("Frame", flameBox, { Size = UDim2.fromScale(0.5, 0.55), Position = UDim2.fromScale(0.5, 0.62), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 236, 160), BorderSizePixel = 0, ZIndex = 4 })
-	local torchText = text(torchPill, "TORCH 100%", UDim2.fromScale(0.7, 0.34), UDim2.fromScale(0.22, 0.14), nil, WHITE)
+	local torchText = text(torchPill, "TORCH 100%", UDim2.fromScale(0.72, 0.42), UDim2.fromScale(0.22, 0.08), nil, INK, 700, false)
 	torchText.TextXAlignment = Enum.TextXAlignment.Left
 	local torchTrack = new("Frame", torchPill, { Size = UDim2.fromScale(0.72, 0.2), Position = UDim2.fromScale(0.22, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
 	local torchFill = new("Frame", torchTrack, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 176, 70), BorderSizePixel = 0, ZIndex = 3 })
@@ -1376,7 +1401,7 @@ do
 	local eyes = {}
 	for _, x in { 0.3, 0.7 } do eyes[#eyes + 1] = new("Frame", face, { Size = UDim2.fromScale(0.16, 0.2), Position = UDim2.fromScale(x, 0.38), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 4 }) end
 	local mouth = new("Frame", face, { Size = UDim2.fromScale(0.4, 0.1), Position = UDim2.fromScale(0.5, 0.72), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 4 })
-	local fearText = text(fearPill, "CALM", UDim2.fromScale(0.7, 0.34), UDim2.fromScale(0.23, 0.14), nil, WHITE)
+	local fearText = text(fearPill, "CALM", UDim2.fromScale(0.71, 0.42), UDim2.fromScale(0.23, 0.08), nil, INK, 700, false)
 	fearText.TextXAlignment = Enum.TextXAlignment.Left
 	local fearTrack = new("Frame", fearPill, { Size = UDim2.fromScale(0.71, 0.2), Position = UDim2.fromScale(0.23, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
 	local fearFill = new("Frame", fearTrack, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = LILAC, BorderSizePixel = 0, ZIndex = 3 })
@@ -1585,7 +1610,7 @@ end
 				local v, on = cam:WorldToScreenPoint(g.at) -- the HUD sits under the top bar inset, like the prompts
 				g.bb.Visible = s > 0 and g.seen == true and on
 				if g.bb.Visible then -- 7 studs across at its distance
-					local px = 7 * cam.ViewportSize.Y / (2 * v.Z * math.tan(math.rad(cam.FieldOfView) / 2))
+					local px = math.min(7 * cam.ViewportSize.Y / (2 * v.Z * math.tan(math.rad(cam.FieldOfView) / 2)), cam.ViewportSize.Y * 0.2)
 					g.bb.Position, g.bb.Size = UDim2.fromOffset(v.X, v.Y), UDim2.fromOffset(px, px)
 					g.sc.Scale = s
 					g.star.Rotation = ph * 50
@@ -1646,7 +1671,11 @@ end
 			hum.WalkSpeed, hum.JumpHeight = held.walk, held.jump
 			held.walk = nil
 		end
-		PPS2.Enabled = not on
+		cave.mgBusy = on -- prompts pause (the camera loop owns ProximityPromptService.Enabled)
+		for _, n in { "TorchPill", "FearPill", "Minimap" } do -- focus: the run's own HUD steps back while a minigame is up
+			local o = caveHud:FindFirstChild(n)
+			if o then o.Visible = not on end
+		end
 		if vm then -- the held pickaxe covered the STRIKE button
 			if on then vm.Parent = nil else vm.Parent = cam end
 		end
@@ -1655,39 +1684,51 @@ end
 	end
 	-- Perfect Strike (EXT-01): a needle turns once per second; strike while it crosses the 15 degree gold arc
 	local ps = new("Frame", caveHud, { Name = "PerfectStrike", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Visible = false, ZIndex = 10 })
-	local dial = new("Frame", ps, { Size = S(300, 300), Position = S(640, 290), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 10 })
+	new("Frame", ps, { Name = "Dim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 0.45, BorderSizePixel = 0, ZIndex = 9 })
+	local dialShadow = new("Frame", ps, { Size = S(300, 300), Position = S(640, 298), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(20, 12, 34), BackgroundTransparency = 0.45, BorderSizePixel = 0, ZIndex = 10 })
+	fit(dialShadow, 1, 1)
+	new("UICorner", dialShadow, { CornerRadius = UDim.new(0.5, 0) })
+	local dial = new("Frame", ps, { Size = S(300, 300), Position = S(640, 290), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(111, 88, 176), BorderSizePixel = 0, ZIndex = 10 })
 	fit(dial, 1, 1)
 	new("UICorner", dial, { CornerRadius = UDim.new(0.5, 0) })
-	for _, ring in { { 0.95, CREAM }, { 0.89, Color3.fromRGB(42, 31, 61) }, { 0.4, Color3.fromRGB(29, 22, 41) } } do
+	for _, ring in { { 0.965, LILAC }, { 0.93, CREAM }, { 0.86, Color3.fromRGB(185, 164, 238) }, { 0.84, Color3.fromRGB(232, 224, 252) }, { 0.36, Color3.fromRGB(214, 202, 248) } } do
 		new("UICorner", new("Frame", dial, { Size = UDim2.fromScale(ring[1], ring[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = ring[2], BorderSizePixel = 0, ZIndex = 10 }), { CornerRadius = UDim.new(0.5, 0) })
 	end
-	for i = 0, 23 do -- rim ticks every 15 degrees, longer every 45
+	for i = 0, 23 do -- soft dots every 15 degrees, bigger every 45
 		local t = new("Frame", dial, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Rotation = i * 15, ZIndex = 11 })
-		new("Frame", t, { Size = UDim2.fromScale(0.014, i % 3 == 0 and 0.06 or 0.035), Position = UDim2.fromScale(0.5, 0.065), BackgroundColor3 = CREAM, BackgroundTransparency = 0.35, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0), ZIndex = 11 })
+		local d = i % 3 == 0 and 0.026 or 0.016
+		new("UICorner", new("Frame", t, { Size = UDim2.fromScale(d, d), Position = UDim2.fromScale(0.5, 0.115), BackgroundColor3 = Color3.fromRGB(111, 88, 176), BackgroundTransparency = i % 3 == 0 and 0.1 or 0.45, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 11 }), { CornerRadius = UDim.new(0.5, 0) })
 	end
 	local arcPivot = new("Frame", dial, { Name = "Arc", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 11 })
 	for a = -6.75, 6.76, 1.5 do -- the 15 degree gold arc as a fan of thin spokes, darker gold on its two edges
 		local f = new("Frame", arcPivot, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Rotation = a, ZIndex = 11 })
-		new("Frame", f, { Size = UDim2.fromScale(0.022, 0.385), Position = UDim2.fromScale(0.5, 0.065), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = math.abs(a) > 6 and GOLD or BUTTER, BorderSizePixel = 0, ZIndex = 11 })
+		new("Frame", f, { Size = UDim2.fromScale(0.022, 0.36), Position = UDim2.fromScale(0.5, 0.08), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = math.abs(a) > 6 and GOLD or BUTTER, BorderSizePixel = 0, ZIndex = 11 })
 	end
 	local needle = new("Frame", dial, { Name = "Needle", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 12 })
-	new("Frame", needle, { Size = UDim2.fromScale(0.035, 0.43), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = WHITE, BorderSizePixel = 0, ZIndex = 12 })
-	local hub = new("Frame", dial, { Size = UDim2.fromScale(0.08, 0.08), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 13 })
-	new("UIStroke", hub, { Color = INK, Thickness = 2 })
+	new("UICorner", new("Frame", needle, { Size = UDim2.fromScale(0.04, 0.4), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 12 }), { CornerRadius = UDim.new(0.5, 0) })
+	local hub = new("Frame", dial, { Size = UDim2.fromScale(0.11, 0.11), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 13 })
+	new("UICorner", hub, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", hub, { Color = Color3.fromRGB(196, 138, 46), Thickness = 3 })
 	local psTitleBar = panel(ps, S(560, 50), S(640, 110), Vector2.new(0.5, 0.5), "pill")
 	fit(psTitleBar, 560, 50)
+	psTitleBar.ZIndex = 12 -- above the minigame's dim backdrop
 	local psTitle = text(psTitleBar, "PERFECT STRIKE", UDim2.fromScale(0.86, 0.44), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), INK, 700, false)
 	psTitle.ZIndex = 3
 	local psPop = text(ps, "PERFECT!", S(360, 52), S(640, 290), Vector2.new(0.5, 0.5), BUTTER)
 	psPop.ZIndex, psPop.Visible = 14, false
+	local pipTrack = new("Frame", ps, { Size = S(130, 36), Position = S(640, 460), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(214, 202, 248), BorderSizePixel = 0, ZIndex = 11 })
+	new("UICorner", pipTrack, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", pipTrack, { Color = Color3.fromRGB(111, 88, 176), Thickness = 3 })
 	local pips = {}
 	for i = 1, D.strikes do
-		pips[i] = new("Frame", ps, { Size = S(22, 22), Position = S(640 + (i - (D.strikes + 1) / 2) * 34, 468), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 12 })
+		pips[i] = new("Frame", ps, { Size = S(22, 22), Position = S(640 + (i - (D.strikes + 1) / 2) * 34, 460), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 12 })
 		fit(pips[i], 1, 1)
-		new("UIStroke", pips[i], { Color = INK, Thickness = 2 })
+		new("UICorner", pips[i], { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", pips[i], { Color = Color3.fromRGB(111, 88, 176), Thickness = 3 })
 	end
-	local psHintBar = panel(ps, S(440, 36), S(640, 506), Vector2.new(0.5, 0.5), "dark")
+	local psHintBar = panel(ps, S(440, 36), S(640, 512), Vector2.new(0.5, 0.5), "dark")
 	fit(psHintBar, 440, 36)
+	psHintBar.ZIndex = 12
 	local psHint = text(psHintBar, UIS.KeyboardEnabled and "SPACE OR CLICK ON THE GOLD" or "TAP STRIKE ON THE GOLD", UDim2.fromScale(0.88, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), CREAM)
 	psHint.ZIndex = 3
 	-- UI juice: pastel pixel confetti and expanding rings from a point on screen
@@ -1717,21 +1758,32 @@ end
 
 	-- Vein Rush (EXT-02): the vein drops a segment per chisel; red cracks sit on one side, chisel the other
 	local vr = new("Frame", caveHud, { Name = "VeinRush", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Visible = false, ZIndex = 10 })
+	new("Frame", vr, { Name = "Dim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 0.45, BorderSizePixel = 0, ZIndex = 9 })
 	local quality = panel(vr, S(560, 84), S(640, 18), Vector2.new(0.5, 0), "card")
 	fit(quality, 560, 84)
-	local qText = text(quality, "VEIN RUSH  FLAWLESS", UDim2.fromScale(0.62, 0.34), UDim2.fromScale(0.06, 0.16), nil, INK, 700, false)
+	quality.ZIndex = 12
+	local qText = text(quality, "VEIN RUSH  FLAWLESS", UDim2.fromScale(0.6, 0.4), UDim2.fromScale(0.07, 0.26), nil, INK, 700, false)
 	qText.TextXAlignment = Enum.TextXAlignment.Left
 	local stars = {}
 	for i = 1, 3 do
-		stars[i] = new("ImageLabel", quality, { Image = ICON.star, BackgroundTransparency = 1, ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.07, 0.42), Position = UDim2.fromScale(0.76 + i * 0.06, 0.32), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
+		stars[i] = new("ImageLabel", quality, { Image = SPRITE.star, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.09, 0.56), Position = UDim2.fromScale(0.73 + i * 0.065, 0.46), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
 	end
-	local timeTrack = new("Frame", quality, { Size = UDim2.fromScale(0.88, 0.16), Position = UDim2.fromScale(0.5, 0.7), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
+	local timeBar = panel(vr, S(420, 30), S(640, 112), Vector2.new(0.5, 0), "dark")
+	fit(timeBar, 420, 30)
+	timeBar.ZIndex = 12
+	local timeTrack = new("Frame", timeBar, { Size = UDim2.fromScale(0.9, 0.36), Position = UDim2.fromScale(0.5, 0.45), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(30, 20, 48), BorderSizePixel = 0, ZIndex = 2 })
+	new("UICorner", timeTrack, { CornerRadius = UDim.new(0.5, 0) })
 	local timeFill = new("Frame", timeTrack, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = MINT, BorderSizePixel = 0, ZIndex = 3 })
-	local column = new("Frame", vr, { Size = S(280, 380), Position = S(640, 450), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, ZIndex = 10 })
+	new("UICorner", timeFill, { CornerRadius = UDim.new(0.5, 0) })
+	local plate = new("Frame", vr, { Size = S(300, 318), Position = S(640, 459), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = Color3.fromRGB(74, 56, 110), BackgroundTransparency = 0.3, BorderSizePixel = 0, ZIndex = 10 })
+	new("UICorner", plate, { CornerRadius = UDim.new(0.08, 0) })
+	new("UIStroke", plate, { Color = LILAC, Thickness = 3, Transparency = 0.2 })
+	local column = new("Frame", vr, { Size = S(280, 300), Position = S(640, 450), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, ZIndex = 10 })
 	local slots = {}
 	for k = 1, 5 do -- slot 1 is the bottom segment, the one you chisel now
 		local y = 1 - (k - 1) * 0.18
-		local seg = new("Frame", column, { Size = UDim2.fromScale(0.32, 0.17), Position = UDim2.fromScale(0.5, y), AnchorPoint = Vector2.new(0.5, 1), BorderSizePixel = 0, ZIndex = 11 })
+		local seg = new("Frame", column, { Size = UDim2.fromScale(0.32, 0.17), Position = UDim2.fromScale(0.5, y), AnchorPoint = Vector2.new(0.5, 1), BorderSizePixel = 0, ZIndex = 11, ClipsDescendants = true })
+		new("UICorner", seg, { CornerRadius = UDim.new(0.22, 0) })
 		new("UIStroke", seg, { Color = INK, Thickness = 2 })
 		-- a cut crystal: a light top band, a dark bottom band and a pale diagonal facet
 		local lite = new("Frame", seg, { Size = UDim2.fromScale(1, 0.24), BorderSizePixel = 0, ZIndex = 12 })
@@ -1746,6 +1798,7 @@ end
 			local c = new("Frame", column, { Size = UDim2.fromScale(0.34, 0.17), Position = UDim2.fromScale(side == 1 and 0.17 or 0.83, y - 0.085), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 11 })
 			for n, w in { 0.9, 0.62, 0.32 } do -- a red crystal spike jutting out of the vein, stepped like pixels
 				local spike = new("Frame", c, { Size = UDim2.fromScale(w, 0.22), Position = UDim2.fromScale(side == 1 and 1 or 0, 0.2 + n * 0.17), AnchorPoint = Vector2.new(side == 1 and 1 or 0, 0.5), BackgroundColor3 = n == 1 and Color3.fromRGB(255, 90, 110) or Color3.fromRGB(220, 60, 84), BorderSizePixel = 0, ZIndex = 11 })
+				new("UICorner", spike, { CornerRadius = UDim.new(0.5, 0) })
 				new("UIStroke", spike, { Color = Color3.fromRGB(110, 20, 50), Thickness = 2 })
 			end
 			cracks[side] = c
@@ -1755,6 +1808,7 @@ end
 	local miner = new("ImageLabel", column, { Image = ICON.pick, BackgroundTransparency = 1, ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.17, 0.16), Position = UDim2.fromScale(0.12, 1), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 13 })
 	local beatBar = panel(vr, S(200, 36), S(640, 480), Vector2.new(0.5, 0.5), "dark")
 	fit(beatBar, 200, 36)
+	beatBar.ZIndex = 12
 	local beatText = text(beatBar, "BEAT 1 / 10", UDim2.fromScale(0.84, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), CREAM)
 	beatText.ZIndex = 3
 	local leftBtn = button(vr, "< CHISEL LEFT", S(300, 86), S(190, 470), Vector2.new(0, 1), "mint") -- clear of the vein and the stick/jump zones
@@ -1765,22 +1819,29 @@ end
 		keyCap(rightBtn, "D", UDim2.fromScale(0.1, 0.5), UDim2.fromScale(0.94, 0.12))
 	end
 	-- the result card (both minigames): ore swatch, amount, gold value, grade and stars
-	local result = panel(caveHud, S(470, 150), S(640, 262), Vector2.new(0.5, 0.5), "card")
-	fit(result, 470, 150)
+	local resultDim = new("Frame", caveHud, { Name = "ResultDim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 0.5, BorderSizePixel = 0, ZIndex = 14, Visible = false })
+	local result = panel(caveHud, S(470, 190), S(640, 270), Vector2.new(0.5, 0.5), "panel")
+	fit(result, 470, 190)
 	result.Name, result.Visible, result.ZIndex = "ExtractResult", false, 15
-	local swatch = new("Frame", result, { Size = UDim2.fromScale(0.15, 0.48), Position = UDim2.fromScale(0.07, 0.5), AnchorPoint = Vector2.new(0, 0.5), BorderSizePixel = 0, ZIndex = 3 })
-	new("UIStroke", swatch, { Color = INK, Thickness = 3 })
-	local swLite = new("Frame", swatch, { Size = UDim2.fromScale(1, 0.28), BorderSizePixel = 0, ZIndex = 4 })
-	local rOre = text(result, "+6 ORE", UDim2.fromScale(0.66, 0.26), UDim2.fromScale(0.27, 0.12), nil, INK, 700, false)
+	local ribbon = ribbonTitle(result, "ORE EXTRACTED!", "ribbonPink", 0.66)
+	ribbon.Size = UDim2.fromScale(0.66, 0.26)
+	local swatch = new("Frame", result, { Size = UDim2.fromScale(0.2, 0.5), Position = UDim2.fromScale(0.08, 0.55), AnchorPoint = Vector2.new(0, 0.5), BorderSizePixel = 0, ZIndex = 3 })
+	fit(swatch, 1, 1)
+	new("UICorner", swatch, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", swatch, { Color = Color3.fromRGB(111, 88, 176), Thickness = 4 })
+	local swLite = new("Frame", swatch, { Size = UDim2.fromScale(0.44, 0.3), Position = UDim2.fromScale(0.3, 0.26), AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, BackgroundTransparency = 0.25, ZIndex = 4 })
+	new("UICorner", swLite, { CornerRadius = UDim.new(0.5, 0) })
+	local rOre = text(result, "+6 ORE", UDim2.fromScale(0.6, 0.2), UDim2.fromScale(0.33, 0.2), nil, INK, 700, false)
 	rOre.TextXAlignment = Enum.TextXAlignment.Left
-	icon(result, "coin", UDim2.fromScale(0.07, 0.2), UDim2.fromScale(0.27, 0.42))
-	local rGold = text(result, "72 GOLD", UDim2.fromScale(0.5, 0.18), UDim2.fromScale(0.36, 0.43), nil, INK, 700, false)
+	local coinI = icon(result, "coin", UDim2.fromScale(0.06, 0.15), UDim2.fromScale(0.33, 0.43))
+	new("UIAspectRatioConstraint", coinI, { AspectRatio = 1 })
+	local rGold = text(result, "72 GOLD", UDim2.fromScale(0.5, 0.15), UDim2.fromScale(0.41, 0.43), nil, INK, 700, false)
 	rGold.TextXAlignment = Enum.TextXAlignment.Left
-	local rGrade = text(result, "PRISTINE VEIN", UDim2.fromScale(0.42, 0.17), UDim2.fromScale(0.27, 0.7), nil, PLUM_SOFT, 700, false)
+	local rGrade = text(result, "PRISTINE VEIN", UDim2.fromScale(0.42, 0.13), UDim2.fromScale(0.33, 0.62), nil, PLUM_SOFT, 700, false)
 	rGrade.TextXAlignment = Enum.TextXAlignment.Left
 	local rStars = {}
 	for i = 1, 3 do
-		rStars[i] = new("ImageLabel", result, { Image = ICON.star, BackgroundTransparency = 1, ResampleMode = Enum.ResamplerMode.Pixelated, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.07, 0.22), Position = UDim2.fromScale(0.74 + i * 0.065, 0.78), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
+		rStars[i] = new("ImageLabel", result, { Image = SPRITE.star, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.1, 0.22), Position = UDim2.fromScale(0.37 + (i - 1) * 0.09, 0.8), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
 	end
 	local resultSeq = 0
 	local function showResult(oreName, count, value, col, gradeText, nStars)
@@ -1791,13 +1852,18 @@ end
 		rGold.Text = commas(value) .. " GOLD"
 		rGrade.Text = gradeText
 		for i, st in rStars do
-			st.ImageColor3, st.ImageTransparency = i <= nStars and WHITE or PLUM_SOFT, i <= nStars and 0 or 0.4
+			st.Image = i <= nStars and SPRITE.star or SPRITE.starOff
 			if i <= nStars then task.delay(0.15 + i * 0.12, function() pop(st, 1.8, 0.3) sfx("sparkle", 1 + i * 0.12) end) end
 		end
-		result.Visible = true
+		result.Visible, resultDim.Visible = true, true
 		pop(result, 0.5, 0.35)
 		uiBurst(caveHud, S(640, 262), CONFETTI, 18 + nStars * 6, 0.3)
-		task.delay(2.2, function() if resultSeq == my then closePanel(result) end end)
+		task.delay(2.2, function()
+			if resultSeq == my then
+				closePanel(result)
+				resultDim.Visible = false
+			end
+		end)
 	end
 	local function gradeOf(slips)
 		for _, g in D.grades do
@@ -1818,7 +1884,7 @@ end
 		end
 		local g = gradeOf(mg.slips)
 		qText.Text = "VEIN RUSH  " .. g[1]
-		for i, st in stars do st.ImageColor3, st.ImageTransparency = i <= g[4] and WHITE or PLUM_SOFT, i <= g[4] and 0 or 0.4 end
+		for i, st in stars do st.Image = i <= g[4] and SPRITE.star or SPRITE.starOff end
 		beatText.Text = "BEAT " .. math.min(mg.i + 1, #mg.seq) .. " / " .. #mg.seq
 	end
 	local function close()
@@ -1949,6 +2015,7 @@ end
 	end
 
 	cave.tick = function(now, h)
+		glints.Visible = not (ps.Visible or vr.Visible or result.Visible)
 		mapStep(now, h)
 		if mg and mg.kind == "strike" then
 			needle.Rotation = ((workspace:GetServerTimeNow() - mg.t0) / D.strikePeriod % 1) * 360
@@ -1979,7 +2046,7 @@ local function setMode(mine, inCaves)
 	caveLighting(inCave)
 	caveHud.Visible = inCave
 	if not inCave and cave.mgClose then cave.mgClose() end
-	strip.Visible = not inCave -- the block-mine depth strip has no meaning in the caves
+	strip.Visible = inMine -- the block-mine depth strip only means something in the old block mines
 	if inCave then cave.relitAt, cave.wasInCamp = os.clock(), true end
 	mine = inMine or inCave
 	cross.Visible, digBtn.Visible = inMine, inMine
@@ -2233,6 +2300,8 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		cam.CFrame = CFrame.lookAt(focus + dir * C.CAM_DIST + off, focus + off)
 	end
 	local modal = forge.Visible or odds.Visible or mapP.Visible or night.Visible
+	local promptsOn = not (modal or cave.mgBusy)
+	if PPS.Enabled ~= promptsOn then PPS.Enabled = promptsOn end
 	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and not inCave
 	if modal ~= scrim.Visible then
 		scrim.Visible = true
@@ -2351,13 +2420,16 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	end
 
 	-- depth label
-	local row = inMine and math.max(1, math.floor((-C.CRUST * B - h.Position.Y + 3) / B) + 1) or 0
+	local row = inMine and math.max(1, math.floor((-C.CRUST * B - h.Position.Y + 3) / B) + 1) or (inCave and -1 or 0)
 	if row ~= lastRow then
 		local L = layerOf(math.max(row, 1))
+		layerName.Size = UDim2.fromScale(inMine and 0.4 or 0.58, 0.46) -- the wide font needs the room when no depth shows
 		if inMine then
 			layerNum.Text = "LAYER " .. L
 			layerName.Text = C.LAYERS[L][1]:upper()
 			layerDepth.Text = row * B .. " M"
+		elseif inCave then
+			layerNum.Text, layerName.Text, layerDepth.Text = "CAVES", "CAMP 1 DEPTHS", ""
 		else
 			layerNum.Text, layerName.Text, layerDepth.Text = "CAMP", "HOLLOW MOUNTAIN", ""
 		end
