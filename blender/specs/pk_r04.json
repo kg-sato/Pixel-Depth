@@ -1,0 +1,1349 @@
+{
+ "name": "AshcoalPickaxe",
+ "ref": "art/gen/ladder/c1_ashcoal.png",
+ "length": 3.6,
+ "handle_r": 0.105,
+ "tilt": 14,
+ "yaw": 20,
+ "seed": 44,
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ffd8c4",
+   "#ffc0a0"
+  ],
+  "light": "#ffa478",
+  "light_power": 35,
+  "glow": "#ffa478"
+ },
+ "handle": {
+  "mat": "wood",
+  "color": "#5e4248",
+  "r_bottom": 0.1,
+  "wrap": {
+   "mat": "satin",
+   "color": "#f59a70",
+   "w": 0.06,
+   "turns": 3.4,
+   "z0": 0.42,
+   "z1": 3.05
+  },
+  "bands": [
+   {
+    "z": 0.24,
+    "mat": "rosegold",
+    "color": "#eba792",
+    "r": 0.026,
+    "scale": 1.12
+   },
+   {
+    "z": 3.42,
+    "mat": "rosegold",
+    "color": "#eba792",
+    "r": 0.024,
+    "scale": 1.95
+   },
+   {
+    "z": 3.82,
+    "mat": "rosegold",
+    "color": "#eba792",
+    "r": 0.024,
+    "scale": 1.95
+   }
+  ]
+ },
+ "pommel": {
+  "type": "orb",
+  "mat": "stone",
+  "color": "#5c4854",
+  "r": 0.16,
+  "collar": "rosegold"
+ },
+ "arm": {
+  "len": 1.45,
+  "rise": 0.24,
+  "droop": 0.6,
+  "width": 0.6,
+  "top": 0.5,
+  "taper": 0.9,
+  "belly": 0.3,
+  "thick": 0.16,
+  "bend": 1.9,
+  "n": 14,
+  "mat": "stone",
+  "color": "#4c3c48",
+  "facet": true,
+  "core": {
+   "frac": 0.55,
+   "mat": "stone",
+   "color": "#574552"
+  },
+  "edge": "#d89aa0",
+  "edge_mat": "stone",
+  "edge_glow": 0.25,
+  "edge_r": 0.028,
+  "edge2": "#3a2e38",
+  "edge2_mat": "stone"
+ },
+ "center": [
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.09,
+   "rot": 27.4,
+   "at": [
+    -0.321,
+    0.254
+   ],
+   "y": -0.1725,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.09,
+   "rot": 27.4,
+   "at": [
+    -0.321,
+    0.254
+   ],
+   "y": 0.1725,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.056,
+   "rot": 32.1,
+   "at": [
+    -0.445,
+    0.189
+   ],
+   "y": -0.1605,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.056,
+   "rot": 32.1,
+   "at": [
+    -0.445,
+    0.189
+   ],
+   "y": 0.1605,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.048,
+   "rot": 149.2,
+   "at": [
+    -0.673,
+    0.049
+   ],
+   "y": -0.1365,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.048,
+   "rot": 149.2,
+   "at": [
+    -0.673,
+    0.049
+   ],
+   "y": 0.1365,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.066,
+   "rot": 48.2,
+   "at": [
+    -0.831,
+    0.169
+   ],
+   "y": -0.1245,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.066,
+   "rot": 48.2,
+   "at": [
+    -0.831,
+    0.169
+   ],
+   "y": 0.1245,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.046,
+   "rot": 166.5,
+   "at": [
+    -1.002,
+    -0.088
+   ],
+   "y": -0.1005,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.046,
+   "rot": 166.5,
+   "at": [
+    -1.002,
+    -0.088
+   ],
+   "y": 0.1005,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.082,
+   "rot": 37.8,
+   "at": [
+    -0.242,
+    0.127
+   ],
+   "y": -0.1777,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.082,
+   "rot": 37.8,
+   "at": [
+    -0.242,
+    0.127
+   ],
+   "y": 0.1777,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.084,
+   "rot": 104.5,
+   "at": [
+    -0.351,
+    0.164
+   ],
+   "y": -0.1665,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.084,
+   "rot": 104.5,
+   "at": [
+    -0.351,
+    0.164
+   ],
+   "y": 0.1665,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.094,
+   "rot": 129.9,
+   "at": [
+    -0.478,
+    0.096
+   ],
+   "y": -0.1545,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.094,
+   "rot": 129.9,
+   "at": [
+    -0.478,
+    0.096
+   ],
+   "y": 0.1545,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.072,
+   "rot": 70.6,
+   "at": [
+    -0.594,
+    0.066
+   ],
+   "y": -0.1425,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.072,
+   "rot": 70.6,
+   "at": [
+    -0.594,
+    0.066
+   ],
+   "y": 0.1425,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.086,
+   "rot": 72.2,
+   "at": [
+    -0.718,
+    0.108
+   ],
+   "y": -0.1305,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.086,
+   "rot": 72.2,
+   "at": [
+    -0.718,
+    0.108
+   ],
+   "y": 0.1305,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.082,
+   "rot": 130.9,
+   "at": [
+    -0.838,
+    0.085
+   ],
+   "y": -0.1185,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.082,
+   "rot": 130.9,
+   "at": [
+    -0.838,
+    0.085
+   ],
+   "y": 0.1185,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.081,
+   "rot": 130.5,
+   "at": [
+    -0.941,
+    -0.004
+   ],
+   "y": -0.1065,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.081,
+   "rot": 130.5,
+   "at": [
+    -0.941,
+    -0.004
+   ],
+   "y": 0.1065,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.076,
+   "rot": 117.9,
+   "at": [
+    -1.048,
+    -0.077
+   ],
+   "y": -0.0952,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.076,
+   "rot": 117.9,
+   "at": [
+    -1.048,
+    -0.077
+   ],
+   "y": 0.0952,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.09,
+   "rot": -27.4,
+   "at": [
+    0.321,
+    0.254
+   ],
+   "y": -0.1725,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.09,
+   "rot": -27.4,
+   "at": [
+    0.321,
+    0.254
+   ],
+   "y": 0.1725,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.056,
+   "rot": -32.1,
+   "at": [
+    0.445,
+    0.189
+   ],
+   "y": -0.1605,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.056,
+   "rot": -32.1,
+   "at": [
+    0.445,
+    0.189
+   ],
+   "y": 0.1605,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.048,
+   "rot": -149.2,
+   "at": [
+    0.673,
+    0.049
+   ],
+   "y": -0.1365,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.048,
+   "rot": -149.2,
+   "at": [
+    0.673,
+    0.049
+   ],
+   "y": 0.1365,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.066,
+   "rot": -48.2,
+   "at": [
+    0.831,
+    0.169
+   ],
+   "y": -0.1245,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.066,
+   "rot": -48.2,
+   "at": [
+    0.831,
+    0.169
+   ],
+   "y": 0.1245,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.046,
+   "rot": -166.5,
+   "at": [
+    1.002,
+    -0.088
+   ],
+   "y": -0.1005,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.046,
+   "rot": -166.5,
+   "at": [
+    1.002,
+    -0.088
+   ],
+   "y": 0.1005,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.082,
+   "rot": -37.8,
+   "at": [
+    0.242,
+    0.127
+   ],
+   "y": -0.1777,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.082,
+   "rot": -37.8,
+   "at": [
+    0.242,
+    0.127
+   ],
+   "y": 0.1777,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.084,
+   "rot": -104.5,
+   "at": [
+    0.351,
+    0.164
+   ],
+   "y": -0.1665,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.084,
+   "rot": -104.5,
+   "at": [
+    0.351,
+    0.164
+   ],
+   "y": 0.1665,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.094,
+   "rot": -129.9,
+   "at": [
+    0.478,
+    0.096
+   ],
+   "y": -0.1545,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.094,
+   "rot": -129.9,
+   "at": [
+    0.478,
+    0.096
+   ],
+   "y": 0.1545,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.072,
+   "rot": -70.6,
+   "at": [
+    0.594,
+    0.066
+   ],
+   "y": -0.1425,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.072,
+   "rot": -70.6,
+   "at": [
+    0.594,
+    0.066
+   ],
+   "y": 0.1425,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.086,
+   "rot": -72.2,
+   "at": [
+    0.718,
+    0.108
+   ],
+   "y": -0.1305,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.086,
+   "rot": -72.2,
+   "at": [
+    0.718,
+    0.108
+   ],
+   "y": 0.1305,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.082,
+   "rot": -130.9,
+   "at": [
+    0.838,
+    0.085
+   ],
+   "y": -0.1185,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.082,
+   "rot": -130.9,
+   "at": [
+    0.838,
+    0.085
+   ],
+   "y": 0.1185,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.081,
+   "rot": -130.5,
+   "at": [
+    0.941,
+    -0.004
+   ],
+   "y": -0.1065,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.081,
+   "rot": -130.5,
+   "at": [
+    0.941,
+    -0.004
+   ],
+   "y": 0.1065,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.076,
+   "rot": -117.9,
+   "at": [
+    1.048,
+    -0.077
+   ],
+   "y": -0.0952,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.11,
+   "size": 0.076,
+   "rot": -117.9,
+   "at": [
+    1.048,
+    -0.077
+   ],
+   "y": 0.0952,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "collar",
+   "at": [
+    0,
+    0.02
+   ],
+   "r": 0.205,
+   "h": 0.42,
+   "mat": "stone",
+   "color": "#6a5464",
+   "facets": 8
+  },
+  {
+   "type": "gem",
+   "shape": "rect",
+   "at": [
+    0,
+    0.02
+   ],
+   "y": -0.215,
+   "size": 0.15,
+   "sx": 1.0,
+   "sz": 1.2,
+   "mat": "stone",
+   "color": "#5c4858",
+   "glow": 0,
+   "depth": 0.03,
+   "frame": "#eba792",
+   "frame_mat": "rosegold",
+   "frame_scale": 1.14
+  },
+  {
+   "type": "burst",
+   "at": [
+    0,
+    -0.06
+   ],
+   "n": 3,
+   "r0": 0.015,
+   "r1": 0.13,
+   "w": 0.035,
+   "from": 55,
+   "to": 125,
+   "vary": 0.05,
+   "mat": "rosegold",
+   "colors": [
+    "#eba792"
+   ],
+   "glow": 0,
+   "y": -0.255
+  },
+  {
+   "type": "orb",
+   "at": [
+    0,
+    -0.07
+   ],
+   "y": -0.26,
+   "r": 0.022,
+   "mat": "rosegold",
+   "color": "#eba792",
+   "glow": 0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0,
+    0.3
+   ],
+   "y": -0.02,
+   "r": 0.09,
+   "mat": "crystal",
+   "color": "#ff8a66",
+   "glow": 1.8
+  },
+  {
+   "type": "orb",
+   "at": [
+    -0.12,
+    0.31
+   ],
+   "y": 0.0,
+   "r": 0.13,
+   "scale": [
+    1.1,
+    0.9,
+    0.8
+   ],
+   "mat": "stone",
+   "color": "#4c3c46",
+   "glow": 0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0.13,
+    0.3
+   ],
+   "y": 0.02,
+   "r": 0.12,
+   "scale": [
+    1.0,
+    0.95,
+    0.85
+   ],
+   "mat": "stone",
+   "color": "#54424e",
+   "glow": 0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0.01,
+    0.4
+   ],
+   "y": 0.04,
+   "r": 0.11,
+   "scale": [
+    1.0,
+    0.9,
+    0.85
+   ],
+   "mat": "stone",
+   "color": "#4a3a44",
+   "glow": 0
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.16,
+   "size": 0.06,
+   "rot": 35,
+   "at": [
+    0.03,
+    -3.73
+   ],
+   "y": -0.152,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "star",
+   "points": 2,
+   "ratio": 0.16,
+   "size": 0.045,
+   "rot": -40,
+   "at": [
+    -0.04,
+    -3.78
+   ],
+   "y": -0.148,
+   "depth": 0.012,
+   "color": "#ff8a66",
+   "glow": 1.6
+  },
+  {
+   "type": "burst",
+   "at": [
+    0,
+    -1.35
+   ],
+   "n": 2,
+   "r0": 0.01,
+   "r1": 0.11,
+   "w": 0.04,
+   "from": 45,
+   "to": 135,
+   "vary": 0.05,
+   "mat": "rosegold",
+   "colors": [
+    "#eba792"
+   ],
+   "glow": 0,
+   "y": -0.11
+  },
+  {
+   "type": "burst",
+   "at": [
+    0,
+    -2.25
+   ],
+   "n": 2,
+   "r0": 0.01,
+   "r1": 0.11,
+   "w": 0.04,
+   "from": 45,
+   "to": 135,
+   "vary": 0.05,
+   "mat": "rosegold",
+   "colors": [
+    "#eba792"
+   ],
+   "glow": 0,
+   "y": -0.11
+  },
+  {
+   "type": "burst",
+   "at": [
+    0,
+    -3.0
+   ],
+   "n": 2,
+   "r0": 0.01,
+   "r1": 0.11,
+   "w": 0.04,
+   "from": 45,
+   "to": 135,
+   "vary": 0.05,
+   "mat": "rosegold",
+   "colors": [
+    "#eba792"
+   ],
+   "glow": 0,
+   "y": -0.11
+  },
+  {
+   "type": "orb",
+   "at": [
+    0.56,
+    -0.64
+   ],
+   "y": -0.07,
+   "r": 0.12,
+   "scale": [
+    1,
+    0.8,
+    0.95
+   ],
+   "mat": "stone",
+   "color": "#4a3a46",
+   "glow": 0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0.664,
+    -0.6
+   ],
+   "y": -0.07,
+   "r": 0.048,
+   "mat": "stone",
+   "color": "#4a3a46",
+   "glow": 0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0.603,
+    -0.542
+   ],
+   "y": -0.07,
+   "r": 0.048,
+   "mat": "stone",
+   "color": "#4a3a46",
+   "glow": 0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0.517,
+    -0.542
+   ],
+   "y": -0.07,
+   "r": 0.048,
+   "mat": "stone",
+   "color": "#4a3a46",
+   "glow": 0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0.457,
+    -0.599
+   ],
+   "y": -0.07,
+   "r": 0.048,
+   "mat": "stone",
+   "color": "#4a3a46",
+   "glow": 0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0.456,
+    -0.68
+   ],
+   "y": -0.07,
+   "r": 0.048,
+   "mat": "stone",
+   "color": "#4a3a46",
+   "glow": 0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0.517,
+    -0.738
+   ],
+   "y": -0.07,
+   "r": 0.048,
+   "mat": "stone",
+   "color": "#4a3a46",
+   "glow": 0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0.603,
+    -0.738
+   ],
+   "y": -0.07,
+   "r": 0.048,
+   "mat": "stone",
+   "color": "#4a3a46",
+   "glow": 0
+  },
+  {
+   "type": "orb",
+   "at": [
+    0.663,
+    -0.681
+   ],
+   "y": -0.07,
+   "r": 0.048,
+   "mat": "stone",
+   "color": "#4a3a46",
+   "glow": 0
+  },
+  {
+   "type": "oval",
+   "at": [
+    0.525,
+    -0.62
+   ],
+   "y": -0.158,
+   "size": 0.014,
+   "mat": "crystal",
+   "color": "#ff8a66",
+   "glow": 1.8,
+   "depth": 0.008
+  },
+  {
+   "type": "oval",
+   "at": [
+    0.595,
+    -0.62
+   ],
+   "y": -0.158,
+   "size": 0.014,
+   "mat": "crystal",
+   "color": "#ff8a66",
+   "glow": 1.8,
+   "depth": 0.008
+  },
+  {
+   "type": "oval",
+   "at": [
+    0.5,
+    -0.655
+   ],
+   "y": -0.15,
+   "size": 0.02,
+   "sz": 0.6,
+   "mat": "satin",
+   "color": "#f08a8a",
+   "glow": 0,
+   "depth": 0.006
+  },
+  {
+   "type": "oval",
+   "at": [
+    0.62,
+    -0.655
+   ],
+   "y": -0.15,
+   "size": 0.02,
+   "sz": 0.6,
+   "mat": "satin",
+   "color": "#f08a8a",
+   "glow": 0,
+   "depth": 0.006
+  }
+ ],
+ "bow": {
+  "at": [
+   0,
+   -0.42
+  ],
+  "size": 0.34,
+  "color": "#f59a70",
+  "lift": 0.2,
+  "y": -0.14,
+  "height": 0.5,
+  "tails": [
+   {
+    "pts": [
+     [
+      -0.06,
+      -0.46
+     ],
+     [
+      -0.28,
+      -0.7
+     ],
+     [
+      -0.36,
+      -0.98
+     ],
+     [
+      -0.52,
+      -1.2
+     ]
+    ],
+    "width": 0.13,
+    "twist": 1.6,
+    "waves": 2.0
+   },
+   {
+    "pts": [
+     [
+      0.06,
+      -0.46
+     ],
+     [
+      0.24,
+      -0.74
+     ],
+     [
+      0.18,
+      -1.0
+     ],
+     [
+      0.3,
+      -1.26
+     ]
+    ],
+    "width": 0.13,
+    "twist": 1.6,
+    "waves": 2.0
+   }
+  ]
+ },
+ "charms": [
+  {
+   "anchor": [
+    0.55,
+    0.0
+   ],
+   "len": 0.52,
+   "charm": "none",
+   "chain": "rosegold",
+   "chain_color": "#eba792",
+   "wire": 0.007,
+   "bead": 0.014,
+   "step": 0.04,
+   "y": -0.07,
+   "swing": 0.0
+  },
+  {
+   "anchor": [
+    0.64,
+    -0.02
+   ],
+   "len": 0.3,
+   "charm": "drop",
+   "chain": "rosegold",
+   "chain_color": "#eba792",
+   "wire": 0.006,
+   "bead": 0.012,
+   "step": 0.04,
+   "y": -0.09,
+   "swing": 0.02,
+   "mat": "crystal",
+   "color": "#ff8a66",
+   "glow": 1.2,
+   "size": 0.045
+  }
+ ]
+}

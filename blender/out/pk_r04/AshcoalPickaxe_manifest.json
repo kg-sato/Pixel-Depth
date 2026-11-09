@@ -1,0 +1,45 @@
+{
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#ffd8c4",
+   "#ffc0a0"
+  ],
+  "light": "#ffa478",
+  "light_power": 35,
+  "glow": "#ffa478"
+ },
+ "name": "AshcoalPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 10768,
+ "palette": "AshcoalPickaxe_palette.png",
+ "parts": {
+  "AshcoalPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 6936,
+   "transparency": 0.0
+  },
+  "AshcoalPickaxe_Metal": {
+   "roblox_material": "Metal",
+   "tris": 2088,
+   "transparency": 0.0
+  },
+  "AshcoalPickaxe_Neon": {
+   "roblox_material": "Neon",
+   "tris": 1732,
+   "transparency": 0.0
+  },
+  "AshcoalPickaxe_Glass": {
+   "roblox_material": "Glass",
+   "tris": 12,
+   "transparency": 0.25
+  }
+ }
+}

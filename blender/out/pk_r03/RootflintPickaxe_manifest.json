@@ -1,0 +1,30 @@
+{
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#fff2d0",
+   "#d8f6e4"
+  ],
+  "light": "#fff0d0",
+  "light_power": 25,
+  "glow": "#fff0d0"
+ },
+ "name": "RootflintPickaxe",
+ "units": "studs (1 Blender unit = 1 stud); glTF is Y-up: handle along +Y, head at Y=length",
+ "length": 3.6,
+ "grip": [
+  0,
+  1.08,
+  0
+ ],
+ "tris": 5342,
+ "palette": "RootflintPickaxe_palette.png",
+ "parts": {
+  "RootflintPickaxe_SmoothPlastic": {
+   "roblox_material": "SmoothPlastic",
+   "tris": 5342,
+   "transparency": 0.0
+  }
+ }
+}

@@ -1,0 +1,26 @@
+{
+ "name": "AshcoalPickaxe",
+ "objects": 123,
+ "parts": 18,
+ "tris": 10768,
+ "per_part": {
+  "wood_5e4248_0": 80,
+  "satin_f59a70_0": 1168,
+  "rosegold_eba792_0": 2088,
+  "stone_5c4854_6": 224,
+  "stone_4c3c48_0": 328,
+  "stone_574552_0": 328,
+  "stone_d89aa0_2": 272,
+  "stone_3a2e38_0": 272,
+  "crystal_ff8a66_16": 1080,
+  "stone_6a5464_0": 28,
+  "stone_5c4858_0": 20,
+  "crystal_ff8a66_18": 652,
+  "stone_4c3c46_0": 324,
+  "stone_54424e_0": 324,
+  "stone_4a3a44_0": 324,
+  "stone_4a3a46_0": 2916,
+  "satin_f08a8a_0": 328,
+  "crystal_ff8a66_12": 12
+ }
+}

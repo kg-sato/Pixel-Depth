@@ -1,0 +1,388 @@
+{
+ "name": "RootflintPickaxe",
+ "ref": "art/gen/ladder/c1_rootflint.png",
+ "length": 3.6,
+ "handle_r": 0.11,
+ "tilt": 14,
+ "yaw": 20,
+ "seed": 33,
+ "vfx": {
+  "sparkles": 12,
+  "colors": [
+   "#ffffff",
+   "#fff2d0",
+   "#d8f6e4"
+  ],
+  "light": "#fff0d0",
+  "light_power": 25,
+  "glow": "#fff0d0"
+ },
+ "handle": {
+  "mat": "wood",
+  "color": "#e2a868",
+  "r_bottom": 0.104,
+  "wrap": {
+   "mat": "wood",
+   "color": "#cf9454",
+   "w": 0.05,
+   "turns": 3.2,
+   "z0": 0.45,
+   "z1": 3.2
+  },
+  "bands": [
+   {
+    "z": 0.24,
+    "mat": "wood",
+    "color": "#c98a4e",
+    "r": 0.024,
+    "scale": 1.08
+   },
+   {
+    "z": 0.31,
+    "mat": "wood",
+    "color": "#c98a4e",
+    "r": 0.024,
+    "scale": 1.06
+   },
+   {
+    "z": 3.84,
+    "mat": "wood",
+    "color": "#c98a4e",
+    "r": 0.026,
+    "scale": 1.78
+   },
+   {
+    "z": 3.78,
+    "mat": "wood",
+    "color": "#c98a4e",
+    "r": 0.026,
+    "scale": 1.78
+   },
+   {
+    "z": 3.43,
+    "mat": "wood",
+    "color": "#c98a4e",
+    "r": 0.026,
+    "scale": 1.78
+   },
+   {
+    "z": 3.37,
+    "mat": "wood",
+    "color": "#c98a4e",
+    "r": 0.026,
+    "scale": 1.78
+   }
+  ]
+ },
+ "pommel": {
+  "type": "orb",
+  "mat": "wood",
+  "color": "#ebb75e",
+  "r": 0.17,
+  "collar": null
+ },
+ "arm": {
+  "len": 1.45,
+  "rise": 0.24,
+  "droop": 0.75,
+  "width": 0.64,
+  "top": 0.5,
+  "taper": 1.0,
+  "belly": 0.3,
+  "thick": 0.16,
+  "bend": 1.9,
+  "mat": "stone",
+  "color": "#9c8476",
+  "facet": true,
+  "core": {
+   "frac": 0.55,
+   "mat": "stone",
+   "color": "#ac9282"
+  },
+  "edge": "#dcc4ae",
+  "edge_mat": "stone",
+  "edge_glow": 0.0,
+  "edge_r": 0.03,
+  "edge2": "#7a6458",
+  "edge2_mat": "stone",
+  "n": 8
+ },
+ "center": [
+  {
+   "type": "collar",
+   "at": [
+    0,
+    0.04
+   ],
+   "r": 0.19,
+   "h": 0.46,
+   "mat": "wood",
+   "color": "#dca266",
+   "facets": 10
+  },
+  {
+   "type": "spike",
+   "at": [
+    0,
+    0.24
+   ],
+   "dir": [
+    0.12,
+    0,
+    1
+   ],
+   "len": 0.2,
+   "r": 0.014,
+   "mat": "wood",
+   "color": "#a8c88a",
+   "glow": 0,
+   "facets": 5,
+   "y": 0
+  },
+  {
+   "type": "drop",
+   "at": [
+    -0.1,
+    0.4
+   ],
+   "rot": 55,
+   "size": 0.075,
+   "mat": "irid",
+   "color": "#a8d68e",
+   "glow": 0,
+   "y": -0.02
+  },
+  {
+   "type": "drop",
+   "at": [
+    0.13,
+    0.43
+   ],
+   "rot": -55,
+   "size": 0.09,
+   "mat": "irid",
+   "color": "#b9e0a0",
+   "glow": 0,
+   "y": -0.02
+  },
+  {
+   "type": "orb",
+   "at": [
+    0,
+    -3.56
+   ],
+   "y": 0,
+   "r": 0.21,
+   "scale": [
+    1,
+    1,
+    0.8
+   ],
+   "mat": "wood",
+   "color": "#a87444",
+   "glow": 0
+  },
+  {
+   "type": "spike",
+   "at": [
+    0,
+    -3.89
+   ],
+   "dir": [
+    0,
+    0,
+    -1
+   ],
+   "len": 0.06,
+   "r": 0.025,
+   "mat": "wood",
+   "color": "#d89a4c",
+   "glow": 0,
+   "facets": 6,
+   "y": 0
+  },
+  {
+   "type": "drop",
+   "at": [
+    0.16,
+    -1.05
+   ],
+   "rot": -60,
+   "size": 0.065,
+   "mat": "irid",
+   "color": "#a8d68e",
+   "glow": 0,
+   "y": -0.1
+  },
+  {
+   "type": "drop",
+   "at": [
+    -0.16,
+    -1.9
+   ],
+   "rot": 60,
+   "size": 0.06,
+   "mat": "irid",
+   "color": "#b9e0a0",
+   "glow": 0,
+   "y": -0.1
+  },
+  {
+   "type": "scroll",
+   "at": [
+    0.14,
+    -1.25
+   ],
+   "mirror": false,
+   "side": 1,
+   "r": 0.05,
+   "turns": 1.1,
+   "w": 0.012,
+   "mat": "wood",
+   "color": "#d39656",
+   "y": -0.1
+  },
+  {
+   "type": "scroll",
+   "at": [
+    -0.14,
+    -2.1
+   ],
+   "mirror": false,
+   "side": -1,
+   "r": 0.045,
+   "turns": 1.1,
+   "w": 0.012,
+   "mat": "wood",
+   "color": "#d39656",
+   "y": -0.1
+  }
+ ],
+ "ribbons": [
+  {
+   "pts": [
+    [
+     -0.16,
+     0.24,
+     -0.118
+    ],
+    [
+     -0.08,
+     0.142,
+     -0.188
+    ],
+    [
+     0.0,
+     0.045,
+     -0.206
+    ],
+    [
+     0.08,
+     -0.052,
+     -0.188
+    ],
+    [
+     0.16,
+     -0.15,
+     -0.118
+    ]
+   ],
+   "width": 0.05,
+   "mat": "wood",
+   "color": "#c98a4e",
+   "twist": 0
+  },
+  {
+   "pts": [
+    [
+     -0.16,
+     -0.15,
+     -0.118
+    ],
+    [
+     -0.08,
+     -0.052,
+     -0.188
+    ],
+    [
+     0.0,
+     0.045,
+     -0.206
+    ],
+    [
+     0.08,
+     0.142,
+     -0.188
+    ],
+    [
+     0.16,
+     0.24,
+     -0.118
+    ]
+   ],
+   "width": 0.05,
+   "mat": "wood",
+   "color": "#c98a4e",
+   "twist": 0
+  }
+ ],
+ "bow": {
+  "at": [
+   0,
+   -0.45
+  ],
+  "size": 0.32,
+  "color": "#a8dcc0",
+  "lift": 0.2,
+  "y": -0.13,
+  "height": 0.5,
+  "tails": [
+   {
+    "pts": [
+     [
+      -0.06,
+      -0.49
+     ],
+     [
+      -0.26,
+      -0.72
+     ],
+     [
+      -0.36,
+      -0.98
+     ],
+     [
+      -0.5,
+      -1.18
+     ]
+    ],
+    "width": 0.12,
+    "twist": 1.6,
+    "waves": 2.0
+   },
+   {
+    "pts": [
+     [
+      0.06,
+      -0.49
+     ],
+     [
+      0.22,
+      -0.75
+     ],
+     [
+      0.16,
+      -1.0
+     ],
+     [
+      0.26,
+      -1.22
+     ]
+    ],
+    "width": 0.12,
+    "twist": 1.6,
+    "waves": 2.0
+   }
+  ]
+ }
+}

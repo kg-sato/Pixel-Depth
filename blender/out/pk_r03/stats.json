@@ -1,0 +1,24 @@
+{
+ "name": "RootflintPickaxe",
+ "objects": 34,
+ "parts": 16,
+ "tris": 5342,
+ "per_part": {
+  "wood_e2a868_0": 80,
+  "wood_cf9454_0": 356,
+  "wood_c98a4e_0": 1832,
+  "wood_ebb75e_6": 224,
+  "stone_9c8476_0": 184,
+  "stone_ac9282_0": 184,
+  "stone_dcc4ae_0": 152,
+  "stone_7a6458_0": 152,
+  "wood_dca266_0": 36,
+  "wood_a8c88a_0": 10,
+  "irid_a8d68e_0": 328,
+  "irid_b9e0a0_0": 328,
+  "wood_a87444_0": 324,
+  "wood_d89a4c_0": 12,
+  "wood_d39656_0": 352,
+  "satin_a8dcc0_0": 788
+ }
+}
