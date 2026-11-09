@@ -1248,8 +1248,8 @@ local STEPS = {
 local stepShown, stepDoneAt, stepExpired = "", nil, false
 local function stepMessage()
 	if not state then return "" end
-	if not inMine and state.step <= 2 then return C.CAVES_ON and "Ride the lift down into the mine!" or "Jump into the glowing mine shaft!" end
-	if not inMine and state.step == 5 then return "Ride the lift back down to find the egg!" end
+	if not inMine and state.step <= 2 then return C.CAVES_ON and "Ride the minecart down into the mine!" or "Jump into the glowing mine shaft!" end
+	if not inMine and state.step == 5 then return "Ride the minecart back down to find the egg!" end
 	return STEPS[state.step] or ""
 end
 R.State.OnClientEvent:Connect(function(s)
@@ -3070,6 +3070,24 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		local L, bonus = ...
 		toast("NEW LAYER: " .. C.LAYERS[L][1]:upper(), GOLD, true)
 		toast("Depth reward +" .. commas(bonus) .. " gold", MINT, false, 1.2)
+	elseif kind == "ride" then -- the minecart ride down to Camp 1 (ReplicatedStorage.Shared.MinecartRide)
+		local full = ...
+		local mod = RS.Shared:FindFirstChild("MinecartRide")
+		local hub = workspace:FindFirstChild("Hub")
+		local cartM = hub and hub:FindFirstChild("HubCart", true)
+		local caves = workspace:FindFirstChild("Caves")
+		task.spawn(function()
+			local ok, err = pcall(function()
+				require(mod).play({
+					cart = cartM, camp = caves and caves:FindFirstChild("Camp"), full = full, sfx = sfx,
+					inCave = function() return plr:GetAttribute("InCave") == true end,
+					restore = function() setMode(modeNow()) end,
+				})
+			end)
+			if not ok then warn("[MinecartRide] " .. tostring(err)) end
+			R.Surface:FireServer("arrived")
+			if ok then toast("CAMP 1  ·  ORE IS SAFE HERE", MINT, true) end
+		end)
 	elseif kind == "lift" then
 		local down = ...
 		fadeText.Text = down and "RIDING THE LIFT DOWN..." or "BACK TO CAMP!"
@@ -3082,6 +3100,11 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 			task.delay(0.46, function() fadeText.TextStrokeTransparency = 0 end)
 		end)
 	end
+end)
+
+task.delay(4, function() -- the minecart ride's far stage, built early so its lanterns are lit by the first ride
+	local mod = RS.Shared:FindFirstChild("MinecartRide")
+	if mod then pcall(function() require(mod).prepare() end) end
 end)
 
 -- Hub idle animations: spinning wheel, bobbing eggs and crystals, flickering fires, swaying lanterns, dancing flames

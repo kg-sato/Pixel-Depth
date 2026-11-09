@@ -45,6 +45,7 @@ if oldHub then oldHub:Destroy() end
 local hub = HubBuilder.build(workspace, Vector3.zero)
 local HUB_SPAWN = hub:FindFirstChild("SpawnPoint").CFrame
 local HUB_SELL = hub:FindFirstChild("SellPoint", true)
+local HUB_CART = hub:FindFirstChild("HubCart", true) -- the minecart the ride down starts from (HubBuilder)
 
 -- Caves (cave exploration rework): one shared cave world per server, built from the hour's seed at C.CAVE_ORIGIN.
 -- The lift takes players to Camp 1 instead of their private block mine while C.CAVES_ON is true (the old mine code stays).
@@ -662,9 +663,21 @@ SellR.OnServerEvent:Connect(function(plr) -- the lift: ride up to the sell stall
 end)
 
 local enterMine -- defined below
+local riding = {} -- players on the minecart ride down (MinecartRide on the client): anchored until the client says it arrived
+local function endRide(plr)
+	if not riding[plr] then return end
+	riding[plr] = nil
+	local hrp = hrpOf(plr)
+	if hrp then hrp.Anchored = false end
+end
 SurfaceR.OnServerEvent:Connect(function(plr, dir) -- the rail lift button: "down" into your mine, otherwise up to camp
 	local s = data[plr]
 	local hrp = hrpOf(plr)
+	if dir == "arrived" then -- the ride down has ended on this client
+		endRide(plr)
+		return
+	end
+	if riding[plr] then return end
 	if s and dir == "down" then
 		enterMine(s)
 		return
@@ -680,13 +693,29 @@ end)
 
 enterMine = function(s)
 	local hrp = hrpOf(s.player)
-	if not hrp or s.player:GetAttribute("InMine") or s.player:GetAttribute("InCave") then return end
-	if caveLanding then
+	if not hrp or riding[s.player] or s.player:GetAttribute("InMine") or s.player:GetAttribute("InCave") then return end
+	if caveLanding then -- the minecart ride (feedback batch phase 4): stand in the town cart, the client films the ride, and at the
+		-- cut (2.15 s into the first ride, 1.25 s into the short repeat ride) the character moves to the Camp 1 landing
+		local plr = s.player
+		local full = not s.tips.ride or plr:GetAttribute("DevFullRide") == true -- test hook: always the full first ride
+		s.tips.ride = true
+		riding[plr] = true
 		hrp.AssemblyLinearVelocity = Vector3.zero
-		hrp.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
-		s.player:SetAttribute("InCave", true)
-		FxR:FireClient(s.player, "lift", true)
-		sendState(s) -- the bag pill turns into the unbanked ore count in the caves
+		hrp.Anchored = true
+		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+		if HUB_CART then hrp.CFrame = HUB_CART:GetPivot() * CFrame.new(0, 1.05 + hrp.Size.Y / 2 + (hum and hum.HipHeight or 2), 0.3) end
+		FxR:FireClient(plr, "ride", full)
+		task.delay(full and 2.15 or 1.25, function()
+			local h = hrpOf(plr)
+			if not h or not data[plr] then
+				riding[plr] = nil
+				return
+			end
+			h.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
+			plr:SetAttribute("InCave", true)
+			sendState(s) -- the bag pill turns into the unbanked ore count in the caves
+		end)
+		task.delay(14, function() endRide(plr) end) -- a client that never reports back still gets its legs back
 		return
 	end
 	s.pr = -99 -- render the landing now

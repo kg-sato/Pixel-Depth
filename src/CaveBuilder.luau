@@ -171,16 +171,58 @@ function Cave.build(parent, origin, seed)
 		for k = 0, 2 do part("Camp", "Crate", Vector3.new(2, 2, 2), stall * CFrame.new(-2.6 + k * 2.6, 4.8, 0) * CFrame.Angles(0, k * 0.3, 0), Color3.fromRGB(196, 150, 110)) end
 		part("Camp", "Lamp", Vector3.new(1, 1.2, 1), stall * CFrame.new(3.2, 6.2, 1.2), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false })
 		glow(group("Camp"):FindFirstChild("Lamp"), PAL.warm, 18, 1)
-		-- lift winch on the south side: an A-frame, a drum, the rope up into the dark, the landing platform (players arrive here)
-		local lift = CFrame.new(W(-1, -7, 0))
-		part("Camp", "LiftDeck", Vector3.new(10, 1, 10), lift * CFrame.new(0, 0.5, 0), PAL.plank:Lerp(PAL.bark, 0.4))
-		for _, x in { -4.5, 4.5 } do
-			for _, z in { -4.5, 4.5 } do part("Camp", "LiftPost", Vector3.new(0.8, 14, 0.8), lift * CFrame.new(x, 7, z), PAL.bark) end
+		-- the rail station on the south side (feedback batch phase 4, 2026-11-08: the minecart ride replaces the lift): rails run
+		-- out of a timbered tunnel mouth in the south wall to buffers, a parked cart, a plank platform where riders step off
+		local st = CFrame.new(W(-1, -7, 0))
+		local railZ0, railZ1 = -11, 6 -- along the station's local z: the tunnel end (south) to the buffers (north)
+		for _, x in { -1.25, 1.25 } do
+			part("Camp", "Rail", Vector3.new(0.3, 0.3, railZ1 - railZ0), st * CFrame.new(x, 0.45, (railZ0 + railZ1) / 2), Color3.fromRGB(150, 140, 170), { Material = Enum.Material.Metal })
 		end
-		part("Camp", "LiftBeam", Vector3.new(10.8, 0.8, 0.8), lift * CFrame.new(0, 14, 0), PAL.bark)
-		part("Camp", "Drum", Vector3.new(2.4, 2.4, 6), lift * CFrame.new(0, 12.6, 0) * CFrame.Angles(0, 0, 0), PAL.barkLt)
-		part("Camp", "Rope", Vector3.new(0.4, 60, 0.4), lift * CFrame.new(0, 44, 0), PAL.rope, DECO)
-		local landing = part("Camp", "LiftLanding", Vector3.new(4, 0.2, 4), lift * CFrame.new(0, 1.1, 0), PAL.plank, { Transparency = 1, CanCollide = false })
+		for z = railZ0 + 1, railZ1 - 1, 2 do
+			part("Camp", "Sleeper", Vector3.new(3.4, 0.3, 0.8), st * CFrame.new(0, 0.15, z), PAL.bark)
+		end
+		for _, x in { -1.5, 1.5 } do -- buffers: a post with a soft pink pad
+			part("Camp", "BufferPost", Vector3.new(0.6, 1.6, 0.6), st * CFrame.new(x, 0.8, railZ1 + 0.4), PAL.bark)
+			part("Camp", "BufferPad", Vector3.new(0.8, 0.8, 0.4), st * CFrame.new(x, 1.3, railZ1 - 0.05), PAL.pink)
+		end
+		-- the parked cart: a lilac tub with a butter rim on four dark wheels
+		local cart = st * CFrame.new(0, 0, railZ1 - 3)
+		part("Camp", "CartBody", Vector3.new(3, 1.8, 3.6), cart * CFrame.new(0, 1.65, 0), Color3.fromRGB(150, 128, 200))
+		part("Camp", "CartRimF", Vector3.new(3.2, 0.35, 0.3), cart * CFrame.new(0, 2.6, -1.8), PAL.warm:Lerp(PAL.cream, 0.3), { Material = Enum.Material.Metal })
+		part("Camp", "CartRimB", Vector3.new(3.2, 0.35, 0.3), cart * CFrame.new(0, 2.6, 1.8), PAL.warm:Lerp(PAL.cream, 0.3), { Material = Enum.Material.Metal })
+		for _, w in { { -1.35, -1.1 }, { 1.35, -1.1 }, { -1.35, 1.1 }, { 1.35, 1.1 } } do
+			part("Camp", "CartWheel", Vector3.new(0.4, 1, 1), cart * CFrame.new(w[1], 0.65, w[2]) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(60, 46, 76), { Shape = Enum.PartType.Cylinder })
+		end
+		-- the tunnel mouth: a dark opening framed in timber, a lantern each side, a sign
+		part("Camp", "TunnelDark", Vector3.new(5.4, 6.4, 4), st * CFrame.new(0, 3.2, railZ0 - 2.2), Color3.fromRGB(14, 8, 22), { Material = Enum.Material.SmoothPlastic })
+		for _, x in { -4.3, 4.3 } do part("Camp", "TunnelCheek", Vector3.new(2.6, 8.4, 4.4), st * CFrame.new(x, 4.2, railZ0 - 2.4), PAL.rock[2], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant }) end
+		part("Camp", "TunnelLintel", Vector3.new(11.2, 2.6, 4.4), st * CFrame.new(0, 8.9, railZ0 - 2.4), PAL.rock[2], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
+		for _, x in { -3, 3 } do
+			part("Camp", "TunnelPost", Vector3.new(0.8, 7.2, 0.8), st * CFrame.new(x, 3.6, railZ0), PAL.bark)
+			local l = part("Camp", "TunnelLamp", Vector3.new(0.8, 1, 0.8), st * CFrame.new(x, 5.2, railZ0 + 0.7), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+			glow(l, PAL.warm, 16, 0.7)
+		end
+		part("Camp", "TunnelBeam", Vector3.new(7.6, 0.9, 0.9), st * CFrame.new(0, 7.4, railZ0), PAL.barkLt)
+		local sign = part("Camp", "StationSign", Vector3.new(5.6, 1.5, 0.3), st * CFrame.new(0, 8.9, railZ0 + 0.35), PAL.cream)
+		local sg = Instance.new("SurfaceGui")
+		sg.Face, sg.PixelsPerStud, sg.LightInfluence = Enum.NormalId.Back, 40, 0
+		local tl = Instance.new("TextLabel")
+		tl.Size, tl.BackgroundTransparency, tl.Text, tl.TextScaled, tl.Font = UDim2.fromScale(1, 1), 1, "CAMP 1 STATION", true, Enum.Font.FredokaOne
+		tl.TextColor3 = Color3.fromRGB(111, 88, 176)
+		tl.Parent = sg
+		sg.Parent = sign
+		-- the platform beside the rails: riders step off here (LiftLanding keeps its name for the server)
+		part("Camp", "Platform", Vector3.new(5, 1, 12), st * CFrame.new(4.6, 0.5, 0), PAL.plank:Lerp(PAL.bark, 0.65))
+		for _, z in { -5, 5 } do -- lantern posts on the platform light the arrival
+			part("Camp", "PlatformPost", Vector3.new(0.6, 5, 0.6), st * CFrame.new(6.6, 3.5, z), PAL.bark)
+			part("Camp", "PlatformArm", Vector3.new(1.6, 0.4, 0.4), st * CFrame.new(5.9, 5.8, z), PAL.bark)
+			local l = part("Camp", "PlatformLamp", Vector3.new(0.8, 1, 0.8), st * CFrame.new(5.3, 5.1, z), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+			glow(l, PAL.warm, 22, 1.2)
+		end
+		for k = -2, 2 do -- plank seams across the deck
+			part("Camp", "PlankSeam", Vector3.new(5.1, 0.08, 0.16), st * CFrame.new(4.6, 1.02, k * 2.4), PAL.bark:Lerp(Color3.new(0, 0, 0), 0.35), DECO)
+		end
+		local landing = part("Camp", "LiftLanding", Vector3.new(4, 0.2, 4), st * CFrame.new(4.6, 1.1, 2) * CFrame.Angles(0, math.pi, 0), PAL.plank, { Transparency = 1, CanCollide = false })
 		landing:SetAttribute("Landing", true)
 		-- the runic boundary ring (CMP-01): glowing mint segments on the floor round the safe zone; inside it you are safe
 		local ringR = 8.6 * CELL

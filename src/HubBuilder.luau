@@ -713,14 +713,6 @@ function Hub.build(parent, origin)
 		tvox(shaft, "Brace", Vector3.new(1.2, 1.2, 12.5), CFrame.new(W(s * 7.5, 12, 0)) * CFrame.Angles(0.5, 0, 0), "beam", 4)
 	end
 	tvox(shaft, "CrossBeam", Vector3.new(18, 2.2, 2.2), CFrame.new(W(0, 19.5, 0)), "beam", 4)
-	local wheel = group("LiftWheel")
-	for i = 0, 15 do
-		local a = i / 16 * math.pi * 2
-		vox(wheel, "Rim", Vector3.new(1.2, 1.2, 1.2), CFrame.new(W(0, 23 + math.sin(a) * 3.6, math.cos(a) * 3.6)), i % 2 == 0 and PAL.wood[2] or PAL.wood[3])
-	end
-	tvox(wheel, "Hub", Vector3.new(1.8, 1.8, 1.8), CFrame.new(W(0, 23, 0)), "iron", 2)
-	for i = 0, 3 do vox(wheel, "Spoke", Vector3.new(0.6, 7, 0.6), CFrame.new(W(0, 23, 0)) * CFrame.Angles(i * math.pi / 4, 0, 0), PAL.wood[1]) end
-	wheel:SetAttribute("SpinX", 1.4)
 	vox(shaft, "Rope", Vector3.new(0.25, 14, 0.25), CFrame.new(W(0, 13, 2.6)), PAL.cream[1], { CanCollide = false })
 	for k, o in { { 0.7, 0.2, 1.1 }, { -0.6, -0.4, 0.9 }, { 0.1, -0.9, 0.8 } } do
 		vox(shaft, "HangingShard", Vector3.new(0.7, o[3] * 1.6, 0.7), CFrame.new(W(o[1], 5.4 + o[2], 2.6)) * CFrame.Angles(0.3 * k, 0.5, 0.2), k == 2 and Color3.fromRGB(170, 150, 240) or CYAN, { CanCollide = false, Material = Enum.Material.Neon })
@@ -729,7 +721,34 @@ function Hub.build(parent, origin)
 	glow(hang, CYAN, 18, 1.2)
 	hang:SetAttribute("Bob", 0.3)
 	sign(shaft, "MINE", CFrame.new(W(0, 17.2, 6.9)), 5, 1.8, GOLD)
-	prompt(tvox(shaft, "EnterPlate", Vector3.new(4, 0.3, 2), CFrame.new(W(0, 1.75, 7)), "planks_light", 2, { CanCollide = false }), "Enter the mine", "Lift", "enter")
+	-- the minecart dock (feedback batch phase 4, storyboard https://claude.ai/artifact/RbfNa2PVyTuRTwyVzdbWTs): a plank deck over the
+	-- south rim, rails that run to the lip of the shaft and dip over it, buffers, and the parked cart whose prompt starts the ride
+	local dock = group("MineDock")
+	local RAILC = Color3.fromRGB(150, 140, 170)
+	vox(dock, "Deck", Vector3.new(5, 1.2, 8.4), CFrame.new(W(0, 1.7, 9.8)), PAL.wood[2])
+	for k = 0, 4 do vox(dock, "Sleeper", Vector3.new(3.4, 0.2, 0.7), CFrame.new(W(0, 2.4, 6.2 + k * 1.8)), PAL.wood[1], { CanCollide = false }) end
+	for _, x in { -1.25, 1.25 } do
+		vox(dock, "Rail", Vector3.new(0.3, 0.3, 8.4), CFrame.new(W(x, 2.45, 9.8)), RAILC, { Material = Enum.Material.Metal, CanCollide = false })
+		local c = W(x, 1.88, 4.8)
+		vox(dock, "RailLip", Vector3.new(0.3, 0.3, 2), CFrame.lookAt(c, c + Vector3.new(0, -0.57, -0.82)), RAILC, { Material = Enum.Material.Metal, CanCollide = false })
+		vox(dock, "BufferPost", Vector3.new(0.6, 1.4, 0.6), CFrame.new(W(x * 1.2, 3, 13.7)), PAL.wood[1])
+		vox(dock, "BufferPad", Vector3.new(0.8, 0.6, 0.3), CFrame.new(W(x * 1.2, 3.2, 13.3)), PAL.pink[2])
+	end
+	-- the cart: a hollow lilac tub (the rider sees its inside in first person) with butter rims on four wheels, facing the shaft
+	local cart = group("HubCart")
+	local base = CFrame.lookAt(W(0, 2.3, 9.8), W(0, 2.3, 0))
+	local LIL, BUT = Color3.fromRGB(150, 128, 200), Color3.fromRGB(255, 214, 140)
+	local root = vox(cart, "Base", Vector3.new(0.2, 0.2, 0.2), base, LIL, { Transparency = 1, CanCollide = false, CanQuery = false })
+	cart.PrimaryPart = root
+	local floor = vox(cart, "Floor", Vector3.new(2.4, 0.3, 3), base * CFrame.new(0, 0.9, 0), LIL:Lerp(Color3.new(0, 0, 0), 0.25))
+	for _, z in { -1.65, 1.65 } do vox(cart, "WallEnd", Vector3.new(3, 1.6, 0.3), base * CFrame.new(0, 1.75, z), LIL) end
+	for _, x in { -1.35, 1.35 } do vox(cart, "WallSide", Vector3.new(0.3, 1.6, 3), base * CFrame.new(x, 1.75, 0), LIL) end
+	for _, z in { -1.65, 1.65 } do vox(cart, "RimEnd", Vector3.new(3.2, 0.35, 0.35), base * CFrame.new(0, 2.62, z), BUT, { Material = Enum.Material.Metal }) end
+	for _, x in { -1.4, 1.4 } do vox(cart, "RimSide", Vector3.new(0.3, 0.3, 2.95), base * CFrame.new(x, 2.6, 0), BUT, { Material = Enum.Material.Metal }) end
+	for _, w in { { -1.55, -1.1 }, { 1.55, -1.1 }, { -1.55, 1.1 }, { 1.55, 1.1 } } do
+		vox(cart, "Wheel", Vector3.new(0.4, 1, 1), base * CFrame.new(w[1], 0.65, w[2]) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(60, 46, 76), { Shape = Enum.PartType.Cylinder })
+	end
+	prompt(floor, "Ride the minecart", "Minecart", "enter")
 
 	-- a store frame at (x, z) with its front (+Z) turned toward the point (fx, fz); store parts are laid out for a ground top of
 	-- 1.1, so the frame sits at the real ground top (meadow 0.6, rise 2, terrace 4) minus 1.1
