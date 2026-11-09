@@ -145,7 +145,7 @@ function M.start(E)
 			shake(0.8)
 			sfx("breakRock", 0.8)
 			hitFlash.BackgroundTransparency = 0.35
-			toast(a > 0 and ("BONK! A GLOOMLING GRABBED " .. commas(a) .. " ORE") or "BONK! A GLOOMLING GOT YOU", PINK, true)
+			toast(a < 0 and "FAFNIR BLOCKED THE CATCH!" or (a > 0 and ("BONK! A GLOOMLING GRABBED " .. commas(a) .. " ORE") or "BONK! A GLOOMLING GOT YOU"), a < 0 and GOLD or PINK, true)
 			toast("Golden shield for 3 s: run!", GOLD, false, 0.9)
 		elseif kind == "flareFx" then -- a pocket sunrise: a white-gold ball swells and fades, sparks fly, the cave lights up
 			local pos = a

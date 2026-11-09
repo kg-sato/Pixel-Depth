@@ -28,7 +28,8 @@ function M.start(opt)
 	local plr = Players.LocalPlayer
 	local cam = workspace.CurrentCamera
 	local sfx = opt.sfx or function() end
-	local air, swimming, under, passedOut = S.air, false, false, false
+	local function maxAir() return S.air * (opt.airScale and opt.airScale() or 1) end -- Selkie: +50% air
+	local air, swimming, under, passedOut = maxAir(), false, false, false
 	local force, att, savedWalk
 
 	-- the air bar: a soft pill with a bubble icon and a fill that turns pink when low
@@ -115,10 +116,10 @@ function M.start(opt)
 		if under and not passedOut then
 			air = math.max(0, air - dt)
 		else
-			air = math.min(S.air, air + dt * S.air / S.refill)
+			air = math.min(maxAir(), air + dt * maxAir() / S.refill)
 		end
-		bar.Visible = under or air < S.air - 0.05
-		local k = air / S.air
+		bar.Visible = under or air < maxAir() - 0.05
+		local k = air / maxAir()
 		fill.Size = UDim2.fromScale(k, 1)
 		fill.BackgroundColor3 = k < 0.3 and PINK or SKY
 		scale.Scale = k < 0.3 and 1 + 0.06 * math.sin(os.clock() * 12) or 1
@@ -129,7 +130,7 @@ function M.start(opt)
 			if opt.drown then opt.drown() end
 			task.delay(3, function()
 				passedOut = false
-				air = S.air
+				air = maxAir()
 			end)
 		end
 	end)

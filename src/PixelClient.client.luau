@@ -1623,14 +1623,18 @@ do
 		if plr:GetAttribute("TorchFrozen") then cave.relitAt = now end -- the server: no dimming until the first bank
 		local age = plr:GetAttribute("DevTorchAge") -- Studio test hook: age the torch by this many seconds
 		if age then cave.relitAt = now - age plr:SetAttribute("DevTorchAge", nil) end
-		cave.fuel = math.clamp(1 - (now - cave.relitAt) / C.TORCH.time, 0, 1)
-		cave.fear = here and 0 or math.clamp((1 - cave.fuel) * 1.15 - 0.1, 0, 1)
+		if state and cave.jobFor ~= state.pets and RS.Shared:FindFirstChild("PetJobs") then -- crew pets' cave jobs (Shared.PetJobs)
+			cave.jobFor, cave.job = state.pets, require(RS.Shared.PetJobs).perks(state.pets)
+		end
+		local job = cave.job or { torch = 1, fear = 1, light = 0, air = 1 }
+		cave.fuel = math.clamp(1 - (now - cave.relitAt) / (C.TORCH.time * job.torch), 0, 1)
+		cave.fear = here and 0 or math.clamp(((1 - cave.fuel) * 1.15 - 0.1) * job.fear, 0, 1)
 		-- the torch: the head lantern shrinks and dims with the fuel and flickers like a flame (LGT-01)
 		local lantern = plr.Character and plr.Character:FindFirstChild("Lantern", true) -- on the torch in the left hand
 		if lantern then
 			local flick = math.noise(now * 6, 1.7) * 0.18 + math.noise(now * 17, 4.2) * 0.08
 			lantern.Color = Color3.fromRGB(255, 196, 120)
-			lantern.Range = C.TORCH.minRange + (C.TORCH.range - C.TORCH.minRange) * cave.fuel ^ 0.7 + flick * 2
+			lantern.Range = C.TORCH.minRange + (C.TORCH.range - C.TORCH.minRange) * cave.fuel ^ 0.7 + flick * 2 + job.light
 			lantern.Brightness = 0.25 + 0.6 * cave.fuel + flick * 0.4 -- soft: the torch sits low in the hand, close to the floor, and blew it out
 		end
 		torchFill.Size = UDim2.fromScale(cave.fuel, 1)
@@ -2117,9 +2121,9 @@ end
 
 	cave.mg = function(kind, ...)
 		if kind == "mgStart" then
-			local dep, which, t0, param, zone = ...
+			local dep, which, t0, param, zone, period = ...
 			local col = C.LAYERS[dep:GetAttribute("Layer")][4][dep:GetAttribute("Ore")][2]
-			mg = { kind = which, dep = dep, t0 = t0, col = col, cool = 0 }
+			mg = { kind = which, dep = dep, t0 = t0, col = col, cool = 0, period = period }
 			freeze(true)
 			if which == "strike" then
 				mg.arc = param
@@ -2196,7 +2200,7 @@ end
 		glints.Visible = not (ps.Visible or vr.Visible or result.Visible)
 		mapStep(now, h)
 		if mg and mg.kind == "strike" then
-			if not (mg.freezeUntil and os.clock() < mg.freezeUntil) then needle.Rotation = ((workspace:GetServerTimeNow() - mg.t0) / D.strikePeriod % 1) * 360 end
+			if not (mg.freezeUntil and os.clock() < mg.freezeUntil) then needle.Rotation = ((workspace:GetServerTimeNow() - mg.t0) / (mg.period or D.strikePeriod) % 1) * 360 end
 			arcPivot.Rotation = mg.arc
 		elseif mg and mg.kind == "rush" then
 			local left = 1 - (workspace:GetServerTimeNow() - mg.t0) / (#mg.seq * D.rushBeat)
@@ -2624,6 +2628,7 @@ end)
 				stop = require(mod).start({
 					water = water, gui = swimGui, sfx = sfx,
 					drown = function() R.Surface:FireServer("drown") end,
+					airScale = function() return cave.job and cave.job.air or 1 end,
 					active = function() return not cave.mgBusy end,
 				})
 			end

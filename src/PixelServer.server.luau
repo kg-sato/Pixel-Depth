@@ -45,6 +45,8 @@ if oldHub then oldHub:Destroy() end
 local hub = HubBuilder.build(workspace, Vector3.zero)
 local HUB_SPAWN = hub:FindFirstChild("SpawnPoint").CFrame
 local HUB_SELL = hub:FindFirstChild("SellPoint", true)
+local PetJobs = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("PetJobs")) -- crew pets' cave jobs (phase 7)
+local function crewOf(s) local n = {} for i, p in s.pets do n[i] = p.name end return n end
 local HUB_CART = hub:FindFirstChild("HubCart", true) -- the minecart the ride down starts from (HubBuilder)
 
 -- Caves (cave exploration rework): one shared cave world per server, built from the hour's seed at C.CAVE_ORIGIN.
@@ -771,7 +773,7 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 end)
 Players.PlayerRemoving:Connect(function(plr) riding[plr], escaping[plr] = nil, nil end)
 local Gloom = require(game:GetService("ServerScriptService"):WaitForChild("Gloom")) -- gloomlings, HP, the catch, flares (phase 6)
-Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
+Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, perks = function(s) return PetJobs.perks(crewOf(s)) end, busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
 
 enterMine = function(s)
 	local hrp = hrpOf(s.player)
@@ -839,6 +841,10 @@ local function finishMinigame(s)
 	local L, idx = mg.dep:GetAttribute("Layer"), mg.dep:GetAttribute("Ore")
 	local o = C.LAYERS[L][4][idx]
 	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) + 0.5)
+	local job = PetJobs.perks(crewOf(s)) -- Kobold +1 ore, Goldbristle +1 on rare, Ninering doubles every 9th deposit
+	count += job.ore + (idx == 3 and job.rareOre or 0)
+	s.deposits = (s.deposits or 0) + 1
+	if job.ninth and s.deposits % 9 == 0 then count *= 2 end
 	s.bag += count
 	s.bagV += count * v
 	local key = L .. "." .. idx
@@ -863,8 +869,9 @@ for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
 		if (hrp.Position - core.Position).Magnitude > D.reach + 4 then return end
 		local now = workspace:GetServerTimeNow()
 		if dep:GetAttribute("Ore") < 3 then
-			s.mg = { kind = "strike", dep = dep, t0 = now, arc = s.rng:NextNumber() * 360, zone = C.strikeArc(s.lv[tostring(s.equip)]), swings = 0, perfects = 0, last = 0, deadline = now + D.strikes * 4 + 2 }
-			FxR:FireClient(plr, "mgStart", dep, "strike", now, s.mg.arc, s.mg.zone)
+			local period = D.strikePeriod * PetJobs.perks(crewOf(s)).strike -- Kepri Scarab slows the needle
+			s.mg = { kind = "strike", dep = dep, t0 = now, arc = s.rng:NextNumber() * 360, zone = C.strikeArc(s.lv[tostring(s.equip)]), period = period, swings = 0, perfects = 0, last = 0, deadline = now + D.strikes * 4 * period + 2 }
+			FxR:FireClient(plr, "mgStart", dep, "strike", now, s.mg.arc, s.mg.zone, period)
 		else
 			local seq = {} -- the side of the red crack on each beat: 1 left, 2 right; chiseling that side slips
 			for i = 1, s.rng:NextInteger(D.rush[1], D.rush[2]) do seq[i] = s.rng:NextInteger(1, 2) end
@@ -885,7 +892,7 @@ ExtractR.OnServerEvent:Connect(function(plr, what, arg)
 		-- shortcut: a cheater can pick the best moment inside that 0.08-0.35 s window; send server-timed swing windows if it matters
 		local window = math.clamp(plr:GetNetworkPing() * 2 + 0.08, 0.08, 0.35)
 		local t = (type(arg) == "number" and arg == arg) and math.clamp(arg, now - window, now) or now
-		local needle = ((t - mg.t0) / D.strikePeriod % 1) * 360
+		local needle = ((t - mg.t0) / (mg.period or D.strikePeriod) % 1) * 360
 		local perfect = math.abs((needle - mg.arc + 180) % 360 - 180) <= mg.zone / 2 + 2
 		mg.swings += 1
 		if perfect then mg.perfects += 1 end
@@ -1347,6 +1354,11 @@ while true do
 				plr:SetAttribute("DevGold", nil)
 				s.gold += dev
 				sendState(s)
+			end
+			local devPet = plr:GetAttribute("DevPet") -- a crew pet by name (C.PETS), to test cave jobs
+			if devPet then
+				plr:SetAttribute("DevPet", nil)
+				if C.PETS[devPet] and #s.pets < C.MAX_PETS then table.insert(s.pets, { name = devPet, next = os.clock() + C.HATCH_TIME }) sendState(s) end
 			end
 			local devOres = plr:GetAttribute("DevOres") -- that many of every Camp 1 ore into the ore bank
 			if devOres then

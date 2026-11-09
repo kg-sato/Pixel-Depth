@@ -36,8 +36,9 @@ local function inCamp(pos)
 end
 local function fearOf(s, g)
 	if not s.tips.banked then return 0, 1 end
-	local fuel = math.clamp(1 - (serverNow() - g.relitAt) / C.TORCH.time, 0, 1)
-	return math.clamp((1 - fuel) * 1.15 - 0.1, 0, 1), fuel
+	local job = ctx.perks(s)
+	local fuel = math.clamp(1 - (serverNow() - g.relitAt) / (C.TORCH.time * job.torch), 0, 1)
+	return math.clamp(((1 - fuel) * 1.15 - 0.1) * job.fear, 0, 1), fuel
 end
 local function scatter(plr) -- every gloomling after this player flees
 	for p, m in mobs do
@@ -64,7 +65,17 @@ local function spawn(plr, hrp)
 end
 
 local function caught(plr, s, g)
-	local lost = ctx.lose(s, C.GLOOM.loss)
+	local job = ctx.perks(s)
+	if job.block and not g.blocked then -- Fafnir takes the first catch of the dive
+		g.blocked = true
+		g.hp = C.GLOOM.hp
+		g.shieldUntil = serverNow() + C.GLOOM.shield
+		publish(plr, g)
+		scatter(plr)
+		ctx.fx:FireClient(plr, "caught", -1)
+		return
+	end
+	local lost = ctx.lose(s, job.loss or C.GLOOM.loss)
 	g.hp = C.GLOOM.hp
 	g.shieldUntil = serverNow() + C.GLOOM.shield
 	publish(plr, g)
@@ -112,7 +123,7 @@ function G.step(dt)
 		local caving = hrp and plr:GetAttribute("InCave") and not ctx.busy(plr)
 		if not caving then
 			if hrp and not plr:GetAttribute("InCave") then -- in town: a fresh torch, full HP and flares for the next dive
-				g.inCamp, g.relitAt = true, serverNow()
+				g.inCamp, g.relitAt, g.blocked = true, serverNow(), false
 				if g.hp < C.GLOOM.hp or g.flares < C.GLOOM.flares then g.hp, g.flares = C.GLOOM.hp, C.GLOOM.flares publish(plr, g) end
 			end
 			scatter(plr)
