@@ -4,7 +4,7 @@
 --   Until a player has banked ore once, the torch does not dim and no gloomling comes (learn the rules first).
 -- - gloomlings: soot sprites that slip through rock. At UNEASY one creeps in from the dark behind you, at SCARED two; they never
 --   move as fast as you walk. A touch is a BONK (C.GLOOM.hit HP). At 0 HP you are caught: 25% of the unbanked ore is gone, HP
---   refills and a 3 s golden shield keeps them off. Back at camp they scatter, HP and flares refill.
+--   refills and a 5 s golden shield keeps them off. Back at camp they scatter, HP and flares refill.
 -- - flares (C.GLOOM.flares per dive, key R or the FLARE button): every gloomling within 30 studs pancakes, then flees and is gone.
 -- Each gloomling is an invisible anchored Part in workspace.Gloom moved here at 10 Hz; every client draws its own soot sprite on it.
 local Players = game:GetService("Players")

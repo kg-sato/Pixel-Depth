@@ -65,7 +65,7 @@ function M.start(E)
 		if tab == "story" then
 			for k = q.story, math.min(q.story + 2, #Quests.STORY) do
 				local d = Quests.STORY[k]
-				local p = k == q.story and q.sp or 0
+				local p = k == q.story and q.sp or (k == q.story + 1 and (q.np or 0) or 0) -- the next quest already counts while this one waits
 				table.insert(out, { d, p, k > q.story and "locked" or (p >= d.n and "done" or "open") })
 			end
 		else
@@ -100,7 +100,7 @@ function M.start(E)
 				tween(r.fill, 0.3, { Size = UDim2.fromScale(math.clamp(p / d.n, 0, 1), 1) })
 				r.claim.Visible = state == "done"
 				r.count.Visible = state ~= "done"
-				r.count.Text = state == "claimed" and "CLAIMED" or state == "locked" and "LOCKED" or (p .. " / " .. d.n)
+				r.count.Text = state == "claimed" and "CLAIMED" or (state == "locked" and p == 0) and "LOCKED" or (p .. " / " .. d.n)
 			end
 		end
 		if tab == "story" then
@@ -110,7 +110,8 @@ function M.start(E)
 		if dot then dot.Visible = can end
 		-- the tutorial line in the step card
 		local st = Quests.STORY[q.story]
-		hook.questHint = st and (q.sp >= st.n and "Quest done! Open QUESTS (J) to claim your reward." or st.hint) or nil
+		local g = Quests.guide(q) -- a finished quest keeps leading: the next step, plus where the reward waits
+		hook.questHint = st and (q.sp >= st.n and (g and (g.hint .. " (Reward waiting: J)") or "Quest done! Open QUESTS (J) to claim your reward.") or st.hint) or nil
 	end
 	for k, b in tabs do
 		b.Activated:Connect(function()
@@ -196,8 +197,8 @@ function M.start(E)
 	tagText.ZIndex = 3
 	local PLACE = { cart = { "HubCart", "RIDE" }, sell = { "SellStall", "SELL" }, forge = { "Forge", "FORGE" }, egg = { "Incubator", "EGG" }, chest = { "DailyChest", "OPEN" } }
 	local function target() -- the world position and the word, or nil
-		local st = Quests.STORY[q.story]
-		if not st or q.sp >= st.n then return nil end
+		local st, sp = Quests.guide(q)
+		if not st or sp >= st.n then return nil end
 		local inCave = plr:GetAttribute("InCave")
 		local hub, caves = workspace:FindFirstChild("Hub"), workspace:FindFirstChild("Caves")
 		local function over(m, word)

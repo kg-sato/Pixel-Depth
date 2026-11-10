@@ -77,7 +77,7 @@ function M.start(E)
 	totalT.TextXAlignment = Enum.TextXAlignment.Left
 	local sellBtn = button(foot, "SELL", UDim2.fromScale(0.32, 1), UDim2.fromScale(1, 0), Vector2.new(1, 0), "butter", "coin")
 	for _, o in { allBtn, clearBtn, sellBtn } do o.ZIndex = 7 end
-	local hintT = text(inv, "", UDim2.fromScale(0.84, 0.045), UDim2.fromScale(0.5, 0.81), Vector2.new(0.5, 0.5), MUTED, 700, false)
+	local hintT = text(inv, "", UDim2.fromScale(0.88, 0.058), UDim2.fromScale(0.5, 0.81), Vector2.new(0.5, 0.5), INK, 700, false) -- larger, full ink: too faint to read (Gemini loop review, 2026-11-10)
 	hintT.ZIndex = 6
 
 	local function price(key) -- coins per ore, the same formula the server uses (layer value x 3 per layer x the held pickaxe)

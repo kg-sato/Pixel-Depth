@@ -136,7 +136,7 @@ function M.start(E)
 			sfx("breakRock", 0.8)
 			hitFlash.BackgroundTransparency = 0.35
 			toast(a < 0 and "FAFNIR BLOCKED THE CATCH!" or (a > 0 and ("BONK! A GLOOMLING GRABBED " .. commas(a) .. " ORE") or "BONK! A GLOOMLING GOT YOU"), a < 0 and GOLD or PINK, true)
-			toast("Golden shield for 3 s: run!", GOLD, false, 0.9)
+			toast("Golden shield for 5 s: run!", GOLD, false, 0.9)
 		elseif kind == "grabbed" then -- held for a few seconds: a flare now saves the ore
 			shake(0.6)
 			sfx("breakRock", 0.6)

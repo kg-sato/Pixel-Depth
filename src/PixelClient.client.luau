@@ -1233,13 +1233,21 @@ PPS.PromptHidden:Connect(function(prompt)
 end)
 RunService.RenderStepped:Connect(function()
 	local cam = workspace.CurrentCamera
+	local placed = {} -- bubbles already set this frame: a second one at the same spot stacks above (shrine: chest, lantern, mural)
 	for _, u in promptUI do
 		local a = u.adornee
 		local p = (a:IsA("BasePart") and a.Position or (a:IsA("Attachment") and a.WorldPosition or Vector3.zero)) + Vector3.new(0, u.lift, 0)
 		local v, on = cam:WorldToScreenPoint(p)
 		u.bb.Visible = on
 		local sz, vp = u.bb.AbsoluteSize, cam.ViewportSize -- kept whole on screen: a bubble over a tall thing was cut by the top edge (Gemini UI review, 2026-11-10)
-		u.bb.Position = UDim2.fromOffset(math.clamp(v.X, sz.X * 0.62 + 6, math.max(vp.X - sz.X * 0.38 - 6, sz.X * 0.62 + 6)), math.max(v.Y, sz.Y + 6))
+		local x, y = math.clamp(v.X, sz.X * 0.62 + 6, math.max(vp.X - sz.X * 0.38 - 6, sz.X * 0.62 + 6)), math.max(v.Y, sz.Y + 6)
+		if on then
+			for _, q in placed do
+				if math.abs(x - q.X) < sz.X and math.abs(y - q.Y) < sz.Y then y = q.Y - sz.Y - 4 < sz.Y + 6 and q.Y + sz.Y + 4 or q.Y - sz.Y - 4 end
+			end
+			table.insert(placed, Vector2.new(x, y))
+		end
+		u.bb.Position = UDim2.fromOffset(x, y)
 	end
 end)
 PPS.PromptTriggered:Connect(function(prompt) -- client-only stations

@@ -996,7 +996,9 @@ Shop.init({ data = data, fx = FxR, sendState = sendState })
 require(game:GetService("ServerScriptService"):WaitForChild("Boss")).init({ data = data, fx = FxR, sendState = sendState, hrpOf = hrpOf, analytics = A, strikes = C.DEPOSIT.strikes,
 	hurt = function(plr, n) return Gloom.hurt(plr, n) end, heal = function(plr) Gloom.heal(plr) end,
 	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
-Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, analytics = A, perks = function(s) return PetJobs.perks(crewOf(s)) end, busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
+Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, analytics = A, perks = function(s) return PetJobs.perks(crewOf(s)) end,
+	-- gloomlings leave you alone on a ride, in an ore minigame (hands and eyes are busy) and for 2.5 s after it (Gemini loop review, 2026-11-10)
+	busy = function(plr) local s = data[plr] return riding[plr] ~= nil or escaping[plr] ~= nil or (s ~= nil and (s.mg ~= nil or os.clock() < (s.mgSafe or 0))) end })
 
 enterMine = function(s)
 	local hrp = hrpOf(s.player)
@@ -1051,6 +1053,7 @@ local function finishMinigame(s)
 	local mg = s.mg
 	if not mg then return end
 	s.mg = nil
+	s.mgSafe = os.clock() + 2.5
 	if mg.boss then return mg.boss(s, mg) end -- a Root Warden knot (ServerScriptService.Boss), not ore
 	local count, grade
 	if mg.kind == "strike" then

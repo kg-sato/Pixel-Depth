@@ -3,7 +3,8 @@
 -- tutorial". v1: the tutorial IS the story chain (one quest at a time, in order, each pointing at a place) plus three daily
 -- quests picked from a pool by the day number, the same for everyone.
 --   a player's quests: { story = index of the open story quest, sp = its progress, day = day number, d = { id = progress },
---                        c = { id = true once claimed } }   (string keys and numbers only: DataStore-safe)
+--                        c = { id = true once claimed }, np = progress already made on the NEXT story quest while the
+--                        open one waits to be claimed }   (string keys and numbers only: DataStore-safe)
 local M = {}
 
 -- ev: the server event that counts (PixelServer calls quest(s, ev, n)); point: where the guide arrow leads (QuestUI)
@@ -35,7 +36,7 @@ end
 
 function M.clean(q, day) -- whatever was saved, made safe; a new day clears the daily progress
 	q = type(q) == "table" and q or {}
-	local o = { story = math.clamp(math.floor(tonumber(q.story) or 1), 1, #M.STORY + 1), sp = math.max(math.floor(tonumber(q.sp) or 0), 0), day = day, d = {}, c = {} }
+	local o = { story = math.clamp(math.floor(tonumber(q.story) or 1), 1, #M.STORY + 1), sp = math.max(math.floor(tonumber(q.sp) or 0), 0), np = math.max(math.floor(tonumber(q.np) or 0), 0), day = day, d = {}, c = {} }
 	if tonumber(q.day) == day then
 		for _, d in M.DAILY do
 			local p = type(q.d) == "table" and tonumber(q.d[d.id])
@@ -52,6 +53,12 @@ function M.bump(q, ev, n) -- count an event; true when something moved
 	if st and st.ev == ev and q.sp < st.n then
 		q.sp = math.min(q.sp + n, st.n)
 		changed = true
+	elseif st then -- done but not claimed yet: what you do meanwhile counts for the next quest (Gemini loop review, 2026-11-10)
+		local nx = M.STORY[q.story + 1]
+		if nx and nx.ev == ev and (q.np or 0) < nx.n then
+			q.np = math.min((q.np or 0) + n, nx.n)
+			changed = true
+		end
 	end
 	for _, d in M.dailies(q.day) do
 		local p = q.d[d.id] or 0
@@ -63,11 +70,17 @@ function M.bump(q, ev, n) -- count an event; true when something moved
 	return changed
 end
 
+function M.guide(q) -- the story quest to work on now and its progress: a finished, unclaimed one already leads to the next
+	local st = M.STORY[q.story]
+	if st and q.sp >= st.n then return M.STORY[q.story + 1], q.np or 0 end
+	return st, q.sp
+end
+
 function M.claim(q, id) -- the finished, unclaimed quest with this id (its reward is the caller's to pay), or nil
 	local st = M.STORY[q.story]
 	if st and st.id == id and q.sp >= st.n then
 		q.story += 1
-		q.sp = 0
+		q.sp, q.np = q.np or 0, 0
 		return st
 	end
 	for _, d in M.dailies(q.day) do
@@ -83,6 +96,9 @@ do -- self-check: the rules above
 	local q = M.clean(nil, 5)
 	assert(q.story == 1 and not M.claim(q, "ride"))
 	assert(M.bump(q, "ride", 1) and M.claim(q, "ride").coins == 20 and q.story == 2 and not M.claim(q, "ride"))
+	M.bump(q, "extract", 1) -- quest 2 done, not claimed: two more extracts count for quest 3
+	assert(M.guide(q).id == "three" and M.bump(q, "extract", 2) and q.np == 2)
+	assert(M.claim(q, "first") and q.story == 3 and q.sp == 2 and q.np == 0 and M.guide(q).id == "three")
 	local d = M.dailies(5)[1]
 	M.bump(q, d.ev, d.n)
 	assert(M.claim(q, d.id) == d and not M.claim(q, d.id))
