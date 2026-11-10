@@ -38,6 +38,8 @@ local function remote(name)
 	return r
 end
 local DigR, SellR, BuyR, SurfaceR, StateR, FxR = remote("Dig"), remote("Sell"), remote("Buy"), remote("Surface"), remote("State"), remote("Fx")
+local WearR = remote("Wear") -- the wardrobe (Shared.WardrobeUI): cosmetics only, the server keeps and applies what is worn
+local Wardrobe = require(RS:WaitForChild("Shared"):WaitForChild("WardrobeUI"))
 remotes.Parent = RS
 
 local oldHub = workspace:FindFirstChild("Hub") -- always build the current hub (an Edit-mode preview may be saved in the place)
@@ -84,6 +86,16 @@ effect("ColorCorrectionEffect", { Saturation = 0.06, Contrast = 0.12, Brightness
 effect("Sky", { StarCount = 3000, MoonAngularSize = 18, CelestialBodiesShown = true })
 local clouds = workspace.Terrain:FindFirstChildOfClass("Clouds") or Instance.new("Clouds")
 clouds.Cover, clouds.Density, clouds.Color, clouds.Parent = 0.45, 0.5, Color3.fromRGB(120, 110, 176), workspace.Terrain
+do -- the glass and reflections pass (overnight 2026-11-09): realistic lighting with full reflections, a glossy hub, wet caves, glass ores
+	local Glossify = require(game:GetService("ServerScriptService"):WaitForChild("Glossify"))
+	Glossify.lighting(false)
+	local ok, err = pcall(function()
+		Glossify.hub(hub)
+		local caves = workspace:FindFirstChild("Caves")
+		if caves then Glossify.caves(caves) end
+	end)
+	if not ok then warn("[Glossify] " .. tostring(err)) end
+end
 
 local proto = Instance.new("Part")
 proto.Anchored = true
@@ -93,6 +105,7 @@ proto.TopSurface, proto.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceTyp
 
 local data = {} -- [player] = plot state
 local equipPick -- defined with the held pickaxe below
+local dress -- the wardrobe, defined with its remote below
 local slots = {}
 
 local function layerOf(r)
@@ -445,6 +458,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.gold, d.pick, d.pack, d.best, d.hatched, d.pity, d.step = s.gold, s.pick, s.pack, s.best, s.hatched, s.pity, s.step
 	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
 	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
+	d.wear = s.wear
 	local names = {}
 	for i, p in s.pets do names[i] = p.name end
 	d.pets = names
@@ -458,7 +472,7 @@ local function sendState(s)
 		gold = s.gold, bag = s.bag, cap = cap(s), pick = s.pick, pack = s.pack, step = s.step, target = target(s),
 		pets = pets, ox = s.ox, oz = s.oz, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs,
 		deepest = s.deepest, goal = s.goal, gems = s.gems, lv = s.lv, equip = s.equip, tips = s.tips,
-		ores = s.ores, bagOres = s.bagOres,
+		ores = s.ores, bagOres = s.bagOres, wear = s.wear,
 	})
 end
 
@@ -499,6 +513,24 @@ local function hatch(s)
 		table.insert(s.pets, { name = name, next = os.clock() + C.HATCH_TIME })
 	end
 	if s.step == 5 then s.step = 6 end
+	FxR:FireClient(s.player, "hatch", name)
+end
+
+local function hatchFrom(s, minIdx) -- an Egg Altar egg: a rarity from minIdx up (by their own odds), then a pet of that rarity
+	local pool, total = {}, 0
+	for i = minIdx, #C.RARITIES do table.insert(pool, C.RARITIES[i]) total += C.RARITIES[i][2] end
+	local x, acc, rarity = s.rng:NextNumber() * total, 0, pool[#pool][1]
+	for _, t in pool do
+		acc += t[2]
+		if x < acc then rarity = t[1] break end
+	end
+	local names = {}
+	for n, p in C.PETS do if p[1] == rarity then table.insert(names, n) end end
+	table.sort(names)
+	if #names == 0 then return hatch(s) end
+	local name = names[s.rng:NextInteger(1, #names)]
+	s.hatched += 1
+	if #s.pets < C.MAX_PETS then table.insert(s.pets, { name = name, next = os.clock() + C.HATCH_TIME }) end
 	FxR:FireClient(s.player, "hatch", name)
 end
 
@@ -715,6 +747,7 @@ local function finishEscape(plr, report)
 		local dodges = math.clamp(math.floor(tonumber(report.dodges) or 0), 0, math.floor(el))
 		local boosts = math.clamp(math.floor(tonumber(report.boosts) or 0), 0, math.floor(el / 2))
 		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2, C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
+		if report.caught == true then bonus = math.floor(bonus / 2) end -- the Gloom nipped you (playtest 2 pursuer)
 		s.gold += bonus
 		A.earn(s, "Coins", bonus, s.gold, "EscapeBonus")
 		A.event(s, "EscapeSeconds", math.floor(el))
@@ -802,6 +835,38 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	FxR:FireClient(plr, "egg", s.eggs)
 	FxR:FireClient(plr, "nestEgg", egg, C.DEPOSIT.nests.regrow)
 	sendState(s)
+end)
+game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- the Egg Altar: pay coins, roll an egg, it hatches
+	if not prompt:GetAttribute("EggAltar") then return end
+	local s = data[plr]
+	if not s or not plr:GetAttribute("InCave") or os.clock() < (s.altarCool or 0) then return end
+	local AL = C.ALTAR
+	if s.gold < AL.cost then
+		FxR:FireClient(plr, "altarPoor", AL.cost - s.gold)
+		return
+	end
+	s.altarCool = os.clock() + 4
+	s.gold -= AL.cost
+	A.spend(s, "Coins", AL.cost, s.gold, "EggAltar")
+	s.altarPity = (s.altarPity or 0) + 1
+	local pick = #AL.eggs
+	if s.altarPity < AL.pity then -- the shown odds; the last egg is guaranteed by the pity roll
+		local x, acc = s.rng:NextNumber() * 100, 0
+		for i, e in AL.eggs do
+			acc += e[2]
+			if x < acc then pick = i break end
+		end
+	end
+	if pick == #AL.eggs then s.altarPity = 0 end
+	A.event(s, "AltarRoll_" .. AL.eggs[pick][1])
+	FxR:FireClient(plr, "altarRoll", pick, prompt.Parent)
+	sendState(s)
+	task.delay(1.6, function()
+		if data[plr] == s then
+			hatchFrom(s, AL.eggs[pick][3])
+			sendState(s)
+		end
+	end)
 end)
 do -- selling at Bolt (playtest 2, board PT2_Sell): the player picks stacks from the ore bank; the server checks each and pays
 	local SellPickR = remote("SellPick")
@@ -1151,12 +1216,26 @@ local function buildTorch(ch)
 	local handle = tp("Handle", Vector3.new(0.32, 1.7, 0.32), Color3.fromRGB(122, 84, 58))
 	local pieces = {
 		{ tp("Wrap", Vector3.new(0.46, 0.36, 0.46), Color3.fromRGB(78, 56, 44)), 0.72 },
-		{ tp("Flame", Vector3.new(0.52, 0.56, 0.52), Color3.fromRGB(255, 150, 60), Enum.Material.Neon), 1.12 },
-		{ tp("Core", Vector3.new(0.3, 0.34, 0.3), Color3.fromRGB(255, 236, 160), Enum.Material.Neon), 1.16 },
+		{ tp("Grip", Vector3.new(0.38, 0.12, 0.38), Color3.fromRGB(58, 40, 34)), -0.3 }, { tp("Grip", Vector3.new(0.38, 0.12, 0.38), Color3.fromRGB(58, 40, 34)), -0.02 }, { tp("Grip", Vector3.new(0.38, 0.12, 0.38), Color3.fromRGB(58, 40, 34)), 0.26 }, -- leather grip strapping
+		-- demo audit 09: the flame was one bare neon cube that bloomed into a square. A tapered flame in an iron cup with prongs.
+		{ tp("Cup", Vector3.new(0.58, 0.16, 0.58), Color3.fromRGB(58, 52, 72), Enum.Material.Metal), 0.94 },
+		{ tp("Flame", Vector3.new(0.4, 0.4, 0.4), Color3.fromRGB(255, 150, 60), Enum.Material.Neon), 1.16 },
+		{ tp("FlameMid", Vector3.new(0.27, 0.34, 0.27), Color3.fromRGB(255, 186, 84), Enum.Material.Neon), 1.46, math.pi / 4 }, -- turned 45 degrees: the stack tapers like a teardrop
+		{ tp("FlameMid2", Vector3.new(0.19, 0.26, 0.19), Color3.fromRGB(255, 206, 104), Enum.Material.Neon), 1.68 },
+		{ tp("FlameTip", Vector3.new(0.11, 0.26, 0.11), Color3.fromRGB(255, 232, 150), Enum.Material.Neon), 1.9, math.pi / 4 },
+		{ tp("FlameBase", Vector3.new(0.46, 0.16, 0.46), Color3.fromRGB(255, 126, 48), Enum.Material.Neon), 1.0, math.pi / 4 },
+		{ tp("Core", Vector3.new(0.2, 0.3, 0.2), Color3.fromRGB(255, 236, 160), Enum.Material.Neon), 1.18 },
 	}
+	for _, o in { { -1, -1 }, { -1, 1 }, { 1, -1 }, { 1, 1 } } do
+		local prong = tp("Prong", Vector3.new(0.07, 0.46, 0.07), Color3.fromRGB(58, 52, 72), Enum.Material.Metal)
+		local wd = Instance.new("Weld")
+		wd.Part0, wd.Part1, wd.C0 = handle, prong, CFrame.new(o[1] * 0.25, 1.2, o[2] * 0.25)
+		wd.Parent = prong
+	end
+	m:FindFirstChild("Flame").Transparency = 0.25
 	for _, piece in pieces do
 		local wd = Instance.new("Weld")
-		wd.Part0, wd.Part1, wd.C0 = handle, piece[1], CFrame.new(0, piece[2], 0)
+		wd.Part0, wd.Part1, wd.C0 = handle, piece[1], CFrame.new(0, piece[2], 0) * CFrame.Angles(0, piece[3] or 0, 0)
 		wd.Parent = piece[1]
 	end
 	local flame = m:FindFirstChild("Flame")
@@ -1198,6 +1277,48 @@ local function mountGear(s)
 		end
 	end
 end
+
+-- The wardrobe: put the worn cosmetics on the character and tint the torch flame (the lantern slot). Free and cosmetic.
+function dress(s)
+	local ch = s.player.Character
+	if not ch or not s.wear then return end
+	Wardrobe.apply(ch, s.wear)
+	local lamp = Wardrobe.find("lantern", s.wear.lantern)
+	local col = lamp and lamp.color or Color3.fromRGB(255, 196, 120)
+	s.player:SetAttribute("TorchColor", col)
+	local torch = ch:FindFirstChild("HeldTorch")
+	local flame = torch and torch:FindFirstChild("Flame")
+	if flame then
+		flame.Color = col
+		for _, n in { "FlameMid", "FlameMid2", "FlameTip" } do
+			local f = torch:FindFirstChild(n)
+			if f then f.Color = col:Lerp(Color3.new(1, 1, 1), 0.2) end
+		end
+		local sp = flame:FindFirstChild("Sparks")
+		if sp then sp.Color = ColorSequence.new(col) end
+	end
+end
+WearR.OnServerEvent:Connect(function(plr, what, a, b)
+	local s = data[plr]
+	if not s or not s.wear or os.clock() < (s.wearCool or 0) then return end
+	s.wearCool = os.clock() + 0.12
+	if what == "set" and type(a) == "string" and type(b) == "string" and Wardrobe.DEFAULT[a] and Wardrobe.find(a, b) then
+		s.wear[a] = b
+	elseif (what == "save" or what == "load") and type(a) == "number" and (a == 1 or a == 2 or a == 3) then
+		local key = tostring(a)
+		if what == "save" then
+			s.wear.presets[key] = Wardrobe.clean(s.wear)
+		elseif s.wear.presets[key] then
+			for slot, id in Wardrobe.clean(s.wear.presets[key]) do s.wear[slot] = id end
+		else
+			return
+		end
+	else
+		return
+	end
+	dress(s)
+	sendState(s)
+end)
 
 BuyR.OnServerEvent:Connect(function(plr, what, arg)
 	local s = data[plr]
@@ -1461,6 +1582,12 @@ local function onJoin(plr)
 		ores = d.ores or {}, bagOres = {}, -- the ore bank per kind ("layer.ore" keys) and the unbanked cave ore per kind
 	}
 	s.equip = (d.equip or 0) >= 1 and math.min(d.equip, s.pick) or s.pick
+	s.wear = Wardrobe.clean(d.wear) -- the wardrobe: only known slots and items survive a load
+	s.wear.presets = {}
+	for k = 1, 3 do
+		local p = type(d.wear) == "table" and type(d.wear.presets) == "table" and d.wear.presets[tostring(k)]
+		if type(p) == "table" then s.wear.presets[tostring(k)] = Wardrobe.clean(p) end
+	end
 	for _, n in d.pets do
 		if C.PETS[n] and #s.pets < C.MAX_PETS then table.insert(s.pets, { name = n, next = os.clock() + 2 }) end
 	end
@@ -1491,6 +1618,7 @@ local function onJoin(plr)
 		plr:SetAttribute("InCave", false)
 		ch:WaitForChild("LeftHand", 5)
 		buildTorch(ch) -- the miner's light: the caves are dark, light comes from your torch and the glowing things
+		dress(s)
 		equipPick(s)
 		mountGear(s)
 		sendState(s)
