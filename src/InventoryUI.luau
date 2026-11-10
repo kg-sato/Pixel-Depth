@@ -12,7 +12,7 @@ function M.start(E)
 	local INK, WHITE, MINT, PINK, BUTTER, GOLD = E.INK, E.WHITE, E.MINT, E.PINK, E.BUTTER, E.GOLD
 	local bagPill, goldPill, isBusy, burst = E.bagPill, E.goldPill, E.isBusy, E.burst
 	local SellPickR = R:WaitForChild("SellPick")
-	local MUTED, CORAL, DEEP_GOLD = Color3.fromRGB(107, 90, 128), Color3.fromRGB(224, 96, 110), Color3.fromRGB(184, 122, 26)
+	local MUTED, CORAL, DEEP_GOLD = Color3.fromRGB(58, 34, 82), Color3.fromRGB(224, 96, 110), Color3.fromRGB(184, 122, 26)
 	local HEAVY = 0.75 -- walk speed share over capacity
 	local st -- the latest state from the server
 	local ui = { tab = "bag", sell = false, picks = {}, slots = {} }
@@ -38,6 +38,8 @@ function M.start(E)
 	local inv = panel(gui, S(880, 480), S(640, 312), Vector2.new(0.5, 0.5), "panel")
 	fit(inv, 880, 480)
 	inv.Name, inv.Visible = "Inventory", false
+	if inv:FindFirstChild("Skin") then inv.Skin.ImageColor3 = Color3.fromRGB(245, 239, 251) end -- frosted parchment, not clinical white (Gemini r3)
+	if E.addModal then E.addModal(inv) end -- audit 03: the scrim, the blur and the prompt pause follow this panel
 	local _, titleT = ribbonTitle(inv, "BACKPACK", "ribbonLilac", 0.42)
 	local close = closeButton(inv, "InventoryClose")
 	local tabs = {}
@@ -61,6 +63,11 @@ function M.start(E)
 	new("UIGridLayout", grid, { CellSize = UDim2.fromScale(0.155, 0.46), CellPadding = UDim2.fromScale(0.014, 0.05), SortOrder = Enum.SortOrder.LayoutOrder })
 	local emptyT = text(inv, "", UDim2.fromScale(0.8, 0.07), UDim2.fromScale(0.5, 0.56), Vector2.new(0.5, 0.5), MUTED, 700, false)
 	emptyT.ZIndex = 6
+	local emptyIc = new("ImageLabel", inv, { Image = E.ICON and E.ICON.bag or "", BackgroundTransparency = 1, ImageTransparency = 0.25, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.42, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 6 }) -- a sleepy open pouch fills the empty panel
+	new("UIAspectRatioConstraint", emptyIc, { AspectRatio = 1 })
+	emptyT.Position, emptyT.Size = UDim2.fromScale(0.5, 0.74), UDim2.fromScale(0.8, 0.09)
+	for k = 1, 9 do new("Frame", capTrack, { Size = UDim2.new(0, 4, 1, 0), Position = UDim2.fromScale(k / 10, 0), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = INK, BackgroundTransparency = 0.15, BorderSizePixel = 0, ZIndex = 8 }) end -- ten slots
+	emptyT:GetPropertyChangedSignal("Visible"):Connect(function() emptyIc.Visible = emptyT.Visible end)
 	-- sell mode footer
 	local foot = new("Frame", inv, { Size = UDim2.fromScale(0.88, 0.11), Position = UDim2.fromScale(0.5, 0.86), AnchorPoint = Vector2.new(0.5, 0), BackgroundTransparency = 1, Visible = false, ZIndex = 6 })
 	local allBtn = button(foot, "SELECT ALL", UDim2.fromScale(0.2, 1), UDim2.fromScale(0, 0), nil, "lilac")
@@ -251,11 +258,42 @@ function M.start(E)
 			local egg = gold
 			if egg and egg:IsA("BasePart") then
 				if burst then burst(egg.Position, Vector3.yAxis, Color3.fromRGB(255, 220, 240), 28) end
+				local core = egg:FindFirstChild("EggCore") -- the glowing heart inside the glass egg (Glossify)
 				egg.LocalTransparencyModifier = 1
-				task.delay(moved or 3600, function() if egg.Parent then egg.LocalTransparencyModifier = 0 end end)
+				if core then core.LocalTransparencyModifier = 1 end
+				task.delay(moved or 3600, function()
+					if egg.Parent then egg.LocalTransparencyModifier = 0 end
+					if core and core.Parent then core.LocalTransparencyModifier = 0 end
+				end)
 			end
 			sfx("sparkle", 1.4)
 			toast("+1 EGG FROM THE NEST! HATCH IT AT MARIBEL'S INCUBATOR", PINK, true)
+		elseif kind == "altarRoll" then -- the pedestals light in turn, the chosen egg rises in a beam, then the hatch reveal plays
+			local pick, dais = gold, moved
+			local altar = dais and dais.Parent
+			local eggs = {}
+			for k = 1, 3 do eggs[k] = altar and altar:FindFirstChild("AltarEgg" .. k) end
+			local AL = C.ALTAR
+			sfx("click", 1)
+			for step = 0, 8 do -- a light chase that slows down onto the chosen egg
+				task.delay(step * 0.12 + step * step * 0.008, function()
+					local k = step < 8 and (step % 3) + 1 or pick
+					for j, e in eggs do if e then e.Material = (j == k) and Enum.Material.Neon or Enum.Material.Glass end end -- the eggs are glass (Glossify)
+					sfx("click", 1 + step * 0.06)
+				end)
+			end
+			task.delay(1.2, function()
+				local e = eggs[pick]
+				if e then
+					if burst then burst(e.Position, Vector3.yAxis, AL.eggs[pick][4], 40) end
+					local beam = E.new("Part", workspace, { Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, Material = Enum.Material.Neon, Color = AL.eggs[pick][4], Transparency = 0.5, Size = Vector3.new(1.4, 16, 1.4), CFrame = CFrame.new(e.Position + Vector3.new(0, 8, 0)) })
+					tween(beam, 0.8, { Transparency = 1, Size = Vector3.new(0.2, 22, 0.2) }).Completed:Connect(function() beam:Destroy() end)
+				end
+				sfx("upgrade", 1.2)
+				toast(string.upper(AL.eggs[pick][1]) .. " EGG!", AL.eggs[pick][4], true)
+			end)
+		elseif kind == "altarPoor" then
+			toast("THE ALTAR ASKS " .. commas(C.ALTAR.cost) .. " COINS. YOU NEED " .. commas(gold) .. " MORE", PINK, false)
 		elseif kind == "nestEmpty" then
 			toast("This nest is empty. A new egg in " .. tostring(gold) .. " min", PINK, false)
 		elseif kind == "noCoins" then

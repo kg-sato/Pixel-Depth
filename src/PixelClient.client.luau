@@ -48,13 +48,13 @@ end
 -- Soft pastel UI kit v3 (art/ui_soft from art/pd_ui_soft.py, 2026-11-08; the user: the pixel style did not fit the HUD).
 -- Refs: art/ui_soft/refs.md (casual soft GUI kits and three local FLUX sheets): rounded glossy shapes, outlines in a deeper shade
 -- of their own colour, a white rim on top, a darker lip below, soft plum shadows. SLICE is each skin's 9-slice centre in image pixels.
-local SKIN = {
-	panel = "rbxassetid://113415316875605", card = "rbxassetid://81633677346028", pill = "rbxassetid://119090200856398", dark = "rbxassetid://121498621263299",
-	mint = "rbxassetid://83808029416788", pink = "rbxassetid://136217450602282", lilac = "rbxassetid://77616401786163", butter = "rbxassetid://83179311853804",
-	sky = "rbxassetid://128441056159318", off = "rbxassetid://111104085286106", keycap = "rbxassetid://139715689953072", keycapDown = "rbxassetid://125800119532458",
-	slot = "rbxassetid://93694333526600", tab = "rbxassetid://123295883549695", tabOn = "rbxassetid://124239785302537", ribbonPink = "rbxassetid://91362224784143",
-	ribbonLilac = "rbxassetid://138043867629077",
-	pillButter = "rbxassetid://89904114967253", pillLilac = "rbxassetid://129953065739484", pillMint = "rbxassetid://86008192630288", pillPink = "rbxassetid://103351763502280", -- puffy tone-on-tone pills (kit round 4)
+local SKIN = { -- glass kit (art/ui_glass, pd_ui_glass.py; the glass pass 2026-11-09): same sizes and slices as the soft kit (art/ui_soft)
+	panel = "rbxassetid://112246722719660", card = "rbxassetid://121172097992398", pill = "rbxassetid://77883260428897", dark = "rbxassetid://82969029005096",
+	mint = "rbxassetid://105069733774712", pink = "rbxassetid://96406794528292", lilac = "rbxassetid://74133804390395", butter = "rbxassetid://108023391222559",
+	sky = "rbxassetid://91254126939707", off = "rbxassetid://119079173035833", keycap = "rbxassetid://105067142232301", keycapDown = "rbxassetid://75484431878427",
+	slot = "rbxassetid://84168548618279", tab = "rbxassetid://114912943266935", tabOn = "rbxassetid://131675575371032", ribbonPink = "rbxassetid://108159635175401",
+	ribbonLilac = "rbxassetid://72754184573546",
+	pillButter = "rbxassetid://92322010210225", pillLilac = "rbxassetid://114518839673382", pillMint = "rbxassetid://100114863227337", pillPink = "rbxassetid://121009011634746", -- puffy tone-on-tone pills (kit round 4)
 }
 local SLICE = {
 	panel = { 64, 64, 136, 126 }, card = { 50, 50, 126, 78 }, pill = { 40, 31, 136, 37 }, dark = { 36, 36, 76, 64 },
@@ -286,7 +286,7 @@ local goldPill = panel(gui, S(170, 46), S(20, 18), nil, "pillButter")
 fit(goldPill, 170, 46)
 local coinIcon = icon(goldPill, "coin", UDim2.fromScale(0.2, 0.68), UDim2.fromScale(0.06, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", coinIcon, { AspectRatio = 1 })
-local goldText = text(goldPill, "0", UDim2.fromScale(0.64, 0.56), UDim2.fromScale(0.3, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
+local goldText = text(goldPill, "0", UDim2.fromScale(0.64, 0.56), UDim2.fromScale(0.3, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(122, 78, 12), 700, false)
 goldText.TextXAlignment = Enum.TextXAlignment.Left
 goldPill.Name = "GoldPill"
 
@@ -386,7 +386,7 @@ local function feedLine(msg, color)
 end
 
 -- A dim scrim behind modal panels so they read over the busy world
-local scrim = new("Frame", gui, { Name = "Scrim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 3, Visible = false })
+local scrim = new("Frame", gui, { Name = "Scrim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(15, 10, 25), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 3, Visible = false })
 
 -- Night Shaft report (spec 5.7)
 local night = panel(gui, S(460, 230), S(640, 296), Vector2.new(0.5, 0.5), "panel")
@@ -417,7 +417,7 @@ text(sellPop, "Takes you up to the sell stall", UDim2.fromScale(0.84, 0.08), UDi
 local forge = panel(gui, S(1140, 520), S(640, 304), Vector2.new(0.5, 0.5), "panel")
 fit(forge, 1140, 520)
 forge.Visible, forge.Name = false, "Forge"
-local forgeUI = { open = function() end, toggle = function() end, refresh = function() end, fx = function() end }
+local forgeUI = { open = function() end, toggle = function() end, refresh = function() end, fx = function() end, modals = {} } -- modals: full-screen panels from the Shared modules (E.addModal)
 
 -- Egg odds (spec 5.4 and 5.12: every random item shows its odds; pity is visible)
 do
@@ -476,7 +476,7 @@ fadeText.ZIndex = 51
 local toasts = 0 -- live toasts stack downwards instead of overlapping
 local function toast(msg, color, big, delay)
 	task.delay(delay or 0, function()
-		local y = 0.7 - (toasts % 3) * 0.09 -- above the DIG button, clear of the centre panels
+		local y = 0.74 + (toasts % 3) * 0.055 -- under the centre cards (the loot card ends at 0.62), above the DIG button
 		toasts += 1
 		local t = text(gui, msg, UDim2.fromScale(big and 0.6 or 0.4, big and 0.08 or 0.06), UDim2.fromScale(0.5, y + 0.06), Vector2.new(0.5, 0.5), color, 700)
 		tween(t, 0.35, { Position = UDim2.fromScale(0.5, y) }, Enum.EasingStyle.Back)
@@ -1006,12 +1006,13 @@ local function buildViewmodel()
 	end
 	local cf, size = vm:GetBoundingBox()
 	vm.WorldPivot = CFrame.new(cf.Position - Vector3.new(0, size.Y * 0.38, 0)) -- swing from the grip
-	vm:ScaleTo(vm:GetScale() * (1.55 / math.max(size.Y, 0.1)))
+	vm:ScaleTo(vm:GetScale() * (1.65 / math.max(size.Y, 0.1))) -- a chunkier tool in the hand (audit 15: it read as a thin wand)
 	new("Highlight", vm, { FillTransparency = 1, OutlineColor = Color3.fromRGB(255, 236, 200), OutlineTransparency = 0.7, DepthMode = Enum.HighlightDepthMode.Occluded })
 	local _, sz = vm:GetBoundingBox()
 	local a0 = new("Attachment", root, { Position = root.CFrame:PointToObjectSpace(vm:GetBoundingBox().Position + Vector3.new(0, sz.Y * 0.45, 0)) })
 	local a1 = new("Attachment", root, { Position = a0.Position + Vector3.new(0.6, 0, 0) })
 	vmTrail = new("Trail", root, { Attachment0 = a0, Attachment1 = a1, Lifetime = 0.12, LightEmission = 0.8, Color = ColorSequence.new(WHITE), Transparency = NumberSequence.new(0.3, 1), Enabled = false })
+	if forgeUI.vmHands then forgeUI.vmHands(vm, root) end -- the gloved hand on the handle (Shared.ViewHands)
 	vm.Parent = cam
 end
 
@@ -1540,35 +1541,12 @@ end)()
 	gemPill:SetAttribute("Ready", true)
 end)()
 
--- Caves (cave rework, refs LGT-01, HUD-01): torch meter and fear badge bottom left; the compass to camp lives on the minimap.
+-- Caves (cave rework, refs LGT-01, HUD-01): torch and fear (drawn by Shared.SurvivalHUD, the talisman bottom left); the compass to camp lives on the minimap.
 -- The torch dims from full to its dimmest glow over C.TORCH.time (5 minutes); inside Camp 1's ring it relights and fear clears.
 -- shortcut: the torch and fear run on the client for the prototype; move them to the server when gloomling catches cost ore.
 local caveHud, cave, caveLighting, caveStep -- one scope for the cave HUD keeps the script under Luau's 200-local limit
 do
 	caveHud = new("Frame", gui, { Name = "CaveHud", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Visible = false })
-	local torchPill = panel(caveHud, S(270, 52), S(20, 470), nil, "pillButter")
-	fit(torchPill, 270, 52)
-	torchPill.Name = "TorchPill"
-	local flameBox = new("ImageLabel", torchPill, { Image = C.HUD_ICON.torch, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.16, 0.9), Position = UDim2.fromScale(0.035, 0.5), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
-	new("UIAspectRatioConstraint", flameBox, { AspectRatio = 1 })
-	local torchText = text(torchPill, "TORCH 100%", UDim2.fromScale(0.72, 0.42), UDim2.fromScale(0.22, 0.08), nil, INK, 700, false)
-	torchText.TextXAlignment = Enum.TextXAlignment.Left
-	local torchTrack = new("Frame", torchPill, { Size = UDim2.fromScale(0.72, 0.2), Position = UDim2.fromScale(0.22, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
-	local torchFill = new("Frame", torchTrack, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 176, 70), BorderSizePixel = 0, ZIndex = 3 })
-
-	local fearPill = panel(caveHud, S(270, 52), S(20, 528), nil, "pillLilac")
-	fit(fearPill, 270, 52)
-	fearPill.Name = "FearPill"
-	local face = new("ImageLabel", fearPill, { Image = C.HUD_ICON.calm, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.16, 0.9), Position = UDim2.fromScale(0.035, 0.5), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
-	new("UIAspectRatioConstraint", face, { AspectRatio = 1 })
-	local eyes = {}
-	for _, x in { 0.3, 0.7 } do eyes[#eyes + 1] = new("Frame", face, { Size = UDim2.fromScale(0.16, 0.2), Position = UDim2.fromScale(x, 0.38), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 4, Visible = false }) end
-	local mouth = new("Frame", face, { Size = UDim2.fromScale(0.4, 0.1), Position = UDim2.fromScale(0.5, 0.72), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 4, Visible = false }) -- the face is an icon now (C.HUD_ICON)
-	local fearText = text(fearPill, "CALM", UDim2.fromScale(0.71, 0.42), UDim2.fromScale(0.23, 0.08), nil, INK, 700, false)
-	fearText.TextXAlignment = Enum.TextXAlignment.Left
-	local fearTrack = new("Frame", fearPill, { Size = UDim2.fromScale(0.71, 0.2), Position = UDim2.fromScale(0.23, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
-	local fearFill = new("Frame", fearTrack, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = LILAC, BorderSizePixel = 0, ZIndex = 3 })
-
 	local relitBanner = panel(caveHud, S(420, 54), S(640, 150), Vector2.new(0.5, 0), "card")
 	fit(relitBanner, 420, 54)
 	relitBanner.Visible = false
@@ -1632,23 +1610,10 @@ do
 		local lantern = plr.Character and plr.Character:FindFirstChild("Lantern", true) -- on the torch in the left hand
 		if lantern then
 			local flick = math.noise(now * 6, 1.7) * 0.18 + math.noise(now * 17, 4.2) * 0.08
-			lantern.Color = Color3.fromRGB(255, 196, 120)
-			lantern.Range = C.TORCH.minRange + (C.TORCH.range - C.TORCH.minRange) * cave.fuel ^ 0.7 + flick * 2 + job.light
+			lantern.Color = plr:GetAttribute("TorchColor") or Color3.fromRGB(255, 196, 120) -- the lantern cosmetic (Shared.WardrobeUI)
+			lantern.Range = C.TORCH.minRange + (C.TORCH.range - C.TORCH.minRange) * cave.fuel ^ 0.5 + flick * 2 + job.light
 			lantern.Brightness = 0.22 + 0.5 * cave.fuel + flick * 0.3 -- soft: close things blew out white (the floor, then chests and tents; Gemini 2026-11-09)
 		end
-		torchFill.Size = UDim2.fromScale(cave.fuel, 1)
-		torchFill.BackgroundColor3 = cave.fuel > 0.3 and Color3.fromRGB(255, 176, 70) or Color3.fromRGB(255, 110, 90)
-		torchText.Text = "TORCH " .. math.floor(cave.fuel * 100 + 0.5) .. "%"
-		flameBox.Size = UDim2.fromScale(0.13 + 0.03 * cave.fuel + math.abs(math.noise(now * 5)) * 0.008, 0.9) -- the torch icon breathes with the flame
-		flameBox.ImageTransparency = 0.45 * (1 - cave.fuel) ^ 2
-		fearFill.Size = UDim2.fromScale(cave.fear, 1)
-		fearFill.BackgroundColor3 = LILAC:Lerp(PINK, cave.fear)
-		fearText.Text = cave.fear < 0.25 and "CALM" or (cave.fear < 0.6 and "UNEASY" or "SCARED")
-		-- the face badge: eyes widen and the mouth drops open as fear rises (HUD-01 fear face)
-		for _, e in eyes do e.Size = UDim2.fromScale(0.16 + cave.fear * 0.08, 0.2 + cave.fear * 0.12) end
-		mouth.Size = UDim2.fromScale(0.4 - cave.fear * 0.18, 0.1 + cave.fear * 0.18)
-		face.Rotation = cave.fear > 0.6 and math.sin(now * 40) * 4 * (cave.fear - 0.6) or 0
-		face.Image = cave.fear < 0.25 and C.HUD_ICON.calm or (cave.fear < 0.6 and C.HUD_ICON.uneasy or C.HUD_ICON.scared)
 		if cave.tick then cave.tick(now, h) end
 	end
 end
@@ -1664,9 +1629,26 @@ end
 	local mapPanel = panel(caveHud, S(168, 168), S(1262, 150), Vector2.new(1, 0), "panel")
 	fit(mapPanel, 168, 168)
 	mapPanel.Name = "Minimap"
-	local view = new("Frame", mapPanel, { Size = UDim2.fromScale(0.8, 0.8), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(18, 13, 28), BorderSizePixel = 0, ClipsDescendants = true, ZIndex = 2 })
-	new("UIStroke", view, { Color = INK, Thickness = 2 })
+	mapPanel.Skin.Visible = false -- audit 04: a round glass radar instead of the opaque framed square
+	local function disc(z, bg) -- a CanvasGroup clips its children to the round corner and fades as one
+		local d = new("CanvasGroup", mapPanel, { Size = UDim2.fromScale(0.94, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 16, 36), BackgroundTransparency = bg, BorderSizePixel = 0, ZIndex = z })
+		new("UICorner", d, { CornerRadius = UDim.new(0.5, 0) })
+		return d
+	end
+	local view = disc(2, 0.55)
+	view.BackgroundColor3 = Color3.fromRGB(22, 19, 46)
+	new("UIStroke", view, { Color = Color3.fromRGB(176, 132, 74), Thickness = 2.5 }) -- a brass bezel, like the mining gauge
+	for _, r in { 0.34, 0.64 } do -- faint range rings
+		local ring = new("Frame", mapPanel, { Size = UDim2.fromScale(r, r), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 4 })
+		new("UICorner", ring, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", ring, { Color = CREAM, Thickness = 1, Transparency = 0.8 })
+	end
+	local gloss = new("Frame", mapPanel, { Size = UDim2.fromScale(0.62, 0.26), Position = UDim2.fromScale(0.5, 0.2), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = WHITE, BackgroundTransparency = 0.7, BorderSizePixel = 0, Rotation = -18, ZIndex = 4 }) -- a diagonal gloss arc under the top rim
+	new("UICorner", gloss, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIGradient", gloss, { Rotation = 90, Transparency = NumberSequence.new(0, 1) })
 	local canvas = new("Frame", view, { BackgroundTransparency = 1, ZIndex = 2 })
+	local view2 = disc(3, 1) -- beacons (you, found ore) on their own disc: they stay at full strength
+	local canvas2 = new("Frame", view2, { BackgroundTransparency = 1, ZIndex = 3 })
 	-- compass on the minimap (the user, 2026-11-08: the top ribbon goes): north is always up, so N sits on the top rim; the camp
 	-- campfire icon shows where Camp 1 is and sticks to the rim, pointing the way, once it leaves the view
 	local north = panel(mapPanel, UDim2.fromScale(0.24, 0.16), UDim2.fromScale(0.5, 0.03), Vector2.new(0.5, 0.5), "pink")
@@ -1675,13 +1657,14 @@ end
 	local campIcon = icon(mapPanel, "camp", UDim2.fromScale(0.2, 0.2), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5)) -- the smooth campfire icon
 	campIcon.Name, campIcon.ZIndex = "CampIcon", 6
 	new("UIAspectRatioConstraint", campIcon, { AspectRatio = 1 })
-	local campPill = panel(caveHud, S(168, 34), S(1262, 324), Vector2.new(1, 0), "pillButter")
-	fit(campPill, 168, 34)
+	local campPill = panel(caveHud, S(124, 30), S(1240, 304), Vector2.new(1, 0), "pillButter") -- docked on the radar's bottom rim
+	fit(campPill, 124, 30)
+	campPill.ZIndex = 7
 	campPill.Name = "CampPill"
 	local campDist = text(campPill, "CAMP", UDim2.fromScale(0.84, 0.5), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
 	-- each cave area its own colour (the user, 2026-11-08): camp butter, tunnels lilac, chasm teal, grotto aqua, mushroom hall pink
-	local AREA = { camp = BUTTER, tunnel = LILAC, chasm = Color3.fromRGB(104, 214, 196), grotto = Color3.fromRGB(120, 200, 255), mush = Color3.fromRGB(255, 160, 200), squeeze = Color3.fromRGB(214, 160, 190) }
-	local me = new("Frame", view, { Size = UDim2.fromScale(0.2, 0.2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 5 })
+	local AREA = { camp = Color3.fromRGB(226, 183, 116), tunnel = LILAC, chasm = Color3.fromRGB(104, 214, 196), grotto = Color3.fromRGB(120, 200, 255), mush = Color3.fromRGB(255, 160, 200), squeeze = Color3.fromRGB(214, 160, 190) }
+	local me = new("Frame", view2, { Size = UDim2.fromScale(0.2, 0.2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 5 })
 	local meDot = new("Frame", me, { Size = UDim2.fromScale(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.55), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 5 })
 	new("UIStroke", meDot, { Color = INK, Thickness = 1 })
 	new("Frame", me, { Size = UDim2.fromScale(0.24, 0.28), Position = UDim2.fromScale(0.5, 0.16), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 5 })
@@ -1743,6 +1726,7 @@ end
 	end)
 	local function mapBuild(caves)
 		canvas:ClearAllChildren()
+		canvas2:ClearAllChildren()
 		for _, g in map.deps do if g.bb then g.bb:Destroy() end end
 		map.caves, map.floors, map.deps = caves, {}, {}
 		local x0, z0, x1, z1 = math.huge, math.huge, -math.huge, -math.huge
@@ -1773,6 +1757,9 @@ end
 		if not map.lo then return end
 		local p = h.Position
 		canvas.Position = UDim2.fromScale(0.5 - (p.X - map.lo.X) / C.MAP_VIEW, 0.5 - (p.Z - map.lo.Y) / C.MAP_VIEW)
+		canvas2.Position, canvas2.Size = canvas.Position, canvas.Size
+		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
+		view.GroupTransparency += ((hum and hum.MoveDirection.Magnitude > 0.1 and 0.8 or 0) - view.GroupTransparency) * 0.1 -- 20% while walking
 		local lv = cam.CFrame.LookVector
 		me.Rotation = math.deg(math.atan2(lv.X, -lv.Z))
 		local to = C.CAVE_ORIGIN - p
@@ -1823,7 +1810,7 @@ end
 				new("Frame", canvas, {
 					Position = UDim2.fromScale((f.a.X - map.lo.X) / map.span.X, (f.a.Y - map.lo.Y) / map.span.Y),
 					Size = UDim2.fromScale((f.b.X - f.a.X) / map.span.X, (f.b.Y - f.a.Y) / map.span.Y),
-					BackgroundColor3 = Color3.fromRGB(40, 30, 62):Lerp(AREA[f.theme] or LILAC, 0.45 + 0.55 * math.clamp((f.top + 40) / 50, 0, 1)), BorderSizePixel = 0, ZIndex = 2,
+					BackgroundColor3 = Color3.fromRGB(40, 30, 62):Lerp(AREA[f.theme] or LILAC, 0.45 + 0.55 * math.clamp((f.top + 40) / 50, 0, 1)), BackgroundTransparency = 0.45, BorderSizePixel = 0, ZIndex = 2, -- glass: the cave shows through the map
 				})
 			end
 		end
@@ -1842,7 +1829,7 @@ end
 		map.hl = map.hl or {}
 		local near = {}
 		for _, g in map.deps do
-			if not g.claimed then
+			if not g.claimed and not cave.mgBusy then -- no ore outlines behind a minigame (they showed as stray wireframes round the dial and the spire)
 				local d = (g.core.Position - p).Magnitude
 				if d < 45 then table.insert(near, { g = g, d = d }) end
 			end
@@ -1866,7 +1853,7 @@ end
 		for _, g in map.deps do -- a found deposit stays on the map as a dot in its ore colour until you mine it
 			if not g.claimed and not g.dot and (g.core.Position - p).Magnitude < r then
 				local pos, size = onMap(g.core.Position.X, g.core.Position.Z, 5)
-				g.dot = new("Frame", canvas, { Position = pos, Size = size, BackgroundColor3 = g.col, BorderSizePixel = 0, ZIndex = 3 })
+				g.dot = new("Frame", canvas2, { Position = pos, Size = size, BackgroundColor3 = g.col, BorderSizePixel = 0, ZIndex = 3 })
 				new("UIStroke", g.dot, { Color = CREAM, Thickness = 1 })
 			end
 		end
@@ -1893,7 +1880,7 @@ end
 		end
 		if not on then CAS:UnbindAction("PixelMgLock") end
 		cave.mgBusy = on -- prompts pause (the camera loop owns ProximityPromptService.Enabled)
-		for _, n in { "TorchPill", "FearPill", "Minimap", "CampPill", "GoldPill", "Surface", "InventoryButton" } do -- Tracker and HeavyPill hide themselves (they are not always on) -- focus: every HUD widget steps back while a minigame is up
+		for _, n in { "Survival", "Minimap", "CampPill", "LeftColumn" } do -- Tracker and HeavyPill hide themselves (they are not always on) -- focus: every HUD widget steps back while a minigame is up
 			local o = caveHud:FindFirstChild(n) or gui:FindFirstChild(n)
 			if o then o.Visible = not on end
 		end
@@ -1909,16 +1896,28 @@ end
 	local dialShadow = new("Frame", ps, { Size = S(300, 300), Position = S(640, 298), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(20, 12, 34), BackgroundTransparency = 0.45, BorderSizePixel = 0, ZIndex = 10 })
 	fit(dialShadow, 1, 1)
 	new("UICorner", dialShadow, { CornerRadius = UDim.new(0.5, 0) })
-	local dial = new("Frame", ps, { Size = S(300, 300), Position = S(640, 290), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(111, 88, 176), BorderSizePixel = 0, ZIndex = 10 })
+	-- audit 06: the dial was a stark white clock face. It is an old brass mining gauge now: a bronze case, a brass bezel, a dark
+	-- slate face with notches and glowing rune marks, a glowing needle; a gold hit throws shards off the real deposit
+	local BRASS, BRONZE, SLATE = Color3.fromRGB(214, 168, 84), Color3.fromRGB(96, 64, 40), Color3.fromRGB(46, 38, 62)
+	local dial = new("Frame", ps, { Size = S(300, 300), Position = S(640, 290), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BRONZE, BorderSizePixel = 0, ZIndex = 10 })
 	fit(dial, 1, 1)
 	new("UICorner", dial, { CornerRadius = UDim.new(0.5, 0) })
-	for _, ring in { { 0.965, LILAC }, { 0.93, CREAM }, { 0.86, Color3.fromRGB(185, 164, 238) }, { 0.84, Color3.fromRGB(232, 224, 252) }, { 0.36, Color3.fromRGB(214, 202, 248) } } do
-		new("UICorner", new("Frame", dial, { Size = UDim2.fromScale(ring[1], ring[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = ring[2], BorderSizePixel = 0, ZIndex = 10 }), { CornerRadius = UDim.new(0.5, 0) })
+	for _, ring in { { 0.965, BRASS }, { 0.9, BRONZE:Lerp(INK, 0.4) }, { 0.875, BRASS:Lerp(WHITE, 0.25) }, { 0.85, SLATE }, { 0.36, SLATE:Lerp(LILAC, 0.14) } } do
+		local r = new("Frame", dial, { Size = UDim2.fromScale(ring[1], ring[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = ring[2], BorderSizePixel = 0, ZIndex = 10 })
+		new("UICorner", r, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIGradient", r, { Rotation = 70, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(150, 140, 160)) }) -- a lit top-left edge on each ring
 	end
-	for i = 0, 23 do -- soft dots every 15 degrees, bigger every 45
+	for i = 0, 23 do -- brass notches every 15 degrees; every 45 a glowing rune mark (a mint diamond)
 		local t = new("Frame", dial, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Rotation = i * 15, ZIndex = 11 })
-		local d = i % 3 == 0 and 0.026 or 0.016
-		new("UICorner", new("Frame", t, { Size = UDim2.fromScale(d, d), Position = UDim2.fromScale(0.5, 0.115), BackgroundColor3 = Color3.fromRGB(111, 88, 176), BackgroundTransparency = i % 3 == 0 and 0.1 or 0.45, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 11 }), { CornerRadius = UDim.new(0.5, 0) })
+		local rune = i % 3 == 0
+		local n = new("Frame", t, { Size = rune and UDim2.fromScale(0.034, 0.034) or UDim2.fromScale(0.012, 0.04), Position = UDim2.fromScale(0.5, 0.125), Rotation = rune and 45 or 0, BackgroundColor3 = rune and MINT or BRASS, BackgroundTransparency = rune and 0 or 0.25, BorderSizePixel = 0, AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 11 })
+		if rune then new("UIStroke", n, { Color = MINT, Thickness = 2, Transparency = 0.6 }) end
+	end
+	for i = 0, 3 do -- four bronze rivets hold the bezel
+		local t = new("Frame", dial, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Rotation = 45 + i * 90, ZIndex = 11 })
+		local rv = new("Frame", t, { Size = UDim2.fromScale(0.04, 0.04), Position = UDim2.fromScale(0.5, 0.034), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BRONZE:Lerp(INK, 0.3), BorderSizePixel = 0, ZIndex = 11 })
+		new("UICorner", rv, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", rv, { Color = BRASS:Lerp(WHITE, 0.3), Thickness = 1, Transparency = 0.3 })
 	end
 	local arcPivot = new("Frame", dial, { Name = "Arc", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 11 })
 	local function drawArc(z) -- the gold zone (15 degrees, wider with forge levels) as a fan of thin spokes, darker gold on its edges
@@ -1931,8 +1930,16 @@ end
 	end
 	drawArc(D.arc)
 	local needle = new("Frame", dial, { Name = "Needle", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 12 })
-	new("UICorner", new("Frame", needle, { Size = UDim2.fromScale(0.04, 0.4), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 12 }), { CornerRadius = UDim.new(0.5, 0) })
-	local hub = new("Frame", dial, { Size = UDim2.fromScale(0.11, 0.11), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 13 })
+	local nd = new("Frame", needle, { Size = UDim2.fromScale(0.034, 0.4), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = Color3.fromRGB(226, 255, 244), BorderSizePixel = 0, ZIndex = 12 }) -- pale mint: it must not merge with the gold wedge
+	new("UICorner", nd, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", nd, { Color = Color3.fromRGB(62, 196, 170), Thickness = 3, Transparency = 0.2 })
+	local tipN = new("Frame", needle, { Size = UDim2.fromScale(0.016, 0.1), Position = UDim2.fromScale(0.5, 0.11), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = WHITE, BorderSizePixel = 0, ZIndex = 12 }) -- it tapers to a fine point
+	new("UICorner", tipN, { CornerRadius = UDim.new(0.5, 0) })
+	local cw = new("Frame", needle, { Size = UDim2.fromScale(0.075, 0.075), Position = UDim2.fromScale(0.5, 0.6), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BRASS, BorderSizePixel = 0, ZIndex = 12 }) -- a brass counterweight behind the pivot
+	new("UICorner", cw, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", cw, { Color = BRONZE, Thickness = 2 }) -- the needle glows: a pale core in an amber halo
+	local halo = new("ImageLabel", needle, { Image = "rbxassetid://77591933607769", ImageColor3 = Color3.fromRGB(127, 255, 220), ImageTransparency = 0.35, BackgroundTransparency = 1, Size = UDim2.fromScale(0.3, 0.3), Position = UDim2.fromScale(0.5, 0.14), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 11 })
+	local hub = new("Frame", dial, { Size = UDim2.fromScale(0.11, 0.11), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BRASS, BorderSizePixel = 0, ZIndex = 13 })
 	new("UICorner", hub, { CornerRadius = UDim.new(0.5, 0) })
 	new("UIStroke", hub, { Color = Color3.fromRGB(196, 138, 46), Thickness = 3 })
 	local psTitleBar = panel(ps, S(560, 50), S(640, 110), Vector2.new(0.5, 0.5), "pill")
@@ -1942,9 +1949,9 @@ end
 	psTitle.ZIndex = 3
 	local psPop = text(ps, "PERFECT!", S(360, 52), S(640, 290), Vector2.new(0.5, 0.5), BUTTER)
 	psPop.ZIndex, psPop.Visible = 14, false
-	local pipTrack = new("Frame", ps, { Size = S(130, 36), Position = S(640, 460), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(214, 202, 248), BorderSizePixel = 0, ZIndex = 11 })
+	local pipTrack = new("Frame", ps, { Size = S(130, 36), Position = S(640, 460), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = SLATE, BorderSizePixel = 0, ZIndex = 11 })
 	new("UICorner", pipTrack, { CornerRadius = UDim.new(0.5, 0) })
-	new("UIStroke", pipTrack, { Color = Color3.fromRGB(111, 88, 176), Thickness = 3 })
+	new("UIStroke", pipTrack, { Color = BRASS, Thickness = 3 })
 	local pips = {}
 	for i = 1, D.strikes do
 		pips[i] = new("Frame", ps, { Size = S(22, 22), Position = S(640 + (i - (D.strikes + 1) / 2) * 34, 460), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 12 })
@@ -1979,72 +1986,10 @@ end
 			task.delay(0.5, function() r:Destroy() end)
 		end)
 	end
-	local strikeBtn = button(ps, "STRIKE!", S(250, 74), S(640, 546), Vector2.new(0.5, 0.5), "mint", "hammer") -- under the dial (kit round 4)
+	local strikeBtn = button(ps, "STRIKE!", S(204, 62), S(640, 540), Vector2.new(0.5, 0.5), "butter", "hammer") -- under the dial (kit round 4)
 	strikeBtn.ZIndex = 12
 
-	-- Vein Rush (EXT-02): the vein drops a segment per chisel; red cracks sit on one side, chisel the other
-	local vr = new("Frame", caveHud, { Name = "VeinRush", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Visible = false, ZIndex = 10 })
-	new("Frame", vr, { Name = "Dim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 0.45, BorderSizePixel = 0, ZIndex = 9 })
-	local quality = panel(vr, S(560, 84), S(640, 18), Vector2.new(0.5, 0), "card")
-	fit(quality, 560, 84)
-	quality.ZIndex = 12
-	local qText = text(quality, "VEIN RUSH  FLAWLESS", UDim2.fromScale(0.6, 0.4), UDim2.fromScale(0.07, 0.26), nil, INK, 700, false)
-	qText.TextXAlignment = Enum.TextXAlignment.Left
-	local stars = {}
-	for i = 1, 3 do
-		stars[i] = new("ImageLabel", quality, { Image = SPRITE.star, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.09, 0.56), Position = UDim2.fromScale(0.73 + i * 0.065, 0.46), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
-	end
-	local timeBar = panel(vr, S(460, 42), S(640, 110), Vector2.new(0.5, 0), "dark")
-	fit(timeBar, 460, 42)
-	timeBar.ZIndex = 12
-	local timeTrack = new("Frame", timeBar, { Size = UDim2.fromScale(0.9, 0.5), Position = UDim2.fromScale(0.5, 0.45), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(30, 20, 48), BorderSizePixel = 0, ZIndex = 2 })
-	new("UICorner", timeTrack, { CornerRadius = UDim.new(0.5, 0) })
-	local timeFill = new("Frame", timeTrack, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = MINT, BorderSizePixel = 0, ZIndex = 3 })
-	new("UICorner", timeFill, { CornerRadius = UDim.new(0.5, 0) })
-	local plate = new("Frame", vr, { Size = S(300, 318), Position = S(640, 459), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = Color3.fromRGB(74, 56, 110), BackgroundTransparency = 0.3, BorderSizePixel = 0, ZIndex = 10 })
-	new("UICorner", plate, { CornerRadius = UDim.new(0.08, 0) })
-	new("UIStroke", plate, { Color = LILAC, Thickness = 3, Transparency = 0.2 })
-	local column = new("Frame", vr, { Size = S(280, 300), Position = S(640, 450), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, ZIndex = 10 })
-	local slots = {}
-	for k = 1, 5 do -- slot 1 is the bottom segment, the one you chisel now
-		local y = 1 - (k - 1) * 0.18
-		local seg = new("Frame", column, { Size = UDim2.fromScale(0.32, 0.17), Position = UDim2.fromScale(0.5, y), AnchorPoint = Vector2.new(0.5, 1), BorderSizePixel = 0, ZIndex = 11, ClipsDescendants = true })
-		new("UICorner", seg, { CornerRadius = UDim.new(0.22, 0) })
-		new("UIStroke", seg, { Color = INK, Thickness = 2 })
-		-- a cut crystal: a light top band, a dark bottom band and a pale diagonal facet
-		local lite = new("Frame", seg, { Size = UDim2.fromScale(1, 0.24), BorderSizePixel = 0, ZIndex = 12 })
-		local dark = new("Frame", seg, { Size = UDim2.fromScale(1, 0.24), Position = UDim2.fromScale(0, 0.76), BorderSizePixel = 0, ZIndex = 12 })
-		new("Frame", seg, { Size = UDim2.fromScale(0.14, 0.62), Position = UDim2.fromScale(0.28, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 24, BackgroundColor3 = WHITE, BackgroundTransparency = 0.55, BorderSizePixel = 0, ZIndex = 12 })
-		local lines = {}
-		for side = 1, 2 do -- the red fracture running into the vein on the cracked side
-			lines[side] = new("Frame", seg, { Size = UDim2.fromScale(0.3, 0.1), Position = UDim2.fromScale(side == 1 and 0 or 1, 0.55), AnchorPoint = Vector2.new(side == 1 and 0 or 1, 0.5), Rotation = side == 1 and -14 or 14, BackgroundColor3 = Color3.fromRGB(230, 50, 80), BorderSizePixel = 0, ZIndex = 13 })
-		end
-		local cracks = {}
-		for side = 1, 2 do
-			local c = new("Frame", column, { Size = UDim2.fromScale(0.34, 0.17), Position = UDim2.fromScale(side == 1 and 0.17 or 0.83, y - 0.085), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 11 })
-			for n, w in { 0.9, 0.62, 0.32 } do -- a red crystal spike jutting out of the vein, stepped like pixels
-				local spike = new("Frame", c, { Size = UDim2.fromScale(w, 0.22), Position = UDim2.fromScale(side == 1 and 1 or 0, 0.2 + n * 0.17), AnchorPoint = Vector2.new(side == 1 and 1 or 0, 0.5), BackgroundColor3 = n == 1 and Color3.fromRGB(255, 140, 120) or Color3.fromRGB(240, 106, 100), BorderSizePixel = 0, ZIndex = 11 })
-				new("UICorner", spike, { CornerRadius = UDim.new(0.5, 0) })
-				new("UIStroke", spike, { Color = Color3.fromRGB(150, 56, 70), Thickness = 2 }) -- soft coral, not alarm red (kit round 4)
-			end
-			cracks[side] = c
-		end
-		slots[k] = { seg = seg, cracks = cracks, lite = lite, dark = dark, lines = lines }
-	end
-	local miner = new("ImageLabel", column, { Image = ICON.pick, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.17, 0.16), Position = UDim2.fromScale(0.12, 1), AnchorPoint = Vector2.new(0.5, 1), ZIndex = 13 })
-	local beatBar = panel(vr, S(200, 36), S(640, 480), Vector2.new(0.5, 0.5), "dark")
-	fit(beatBar, 200, 36)
-	beatBar.ZIndex = 12
-	local beatText = text(beatBar, "BEAT 1 / 10", UDim2.fromScale(0.84, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), CREAM)
-	beatText.ZIndex = 3
-	local leftBtn = button(vr, "< CHISEL LEFT", S(300, 86), S(190, 470), Vector2.new(0, 1), "mint", "chisel") -- clear of the vein and the stick/jump zones
-	local rightBtn = button(vr, "CHISEL RIGHT >", S(300, 86), S(1090, 470), Vector2.new(1, 1), "pink", "chisel")
-	rightBtn.Icon.Rotation = 90 -- the chisel points the other way
-	leftBtn.ZIndex, rightBtn.ZIndex = 12, 12
-	if UIS.KeyboardEnabled then
-		keyCap(leftBtn, "A", UDim2.fromScale(0.1, 0.5), UDim2.fromScale(0.06, 0.12))
-		keyCap(rightBtn, "D", UDim2.fromScale(0.1, 0.5), UDim2.fromScale(0.94, 0.12))
-	end
+	local VR -- Vein Rush (EXT-02) lives in Shared.VeinRushUI: a crystal spire in the world, started below once its helpers exist
 	-- the result card (both minigames): ore swatch, amount, gold value, grade and stars
 	local resultDim = new("Frame", caveHud, { Name = "ResultDim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 0.5, BorderSizePixel = 0, ZIndex = 14, Visible = false })
 	local result = panel(caveHud, S(470, 190), S(640, 270), Vector2.new(0.5, 0.5), "panel")
@@ -2052,16 +1997,9 @@ end
 	result.Name, result.Visible, result.ZIndex = "ExtractResult", false, 15
 	local ribbon = ribbonTitle(result, "ORE EXTRACTED!", "ribbonPink", 0.66)
 	ribbon.Size = UDim2.fromScale(0.66, 0.26)
-	local swatch = new("Frame", result, { Size = UDim2.fromScale(0.2, 0.5), Position = UDim2.fromScale(0.08, 0.55), AnchorPoint = Vector2.new(0, 0.5), BorderSizePixel = 0, ZIndex = 3 })
-	fit(swatch, 1, 1)
-	new("UICorner", swatch, { CornerRadius = UDim.new(0.5, 0) })
-	new("UIStroke", swatch, { Color = Color3.fromRGB(111, 88, 176), Thickness = 4 })
-	new("UIGradient", swatch, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(150, 140, 175)) }) -- glossy: lit on top, shaded below
 	local swGlow = new("ImageLabel", result, { Image = "rbxassetid://77591933607769", BackgroundTransparency = 1, ImageTransparency = 0.2, Size = UDim2.fromScale(0.42, 1.04), Position = UDim2.fromScale(0.18, 0.55), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 2 })
 	new("UIAspectRatioConstraint", swGlow, { AspectRatio = 1 })
-	local swLite = new("Frame", swatch, { Size = UDim2.fromScale(0.44, 0.3), Position = UDim2.fromScale(0.3, 0.26), AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, BackgroundTransparency = 0.25, ZIndex = 4 })
-	new("UICorner", new("Frame", swatch, { Size = UDim2.fromScale(0.12, 0.12), Position = UDim2.fromScale(0.62, 0.22), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = WHITE, BackgroundTransparency = 0.1, BorderSizePixel = 0, ZIndex = 4 }), { CornerRadius = UDim.new(0.5, 0) })
-	new("UICorner", swLite, { CornerRadius = UDim.new(0.5, 0) })
+	local oreIcon = require(RS.Shared:WaitForChild("OreIcon")).make(result, { Size = UDim2.fromScale(0.24, 0.62), Position = UDim2.fromScale(0.06, 0.55), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 }) -- audit 08: a live voxel ore, not a flat circle
 	local rOre = text(result, "+6 ORE", UDim2.fromScale(0.6, 0.2), UDim2.fromScale(0.33, 0.2), nil, INK, 700, false)
 	rOre.TextXAlignment = Enum.TextXAlignment.Left
 	local coinI = icon(result, "coin", UDim2.fromScale(0.06, 0.15), UDim2.fromScale(0.33, 0.43))
@@ -2078,7 +2016,8 @@ end
 	local function showResult(oreName, count, value, col, gradeText, nStars)
 		resultSeq += 1
 		local my = resultSeq
-		swatch.BackgroundColor3, swLite.BackgroundColor3, swGlow.ImageColor3 = col:Lerp(WHITE, 0.15), col:Lerp(WHITE, 0.55), col
+		oreIcon.set(col)
+		swGlow.ImageColor3 = col
 		rOre.Text = "+" .. count .. " " .. string.upper(oreName)
 		rGold.Text = commas(value) .. " GOLD"
 		rGrade.Text = gradeText
@@ -2101,63 +2040,25 @@ end
 			if slips <= g[2] then return g end
 		end
 	end
-	local function drawVein()
-		for k, sl in slots do
-			local beat = mg.i + k
-			local on = beat <= #mg.seq
-			sl.seg.Visible = on
-			local base = mg.col:Lerp(LILAC, 0.2):Lerp(beat % 2 == 0 and WHITE or Color3.new(0, 0, 0), 0.12)
-			sl.seg.BackgroundColor3, sl.lite.BackgroundColor3, sl.dark.BackgroundColor3 = base, base:Lerp(WHITE, 0.4), base:Lerp(INK, 0.35)
-			for side = 1, 2 do
-				sl.cracks[side].Visible = on and mg.seq[beat] == side
-				sl.lines[side].Visible = on and mg.seq[beat] == side
-				for _, sp in sl.cracks[side]:GetChildren() do -- only the next two cracks are bold; the look-ahead stays faint
-					sp.BackgroundTransparency = k <= 2 and 0 or 0.65
-				end
+	VR = require(RS.Shared:WaitForChild("VeinRushUI")).start({
+		new = new, S = S, fit = fit, text = text, panel = panel, button = button, keyCap = keyCap, tween = tween, sfx = sfx, shake = shake, pop = pop,
+		uiBurst = uiBurst, D = D, caveHud = caveHud, plr = plr, SPRITE = SPRITE, gradeOf = gradeOf, INK = INK, WHITE = WHITE, MINT = MINT, PINK = PINK, CREAM = CREAM, LILAC = LILAC,
+		send = function(m) -- every beat chiselled, or the time ran out: the server grades the choices
+			if not m.sent then
+				m.sent = true
+				ExtractR:FireServer("rush", m.choices)
 			end
-		end
-		local g = gradeOf(mg.slips)
-		qText.Text = "VEIN RUSH  " .. g[1]
-		for i, st in stars do st.Image = i <= g[4] and SPRITE.star or SPRITE.starOff end
-		beatText.Text = "BEAT " .. math.min(mg.i + 1, #mg.seq) .. " / " .. #mg.seq
-	end
+		end,
+	})
+	local vr = VR.frame
 	local function close()
 		if not mg then return end
 		mg = nil
-		ps.Visible, vr.Visible = false, false
+		ps.Visible = false
+		VR.close()
 		freeze(false)
 	end
 	cave.mgClose = close
-	local function sendRush()
-		if mg and mg.kind == "rush" and not mg.sent then
-			mg.sent = true
-			ExtractR:FireServer("rush", mg.choices)
-		end
-	end
-	local function chisel(side)
-		if not mg or mg.kind ~= "rush" or mg.sent then return end
-		mg.i += 1
-		mg.choices[mg.i] = side
-		miner.Position = UDim2.fromScale(side == 1 and 0.12 or 0.88, 1)
-		miner.Rotation = side == 1 and -30 or 30
-		tween(miner, 0.15, { Rotation = 0 }, Enum.EasingStyle.Back)
-		local at = S(640 + (side == 1 and -50 or 50), 420)
-		if mg.seq[mg.i] == side then -- hit the crack: a slip
-			mg.slips += 1
-			sfx("hit", 0.6)
-			shake(0.5)
-			uiBurst(vr, at, { Color3.fromRGB(255, 90, 110), PINK }, 10, 0.16)
-			miner.ImageColor3 = PINK
-			tween(miner, 0.3, { ImageColor3 = WHITE })
-		else
-			sfx("clink", 1.1 + mg.i * 0.04)
-			uiBurst(vr, at, { mg.col:Lerp(WHITE, 0.3), mg.col, CREAM }, 9, 0.18)
-		end
-		column.Position = S(640, 450 - 72) -- the vein drops one segment
-		tween(column, 0.12, { Position = S(640, 450) }, Enum.EasingStyle.Quad)
-		drawVein()
-		if mg.i >= #mg.seq then sendRush() end
-	end
 	local function strike()
 		if not mg or mg.kind ~= "strike" or mg.done or os.clock() < mg.cool then return end
 		mg.cool = os.clock() + 0.28
@@ -2167,8 +2068,6 @@ end
 	end
 	held.strike = strike -- the minigame lock's Space/A binding strikes through this
 	strikeBtn.Activated:Connect(strike)
-	leftBtn.Activated:Connect(function() chisel(1) end)
-	rightBtn.Activated:Connect(function() chisel(2) end)
 	UIS.InputBegan:Connect(function(input, gp)
 		if not mg or gp then return end
 		local k, t = input.KeyCode, input.UserInputType
@@ -2176,9 +2075,9 @@ end
 			strike()
 		elseif mg.kind == "rush" then
 			if k == Enum.KeyCode.A or k == Enum.KeyCode.Left or k == Enum.KeyCode.ButtonL1 or k == Enum.KeyCode.DPadLeft or t == Enum.UserInputType.MouseButton1 then
-				chisel(1)
+				VR.chisel(1)
 			elseif k == Enum.KeyCode.D or k == Enum.KeyCode.Right or k == Enum.KeyCode.ButtonR1 or k == Enum.KeyCode.DPadRight or t == Enum.UserInputType.MouseButton2 then
-				chisel(2)
+				VR.chisel(2)
 			end
 		end
 	end)
@@ -2199,9 +2098,7 @@ end
 			else
 				mg.seq, mg.i, mg.slips, mg.choices = param, 0, 0, {}
 				vr:SetAttribute("Seq", table.concat(param, "")) -- for the Play test script (the player sees the cracks anyway)
-				drawVein()
-				vr.Visible = true
-				pop(column, 0.7, 0.3)
+				VR.open(mg)
 			end
 			sfx("sparkle", 1.1)
 		elseif kind == "mgStrike" and mg and mg.kind == "strike" then
@@ -2215,8 +2112,16 @@ end
 			if perfect then -- the hit recipe from the VFX note: hit-stop, FOV punch, a soft brightness lift, rising pitch
 				mg.streak = (mg.streak or 0) + 1
 				mg.freezeUntil = os.clock() + 0.07 -- the needle holds for 70 ms; UI and sound keep going
-				sfx("clink", 1.5 * (1 + 0.06 * (mg.streak - 1)))
+				local up = 1 + 0.06 * (mg.streak - 1)
+				sfx("clink", 1.5 * up) -- the hammer clink, then a rising chime chord (root, third, fifth)
 				sfx("sparkle", 1.25)
+				for k, iv in { 1, 1.26, 1.5 } do task.delay(0.05 * k, function() sfx("upgrade", 1.6 * iv * up) end) end
+				local core = mg.dep.PrimaryPart
+				if core then -- the deposit itself answers: voxel shards and crystal dust fly off it, a golden shockwave ring
+					burst(core.Position, (cam.CFrame.Position - core.Position).Unit, mg.col, 16)
+					burst(core.Position, Vector3.yAxis, CREAM, 8)
+					shockwave(core.Position, GOLD)
+				end
 				shake(0.3)
 				fovKick = -4 -- a punch in, then the camera eases back
 				local cc = game:GetService("Lighting"):FindFirstChildOfClass("ColorCorrectionEffect")
@@ -2271,10 +2176,7 @@ end
 			if not (mg.freezeUntil and os.clock() < mg.freezeUntil) then needle.Rotation = ((workspace:GetServerTimeNow() - mg.t0) / (mg.period or D.strikePeriod) % 1) * 360 end
 			arcPivot.Rotation = mg.arc
 		elseif mg and mg.kind == "rush" then
-			local left = 1 - (workspace:GetServerTimeNow() - mg.t0) / (#mg.seq * D.rushBeat)
-			timeFill.Size = UDim2.fromScale(math.clamp(left, 0, 1), 1)
-			timeFill.BackgroundColor3 = left > 0.3 and MINT or PINK
-			if left <= 0 then sendRush() end
+			VR.tick(mg)
 		end
 	end
 end)()
@@ -2392,6 +2294,8 @@ end)()
 					task.delay(0.15 + k * 0.18, function() tween(r.text, 0.25, { TextTransparency = 0 }) end)
 				end
 			end
+		elseif kind == "mgStrike" and card.Visible then
+			closePanel(card) -- the first swing is in: the card gives the screen back
 		elseif kind == "mgEnd" and current then
 			tip(current) -- seen once it has been played through
 			current = nil
@@ -2770,6 +2674,8 @@ end)()
 		pop = pop, tween = tween, commas = commas, INK = INK, WHITE = WHITE, MINT = MINT, PINK = PINK, BUTTER = BUTTER, GOLD = GOLD,
 		bagPill = bagPill, goldPill = goldPill, burst = burst, shake = shake, ICON = ICON, fly = function(...) if forgeUI.fly then forgeUI.fly(...) end end,
 		isBusy = function() return cave ~= nil and cave.mgBusy == true end,
+		cave = cave, caveHud = caveHud, hrp = hrp, feed = feed, layerPill = layerPill, icon = icon, keyCap = keyCap, CREAM = CREAM, LILAC = LILAC,
+		addModal = function(f) table.insert(forgeUI.modals, f) end, vmHook = forgeUI,
 	}
 	do -- sitting in the minecart (playtest 2): the server sets Seated while it holds us in a cart; our own Animator plays the sit pose
 		local SIT = { [Enum.HumanoidRigType.R15] = "rbxassetid://2506281703", [Enum.HumanoidRigType.R6] = "rbxassetid://178130996" }
@@ -2793,7 +2699,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
@@ -2861,17 +2767,23 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		cam.CFrame = CFrame.lookAt(focus + dir * C.CAM_DIST + off, focus + off)
 	end
 	local modal = forge.Visible or odds.Visible or mapP.Visible or night.Visible
-	local promptsOn = not (modal or cave.mgBusy)
+	for _, m in forgeUI.modals do modal = modal or m.Visible end
+	local card = caveHud:FindFirstChild("ResultDim")
+	local promptsOn = not (modal or cave.mgBusy or (card and card.Visible)) -- audit 05: no world prompt over a modal or a loot card
+	caveHud.Visible = inCave and not modal -- the cave HUD and its tip ribbon step back behind a modal
+	layerPill.Visible, goldPill.Parent.Parent.Visible = not modal, not (modal or cave.mgBusy) -- so do the location pill and the left column (Gemini r2: they floated over the blur)
 	if PPS.Enabled ~= promptsOn then PPS.Enabled = promptsOn end
 	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and not inCave
 	if modal ~= scrim.Visible then
 		scrim.Visible = true
-		tween(scrim, 0.2, { BackgroundTransparency = modal and 0.25 or 1 })
+		tween(scrim, 0.25, { BackgroundTransparency = modal and 0.45 or 1 })
+		forgeUI.blur = forgeUI.blur or new("BlurEffect", game:GetService("Lighting"), { Name = "ModalBlur", Size = 0 }) -- audit 03: the world falls out of focus
+		tween(forgeUI.blur, 0.25, { Size = (modal and not forge.Visible) and 16 or 0 }) -- the forge brings its own blur
 		if not modal then task.delay(0.2, function() if scrim.BackgroundTransparency > 0.95 then scrim.Visible = false end end) end
 	end
 	-- a free mouse while a panel is open (or Left Alt is held) so PC players can click the HUD in first person
 	if inMine or inCave then
-		local free = forge.Visible or odds.Visible or sellPop.Visible or mapP.Visible or night.Visible or UIS:IsKeyDown(Enum.KeyCode.LeftAlt)
+		local free = modal or sellPop.Visible or UIS:IsKeyDown(Enum.KeyCode.LeftAlt)
 		if free then
 			UIS.MouseBehavior = Enum.MouseBehavior.Default
 		end
@@ -2887,33 +2799,29 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		end
 		for _, d in cave.tvm:GetDescendants() do
 			if d:IsA("BasePart") then d.Anchored, d.Transparency, d.CastShadow = d == cave.tvm.PrimaryPart, 0, false end
-			if d.Name == "Flame" then d.Color = Color3.fromRGB(205, 112, 42) end -- dimmer neon: a full-bright flame at the lens blooms into a blob
+			if d.Name:sub(1, 5) == "Flame" then d.Color = (plr:GetAttribute("TorchColor") or Color3.fromRGB(255, 150, 60)):Lerp(Color3.new(0, 0, 0), 0.25) end -- dimmer neon: a full-bright flame at the lens blooms into a blob
 			if d.Name == "Core" then d.Color = Color3.fromRGB(235, 190, 120) end
 		end
 		cave.tvm:ScaleTo(0.6)
 		cave.tvm.Name = "ViewTorch"
+		if forgeUI.vmHands then forgeUI.vmHands(cave.tvm, cave.tvm.PrimaryPart, cave.tvm.PrimaryPart.CFrame * CFrame.new(0, -0.2, 0), 0.72) end -- the left hand holds it (audit 15)
 		cave.tvm.Parent = cam
 	end
 	if cave.tvm and (inMine or inCave) and not cave.mgBusy then
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 		local bob = hum and hum.MoveDirection.Magnitude > 0.1 and math.sin(now * 10 + 1.5) * 0.07 or math.sin(now * 2 + 1) * 0.02
-		cave.tvm:PivotTo(cam.CFrame * CFrame.new(-1.15, -1.05 + bob, -2.4) * CFrame.Angles(0.3, 0.25, -0.15))
+		cave.tvm:PivotTo(cam.CFrame * CFrame.new(-1.3, -1.1 + bob, -2.4) * CFrame.Angles(0.3, 0.25, -0.32)) -- leaning out toward the screen edge
 	elseif cave.tvm then
 		cave.tvm:PivotTo(CFrame.new(0, -1e4, 0)) -- out of sight during minigames
 	end
 	-- first-person pickaxe swing: wind-up, fast strike, short hold, recover; walking bob
 	if vm and (inMine or inCave) then
 		local t = now - swingT0
-		local a = 0
-		if t < 0.07 then a = -0.8 * t / 0.07
-		elseif t < 0.13 then a = -0.8 + 2.4 * ((t - 0.07) / 0.06) ^ 2
-		elseif t < 0.18 then a = 1.6
-		elseif t < 0.42 then a = 1.6 * (1 - (t - 0.18) / 0.24) ^ 2 end
 		if vmTrail then vmTrail.Enabled = t > 0.06 and t < 0.2 end
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 		local moving = hum and hum.MoveDirection.Magnitude > 0.1
 		local bob = moving and math.sin(now * 10) * 0.08 or math.sin(now * 2) * 0.02
-		vm:PivotTo(cam.CFrame * CFrame.new(1.3, -1.5 + bob, -2.1) * CFrame.Angles(0.15, -0.35, 0.35) * CFrame.Angles(-a, 0, 0))
+		vm:PivotTo(cam.CFrame * (forgeUI.vmPose and forgeUI.vmPose(dt, t, moving, now, cam.CFrame) or CFrame.new(1.3, -1.5 + bob, -2.1) * CFrame.Angles(0.15, -0.35, 0.35))) -- springs: Shared.ViewHands
 	end
 	-- aim outline on the block under the crosshair
 	if inMine then

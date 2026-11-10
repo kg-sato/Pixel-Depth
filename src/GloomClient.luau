@@ -1,4 +1,4 @@
--- GloomClient (ReplicatedStorage.Shared.GloomClient), started by PixelClient. The Gloom (roadmap phase 6; server: ServerScriptService.Gloom): the HP pill and the FLARE button on the cave HUD, a soot sprite
+-- GloomClient (ReplicatedStorage.Shared.GloomClient), started by PixelClient. The Gloom (roadmap phase 6; server: ServerScriptService.Gloom): the flare key (HP and the flare slot are drawn by Shared.SurvivalHUD), a soot sprite
 -- drawn on every server gloomling (bob, blinking eyes, squash when flared), BONK and the catch, the flare burst, the golden shield,
 -- and Wick's and Smudge's speech bubbles at Camp 1. The torch follows the server: RelitAt and TorchFrozen attributes.
 local M = {}
@@ -11,30 +11,11 @@ function M.start(E)
 	local FlareR = R:WaitForChild("Flare", 30)
 	local MINT_C = Color3.fromRGB(127, 220, 180)
 	local SOOT, EYE = Color3.fromRGB(44, 42, 62), Color3.fromRGB(214, 196, 140) -- charcoal; eyes a soft gold (pale neon bloomed to white)
-	-- HP pill above the torch
-	local hpPill = panel(caveHud, S(270, 52), S(20, 412), nil, "pillPink")
-	fit(hpPill, 270, 52)
-	hpPill.Name = "HpPill"
-	local heart = new("ImageLabel", hpPill, { Image = C.HUD_ICON.heart, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.16, 0.9), Position = UDim2.fromScale(0.035, 0.5), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 }) -- playtest 2: soft-kit icon
-	new("UIAspectRatioConstraint", heart, { AspectRatio = 1 })
-	local hpText = text(hpPill, "HP 100", UDim2.fromScale(0.72, 0.42), UDim2.fromScale(0.22, 0.08), nil, INK, 700, false)
-	hpText.TextXAlignment = Enum.TextXAlignment.Left
-	local hpTrack = new("Frame", hpPill, { Size = UDim2.fromScale(0.72, 0.2), Position = UDim2.fromScale(0.22, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
-	local hpFill = new("Frame", hpTrack, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 110, 140), BorderSizePixel = 0, ZIndex = 3 })
-	-- FLARE button (key R), right side above the thumb zone
-	local flareBtn = button(caveHud, "FLARE  R  x2", S(190, 58), S(1262, 470), Vector2.new(1, 0), "pink")
-	fit(flareBtn, 190, 58)
-	flareBtn.Name = "FlareBtn"
-	do -- the flare icon on the left, the label moved right so they never overlap (playtest 2)
-		local fi = new("ImageLabel", flareBtn, { Image = C.HUD_ICON.flare, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.26, 0.92), Position = UDim2.fromScale(0.04, 0.47), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
-		new("UIAspectRatioConstraint", fi, { AspectRatio = 1 })
-		local lab = flareBtn:FindFirstChild("Label")
-		if lab then lab.Size, lab.Position = UDim2.fromScale(0.62, 0.5), UDim2.fromScale(0.63, 0.47) end
-	end
+	-- the HP hearts and the flare slot are drawn by Shared.SurvivalHUD (the talisman); the flare itself fires from here
 	local function fire()
 		if FlareR and plr:GetAttribute("InCave") and (plr:GetAttribute("Flares") or 0) > 0 and not cave.mgBusy then FlareR:FireServer() end
 	end
-	flareBtn.Activated:Connect(fire)
+	cave.flare = fire
 	UIS.InputBegan:Connect(function(io, gp)
 		if not gp and (io.KeyCode == Enum.KeyCode.R or io.KeyCode == Enum.KeyCode.ButtonY) then fire() end
 	end)
@@ -43,17 +24,6 @@ function M.start(E)
 	local hitFlash = new("Frame", layer, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 80, 120), BackgroundTransparency = 1, BorderSizePixel = 0 })
 	local shield = new("Frame", layer, { Size = UDim2.new(1, -20, 1, -20), Position = UDim2.fromOffset(10, 10), BackgroundTransparency = 1, BorderSizePixel = 0 }) -- inset: the stroke draws outside the frame
 	local shieldStroke = new("UIStroke", shield, { Color = Color3.fromRGB(255, 210, 90), Thickness = 18, Transparency = 1 })
-	local function refreshHud()
-		local hp = plr:GetAttribute("HP") or C.GLOOM.hp
-		local fl = plr:GetAttribute("Flares") or C.GLOOM.flares
-		hpText.Text = "HP " .. hp
-		tween(hpFill, 0.25, { Size = UDim2.fromScale(math.clamp(hp / C.GLOOM.hp, 0, 1), 1) })
-		flareBtn.Text = "FLARE  R  x" .. fl
-		setKind(flareBtn, fl > 0 and "pink" or "lilac")
-	end
-	plr:GetAttributeChangedSignal("HP"):Connect(refreshHud)
-	plr:GetAttributeChangedSignal("Flares"):Connect(refreshHud)
-	refreshHud()
 	-- the torch follows the server: frozen until the first bank, else counted from when you left the ring
 	plr:GetAttributeChangedSignal("RelitAt"):Connect(function()
 		local at = plr:GetAttribute("RelitAt")
