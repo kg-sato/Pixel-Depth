@@ -465,7 +465,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.gold, d.pick, d.pack, d.best, d.hatched, d.pity, d.step = s.gold, s.pick, s.pack, s.best, s.hatched, s.pity, s.step
 	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
 	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
-	d.wear, d.quests = s.wear, s.quests
+	d.wear, d.quests, d.lanterns = s.wear, s.quests, s.lanterns
 	local names = {}
 	for i, p in s.pets do names[i] = p.name end
 	d.pets = names
@@ -479,7 +479,7 @@ local function sendState(s)
 		gold = s.gold, bag = s.bag, cap = cap(s), pick = s.pick, pack = s.pack, step = s.step, target = target(s),
 		pets = pets, ox = s.ox, oz = s.oz, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs,
 		deepest = s.deepest, goal = s.goal, gems = s.gems, lv = s.lv, equip = s.equip, tips = s.tips,
-		ores = s.ores, bagOres = s.bagOres, wear = s.wear,
+		ores = s.ores, bagOres = s.bagOres, wear = s.wear, lanterns = s.lanterns,
 	})
 end
 
@@ -969,6 +969,26 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	A.earn(s, "Gems", SH.gems, s.gems, "CaveShrine")
 	FxR:FireClient(plr, "chest", chest, gold, C.LAYERS[L][1])
 	FxR:FireClient(plr, "shrineGems", SH.gems)
+	sendState(s)
+end)
+game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- a lost Lamplighter lantern at a cave shrine: each one once, ever
+	local i = prompt:GetAttribute("CaveLantern")
+	local s = data[plr]
+	if type(i) ~= "number" or not s or not plr:GetAttribute("InCave") then return end
+	local hrp = hrpOf(plr)
+	if not hrp or (hrp.Position - prompt.Parent.Position).Magnitude > prompt.MaxActivationDistance + 6 then return end
+	local key = tostring(i)
+	if s.lanterns[key] then
+		FxR:FireClient(plr, "lanternHave")
+		return
+	end
+	s.lanterns[key] = true
+	local n = 0
+	for _ in s.lanterns do n += 1 end
+	s.gems += C.LANTERN.gems
+	A.earn(s, "Gems", C.LANTERN.gems, s.gems, "LostLantern")
+	A.event(s, "LostLantern_" .. key)
+	FxR:FireClient(plr, "lantern", i, n, C.LANTERN.gems)
 	sendState(s)
 end)
 local Gloom = require(game:GetService("ServerScriptService"):WaitForChild("Gloom")) -- gloomlings, HP, the catch, flares (phase 6)
@@ -1622,6 +1642,8 @@ local function onJoin(plr)
 	}
 	s.equip = (d.equip or 0) >= 1 and math.min(d.equip, s.pick) or s.pick
 	s.quests = Quests.clean(d.quests, Quests.day())
+	s.lanterns = {} -- lost lanterns found: { ["1"] = true, ... }
+	for k = 1, C.LANTERN.count do if type(d.lanterns) == "table" and d.lanterns[tostring(k)] == true then s.lanterns[tostring(k)] = true end end
 	s.wear = Wardrobe.clean(d.wear) -- the wardrobe: only known slots and items survive a load
 	s.wear.presets = {}
 	for k = 1, 3 do

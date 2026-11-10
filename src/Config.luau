@@ -107,6 +107,7 @@ C.TEX = {
 	crack3 = "rbxassetid://88354204027901",
 }
 C.LAYER_TEX = { "rootholm", "titan", "glitter", "muspell", "mimir", "alfglow", "gap" }
+C.LANTERN = { count = 3, gems = 5 } -- the lost Lamplighter lanterns at the cave shrines (one each, found once ever)
 C.SHRINE_ROWS = { 22, 84, 146, 208, 270, 332, 394 } -- one hidden shrine room per layer (rows of the mine, 5x3x5 cells)
 
 -- Caves (3D noise): caverns where the cave field is high, winding tunnels where two fields both cross zero

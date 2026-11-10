@@ -50,6 +50,27 @@ function M.start(E)
 		if h and e == "cheer" and burst then burst(h.Position + Vector3.new(0, 4.5, 0), Vector3.yAxis, E.GOLD, 14) end -- a little confetti over the head
 	end)
 
+	-- the Lost Lamplighters: a lantern found (the server pays), and the murals' one-line captions (client only)
+	local GRAN = { "Gran: \"Fenn's lantern! He always walked in front.\"", "Gran: \"That one was Odda's. She sang the whole way down.\"", "Gran: \"The captain's lantern... so they did reach the bottom.\"" }
+	local MURAL = { "The Lamplighters march down, lanterns held high.", "Something dark rises from below.", "They stayed, to keep the great light alive." }
+	R.Fx.OnClientEvent:Connect(function(kind, i, n, gems)
+		if kind == "lantern" then
+			sfx("claim")
+			emote("cheer")
+			E.toast("LOST LANTERN " .. n .. " / " .. #GRAN .. "   +" .. gems .. " GEMS", E.GOLD, true)
+			task.delay(1.4, function() E.toast(GRAN[i] or GRAN[1], E.GOLD, false) end)
+		elseif kind == "lanternHave" then
+			E.toast("You already carried this lantern home.", E.GOLD, false)
+		end
+	end)
+	game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt)
+		local m = prompt:GetAttribute("Mural")
+		if m then
+			sfx("pluck", 0.8)
+			E.toast(MURAL[m] or MURAL[1], E.GOLD, false)
+		end
+	end)
+
 	-- walking dust
 	local dust, hum
 	local function dress(ch)

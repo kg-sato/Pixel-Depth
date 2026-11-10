@@ -957,6 +957,45 @@ function Cave.build(parent, origin, seed)
 				pr.Style = Enum.ProximityPromptStyle.Custom
 				pr:SetAttribute("CaveShrine", true)
 				pr.Parent = chest
+				-- the Lost Lamplighters (Lore and Gameplay Plan A8): each shrine keeps one lost lantern and one mural panel. The mural is a
+				-- picture made of small glowing blocks on a dark slab: 1 the march down, 2 the Gloom rising, 3 the ones who stayed
+				local slab = part("Shrines", "Mural", Vector3.new(4.4, 3.2, 0.4), base * CFrame.new(-4.1, 2.3, 1.1), PAL.rock[1], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
+				part("Shrines", "MuralFrame", Vector3.new(4.8, 0.3, 0.6), base * CFrame.new(-4.1, 4.05, 1.1), PAL.bark)
+				part("Shrines", "MuralFrame", Vector3.new(4.8, 0.3, 0.6), base * CFrame.new(-4.1, 0.55, 1.1), PAL.bark)
+				local function dot(x, y, w, h, col) -- x, y on the slab face, from its centre
+					part("Shrines", "MuralDot", Vector3.new(w, h, 0.12), base * CFrame.new(-4.1 + x, 2.3 + y, 0.86), col, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+				end
+				local function miner(x, y, lit) -- a little figure holding a lantern
+					dot(x, y + 0.42, 0.24, 0.24, PAL.cream)
+					dot(x, y, 0.3, 0.5, PAL.cream)
+					if lit then dot(x + 0.34, y + 0.2, 0.16, 0.2, PAL.warm) end
+				end
+				if made % 3 == 1 then
+					for k = 0, 3 do miner(-1.5 + k, 0.8 - k * 0.5, true) end -- marching down
+				elseif made % 3 == 2 then
+					for k = 0, 2 do miner(-1 + k, 0.8, true) end
+					dot(0, -0.9, 3.2, 0.7, PAL.lightViolet:Lerp(Color3.new(0, 0, 0), 0.55)) -- the Gloom below
+					dot(-0.5, -0.8, 0.2, 0.2, PAL.cream)
+					dot(0.5, -0.8, 0.2, 0.2, PAL.cream)
+				else
+					dot(0, 0.5, 0.7, 0.9, PAL.warm) -- the great light
+					for _, r in { { -0.9, 0.5, 0.5, 0.12 }, { 0.9, 0.5, 0.5, 0.12 }, { 0, 1.25, 0.12, 0.4 } } do dot(r[1], r[2], r[3], r[4], PAL.warm) end
+					for k = -1, 1 do miner(k * 1.2, -0.8, false) end -- they stayed beside it
+				end
+				glow(slab, PAL.warm, 8, 0.35)
+				local look = Instance.new("ProximityPrompt")
+				look.ActionText, look.ObjectText, look.KeyboardKeyCode = "Look", "Old mural", Enum.KeyCode.F
+				look.MaxActivationDistance, look.RequiresLineOfSight, look.Style = 7, false, Enum.ProximityPromptStyle.Custom
+				look:SetAttribute("Mural", (made - 1) % 3 + 1)
+				look.Parent = slab
+				local lost = lantern("Shrines", "LostLantern", base * CFrame.new(2.7, 0.75, -0.3) * CFrame.Angles(0, 0.5, 0.12), PAL.warm, 12, 1)
+				local spot = part("Shrines", "LostLanternSpot", Vector3.new(1.2, 1.5, 1.2), base * CFrame.new(2.7, 0.75, -0.3), PAL.warm, { Transparency = 1, CanCollide = false, CastShadow = false })
+				local take = Instance.new("ProximityPrompt")
+				take.ActionText, take.ObjectText, take.KeyboardKeyCode = "Take", "Lost lantern", Enum.KeyCode.E
+				take.MaxActivationDistance, take.RequiresLineOfSight, take.Style = 5, false, Enum.ProximityPromptStyle.Custom
+				take:SetAttribute("CaveLantern", made)
+				take.Exclusivity = Enum.ProximityPromptExclusivity.AlwaysShow -- the chest beside it also uses E (a hold); a tap takes the lantern
+				take.Parent = spot
 			end
 		end
 		model:SetAttribute("Shrines", made)

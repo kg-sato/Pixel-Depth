@@ -1238,7 +1238,8 @@ RunService.RenderStepped:Connect(function()
 		local p = (a:IsA("BasePart") and a.Position or (a:IsA("Attachment") and a.WorldPosition or Vector3.zero)) + Vector3.new(0, u.lift, 0)
 		local v, on = cam:WorldToScreenPoint(p)
 		u.bb.Visible = on
-		u.bb.Position = UDim2.fromOffset(v.X, v.Y)
+		local sz, vp = u.bb.AbsoluteSize, cam.ViewportSize -- kept whole on screen: a bubble over a tall thing was cut by the top edge (Gemini UI review, 2026-11-10)
+		u.bb.Position = UDim2.fromOffset(math.clamp(v.X, sz.X * 0.62 + 6, math.max(vp.X - sz.X * 0.38 - 6, sz.X * 0.62 + 6)), math.max(v.Y, sz.Y + 6))
 	end
 end)
 PPS.PromptTriggered:Connect(function(prompt) -- client-only stations
@@ -2237,17 +2238,21 @@ end)()
 	end
 	game:GetService("RunService").Heartbeat:Connect(function() -- never cover a prompt bubble: the ribbon steps down while one sits behind its top spot (playtest 2)
 		if not banner.Visible or not banner:GetAttribute("Settled") then return end
-		local vp = workspace.CurrentCamera.ViewportSize
-		local a1 = Vector2.new(vp.X * 0.5 - banner.AbsoluteSize.X / 2, vp.Y * 96 / 592)
-		local a2 = a1 + banner.AbsoluteSize
-		local hit = false
-		for _, b in gui:GetChildren() do
-			if b.Name == "PromptUI" and b.Visible then
-				local b1, b2 = b.AbsolutePosition, b.AbsolutePosition + b.AbsoluteSize
-				if a1.X < b2.X and b1.X < a2.X and a1.Y < b2.Y and b1.Y < a2.Y then hit = true end
+		local vp = gui.AbsoluteSize -- the HUD's own size: the viewport is taller by the top bar, which put the test 9 px low
+		local pick = 96
+		for _, y in { 96, 452, 300 } do -- the first spot no prompt bubble sits on (two bubbles can be up at a shrine)
+			local a1 = Vector2.new(vp.X * 0.5 - banner.AbsoluteSize.X / 2, vp.Y * y / 592)
+			local a2 = a1 + banner.AbsoluteSize
+			local hit = false
+			for _, b in gui:GetChildren() do
+				if b.Name == "PromptUI" and b.Visible then
+					local b1, b2 = b.AbsolutePosition, b.AbsolutePosition + b.AbsoluteSize
+					if a1.X < b2.X and b1.X < a2.X and a1.Y < b2.Y and b1.Y < a2.Y then hit = true end
+				end
 			end
+			if not hit then pick = y break end
 		end
-		banner.Position = hit and S(640, 452) or S(640, 96)
+		banner.Position = S(640, pick)
 	end)
 	local function tip(name)
 		if seen(name) then return end
