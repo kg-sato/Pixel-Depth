@@ -15,9 +15,8 @@ function M.start(E)
 	local hpPill = panel(caveHud, S(270, 52), S(20, 412), nil, "pillPink")
 	fit(hpPill, 270, 52)
 	hpPill.Name = "HpPill"
-	local heart = new("Frame", hpPill, { Size = UDim2.fromScale(0.13, 0.6), Position = UDim2.fromScale(0.05, 0.5), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.fromRGB(255, 96, 132), BorderSizePixel = 0, Rotation = 45, ZIndex = 3 })
+	local heart = new("ImageLabel", hpPill, { Image = C.HUD_ICON.heart, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.16, 0.9), Position = UDim2.fromScale(0.035, 0.5), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 }) -- playtest 2: soft-kit icon
 	new("UIAspectRatioConstraint", heart, { AspectRatio = 1 })
-	new("UICorner", heart, { CornerRadius = UDim.new(0.3, 0) })
 	local hpText = text(hpPill, "HP 100", UDim2.fromScale(0.72, 0.42), UDim2.fromScale(0.22, 0.08), nil, INK, 700, false)
 	hpText.TextXAlignment = Enum.TextXAlignment.Left
 	local hpTrack = new("Frame", hpPill, { Size = UDim2.fromScale(0.72, 0.2), Position = UDim2.fromScale(0.22, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
@@ -26,6 +25,12 @@ function M.start(E)
 	local flareBtn = button(caveHud, "FLARE  R  x2", S(190, 58), S(1262, 470), Vector2.new(1, 0), "pink")
 	fit(flareBtn, 190, 58)
 	flareBtn.Name = "FlareBtn"
+	do -- the flare icon on the left, the label moved right so they never overlap (playtest 2)
+		local fi = new("ImageLabel", flareBtn, { Image = C.HUD_ICON.flare, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.26, 0.92), Position = UDim2.fromScale(0.04, 0.47), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
+		new("UIAspectRatioConstraint", fi, { AspectRatio = 1 })
+		local lab = flareBtn:FindFirstChild("Label")
+		if lab then lab.Size, lab.Position = UDim2.fromScale(0.62, 0.5), UDim2.fromScale(0.63, 0.47) end
+	end
 	local function fire()
 		if FlareR and plr:GetAttribute("InCave") and (plr:GetAttribute("Flares") or 0) > 0 and not cave.mgBusy then FlareR:FireServer() end
 	end

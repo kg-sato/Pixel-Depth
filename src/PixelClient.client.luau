@@ -355,7 +355,7 @@ end
 local crossScale = scaler(cross)
 
 -- Pickup feed (board: under the pills, newest on top)
-local feed = new("Frame", gui, { Size = S(300, 140), Position = S(112, 160), BackgroundTransparency = 1 })
+local feed = new("Frame", gui, { Size = S(270, 140), Position = S(102, 222), BackgroundTransparency = 1 }) -- under the upgrade tracker (playtest 2: no overlap)
 new("UIListLayout", feed, { SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 4), VerticalAlignment = Enum.VerticalAlignment.Top })
 local feedN = 0
 local function feedLine(msg, color)
@@ -1549,9 +1549,8 @@ do
 	local torchPill = panel(caveHud, S(270, 52), S(20, 470), nil, "pillButter")
 	fit(torchPill, 270, 52)
 	torchPill.Name = "TorchPill"
-	local flameBox = new("Frame", torchPill, { Size = UDim2.fromScale(0.12, 0.62), Position = UDim2.fromScale(0.05, 0.5), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.fromRGB(255, 150, 60), BorderSizePixel = 0, ZIndex = 3 })
-	new("UIAspectRatioConstraint", flameBox, { AspectRatio = 0.75 })
-	local flameCore = new("Frame", flameBox, { Size = UDim2.fromScale(0.5, 0.55), Position = UDim2.fromScale(0.5, 0.62), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 236, 160), BorderSizePixel = 0, ZIndex = 4 })
+	local flameBox = new("ImageLabel", torchPill, { Image = C.HUD_ICON.torch, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.16, 0.9), Position = UDim2.fromScale(0.035, 0.5), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
+	new("UIAspectRatioConstraint", flameBox, { AspectRatio = 1 })
 	local torchText = text(torchPill, "TORCH 100%", UDim2.fromScale(0.72, 0.42), UDim2.fromScale(0.22, 0.08), nil, INK, 700, false)
 	torchText.TextXAlignment = Enum.TextXAlignment.Left
 	local torchTrack = new("Frame", torchPill, { Size = UDim2.fromScale(0.72, 0.2), Position = UDim2.fromScale(0.22, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
@@ -1560,12 +1559,11 @@ do
 	local fearPill = panel(caveHud, S(270, 52), S(20, 528), nil, "pillLilac")
 	fit(fearPill, 270, 52)
 	fearPill.Name = "FearPill"
-	local face = new("Frame", fearPill, { Size = UDim2.fromScale(0.15, 0.7), Position = UDim2.fromScale(0.04, 0.5), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 3 })
+	local face = new("ImageLabel", fearPill, { Image = C.HUD_ICON.calm, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.16, 0.9), Position = UDim2.fromScale(0.035, 0.5), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 })
 	new("UIAspectRatioConstraint", face, { AspectRatio = 1 })
-	new("UIStroke", face, { Color = INK, Thickness = 2 })
 	local eyes = {}
-	for _, x in { 0.3, 0.7 } do eyes[#eyes + 1] = new("Frame", face, { Size = UDim2.fromScale(0.16, 0.2), Position = UDim2.fromScale(x, 0.38), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 4 }) end
-	local mouth = new("Frame", face, { Size = UDim2.fromScale(0.4, 0.1), Position = UDim2.fromScale(0.5, 0.72), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 4 })
+	for _, x in { 0.3, 0.7 } do eyes[#eyes + 1] = new("Frame", face, { Size = UDim2.fromScale(0.16, 0.2), Position = UDim2.fromScale(x, 0.38), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 4, Visible = false }) end
+	local mouth = new("Frame", face, { Size = UDim2.fromScale(0.4, 0.1), Position = UDim2.fromScale(0.5, 0.72), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 4, Visible = false }) -- the face is an icon now (C.HUD_ICON)
 	local fearText = text(fearPill, "CALM", UDim2.fromScale(0.71, 0.42), UDim2.fromScale(0.23, 0.08), nil, INK, 700, false)
 	fearText.TextXAlignment = Enum.TextXAlignment.Left
 	local fearTrack = new("Frame", fearPill, { Size = UDim2.fromScale(0.71, 0.2), Position = UDim2.fromScale(0.23, 0.62), BackgroundColor3 = INK, BorderSizePixel = 0, ZIndex = 2 })
@@ -1641,7 +1639,8 @@ do
 		torchFill.Size = UDim2.fromScale(cave.fuel, 1)
 		torchFill.BackgroundColor3 = cave.fuel > 0.3 and Color3.fromRGB(255, 176, 70) or Color3.fromRGB(255, 110, 90)
 		torchText.Text = "TORCH " .. math.floor(cave.fuel * 100 + 0.5) .. "%"
-		flameBox.Size = UDim2.fromScale(0.08 + 0.05 * cave.fuel + math.abs(math.noise(now * 5)) * 0.01, 0.4 + 0.25 * cave.fuel)
+		flameBox.Size = UDim2.fromScale(0.13 + 0.03 * cave.fuel + math.abs(math.noise(now * 5)) * 0.008, 0.9) -- the torch icon breathes with the flame
+		flameBox.ImageTransparency = 0.45 * (1 - cave.fuel) ^ 2
 		fearFill.Size = UDim2.fromScale(cave.fear, 1)
 		fearFill.BackgroundColor3 = LILAC:Lerp(PINK, cave.fear)
 		fearText.Text = cave.fear < 0.25 and "CALM" or (cave.fear < 0.6 and "UNEASY" or "SCARED")
@@ -1649,6 +1648,7 @@ do
 		for _, e in eyes do e.Size = UDim2.fromScale(0.16 + cave.fear * 0.08, 0.2 + cave.fear * 0.12) end
 		mouth.Size = UDim2.fromScale(0.4 - cave.fear * 0.18, 0.1 + cave.fear * 0.18)
 		face.Rotation = cave.fear > 0.6 and math.sin(now * 40) * 4 * (cave.fear - 0.6) or 0
+		face.Image = cave.fear < 0.25 and C.HUD_ICON.calm or (cave.fear < 0.6 and C.HUD_ICON.uneasy or C.HUD_ICON.scared)
 		if cave.tick then cave.tick(now, h) end
 	end
 end
@@ -2311,7 +2311,9 @@ end)()
 		tween(banner, 0.4, { Position = S(640, 96) }, Enum.EasingStyle.Back)
 		pop(banner, 0.6, 0.35)
 		sfx("sparkle", 1.25)
+		task.delay(0.42, function() banner:SetAttribute("Settled", true) end)
 		task.delay(5.5, function()
+			banner:SetAttribute("Settled", false)
 			tween(scaler(banner), 0.18, { Scale = 0.6 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 			task.delay(0.2, function()
 				banner.Visible = false
@@ -2321,6 +2323,20 @@ end)()
 			end)
 		end)
 	end
+	game:GetService("RunService").Heartbeat:Connect(function() -- never cover a prompt bubble: the ribbon steps down while one sits behind its top spot (playtest 2)
+		if not banner.Visible or not banner:GetAttribute("Settled") then return end
+		local vp = workspace.CurrentCamera.ViewportSize
+		local a1 = Vector2.new(vp.X * 0.5 - banner.AbsoluteSize.X / 2, vp.Y * 96 / 592)
+		local a2 = a1 + banner.AbsoluteSize
+		local hit = false
+		for _, b in gui:GetChildren() do
+			if b.Name == "PromptUI" and b.Visible then
+				local b1, b2 = b.AbsolutePosition, b.AbsolutePosition + b.AbsoluteSize
+				if a1.X < b2.X and b1.X < a2.X and a1.Y < b2.Y and b1.Y < a2.Y then hit = true end
+			end
+		end
+		banner.Position = hit and S(640, 452) or S(640, 96)
+	end)
 	local function tip(name)
 		if seen(name) then return end
 		shown[name] = true

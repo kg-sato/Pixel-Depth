@@ -23,5 +23,11 @@
  "ore_rune_tin": "84304854874096",
  "ore_frostquartz": "105789721830747",
  "ore_bards_amethyst": "105263817138186",
- "ore_valkyrie_sapphire": "139140232453040"
+ "ore_valkyrie_sapphire": "139140232453040",
+ "hud_heart": "112840156135846",
+ "hud_torch": "132878882630763",
+ "hud_face_calm": "85218255319100",
+ "hud_face_uneasy": "108597473207994",
+ "hud_face_scared": "82253085768781",
+ "hud_flare": "136155303523972"
 }

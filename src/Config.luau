@@ -267,6 +267,13 @@ C.CHEST_GOLD = 40 -- gold per chest, times the streak (capped at 7)
 -- Spent on forge levels (C.FORGE) and on egg rolls when you have no egg.
 C.GEMS = { rare = 2, perfect = 1, chest = 2 }
 C.EGG_GEMS = 10 -- one egg roll with gems
+-- HUD pill icons (playtest 2: "remake the icons in the bottom left to be higher quality and of the same theme"; art/icons_soft/hud_*,
+-- Codex imagegen in the soft kit style, ids in art/icons_soft/asset_ids.json)
+C.HUD_ICON = {
+	heart = "rbxassetid://112840156135846", torch = "rbxassetid://132878882630763", flare = "rbxassetid://136155303523972",
+	calm = "rbxassetid://85218255319100", uneasy = "rbxassetid://108597473207994", scared = "rbxassetid://82253085768781",
+}
+C.EGG_COINS = 75 -- a starter egg from Maribel's stall (playtest 2: cheap eggs in town, rarer ones in the caves)
 -- gem packs for Robux (ServerScriptService.Shop): id = the Developer Product id from the Creator Dashboard; 0 = not created yet
 -- (the pack shows SOON). Prices are a proposal for the owner to set.
 C.GEM_PACKS = { { gems = 40, robux = 49, id = 0 }, { gems = 120, robux = 129, id = 0 }, { gems = 320, robux = 299, id = 0 } }
@@ -290,7 +297,7 @@ C.CAVES_ON = true -- the lift goes to the shared caves; false brings back the pr
 C.TORCH = { time = 300, range = 18, minRange = 6 } -- full light to the dimmest glow in 5 minutes (the user, 2026-11-08); wooden torch radius 18 studs (LGT-02)
 -- the minecart escape on the ride up (MinecartEscape): track length (studs), base speed (studs/s), coin bonus range;
 -- the server pays only when the run took at least dist / (speed * 1.6) seconds (every boost stacked the whole way)
-C.ESCAPE = { dist = 1050, speed = 30, bonus = { 10, 40 } }
+C.ESCAPE = { dist = 1050, speed = 30, top = 1.45, bonus = { 10, 40 } } -- top: the speed wave's peak multiplier (playtest 2 runner redesign); the server's time check uses it
 -- swimming in the grotto lake (CaveSwim): seconds of air, seconds to refill, swim / rise / sink speeds (studs/s), and the share of
 -- the unbanked ore lost when you pass out (the same rule as a gloomling catch)
 C.SWIM = { air = 14, refill = 2.5, speed = 12, rise = 9, sink = 1.2, loss = 0.25 }
@@ -325,6 +332,7 @@ C.DEPOSIT = {
 	regrow = 420, -- seconds until a deposit you mined grows back for you (roadmap i75: inside the hour)
 	shrines = { count = 3, minDist = 90, regrow = 3600, gold = 60, gems = 2 }, -- hidden shrines: how many, studs from camp at least, per-player regrow, coins (x3 per layer), gems
 	coop = { window = 20, mult = 1.5 }, -- two players on the same deposit within 20 s: both get x1.5 ore
+	nests = { count = 3, minDist = 60, regrow = 3600 }, -- egg nests in quiet nooks (playtest 2): free, once an hour per player
 	gilded = { count = 2, every = 300, mult = 2, gems = 1 }, -- gilded veins: how many at a time, seconds between picks, ore x, extra gems
 	frenzy = { deposits = 3, window = 60, time = 20, mult = 1.5 }, -- three deposits inside a minute: x1.5 ore for 20 s
 	grades = { { "FLAWLESS", 0, 2, 3 }, { "PRISTINE", 1, 1.5, 2 }, { "STANDARD", 3, 1, 1 }, { "CHIPPED", math.huge, 0.5, 0 } }, -- name, most slips, ore multiplier, stars

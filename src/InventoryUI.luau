@@ -28,9 +28,9 @@ function M.start(E)
 	local badgeT = text(badge, "0/10", UDim2.fromScale(0.82, 0.62), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), DEEP_GOLD, 700, false)
 	badgeT.ZIndex = 4
 
-	-- the heavy-bag pill, top centre
-	local heavyPill = panel(gui, S(560, 44), S(640, 84), Vector2.new(0.5, 0), "pillButter")
-	fit(heavyPill, 560, 44)
+	-- the heavy-bag pill, bottom centre (the top centre holds the step card and the tip ribbon)
+	local heavyPill = panel(gui, S(440, 40), S(640, 562), Vector2.new(0.5, 1), "pillButter")
+	fit(heavyPill, 440, 40)
 	heavyPill.Name, heavyPill.Visible = "HeavyPill", false
 	text(heavyPill, "HEAVY BAG: YOU WALK SLOWER. BANK AT CAMP", UDim2.fromScale(0.9, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), DEEP_GOLD, 700, false)
 
@@ -226,10 +226,44 @@ function M.start(E)
 		end
 		ui.heavy = heavy
 		if inv.Visible then refresh() end
+		-- egg tip (board 4/5): after the first forge, with no egg in hand, point to Maribel's stall once
+		if (s.pick or 1) >= 2 and (s.eggs or 0) == 0 and not (s.tips and s.tips.eggTip) and not ui.eggTip then
+			ui.eggTip = true
+			R.Tip:FireServer("eggTip")
+			task.delay(2.5, function()
+				toast("EGGS HATCH HELPERS! MARIBEL SELLS STARTER EGGS; RARER ONES HIDE IN CAVE NESTS", PINK, true)
+				local hub = workspace:FindFirstChild("Hub")
+				local mar = hub and hub:FindFirstChild("Maribel", true)
+				local body = mar and mar:FindFirstChild("Body")
+				if body then
+					local bb = E.new("BillboardGui", body, { Name = "EggBeacon", Size = UDim2.fromScale(6, 2.2), StudsOffset = Vector3.new(0, 6, 0), AlwaysOnTop = true, LightInfluence = 0, MaxDistance = 250 })
+					local pill = panel(bb, UDim2.fromScale(1, 0.62), UDim2.fromScale(0.5, 0), Vector2.new(0.5, 0), "pillPink")
+					text(pill, "EGGS HERE", UDim2.fromScale(0.8, 0.55), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), WHITE, 700)
+					task.delay(90, function() bb:Destroy() end)
+				end
+			end)
+		end
 	end)
 	R.Fx.OnClientEvent:Connect(function(kind, gold, moved)
 		if kind == "openSell" then
 			open(true)
+		elseif kind == "nestEgg" then -- gold = the egg part, moved = its regrow seconds: the egg leaves the nest for us until it regrows
+			local egg = gold
+			if egg and egg:IsA("BasePart") then
+				if burst then burst(egg.Position, Vector3.yAxis, Color3.fromRGB(255, 220, 240), 28) end
+				egg.LocalTransparencyModifier = 1
+				task.delay(moved or 3600, function() if egg.Parent then egg.LocalTransparencyModifier = 0 end end)
+			end
+			sfx("sparkle", 1.4)
+			toast("+1 EGG FROM THE NEST! HATCH IT AT MARIBEL'S INCUBATOR", PINK, true)
+		elseif kind == "nestEmpty" then
+			toast("This nest is empty. A new egg in " .. tostring(gold) .. " min", PINK, false)
+		elseif kind == "noCoins" then
+			toast("YOU NEED " .. commas(gold) .. " MORE COINS FOR AN EGG. SELL ORE TO BOLT", PINK, false)
+			E.shake(0.12)
+		elseif kind == "boughtEgg" then
+			sfx("coin", 0.9)
+			toast("-" .. commas(gold) .. " COINS: A STARTER EGG! HATCH IT AT THE INCUBATOR", PINK, false)
 		elseif kind == "soldPick" then -- coins burst from the SELL button into the gold pill
 			local inset = game:GetService("GuiService"):GetGuiInset()
 			local from = sellBtn.AbsolutePosition + sellBtn.AbsoluteSize / 2 + inset

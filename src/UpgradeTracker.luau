@@ -16,8 +16,8 @@ function M.start(E)
 	}
 	local RARITY = { "common", "uncommon", "rare" }
 
-	local card = panel(gui, S(300, 124), S(102, 74), nil, "card") -- right of the inventory button
-	fit(card, 300, 124)
+	local card = panel(gui, S(270, 118), S(102, 88), nil, "card") -- right of the inventory button, under the step card, clear of the tip ribbon (no overlap: the user, 2026-11-09)
+	fit(card, 270, 118)
 	card.Name, card.Visible = "Tracker", false
 	local head = text(card, "NEXT UPGRADE", UDim2.fromScale(0.6, 0.13), UDim2.fromScale(0.07, 0.1), nil, Color3.fromRGB(156, 134, 217), 700, false)
 	head.TextXAlignment = Enum.TextXAlignment.Left
@@ -104,8 +104,8 @@ function M.start(E)
 		if not unlocked and (s.tips and (s.tips.obFirstDeposit or s.tips.banked) or (s.ores and next(s.ores))) then
 			unlocked = true
 			card.Visible = true -- slides in once the first ore exists, with the teaching line (board 4, step 2)
-			card.Position = S(-320, 74)
-			tween(card, 0.45, { Position = S(102, 74) }, Enum.EasingStyle.Back)
+			card.Position = S(-300, 88)
+			tween(card, 0.45, { Position = S(102, 88) }, Enum.EasingStyle.Back)
 			if not seenOnce then
 				seenOnce = true
 				toast("YOUR NEXT PICKAXE NEEDS ORE: BANK IT AT CAMP, THEN FORGE AT BOLT", BUTTER, true)

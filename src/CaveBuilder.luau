@@ -876,10 +876,57 @@ function Cave.build(parent, origin, seed)
 		end
 		model:SetAttribute("Shrines", made)
 	end
+	do -- egg nests (playtest 2, board PT2_Eggs): a twig nest with one glowing egg in a quiet nook, a soft shaft of light from above
+		-- and drifting motes; free, once an hour per player (PixelServer CaveNest)
+		local NE = D.nests
+		local EGG_COL = { Color3.fromRGB(159, 217, 154), Color3.fromRGB(255, 170, 120), Color3.fromRGB(140, 205, 235) } -- moss, ember, tide
+		local made = 0
+		for _, sp in spots do
+			if made >= NE.count then break end
+			local c = sp.c
+			local pos = W(c.i, c.j, c.f)
+			local far = (c.i * c.i + c.j * c.j) * CELL * CELL > NE.minDist * NE.minDist
+			local clear = true
+			for _, q in placed do if (q - pos).Magnitude < 14 then clear = false break end end
+			if far and clear then
+				made += 1
+				table.insert(placed, pos)
+				local wall = Vector3.new(sp.o[1], 0, sp.o[2])
+				local foot = pos + wall * (CELL / 2 - 1.8)
+				local base = CFrame.lookAt(foot, foot - wall)
+				local twig = PAL.bark or Color3.fromRGB(120, 86, 70)
+				part("Nests", "NestBed", Vector3.new(2.8, 0.4, 2.8), base * CFrame.new(0, 0.2, -0.6), Color3.fromRGB(214, 186, 120))
+				for k, o in { { 0, 1.35, 3.2, 0.6 }, { 0, -1.35, 3.2, 0.6 }, { 1.35, 0, 0.6, 3.2 }, { -1.35, 0, 0.6, 3.2 } } do
+					part("Nests", "NestTwig", Vector3.new(o[3], 0.55 + k * 0.03, o[4]), base * CFrame.new(o[1], 0.5, -0.6 + o[2]) * CFrame.Angles(0, k * 0.08, 0), twig)
+				end
+				local col = EGG_COL[(made - 1) % #EGG_COL + 1]
+				local egg = part("Nests", "NestEgg", Vector3.new(1.3, 1.3, 1.3), base * CFrame.new(0, 1.35, -0.6), col, { CanCollide = false })
+				local mesh = Instance.new("SpecialMesh")
+				mesh.MeshType, mesh.Scale = Enum.MeshType.Sphere, Vector3.new(1, 1.3, 1)
+				mesh.Parent = egg
+				glow(egg, col:Lerp(Color3.new(1, 1, 1), 0.4), 12, 0.9)
+				local shaft = part("Nests", "NestShaft", Vector3.new(2.2, 14, 2.2), base * CFrame.new(0, 8, -0.6), Color3.fromRGB(255, 238, 200), { Material = Enum.Material.Neon, Transparency = 0.9, CanCollide = false, CanQuery = false, CastShadow = false })
+				shaft:SetAttribute("NoDim", true)
+				local motes = Instance.new("ParticleEmitter")
+				motes.Rate, motes.Lifetime, motes.Speed, motes.SpreadAngle = 4, NumberRange.new(2, 3.5), NumberRange.new(0.4, 1), Vector2.new(40, 40)
+				motes.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.4, 0.18), NumberSequenceKeypoint.new(1, 0) })
+				motes.Color, motes.LightEmission, motes.EmissionDirection = ColorSequence.new(col:Lerp(Color3.new(1, 1, 1), 0.5)), 1, Enum.NormalId.Top
+				motes.Parent = egg
+				local pr = Instance.new("ProximityPrompt")
+				pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode = "Take egg", "Egg nest", Enum.KeyCode.E
+				pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.HoldDuration = 9, false, 0.5
+				pr.Style = Enum.ProximityPromptStyle.Custom
+				pr:SetAttribute("CaveNest", true)
+				pr.Parent = egg
+			end
+		end
+		model:SetAttribute("Nests", made)
+	end
 	do -- playtest 2 (board 6): a cave again. Every glow that is not ore (crystals, moss, mushrooms, streams, fills, lamps) drops to about half
 		local depF = model:FindFirstChild("Deposits")
 		for _, o in model:GetDescendants() do
 			if depF and o:IsDescendantOf(depF) then continue end
+			if model:FindFirstChild("Nests") and o:IsDescendantOf(model.Nests) then continue end -- egg nests are a find, like ore: they keep their glow
 			if o:IsA("PointLight") or o:IsA("SpotLight") or o:IsA("SurfaceLight") then
 				o.Brightness *= 0.55
 				o.Range *= 0.8

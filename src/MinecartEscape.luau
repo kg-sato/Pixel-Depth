@@ -5,6 +5,11 @@
 -- lean left or right (A/D, arrows, left stick, hold a screen half) to dodge. A hit is a BONK and slows you for 1.5 s (no ore
 -- lost). Gold orbs boost +20% speed for 1.5 s, stacking to 3. At the end the cart bursts out of the town's mine shaft and a
 -- result card shows time, dodges, boosts and the bonus.
+-- Playtest 2 (the user, 2026-11-09: "too linear with no twists and turns"; vault Refs/Minecart Escape Redesign, items 1, 2 and 4):
+-- the track is now a seeded path that curves, dips and climbs, the camera looks ahead into the bends, and there are three verbs:
+-- lean, JUMP (Space / A / swipe up) and DUCK (S / Down / B / swipe down). Obstacles: falling rocks (lean), low timber beams
+-- (duck), buckled rails (jump) and parked carts with a gloomling inside (lean or jump). Each is shown alone once with a hint,
+-- warned by a sound a second ahead, and the speed rises in a wave (calm, build, a gold-rush breather, the climax).
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
@@ -22,7 +27,8 @@ local SPARK = "rbxasset://textures/particles/sparkles_main.dds"
 local ORIGIN = C.CAVE_ORIGIN + Vector3.new(260, 30, -260) -- beside the ride's far stage, south of the caves
 local PIECE, NPIECE = 4, 40 -- tunnel pieces recycled ahead of the cart
 local LANES = { -1.6, 0, 1.6 }
-local SND = { clack = { 9113120822, 0, true }, wind = { 9125742262, 0, true }, rumble = { 9125875511, 0.6 }, bonk = { 3765689841, 0.8 }, whoosh = { 9126229255, 0.7 } }
+local SND = { clack = { 9113120822, 0, true }, wind = { 9125742262, 0, true }, rumble = { 9125875511, 0.6 }, bonk = { 3765689841, 0.8 }, whoosh = { 9126229255, 0.7 },
+	creak = { 9120839010, 0.7 }, thud = { 9120798134, 0.6 }, screech = { 9116893799, 0.45 } }
 local E = C.ESCAPE
 
 local function part(parent, size, cf, color, props)
@@ -46,12 +52,14 @@ local function buildPiece(f, k, rng)
 	m.Name = "Piece"
 	local cf = CFrame.new(ORIGIN + Vector3.new(0, 0, -k * PIECE))
 	local ROCK = { Material = Enum.Material.Slate, MaterialVariant = "PixelCaveRock" }
-	local root = part(m, Vector3.new(9, 1, PIECE), cf * CFrame.new(0, -0.5, 0), ROCKC[1], ROCK)
+	local o = (k % 2) * 0.03 -- neighbours sit 0.03 apart, and every piece is 0.7 longer, so curves close their wedges with no coplanar faces
+	local L = PIECE + 0.7
+	local root = part(m, Vector3.new(9, 1, L), cf * CFrame.new(0, -0.5 - o, 0), ROCKC[1], ROCK)
 	m.PrimaryPart = root
 	local wallC = ROCKC[rng:NextInteger(2, 3)]
-	for _, s in { -1, 1 } do part(m, Vector3.new(1.6, 10, PIECE), cf * CFrame.new(s * 5.3, 4.5, 0), wallC, ROCK) end
-	part(m, Vector3.new(12.2, 1.6, PIECE), cf * CFrame.new(0, 10.2, 0), ROCKC[1], ROCK)
-	for _, x in { -1.25, 1.25 } do part(m, Vector3.new(0.3, 0.3, PIECE), cf * CFrame.new(x, 0.45, 0), RAIL, { Material = Enum.Material.Metal }) end
+	for _, s in { -1, 1 } do part(m, Vector3.new(1.6, 10, L), cf * CFrame.new(s * (5.3 + o), 4.5, 0), wallC, ROCK) end
+	part(m, Vector3.new(12.2, 1.6, L), cf * CFrame.new(0, 10.2 + o, 0), ROCKC[1], ROCK)
+	for _, x in { -1.25, 1.25 } do part(m, Vector3.new(0.3, 0.3, L), cf * CFrame.new(x, 0.45 + o * 0.7, 0), RAIL, { Material = Enum.Material.Metal }) end
 	for _, z in { -1, 1 } do part(m, Vector3.new(3.4, 0.25, 0.7), cf * CFrame.new(0, 0.15, z), BARK) end
 	if k % 2 == 0 then -- a support frame and a lantern on every second piece
 		for _, s in { -1, 1 } do part(m, Vector3.new(0.8, 8.6, 0.8), cf * CFrame.new(s * 4, 4.3, 0), BARK) end
@@ -85,6 +93,44 @@ function M.prepare()
 	local exit = part(f, Vector3.new(9, 10, 1), CFrame.new(ORIGIN + Vector3.new(0, 4.5, 400)), Color3.fromRGB(255, 244, 214), { Material = Enum.Material.Neon })
 	f.Parent = workspace
 	tunnel = { folder = f, pieces = pieces, exit = exit }
+end
+
+-- the path (redesign item 1): one frame per piece, chained from authored segments, seeded per run so the server could rebuild it
+local PATH_N = math.ceil((E.dist + 260) / PIECE)
+local function buildPath(seed)
+	local rng = Random.new(seed)
+	local segs = {}
+	local function add(n, yaw, pitch) for _ = 1, n do table.insert(segs, { yaw, pitch }) end end
+	add(12, 0, 0) -- a calm straight start
+	local dir, heading = (rng:NextNumber() < 0.5) and 1 or -1, 0
+	while #segs < PATH_N + 4 do
+		local r = rng:NextNumber()
+		if r < 0.45 then -- a bend: 45-70 degrees over 14-18 pieces (at most ~4 degrees a piece), sides alternate so the track snakes on
+			local n = rng:NextInteger(14, 18)
+			local total = math.rad(rng:NextNumber(45, 70))
+			if math.abs(heading + dir * total) > math.rad(75) then dir = -dir end
+			add(n, dir * total / n, 0)
+			heading += dir * total
+			dir = -dir
+		elseif r < 0.65 then -- a dip: down 12 degrees, a short run, back up
+			add(4, 0, -math.rad(3))
+			add(rng:NextInteger(3, 6), 0, 0)
+			add(4, 0, math.rad(3))
+		elseif r < 0.82 then -- a climb toward town
+			add(4, 0, math.rad(2.5))
+			add(rng:NextInteger(4, 8), 0, 0)
+			add(4, 0, -math.rad(2.5))
+		else
+			add(rng:NextInteger(6, 12), 0, 0)
+		end
+	end
+	local P, YAW = { [0] = CFrame.new(ORIGIN) }, { [0] = 0 }
+	for i = 1, PATH_N + 4 do
+		local sg = segs[i]
+		P[i] = P[i - 1] * CFrame.Angles(sg[2], sg[1], 0) * CFrame.new(0, 0, -PIECE)
+		YAW[i] = sg[1]
+	end
+	return P, YAW
 end
 
 local SIT_ANIM = { [Enum.HumanoidRigType.R15] = "rbxassetid://2506281703", [Enum.HumanoidRigType.R6] = "rbxassetid://178130996" } -- Roblox's own sit poses
@@ -251,7 +297,7 @@ function M.play(opt)
 	local big = label(gui, "", UDim2.fromScale(0.5, 0.16), UDim2.fromScale(0.5, 0.42), WHITE, 6)
 	local bigStroke = stroke(big, INK, 5)
 	local touch = UIS.TouchEnabled and not UIS.KeyboardEnabled
-	local hint = label(gui, touch and "HOLD LEFT OR RIGHT TO LEAN" or "LEAN WITH  A / D  OR  ← →", UDim2.fromScale(0.5, 0.045), UDim2.fromScale(0.5, 0.9), WHITE, 4)
+	local hint = label(gui, touch and "HOLD LEFT OR RIGHT TO LEAN, SWIPE UP TO JUMP, DOWN TO DUCK" or "LEAN  A / D    JUMP  SPACE    DUCK  S", UDim2.fromScale(0.6, 0.045), UDim2.fromScale(0.5, 0.9), WHITE, 4)
 	local hintStroke = stroke(hint, INK, 3)
 	local flash = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, ZIndex = 8 })
 	local vignette = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 80, 110), BackgroundTransparency = 1, ZIndex = 2 })
@@ -280,8 +326,38 @@ function M.play(opt)
 	local amb = { a = Lighting.Ambient, o = Lighting.OutdoorAmbient }
 	local AMB_UP, OAMB_UP = Color3.fromRGB(96, 80, 132), Color3.fromRGB(86, 72, 120)
 
-	-- the run
+	-- the run, on the seeded path
+	local P, YAW = buildPath(opt.seed or 1)
+	local function pathCF(s)
+		local i = math.clamp(math.floor(s / PIECE), 0, PATH_N + 3)
+		return P[i]:Lerp(P[i + 1], math.clamp(s / PIECE - i, 0, 1))
+	end
+	for _, pc in tunnel.pieces do pc.m:PivotTo(pathCF((pc.k + 0.5) * PIECE) * CFrame.new(0, -0.5 - (pc.k % 2) * 0.03, 0)) end
+	local atmo = Lighting:FindFirstChildOfClass("Atmosphere") -- thinned so every obstacle reads 0.9 s ahead
+	local atmoDensity = atmo and atmo.Density
+	if atmo then atmo.Density = math.min(atmo.Density, 0.14) end
+	local jumpT, duckUntil, jumpY, duckY = -10, 0, 0, 0
+	local JUMP_T, JUMP_H = 0.6, 2.6
+	local taught = {}
 	local dist, speed, t, lean, roll = 0, 0, -3.2, 0, 0
+	local function jump() if t > 0 and os.clock() - jumpT > JUMP_T then jumpT = os.clock() play("whoosh", 1.5) end end
+	local function duck() if t > 0 then duckUntil = os.clock() + 0.7 end end
+	table.insert(cons, UIS.InputBegan:Connect(function(input)
+		local k = input.KeyCode
+		if k == Enum.KeyCode.Space or k == Enum.KeyCode.ButtonA or k == Enum.KeyCode.W or k == Enum.KeyCode.Up then jump()
+		elseif k == Enum.KeyCode.S or k == Enum.KeyCode.Down or k == Enum.KeyCode.C or k == Enum.KeyCode.ButtonB then duck() end
+	end))
+	local swipe = {}
+	table.insert(cons, UIS.TouchStarted:Connect(function(tch) swipe[tch] = { tch.Position, os.clock() } end))
+	table.insert(cons, UIS.TouchEnded:Connect(function(tch)
+		local s0 = swipe[tch]
+		swipe[tch] = nil
+		if not s0 then return end
+		local d = tch.Position - s0[1]
+		if os.clock() - s0[2] < 0.4 and math.abs(d.Y) > 50 and math.abs(d.Y) > math.abs(d.X) * 1.3 then
+			if d.Y < 0 then jump() else duck() end
+		end
+	end))
 	local boosts, boostUntil, slowUntil, dodges, hits = 0, {}, 0, 0, 0
 	local hazards, nextSpawn = {}, 1.2
 	local shakeAmp, phase, done, resultAt, bonus = 0, "run", false, nil, nil
@@ -290,10 +366,10 @@ function M.play(opt)
 	local function laneX() return lean * 1.6 end
 	local function spawnRock(lane, at, threat)
 		local x = LANES[lane]
-		local z = ORIGIN.Z - at
-		local ring = part(world, Vector3.new(0.15, 3, 3), CFrame.new(ORIGIN.X + x, ORIGIN.Y + 0.35, z) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(255, 60, 90), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Neon, Transparency = 0.1 })
+		local here = pathCF(at)
+		local ring = part(world, Vector3.new(0.15, 3, 3), here * CFrame.new(x, 0.35, 0) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(255, 60, 90), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Neon, Transparency = 0.1 })
 		local rock = Instance.new("Model")
-		local r1 = part(rock, Vector3.new(2.6, 2.1, 2.4), CFrame.new(ORIGIN.X + x, ORIGIN.Y + 9, z) * CFrame.Angles(0.3, 0.6, 0.2), ROCKC[3], { Material = Enum.Material.Slate, MaterialVariant = "PixelCaveRock" })
+		local r1 = part(rock, Vector3.new(2.6, 2.1, 2.4), here * CFrame.new(x, 9, 0) * CFrame.Angles(0.3, 0.6, 0.2), ROCKC[3], { Material = Enum.Material.Slate, MaterialVariant = "PixelCaveRock" })
 		part(rock, Vector3.new(1.7, 1.4, 1.7), r1.CFrame * CFrame.new(0.7, 0.7, -0.4) * CFrame.Angles(0.4, 0.2, 0.5), ROCKC[2], { Material = Enum.Material.Slate, MaterialVariant = "PixelCaveRock" })
 		for k = 1, 2 do -- glowing pink cracks so a falling rock reads at a glance (Gemini r1)
 			part(rock, Vector3.new(0.18, 2.3, 0.18), r1.CFrame * CFrame.new(k == 1 and -0.5 or 0.6, 0, -1.22) * CFrame.Angles(0, 0, k == 1 and 0.5 or -0.4), Color3.fromRGB(255, 119, 168), { Material = Enum.Material.Neon })
@@ -303,15 +379,69 @@ function M.play(opt)
 		table.insert(hazards, { kind = "rock", lane = lane, at = at, ring = ring, rock = rock, base = r1.CFrame, threat = threat })
 	end
 	local function spawnOrb(lane, at)
-		local orb = part(world, Vector3.new(1.3, 1.3, 1.3), CFrame.new(ORIGIN.X + LANES[lane], ORIGIN.Y + 2.6, ORIGIN.Z - at), BUTTER, { Shape = Enum.PartType.Ball, Material = Enum.Material.Neon })
+		local orb = part(world, Vector3.new(1.3, 1.3, 1.3), pathCF(at) * CFrame.new(LANES[lane], 2.6, 0), BUTTER, { Shape = Enum.PartType.Ball, Material = Enum.Material.Neon })
 		local e = Instance.new("ParticleEmitter")
 		e.Texture, e.Rate, e.LightEmission, e.Color = SPARK, 8, 1, ColorSequence.new(BUTTER, PINK)
 		e.Size, e.Lifetime, e.Speed = NumberSequence.new(0.4, 0), NumberRange.new(0.4, 0.7), NumberRange.new(1, 2)
 		e.Parent = orb
 		table.insert(hazards, { kind = "orb", lane = lane, at = at, orb = orb })
 	end
+	local TAPE = Color3.fromRGB(255, 210, 80)
+	local function spawnBeam(at) -- a low timber across the tunnel in warning stripes, a lantern swinging from it: DUCK
+		local here = pathCF(at)
+		local m = Instance.new("Model")
+		for k = -4, 4 do part(m, Vector3.new(1.05, 0.9, 0.9), here * CFrame.new(k * 1.05, 3.35, 0), k % 2 == 0 and TAPE or INK) end
+		for _, s in { -1, 1 } do part(m, Vector3.new(0.8, 3.4, 0.8), here * CFrame.new(s * 4.75, 1.7, 0), BARK) end
+		local lamp = part(m, Vector3.new(0.6, 0.8, 0.6), here * CFrame.new(1.8, 2.45, 0), Color3.fromRGB(255, 196, 120), { Material = Enum.Material.Neon })
+		local l = Instance.new("PointLight")
+		l.Color, l.Range, l.Brightness = Color3.fromRGB(255, 196, 120), 14, 1.4
+		l.Parent = lamp
+		m.Parent = world
+		table.insert(hazards, { kind = "beam", lane = 0, at = at, model = m, lamp = lamp, lampBase = lamp.CFrame })
+	end
+	local function spawnGap(at, lane) -- buckled rails curling up over a dark crack (one lane, or all three): JUMP
+		local here = pathCF(at)
+		local m = Instance.new("Model")
+		local xs = lane == 0 and { -1.6, 0, 1.6 } or { LANES[lane] }
+		for _, x in xs do
+			part(m, Vector3.new(2.4, 0.08, 2.6), here * CFrame.new(x, 0.06, 0), DARK)
+			part(m, Vector3.new(2.4, 0.1, 0.12), here * CFrame.new(x, 0.12, -1.3), Color3.fromRGB(90, 230, 220), { Material = Enum.Material.Neon })
+			for _, s in { -1, 1 } do -- the two rail ends bent up into a hump
+				part(m, Vector3.new(0.3, 0.3, 1.8), here * CFrame.new(x + s * 0.7, 0.9, 0.5) * CFrame.Angles(0.7, 0, s * 0.12), RAIL, { Material = Enum.Material.Metal })
+				part(m, Vector3.new(0.3, 0.3, 1.6), here * CFrame.new(x + s * 0.7, 0.85, -0.7) * CFrame.Angles(-0.8, 0, -s * 0.1), RAIL, { Material = Enum.Material.Metal })
+			end
+			part(m, Vector3.new(1.8, 0.3, 0.5), here * CFrame.new(x, 0.35, 1.4) * CFrame.Angles(0, 0.4, 0.25), BARK_LT) -- a split sleeper
+		end
+		m.Parent = world
+		table.insert(hazards, { kind = "gap", lane = lane, at = at, model = m })
+	end
+	local function spawnCart(at, lane) -- a rusty parked cart with a gloomling peeking out: LEAN (or JUMP it)
+		local here = pathCF(at) * CFrame.new(LANES[lane], 0, 0)
+		local m = Instance.new("Model")
+		local rust = Color3.fromRGB(150, 92, 76)
+		part(m, Vector3.new(2.6, 1.6, 3.0), here * CFrame.new(0, 1.15, 0), rust, { Material = Enum.Material.Metal })
+		part(m, Vector3.new(2.8, 0.3, 3.2), here * CFrame.new(0, 2.05, 0), rust:Lerp(INK, 0.3), { Material = Enum.Material.Metal })
+		for _, x in { -1.05, 1.05 } do for _, z in { -0.9, 0.9 } do part(m, Vector3.new(0.4, 0.7, 0.7), here * CFrame.new(x, 0.35, z), INK) end end
+		part(m, Vector3.new(1.3, 1.1, 1.3), here * CFrame.new(0, 2.5, 0.2), DARK, { Shape = Enum.PartType.Ball })
+		for _, x in { -0.25, 0.25 } do part(m, Vector3.new(0.22, 0.28, 0.1), here * CFrame.new(x, 2.65, -0.42), Color3.fromRGB(255, 240, 200), { Material = Enum.Material.Neon }) end
+		m.Parent = world
+		table.insert(hazards, { kind = "cart", lane = lane, at = at, model = m })
+	end
 	local function cleanup(h)
-		for _, k in { "ring", "rock", "orb" } do if h[k] then h[k]:Destroy() end end
+		for _, k in { "ring", "rock", "orb", "model" } do if h[k] then h[k]:Destroy() end end
+	end
+	local WARN = { rock = { "rumble", 1.4 }, beam = { "creak", 1.1 }, gap = { "screech", 1.5 }, cart = { "thud", 0.7 } }
+	local TEACH = {
+		beam = touch and "DUCK!  SWIPE DOWN" or "DUCK!  PRESS S",
+		gap = touch and "JUMP!  SWIPE UP" or "JUMP!  PRESS SPACE",
+		cart = touch and "LEAN AWAY OR JUMP IT!" or "LEAN AWAY OR JUMP IT!",
+	}
+	local function wave(p) -- the speed wave (redesign item 4): calm, build, a gold-rush breather, the climax
+		if p < 0.15 then return 0.9 end
+		if p < 0.45 then return 0.9 + (p - 0.15) / 0.3 * 0.25 end
+		if p < 0.6 then return 1.15 end
+		if p < 0.7 then return 1.08 end
+		return math.min(E.top or 1.45, 1.2 + (p - 0.7) / 0.3 * 0.25)
 	end
 
 	local last = os.clock()
@@ -362,7 +492,7 @@ function M.play(opt)
 			-- speed: base, boosts stack, a bonk halves it
 			local live = 0
 			for i = #boostUntil, 1, -1 do if now < boostUntil[i] then live += 1 else table.remove(boostUntil, i) end end
-			local target = t < 0 and 0 or E.speed * (1 + 0.2 * live) * (now < slowUntil and 0.5 or 1)
+			local target = t < 0 and 0 or E.speed * wave(dist / E.dist) * (1 + 0.2 * live) * (now < slowUntil and 0.5 or 1)
 			speed += (target - speed) * (1 - math.exp(-dt / 0.25))
 			dist += speed * dt
 			for i, p in pips do p.BackgroundTransparency = i <= live and 0 or 0.75 end
@@ -372,17 +502,50 @@ function M.play(opt)
 			roll += ((calm and 0 or -want * 0.052) - roll) * (1 - math.exp(-dt / 0.1))
 			-- spawn ahead: rocks every 1.1-1.6 s (two lanes at once later on), an orb now and then
 			if t > 0 and t >= nextSpawn and dist < E.dist - 80 then
-				local ahead = dist + math.max(speed, E.speed) * 1.6
+				local p = dist / E.dist
+				local ahead = dist + math.max(speed, E.speed) * 1.8
 				local cur = lean < -0.5 and 1 or (lean > 0.5 and 3 or 2)
-				local lane = rng:NextNumber() < 0.6 and cur or rng:NextInteger(1, 3) -- most rocks aim at you
-				spawnRock(lane, ahead, lane == cur)
-				if dist > E.dist * 0.45 and rng:NextNumber() < 0.35 then
-					local l2 = lane % 3 + 1
-					spawnRock(l2, ahead, l2 == cur)
+				local kind
+				if p > 0.6 and p < 0.7 then kind = "orbs" -- the breather: a gold rush
+				elseif not taught.beam and t > 6 then kind = "beam" -- each new verb alone once, with a hint
+				elseif not taught.gap and t > 9.5 then kind = "gap"
+				elseif not taught.cart and t > 13 then kind = "cart"
+				elseif t < 6 then kind = "rock"
+				else
+					local r = rng:NextNumber()
+					kind = r < 0.4 and "rock" or (r < 0.6 and "beam" or (r < 0.8 and "gap" or "cart"))
 				end
-				if rng:NextNumber() < 0.45 then spawnOrb(rng:NextInteger(1, 3), ahead + math.max(speed, E.speed) * 0.6) end
-				nextSpawn = t + rng:NextNumber(1.1, 1.6) * (dist > E.dist * 0.6 and 0.85 or 1)
+				if kind == "orbs" then
+					local l = rng:NextInteger(1, 3)
+					for k = 0, 3 do
+						spawnOrb(l, ahead + k * 5)
+						l = math.clamp(l + rng:NextInteger(-1, 1), 1, 3)
+					end
+				elseif kind == "rock" then
+					local lane = rng:NextNumber() < 0.6 and cur or rng:NextInteger(1, 3) -- most rocks aim at you
+					spawnRock(lane, ahead, lane == cur)
+					if p > 0.45 and rng:NextNumber() < 0.35 then
+						local l2 = lane % 3 + 1
+						spawnRock(l2, ahead, l2 == cur)
+					end
+				elseif kind == "beam" then
+					spawnBeam(ahead)
+				elseif kind == "gap" then
+					spawnGap(ahead, (not taught.gap or p > 0.7 and rng:NextNumber() < 0.5) and 0 or cur)
+				else
+					spawnCart(ahead, taught.cart and cur or 2)
+				end
+				if TEACH[kind] and not taught[kind] then hazards[#hazards].teach = TEACH[kind] end
+				taught[kind] = true
+				if kind ~= "orbs" and rng:NextNumber() < 0.45 then spawnOrb(rng:NextInteger(1, 3), ahead + math.max(speed, E.speed) * 0.6) end
+				local dens = p < 0.15 and 1.15 or (p < 0.6 and 1 - (p - 0.15) * 0.33 or (p < 0.7 and 0.8 or 0.75))
+				nextSpawn = t + rng:NextNumber(1.1, 1.6) * dens
 			end
+			-- verbs: the jump is a sine hop, the duck drops the eye
+			local ju = (now - jumpT) / JUMP_T
+			jumpY = (ju >= 0 and ju <= 1) and math.sin(ju * math.pi) * JUMP_H or 0
+			local ducking = now < duckUntil
+			duckY += ((ducking and 1.4 or 0) - duckY) * (1 - math.exp(-dt / 0.06))
 			-- hazards: rocks drop to land as the cart arrives; passing a lane checks the lean
 			local myLane = lean < -0.5 and 1 or (lean > 0.5 and 3 or 2)
 			for i = #hazards, 1, -1 do
@@ -392,13 +555,31 @@ function M.play(opt)
 					local fall = 1 - math.clamp(gap / math.max(speed * 0.6, 8), 0, 1) -- the last 0.6 s: falls from the ceiling
 					h.rock:PivotTo(h.base * CFrame.new(0, -fall * 8, 0) * CFrame.Angles(fall * 2, 0, fall))
 					h.ring.Transparency = 0.05 + 0.4 * (0.5 + 0.5 * math.sin(now * 18))
-				else
-					h.orb.CFrame = CFrame.new(h.orb.Position.X, ORIGIN.Y + 2.6 + math.sin(now * 4 + h.at) * 0.3, h.orb.Position.Z)
+				elseif h.kind == "orb" then
+					h.orb.CFrame = pathCF(h.at) * CFrame.new(LANES[h.lane], 2.6 + math.sin(now * 4 + h.at) * 0.3, 0)
+				elseif h.kind == "beam" then
+					h.lamp.CFrame = h.lampBase * CFrame.Angles(0, 0, math.sin(now * 3 + h.at) * 0.25)
 				end
+				if not h.warned and h.kind ~= "orb" and gap < math.max(speed, 1) * 1.05 then -- a sound a second ahead, a hint the first time
+					h.warned = true
+					local w = WARN[h.kind]
+					if w then play(w[1], w[2]) end
+					if h.teach then
+						big.Text, big.TextTransparency, big.TextColor3 = h.teach, 0, BUTTER
+						bigStroke.Transparency = 0
+						task.delay(1.1, function() big.TextTransparency = 1 bigStroke.Transparency = 1 big.TextColor3 = WHITE end)
+					end
+				end
+				local inLane = h.lane == myLane or h.lane == 0
+				local struck
+				if h.kind == "beam" then struck = not ducking
+				elseif h.kind == "gap" then struck = inLane and jumpY < 0.9
+				elseif h.kind == "cart" then struck = inLane and jumpY < 1.5
+				else struck = inLane end
 				if gap < 0.8 and not h.passed then
 					h.passed = true
-					if h.lane == myLane then
-						if h.kind == "rock" then
+					if struck then
+						if h.kind ~= "orb" then
 							hits += 1
 							slowUntil = now + 1.5
 							shakeAmp = calm and 0 or 0.5
@@ -416,8 +597,8 @@ function M.play(opt)
 						end
 						cleanup(h)
 						table.remove(hazards, i)
-					elseif h.kind == "rock" and h.threat then -- it was coming for you and you moved
-						dodges += 1
+					elseif (h.kind == "rock" and h.threat) or h.kind == "beam" or ((h.kind == "gap" or h.kind == "cart") and h.lane ~= myLane and h.lane ~= 0 and h.threat) or ((h.kind == "gap" or h.kind == "cart") and (h.lane == myLane or h.lane == 0)) then
+						dodges += 1 -- it was coming for you and you answered it
 					end
 				end
 				if gap < -6 and hazards[i] == h then
@@ -430,10 +611,10 @@ function M.play(opt)
 			for _, pc in tunnel.pieces do
 				if pc.k * PIECE < dist - 8 then
 					pc.k += NPIECE
-					pc.m:PivotTo(CFrame.new(ORIGIN + Vector3.new(0, -0.5, -pc.k * PIECE)))
+					pc.m:PivotTo(pathCF((pc.k + 0.5) * PIECE) * CFrame.new(0, -0.5 - (pc.k % 2) * 0.03, 0))
 				end
 			end
-			tunnel.exit.CFrame = CFrame.new(ORIGIN + Vector3.new(0, 4.5, -(E.dist + 6)))
+			tunnel.exit.CFrame = pathCF(E.dist + 6) * CFrame.new(0, 4.5, 0)
 			fill.Size = UDim2.fromScale(math.clamp(dist / E.dist, 0, 1), 1)
 			barText.Text = string.format("ESCAPE  %d%%", math.clamp(math.floor(dist / E.dist * 100), 0, 100))
 			timer.Text = string.format("%.1f", math.max(t, 0))
@@ -443,12 +624,16 @@ function M.play(opt)
 			snd.wind.Volume = math.min(speed / 48, 1) * 0.5
 			flash.BackgroundTransparency = 1 - smooth(E.dist - 25, E.dist, dist)
 			-- camera: first person in the cart, leaning
-			local cartCF = CFrame.new(ORIGIN + Vector3.new(laneX(), 0, -dist)) * CFrame.Angles(0, 0, roll * 0.6)
+			local base = pathCF(dist)
+			local bank = calm and 0 or math.clamp(-(YAW[math.floor(dist / PIECE)] or 0) * 2.5, -math.rad(3), math.rad(3)) -- roll only on bends, 3 degrees at most
+			local cartCF = base * CFrame.new(laneX(), jumpY, 0) * CFrame.Angles(0, 0, roll * 0.6 + bank * 0.6)
 			cart:PivotTo(cartCF)
 			shakeAmp = math.max(0, shakeAmp - dt * 1.2)
 			local sh = calm and 0 or shakeAmp + math.min(speed / 48, 1) * 0.02
 			cam.CameraType = Enum.CameraType.Scriptable
-			cam.CFrame = cartCF * CFrame.new(0, 3.8, 0.6) * CFrame.Angles(-0.06, 0, roll) * CFrame.Angles((math.random() - 0.5) * sh * 0.06, (math.random() - 0.5) * sh * 0.06, 0)
+			local eye = (base * CFrame.new(laneX() * 0.9, 3.8 + jumpY * 0.85 - duckY, 0.6)).Position
+			local look = (pathCF(dist + 7) * CFrame.new(laneX() * 0.4, 3.0 + jumpY * 0.5 - duckY * 0.5, 0)).Position -- looks into the bend before it arrives
+			cam.CFrame = CFrame.lookAt(eye, look, base.UpVector) * CFrame.Angles(0, 0, roll + bank) * CFrame.Angles((math.random() - 0.5) * sh * 0.06, (math.random() - 0.5) * sh * 0.06, 0)
 			cam.FieldOfView = C.FP_FOV + (calm and 0 or math.min(#boostUntil, 3) * 2)
 			if dist >= E.dist then -- out of the tunnel: tell the server, wait for it to move us to town, then burst out of the shaft
 				phase = "wait"
@@ -540,6 +725,7 @@ function M.play(opt)
 	RunService:UnbindFromRenderStep("MinecartEscape")
 	for _, c in cons do c:Disconnect() end
 	if phase == "run" then Lighting.Ambient, Lighting.OutdoorAmbient = amb.a, amb.o end
+	if atmo and atmoDensity then atmo.Density = atmoDensity end
 	for p in vmSeen do if p.Parent then p.LocalTransparencyModifier = 0 end end
 	for p in hiddenChar do if p.Parent then p.LocalTransparencyModifier = 0 end end
 	for p, v in hubHidden do if p.Parent then p.LocalTransparencyModifier = v end end

@@ -711,7 +711,7 @@ local function finishEscape(plr, report)
 	local s = data[plr]
 	local bonus = 0
 	local el = os.clock() - e.t0
-	if s and type(report) == "table" and el >= C.ESCAPE.dist / (C.ESCAPE.speed * 1.6) then
+	if s and type(report) == "table" and el >= C.ESCAPE.dist / (C.ESCAPE.speed * (C.ESCAPE.top or 1) * 1.6) then -- the fastest legal run: top of the speed wave with three boosts
 		local dodges = math.clamp(math.floor(tonumber(report.dodges) or 0), 0, math.floor(el))
 		local boosts = math.clamp(math.floor(tonumber(report.boosts) or 0), 0, math.floor(el / 2))
 		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2, C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
@@ -785,6 +785,23 @@ end)
 game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- Camp 1's parked cart: Ride up
 	local s = data[plr]
 	if s and prompt:GetAttribute("RideUp") and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] then startEscape(s) end
+end)
+game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- a cave egg nest: one free egg, once an hour per nest
+	if not prompt:GetAttribute("CaveNest") then return end
+	local s = data[plr]
+	local egg = prompt.Parent
+	if not s or not plr:GetAttribute("InCave") then return end
+	s.nestsOpen = s.nestsOpen or {}
+	if (s.nestsOpen[egg] or 0) > os.clock() then
+		FxR:FireClient(plr, "nestEmpty", math.ceil((s.nestsOpen[egg] - os.clock()) / 60))
+		return
+	end
+	s.nestsOpen[egg] = os.clock() + C.DEPOSIT.nests.regrow
+	s.eggs += 1
+	A.event(s, "NestEgg")
+	FxR:FireClient(plr, "egg", s.eggs)
+	FxR:FireClient(plr, "nestEgg", egg, C.DEPOSIT.nests.regrow)
+	sendState(s)
 end)
 do -- selling at Bolt (playtest 2, board PT2_Sell): the player picks stacks from the ore bank; the server checks each and pays
 	local SellPickR = remote("SellPick")
@@ -919,7 +936,7 @@ end
 -- each player extracts each deposit once. Its prompt starts a minigame; the server keeps the clock, the gold arc and the
 -- crack sequence, grades the result and pays ore from the deposit's own attributes into the unbanked bag (no bag limit).
 local ExtractR = remote("Extract")
-local TIP_NAMES = { camp = true, torch = true, ore = true, fear = true, strike = true, rush = true }
+local TIP_NAMES = { camp = true, torch = true, ore = true, fear = true, strike = true, rush = true, eggTip = true }
 remote("Tip").OnServerEvent:Connect(function(plr, name) -- the client marks a tip as seen; only known names, saved with the profile
 	local s = data[plr]
 	if s and type(name) == "string" and TIP_NAMES[name] and not s.tips[name] then
@@ -1352,6 +1369,20 @@ local STATION = {
 	map = function(s) FxR:FireClient(s.player, "map", s.deepest) end,
 	chest = dailyChest,
 	enter = function(s) enterMine(s) end,
+	buyEgg = function(s) -- Maribel sells starter eggs for coins (playtest 2: cheap eggs in town, rarer ones in cave nests)
+		if os.clock() < (s.buyCool or 0) then return end
+		s.buyCool = os.clock() + 0.6
+		if s.gold < C.EGG_COINS then
+			FxR:FireClient(s.player, "noCoins", C.EGG_COINS - s.gold)
+			return
+		end
+		s.gold -= C.EGG_COINS
+		s.eggs += 1
+		A.spend(s, "Coins", C.EGG_COINS, s.gold, "StarterEgg")
+		FxR:FireClient(s.player, "egg", s.eggs)
+		FxR:FireClient(s.player, "boughtEgg", C.EGG_COINS)
+		sendState(s)
+	end,
 	hatch = function(s)
 		if os.clock() < (s.nextHatch or 0) then return end
 		if s.eggs > 0 then

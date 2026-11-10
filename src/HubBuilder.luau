@@ -1179,13 +1179,14 @@ function Hub.build(parent, origin)
 		tvox(g, "DoorStep", Vector3.new(3.4, 0.6, 1.6), at(0, 0.9, 2.2), "stonebrick", 2)
 		for k, x in { -6, -3.6, 3.6, 6 } do -- succulent pots along the front curb, outside the glass
 			vox(g, "Pot", Vector3.new(1.1, 0.9, 1.1), at(x, 1.85, 2), clay)
-			for j = 0, 2 do vox(g, "Succulent", Vector3.new(0.5, 0.8, 0.5), at(x + (j - 1) * 0.35, 2.6 + (j == 1 and 0.3 or 0), 2) * CFrame.Angles(0, 0, (j - 1) * 0.45), shadeOf("moss", j, k, 2), { CanCollide = false }) end
+			for j = 0, 2 do vox(g, "Succulent", Vector3.new(0.5, 0.8, 0.5), at(x + (j - 1) * 0.35, 2.6 + (j == 1 and 0.3 or 0) + j * 0.03, 2) * CFrame.Angles(0, 0, (j - 1) * 0.45), shadeOf("moss", j, k, 2), { CanCollide = false }) end
 		end
 		tvox(g, "SignPost", Vector3.new(0.5, 3.2, 0.5), at(3.8, 2.7, 3.4), "beam", 2)
 		sign(g, "EGGS", CFrame.new(at(3.8, 4.8, 3.4).Position), 3.4, 1.3, PAL.pink[3])
 		prompt(g:FindFirstChild("SignPost"), "Egg odds", "Incubator", "odds") -- the odds moved off the HUD rail (the user, 2026-11-08)
 		prompt(g:FindFirstChild("Base"), "Hatch an egg", "Incubator", "hatch")
-		villager("Maribel", at(-4.8, 1.1, 4.6), Color3.fromRGB(140, 227, 192), Color3.fromRGB(201, 184, 242))
+		local maribel = villager("Maribel", at(-4.8, 1.1, 4.6), Color3.fromRGB(140, 227, 192), Color3.fromRGB(201, 184, 242))
+		prompt(maribel:FindFirstChild("Body"), "Buy an egg", "Maribel", "buyEgg") -- playtest 2: starter eggs for coins
 	end
 
 	-- 8. Quest notice board, treasure map and the daily relic chest (north, behind the shaft; ref art/hub/pdv4_notice_s61.jpg)
