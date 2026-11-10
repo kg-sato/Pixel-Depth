@@ -74,7 +74,7 @@ function M.start(E)
 			task.wait(0.2)
 		end
 	end)
-	local flames = setmetatable({}, { __mode = "k" }) -- flame part -> its base colour
+	local flames, flameOf = {}, nil -- flame part -> its base colour, for the torch model flameOf
 	hook.vmTorchPose = function(dt, moving, now, cave)
 		local t = os.clock()
 		if cave.relitAt ~= relitSeen then -- relit at camp: the torch lifts in a small salute
@@ -87,9 +87,14 @@ function M.start(E)
 		local lift = math.sin(math.clamp((t - liftAt) / 0.7, 0, 1) * math.pi) * 0.35
 		local low = (cave.fuel or 1) < 0.25 and 1 or 0 -- nearly out: the hand shivers
 		local shiver = low * math.noise(now * 9, 3.1) * 0.05
-		for _, d in cave.tvm:GetDescendants() do -- the flame gutters: each flame block flickers on its own, harder when low
-			if d:IsA("BasePart") and d.Name:sub(1, 5) == "Flame" then
-				flames[d] = flames[d] or d.Color
+		if flameOf ~= cave.tvm then -- a new torch model: find its flame blocks once, not every frame
+			flameOf, flames = cave.tvm, {}
+			for _, d in cave.tvm:GetDescendants() do
+				if d:IsA("BasePart") and d.Name:sub(1, 5) == "Flame" then flames[d] = d.Color end
+			end
+		end
+		for d in flames do -- the flame gutters: each flame block flickers on its own, harder when low
+			do
 				local n = math.noise(now * 7, d.Size.X * 13.7, d.Size.Y * 5.1)
 				d.Color = flames[d]:Lerp(n > 0 and Color3.new(1, 1, 0.8) or Color3.new(0.4, 0.1, 0), math.abs(n) * (0.35 + low * 0.3))
 			end

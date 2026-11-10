@@ -719,7 +719,7 @@ end
 SellR.OnServerEvent:Connect(function(plr) -- the lift: ride up to the sell stall and sell
 	local s = data[plr]
 	local hrp = hrpOf(plr)
-	if not s or not hrp then return end
+	if not s or not hrp or plr:GetAttribute("InCave") or plr:GetAttribute("Seated") then return end -- the caves go home by minecart; not during a ride
 	hrp.CFrame = HUB_SELL and (HUB_SELL.CFrame * CFrame.Angles(0, math.pi, 0) + Vector3.new(0, 1, 0)) or spawnCFrame() -- face the stall
 	plr:SetAttribute("InMine", false)
 	plr:SetAttribute("InCave", false)
@@ -731,6 +731,8 @@ local enterMine -- defined below
 local riding = {} -- players on the minecart ride down (MinecartRide on the client): anchored until the client says it arrived
 local function endRide(plr, trip) -- trip: only end that ride (a stale timer must not end a later one)
 	if not riding[plr] or (trip and riding[plr] ~= trip) then return end
+	local was = riding[plr]
+	if was.down and os.clock() - was.down >= 1.2 then quest(data[plr], "ride") end -- a ride down counts once the cut to the cave has passed
 	riding[plr] = nil
 	local hrp = hrpOf(plr)
 	if hrp then hrp.Anchored = false end
@@ -755,6 +757,7 @@ local function finishEscape(plr, report)
 	local bonus = 0
 	local el = os.clock() - e.t0
 	if s and type(report) == "table" and el >= C.ESCAPE.dist / (C.ESCAPE.speed * (C.ESCAPE.top or 1) * 1.6) then -- the fastest legal run: top of the speed wave with three boosts
+		-- shortcut: dodges, boosts and caught are the client's word, bounded by the run time and the 40-coin cap; replay the seed on the server if the bonus ever grows
 		local dodges = math.clamp(math.floor(tonumber(report.dodges) or 0), 0, math.floor(el))
 		local boosts = math.clamp(math.floor(tonumber(report.boosts) or 0), 0, math.floor(el / 2))
 		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2, C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
@@ -763,6 +766,7 @@ local function finishEscape(plr, report)
 		A.earn(s, "Coins", bonus, s.gold, "EscapeBonus")
 		A.event(s, "EscapeSeconds", math.floor(el))
 		A.step(s, "Escaped")
+		quest(s, "escape")
 	end
 	if HUB_CART then standIn(plr, HUB_CART:GetPivot()) else local h = hrpOf(plr) if h then h.CFrame = spawnCFrame() end end
 	plr:SetAttribute("InMine", false)
@@ -771,7 +775,6 @@ local function finishEscape(plr, report)
 	riding[plr] = trip -- anchored in the town cart until the client's burst out of the shaft ends ("arrived")
 	task.delay(12, function() endRide(plr, trip) end)
 	if s then sendState(s) end -- the bag pill switches back from the cave's unbanked count
-	quest(s, "escape")
 	FxR:FireClient(plr, "escapeDone", bonus)
 end
 local function startEscape(s)
@@ -983,14 +986,13 @@ enterMine = function(s)
 		local plr = s.player
 		local full = not s.tips.ride or plr:GetAttribute("DevFullRide") == true -- test hook: always the full first ride
 		s.tips.ride = true
-		local trip = {}
+		local trip = { down = os.clock() }
 		riding[plr] = trip
 		hrp.AssemblyLinearVelocity = Vector3.zero
 		hrp.Anchored = true
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 		if HUB_CART then hrp.CFrame = HUB_CART:GetPivot() * CFrame.new(0, 1.05 + hrp.Size.Y / 2 + (hum and hum.HipHeight or 2), 0.3) end
 		FxR:FireClient(plr, "ride", full)
-		quest(s, "ride")
 		A.step(s, "RodeDown")
 		task.delay(full and 2.15 or 1.25, function()
 			local h = hrpOf(plr)
@@ -1032,7 +1034,7 @@ local function finishMinigame(s)
 	if mg.boss then return mg.boss(s, mg) end -- a Root Warden knot (ServerScriptService.Boss), not ore
 	local count, grade
 	if mg.kind == "strike" then
-		count, grade = D.strikes * D.chunks + mg.perfects * D.bonus, mg.perfects
+		count, grade = math.max(mg.swings, 1) * D.chunks + mg.perfects * D.bonus, mg.perfects -- swings made (a timed-out game is not a full one)
 	else
 		for _, g in D.grades do
 			if (mg.slips or math.huge) <= g[2] then
@@ -1138,6 +1140,7 @@ ExtractR.OnServerEvent:Connect(function(plr, what, arg)
 			if (arg[i] ~= 1 and arg[i] ~= 2) or arg[i] == crack then slips += 1 end
 		end
 		local took = now - mg.t0
+		-- shortcut: the client holds the whole sequence, so a script can answer it; send the cracks beat by beat if Vein Rush rewards grow
 		if took > #mg.seq * D.rushBeat + 1.5 or took < #mg.seq * 0.12 then slips = math.huge end -- out of time, or faster than hands
 		mg.slips = slips
 		finishMinigame(s)
@@ -1384,7 +1387,7 @@ BuyR.OnServerEvent:Connect(function(plr, what, arg)
 		mountGear(s)
 	end
 	if s.step == 4 then s.step = #s.pets > 0 and 6 or 5 end
-	quest(s, "buy")
+	if what == "pick" then quest(s, "buy") end
 	FxR:FireClient(plr, "bought", nxt.name, what)
 	sendState(s)
 end)
@@ -1506,6 +1509,8 @@ QuestR.OnServerEvent:Connect(function(plr, what, id) -- "get": send my quests; "
 	if not s or not s.quests or os.clock() < (s.questCool or 0) then return end
 	s.questCool = os.clock() + 0.2
 	if s.quests.day ~= Quests.day() then s.quests = Quests.clean(s.quests, Quests.day()) end
+	local st = Quests.STORY[s.quests.story]
+	if st and st.ev == "buy" and s.pick >= #C.PICKS then s.quests.sp = st.n end -- nothing left to forge: the forge quest is done
 	local paid = what == "claim" and type(id) == "string" and Quests.claim(s.quests, id) or nil
 	if paid then
 		if paid.coins then s.gold += paid.coins A.earn(s, "Coins", paid.coins, s.gold, "Quest") end

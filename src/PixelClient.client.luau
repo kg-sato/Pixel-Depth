@@ -184,7 +184,9 @@ local function pop(o, from, t)
 	sc.Scale = from or 1.25
 	tween(sc, t or 0.35, { Scale = 1 }, Enum.EasingStyle.Back)
 end
+local uiSound -- sfx, set once the sound bank exists
 local function openPanel(o)
+	if uiSound and not o.Visible then uiSound("open") end
 	o.Visible = true
 	o.ZIndex = 5
 	local sc = scaler(o)
@@ -192,6 +194,7 @@ local function openPanel(o)
 	tween(sc, 0.28, { Scale = 1 }, Enum.EasingStyle.Back)
 end
 local function closePanel(o)
+	if uiSound and o.Visible then uiSound("close") end
 	local sc = scaler(o)
 	tween(sc, 0.15, { Scale = 0.9 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 	task.delay(0.15, function()
@@ -478,6 +481,7 @@ local function toast(msg, color, big, delay)
 	task.delay(delay or 0, function()
 		local y = 0.74 + (toasts % 3) * 0.055 -- under the centre cards (the loot card ends at 0.62), above the DIG button
 		toasts += 1
+		if uiSound then uiSound("pop", big and 0.9 or 1.1) end
 		local t = text(gui, msg, UDim2.fromScale(big and 0.6 or 0.4, big and 0.08 or 0.06), UDim2.fromScale(0.5, y + 0.06), Vector2.new(0.5, 0.5), color, 700)
 		tween(t, 0.35, { Position = UDim2.fromScale(0.5, y) }, Enum.EasingStyle.Back)
 		pop(t, 0.4)
@@ -501,11 +505,15 @@ local function setGold(n)
 	end
 end
 
--- Sound effects (Creator Store audio, free: ProSoundEffects where available). Each play varies the pitch a little.
+-- Sound effects: soft, cute UI and impact sounds from Kenney's CC0 packs (the user, 2026-11-10; files, sources and ids in
+-- audio/sfx/README.md), trimmed and levelled by audio/pd_sfx.py. Each play varies the pitch a little.
 local SFX = {
 	-- name = { asset id, volume, seconds to play at most (some library sounds are long takes) }
-	swing = { 9119710806, 0.35 }, hit = { 9118582313, 0.45, 0.28 }, clink = { 9116651251, 0.5, 0.6 }, breakRock = { 9118587698, 0.55, 0.9 },
-	coin = { 113730061669739, 0.5 }, click = { 17779566040, 0.5, 0.4 }, upgrade = { 135996502799215, 0.6 }, sparkle = { 132381858621446, 0.55, 1.4 },
+	swing = { 82582582223321, 0.3 }, hit = { 84749599799318, 0.45 }, clink = { 109535777937742, 0.45 }, breakRock = { 73576495438405, 0.5 },
+	coin = { 130614539116248, 0.45 }, click = { 118078655883816, 0.35 }, upgrade = { 124702248480385, 0.5 }, sparkle = { 96727638802500, 0.3 },
+	tab = { 108382314361659, 0.35 }, open = { 122439587120394, 0.3 }, close = { 139837639994797, 0.25 }, pop = { 98559989688124, 0.3 },
+	error = { 129224473501721, 0.4 }, claim = { 93961639592928, 0.5 }, hatch = { 90744422601646, 0.55 }, step = { 101247424367019, 0.12 },
+	pluck = { 80200426277557, 0.4 }, land = { 88699226385252, 0.25 },
 }
 local soundBank = {}
 for name, s in SFX do
@@ -524,6 +532,7 @@ sfx = function(name, pitch)
 	task.delay(math.min(s.TimeLength > 0 and s.TimeLength or 3, len and len + 0.2 or 3), function() s:Destroy() end)
 end
 sfxClick = function() sfx("click") end
+uiSound = sfx
 
 -- World FX
 local fx = new("Folder", workspace, { Name = "ClientFX" })
@@ -2503,6 +2512,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		toast(lost > 0 and ("Bonk! Spilled " .. lost .. " ore") or "Bonk!", PINK, true)
 	elseif kind == "egg" then
 		toast("Fossil egg! Hatch it at the camp incubator", PINK, true)
+		sfx("pluck")
 		pop(eggPill, 1.3)
 	elseif kind == "night" then
 		local mins, gold, crew = ...
@@ -2510,6 +2520,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		nightGold.Text = "+" .. commas(gold) .. " GOLD"
 		openPanel(night)
 	elseif kind == "hatch" then
+		sfx("hatch")
 		task.spawn(hatchShow, ...)
 	elseif kind == "petDig" then
 		local i, p = ...

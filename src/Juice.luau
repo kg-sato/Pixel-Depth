@@ -18,7 +18,7 @@ local ON_FX = {
 }
 
 function M.start(E)
-	local R, plr, burst = E.R, E.plr, E.burst
+	local R, plr, burst, sfx = E.R, E.plr, E.burst, E.sfx
 	local RunService = game:GetService("RunService")
 	local calm = false
 	pcall(function() calm = game:GetService("GuiService").ReducedMotionEnabled end)
@@ -45,6 +45,7 @@ function M.start(E)
 		local e = ON_FX[kind]
 		if not e then return end
 		emote(e)
+		if e == "point" and kind ~= "openQuests" then sfx("error") end -- not enough coins or ore: a soft no
 		local h = E.hrp()
 		if h and e == "cheer" and burst then burst(h.Position + Vector3.new(0, 4.5, 0), Vector3.yAxis, E.GOLD, 14) end -- a little confetti over the head
 	end)
@@ -67,18 +68,26 @@ function M.start(E)
 		dust.EmissionDirection, dust.Acceleration, dust.LightInfluence, dust.Rotation = Enum.NormalId.Back, Vector3.new(0, 1.5, 0), 1, NumberRange.new(0, 360)
 		dust.Parent = at
 		hum.StateChanged:Connect(function(_, new)
-			if new == Enum.HumanoidStateType.Landed and dust.Parent and not calm then dust:Emit(8) end
+			if new == Enum.HumanoidStateType.Landed and dust.Parent then
+				sfx("land")
+				if not calm then dust:Emit(8) end
+			end
 		end)
 	end
 	if plr.Character then task.spawn(dress, plr.Character) end
 	plr.CharacterAdded:Connect(dress)
 
 	-- egg hearts
-	local hearts, nextScan = {}, 0
+	local hearts, nextScan, nextStep = {}, 0, 0
 	RunService.Heartbeat:Connect(function()
 		local now = os.clock()
 		if dust and dust.Parent and hum then
-			dust.Rate = (not calm and hum.MoveDirection.Magnitude > 0.1 and hum.FloorMaterial ~= Enum.Material.Air and not plr:GetAttribute("Seated")) and 9 or 0
+			local walking = hum.MoveDirection.Magnitude > 0.1 and hum.FloorMaterial ~= Enum.Material.Air and not plr:GetAttribute("Seated")
+			dust.Rate = (walking and not calm) and 9 or 0
+			if walking and now >= nextStep then -- soft footsteps, in time with the stride
+				nextStep = now + 5 / math.max(hum.WalkSpeed, 8)
+				sfx("step")
+			end
 		end
 		if calm or not plr:GetAttribute("InCave") then return end
 		if now >= nextScan then

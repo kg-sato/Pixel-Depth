@@ -113,12 +113,14 @@ function M.start(E)
 	for k, b in tabs do
 		b.Activated:Connect(function()
 			tab = k
+			sfx("tab")
 			refresh()
 		end)
 	end
 
 	local function open()
 		if win.Visible or (E.isBusy and E.isBusy()) then return end
+		QuestR:FireServer("get")
 		refresh()
 		openPanel(win)
 		sfx("sparkle", 1.2)
@@ -148,13 +150,15 @@ function M.start(E)
 		end
 	end)
 
+	local got = false
 	QuestR.OnClientEvent:Connect(function(state, paid)
+		got = true
 		local was = claimable()
 		q = Quests.clean(state, type(state) == "table" and tonumber(state.day) or Quests.day())
 		q.day = type(state) == "table" and tonumber(state.day) or q.day
 		refresh()
 		if paid then -- a claim went through: the row pops, coins fly to the purse, the miner cheers
-			sfx("coin", 1.15)
+			sfx("claim")
 			toast(paid.coins and ("QUEST DONE  +" .. paid.coins .. " COINS") or ("QUEST DONE  +" .. (paid.gems or 0) .. " GEMS"), GOLD, true)
 			for _, r in rows do if r.f.Visible then pop(r.f, 1.06, 0.3) end end
 			if paid.coins and E.fly and E.goldPill and win.Visible then
@@ -169,7 +173,13 @@ function M.start(E)
 		end
 	end)
 	R.Fx.OnClientEvent:Connect(function(kind) if kind == "openQuests" then open() end end)
-	QuestR:FireServer("get")
+	task.spawn(function() -- the first request can arrive before the profile has loaded: ask until answered
+		for _ = 1, 20 do
+			if got then return end
+			QuestR:FireServer("get")
+			task.wait(1.5)
+		end
+	end)
 
 	-- the guide marker: a small sign over the place the open story quest leads to. It is drawn on the HUD from the place's
 	-- screen position (like the ore glints), so it shows through walls and slides to the screen edge when the place is out of view
@@ -237,6 +247,13 @@ function M.start(E)
 		x = math.clamp(x, vp.X * 0.2, vp.X * 0.8) -- stay between the side columns
 		y = math.clamp(y - math.abs(math.sin(now * 3)) * vp.Y * 0.02, vp.Y * 0.24, vp.Y * 0.78) -- under the step card, over the talisman
 		marker.Position = UDim2.fromOffset(x, y - (gui.IgnoreGuiInset and 0 or game:GetService("GuiService"):GetGuiInset().Y))
+		local mp, ms = marker.AbsolutePosition, marker.AbsoluteSize
+		for _, c in gui:GetChildren() do -- a prompt bubble says what to do: the marker yields where it would sit on one
+			if c.Name == "PromptUI" and c.Visible then
+				local cp, cs = c.AbsolutePosition, c.AbsoluteSize
+				if mp.X < cp.X + cs.X and cp.X < mp.X + ms.X and mp.Y < cp.Y + cs.Y and cp.Y < mp.Y + ms.Y then marker.Visible = false end
+			end
+		end
 	end)
 end
 

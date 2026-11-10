@@ -33,7 +33,7 @@ local function facesOf(p)
 end
 
 -- one pass; returns the number of faces pushed
-local function pass(root)
+local function pass(root, PUSH)
 	local buckets = {}
 	for _, p in root:GetDescendants() do
 		if p:IsA("Part") and p.Shape == Enum.PartType.Block and p.Transparency < 0.95 then
@@ -55,7 +55,8 @@ local function pass(root)
 					local g = list[j]
 					if g.b0 >= f.b1 - EPS then break end
 					if f.p ~= g.p and math.min(f.d1, g.d1) - math.max(f.d0, g.d0) > EPS and math.min(f.b1, g.b1) - math.max(f.b0, g.b0) > EPS
-						and (f.p.Color ~= g.p.Color or f.p.Material ~= g.p.Material or f.p.MaterialVariant ~= g.p.MaterialVariant) then
+						and (f.p.Color ~= g.p.Color or f.p.Material ~= g.p.Material or f.p.MaterialVariant ~= g.p.MaterialVariant
+							or f.p:FindFirstChildWhichIsA("Texture") or g.p:FindFirstChildWhichIsA("Texture")) then -- same colour, different skins still flicker
 						local m = f.vol <= g.vol and f or g -- the smaller part steps forward
 						local tag = m.a .. ":" .. m.s
 						pushed[m.p] = pushed[m.p] or {}
@@ -80,8 +81,8 @@ end
 -- passes until clean (a face pushed in one pass can land on another pushed face; the next pass separates them)
 function ZFix.fix(root)
 	local total = 0
-	for _ = 1, 4 do
-		local n = pass(root)
+	for i = 1, 8 do
+		local n = pass(root, PUSH + (i - 1) * 0.012) -- a different step each pass: two faces pushed by the same step stayed coplanar (11 hub lane pairs, 2026-11-10)
 		total += n
 		if n == 0 then break end
 	end
