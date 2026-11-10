@@ -316,7 +316,7 @@ C.SWIM = { air = 14, refill = 2.5, speed = 12, rise = 9, sink = 1.2, loss = 0.25
 -- crack, the knots' Perfect Strike (zone degrees, needle period, PERFECTs out of 3 to crack one), the slam (wind-up seconds,
 -- reach in studs, HP it costs), how far you may walk off, and the reward
 C.BOSS = { needTier = 6, knots = 3, zone = 13, period = 0.85, perfects = 2, windup = 1.1, slamReach = 22, slamHit = 34, leash = 34, gold = 500, gems = 25 }
-C.GLOOM = { hp = 100, hit = 34, loss = 0.25, shield = 5, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6, grab = 3 }
+C.GLOOM = { hp = 100, hit = 34, loss = 0.25, shield = 5, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6, grab = 3, warn = 0.8 }
 C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
 C.CAVE2_ORIGIN = Vector3.new(-3000, 0, 1200) -- Camp 2 (Clay Caves), clear of Camp 1's caves (z -56..252); the camp is not built yet
@@ -349,8 +349,8 @@ C.DEPOSIT = {
 -- (https://www.youtube.com/watch?v=adgCWET34rU): realistic style, tinted ambient so shadows keep colour, low diffuse, punchy
 -- contrast with a subtle tint, a small low-threshold bloom so glows read as colour, a light depth of field for big halls.
 C.CAVE_LIGHT = {
-	Lighting = { LightingStyle = Enum.LightingStyle.Realistic, Ambient = Color3.fromRGB(28, 22, 40), OutdoorAmbient = Color3.fromRGB(24, 18, 36), Brightness = 0, EnvironmentDiffuseScale = 0.08, EnvironmentSpecularScale = 1, ExposureCompensation = 0.05, ShadowSoftness = 0.15 }, -- specular 0.85: the wet rock and glass ores reflect (glass pass) -- playtest 2: was 40,30,64 / 36,28,60 / 0.15 / 0.25, too bright for a cave
-	Atmosphere = { Density = 0.42, Offset = 0, Color = Color3.fromRGB(52, 36, 86), Decay = Color3.fromRGB(26, 16, 46), Glare = 0, Haze = 0.8 },
+	Lighting = { LightingStyle = Enum.LightingStyle.Realistic, Ambient = Color3.fromRGB(50, 39, 74), OutdoorAmbient = Color3.fromRGB(44, 34, 68), Brightness = 0, EnvironmentDiffuseScale = 0.13, EnvironmentSpecularScale = 1, ExposureCompensation = 0.32, ShadowSoftness = 0.15 }, -- specular 0.85: the wet rock and glass ores reflect (glass pass) -- playtest 2: was 40,30,64 / 36,28,60 / 0.15 / 0.25, too bright for a cave; 2026-11-10: 28,22,40 / 24,18,36 / 0.08 / 0.05 left the tunnels and gloomlings black outside the torch (loop review), lifted part of the way back
+	Atmosphere = { Density = 0.37, Offset = 0, Color = Color3.fromRGB(52, 36, 86), Decay = Color3.fromRGB(26, 16, 46), Glare = 0, Haze = 0.8 },
 	Bloom = { Intensity = 0.55, Size = 22, Threshold = 0.95 }, -- was 0.7 / 30: neon and lit floors smeared into glare (VFX note 2026-11-08)
 	ColorCorrection = { Brightness = 0.03, Contrast = 0.2, Saturation = 0.12, TintColor = Color3.fromRGB(240, 230, 255) },
 	DepthOfField = { FarIntensity = 0.22, FocusDistance = 36, InFocusRadius = 40, NearIntensity = 0 },

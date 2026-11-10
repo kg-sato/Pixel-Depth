@@ -23,6 +23,10 @@ function M.start(E)
 	local layer = new("ScreenGui", plr:WaitForChild("PlayerGui"), { Name = "GloomFx", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 6 })
 	local hitFlash = new("Frame", layer, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 80, 120), BackgroundTransparency = 1, BorderSizePixel = 0 })
 	local shield = new("Frame", layer, { Size = UDim2.new(1, -20, 1, -20), Position = UDim2.fromOffset(10, 10), BackgroundTransparency = 1, BorderSizePixel = 0 }) -- inset: the stroke draws outside the frame
+	local WARN = Color3.fromRGB(255, 84, 104)
+	local warnBar = new("Frame", layer, { Name = "GloomWarn", Size = UDim2.fromOffset(120, 16), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = WARN, BorderSizePixel = 0, Visible = false })
+	new("UICorner", warnBar, { CornerRadius = UDim.new(1, 0) })
+	new("UIStroke", warnBar, { Color = Color3.fromRGB(255, 255, 255), Thickness = 2 })
 	local shieldStroke = new("UIStroke", shield, { Color = Color3.fromRGB(255, 210, 90), Thickness = 18, Transparency = 1 })
 	-- the torch follows the server: frozen until the first bank, else counted from when you left the ring
 	plr:GetAttributeChangedSignal("RelitAt"):Connect(function()
@@ -82,6 +86,7 @@ function M.start(E)
 				local state = p:GetAttribute("State") or "creep"
 				if state ~= v.state then
 					if state == "pancake" then sfx("hit", 0.6) end
+					if state == "windup" then sfx("error", 1.4) end -- about to hit: hear it even with your back turned
 					v.state, v.since = state, now
 				end
 				v.cf = v.cf:Lerp(p.CFrame, 1 - math.exp(-dt * 10))
@@ -92,6 +97,8 @@ function M.start(E)
 					sy, sxz = 1 - 0.7 * k, 1 + 0.6 * k
 				elseif state == "stun" then
 					tilt = math.sin(now * 25) * 0.3
+				elseif state == "windup" then -- rears up and shivers, eyes red
+					sy, sxz, tilt = 1.3, 1.15, math.sin(now * 40) * 0.12
 				elseif state == "flee" then
 					sy, sxz = 0.8, 0.9
 				end
@@ -103,9 +110,30 @@ function M.start(E)
 				if now > v.blink + 0.12 then v.blink = now + 2 + math.random() * 2 end
 				for _, e in v.eyes do
 					e.part.CFrame = base * CFrame.new(e.off.Position * Vector3.new(sxz, sy, 1)) * e.off.Rotation
-					e.part.Transparency = (shut or state == "flee") and 1 or 0
+					e.part.Transparency = ((shut and state ~= "windup") or state == "flee") and 1 or 0
+					e.col = e.col or e.part.Color
+					e.part.Color = (state == "windup" and e.col == EYE) and WARN or e.col
 				end
 			end
+		end
+		-- the warning mark: a red bar at the side of the screen the nearest rearing gloomling is on (first person has no eyes in its back)
+		local near, nd
+		local cam = workspace.CurrentCamera
+		for _, v in vis do
+			if v.state == "windup" then
+				local d = (v.cf.Position - cam.CFrame.Position).Magnitude
+				if not nd or d < nd then near, nd = v, d end
+			end
+		end
+		warnBar.Visible = near ~= nil
+		if near then
+			local rel = cam.CFrame:PointToObjectSpace(near.cf.Position)
+			local a = math.atan2(rel.X, -rel.Z)
+			local vp = cam.ViewportSize
+			local r = math.min(vp.X, vp.Y) * 0.32
+			warnBar.Position = UDim2.fromOffset(vp.X / 2 + math.sin(a) * r, vp.Y / 2 - math.cos(a) * r)
+			warnBar.Rotation = math.deg(a)
+			warnBar.BackgroundTransparency = 0.15 + 0.25 * math.abs(math.sin(now * 14))
 		end
 		-- held by a gloomling: slow feet and a pink pulse
 		local held = (plr:GetAttribute("GrabbedUntil") or 0) - workspace:GetServerTimeNow()

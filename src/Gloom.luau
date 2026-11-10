@@ -214,22 +214,32 @@ function G.step(dt)
 			local side = Vector3.new(-to.Z, 0, to.X).Unit * math.sin(nowC * 2.3 + m.seed) * 0.35 -- a little weave
 			local step = (to.Unit + side).Unit * math.min(speed * dt, math.max(dist - 1.5, 0))
 			p.CFrame = CFrame.lookAt(pos + step, hrp.Position)
-			if dist < C.GLOOM.reach and serverNow() > g.shieldUntil and not g.grabbedUntil then -- BONK
-				g.hp = math.max(0, g.hp - C.GLOOM.hit)
-				m.state, m.t0, m.from = "stun", nowC, pos
-				p:SetAttribute("State", "stun")
-				if g.hp <= 0 then -- GRABBED: a flare (yours or a friend's) within C.GLOOM.grab seconds frees you
-					g.grabbedUntil = serverNow() + C.GLOOM.grab
-					plr:SetAttribute("GrabbedUntil", g.grabbedUntil)
-					publish(plr, g)
-					ctx.fx:FireClient(plr, "grabbed", C.GLOOM.grab)
-				else
-					publish(plr, g)
-					ctx.fx:FireClient(plr, "gloomBonk", g.hp)
-				end
+			if dist < C.GLOOM.reach + 1 and serverNow() > g.shieldUntil and not g.grabbedUntil then -- rears up first (C.GLOOM.warn s): step away and it misses
+				m.state, m.t0 = "windup", nowC
+				p:SetAttribute("State", "windup")
 			elseif dist > 70 then
 				mobs[p] = nil
 				p:Destroy()
+			end
+		elseif m.state == "windup" then -- the warning beat, then BONK unless the player got away (Gemini loop review, 2026-11-10)
+			if age >= C.GLOOM.warn then
+				if dist < C.GLOOM.reach + 2 and serverNow() > g.shieldUntil and not g.grabbedUntil then
+					g.hp = math.max(0, g.hp - C.GLOOM.hit)
+					m.state, m.t0, m.from = "stun", nowC, pos
+					p:SetAttribute("State", "stun")
+					if g.hp <= 0 then -- GRABBED: a flare (yours or a friend's) within C.GLOOM.grab seconds frees you
+						g.grabbedUntil = serverNow() + C.GLOOM.grab
+						plr:SetAttribute("GrabbedUntil", g.grabbedUntil)
+						publish(plr, g)
+						ctx.fx:FireClient(plr, "grabbed", C.GLOOM.grab)
+					else
+						publish(plr, g)
+						ctx.fx:FireClient(plr, "gloomBonk", g.hp)
+					end
+				else
+					m.state, m.t0 = "creep", nowC
+					p:SetAttribute("State", "creep")
+				end
 			end
 		elseif m.state == "stun" then -- knocked back, dazed, then creeps again
 			local k = math.min(age / 0.4, 1)
