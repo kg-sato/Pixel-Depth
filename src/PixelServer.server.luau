@@ -40,6 +40,13 @@ end
 local DigR, SellR, BuyR, SurfaceR, StateR, FxR = remote("Dig"), remote("Sell"), remote("Buy"), remote("Surface"), remote("State"), remote("Fx")
 local WearR = remote("Wear") -- the wardrobe (Shared.WardrobeUI): cosmetics only, the server keeps and applies what is worn
 local Wardrobe = require(RS:WaitForChild("Shared"):WaitForChild("WardrobeUI"))
+local Quests = require(RS:WaitForChild("Shared"):WaitForChild("Quests")) -- story (the tutorial chain) and daily quests; menu: Shared.QuestUI
+local QuestR = remote("Quest")
+local function quest(s, ev, n) -- count a quest event for this player; the client hears only when something moved
+	if not s or not s.quests then return end
+	if s.quests.day ~= Quests.day() then s.quests = Quests.clean(s.quests, Quests.day()) end
+	if Quests.bump(s.quests, ev, n or 1) then QuestR:FireClient(s.player, s.quests) end
+end
 remotes.Parent = RS
 
 local oldHub = workspace:FindFirstChild("Hub") -- always build the current hub (an Edit-mode preview may be saved in the place)
@@ -458,7 +465,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.gold, d.pick, d.pack, d.best, d.hatched, d.pity, d.step = s.gold, s.pick, s.pack, s.best, s.hatched, s.pity, s.step
 	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
 	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
-	d.wear = s.wear
+	d.wear, d.quests = s.wear, s.quests
 	local names = {}
 	for i, p in s.pets do names[i] = p.name end
 	d.pets = names
@@ -513,6 +520,7 @@ local function hatch(s)
 		table.insert(s.pets, { name = name, next = os.clock() + C.HATCH_TIME })
 	end
 	if s.step == 5 then s.step = 6 end
+	quest(s, "hatch")
 	FxR:FireClient(s.player, "hatch", name)
 end
 
@@ -531,6 +539,7 @@ local function hatchFrom(s, minIdx) -- an Egg Altar egg: a rarity from minIdx up
 	local name = names[s.rng:NextInteger(1, #names)]
 	s.hatched += 1
 	if #s.pets < C.MAX_PETS then table.insert(s.pets, { name = name, next = os.clock() + C.HATCH_TIME }) end
+	quest(s, "hatch")
 	FxR:FireClient(s.player, "hatch", name)
 end
 
@@ -697,6 +706,8 @@ local function sell(s)
 	if paid > 0 then
 		s.gold += paid
 		A.earn(s, "Coins", paid, s.gold, "SellStall")
+		quest(s, "sell")
+		quest(s, "coins", paid)
 	end
 	if s.player:GetAttribute("InCave") then A.step(s, "FirstBank") end
 	FxR:FireClient(s.player, "sold", paid, s.bag, moved)
@@ -760,6 +771,7 @@ local function finishEscape(plr, report)
 	riding[plr] = trip -- anchored in the town cart until the client's burst out of the shaft ends ("arrived")
 	task.delay(12, function() endRide(plr, trip) end)
 	if s then sendState(s) end -- the bag pill switches back from the cave's unbanked count
+	quest(s, "escape")
 	FxR:FireClient(plr, "escapeDone", bonus)
 end
 local function startEscape(s)
@@ -907,6 +919,8 @@ do -- selling at Bolt (playtest 2, board PT2_Sell): the player picks stacks from
 		if gold <= 0 then return end
 		s.gold += gold
 		A.earn(s, "Coins", gold, s.gold, "SellAtBolt")
+		quest(s, "sell")
+		quest(s, "coins", gold)
 		FxR:FireClient(plr, "soldPick", gold, moved)
 		sendState(s)
 	end)
@@ -976,6 +990,7 @@ enterMine = function(s)
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 		if HUB_CART then hrp.CFrame = HUB_CART:GetPivot() * CFrame.new(0, 1.05 + hrp.Size.Y / 2 + (hum and hum.HipHeight or 2), 0.3) end
 		FxR:FireClient(plr, "ride", full)
+		quest(s, "ride")
 		A.step(s, "RodeDown")
 		task.delay(full and 2.15 or 1.25, function()
 			local h = hrpOf(plr)
@@ -1053,6 +1068,8 @@ local function finishMinigame(s)
 	local key = L .. "." .. idx
 	s.bagOres[key] = (s.bagOres[key] or 0) + count
 	s.claimed[mg.dep] = os.clock() + D.regrow -- grows back for this player after D.regrow seconds
+	quest(s, "extract")
+	if grade == D.strikes or grade == D.grades[1][1] then quest(s, "perfect") end
 	local gems = (idx == 3 and C.GEMS.rare or 0) + ((grade == D.strikes or grade == D.grades[1][1]) and C.GEMS.perfect or 0) + (gilded and D.gilded.gems or 0)
 	s.gems += gems
 	A.earn(s, "Gems", gems, s.gems, idx == 3 and "RareDeposit" or "PerfectGrade")
@@ -1367,6 +1384,7 @@ BuyR.OnServerEvent:Connect(function(plr, what, arg)
 		mountGear(s)
 	end
 	if s.step == 4 then s.step = #s.pets > 0 and 6 or 5 end
+	quest(s, "buy")
 	FxR:FireClient(plr, "bought", nxt.name, what)
 	sendState(s)
 end)
@@ -1478,11 +1496,27 @@ local function dailyChest(s)
 	s.gems += gems
 	A.earn(s, "Coins", gold, s.gold, "DailyChest")
 	A.earn(s, "Gems", gems, s.gems, "DailyChest")
+	quest(s, "chest")
 	FxR:FireClient(s.player, "dailyChest", gold, s.streak, gems)
 	sendState(s)
 end
 
+QuestR.OnServerEvent:Connect(function(plr, what, id) -- "get": send my quests; "claim", id: pay a finished quest (the server decides)
+	local s = data[plr]
+	if not s or not s.quests or os.clock() < (s.questCool or 0) then return end
+	s.questCool = os.clock() + 0.2
+	if s.quests.day ~= Quests.day() then s.quests = Quests.clean(s.quests, Quests.day()) end
+	local paid = what == "claim" and type(id) == "string" and Quests.claim(s.quests, id) or nil
+	if paid then
+		if paid.coins then s.gold += paid.coins A.earn(s, "Coins", paid.coins, s.gold, "Quest") end
+		if paid.gems then s.gems += paid.gems A.earn(s, "Gems", paid.gems, s.gems, "Quest") end
+		sendState(s)
+	end
+	QuestR:FireClient(plr, s.quests, paid and { coins = paid.coins, gems = paid.gems } or nil)
+end)
+
 local STATION = {
+	quests = function(s) FxR:FireClient(s.player, "openQuests") end,
 	sell = function(s) -- Bolt and the sell stall open the sell screen (InventoryUI): pick stacks from the ore bank
 		if C.CAVES_ON then FxR:FireClient(s.player, "openSell") else sell(s) end
 	end,
@@ -1582,6 +1616,7 @@ local function onJoin(plr)
 		ores = d.ores or {}, bagOres = {}, -- the ore bank per kind ("layer.ore" keys) and the unbanked cave ore per kind
 	}
 	s.equip = (d.equip or 0) >= 1 and math.min(d.equip, s.pick) or s.pick
+	s.quests = Quests.clean(d.quests, Quests.day())
 	s.wear = Wardrobe.clean(d.wear) -- the wardrobe: only known slots and items survive a load
 	s.wear.presets = {}
 	for k = 1, 3 do

@@ -1005,7 +1005,7 @@ local function buildViewmodel()
 		if p:IsA("BasePart") then p.Anchored, p.CastShadow, p.CanCollide, p.CanQuery = p == root, false, false, false end
 	end
 	local cf, size = vm:GetBoundingBox()
-	vm.WorldPivot = CFrame.new(cf.Position - Vector3.new(0, size.Y * 0.38, 0)) -- swing from the grip
+	vm.WorldPivot = CFrame.new(cf.Position - Vector3.new(0, size.Y * 0.16, 0)) -- swing from the grip: mid-handle (at 0.38 the hand sat on the pommel)
 	vm:ScaleTo(vm:GetScale() * (3.6 / math.max(size.Y, 0.1))) -- a chunkier tool in the hand (audit 15: it read as a thin wand)
 	new("Highlight", vm, { FillTransparency = 1, OutlineColor = Color3.fromRGB(255, 236, 200), OutlineTransparency = 0.7, DepthMode = Enum.HighlightDepthMode.Occluded })
 	local _, sz = vm:GetBoundingBox()
@@ -1250,6 +1250,7 @@ local STEPS = {
 local stepShown, stepDoneAt, stepExpired = "", nil, false
 local function stepMessage()
 	if not state then return "" end
+	if forgeUI.questHint then return forgeUI.questHint end -- the tutorial: the open story quest (Shared.QuestUI)
 	if not inMine and state.step <= 2 then return C.CAVES_ON and "Ride the minecart down into the mine!" or "Jump into the glowing mine shaft!" end
 	if not inMine and state.step == 5 then return "Ride the minecart back down to find the egg!" end
 	return STEPS[state.step] or ""
@@ -2699,7 +2700,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
@@ -2773,7 +2774,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	caveHud.Visible = inCave and not modal -- the cave HUD and its tip ribbon step back behind a modal
 	layerPill.Visible, goldPill.Parent.Parent.Visible = not modal, not (modal or cave.mgBusy) -- so do the location pill and the left column (Gemini r2: they floated over the blur)
 	if PPS.Enabled ~= promptsOn then PPS.Enabled = promptsOn end
-	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and not inCave
+	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and (not inCave or (forgeUI.questHint ~= nil and next(promptUI) == nil)) -- in the cave a prompt bubble can sit where the card is: the card yields
 	if modal ~= scrim.Visible then
 		scrim.Visible = true
 		tween(scrim, 0.25, { BackgroundTransparency = modal and 0.45 or 1 })
@@ -2810,7 +2811,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	if cave.tvm and (inMine or inCave) and not cave.mgBusy then
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 		local bob = hum and hum.MoveDirection.Magnitude > 0.1 and math.sin(now * 10 + 1.5) * 0.07 or math.sin(now * 2 + 1) * 0.02
-		cave.tvm:PivotTo(cam.CFrame * CFrame.new(-1.3, -1.1 + bob, -2.4) * CFrame.Angles(0.3, 0.25, -0.32)) -- leaning out toward the screen edge
+		cave.tvm:PivotTo(cam.CFrame * (forgeUI.vmTorchPose and forgeUI.vmTorchPose(dt, hum and hum.MoveDirection.Magnitude > 0.1, now, cave) or CFrame.new(-1.3, -1.1 + bob, -2.4) * CFrame.Angles(0.3, 0.25, -0.32))) -- leaning out toward the screen edge; sway, flare thrust and flicker: Shared.ViewHands
 	elseif cave.tvm then
 		cave.tvm:PivotTo(CFrame.new(0, -1e4, 0)) -- out of sight during minigames
 	end
@@ -2886,7 +2887,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		stepCard.Visible = msg ~= ""
 		stepCard.Position = S(640, -40)
 		tween(stepCard, 0.5, { Position = S(640, 18) }, Enum.EasingStyle.Bounce)
-		stepDoneAt = state.step >= 6 and now + 6 or nil
+		stepDoneAt = (state.step >= 6 and not forgeUI.questHint) and now + 6 or nil
 	end
 	if stepDoneAt and now > stepDoneAt then
 		stepExpired, stepDoneAt = true, nil

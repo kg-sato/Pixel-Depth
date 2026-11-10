@@ -1237,7 +1237,7 @@ function Hub.build(parent, origin)
 			tvox(g, "Post", Vector3.new(1, 10, 1), at(s * 4.6, 5.4, 0), "beam", 4)
 			tvox(g, "WingPost", Vector3.new(0.8, 9, 0.8), at(s * 8.7, 4.9, 2), "beam", 4)
 		end
-		tvox(g, "Board", Vector3.new(9, 5.6, 0.6), at(0, 6.4, 0.1), "planks", 4)
+		prompt(tvox(g, "Board", Vector3.new(9, 5.6, 0.6), at(0, 6.4, 0.1), "planks", 4), "Read", "Quest board", "quests")
 		local wingL = tvox(g, "Wing", Vector3.new(4.4, 5, 0.5), at(-6.7, 6, 1) * CFrame.Angles(0, 0.46, 0), "planks", 4)
 		local wingR = tvox(g, "Wing", Vector3.new(4.4, 5, 0.5), at(6.7, 6, 1) * CFrame.Angles(0, -0.46, 0), "planks", 4)
 		local function atN(x, y, z) return at(0, 0, 0.4) * CFrame.Angles(0, math.pi / 2, 0) * CFrame.new(x, y, z) end
