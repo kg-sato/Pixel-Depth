@@ -51,6 +51,8 @@ function M.start(E)
 		end
 	end)
 
+	local YAW = -1.2 -- Minecraft's held-tool pose (the user, 2026-11-10): the head runs away from the camera, its flat face turned to screen centre
+	hook.vmYaw = YAW
 	local ang, angV = 0, 0 -- the swing spring (radians)
 	local sway, swayV = Vector2.zero, Vector2.zero -- lag behind the camera's turn
 	local lastLook
@@ -76,7 +78,8 @@ function M.start(E)
 		local bob = moving and math.sin(now * 10) * 0.08 or math.sin(now * 1.7) * 0.035 -- walking bob, or slow breathing
 		local roll = moving and math.sin(now * 5) * 0.03 or math.sin(now * 0.85) * 0.02
 		local dip = math.max(ang, 0) * 0.12 -- the head carries the hand forward and down on the strike
-		return CFrame.new(1.12 + sway.X, -1.24 + bob + sway.Y - dip, -2.1 - dip) * CFrame.Angles(0.15 + sway.Y * 0.5, -0.35 - sway.X * 0.6, 0.35 + roll) * CFrame.Angles(-ang, 0, 0)
+		return CFrame.new(1.5 + sway.X - dip, -2 + bob + sway.Y - dip, -2.4 - dip) * CFrame.Angles(-ang + sway.Y * 0.5, -sway.X * 0.6 + math.max(ang, 0) * 0.25, 0) -- the swing chops forward and in toward the crosshair
+			* CFrame.Angles(-0.5, 0, 0.22 + roll) * CFrame.Angles(0, YAW, 0) -- at rest: leaning forward and a little inward, handle to the bottom right corner
 	end
 end
 

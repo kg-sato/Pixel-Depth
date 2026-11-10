@@ -348,9 +348,9 @@ C.DEPOSIT = {
 -- (https://www.youtube.com/watch?v=adgCWET34rU): realistic style, tinted ambient so shadows keep colour, low diffuse, punchy
 -- contrast with a subtle tint, a small low-threshold bloom so glows read as colour, a light depth of field for big halls.
 C.CAVE_LIGHT = {
-	Lighting = { LightingStyle = Enum.LightingStyle.Realistic, Ambient = Color3.fromRGB(28, 22, 40), OutdoorAmbient = Color3.fromRGB(24, 18, 36), Brightness = 0, EnvironmentDiffuseScale = 0.08, EnvironmentSpecularScale = 0.85, ExposureCompensation = 0.05, ShadowSoftness = 0.15 }, -- specular 0.85: the wet rock and glass ores reflect (glass pass) -- playtest 2: was 40,30,64 / 36,28,60 / 0.15 / 0.25, too bright for a cave
+	Lighting = { LightingStyle = Enum.LightingStyle.Realistic, Ambient = Color3.fromRGB(28, 22, 40), OutdoorAmbient = Color3.fromRGB(24, 18, 36), Brightness = 0, EnvironmentDiffuseScale = 0.08, EnvironmentSpecularScale = 1, ExposureCompensation = 0.05, ShadowSoftness = 0.15 }, -- specular 0.85: the wet rock and glass ores reflect (glass pass) -- playtest 2: was 40,30,64 / 36,28,60 / 0.15 / 0.25, too bright for a cave
 	Atmosphere = { Density = 0.42, Offset = 0, Color = Color3.fromRGB(52, 36, 86), Decay = Color3.fromRGB(26, 16, 46), Glare = 0, Haze = 0.8 },
-	Bloom = { Intensity = 0.45, Size = 22, Threshold = 1.05 }, -- was 0.7 / 30: neon and lit floors smeared into glare (VFX note 2026-11-08)
+	Bloom = { Intensity = 0.55, Size = 22, Threshold = 0.95 }, -- was 0.7 / 30: neon and lit floors smeared into glare (VFX note 2026-11-08)
 	ColorCorrection = { Brightness = 0.03, Contrast = 0.2, Saturation = 0.12, TintColor = Color3.fromRGB(240, 230, 255) },
 	DepthOfField = { FarIntensity = 0.22, FocusDistance = 36, InFocusRadius = 40, NearIntensity = 0 },
 }

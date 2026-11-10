@@ -49,6 +49,33 @@ local function plainGloss(p, class)
 	p.Material, p.MaterialVariant = Enum.Material.SmoothPlastic, name
 end
 
+-- wet glints (audit 11; the Minecraft shader packs' screen-space reflections stand-in): under every lantern a soft streak of
+-- its light lies on the damp ground. Thin layers 0.04 studs apart, so nothing is coplanar with the ground or each other.
+-- round: a pool (first-person caves) instead of a streak stretched toward the town's south camera
+local function wetGlints(root, round)
+	local rp = RaycastParams.new()
+	rp.FilterType = Enum.RaycastFilterType.Exclude
+	for _, p in root:GetDescendants() do
+		if p:IsA("BasePart") and p.Name == "Lantern" then
+			rp.FilterDescendantsInstances = {}
+			local hit = workspace:Raycast(p.Position + Vector3.new(0, 0, 1.6), Vector3.new(0, -16, 0), rp) -- beside the post, on the camera side
+			if hit and hit.Normal.Y > 0.95 and hit.Instance.Transparency < 0.5 then
+				for k, sz in { Vector3.new(2.63, 0.04, 5.37), Vector3.new(1.33, 0.04, 3.17), Vector3.new(0.33, 0.04, 1.77) } do -- three feathered layers, no hard edge
+					local g = Instance.new("Part")
+					g.Name, g.Size, g.Material, g.Color = "WetGlint", round and Vector3.new(sz.Z, 0.04, sz.Z) or sz, Enum.Material.Neon, p.Color:Lerp(Color3.new(1, 1, 1), 0.25 * k)
+					g.Transparency = k == 3 and 0.8 or 0.985 - k * 0.025 -- two faint feathers and a narrow core: a streak of light, not a painted oval
+					g.CFrame = CFrame.new(hit.Position + Vector3.new(0.013, 0.05 + 0.04 * k, round and 0 or 0.4))
+					g.Anchored, g.CanCollide, g.CanQuery, g.CanTouch, g.CastShadow = true, false, false, false, false
+					local oval = Instance.new("SpecialMesh") -- a soft oval, not a hard rectangle
+					oval.MeshType = Enum.MeshType.Sphere
+					oval.Parent = g
+					g.Parent = p.Parent
+				end
+			end
+		end
+	end
+end
+
 -- the hub: textures to variants
 function M.hub(hub)
 	local made, glassed = 0, 0
@@ -60,7 +87,7 @@ function M.hub(hub)
 			end
 			if tex and tex.Name == "glass" then -- windows become real glass with a warm interior glow behind them
 				for _, t in p:GetChildren() do if t:IsA("Texture") then t:Destroy() end end
-				p.Material, p.Transparency, p.Reflectance = Enum.Material.Glass, 0.35, 0.2
+				p.Material, p.Transparency, p.Reflectance = Enum.Material.Glass, 0.35, 0.32
 				glassed += 1
 			elseif tex then
 				local studs = math.floor(tex.StudsPerTileU * 10 + 0.5) / 10
@@ -69,7 +96,7 @@ function M.hub(hub)
 				local tint = tex.Color3
 				for _, t in p:GetChildren() do if t:IsA("Texture") and t.Name == tex.Name then t:Destroy() end end
 				p.Material, p.MaterialVariant, p.Color = Enum.Material.SmoothPlastic, name, tint
-				if CLASS[tex.Name] == "low" then p.Reflectance = 0.2 end -- damp stone picks up the night sky
+				if CLASS[tex.Name] == "low" then p.Reflectance = 0.3 end -- damp stone picks up the night sky
 				made += 1
 			elseif p.Material == Enum.Material.SmoothPlastic or p.Material == Enum.Material.Plastic then
 				local n = p.Name
@@ -78,29 +105,7 @@ function M.hub(hub)
 			end
 		end
 	end
-	-- wet glints (audit 11): under every town lantern a soft streak of its light lies on the damp ground, stretched toward the
-	-- camera (it sits south, C.CAM_YAW 0). Two thin layers 0.04 studs apart, so nothing is coplanar with the ground or each other.
-	local rp = RaycastParams.new()
-	rp.FilterType = Enum.RaycastFilterType.Exclude
-	for _, p in hub:GetDescendants() do
-		if p:IsA("BasePart") and p.Name == "Lantern" then
-			rp.FilterDescendantsInstances = {}
-			local hit = workspace:Raycast(p.Position + Vector3.new(0, 0, 1.6), Vector3.new(0, -16, 0), rp) -- beside the post, on the camera side
-			if hit and hit.Normal.Y > 0.95 and hit.Instance.Transparency < 0.5 then
-				for k, sz in { Vector3.new(2.63, 0.04, 5.37), Vector3.new(1.33, 0.04, 3.17), Vector3.new(0.33, 0.04, 1.77) } do -- three feathered layers, no hard edge
-					local g = Instance.new("Part")
-					g.Name, g.Size, g.Material, g.Color = "WetGlint", sz, Enum.Material.Neon, p.Color:Lerp(Color3.new(1, 1, 1), 0.25 * k)
-					g.Transparency = k == 3 and 0.86 or 0.99 - k * 0.02 -- two faint feathers and a narrow core: a streak of light, not a painted oval
-					g.CFrame = CFrame.new(hit.Position + Vector3.new(0.013, 0.05 + 0.04 * k, 0.4))
-					g.Anchored, g.CanCollide, g.CanQuery, g.CanTouch, g.CastShadow = true, false, false, false, false
-					local oval = Instance.new("SpecialMesh") -- a soft oval, not a hard rectangle
-					oval.MeshType = Enum.MeshType.Sphere
-					oval.Parent = g
-					g.Parent = p.Parent
-				end
-			end
-		end
-	end
+	wetGlints(hub)
 	return made, glassed
 end
 
@@ -109,7 +114,7 @@ local function shell(core, color, grow, transparency)
 	local s = core:Clone()
 	for _, c in s:GetChildren() do c:Destroy() end
 	s.Name = "GlassShell"
-	s.Material, s.Transparency, s.Reflectance = Enum.Material.Glass, transparency or 0.4, 0.25
+	s.Material, s.Transparency, s.Reflectance = Enum.Material.Glass, transparency or 0.4, 0.4
 	s.Color = color
 	s.Size = core.Size * (grow or 1.22)
 	s.CanCollide, s.CanQuery, s.CanTouch, s.CastShadow = false, false, false, false
@@ -143,7 +148,7 @@ function M.caves(caves)
 			shell(core, col:Lerp(Color3.new(1, 1, 1), 0.35), 1.55, 0.45)
 			for _, p in dep:GetChildren() do
 				if p:IsA("BasePart") and p.Name == "Shard" and p.Size.Y > p.Size.X * 1.2 then -- the leaning crystals turn to glass
-					p.Material, p.Transparency, p.Reflectance = Enum.Material.Glass, 0.22, 0.2
+					p.Material, p.Transparency, p.Reflectance = Enum.Material.Glass, 0.22, 0.35
 					p.Color = p.Color:Lerp(Color3.new(1, 1, 1), 0.2)
 				end
 			end
@@ -167,6 +172,7 @@ function M.caves(caves)
 			plainGloss(p, "mid")
 		end
 	end
+	wetGlints(caves, true)
 	return ores, eggs
 end
 

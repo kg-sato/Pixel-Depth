@@ -81,7 +81,7 @@ local function effect(cls, props)
 	e.Parent = Lighting
 end
 effect("Atmosphere", { Density = 0.3, Offset = 0.12, Haze = 1.4, Glare = 0, Color = Color3.fromRGB(86, 70, 140), Decay = Color3.fromRGB(34, 22, 66) })
-effect("BloomEffect", { Intensity = 0.35, Size = 22, Threshold = 1.3 })
+effect("BloomEffect", { Intensity = 0.45, Size = 22, Threshold = 1.1 })
 effect("ColorCorrectionEffect", { Saturation = 0.06, Contrast = 0.12, Brightness = 0.02, TintColor = Color3.fromRGB(242, 234, 255) })
 effect("Sky", { StarCount = 3000, MoonAngularSize = 18, CelestialBodiesShown = true })
 local clouds = workspace.Terrain:FindFirstChildOfClass("Clouds") or Instance.new("Clouds")

@@ -542,7 +542,7 @@ function Cave.build(parent, origin, seed)
 				end
 			end
 		end
-		local water = part("Grotto", "Water", Vector3.new(30 * CELL, 1, 24 * CELL), cf(15, 0, waterY - 0.5), Color3.fromRGB(75, 215, 220), { Transparency = 0.5, Reflectance = 0.25, CanCollide = false, CastShadow = false, Material = Enum.Material.Glass })
+		local water = part("Grotto", "Water", Vector3.new(30 * CELL, 1, 24 * CELL), cf(15, 0, waterY - 0.5), Color3.fromRGB(75, 215, 220), { Transparency = 0.5, Reflectance = 0.4, CanCollide = false, CastShadow = false, Material = Enum.Material.Glass })
 		for k = 0, 5 do -- underwater glow on the basin floor
 			local a = k / 6 * math.pi * 2
 			local uw = part("Grotto", "UnderGlow", Vector3.new(2, 2, 2), cf(15 + math.cos(a) * 7, math.sin(a) * 5, -12), Color3.fromRGB(60, 230, 225), { Transparency = 1, CanCollide = false, CanQuery = false })
