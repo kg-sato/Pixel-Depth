@@ -119,11 +119,22 @@ local function gables(g, at, x, d, y0, tex, step)
 	end
 end
 
-local function sign(g, text, cf, w, h, fg, plain)
+local cubeLantern
+local function sign(g, text, cf, w, h, fg, plain, postH)
 	-- playtest 2 (board 6): readable from the bird's-eye camera: 1.4x bigger, a cream plate (or the given colour), ink Fredoka
 	-- letters, a thick plum rim, a trim strip in the sign's colour, the camera-side face tilted up 45 degrees toward the steep camera (vertical
 	-- signs read as slivers from above); the face is lit by its own SurfaceGui background, so it stays cream at night
 	w, h = w * 1.4, h * 1.4
+	if postH then -- audit 05: a free-standing sign stands on two carved timber posts with a small hanging lantern, not in mid-air
+		for _, sd in { -1, 1 } do
+			local top = cf.Position + cf.RightVector * sd * (w / 2 + 0.7)
+			tvox(g, "SignPost", Vector3.new(0.6, postH + h * 0.5, 0.6), CFrame.new(top + Vector3.new(0, (h * 0.5 - postH) / 2, 0)), "beam", 2)
+			tvox(g, "SignPostCap", Vector3.new(0.9, 0.3, 0.9), CFrame.new(top + Vector3.new(0, h * 0.5 + 0.15, 0)), "beam", 2, { CanCollide = false })
+		end
+		local arm = cf.Position + cf.RightVector * (w / 2 + 1.5) + Vector3.new(0, h * 0.5 - 0.3, 0)
+		tvox(g, "SignArm", Vector3.new(1.4, 0.3, 0.3), CFrame.new(arm - cf.RightVector * 0.3), "beam", 2, { CanCollide = false })
+		cubeLantern(g, arm + cf.RightVector * 0.2 - Vector3.new(0, 1.2, 0), 0.5, 0.55)
+	end
 	cf = cf * CFrame.Angles(math.rad(cf.LookVector.Z > 0 and 45 or -45), 0, 0) -- the face the camera sees (it sits south: C.CAM_YAW 0, pitch 52) tilts up toward it
 	local board = vox(g, "Sign", Vector3.new(w, h, 0.4), cf, plain or PAL.cream[2], { CanCollide = false })
 	vox(g, "SignFrame", Vector3.new(w + 0.8, h + 0.8, 0.3), cf, INK, { CanCollide = false })
@@ -155,7 +166,7 @@ local function prompt(p, action, object, station)
 	return pr
 end
 
-local function cubeLantern(g, pos, hang, s)
+function cubeLantern(g, pos, hang, s)
 	s = s or 1
 	if hang then vox(g, "Chain", Vector3.new(0.2, hang, 0.2), pos + Vector3.new(0, 1.1 * s + hang / 2, 0), PAL.stone[1], { CanCollide = false }) end
 	tvox(g, "LanternCap", Vector3.new(1.6, 0.4, 1.6) * s, pos + Vector3.new(0, 0.95 * s, 0), "iron", 2, { CanCollide = false })
@@ -163,8 +174,11 @@ local function cubeLantern(g, pos, hang, s)
 	for _, o in { { -1, -1 }, { -1, 1 }, { 1, -1 }, { 1, 1 } } do
 		vox(g, "LanternBar", Vector3.new(0.2, 1.5, 0.2) * s, pos + Vector3.new(o[1] * 0.62, 0, o[2] * 0.62) * s, INK, { CanCollide = false })
 	end
-	local core = vox(g, "Lantern", Vector3.new(1.1, 1.5, 1.1) * s, pos, LAMP, { CanCollide = false })
-	glow(core, LAMP, 16 * s, 0.7)
+	-- audit 09: the lamp was a solid neon block that bloomed into a square headlight. Now a small wick inside amber glass panes.
+	vox(g, "LanternGlass", Vector3.new(1.08, 1.5, 1.08) * s, pos, LAMP:Lerp(Color3.fromRGB(255, 176, 96), 0.4), { CanCollide = false, CastShadow = false, Material = Enum.Material.Glass, Transparency = 0.6, Reflectance = 0.2 })
+	vox(g, "LanternWick", Vector3.new(0.34, 0.3, 0.34) * s, pos - Vector3.new(0, 0.58 * s, 0), INK, { CanCollide = false, CastShadow = false })
+	local core = vox(g, "Lantern", Vector3.new(0.24, 0.4, 0.24) * s, pos - Vector3.new(0, 0.22 * s, 0), LAMP, { CanCollide = false, CastShadow = false })
+	glow(core, LAMP, 22 * s, 0.95) -- the lamps carry the town now that the night is darker
 	core:SetAttribute("Sway", 0.08)
 	return core
 end
@@ -767,28 +781,54 @@ function Hub.build(parent, origin)
 	-- south rim, rails that run to the lip of the shaft and dip over it, buffers, and the parked cart whose prompt starts the ride
 	local dock = group("MineDock")
 	local RAILC = Color3.fromRGB(150, 140, 170)
-	vox(dock, "Deck", Vector3.new(5, 1.2, 8.4), CFrame.new(W(0, 1.7, 9.8)), PAL.wood[2])
+	skin(vox(dock, "Deck", Vector3.new(5, 1.2, 8.4), CFrame.new(W(0, 1.7, 9.8)), AVG.planks), "planks", 2, nil, Color3.fromRGB(150, 124, 136)) -- weathered plank decking (Gemini r2: a flat peach slab)
+	for _, x in { -2.6, 2.6 } do
+		tvox(dock, "DeckBeam", Vector3.new(0.5, 1.36, 8.7), CFrame.new(W(x, 1.7, 9.8)), "beam", 2)
+		for _, z in { 5.9, 9.8, 13.7 } do tvox(dock, "DeckPost", Vector3.new(0.7, 2.4, 0.7), CFrame.new(W(x * 1.04, 1.5, z)), "beam", 2) end
+	end
 	for k = 0, 4 do vox(dock, "Sleeper", Vector3.new(3.4, 0.2, 0.7), CFrame.new(W(0, 2.4, 6.2 + k * 1.8)), PAL.wood[1], { CanCollide = false }) end
 	for _, x in { -1.25, 1.25 } do
 		vox(dock, "Rail", Vector3.new(0.3, 0.3, 8.4), CFrame.new(W(x, 2.45, 9.8)), RAILC, { Material = Enum.Material.Metal, CanCollide = false })
 		local c = W(x, 1.88, 4.8)
 		vox(dock, "RailLip", Vector3.new(0.3, 0.3, 2), CFrame.lookAt(c, c + Vector3.new(0, -0.57, -0.82)), RAILC, { Material = Enum.Material.Metal, CanCollide = false })
 		vox(dock, "BufferPost", Vector3.new(0.6, 1.4, 0.6), CFrame.new(W(x * 1.2, 3, 13.7)), PAL.wood[1])
-		vox(dock, "BufferPad", Vector3.new(0.8, 0.6, 0.3), CFrame.new(W(x * 1.2, 3.2, 13.3)), PAL.pink[2])
+		skin(vox(dock, "BufferPad", Vector3.new(0.8, 0.6, 0.3), CFrame.new(W(x * 1.2, 3.2, 13.3)), AVG.iron), "iron", 2, nil, Color3.fromRGB(128, 122, 140)) -- an iron buffer plate (the pink pad read as a stray block)
 	end
-	-- the cart: a hollow lilac tub (the rider sees its inside in first person) with butter rims on four wheels, facing the shaft
+	-- the cart (demo audit 14: it was an untextured lilac box): a hollow tub of dark oak planks (the rider sees its inside in
+	-- first person), banded in riveted wrought iron, on cast-iron flanged wheels with axles and brake shoes, facing the shaft
 	local cart = group("HubCart")
 	local base = CFrame.lookAt(W(0, 2.3, 9.8), W(0, 2.3, 0))
-	local LIL, BUT = Color3.fromRGB(150, 128, 200), Color3.fromRGB(255, 214, 140)
-	local root = vox(cart, "Base", Vector3.new(0.2, 0.2, 0.2), base, LIL, { Transparency = 1, CanCollide = false, CanQuery = false })
+	local OAK, IRON, RIVET = Color3.fromRGB(122, 98, 112), Color3.fromRGB(64, 58, 78), Color3.fromRGB(176, 168, 196)
+	local root = vox(cart, "Base", Vector3.new(0.2, 0.2, 0.2), base, IRON, { Transparency = 1, CanCollide = false, CanQuery = false })
 	cart.PrimaryPart = root
-	local floor = vox(cart, "Floor", Vector3.new(2.4, 0.3, 3), base * CFrame.new(0, 0.9, 0), LIL:Lerp(Color3.new(0, 0, 0), 0.25))
-	for _, z in { -1.65, 1.65 } do vox(cart, "WallEnd", Vector3.new(3, 1.6, 0.3), base * CFrame.new(0, 1.75, z), LIL) end
-	for _, x in { -1.35, 1.35 } do vox(cart, "WallSide", Vector3.new(0.3, 1.6, 3), base * CFrame.new(x, 1.75, 0), LIL) end
-	for _, z in { -1.65, 1.65 } do vox(cart, "RimEnd", Vector3.new(3.2, 0.35, 0.35), base * CFrame.new(0, 2.62, z), BUT, { Material = Enum.Material.Metal }) end
-	for _, x in { -1.4, 1.4 } do vox(cart, "RimSide", Vector3.new(0.3, 0.3, 2.95), base * CFrame.new(x, 2.6, 0), BUT, { Material = Enum.Material.Metal }) end
+	local function oak(name, size, cf, shade) return skin(vox(cart, name, size, cf, AVG.planks), "planks", 2, nil, OAK:Lerp(Color3.new(0, 0, 0), shade or 0)) end
+	local function iron(name, size, cf, props) return skin(vox(cart, name, size, cf, AVG.iron, props or { CanCollide = false }), "iron", 2, nil, Color3.fromRGB(104, 102, 108)) end -- tinted down and neutral (charcoal wrought iron, not slate blue): the plain texture read as lilac, not wrought iron
+	local floor = oak("Floor", Vector3.new(2.4, 0.3, 3), base * CFrame.new(0, 0.9, 0), 0.25)
+	for _, z in { -1.65, 1.65 } do oak("WallEnd", Vector3.new(3, 1.6, 0.3), base * CFrame.new(0, 1.75, z)) end
+	for _, x in { -1.35, 1.35 } do oak("WallSide", Vector3.new(0.3, 1.6, 3), base * CFrame.new(x, 1.75, 0), 0.08) end
+	for _, z in { -1.65, 1.65 } do iron("RimEnd", Vector3.new(3.2, 0.35, 0.35), base * CFrame.new(0, 2.62, z), {}) end
+	for _, x in { -1.4, 1.4 } do iron("RimSide", Vector3.new(0.3, 0.3, 2.95), base * CFrame.new(x, 2.6, 0), {}) end
+	for _, x in { -1, 1 } do
+		for _, z in { -1, 1 } do -- corner braces stand 0.08 proud of the planks, two rivets on each outer face
+			iron("Brace", Vector3.new(0.5, 1.56, 0.5), base * CFrame.new(x * 1.33, 1.72, z * 1.63))
+			for _, y in { 1.25, 2.15 } do
+				vox(cart, "Rivet", Vector3.new(0.16, 0.16, 0.1), base * CFrame.new(x * 1.33, y, z * 1.9), RIVET, { CanCollide = false, Material = Enum.Material.Metal })
+				vox(cart, "Rivet", Vector3.new(0.1, 0.16, 0.16), base * CFrame.new(x * 1.6, y, z * 1.63), RIVET, { CanCollide = false, Material = Enum.Material.Metal })
+			end
+		end
+		iron("Band", Vector3.new(0.07, 0.28, 2.74), base * CFrame.new(x * 1.535, 1.72, 0)) -- the iron band round the tub's waist
+		iron("BrakeLever", Vector3.new(0.14, 1.5, 0.14), base * CFrame.new(x * 1.66, 1.5, 0.35) * CFrame.Angles(0.35, 0, 0))
+	end
+	for _, z in { -1, 1 } do
+		iron("Band", Vector3.new(2.14, 0.28, 0.07), base * CFrame.new(0, 1.72, z * 1.835))
+		vox(cart, "Axle", Vector3.new(3.3, 0.3, 0.3), base * CFrame.new(0, 0.65, z * 1.1), IRON, { Shape = Enum.PartType.Cylinder, CanCollide = false, Material = Enum.Material.Metal })
+	end
 	for _, w in { { -1.55, -1.1 }, { 1.55, -1.1 }, { -1.55, 1.1 }, { 1.55, 1.1 } } do
-		vox(cart, "Wheel", Vector3.new(0.4, 1, 1), base * CFrame.new(w[1], 0.65, w[2]) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(60, 46, 76), { Shape = Enum.PartType.Cylinder })
+		local wcf = base * CFrame.new(w[1], 0.65, w[2]) * CFrame.Angles(0, 0, math.pi / 2)
+		vox(cart, "Wheel", Vector3.new(0.4, 1, 1), wcf, IRON, { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Metal })
+		vox(cart, "WheelFlange", Vector3.new(0.12, 1.26, 1.26), base * CFrame.new(w[1] - math.sign(w[1]) * 0.27, 0.65, w[2]) * CFrame.Angles(0, 0, math.pi / 2), IRON:Lerp(Color3.new(0, 0, 0), 0.25), { Shape = Enum.PartType.Cylinder, CanCollide = false, Material = Enum.Material.Metal })
+		vox(cart, "WheelHub", Vector3.new(0.46, 0.34, 0.34), wcf, RIVET, { Shape = Enum.PartType.Cylinder, CanCollide = false, Material = Enum.Material.Metal })
+		vox(cart, "BrakeShoe", Vector3.new(0.34, 0.44, 0.3), base * CFrame.new(w[1], 0.72, w[2] + (w[2] > 0 and -0.68 or 0.68)), PAL.wood[1], { CanCollide = false })
 	end
 	prompt(floor, "Ride the minecart", "Minecart", "enter")
 
@@ -1107,7 +1147,7 @@ function Hub.build(parent, origin)
 			for k = 0, 3 do tvox(g, "Firewood", Vector3.new(0.8, 0.8, 3), at(-8 + (k % 2) * 0.85, 1.5 + math.floor(k / 2) * 0.8, -2), "logs", 2) end
 		end
 	end
-	sign(model, "GUESTS SOON", CFrame.new(W(21, 3.2, 12)), 6, 1.6)
+	sign(model, "GUESTS SOON", CFrame.new(W(21, 3.2, 12)), 6, 1.6, nil, nil, 3.2)
 	tvox(model, "GuestSignPost", Vector3.new(0.6, 2.2, 0.6), CFrame.new(W(21, 1.5, 12)), "beam", 2)
 
 	-- 7. Egg incubator (south-west; ref art/hub/pdv4_incubator_s61.jpg): a stone base, a warm timber frame with clear glass and a

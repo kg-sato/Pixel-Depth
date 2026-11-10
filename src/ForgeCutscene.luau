@@ -105,6 +105,59 @@ function M.play(opt)
 		l.Parent = fl
 	end
 
+	-- demo audit 13: at night the default sky showed its photographic moon behind the forge, against everything voxel. The sky's
+	-- own sun and moon are switched off (for the whole game: a Sky in Lighting) and the night themes hang a pastel voxel crescent
+	-- inside a ring of rune stones behind the smith, with slow ember motes round it.
+	if not Lighting:FindFirstChildOfClass("Sky") then
+		local sky = Instance.new("Sky")
+		sky.CelestialBodiesShown, sky.StarCount = false, 2200
+		sky.Parent = Lighting
+	end
+	if th.night then
+		local MOONC = Color3.fromRGB(176, 186, 214) -- lavender silver, dim enough that the bloom keeps its facets
+		local mc = CFrame.new(A + Vector3.new(-11, 20, 40)) * CFrame.Angles(0, 0, -0.45)
+		for x = -5, 5 do
+			for y = -5, 5 do
+				local inDisc = math.sqrt(x * x + y * y) <= 5.2
+				local inBite = math.sqrt((x - 2.5) ^ 2 + (y - 1.3) ^ 2) <= 4.5
+				if inDisc and not inBite then -- stepped depth, so the crescent has facets instead of a flat face
+					part(world, Vector3.new(1, 1, 1 + ((x + y) % 2) * 0.5), mc * CFrame.new(x, y, 0), MOONC:Lerp(Color3.new(0, 0, 0), ((x * 7 + y * 13) % 3) * 0.13 + ((x + y) % 2) * 0.1), { Material = Enum.Material.Neon })
+				end
+			end
+		end
+		for k = 1, 12 do
+			local a = k / 12 * math.pi * 2
+			part(world, Vector3.new(0.9, 0.9, 0.5), mc * CFrame.new(math.cos(a) * 9, math.sin(a) * 9, 0.6) * CFrame.Angles(0, 0, math.pi / 4), th.c1:Lerp(WHITE, 0.35), { Material = Enum.Material.Neon, Transparency = k % 2 == 0 and 0.15 or 0.45 })
+		end
+		for k = 1, 8 do -- a ring of standing stones, each with a glowing rune cut into its inner face
+			local a = k / 8 * math.pi * 2 + 0.39
+			if math.sin(a) > -0.15 then -- only behind and beside the smith: the camera's side (-Z) stays open
+				local base = CFrame.lookAt(A + Vector3.new(math.cos(a) * 17, 0, math.sin(a) * 17), A)
+				local h = 6 + (k % 3) * 1.6
+				part(world, Vector3.new(2.4, h, 1.8), base * CFrame.new(0, h / 2, 0) * CFrame.Angles(0, 0, (k % 2 - 0.5) * 0.12), Color3.fromRGB(52, 46, 84))
+				part(world, Vector3.new(1.7, 0.9, 1.5), base * CFrame.new(0, h + 0.3, 0) * CFrame.Angles(0, 0.4, 0), Color3.fromRGB(66, 58, 104))
+				part(world, Vector3.new(0.3, h * 0.5, 0.1), base * CFrame.new(0, h * 0.55, -0.92), th.c1:Lerp(WHITE, 0.3), { Material = Enum.Material.Neon })
+				part(world, Vector3.new(1.0, 0.3, 0.1), base * CFrame.new(0, h * 0.68, -0.92), th.c1:Lerp(WHITE, 0.3), { Material = Enum.Material.Neon })
+			end
+		end
+		for ring, n in { 10, 16 } do -- arcane marks on the dais floor, two rings round the anvil
+			for k = 1, n do
+				local a = k / n * math.pi * 2 + ring
+				local r = 4.5 + ring * 3.2
+				part(world, Vector3.new(1.3, 0.06, 0.26), CFrame.new(A + Vector3.new(math.cos(a) * r, 0.05, math.sin(a) * r)) * CFrame.Angles(0, -a + (k % 2) * 0.6, 0), th.c1:Lerp(Color3.fromRGB(226, 212, 248), 0.5), { Material = Enum.Material.Neon, Transparency = 0.55 })
+			end
+		end
+		for k = 1, 9 do -- far ridges on the horizon, so the dais stands in a place and not in a void
+			local a = (k - 5) * 0.34
+			local h = 26 + ((k * 37) % 5) * 9
+			local at = A + Vector3.new(math.sin(a) * 150, h / 2 - 12, math.cos(a) * 150)
+			part(world, Vector3.new(46, h, 30), CFrame.lookAt(at, Vector3.new(A.X, at.Y, A.Z)), Color3.fromRGB(58, 50, 112):Lerp(th.c1, 0.12))
+			part(world, Vector3.new(26, h * 0.5, 26), CFrame.lookAt(at + Vector3.new(0, h * 0.62, 0), Vector3.new(A.X, at.Y, A.Z)) * CFrame.Angles(0, 0.5, 0), Color3.fromRGB(74, 64, 136):Lerp(th.c1, 0.14))
+		end
+		local halo = part(world, Vector3.new(16, 16, 1), mc, WHITE, { Transparency = 1 })
+		emitter(halo, { Texture = SPARK, Rate = 10, Color = ColorSequence.new(th.c2, th.c1), Size = ns(0.5, 0), Transparency = ns(0.2, 1), Lifetime = NumberRange.new(2, 3.5), Speed = NumberRange.new(0.4, 1.2), LightEmission = 0.8 })
+	end
+
 	-- the smith: Bolt the raccoon (the user's pick, 2026-11-08): grey fur, a dark mask with bright eyes, a white muzzle, round ears,
 	-- a ringed tail, a butter apron and a pink bandana; the right arm swings the hammer about the shoulder
 	local smith = {}
@@ -202,6 +255,7 @@ function M.play(opt)
 		a0.Parent, a1.Parent = s, s
 		local tr = Instance.new("Trail")
 		tr.Attachment0, tr.Attachment1, tr.Lifetime, tr.LightEmission = a0, a1, th.fall == "meteor" and 0.5 or 0.3, 1
+		tr.Transparency = NumberSequence.new(0.45, 1) -- soft light, not a solid white tube across the smith
 		tr.Color, tr.Transparency, tr.WidthScale, tr.FaceCamera = ColorSequence.new(WHITE, s.Color), ns(0, 1), ns(1, 0), true
 		tr.Parent = s
 		local a = math.random() * math.pi * 2

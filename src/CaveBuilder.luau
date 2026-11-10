@@ -83,6 +83,27 @@ function Cave.build(parent, origin, seed)
 		l.Parent = p
 		return l
 	end
+	-- a miner's lantern (demo audit 09: bare neon cubes blew out under bloom): a small neon wick inside amber glass panes, a brass
+	-- cap, base and corner struts. The light sits on the wick; the fixture keeps its glow through the playtest 2 dimming pass.
+	local BRASS, BRASS_DARK = Color3.fromRGB(60, 54, 62), Color3.fromRGB(43, 42, 45) -- dark iron: brass lit by its own flame read as mustard plastic (Gemini r3)
+	local function lantern(g, name, cf, color, range, s)
+		s = s or 1
+		cf = typeof(cf) == "Vector3" and CFrame.new(cf) or cf
+		local core = part(g, name, Vector3.new(0.2, 0.3, 0.2) * s, cf * CFrame.new(0, -0.04 * s, 0), color, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false }) -- a small flame
+		part(g, "LanternFlameTip", Vector3.new(0.11, 0.2, 0.11) * s, cf * CFrame.new(0, 0.2 * s, 0), color:Lerp(Color3.new(1, 1, 1), 0.3), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+		part(g, "LanternWick", Vector3.new(0.3, 0.26, 0.3) * s, cf * CFrame.new(0, -0.4 * s, 0), BRASS_DARK, DECO) -- the oil cup under it
+		part(g, "LanternGlass", Vector3.new(0.9, 1.08, 0.9) * s, cf, Color3.fromRGB(255, 170, 84), { Material = Enum.Material.Glass, Transparency = 0.6, Reflectance = 0.2, CanCollide = false, CastShadow = false }) -- warm amber panes you can see (at 0.8 the cage read as empty)
+		part(g, "LanternCap", Vector3.new(1.06, 0.2, 1.06) * s, cf * CFrame.new(0, 0.62 * s, 0), BRASS, DECO)
+		part(g, "LanternCap", Vector3.new(0.6, 0.18, 0.6) * s, cf * CFrame.new(0, 0.8 * s, 0), BRASS_DARK, DECO)
+		part(g, "LanternBase", Vector3.new(1.06, 0.2, 1.06) * s, cf * CFrame.new(0, -0.62 * s, 0), BRASS, DECO)
+		for _, o in { { -1, -1 }, { -1, 1 }, { 1, -1 }, { 1, 1 } } do
+			for _, y in { -0.62, 0.62 } do part(g, "LanternBracket", Vector3.new(0.2, 0.26, 0.2) * s, cf * CFrame.new(o[1] * 0.46 * s, y * s, o[2] * 0.46 * s), Color3.fromRGB(112, 84, 48), { CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false }) end -- brass corner brackets on the hammered iron
+			part(g, "LanternStrut", Vector3.new(0.12, 1.06, 0.12) * s, cf * CFrame.new(o[1] * 0.44 * s, 0, o[2] * 0.44 * s), BRASS_DARK, DECO)
+		end
+		local l = glow(core, color, range, 0.6) -- soft and wide. The audit asked for 1.2 to 1.8: tried 1.2, the whole camp floor went white (captures/night/p1_camp.png)
+		l:SetAttribute("Fixture", true)
+		return core
+	end
 
 	-- the raster: cells[key] = { f = floor y, c = ceiling y, theme, prio, water }
 	local cells = {}
@@ -229,8 +250,7 @@ function Cave.build(parent, origin, seed)
 			sg2.Face = Enum.NormalId.Front
 			sg2.TextLabel.Text, sg2.TextLabel.TextColor3 = "CLAY CAVES: COMING SOON", Color3.fromRGB(111, 88, 176)
 			sg2.Parent = soon
-			local lamp = gp("AlcoveLamp", Vector3.new(0.8, 1, 0.8), back * CFrame.new(0, 8.5, 5), PAL.warm:Lerp(PAL.cream, 0.5), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
-			glow(lamp, Color3.fromRGB(255, 226, 196), 16, 0.6)
+			lantern("Gate", "AlcoveLamp", back * CFrame.new(0, 8.5, 5), PAL.warm:Lerp(PAL.cream, 0.5), 20, 0.9)
 			-- the Root Warden: a hulking moss-backed root golem asleep in front of the door, three amber knots on its chest
 			local w = Instance.new("Model")
 			w.Name = "Warden"
@@ -296,8 +316,7 @@ function Cave.build(parent, origin, seed)
 		for _, x in { -3.8, 3.8 } do part("Camp", "Post", Vector3.new(0.5, 7, 0.5), stall * CFrame.new(x, 3.5, -1), PAL.bark) end
 		for k = 0, 4 do part("Camp", "Awning", Vector3.new(1.7, 0.3, 4), stall * CFrame.new(-3.4 + k * 1.7, 7.2, 0.4) * CFrame.Angles(-0.35, 0, 0), k % 2 == 0 and PAL.pink or PAL.cream) end
 		for k = 0, 2 do part("Camp", "Crate", Vector3.new(2, 2, 2), stall * CFrame.new(-2.6 + k * 2.6, 4.8, 0) * CFrame.Angles(0, k * 0.3, 0), Color3.fromRGB(196, 150, 110)) end
-		part("Camp", "Lamp", Vector3.new(1, 1.2, 1), stall * CFrame.new(3.2, 6.2, 1.2), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false })
-		glow(group("Camp"):FindFirstChild("Lamp"), PAL.warm, 18, 1)
+		lantern("Camp", "Lamp", stall * CFrame.new(3.2, 6.2, 1.2), PAL.warm, 24, 1.1)
 		-- the rail station on the south side (feedback batch phase 4, 2026-11-08: the minecart ride replaces the lift): rails run
 		-- out of a timbered tunnel mouth in the south wall to buffers, a parked cart, a plank platform where riders step off
 		local st = CFrame.new(W(-1, -7, 0))
@@ -314,17 +333,41 @@ function Cave.build(parent, origin, seed)
 		end
 		-- the parked cart: a lilac tub with a butter rim on four dark wheels
 		local cart = st * CFrame.new(0, 0, railZ1 - 3)
-		local body = part("Camp", "CartBody", Vector3.new(3, 1.8, 3.6), cart * CFrame.new(0, 1.65, 0), Color3.fromRGB(122, 102, 172))
+		-- demo audit 14: the cart was a plain purple box and the platform flat peach. Dark oak planks banded in riveted wrought
+		-- iron, axles, flanged wheels, brake shoes; a plank deck on posts. Every cart part keeps a "Cart" name (the ride hides them).
+		local OAK, IRON, RIVET = Color3.fromRGB(96, 70, 74), Color3.fromRGB(58, 52, 72), Color3.fromRGB(170, 162, 190)
+		local WOODP, METAL = { Material = Enum.Material.WoodPlanks }, { Material = Enum.Material.Metal, CanCollide = false, CastShadow = false }
+		local body = part("Camp", "CartBody", Vector3.new(3, 1.8, 3.6), cart * CFrame.new(0, 1.65, 0), OAK, WOODP)
+		part("Camp", "CartInside", Vector3.new(2.5, 0.1, 3.1), cart * CFrame.new(0, 2.56, 0), Color3.fromRGB(34, 24, 36), DECO) -- the dark of the tub
+		for _, x in { -1, 1 } do
+			for _, z in { -1, 1 } do
+				part("Camp", "CartBrace", Vector3.new(0.5, 1.74, 0.5), cart * CFrame.new(x * 1.33, 1.65, z * 1.63), IRON, METAL)
+				for _, y in { 1.15, 2.15 } do
+					part("Camp", "CartRivet", Vector3.new(0.16, 0.16, 0.1), cart * CFrame.new(x * 1.33, y, z * 1.9), RIVET, METAL)
+					part("Camp", "CartRivet", Vector3.new(0.1, 0.16, 0.16), cart * CFrame.new(x * 1.6, y, z * 1.63), RIVET, METAL)
+				end
+			end
+			part("Camp", "CartBand", Vector3.new(0.07, 0.28, 2.74), cart * CFrame.new(x * 1.535, 1.65, 0), IRON, METAL)
+			part("Camp", "CartBrakeLever", Vector3.new(0.14, 1.5, 0.14), cart * CFrame.new(x * 1.66, 1.5, 0.35) * CFrame.Angles(0.35, 0, 0), IRON, METAL)
+			part("Camp", "CartRimS", Vector3.new(0.3, 0.3, 3.3), cart * CFrame.new(x * 1.45, 2.58, 0), IRON, METAL)
+		end
+		for _, z in { -1, 1 } do
+			part("Camp", "CartBand", Vector3.new(2.14, 0.28, 0.07), cart * CFrame.new(0, 1.65, z * 1.835), IRON, METAL)
+			part("Camp", "CartAxle", Vector3.new(3.1, 0.3, 0.3), cart * CFrame.new(0, 0.65, z * 1.1), IRON, { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Metal, CanCollide = false })
+		end
 		local pr = Instance.new("ProximityPrompt") -- ride up: the minecart escape (the server binds prompts with a RideUp attribute)
 		pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode = "Ride up", "Minecart", Enum.KeyCode.F
 		pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.HoldDuration = 12, false, 0
 		pr.Style = Enum.ProximityPromptStyle.Custom
 		pr:SetAttribute("RideUp", true)
 		pr.Parent = body
-		part("Camp", "CartRimF", Vector3.new(3.2, 0.35, 0.3), cart * CFrame.new(0, 2.6, -1.8), PAL.warm:Lerp(PAL.cream, 0.3), { Material = Enum.Material.Metal })
-		part("Camp", "CartRimB", Vector3.new(3.2, 0.35, 0.3), cart * CFrame.new(0, 2.6, 1.8), PAL.warm:Lerp(PAL.cream, 0.3), { Material = Enum.Material.Metal })
+		part("Camp", "CartRimF", Vector3.new(3.2, 0.35, 0.3), cart * CFrame.new(0, 2.6, -1.8), IRON, { Material = Enum.Material.Metal })
+		part("Camp", "CartRimB", Vector3.new(3.2, 0.35, 0.3), cart * CFrame.new(0, 2.6, 1.8), IRON, { Material = Enum.Material.Metal })
 		for _, w in { { -1.35, -1.1 }, { 1.35, -1.1 }, { -1.35, 1.1 }, { 1.35, 1.1 } } do
-			part("Camp", "CartWheel", Vector3.new(0.4, 1, 1), cart * CFrame.new(w[1], 0.65, w[2]) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(60, 46, 76), { Shape = Enum.PartType.Cylinder })
+			part("Camp", "CartWheel", Vector3.new(0.4, 1, 1), cart * CFrame.new(w[1], 0.65, w[2]) * CFrame.Angles(0, 0, math.pi / 2), IRON, { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Metal })
+			part("Camp", "CartFlange", Vector3.new(0.12, 1.26, 1.26), cart * CFrame.new(w[1] - math.sign(w[1]) * 0.27, 0.65, w[2]) * CFrame.Angles(0, 0, math.pi / 2), IRON:Lerp(Color3.new(0, 0, 0), 0.25), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Metal, CanCollide = false })
+			part("Camp", "CartHub", Vector3.new(0.46, 0.34, 0.34), cart * CFrame.new(w[1], 0.65, w[2]) * CFrame.Angles(0, 0, math.pi / 2), RIVET, { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Metal, CanCollide = false })
+			part("Camp", "CartBrakeShoe", Vector3.new(0.34, 0.44, 0.3), cart * CFrame.new(w[1], 0.72, w[2] + (w[2] > 0 and -0.68 or 0.68)), PAL.bark, DECO)
 		end
 		-- the tunnel mouth: a dark opening framed in timber, a lantern each side, a sign
 		part("Camp", "TunnelDark", Vector3.new(5.4, 6.4, 4), st * CFrame.new(0, 3.2, railZ0 - 2.2), Color3.fromRGB(14, 8, 22), { Material = Enum.Material.SmoothPlastic })
@@ -332,8 +375,7 @@ function Cave.build(parent, origin, seed)
 		part("Camp", "TunnelLintel", Vector3.new(11.2, 2.6, 4.4), st * CFrame.new(0, 8.9, railZ0 - 2.4), PAL.rock[2], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
 		for _, x in { -3, 3 } do
 			part("Camp", "TunnelPost", Vector3.new(0.8, 7.2, 0.8), st * CFrame.new(x, 3.6, railZ0), PAL.bark)
-			local l = part("Camp", "TunnelLamp", Vector3.new(0.8, 1, 0.8), st * CFrame.new(x, 5.2, railZ0 + 0.7), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
-			glow(l, PAL.warm, 16, 0.7)
+			lantern("Camp", "TunnelLamp", st * CFrame.new(x, 5.2, railZ0 + 0.7), PAL.warm, 22, 0.9)
 		end
 		part("Camp", "TunnelBeam", Vector3.new(7.6, 0.9, 0.9), st * CFrame.new(0, 7.4, railZ0), PAL.barkLt)
 		local sign = part("Camp", "StationSign", Vector3.new(5.6, 1.5, 0.3), st * CFrame.new(0, 8.9, railZ0 + 0.35), PAL.bark)
@@ -345,13 +387,17 @@ function Cave.build(parent, origin, seed)
 		tl.Parent = sg
 		sg.Parent = sign
 		-- the platform beside the rails: riders step off here (LiftLanding keeps its name for the server)
-		part("Camp", "Platform", Vector3.new(5, 1, 12), st * CFrame.new(4.6, 0.5, 0), PAL.plank:Lerp(PAL.bark, 0.65))
+		part("Camp", "Platform", Vector3.new(5, 1, 12), st * CFrame.new(4.6, 0.5, 0), Color3.fromRGB(104, 78, 80), { Material = Enum.Material.WoodPlanks })
+		part("Camp", "PlatformEdge", Vector3.new(0.5, 1.16, 12.3), st * CFrame.new(2.0, 0.5, 0), PAL.bark:Lerp(Color3.new(0, 0, 0), 0.3), { Material = Enum.Material.Wood }) -- a heavy edge beam on the rail side
+		for _, z in { -5.6, 0, 5.6 } do
+			part("Camp", "PlatformBolt", Vector3.new(0.12, 0.3, 0.3), st * CFrame.new(1.71, 0.7, z), Color3.fromRGB(170, 162, 190), { Material = Enum.Material.Metal, CanCollide = false, CastShadow = false })
+		end
 		-- station dressing (Gemini r1: "a desolate void"): crates of ore and a sack on the platform, a bench, glowing mushrooms by
 		-- the tunnel mouth, a barrel at the buffers
 		for k, c in { { 5.6, 1.6, 4.2, 1.2, PAL.plank }, { 5.3, 1.45, 3.1, 0.9, PAL.barkLt }, { 5.7, 2.75, 4.0, 0.8, PAL.plank:Lerp(PAL.cream, 0.3) } } do
 			part("Camp", "StationCrate", Vector3.new(c[4], c[4], c[4]), st * CFrame.new(c[1], c[2] - 0.6 + c[4] / 2, c[3]) * CFrame.Angles(0, k * 0.35, 0), c[5])
 		end
-		part("Camp", "CrateOre", Vector3.new(0.5, 0.4, 0.5), st * CFrame.new(5.62, 2.55, 4.18) * CFrame.Angles(0, 0.4, 0), PAL.lightTeal, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+		part("Camp", "CrateOre", Vector3.new(0.5, 0.4, 0.5), st * CFrame.new(5.62, 2.55, 4.18) * CFrame.Angles(0, 0.4, 0), PAL.teal, { Material = Enum.Material.Glass, Transparency = 0.2, CanCollide = false, CastShadow = false }) -- a glass ore sample (a neon one bleached to a white cube under the lamp)
 		part("Camp", "Sack", Vector3.new(1, 1.1, 0.9), st * CFrame.new(3.6, 1.55, -4.6) * CFrame.Angles(0, 0.5, 0.1), PAL.cream:Lerp(PAL.plank, 0.35))
 		part("Camp", "BenchSeat", Vector3.new(1, 0.3, 3.2), st * CFrame.new(6.4, 1.85, -1.5), PAL.barkLt)
 		for _, z in { -2.8, -0.2 } do part("Camp", "BenchLeg", Vector3.new(0.8, 0.85, 0.3), st * CFrame.new(6.4, 1.425, z), PAL.bark) end
@@ -363,8 +409,7 @@ function Cave.build(parent, origin, seed)
 		for _, z in { -5, 5 } do -- lantern posts on the platform light the arrival
 			part("Camp", "PlatformPost", Vector3.new(0.6, 5, 0.6), st * CFrame.new(6.6, 3.5, z), PAL.bark)
 			part("Camp", "PlatformArm", Vector3.new(1.6, 0.4, 0.4), st * CFrame.new(5.9, 5.8, z), PAL.bark)
-			local l = part("Camp", "PlatformLamp", Vector3.new(0.8, 1, 0.8), st * CFrame.new(5.3, 5.1, z), PAL.warm:Lerp(PAL.cream, 0.5), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
-			glow(l, Color3.fromRGB(255, 226, 196), 18, 0.6) -- soft: the warm lamps turned the deck orange (Gemini r1)
+			lantern("Camp", "PlatformLamp", st * CFrame.new(5.3, 5.1, z), PAL.warm:Lerp(PAL.cream, 0.5), 24, 0.9)
 		end
 		for k = -2, 2 do -- plank seams across the deck
 			part("Camp", "PlankSeam", Vector3.new(5.1, 0.08, 0.16), st * CFrame.new(4.6, 1.02, k * 2.4), PAL.bark:Lerp(Color3.new(0, 0, 0), 0.35), DECO)
@@ -387,14 +432,12 @@ function Cave.build(parent, origin, seed)
 			local a = k / 6 * math.pi * 2 + 0.3
 			local p = origin + Vector3.new(math.cos(a) * (ringR + 3), 0, math.sin(a) * (ringR + 3))
 			part("Camp", "LanternPost", Vector3.new(0.6, 6, 0.6), p + Vector3.new(0, 3, 0), PAL.bark)
-			local l = part("Camp", "Lantern", Vector3.new(1.2, 1.4, 1.2), p + Vector3.new(0, 6.4, 0), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false })
-			glow(l, PAL.warm, 24, 0.55)
+			lantern("Camp", "Lantern", p + Vector3.new(0, 6.9, 0), PAL.warm, 30, 1.3)
 		end
 		local fill = part("Camp", "WarmFill", Vector3.new(1, 1, 1), W(0, 0, 22), PAL.warm, { Transparency = 1, CanCollide = false, CanQuery = false })
 		glow(fill, Color3.fromRGB(255, 200, 150), 70, 0.5)
 		for _, at in { { -5, 5 }, { 5, 6 }, { -6.5, -1.5 } } do -- a lantern glow by each tent
-			local l = part("Camp", "TentLamp", Vector3.new(0.8, 1, 0.8), W(at[1], at[2], 1.2) + Vector3.new(2.5, 0, 2.5), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
-			glow(l, PAL.warm, 20, 0.8)
+			lantern("Camp", "TentLamp", W(at[1], at[2], 1.2) + Vector3.new(2.5, 0, 2.5), PAL.warm, 24, 0.9)
 		end
 		return exits
 	end
@@ -714,6 +757,48 @@ function Cave.build(parent, origin, seed)
 			for di = 0, w - 1 do for dj = 0, h - 1 do used[key(c.i + di, c.j + dj)] = true end end
 			part("Ceiling", "Ceiling", Vector3.new(w * CELL, 12, h * CELL), W(c.i + (w - 1) / 2, c.j + (h - 1) / 2, cq + 6), lerpC(PAL.rock[1], PAL.rock[2], hash(c.i, c.j, 19)), { CastShadow = false, Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
 			nCeil += 1
+			-- audit 10: the cave roof was a black void. Bioluminescent moss patches light it from below and World Tree roots hang
+			-- through it, so pillars and the roof keep a silhouette. Only where there is headroom (never in the low tunnels).
+			local room = cq - c.f
+			local hm = hash(c.i, c.j, 23)
+			if hm > 0.74 and room >= 12 then
+				local MOSS = Color3.fromRGB(80, 180, 140)
+				local mw = 1.6 + hash(c.i, c.j, 24) * 2
+				local mossAt = W(c.i, c.j, cq - 0.05) + Vector3.new((hash(c.i, c.j, 25) - 0.5) * 1.6, 0, (hash(c.i, c.j, 26) - 0.5) * 1.6)
+				local MOSSP = { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false }
+				local moss = part("Ceiling", "CeilMoss", Vector3.new(mw * 0.7, 0.5, mw * 0.6), mossAt, MOSS, MOSSP)
+				for q = 1, 2 + math.floor(hash(c.i, c.j, 36) * 5) do -- an irregular patch of two to six cushions, each a different size, depth, distance and shade
+					local a = q * (1.1 + hash(c.i, q, 37) * 1.4) + hm * 6
+					local sz = mw * (0.18 + hash(c.i + q, c.j, 34) * 0.5)
+					part("Ceiling", "CeilMoss", Vector3.new(sz, 0.3 + hash(c.i, c.j + q, 35) * 0.6, sz), mossAt + Vector3.new(math.cos(a) * mw * (0.3 + hash(q, c.j, 38) * 0.5), 0, math.sin(a) * mw * (0.3 + hash(c.i, q, 39) * 0.5)), MOSS:Lerp(({ Color3.fromRGB(78, 200, 230), Color3.fromRGB(150, 235, 190), Color3.fromRGB(40, 160, 110) })[q % 3 + 1], 0.6), MOSSP) -- teal, mint and deep emerald
+				end
+				part("Ceiling", "CeilMossDrip", Vector3.new(0.3, 0.7 + hm, 0.3), moss.CFrame * CFrame.new(mw * 0.2, -0.5, 0), MOSS:Lerp(Color3.new(1, 1, 1), 0.2), { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
+				if hm > 0.82 then glow(moss, hm > 0.94 and Color3.fromRGB(90, 200, 250) or Color3.fromRGB(64, 224, 208), 30, 2.6) end -- the moss washes the rock round it in turquoise
+			end
+			local hr = hash(c.i, c.j, 27)
+			if hr > 0.84 and room >= 16 then
+				local n = 2 + math.floor(hash(c.i, c.j, 28) * 3)
+				local at = W(c.i, c.j, cq + 0.5) + Vector3.new((hash(c.i, c.j, 29) - 0.5) * 2, 0, (hash(c.i, c.j, 30) - 0.5) * 2)
+				local thick = 1.1 + hr * 0.6
+				part("Ceiling", "HangRoot", Vector3.new(thick * 1.9, 0.9, thick * 1.9), CFrame.new(at - Vector3.new(0, 0.6, 0)), Color3.fromRGB(74, 46, 34), { CanCollide = false, CanQuery = false, CastShadow = false, Material = Enum.Material.Wood }) -- a collar where the root breaks through the rock
+				part("Ceiling", "HangRoot", Vector3.new(thick * 1.4, 0.8, thick * 1.4), CFrame.new(at - Vector3.new(0, 1.3, 0)) * CFrame.Angles(0, 0.6, 0), Color3.fromRGB(86, 54, 40), { CanCollide = false, CanQuery = false, CastShadow = false, Material = Enum.Material.Wood })
+				local ROOTP = { CanCollide = false, CanQuery = false, CastShadow = false, Material = Enum.Material.Wood }
+				n = math.clamp(math.floor(room / 4.5), 3, 6) + (hash(c.i, c.j, 28) > 0.5 and 1 or 0)
+				local yaw, lean = hr * 40, 0.5 + hash(c.i, c.j, 32) * 0.6
+				for sgm = 1, n do -- short segments on one sweeping curve: out from the rock, then drooping back down under its own weight
+					local len = 1.5 + hash(c.i, sgm, 31) * 1.1
+					local tilt = lean * math.sin(sgm / n * math.pi) * (sgm < n * 0.6 and 1 or 0.6)
+					local cf = CFrame.new(at) * CFrame.Angles(0, yaw + sgm * 0.25, 0) * CFrame.Angles(tilt, 0, 0)
+					part("Ceiling", "HangRoot", Vector3.new(thick, len + thick * 0.5, thick), cf * CFrame.new(0, -len / 2, 0), sgm % 2 == 0 and Color3.fromRGB(96, 62, 44) or Color3.fromRGB(74, 46, 34), ROOTP) -- dark bark (plum roots lit by the moss read as steel ducts)
+					at = (cf * CFrame.new(0, -len, 0)).Position
+					if sgm >= 2 and hash(c.j, sgm, 33) > 0.45 then -- a thin tendril hangs straight down from the joint, a bead of moss on its end
+						local tl = 1.2 + hash(c.i + sgm, c.j, 34) * 2.6
+						part("Ceiling", "HangRoot", Vector3.new(0.18, tl, 0.18), CFrame.new(at - Vector3.new(0, tl / 2, 0)), Color3.fromRGB(86, 54, 40), ROOTP)
+						part("Ceiling", "CeilMoss", Vector3.new(0.32, 0.32, 0.32), CFrame.new(at - Vector3.new(0, tl + 0.1, 0)), sgm % 2 == 0 and Color3.fromRGB(80, 180, 140) or Color3.fromRGB(40, 160, 110), { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
+					end
+					thick *= 0.8
+				end
+			end
 			if hash(c.i, c.j, 20) > 0.9 then -- a stalactite
 				local len = 4 + math.floor(hash(c.i, c.j, 21) * 4) * 3
 				-- rock-textured and tapered (Gemini r1-r3 kept reading the plain lit block as "a white placeholder hanging from the ceiling")
@@ -922,11 +1007,67 @@ function Cave.build(parent, origin, seed)
 		end
 		model:SetAttribute("Nests", made)
 	end
+	do -- the Egg Altar (playtest 2, board PT2_Eggs): a stone dais in a far nook, three eggs on pedestals, the odds on a lit tablet
+		local AL = C.ALTAR
+		for _, sp in spots do
+			local c = sp.c
+			local pos = W(c.i, c.j, c.f)
+			local far = (c.i * c.i + c.j * c.j) * CELL * CELL > 80 * 80
+			local clear = true
+			for _, q in placed do if (q - pos).Magnitude < 16 then clear = false break end end
+			if far and clear then
+				table.insert(placed, pos)
+				local wall = Vector3.new(sp.o[1], 0, sp.o[2])
+				local foot = pos + wall * (CELL / 2 - 2.6)
+				local base = CFrame.lookAt(foot, foot - wall)
+				local stone = { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant }
+				local dais = part("Altar", "AltarDais", Vector3.new(7, 0.8, 4.2), base * CFrame.new(0, 0.4, -0.4), PAL.rock[3], stone)
+				part("Altar", "AltarStep", Vector3.new(5.6, 0.4, 1.2), base * CFrame.new(0, 0.22, -3.1), PAL.rock[2], stone)
+				for k, e in AL.eggs do
+					local x = (k - 2) * 2.2
+					part("Altar", "AltarPedestal", Vector3.new(1.3, 1.6 + (k == 3 and 0.4 or 0), 1.3), base * CFrame.new(x, 1.6 + (k == 3 and 0.2 or 0), 0), PAL.rock[2], stone)
+					local egg = part("Altar", "AltarEgg" .. k, Vector3.new(1, 1, 1), base * CFrame.new(x, 3.05 + (k == 3 and 0.4 or 0), 0), e[4], { CanCollide = false, Material = k == 1 and Enum.Material.Glass or Enum.Material.SmoothPlastic, Transparency = k == 1 and 0.15 or 0 })
+					local mesh = Instance.new("SpecialMesh")
+					mesh.MeshType, mesh.Scale = Enum.MeshType.Sphere, Vector3.new(1, 1.3, 1)
+					mesh.Parent = egg
+					glow(egg, e[4], 9, 0.8)
+				end
+				local tab = part("Altar", "AltarTablet", Vector3.new(4.2, 2.4, 0.4), base * CFrame.new(0, 4.6, 0.9) * CFrame.Angles(math.rad(-12), 0, 0), PAL.rock[3], stone)
+				local sg = Instance.new("SurfaceGui")
+				sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence = Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 40, 0
+				local lab = Instance.new("TextLabel")
+				lab.Size, lab.BackgroundTransparency, lab.TextScaled, lab.Font = UDim2.fromScale(1, 1), 0.15, true, Enum.Font.FredokaOne
+				lab.BackgroundColor3, lab.TextColor3 = Color3.fromRGB(46, 34, 66), Color3.fromRGB(255, 236, 200)
+				local lines = { "EGG ALTAR  " .. AL.cost .. " COINS" }
+				for _, e in AL.eggs do table.insert(lines, e[1] .. " " .. e[2] .. "%") end
+				lab.Text = table.concat(lines, "\n")
+				lab.Parent = sg
+				sg.Parent = tab
+				local pr = Instance.new("ProximityPrompt")
+				pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode = "Roll an egg", "Egg Altar (" .. AL.cost .. " coins)", Enum.KeyCode.E
+				pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.HoldDuration = 9, false, 0.6
+				pr.Style = Enum.ProximityPromptStyle.Custom
+				pr:SetAttribute("EggAltar", true)
+				pr.Parent = dais
+				model:SetAttribute("Altar", true)
+				break
+			end
+		end
+	end
+	for _, o in group("Camp"):GetChildren() do -- Gemini r3: the station and camp timbers were flat salmon blocks under the lamps: real wood grain, a shade darker
+		local n = o.Name
+		if o.Material == Enum.Material.SmoothPlastic and (n:find("Post") or n:find("Beam") or n:find("Arm") or n == "Pole" or n == "BenchSeat" or n == "BenchLeg" or n == "StationCrate" or n == "StationBarrel" or n == "Counter") then
+			o.Material = (n == "StationCrate" or n == "Counter") and Enum.Material.WoodPlanks or Enum.Material.Wood
+			o.Color = o.Color:Lerp(Color3.fromRGB(60, 40, 44), 0.35)
+		end
+	end
 	do -- playtest 2 (board 6): a cave again. Every glow that is not ore (crystals, moss, mushrooms, streams, fills, lamps) drops to about half
 		local depF = model:FindFirstChild("Deposits")
 		for _, o in model:GetDescendants() do
 			if depF and o:IsDescendantOf(depF) then continue end
-			if model:FindFirstChild("Nests") and o:IsDescendantOf(model.Nests) then continue end -- egg nests are a find, like ore: they keep their glow
+			if model:FindFirstChild("Nests") and o:IsDescendantOf(model.Nests) then continue end
+			if o:GetAttribute("Fixture") then continue end -- lantern wicks and their lights are tuned as built
+			if model:FindFirstChild("Altar") and o:IsDescendantOf(model.Altar) then continue end -- the altar is a find too -- egg nests are a find, like ore: they keep their glow
 			if o:IsA("PointLight") or o:IsA("SpotLight") or o:IsA("SurfaceLight") then
 				o.Brightness *= 0.55
 				o.Range *= 0.8

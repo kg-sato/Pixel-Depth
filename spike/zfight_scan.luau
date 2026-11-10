@@ -16,7 +16,7 @@ end
 local skipped = 0
 for _, root in roots do
 	for _, p in root:GetDescendants() do
-		if p:IsA("BasePart") and p.Transparency < 0.95 and p:IsA("Part") and p.Shape == Enum.PartType.Block then
+		if p:IsA("BasePart") and p.Transparency < 0.95 and p:IsA("Part") and p.Shape == Enum.PartType.Block and not p:FindFirstChildOfClass("SpecialMesh") then -- a mesh hides the box faces
 			local cf, sz = p.CFrame, p.Size
 			local axes = { cf.RightVector, cf.UpVector, cf.LookVector }
 			local ok = true

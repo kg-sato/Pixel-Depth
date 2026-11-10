@@ -273,7 +273,14 @@ C.HUD_ICON = {
 	heart = "rbxassetid://112840156135846", torch = "rbxassetid://132878882630763", flare = "rbxassetid://136155303523972",
 	calm = "rbxassetid://85218255319100", uneasy = "rbxassetid://108597473207994", scared = "rbxassetid://82253085768781",
 }
-C.EGG_COINS = 75 -- a starter egg from Maribel's stall (playtest 2: cheap eggs in town, rarer ones in the caves)
+C.EGG_COINS = 75
+-- the Egg Altar in the caves (playtest 2: "rarer ones should be found in caves ... players will need to roll for them"; board PT2_Eggs).
+-- Coins only, odds shown on the altar; each egg hatches on the spot from its rarity up. Guaranteed Obsidian within `pity` rolls.
+C.ALTAR = { cost = 150, pity = 10, eggs = {
+	{ "Crystal", 60, 2, Color3.fromRGB(150, 210, 245) }, -- name, odds %, lowest rarity index it can hatch (C.RARITIES), colour
+	{ "Gold", 30, 3, Color3.fromRGB(255, 205, 80) },
+	{ "Obsidian", 10, 4, Color3.fromRGB(80, 62, 110) },
+} } -- a starter egg from Maribel's stall (playtest 2: cheap eggs in town, rarer ones in the caves)
 -- gem packs for Robux (ServerScriptService.Shop): id = the Developer Product id from the Creator Dashboard; 0 = not created yet
 -- (the pack shows SOON). Prices are a proposal for the owner to set.
 C.GEM_PACKS = { { gems = 40, robux = 49, id = 0 }, { gems = 120, robux = 129, id = 0 }, { gems = 320, robux = 299, id = 0 } }
@@ -294,7 +301,7 @@ C.FP_FOV = 80
 
 -- Caves (cave exploration rework; vault Projects/Pixel-_/Briefs/Cave Exploration Rework.md and Cave Rework Reference Board)
 C.CAVES_ON = true -- the lift goes to the shared caves; false brings back the private block mines
-C.TORCH = { time = 300, range = 18, minRange = 6 } -- full light to the dimmest glow in 5 minutes (the user, 2026-11-08); wooden torch radius 18 studs (LGT-02)
+C.TORCH = { time = 300, range = 26, minRange = 8 } -- full light to the dimmest glow in 5 minutes (the user, 2026-11-08); wooden torch radius 18 studs (LGT-02)
 -- the minecart escape on the ride up (MinecartEscape): track length (studs), base speed (studs/s), coin bonus range;
 -- the server pays only when the run took at least dist / (speed * 1.6) seconds (every boost stacked the whole way)
 C.ESCAPE = { dist = 1050, speed = 30, top = 1.45, bonus = { 10, 40 } } -- top: the speed wave's peak multiplier (playtest 2 runner redesign); the server's time check uses it
@@ -341,7 +348,7 @@ C.DEPOSIT = {
 -- (https://www.youtube.com/watch?v=adgCWET34rU): realistic style, tinted ambient so shadows keep colour, low diffuse, punchy
 -- contrast with a subtle tint, a small low-threshold bloom so glows read as colour, a light depth of field for big halls.
 C.CAVE_LIGHT = {
-	Lighting = { LightingStyle = Enum.LightingStyle.Realistic, Ambient = Color3.fromRGB(22, 16, 36), OutdoorAmbient = Color3.fromRGB(18, 14, 32), Brightness = 0, EnvironmentDiffuseScale = 0.08, EnvironmentSpecularScale = 0.15, ExposureCompensation = 0.05, ShadowSoftness = 0.15 }, -- playtest 2: was 40,30,64 / 36,28,60 / 0.15 / 0.25, too bright for a cave
+	Lighting = { LightingStyle = Enum.LightingStyle.Realistic, Ambient = Color3.fromRGB(28, 22, 40), OutdoorAmbient = Color3.fromRGB(24, 18, 36), Brightness = 0, EnvironmentDiffuseScale = 0.08, EnvironmentSpecularScale = 0.85, ExposureCompensation = 0.05, ShadowSoftness = 0.15 }, -- specular 0.85: the wet rock and glass ores reflect (glass pass) -- playtest 2: was 40,30,64 / 36,28,60 / 0.15 / 0.25, too bright for a cave
 	Atmosphere = { Density = 0.42, Offset = 0, Color = Color3.fromRGB(52, 36, 86), Decay = Color3.fromRGB(26, 16, 46), Glare = 0, Haze = 0.8 },
 	Bloom = { Intensity = 0.45, Size = 22, Threshold = 1.05 }, -- was 0.7 / 30: neon and lit floors smeared into glare (VFX note 2026-11-08)
 	ColorCorrection = { Brightness = 0.03, Contrast = 0.2, Saturation = 0.12, TintColor = Color3.fromRGB(240, 230, 255) },
