@@ -1006,13 +1006,13 @@ local function buildViewmodel()
 	end
 	local cf, size = vm:GetBoundingBox()
 	vm.WorldPivot = CFrame.new(cf.Position - Vector3.new(0, size.Y * 0.38, 0)) -- swing from the grip
-	vm:ScaleTo(vm:GetScale() * (1.65 / math.max(size.Y, 0.1))) -- a chunkier tool in the hand (audit 15: it read as a thin wand)
+	vm:ScaleTo(vm:GetScale() * (2.3 / math.max(size.Y, 0.1))) -- a chunkier tool in the hand (audit 15: it read as a thin wand)
 	new("Highlight", vm, { FillTransparency = 1, OutlineColor = Color3.fromRGB(255, 236, 200), OutlineTransparency = 0.7, DepthMode = Enum.HighlightDepthMode.Occluded })
 	local _, sz = vm:GetBoundingBox()
 	local a0 = new("Attachment", root, { Position = root.CFrame:PointToObjectSpace(vm:GetBoundingBox().Position + Vector3.new(0, sz.Y * 0.45, 0)) })
 	local a1 = new("Attachment", root, { Position = a0.Position + Vector3.new(0.6, 0, 0) })
 	vmTrail = new("Trail", root, { Attachment0 = a0, Attachment1 = a1, Lifetime = 0.12, LightEmission = 0.8, Color = ColorSequence.new(WHITE), Transparency = NumberSequence.new(0.3, 1), Enabled = false })
-	if forgeUI.vmHands then forgeUI.vmHands(vm, root) end -- the gloved hand on the handle (Shared.ViewHands)
+	if forgeUI.vmHands then forgeUI.vmHands(vm, root, nil, 1.25) end -- the gloved hand on the handle (Shared.ViewHands)
 	vm.Parent = cam
 end
 

@@ -35,8 +35,21 @@ function M.start(E)
 		p(Vector3.new(0.46, 0.4, 0.26), CFrame.new(0, -0.02, 0.46), CUFF) -- the cuff, toward the body
 		p(Vector3.new(0.5, 0.09, 0.3), CFrame.new(0, 0.16, 0.46), Color3.fromRGB(120, 84, 60)) -- its stitched band
 		p(Vector3.new(0.14, 0.14, 0.06), CFrame.new(0.12, 0.02, 0.6), Color3.fromRGB(214, 168, 84)).Material = Enum.Material.Metal -- a brass buckle
-		p(Vector3.new(0.36, 0.34, 0.8), CFrame.new(0.02, -0.16, 0.94) * CFrame.Angles(-0.35, 0, 0), SLEEVE) -- the sleeve, down and back out of view
+		p(Vector3.new(0.4, 0.38, 2.2), CFrame.new(0.02, -0.4, 1.62) * CFrame.Angles(-0.35, 0, 0), SLEEVE) -- the whole forearm, running off the bottom of the screen (the user, 2026-11-10: arms in view like the cart ride)
+		p(Vector3.new(0.44, 0.1, 0.3), CFrame.new(0.02, -0.12, 0.86) * CFrame.Angles(-0.35, 0, 0), SLEEVE:Lerp(Color3.new(1, 1, 1), 0.14)) -- a rolled sleeve hem
 	end
+
+	-- the rider's own body in first person (the user, 2026-11-10): Roblox hides the whole character in LockFirstPerson; the legs
+	-- come back so you see yourself when you look down (the torso filled the lower half of the view, so it stays hidden). The
+	-- arms stay hidden too: the gloved view arms replace them.
+	local plr = game:GetService("Players").LocalPlayer
+	game:GetService("RunService"):BindToRenderStep("PD_FPBody", Enum.RenderPriority.Camera.Value + 1, function()
+		local char = plr.Character
+		if not char or plr.CameraMode ~= Enum.CameraMode.LockFirstPerson or workspace.CurrentCamera.CameraType == Enum.CameraType.Scriptable then return end
+		for _, q in char:GetChildren() do
+			if q:IsA("BasePart") and (q.Name:find("Leg") or q.Name:find("Foot")) then q.LocalTransparencyModifier = 0 end
+		end
+	end)
 
 	local ang, angV = 0, 0 -- the swing spring (radians)
 	local sway, swayV = Vector2.zero, Vector2.zero -- lag behind the camera's turn
