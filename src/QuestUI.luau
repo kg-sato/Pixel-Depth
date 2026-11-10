@@ -43,8 +43,9 @@ function M.start(E)
 		r.title.TextXAlignment, r.title.ZIndex = Enum.TextXAlignment.Left, 7
 		r.reward = text(f, "", UDim2.fromScale(0.3, 0.26), UDim2.fromScale(0.04, 0.57), Vector2.new(0, 0.5), MUTED, 700, false)
 		r.reward.TextXAlignment, r.reward.ZIndex = Enum.TextXAlignment.Left, 7
-		local bar = new("Frame", f, { Size = UDim2.fromScale(0.6, 0.17), Position = UDim2.fromScale(0.04, 0.81), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.fromRGB(196, 184, 218), -- a darker, taller track: the empty bar read as a full one (Gemini UI review)
+		local bar = new("Frame", f, { Size = UDim2.fromScale(0.6, 0.17), Position = UDim2.fromScale(0.04, 0.81), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.fromRGB(240, 234, 246), -- a pale, outlined, taller track: a filled-in empty bar read as a full one (Gemini UI review, twice)
 		 BorderSizePixel = 0, ZIndex = 7 })
+		new("UIStroke", bar, { Color = Color3.fromRGB(190, 176, 214), Thickness = 1.5 })
 		new("UICorner", bar, { CornerRadius = UDim.new(0.5, 0) })
 		r.fill = new("Frame", bar, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = MINT, BorderSizePixel = 0, ZIndex = 8 })
 		new("UICorner", r.fill, { CornerRadius = UDim.new(0.5, 0) })

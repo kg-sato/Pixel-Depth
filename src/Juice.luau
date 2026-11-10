@@ -71,6 +71,40 @@ function M.start(E)
 		end
 	end)
 
+	-- the Lantern Ring by the trophy hall: the lanterns this player has carried home burn, the others hang dark
+	local mine = {}
+	local function lightRing(pop)
+		local hub = workspace:FindFirstChild("Hub")
+		for _, d in hub and hub:GetDescendants() or {} do
+			local k = d:GetAttribute("Ring")
+			if k then
+				local on = mine[tostring(k)] == true
+				local l = d:FindFirstChildOfClass("PointLight")
+				local was = l and l.Enabled
+				d.Material, d.Color = on and Enum.Material.Neon or Enum.Material.SmoothPlastic, on and Color3.fromRGB(255, 206, 130) or Color3.fromRGB(60, 54, 70)
+				if l then l.Enabled, l.Range, l.Brightness = on, 26, 1.2 end
+				if on and not was and pop and burst then burst(d.Position, Vector3.yAxis, E.GOLD, 12) end
+			end
+		end
+	end
+	R.State.OnClientEvent:Connect(function(st)
+		if type(st) ~= "table" or type(st.lanterns) ~= "table" then return end
+		local n, had = 0, 0
+		for _ in mine do had += 1 end
+		for _ in st.lanterns do n += 1 end
+		mine = st.lanterns
+		lightRing(n > had)
+	end)
+	task.delay(6, lightRing) -- the hub may still be streaming in at the first state
+	game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt)
+		if prompt.Parent and prompt.Parent:GetAttribute("Station") == "ring" then
+			local n = 0
+			for _ in mine do n += 1 end
+			sfx("pluck", 0.9)
+			E.toast(n == 0 and "The Lantern Ring. Lost lanterns from the mine hang here." or (n .. " / " .. #GRAN .. " lost lanterns are home."), E.GOLD, false)
+		end
+	end)
+
 	-- walking dust
 	local dust, hum
 	local function dress(ch)

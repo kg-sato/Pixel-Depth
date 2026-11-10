@@ -23,7 +23,8 @@ function M.start(E)
 	local invBtn = button(gui, "BAG", S(70, 70), S(20, 74), nil, "lilac", "bag", true)
 	fit(invBtn, 1, 1)
 	invBtn.Name = "InventoryButton"
-	local badge = panel(invBtn, UDim2.fromScale(1.05, 0.36), UDim2.fromScale(0.5, 1.02), Vector2.new(0.5, 0.5), "pillButter")
+	local badge = panel(invBtn, UDim2.fromScale(1.05, 0.36), UDim2.fromScale(0.5, 0.93), -- tucked onto the button's foot: at 1.02 it read as a loose label
+		 Vector2.new(0.5, 0.5), "pillButter")
 	badge.ZIndex = 3
 	local badgeT = text(badge, "0/10", UDim2.fromScale(0.82, 0.62), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), DEEP_GOLD, 700, false)
 	badgeT.ZIndex = 4

@@ -1082,6 +1082,22 @@ function Hub.build(parent, origin)
 		end
 		vox(g, "Rug", Vector3.new(3.4, 0.1, 2.2), at(0, 1.45, 1.6), PAL.pink[2])
 		sign(g, "TROPHIES", CFrame.new(at(0, peak + 1.4, -6.5).Position), 7, 1.6, GOLD)
+		-- the Lantern Ring (Lore and Gameplay Plan A8): a timber frame by the hall where the lost Lamplighter lanterns hang. All three
+		-- hang dark; each player's own finds are lit on their client (Shared.Juice, attribute Ring = 1..3)
+		local rx, rz = 11, 7 -- right of the hall's apron: the left side is the lane from the quest board
+		local base = tvox(g, "RingBase", Vector3.new(6.4, 1, 3.4), at(rx, 1, rz), "stonebrick", 3)
+		prompt(base, "Look", "Lantern Ring", "ring")
+		for _, s in { -1, 1 } do
+			tvox(g, "RingPost", Vector3.new(0.6, 6.4, 0.6), at(rx + s * 2.7, 4.7, rz), "planks", 2)
+			tvox(g, "RingBrace", Vector3.new(1.4, 0.4, 0.5), at(rx + s * 2.1, 7.3, rz), "planks", 2)
+		end
+		tvox(g, "RingBeam", Vector3.new(6.8, 0.6, 0.8), at(rx, 8.1, rz), "planks", 3)
+		for k = 1, 3 do
+			local core = cubeLantern(g, at(rx + (k - 2) * 1.8, 5.6 - (k % 2) * 0.5, rz).Position, 1.1 + (k % 2) * 0.5, 0.75)
+			core:SetAttribute("Ring", k)
+			core.Color, core.Material = Color3.fromRGB(60, 54, 70), Enum.Material.SmoothPlastic -- dark until its lantern comes home
+			core:FindFirstChildOfClass("PointLight").Enabled = false
+		end
 	end
 
 	-- 6. Two log guest cabins (east and south-east; ref art/hub/pdv4_cabin_s62.jpg): round-log walls with notched log ends, a front

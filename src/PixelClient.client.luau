@@ -343,7 +343,7 @@ local stepCard = panel(gui, S(560, 62), S(640, 18), Vector2.new(0.5, 0), "card")
 fit(stepCard, 560, 62)
 local stepIcon = icon(stepCard, "pick", UDim2.fromScale(0.07, 0.6), UDim2.fromScale(0.03, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", stepIcon, { AspectRatio = 1 })
-local stepText = text(stepCard, "", UDim2.fromScale(0.84, 0.48), UDim2.fromScale(0.55, 0.5), Vector2.new(0.5, 0.5), INK, 700, false)
+local stepText = text(stepCard, "", UDim2.fromScale(0.84, 0.6), UDim2.fromScale(0.55, 0.5), Vector2.new(0.5, 0.5), INK, 700, false)
 stepCard.Name = "StepCard"
 
 local digBtn = button(gui, "DIG", S(220, 82), S(640, 570), Vector2.new(0.5, 1), "mint", "pick")

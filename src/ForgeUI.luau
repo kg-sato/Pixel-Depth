@@ -184,9 +184,9 @@ function M.start(E)
 		local r = panel(det, UDim2.fromScale(0.92, 0.072), UDim2.fromScale(0.5, 0.62 + (k - 1) * 0.08), Vector2.new(0.5, 0.5), "pill")
 		local ic = icon(r, k == 1 and "coin" or "star", UDim2.fromScale(0.1, 0.72), UDim2.fromScale(0.035, 0.5), Vector2.new(0, 0.5))
 		new("UIAspectRatioConstraint", ic, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-		local l = text(r, "", UDim2.fromScale(0.46, 0.5), UDim2.fromScale(0.15, 0.5), Vector2.new(0, 0.5), INK, 700, false)
+		local l = text(r, "", UDim2.fromScale(0.46, 0.68), UDim2.fromScale(0.15, 0.5), Vector2.new(0, 0.5), INK, 700, false) -- 0.68: the stat rows were tiny at phone size
 		l.TextXAlignment = Enum.TextXAlignment.Left
-		local v = text(r, "", UDim2.fromScale(0.44, 0.5), UDim2.fromScale(0.95, 0.5), Vector2.new(1, 0.5), INK, 700, false)
+		local v = text(r, "", UDim2.fromScale(0.44, 0.68), UDim2.fromScale(0.95, 0.5), Vector2.new(1, 0.5), INK, 700, false)
 		v.TextXAlignment, v.RichText = Enum.TextXAlignment.Right, true
 		rows[k] = { frame = r, icon = ic, label = l, value = v }
 	end
@@ -362,7 +362,7 @@ function M.start(E)
 			if def then
 				local fill, rim = tones(rarityOf(tab, i)[3])
 				cd.face.BackgroundColor3, cd.rim.Color, cd.lip.BackgroundColor3 = fill, rim, rim
-				cd.name.Text = short(def.name):upper()
+				cd.name.Text = short(def.name) -- mixed case: capitals crowded the tile edges (Gemini UI review, 2026-11-10)
 				cd.art.Image = tab == "pick" and (CARD_ART[i] or PICK_ART[i]) or ICON.bag
 				local own, nxt = i <= cur, i == cur + 1
 				cd.art.ImageColor3 = (own or nxt) and WHITE or rim:Lerp(WHITE, 0.25)
