@@ -91,6 +91,7 @@ local function pathAt(d)
 	return PATH[i]:Lerp(PATH[i + 1], d - i)
 end
 
+local CartFX = require(script.Parent:WaitForChild("CartFX"))
 local function part(parent, size, cf, color, props)
 	local p = Instance.new("Part")
 	p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow = true, false, false, false, false
@@ -120,7 +121,7 @@ local function buildStage()
 		local mid, sec = pathAt(d + 2), section(d + 2)
 		local ang = math.acos(math.clamp(pathAt(d).LookVector:Dot(pathAt(d + 4).LookVector), -1, 1))
 		local len = ang < 0.01 and 4 or 4 + ang * 12 -- curves: the pieces overlap so the outer side shows no gap
-		for _, x in { -1.25, 1.25 } do part(f, Vector3.new(0.3, 0.3, len), mid * CFrame.new(x, 0.45, 0), RAIL, { Material = Enum.Material.Metal }) end
+		for _, x in { -1.25, 1.25 } do part(f, Vector3.new(0.3, 0.3, len), mid * CFrame.new(x, 0.45, 0), RAIL, { Material = Enum.Material.Metal, Reflectance = 0.3 }) end -- wet rails catch the lantern light
 		for _, o in { 1, 3 } do part(f, Vector3.new(3.4, 0.25, 0.7), pathAt(d + o) * CFrame.new(0, 0.15, 0), BARK) end
 		if sec == "cavern" then
 			cavFrom = cavFrom or d
@@ -145,7 +146,7 @@ local function buildStage()
 				if d % 16 == 0 then
 					local pivot = cf * CFrame.new(0, 8.45, 0)
 					local chain = part(f, Vector3.new(0.15, 0.8, 0.15), pivot * CFrame.new(0, -0.4, 0), INK)
-					local lamp = part(f, Vector3.new(0.7, 0.9, 0.7), pivot * CFrame.new(0, -1.25, 0), WARM, { Material = Enum.Material.Neon })
+					local lamp = CartFX.lantern(part(f, Vector3.new(0.7, 0.9, 0.7), pivot * CFrame.new(0, -1.25, 0), WARM))
 					light(lamp, WARM, 20, d % 32 == 0 and 1.3 or 0.9)
 					table.insert(lamps, { chain = chain, lamp = lamp, pivot = pivot, seed = rng:NextNumber() * 6 })
 				end
@@ -325,8 +326,14 @@ function M.play(opt)
 		end
 	end
 	for _, p in cart:GetDescendants() do -- the pastel tub blows out under the lanterns; a shade darker for the ride
-		if p:IsA("BasePart") and p.Transparency < 1 then p.Color = p.Color:Lerp(INK, 0.42) end
+		if p:IsA("BasePart") and p.Transparency < 1 then p.Color = p.Color:Lerp(INK, 0.12) end
 	end
+	-- phase 3 feel: the rider's gloved hands on the front rim, a sprung chassis (it bounces over every rail tie and against the
+	-- buffers), spore motes and a draft in the air
+	local hands = CartFX.hands(cart, 2.62, -1.65)
+	local bounce = CartFX.spring(210, 16)
+	local air = CartFX.air(world)
+	local lastTie = 0
 	local lampA = Instance.new("Attachment")
 	lampA.Position = Vector3.new(0, 2.7, -1.9)
 	lampA.Parent = cart.PrimaryPart
@@ -494,7 +501,20 @@ function M.play(opt)
 				end
 			end
 		end
+		-- chassis: banks into the curve (up to 4 degrees), bounces on its springs over each tie, the faster the harder
+		local tie = math.floor(d / 2)
+		if tie ~= lastTie then
+			lastTie = tie
+			if not calm then bounce.kick(0.35 + math.min(speed / 60, 1) * 0.9) end
+		end
+		local by = calm and 0 or bounce.step(dt)
+		local bankA = 0
+		if firstPerson and T < CUT2 and not calm then
+			bankA = math.clamp(-((yawAt(d - S0 + 1) - yawAt(d - S0 - 1)) / 2) * 2.2, -math.rad(4), math.rad(4))
+		end
+		cartCF = cartCF * CFrame.new(0, by, 0) * CFrame.Angles(by * 0.25, 0, bankA)
 		cart:PivotTo(cartCF)
+		for _, hp in hands do hp.LocalTransparencyModifier = firstPerson and 0 or 1 end -- in third person the rider's own arms show
 		if rider then
 			rider:PivotTo(cartCF * riderOff)
 			for _, p in rider:GetDescendants() do
@@ -518,7 +538,7 @@ function M.play(opt)
 		once("chime", 4.7, function() sfx("sparkle", 0.9) end)
 		once("drop", 6.3, function() shakeAmp = math.max(shakeAmp, 0.15) play("whoosh", 0.9) end)
 		once("brake", 7.7, function() play("brake", 1.1) end)
-		once("bump", 9.3, function() shakeAmp = math.max(shakeAmp, 0.35) play("thud", 1) sfx("clink", 0.7) end)
+		once("bump", 9.3, function() shakeAmp = math.max(shakeAmp, 0.35) bounce.kick(-3.2) play("thud", 1) sfx("clink", 0.7) end)
 		once("out", 10, function()
 			barT:TweenPosition(UDim2.fromScale(0, -0.1), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.35, true)
 			barB:TweenPosition(UDim2.fromScale(0, 1), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.35, true)
@@ -541,8 +561,9 @@ function M.play(opt)
 			L.f.Position = UDim2.fromScale(0.5 + math.cos(L.a) * r * 0.62, 0.5 + math.sin(L.a) * r)
 			L.f.BackgroundTransparency = 1 - lineA * 0.55 * (1 - (r - 0.28) / 0.45)
 		end
-		snd.clack.Volume = (T > 1.4 and T < 9.4) and 0.15 + math.min(speed / 60, 1) * 0.4 or 0
-		snd.clack.PlaybackSpeed = 0.6 + math.min(speed / 60, 1)
+		local sk = math.min(speed / 60, 1)
+		snd.clack.Volume = (T > 1.4 and T < 9.4) and (0.15 + sk * 0.4) * (0.8 + 0.2 * math.sin(d * math.pi)) or 0 -- it swells on every tie
+		snd.clack.PlaybackSpeed = 0.7 + sk * 0.8 -- 0.7x crawling to 1.5x flat out
 		snd.wind.Volume = math.min(speed / 60, 1) * 0.5
 		if not amb and T > CUT1 and (opt.inCave == nil or opt.inCave()) then
 			amb = { a = Lighting.Ambient, o = Lighting.OutdoorAmbient, t0 = T, d = atmo and atmo.Density }
@@ -571,9 +592,13 @@ function M.play(opt)
 			camCF = CFrame.lookAt(seat.Position, ahead, cartCF.UpVector)
 			local look = smooth(4.6, 5.0, T) * (1 - smooth(5.8, 6.15, T)) -- S4: look out over the lake and the spires, then back
 			if look > 0 then camCF = (camCF + cartCF.UpVector * 1.1 * look) * CFrame.Angles(-0.32 * look, -0.62 * look, 0) end -- lean up over the rim, out to the open side of the curve
-			if T < CUT2 and not calm then -- lean into curves (curvature x gain, at most 3 degrees)
+			if T < CUT2 and not calm then -- the rider leans a little further than the chassis banks (1.5 degrees on top of its 4)
 				local yr = (yawAt(d - S0 + 1) - yawAt(d - S0 - 1)) / 2
-				camCF *= CFrame.Angles(0, 0, math.clamp(-yr * 1.5, -0.052, 0.052))
+				camCF *= CFrame.Angles(0, 0, math.clamp(-yr * 0.8, -0.026, 0.026))
+				if section(d - S0) ~= "cavern" then -- duck under each timber frame (one every 8 studs)
+					local off = ((d - S0 + 4) % 8) - 4
+					camCF *= CFrame.new(0, -0.22 * math.exp(-off * off / 2.5), 0)
+				end
 			end
 			if T > 8.8 and T < 9.6 then camCF *= CFrame.Angles(-0.035 * smooth(8.8, 9.3, T) * (1 - smooth(9.3, 9.6, T)), 0, 0) end -- the brake nod
 			if T > 10 then -- S8: rise and step left onto the platform, into the rider's own eyes
@@ -594,6 +619,7 @@ function M.play(opt)
 		cam.CameraType = Enum.CameraType.Scriptable
 		cam.CFrame = camCF * CFrame.Angles((math.random() - 0.5) * sh * 0.06, (math.random() - 0.5) * sh * 0.06, 0)
 		cam.FieldOfView = fov
+		air.step(cam.CFrame, firstPerson and speed or 0, calm)
 		lastD = d
 		if T >= T_END then done = true end
 	end)

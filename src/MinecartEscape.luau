@@ -10,6 +10,8 @@
 -- lean, JUMP (Space / A / swipe up) and DUCK (S / Down / B / swipe down). Obstacles: falling rocks (lean), low timber beams
 -- (duck), buckled rails (jump) and parked carts with a gloomling inside (lean or jump). Each is shown alone once with a hint,
 -- warned by a sound a second ahead, and the speed rises in a wave (calm, build, a gold-rush breather, the climax).
+-- Items 5 and 6: the Gloom chases you (each BONK lets it close in; boosts pull away; caught halves the bonus) and halfway up the
+-- tunnel opens onto a great cavern crossed on a timber trestle, crystals glowing far below and the town's lights high above.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
@@ -31,6 +33,7 @@ local SND = { clack = { 9113120822, 0, true }, wind = { 9125742262, 0, true }, r
 	creak = { 9120839010, 0.7 }, thud = { 9120798134, 0.6 }, screech = { 9116893799, 0.45 } }
 local E = C.ESCAPE
 
+local CartFX = require(script.Parent:WaitForChild("CartFX"))
 local function part(parent, size, cf, color, props)
 	local p = Instance.new("Part")
 	p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow = true, false, false, false, false
@@ -62,9 +65,13 @@ local function buildPiece(f, k, rng)
 	for _, x in { -1.25, 1.25 } do part(m, Vector3.new(0.3, 0.3, L), cf * CFrame.new(x, 0.45 + o * 0.7, 0), RAIL, { Material = Enum.Material.Metal }) end
 	for _, z in { -1, 1 } do part(m, Vector3.new(3.4, 0.25, 0.7), cf * CFrame.new(0, 0.15, z), BARK) end
 	if k % 2 == 0 then -- a support frame and a lantern on every second piece
-		for _, s in { -1, 1 } do part(m, Vector3.new(0.8, 8.6, 0.8), cf * CFrame.new(s * 4, 4.3, 0), BARK) end
-		part(m, Vector3.new(9, 0.9, 0.9), cf * CFrame.new(0, 8.9, 0), BARK_LT)
-		part(m, Vector3.new(0.7, 0.9, 0.7), cf * CFrame.new(0, 7.2, 0), Color3.fromRGB(255, 212, 160), { Material = Enum.Material.Neon })
+		for _, s in { -1, 1 } do
+			part(m, Vector3.new(0.8, 8.6, 0.8), cf * CFrame.new(s * 4, 4.3, 0), BARK, { Material = Enum.Material.Wood })
+			part(m, Vector3.new(0.5, 2.6, 0.5), cf * CFrame.new(s * 3.1, 7.6, 0) * CFrame.Angles(0, 0, s * 0.8), BARK_LT, { Material = Enum.Material.Wood }) -- a knee brace in each corner
+			part(m, Vector3.new(1.0, 0.7, 0.92), cf * CFrame.new(s * 4, 8.2, 0), Color3.fromRGB(58, 52, 72), { Material = Enum.Material.Metal }) -- an iron bracket plate
+		end
+		part(m, Vector3.new(9, 0.9, 0.9), cf * CFrame.new(0, 8.9, 0), BARK_LT, { Material = Enum.Material.Wood })
+		CartFX.lantern(part(m, Vector3.new(0.7, 0.9, 0.7), cf * CFrame.new(0, 7.2, 0), Color3.fromRGB(255, 212, 160))) -- a glass lantern, not a bare neon block (audit 09)
 	elseif rng:NextNumber() < 0.6 then
 		local s = rng:NextNumber() < 0.5 and -1 or 1
 		local col = CRYSTAL[rng:NextInteger(1, #CRYSTAL)]
@@ -199,9 +206,13 @@ function M.play(opt)
 	local cart = opt.cart and ghost(opt.cart)
 	if not cart then return end
 	for _, p in cart:GetDescendants() do
-		if p:IsA("BasePart") and p.Transparency < 1 then p.Color = p.Color:Lerp(INK, 0.42) end
+		if p:IsA("BasePart") and p.Transparency < 1 then p.Color = p.Color:Lerp(INK, 0.12) end -- the cart is dark oak now (audit 14)
 	end
 	cart.Parent = world
+	local hands = CartFX.hands(cart, 2.62, -1.65) -- the rider's gloved hands on the front rim
+	local bounce = CartFX.spring(210, 16)
+	local air = CartFX.air(world)
+	local lastTie = 0
 	local char = plr.Character
 	local rider = char and ghost(char)
 	local riderOff = CFrame.new(0, 3.3, 0.3)
@@ -252,6 +263,7 @@ function M.play(opt)
 	local gui = Instance.new("ScreenGui")
 	gui.Name, gui.IgnoreGuiInset, gui.ResetOnSpawn, gui.DisplayOrder, gui.ZIndexBehavior = "MinecartEscapeGui", true, false, 30, Enum.ZIndexBehavior.Sibling
 	gui.Parent = pg
+	local speedLines = CartFX.speedLines(gui, 16)
 	local function frame(props)
 		local f = Instance.new("Frame")
 		f.BorderSizePixel = 0
@@ -300,6 +312,20 @@ function M.play(opt)
 	local hint = label(gui, touch and "HOLD LEFT OR RIGHT TO LEAN, SWIPE UP TO JUMP, DOWN TO DUCK" or "LEAN  A / D    JUMP  SPACE    DUCK  S", UDim2.fromScale(0.6, 0.045), UDim2.fromScale(0.5, 0.9), WHITE, 4)
 	local hintStroke = stroke(hint, INK, 3)
 	local flash = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, ZIndex = 8 })
+	local soot = {} -- the Gloom closing in: the screen edges go sooty
+	for i, e in { { UDim2.fromScale(1, 0.3), UDim2.fromScale(0, 0), 90 }, { UDim2.fromScale(1, 0.3), UDim2.fromScale(0, 0.7), -90 }, { UDim2.fromScale(0.25, 1), UDim2.fromScale(0, 0), 0 }, { UDim2.fromScale(0.25, 1), UDim2.fromScale(0.75, 0), 180 } } do
+		local f = frame({ Size = e[1], Position = e[2], BackgroundColor3 = DARK, BackgroundTransparency = 1, ZIndex = 2 })
+		local g = Instance.new("UIGradient")
+		g.Rotation, g.Transparency = e[3], NumberSequence.new(0, 1)
+		g.Parent = f
+		soot[i] = f
+	end
+	local meter = frame({ Size = UDim2.fromScale(0.16, 0.03), Position = UDim2.fromScale(0.13, 0.94), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, ZIndex = 3 })
+	round(meter)
+	stroke(meter, INK, 3)
+	local meterFill = frame({ Parent = meter, Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(120, 90, 170), ZIndex = 4 })
+	round(meterFill)
+	label(meter, "THE GLOOM", UDim2.fromScale(0.9, 0.85), UDim2.fromScale(0.5, -0.9), WHITE, 5)
 	local vignette = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 80, 110), BackgroundTransparency = 1, ZIndex = 2 })
 
 	-- input: keys, the left stick, or touches on a screen half
@@ -333,10 +359,69 @@ function M.play(opt)
 		return P[i]:Lerp(P[i + 1], math.clamp(s / PIECE - i, 0, 1))
 	end
 	for _, pc in tunnel.pieces do pc.m:PivotTo(pathCF((pc.k + 0.5) * PIECE) * CFrame.new(0, -0.5 - (pc.k % 2) * 0.03, 0)) end
+	local CAV0, CAV1 = E.dist * 0.46, E.dist * 0.46 + 130 -- the cavern bridge set piece (redesign item 6)
+	local function dress(pc) -- inside the cavern a piece keeps only its floor and rails, standing on a trestle
+		local s = (pc.k + 0.5) * PIECE
+		local open = s > CAV0 and s < CAV1
+		if pc.open == open then return end
+		pc.open = open
+		for _, p in pc.m:GetChildren() do
+			if p:IsA("BasePart") and p ~= pc.m.PrimaryPart and p.Name ~= "Trestle" and p.Size.Y > 0.6 and p.Size.X ~= 0.3 then
+				p.LocalTransparencyModifier = open and 1 or 0
+			end
+		end
+		if open and not pc.m:FindFirstChild("Trestle") then
+			local root = pc.m.PrimaryPart
+			for _, x in { -3.6, 3.6 } do part(pc.m, Vector3.new(0.9, 26, 0.9), root.CFrame * CFrame.new(x, -13.4, 0), BARK, { Name = "Trestle" }) end
+			part(pc.m, Vector3.new(8.2, 0.7, 0.7), root.CFrame * CFrame.new(0, -6, 0), BARK_LT, { Name = "Trestle" })
+		end
+		for _, p in pc.m:GetChildren() do if p.Name == "Trestle" then p.LocalTransparencyModifier = open and 0 or 1 end end
+	end
+	for _, pc in tunnel.pieces do dress(pc) end
+	do -- the cavern itself: giant crystals far below and around, the town's warm lights high above
+		for k = 0, 9 do
+			local s = CAV0 + 8 + k * 12
+			local side = k % 2 == 0 and 1 or -1
+			local cf = pathCF(s) * CFrame.new(side * rng:NextNumber(18, 34), rng:NextNumber(-26, -8), 0)
+			local col = CRYSTAL[k % #CRYSTAL + 1]
+			for q = 0, 2 do
+				part(world, Vector3.new(2.4, rng:NextNumber(6, 12), 2.4), cf * CFrame.new(q * 2 - 2, 0, (q % 2) * 2) * CFrame.Angles(rng:NextNumber(-0.4, 0.4), q, rng:NextNumber(-0.4, 0.4)), col:Lerp(Color3.new(1, 1, 1), 0.2), { Material = q == 1 and Enum.Material.Neon or Enum.Material.Glass, Transparency = q == 1 and 0 or 0.2 })
+			end
+			local l = Instance.new("PointLight")
+			l.Color, l.Range, l.Brightness = col, 40, 1.6
+			l.Parent = world:GetChildren()[#world:GetChildren()]
+		end
+		-- demo audit 12: the bridge crossed an open void. The cavern has rock now: side walls, a roof, a glowing lake far below
+		-- and an end wall at each tunnel mouth (a hole just the tunnel's size), with dim fill lights so the far rock reads.
+		local midCF = pathCF(CAV0 + 65)
+		local R = CFrame.new(midCF.Position) * CFrame.Angles(0, select(2, midCF:ToOrientation()), 0)
+		local ROCKP = { Material = Enum.Material.Slate, MaterialVariant = "PixelCaveRock" }
+		for _, sx in { -1, 1 } do part(world, Vector3.new(6, 156, 440), R * CFrame.new(sx * 96, 26, 0), ROCKC[2], ROCKP) end
+		part(world, Vector3.new(204, 6, 440), R * CFrame.new(0, 102, 0), ROCKC[1], ROCKP)
+		part(world, Vector3.new(204, 4, 440), R * CFrame.new(0, -50, 0), ROCKC[1], ROCKP)
+		part(world, Vector3.new(190, 1, 430), R * CFrame.new(0, -46, 0), Color3.fromRGB(26, 96, 116), { Material = Enum.Material.Neon, Transparency = 0.15 })
+		for _, s in { CAV0 - 1, CAV1 + 1 } do
+			local ecf = pathCF(s)
+			for _, sx in { -1, 1 } do part(world, Vector3.new(300, 170, 5), ecf * CFrame.new(sx * 155.7, 26, 0), ROCKC[2], ROCKP) end
+			part(world, Vector3.new(11.4, 100, 5), ecf * CFrame.new(0, 61, 0), ROCKC[2], ROCKP)
+			part(world, Vector3.new(11.4, 58, 5), ecf * CFrame.new(0, -30.4, 0), ROCKC[2], ROCKP)
+		end
+		for _, sx in { -1, 1 } do
+			for _, z in { -45, 45 } do
+				local l = Instance.new("PointLight")
+				l.Color, l.Range, l.Brightness = sx < 0 and Color3.fromRGB(120, 210, 230) or Color3.fromRGB(190, 160, 255), 60, 1.3
+				l.Parent = part(world, Vector3.one, R * CFrame.new(sx * 78, 6, z), WHITE, { Transparency = 1 })
+			end
+		end
+		for k = 0, 5 do -- the town's lanterns, small and warm, far overhead
+			part(world, Vector3.new(1.2, 1.2, 1.2), pathCF(CAV0 + 20 + k * 18) * CFrame.new(rng:NextNumber(-40, 40), rng:NextNumber(60, 80), rng:NextNumber(-20, 20)), Color3.fromRGB(255, 214, 150), { Material = Enum.Material.Neon })
+		end
+	end
 	local atmo = Lighting:FindFirstChildOfClass("Atmosphere") -- thinned so every obstacle reads 0.9 s ahead
 	local atmoDensity = atmo and atmo.Density
 	if atmo then atmo.Density = math.min(atmo.Density, 0.14) end
 	local jumpT, duckUntil, jumpY, duckY = -10, 0, 0, 0
+	local gloom = { gap = 1, caught = false } -- the Gloom pursuer (redesign item 5): 1 = far behind, 0 = it has you
 	local JUMP_T, JUMP_H = 0.6, 2.6
 	local taught = {}
 	local dist, speed, t, lean, roll = 0, 0, -3.2, 0, 0
@@ -390,9 +475,16 @@ function M.play(opt)
 	local function spawnBeam(at) -- a low timber across the tunnel in warning stripes, a lantern swinging from it: DUCK
 		local here = pathCF(at)
 		local m = Instance.new("Model")
-		for k = -4, 4 do part(m, Vector3.new(1.05, 0.9, 0.9), here * CFrame.new(k * 1.05, 3.35, 0), k % 2 == 0 and TAPE or INK) end
+		-- a low timber beam (Gemini r5: the neon striped bar read as a placeholder): a split log banded in iron, two red flare lanterns hanging from it
+		part(m, Vector3.new(9.6, 0.9, 0.9), here * CFrame.new(0, 3.35, 0), BARK_LT, { Material = Enum.Material.Wood })
+		part(m, Vector3.new(3.2, 0.5, 0.7), here * CFrame.new(-2.2, 2.85, 0.05) * CFrame.Angles(0, 0, 0.12), BARK, { Material = Enum.Material.Wood }) -- a splintered half hanging lower
+		for _, x in { -3.4, 0, 3.4 } do part(m, Vector3.new(0.5, 1.0, 1.0), here * CFrame.new(x, 3.35, 0), Color3.fromRGB(58, 52, 72), { Material = Enum.Material.Metal }) end
+		for _, x in { -1.7, 3.0 } do
+			part(m, Vector3.new(0.08, 0.5, 0.08), here * CFrame.new(x, 2.65, 0), INK)
+			part(m, Vector3.new(0.34, 0.42, 0.34), here * CFrame.new(x, 2.25, 0), Color3.fromRGB(255, 84, 96), { Material = Enum.Material.Neon })
+		end
 		for _, s in { -1, 1 } do part(m, Vector3.new(0.8, 3.4, 0.8), here * CFrame.new(s * 4.75, 1.7, 0), BARK) end
-		local lamp = part(m, Vector3.new(0.6, 0.8, 0.6), here * CFrame.new(1.8, 2.45, 0), Color3.fromRGB(255, 196, 120), { Material = Enum.Material.Neon })
+		local lamp = CartFX.lantern(part(m, Vector3.new(0.6, 0.8, 0.6), here * CFrame.new(1.8, 2.45, 0), Color3.fromRGB(255, 196, 120)))
 		local l = Instance.new("PointLight")
 		l.Color, l.Range, l.Brightness = Color3.fromRGB(255, 196, 120), 14, 1.4
 		l.Parent = lamp
@@ -588,6 +680,7 @@ function M.play(opt)
 							bigStroke.Transparency = 0
 							task.delay(0.6, function() big.TextTransparency = 1 bigStroke.Transparency = 1 big.TextColor3 = WHITE end)
 							vignette.BackgroundTransparency = 0.6
+							gloom.gap = math.max(0, gloom.gap - 0.35) -- a stumble lets the Gloom close in
 						else
 							boosts += 1
 							table.insert(boostUntil, now + 1.5)
@@ -607,11 +700,29 @@ function M.play(opt)
 				end
 			end
 			vignette.BackgroundTransparency = math.min(1, vignette.BackgroundTransparency + dt * 1.2)
+			if t > 0 then -- the Gloom: falls back slowly, faster on boosts; at 0 it nips you once
+				gloom.gap = math.min(1, gloom.gap + dt * (live > 0 and 0.1 or 0.045))
+				if gloom.gap <= 0.02 and not gloom.caught then
+					gloom.caught = true
+					big.Text, big.TextTransparency, big.TextColor3 = "THE GLOOM NIPPED YOU!", 0, Color3.fromRGB(190, 150, 240)
+					bigStroke.Transparency = 0
+					task.delay(1.2, function() big.TextTransparency = 1 bigStroke.Transparency = 1 big.TextColor3 = WHITE end)
+					shakeAmp = calm and 0 or 0.6
+					play("bonk", 0.6)
+				end
+			end
+			local near = 1 - gloom.gap
+			for _, f in soot do f.BackgroundTransparency = 1 - near * (0.75 + 0.1 * math.sin(now * 7)) end
+			meterFill.Size = UDim2.fromScale(math.clamp(gloom.gap, 0.02, 1), 1)
+			snd.rumble.Volume = 0.15 + near * 0.6
+			local inCav = dist > CAV0 and dist < CAV1
+			if atmo then atmo.Density = inCav and 0.05 or math.min(atmoDensity or 0.14, 0.14) end
 			-- recycle tunnel pieces that fell behind
 			for _, pc in tunnel.pieces do
 				if pc.k * PIECE < dist - 8 then
 					pc.k += NPIECE
 					pc.m:PivotTo(pathCF((pc.k + 0.5) * PIECE) * CFrame.new(0, -0.5 - (pc.k % 2) * 0.03, 0))
+					dress(pc)
 				end
 			end
 			tunnel.exit.CFrame = pathCF(E.dist + 6) * CFrame.new(0, 4.5, 0)
@@ -626,7 +737,13 @@ function M.play(opt)
 			-- camera: first person in the cart, leaning
 			local base = pathCF(dist)
 			local bank = calm and 0 or math.clamp(-(YAW[math.floor(dist / PIECE)] or 0) * 2.5, -math.rad(3), math.rad(3)) -- roll only on bends, 3 degrees at most
-			local cartCF = base * CFrame.new(laneX(), jumpY, 0) * CFrame.Angles(0, 0, roll * 0.6 + bank * 0.6)
+			local tie = math.floor(dist / 2)
+			if tie ~= lastTie then -- the chassis bounces on its springs over each rail tie
+				lastTie = tie
+				if not calm and jumpY == 0 then bounce.kick(0.35 + math.min(speed / 48, 1) * 0.8) end
+			end
+			local by = calm and 0 or bounce.step(dt)
+			local cartCF = base * CFrame.new(laneX(), jumpY + by, 0) * CFrame.Angles(by * 0.25, 0, roll * 0.6 + bank * 0.6)
 			cart:PivotTo(cartCF)
 			shakeAmp = math.max(0, shakeAmp - dt * 1.2)
 			local sh = calm and 0 or shakeAmp + math.min(speed / 48, 1) * 0.02
@@ -635,6 +752,8 @@ function M.play(opt)
 			local look = (pathCF(dist + 7) * CFrame.new(laneX() * 0.4, 3.0 + jumpY * 0.5 - duckY * 0.5, 0)).Position -- looks into the bend before it arrives
 			cam.CFrame = CFrame.lookAt(eye, look, base.UpVector) * CFrame.Angles(0, 0, roll + bank) * CFrame.Angles((math.random() - 0.5) * sh * 0.06, (math.random() - 0.5) * sh * 0.06, 0)
 			cam.FieldOfView = C.FP_FOV + (calm and 0 or math.min(#boostUntil, 3) * 2)
+			air.step(cam.CFrame, speed, calm)
+			speedLines(now, calm and 0 or math.clamp((speed - 30) / 18, 0, 1)) -- streaks at the screen edges as the cart picks up speed
 			if dist >= E.dist then -- out of the tunnel: tell the server, wait for it to move us to town, then burst out of the shaft
 				phase = "wait"
 				resultAt, runTime = t, t
@@ -644,7 +763,7 @@ function M.play(opt)
 				snd.wind:Stop()
 				for _, h in hazards do cleanup(h) end
 				hazards = {}
-				if opt.report then opt.report({ time = t, dodges = dodges, boosts = boosts, hits = hits }) end
+				if opt.report then opt.report({ time = t, dodges = dodges, boosts = boosts, hits = hits, caught = gloom.caught }) end
 			end
 		elseif phase == "wait" then
 			flash.BackgroundTransparency = 0
@@ -652,7 +771,8 @@ function M.play(opt)
 			if bonus or t - resultAt > 4 then
 				phase = "town"
 				resultAt = t
-				bar.Visible, timer.Visible, hint.Visible = false, false, false
+				bar.Visible, timer.Visible, hint.Visible, meter.Visible = false, false, false, false
+				for _, f in soot do f.BackgroundTransparency = 1 end
 				for _, p in pips do p.Visible = false end
 				for _, p in cart:GetDescendants() do -- back to the town cart's own colours for the burst out of the shaft
 					if p:IsA("BasePart") and opt.cart:FindFirstChild(p.Name, true) then p.Color = opt.cart:FindFirstChild(p.Name, true).Color end
@@ -711,7 +831,7 @@ function M.play(opt)
 				stroke(go, Color3.fromRGB(63, 156, 124), 3)
 				go.Parent = card
 				go.Activated:Connect(function() done = true end)
-				local rows = { { "TIME", string.format("%.1f s", runTime) }, { "DODGES", tostring(dodges) }, { "BOOSTS", tostring(boosts) }, { "BONUS", "+" .. tostring(bonus or 0) .. " COINS" } }
+				local rows = { { "TIME", string.format("%.1f s", runTime) }, { "DODGES", tostring(dodges) }, { gloom.caught and "THE GLOOM" or "BOOSTS", gloom.caught and "NIPPED YOU" or tostring(boosts) }, { "BONUS", "+" .. tostring(bonus or 0) .. " COINS" } }
 				for i, r in rows do
 					label(card, r[1], UDim2.fromScale(0.4, 0.085), UDim2.fromScale(0.3, 0.30 + i * 0.104), Color3.fromRGB(122, 98, 160), 7)
 					label(card, r[2], UDim2.fromScale(0.45, 0.085), UDim2.fromScale(0.7, 0.30 + i * 0.104), i == 4 and Color3.fromRGB(214, 140, 40) or INK, 7)
