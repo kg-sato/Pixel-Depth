@@ -25,8 +25,10 @@ function M.start(E)
 	})
 	local wipe = new("Frame", E.top, { Name = "RootsWipe", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(46, 34, 44), BackgroundTransparency = 1, Visible = false, ZIndex = 55 })
 
-	local ribbon = E.panel(E.gui, E.S(640, 40), E.S(640, 562), Vector2.new(0.5, 1), "pillPink")
-	E.fit(ribbon, 640, 40)
+	local ribbon = new("Frame", E.gui, { Size = E.S(700, 46), Position = E.S(640, 536), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = Color3.fromRGB(214, 78, 52), BorderSizePixel = 0 }) -- warning red: a pale pink pill had no urgency (Gemini, 2026-11-10)
+	E.fit(ribbon, 700, 46)
+	new("UICorner", ribbon, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", ribbon, { Color = E.WHITE, Thickness = 2 })
 	ribbon.Name, ribbon.Visible = "RootsRibbon", false
 	local ribbonText = E.text(ribbon, "", UDim2.fromScale(0.92, 0.56), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), E.WHITE, 700)
 	local cc = new("ColorCorrectionEffect", Lighting, { Name = "SporeTint", TintColor = Color3.new(1, 1, 1) })
@@ -44,7 +46,7 @@ function M.start(E)
 		local deps = workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild("Deposits")
 		if on then
 			for _, d in deps and deps:GetDescendants() or {} do
-				if d:IsA("PointLight") and d.Name == "Glint" then glints[d] = d.Brightness d.Brightness *= 2 end
+				if d:IsA("PointLight") and d.Name == "Glint" then glints[d] = d.Brightness d.Brightness *= 1.5 end -- x2 burned the nearest vein out to a white ball
 			end
 			E.toast("SPORE STORM! FLAWLESS STRIKES GIVE +50% ORE", TEAL, true)
 			sfx("sparkle", 0.7)
@@ -77,7 +79,7 @@ function M.start(E)
 			if left ~= lastLeft then
 				lastLeft = left
 				ribbonText.Text = ("THE WORLD TREE ROOTS ARE STIRRING  -  RETURN TO CAMP  %d:%02d"):format(left // 60, left % 60)
-				if left % 2 == 0 then E.pop(ribbon, 1.05, 0.3) end
+				E.pop(ribbon, 1.08, 0.3)
 			end
 			if os.clock() >= nextRumble then -- a rumble and a tremble, closer together and harder as the time comes
 				local k = 1 - math.clamp(left / E.C.EVENTS.rootsWarn, 0, 1)

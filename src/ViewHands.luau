@@ -16,7 +16,7 @@ function M.start(E)
 		local function p(size, cf, color)
 			local q = Instance.new("Part")
 			q.Name, q.Size, q.CFrame, q.Color = "ViewHand", size * k, grip * (cf.Rotation + cf.Position * k), color
-			q.Material, q.Anchored, q.CanCollide, q.CanQuery, q.CanTouch, q.CastShadow, q.Massless = Enum.Material.SmoothPlastic, false, false, false, false, false, true
+			q.Material, q.Anchored, q.CanCollide, q.CanQuery, q.CanTouch, q.CastShadow, q.Massless = Enum.Material.Fabric, false, false, false, false, false, true
 			q.TopSurface, q.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
 			q.Parent = vm
 			local w = Instance.new("WeldConstraint")

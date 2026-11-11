@@ -1002,7 +1002,8 @@ local function buildViewmodel()
 	for _, p in vm:GetDescendants() do
 		if p:IsA("BasePart") then
 			p.Anchored, p.CastShadow, p.CanCollide, p.CanQuery = p == root, false, false, false
-			p.Color = p.Color:Lerp(Color3.new(0, 0, 0), 0.5) -- this close to the torch a full-bright tool blew out to a yellow glow
+			p.Color = p.Color:Lerp(Color3.new(0, 0, 0), 0.45)
+			if p.Material == Enum.Material.SmoothPlastic or p.Material == Enum.Material.Metal then p.Material = Enum.Material.Fabric end -- matte: smooth plastic threw a white shine under every lamp (measured: 33 % of the hand blown out, 9 % with Fabric) -- this close to the torch a full-bright tool blew out to a yellow glow
 		elseif p:IsA("PointLight") or p:IsA("ParticleEmitter") then
 			p.Enabled = false
 		end

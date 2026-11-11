@@ -33,7 +33,7 @@ function M.build(caves)
 		p.Parent = folder
 		return p
 	end
-	local ROCK = { Material = Enum.Material.Slate, MaterialVariant = "PixelCaveRock" }
+	local ROCK = { Material = Enum.Material.Sandstone } -- matte baked clay: the cave rock variant read as a wet, mottled oil slick here (Gemini, 2026-11-10)
 	local function prompt(p, action, object, attr, value, dist)
 		local pr = Instance.new("ProximityPrompt")
 		pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.GamepadKeyCode = action, object, Enum.KeyCode.F, Enum.KeyCode.ButtonX
@@ -70,7 +70,7 @@ function M.build(caves)
 	end
 	for i = 0, 29 do -- floor slabs of baked clay on a loose grid (one per 24 x 20 cell, so no two overlap), sunk 0.05 into the floor
 		local s, k = rng:NextNumber(6, 10), i % 4
-		part("Slab", Vector3.new(s, 0.24 + k * 0.12, s * rng:NextNumber(0.8, 1.1)), O * CFrame.new(-60 + (i % 6) * 24 + rng:NextNumber(-3, 3), 0.07 + k * 0.06, -40 + (i // 6) * 20 + rng:NextNumber(-2, 2)) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), i % 2 == 0 and CLAY or CLAY_L, { Material = Enum.Material.Slate, CanCollide = false })
+		part("Slab", Vector3.new(s, 0.24 + k * 0.12, s * rng:NextNumber(0.8, 1.1)), O * CFrame.new(-60 + (i % 6) * 24 + rng:NextNumber(-3, 3), 0.07 + k * 0.06, -40 + (i // 6) * 20 + rng:NextNumber(-2, 2)) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), i % 2 == 0 and CLAY or CLAY_L, { Material = Enum.Material.Sandstone, CanCollide = false })
 	end
 
 	-- the arrival ledge (west): a root arch with the way back to Camp 1
@@ -94,9 +94,9 @@ function M.build(caves)
 		part("Kiln", Vector3.new(s[1], s[2], s[1]), kiln * CFrame.new(0, s[3] + s[2] / 2, 0), i % 2 == 0 and CLAY_L or CLAY, ROCK)
 	end
 	part("KilnChimney", Vector3.new(2.4, 5, 2.4), kiln * CFrame.new(0, 15.8, 0), CLAY_D, ROCK)
-	local mouth = part("KilnMouth", Vector3.new(4.4, 3, 0.5), kiln * CFrame.new(0, 1.7, 6.3), AMBER, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+	local mouth = part("KilnMouth", Vector3.new(4.4, 3, 0.5), kiln * CFrame.new(0, 1.7, 6.3), Color3.fromRGB(196, 84, 30), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 	local ml = Instance.new("PointLight")
-	ml.Color, ml.Range, ml.Brightness, ml.Shadows = AMBER, 30, 0.8, false
+	ml.Color, ml.Range, ml.Brightness, ml.Shadows = Color3.fromRGB(255, 130, 50), 26, 0.5, false
 	ml.Parent = mouth
 	ml:SetAttribute("Fixture", true)
 	part("KilnArch", Vector3.new(6.2, 1.2, 1), kiln * CFrame.new(0, 3.8, 6.4), CLAY_D, ROCK)
@@ -122,7 +122,7 @@ function M.build(caves)
 	part("KeeperHat", Vector3.new(3, 0.5, 2.7), keeper * CFrame.new(0, 6.6, 0.1), CLAY_L, DECO)
 	prompt(body, "Talk", "Kiln Keeper", "Keeper", true, 12)
 	lamp(Vector3.new(-2, 20, 4), 1.1)
-	for _, x in { -42, -12, 20, 46 } do for _, z in { -34, 34 } do lamp(Vector3.new(x, 24, z), 1.5) end end -- two rows of lamps down the hall: without them it was a dark red box
+	for _, x in { -42, -12, 18 } do for _, z in { -34, 34 } do lamp(Vector3.new(x, 26, z), 1.0) end end -- two rows of lamps down the hall: without them it was a dark red box
 
 	-- two mesas (east) with rare ore on top, and a steam vent in front of each
 	local function deposit(cf, idx) -- the same shape and attributes as CaveBuilder's deposits
@@ -167,7 +167,7 @@ function M.build(caves)
 		local hole = part("SteamVent", Vector3.new(4.6, 0.3, 4.6), v * CFrame.new(0, 0.75, 0), Color3.fromRGB(20, 12, 26), { CanCollide = false })
 		hole:SetAttribute("SteamVent", i) -- Shared.ClayClient erupts it on a rhythm and launches whoever stands in it
 		hole:SetAttribute("Top", top)
-		lamp(Vector3.new(m[1] - 12, top + 18, m[2]), 0.4) -- low: at 0.8 it burned the mesa cap white
+		lamp(Vector3.new(m[1] - 26, top + 6, m[2]), 0.35) -- 15 studs clear of the mesa wall: 1 stud from it, it burned the rock white
 	end
 	-- violet crystal clusters at the wall feet: the cool colour the warm clay needs (deep violet shadows, the user's directive)
 	local VIOLET = Color3.fromRGB(150, 110, 255)

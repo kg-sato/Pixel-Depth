@@ -163,15 +163,17 @@ function M.start(E)
 			shake(0.8)
 			sfx("breakRock", 0.8)
 			hitFlash.BackgroundTransparency = 0.35
-			toast(a < 0 and "FAFNIR BLOCKED THE CATCH!" or (a > 0 and ("BONK! A GLOOMLING GRABBED " .. commas(a) .. " ORE") or "BONK! A GLOOMLING GOT YOU"), a < 0 and GOLD or PINK, true)
-			toast("Golden shield for 5 s: run!", GOLD, false, 0.9)
+			if a < 0 or not cave.caughtUI then -- Shared.DeathScreen draws the catch as a card; the toasts stay for Fafnir's block
+				toast(a < 0 and "FAFNIR BLOCKED THE CATCH!" or (a > 0 and ("BONK! A GLOOMLING GRABBED " .. commas(a) .. " ORE") or "BONK! A GLOOMLING GOT YOU"), a < 0 and GOLD or PINK, true)
+				toast("Golden shield for 5 s: run!", GOLD, false, 0.9)
+			end
 		elseif kind == "grabbed" then -- held for a few seconds: a flare now saves the ore
 			shake(0.6)
 			sfx("breakRock", 0.6)
 			hitFlash.BackgroundTransparency = 0.3
-			toast("GRABBED!  FLARE NOW (R) OR A FRIEND CAN FLARE YOU FREE", PINK, true)
+			if not cave.caughtUI then toast("GRABBED!  FLARE NOW (R) OR A FRIEND CAN FLARE YOU FREE", PINK, true) end
 		elseif kind == "rescued" then
-			toast(b and "FLARED FREE! NOTHING LOST" or ("RESCUED BY " .. string.upper(a) .. "!"), MINT_C, true)
+			if not cave.caughtUI then toast(b and "FLARED FREE! NOTHING LOST" or ("RESCUED BY " .. string.upper(a) .. "!"), MINT_C, true) end
 			sfx("sparkle", 1.2)
 		elseif kind == "rescuedFriend" then
 			toast("YOU RESCUED " .. string.upper(a) .. "!", MINT_C, true)

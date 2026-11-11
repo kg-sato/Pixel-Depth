@@ -133,8 +133,12 @@ function M.start(E)
 			new("UICorner", a, { CornerRadius = UDim.new(0.2, 0) })
 			new("Frame", a, { Size = UDim2.fromScale(0.4, 0.4), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BackgroundTransparency = 0.35, BorderSizePixel = 0, ZIndex = 33 })
 		end
-		tiles[n] = { f = new("Frame", board, { Size = size, Position = at, AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = (col + row) % 2 == 0 and CLAY_L or CLAY, BorderSizePixel = 0, ZIndex = 34 }), hp = 3 }
+		tiles[n] = { f = new("Frame", board, { Size = UDim2.fromScale(0.94 / COLS, 0.94 / ROWS), Position = at, AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = (col + row) % 2 == 0 and CLAY_L or CLAY, BorderSizePixel = 0, ZIndex = 34 }), hp = 3 }
 	end
+	for _, tl in tiles do new("UICorner", tl.f, { CornerRadius = UDim.new(0.16, 0) }) new("UIStroke", tl.f, { Color = Color3.fromRGB(104, 52, 46), Thickness = 2 }) end
+	local brush = new("Frame", board, { Name = "Brush", Size = UDim2.fromScale(0.07, 0.16), AnchorPoint = Vector2.new(0.5, 0.2), BackgroundColor3 = Color3.fromRGB(92, 62, 48), BorderSizePixel = 0, ZIndex = 36, Rotation = 28, Visible = false }) -- the brush under the pointer: a handle and pale bristles
+	new("UICorner", brush, { CornerRadius = UDim.new(0.3, 0) })
+	new("Frame", brush, { Size = UDim2.fromScale(1.5, 0.34), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 37 })
 	local function shut(msg, color)
 		job = nil
 		E.closePanel(win)
@@ -151,6 +155,7 @@ function M.start(E)
 	local function stroke(pos)
 		local now = os.clock()
 		local rel = (pos - board.AbsolutePosition) / board.AbsoluteSize
+		brush.Visible, brush.Position = true, UDim2.fromScale(rel.X, rel.Y)
 		local last, dt = job.last, now - (job.lastT or now)
 		job.last, job.lastT = pos, now
 		if rel.X < 0 or rel.X >= 1 or rel.Y < 0 or rel.Y >= 1 then job.tile = nil return end

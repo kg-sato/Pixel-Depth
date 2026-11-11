@@ -26,7 +26,8 @@ function M.start(e)
 			if os.clock() < live.t - (#queue > 0 and 1.2 or 0) then return end -- a waiting line shortens the one on screen
 			local l = live.label
 			live = nil
-			E.tween(l, 0.3, { TextTransparency = 1, TextStrokeTransparency = 1, Position = UDim2.fromScale(0.5, LANE - 0.05) })
+			E.tween(l, 0.3, { BackgroundTransparency = 1, Position = UDim2.fromScale(0.5, LANE - 0.05) })
+			for _, w in l:GetChildren() do if w:IsA("TextLabel") then E.tween(w, 0.3, { TextTransparency = 1, TextStrokeTransparency = 1 }) end end
 			task.delay(0.32, function() l:Destroy() end)
 			gap = os.clock() + 0.34 -- the next line waits until this one is gone
 			return
@@ -34,8 +35,17 @@ function M.start(e)
 		local t = not hold and os.clock() >= gap and table.remove(queue, 1)
 		if not t then return end
 		E.sfx("pop", t.big and 0.9 or 1.1)
-		local l = E.text(E.gui, t.msg, UDim2.fromScale(t.big and 0.6 or 0.44, t.big and 0.075 or 0.058), UDim2.fromScale(0.5, LANE + 0.06), Vector2.new(0.5, 0.5), t.color, 700)
-		l.Name, l.ZIndex = "Toast", 20
+		-- a dark pill behind the words: bare text lay across the first-person hands (Gemini, 2026-11-10)
+		local l = Instance.new("Frame")
+		l.Name, l.ZIndex, l.AnchorPoint, l.BorderSizePixel = "Toast", 20, Vector2.new(0.5, 0.5), 0
+		l.Size, l.Position = UDim2.fromScale(t.big and 0.56 or 0.42, t.big and 0.075 or 0.06), UDim2.fromScale(0.5, LANE + 0.06)
+		l.BackgroundColor3, l.BackgroundTransparency = Color3.fromRGB(38, 28, 54), 0.22
+		local corner = Instance.new("UICorner")
+		corner.CornerRadius = UDim.new(0.5, 0)
+		corner.Parent = l
+		local words = E.text(l, t.msg, UDim2.fromScale(0.92, 0.62), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), t.color, 700)
+		words.ZIndex = 21
+		l.Parent = E.gui
 		E.tween(l, 0.35, { Position = UDim2.fromScale(0.5, LANE) }, Enum.EasingStyle.Back)
 		E.pop(l, 0.6, 0.35)
 		live = { msg = t.msg, label = l, t = os.clock() + 2.5 }
