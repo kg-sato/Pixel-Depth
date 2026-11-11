@@ -484,6 +484,9 @@ function Cave.build(parent, origin, seed)
 				part("Chasm", "Rail", Vector3.new(0.25, 0.25, (b - a).Magnitude + 0.1), CFrame.lookAt((a + b) / 2, b), PAL.rope, DECO)
 			end
 		end
+		-- a guide lantern at each end of the bridge: the far ledge was black from the near one
+		lantern("Chasm", "BridgeLamp", cf(8.2, 1.7, 4.6), PAL.warm, 22, 0.8, 0.5)
+		lantern("Chasm", "BridgeLamp", cf(29.8, -1.7, 2.6), PAL.warm, 22, 0.8, 0.5)
 		-- the secret ledge (roadmap pt2_23, the user 2026-11-09: "a hidden feature for jumping from one exact spot"): a dark shelf
 		-- 6 studs under the middle of the bridge and 4.6 studs out to one side. Jump off the middle plank to land on it; a small
 		-- chest there pays once ever (PixelServer, prompt attribute SecretLedge) and a spore pad throws you back up to the bridge.
@@ -943,7 +946,7 @@ function Cave.build(parent, origin, seed)
 				local h = 1 + hash(c.i, c.j, s + 40) * 1.1
 				shard(Vector3.new(0.7, h, 0.7), base * CFrame.new(math.sin(a) * 0.8, h * 0.45 * k, math.cos(a) * 0.3 - 0.4) * CFrame.Angles(0.35, 0, -a * 0.4), lerpC(dark, ore[2], hash(c.i, s, 41) * 0.6), { CastShadow = false })
 			end
-			local l = glow(core, ore[2], 7, 0.35)
+			local l = glow(core, ore[2], 9, 0.6) -- was 7 / 0.35: a deposit did not stand out from the rock (Gemini readability check, 2026-11-10)
 			l.Name = "Glint"
 			dep.PrimaryPart = core
 			dep.Parent = group("Deposits")

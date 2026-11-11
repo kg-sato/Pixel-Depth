@@ -547,6 +547,7 @@ local rainEm = new("ParticleEmitter", rain, {
 })
 
 local shakeAmp, fovKick = 0, 0
+local mgZoom = 0 -- the view eases in a little while a minigame holds you (board 8, minigame lock)
 local function shake(a) shakeAmp = math.max(shakeAmp, a) end
 
 local function floatText(pos, msg, color)
@@ -1237,6 +1238,19 @@ RunService.RenderStepped:Connect(function()
 		local sz, vp = u.bb.AbsoluteSize, cam.ViewportSize -- kept whole on screen: a bubble over a tall thing was cut by the top edge (Gemini UI review, 2026-11-10)
 		local x, y = math.clamp(v.X, sz.X * 0.62 + 6, math.max(vp.X - sz.X * 0.38 - 6, sz.X * 0.62 + 6)), math.max(v.Y, sz.Y + 6)
 		if on then
+			-- a bubble steps sideways off the minimap, the camp pill and the talisman (loop grade 2026-11-10: "Ride up" lay on SAFE AT CAMP)
+			local hud = gui:FindFirstChild("CaveHud")
+			local conv = u.bb.AbsolutePosition - Vector2.new(u.bb.Position.X.Offset, u.bb.Position.Y.Offset) -- from our offset to the bubble's top left corner
+			for _, name in { "Minimap", "CampPill", "Survival", "StepCard" } do
+				local r = (hud and hud.Visible and hud:FindFirstChild(name)) or (name == "StepCard" and gui:FindFirstChild(name))
+				if r and r.Visible then
+					local tl, rp, rs = Vector2.new(x, y) + conv, r.AbsolutePosition, r.AbsoluteSize
+					if tl.X < rp.X + rs.X + 10 and rp.X < tl.X + sz.X + 10 and tl.Y < rp.Y + rs.Y + 10 and rp.Y < tl.Y + sz.Y + 10 then
+						if name == "StepCard" then y += rp.Y + rs.Y + 12 - tl.Y -- under the objective card (the card used to hide instead, and with it the torch warning)
+						elseif rp.X + rs.X / 2 < vp.X / 2 then x += rp.X + rs.X + 8 - tl.X else x -= tl.X + sz.X + 8 - rp.X end
+					end
+				end
+			end
 			for _, q in placed do
 				if math.abs(x - q.X) < sz.X and math.abs(y - q.Y) < sz.Y then y = q.Y - sz.Y - 4 < sz.Y + 6 and q.Y + sz.Y + 4 or q.Y - sz.Y - 4 end
 			end
@@ -1264,6 +1278,8 @@ local stepShown, stepDoneAt, stepExpired = "", nil, false
 local stepSince, stepSmall = 0, false
 local function stepMessage()
 	if not state then return "" end
+	local urgent = forgeUI.caveUrgent and forgeUI.caveUrgent() -- in the caves the card says what matters now (Gemini loop grade: it stayed on "find a deposit" while the torch died)
+	if urgent then return urgent end
 	if forgeUI.questHint then return forgeUI.questHint end -- the tutorial: the open story quest (Shared.QuestUI)
 	if not inMine and state.step <= 2 then return C.CAVES_ON and "Ride the minecart down into the mine!" or "Jump into the glowing mine shaft!" end
 	if not inMine and state.step == 5 then return "Ride the minecart back down to find the egg!" end
@@ -1569,6 +1585,13 @@ do
 	local relitText = text(relitBanner, "TORCH RELIT", UDim2.fromScale(0.86, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), INK, 700, false)
 
 	cave = { relitAt = os.clock(), saved = nil, wasInCamp = true, fuel = 1, fear = 0 }
+	forgeUI.caveUrgent = function()
+		if not inCave or not state or cave.wasInCamp or cave.mgBusy then return nil end
+		if cave.fear >= 0.6 then return "Your torch is dying! Run back to the camp fire!" end
+		if state.bag >= state.cap then return "Heavy bag! Bank your ore at the camp fire." end
+		if cave.fear >= 0.25 and state.bag > 0 then return "It is getting dark. Bank your ore at camp soon!" end
+		return nil
+	end
 	local Lighting = game:GetService("Lighting")
 	caveLighting = function(on) -- swap the camp look for C.CAVE_LIGHT and back (each property in a pcall: some may be locked)
 		if on and not cave.saved then
@@ -1698,6 +1721,26 @@ end
 	new("UIStroke", meDot, { Color = INK, Thickness = 1 })
 	new("Frame", me, { Size = UDim2.fromScale(0.24, 0.28), Position = UDim2.fromScale(0.5, 0.16), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 5 })
 	local map = { floors = {}, deps = {}, next = 0 }
+	local orbs = {}
+	RunService.RenderStepped:Connect(function() -- the ore outline breathes, 1.6 s a breath (board 8, World)
+		local k = 0.3 + 0.25 * math.sin(os.clock() * 3.93)
+		for _, h in map.hl or {} do
+			if h.Enabled then h.OutlineTransparency = k end
+			local dep = h.Enabled and h:GetAttribute("Rare") and h.Adornee -- rare ore: one small spark circles it slowly
+			local o = orbs[h]
+			if dep and dep.PrimaryPart then
+				if not o then
+					o = new("Part", fx, { Name = "OreOrbit", Size = Vector3.new(0.22, 0.22, 0.22), Shape = Enum.PartType.Ball, Material = Enum.Material.Neon, Color = BUTTER, Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+					orbs[h] = o
+				end
+				local t = os.clock() * 1.6
+				o.Position = dep.PrimaryPart.Position + Vector3.new(math.cos(t) * 1.6, 0.6 + math.sin(t * 2) * 0.4, math.sin(t) * 1.6)
+				o.Transparency = 0
+			elseif o then
+				o.Transparency = 1
+			end
+		end
+	end)
 	local function onMap(x, z, w) -- a square of w studs at world (x, z) on the canvas
 		return UDim2.fromScale((x - w / 2 - map.lo.X) / map.span.X, (z - w / 2 - map.lo.Y) / map.span.Y), UDim2.fromScale(w / map.span.X, w / map.span.Y)
 	end
@@ -1792,12 +1835,18 @@ end
 		local lv = cam.CFrame.LookVector
 		me.Rotation = math.deg(math.atan2(lv.X, -lv.Z))
 		local to = C.CAVE_ORIGIN - p
+		if (C.CAVE2_ORIGIN - p).Magnitude < to.Magnitude then to = C.CAVE2_ORIGIN - p end -- the nearer camp (the Clay Caves hall has its own ring)
 		local cv = Vector2.new(to.X, to.Z) / C.MAP_VIEW -- camp offset in view widths
 		local edge = math.max(math.abs(cv.X), math.abs(cv.Y))
 		if edge > 0.42 then cv *= 0.42 / edge end -- off the view: stick to the rim, pointing the way
 		campIcon.Position = UDim2.fromScale(0.5 + cv.X * 0.8, 0.5 + cv.Y * 0.8)
 		local dist = Vector2.new(to.X, to.Z).Magnitude
 		campDist.Text = dist < C.CAMP_RING and "SAFE AT CAMP" or ("CAMP " .. math.floor(dist / 4 + 0.5) .. "m")
+		-- the pill is on screen only when it matters (the torch is low, or for 4 s after you cross the camp ring); the camp icon
+		-- on the radar's rim always points home (vault Research/UI/Viral Game HUDs: top games keep about five HUD pieces)
+		local inRing = dist < C.CAMP_RING
+		if inRing ~= cave.pillRing then cave.pillRing, cave.pillUntil = inRing, os.clock() + 4 end
+		campPill.Visible = not cave.mgBusy and (cave.fear >= 0.25 or os.clock() < (cave.pillUntil or 0))
 		local hold = plr:GetAttribute("DevGlint") and 0.25 -- Studio test hook: freeze every glint at its peak for captures
 		for _, g in map.deps do -- glints run every frame (cheap: a scale and a light per deposit)
 			if not g.claimed then
@@ -1876,6 +1925,7 @@ end
 				if e then
 					local col = (e.g.dep:GetAttribute("Gilded") and GOLD) or (e.g.rar >= 3 and BUTTER) or (e.g.rar == 2 and MINT) or CREAM
 					h.OutlineColor, h.FillColor = col, col
+					h:SetAttribute("Rare", e.g.rar >= 3)
 				end
 			end
 		end
@@ -1884,6 +1934,19 @@ end
 				local pos, size = onMap(g.core.Position.X, g.core.Position.Z, 5)
 				g.dot = new("Frame", canvas2, { Position = pos, Size = size, BackgroundColor3 = g.col, BorderSizePixel = 0, ZIndex = 3 })
 				new("UIStroke", g.dot, { Color = CREAM, Thickness = 1 })
+			end
+		end
+		local nests = workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild("Nests") -- an egg nest pings onto the map when your light first reaches it (board 8, Eggs)
+		map.nests = map.nests or {}
+		for _, egg in nests and nests:GetChildren() or {} do
+			if egg.Name == "NestEgg" and not map.nests[egg] and (egg.Position - p).Magnitude < r then
+				local pos, size = onMap(egg.Position.X, egg.Position.Z, 7)
+				local d = new("Frame", canvas2, { Position = pos, Size = size, BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 4 })
+				new("UICorner", d, { CornerRadius = UDim.new(1, 0) })
+				new("UIStroke", d, { Color = PINK, Thickness = 2 })
+				map.nests[egg] = d
+				pop(d, 2.6, 0.6)
+				sfx("pluck", 1.6)
 			end
 		end
 	end
@@ -2629,6 +2692,12 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 			if not ok then warn("[MinecartRide] " .. tostring(err)) end
 			R.Surface:FireServer("arrived")
 			if ok then toast("CAMP 1  ·  ORE IS SAFE HERE", MINT, true) end
+			task.delay(0.35, function() -- step out looking level at the camp fire: the ride left the view on the cart floor (arrival captures, 2026-11-11)
+				local cam2 = workspace.CurrentCamera
+				local eye = cam2.CFrame.Position
+				local at = Vector3.new(C.CAVE_ORIGIN.X, eye.Y, C.CAVE_ORIGIN.Z)
+				if plr:GetAttribute("InCave") and (at - eye).Magnitude > 3 and (at - eye).Magnitude < 80 then cam2.CFrame = CFrame.lookAt(eye, at) end
+			end)
 		end)
 	elseif kind == "lift" then
 		local down = ...
@@ -2740,7 +2809,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
@@ -2790,7 +2859,8 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	fovKick *= math.exp(-dt * 8)
 	if inCave then caveStep(now) end
 	if inMine or inCave then
-		cam.FieldOfView = C.FP_FOV + fovKick
+		mgZoom += ((cave.mgBusy and -7 or 0) - mgZoom) * (1 - math.exp(-dt * 5))
+		cam.FieldOfView = C.FP_FOV + fovKick + mgZoom
 		local hd = head()
 		if now < lookDownUntil and hd then
 			local lv = h.CFrame.LookVector
@@ -2814,13 +2884,15 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		if cave.mgBusy or plr:GetAttribute("Seated") or fade.BackgroundTransparency < 0.5 or (forgeUI.deathPlaying and forgeUI.deathPlaying()) then return true end
 		if forge.Visible or odds.Visible or mapP.Visible or night.Visible then return true end
 		for _, m in forgeUI.modals do if m.Visible then return true end end
+		local tipB = caveHud.Visible and caveHud:FindFirstChild("TipBanner") -- Wick is talking: a toast waits its turn (Gemini r8: both at once)
+		if tipB and tipB.Visible then return true end
 		return false
 	end end
 	local promptsOn = not (modal or cave.mgBusy or forgeUI.cardUp or (card and card.Visible)) -- audit 05: no world prompt over a modal or a loot card
 	caveHud.Visible = inCave and not modal -- the cave HUD and its tip ribbon step back behind a modal
-	layerPill.Visible, goldPill.Parent.Parent.Visible = not modal, not (modal or cave.mgBusy) -- so do the location pill and the left column (Gemini r2: they floated over the blur)
+	layerPill.Visible, goldPill.Parent.Parent.Visible = not (modal or cave.mgBusy or forgeUI.cardUp), not (modal or cave.mgBusy) -- so do the location pill and the left column (Gemini r2: they floated over the blur)
 	if PPS.Enabled ~= promptsOn then PPS.Enabled = promptsOn end
-	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and (not inCave or (forgeUI.questHint ~= nil and next(promptUI) == nil)) -- in the cave a prompt bubble can sit where the card is: the card yields
+	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and not cave.mgBusy and not (card and card.Visible) and (not inCave or ((forgeUI.questHint ~= nil or (forgeUI.caveUrgent ~= nil and forgeUI.caveUrgent() ~= nil)))) -- prompt bubbles step below the card (see the prompt placement loop)
 	if modal ~= scrim.Visible then
 		scrim.Visible = true
 		tween(scrim, 0.25, { BackgroundTransparency = modal and 0.45 or 1 })
@@ -2939,7 +3011,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		stepCard.Visible = msg ~= ""
 		stepCard.Position = S(640, -40)
 		tween(stepCard, 0.5, { Position = S(640, 18) }, Enum.EasingStyle.Bounce)
-		stepDoneAt = (state.step >= 6 and not forgeUI.questHint) and now + 6 or nil
+		stepDoneAt = (state.step >= 6 and not forgeUI.questHint and not (forgeUI.caveUrgent and forgeUI.caveUrgent())) and now + 6 or nil -- an urgent cave warning never times out (Codex)
 	end
 	if stepDoneAt and now > stepDoneAt then
 		stepExpired, stepDoneAt = true, nil

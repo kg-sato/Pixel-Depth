@@ -229,7 +229,7 @@ C.SAVE_STORE = "PixelDepths_v2" -- v2 (the user, 2026-11-08): test saves wiped f
 -- C.LAYERS (1.1 Rootflint, 1.2 Ashcoal, 1.3 Kobold-copper, 2.1 Titan clay, 2.2 Bog-iron, 2.3 Rune-tin, 3.x Glitterhall ...).
 -- About half the ore you mine while saving the coins, so coins stay the usual last gate.
 C.PICK_ORE = {
-	[2] = { ["1.1"] = 8 }, -- Stone (playtest 2: the first upgrade teaches that pickaxes need ore)
+	[2] = { ["1.1"] = 4 }, -- Stone (playtest 2: the first upgrade teaches that pickaxes need ore). Was 8: measured 2026-11-10, only two Rootflint deposits lie within 100 studs of camp and one gives 3 to 6, so 8 meant a long walk (about 3 min); 4 is one deposit with one PERFECT, and the 20 coins take the three nearest deposits (about 2 min with both lift rides)
 	[3] = { ["1.1"] = 6, ["1.2"] = 4 }, -- Ashcoal
 	[4] = { ["1.2"] = 8, ["1.3"] = 3 }, -- Kobold-Copper
 	[5] = { ["2.1"] = 8, ["2.2"] = 5 }, -- Bog-Iron (chasm and grotto ore)
@@ -302,7 +302,7 @@ C.FP_FOV = 80
 
 -- Caves (cave exploration rework; vault Projects/Pixel-_/Briefs/Cave Exploration Rework.md and Cave Rework Reference Board)
 C.CAVES_ON = true -- the lift goes to the shared caves; false brings back the private block mines
-C.TORCH = { time = 300, range = 26, minRange = 8 } -- full light to the dimmest glow in 5 minutes (the user, 2026-11-08); wooden torch radius 18 studs (LGT-02)
+C.TORCH = { time = 300, range = 32, minRange = 8 } -- full light to the dimmest glow in 5 minutes (the user, 2026-11-08); wooden torch radius 18 studs (LGT-02). range 26 to 32 on 2026-11-10 night: the light now hangs 2.5 studs behind the head, and Gemini could not read the far end of the bridge
 -- the minecart escape on the ride up (MinecartEscape): track length (studs), base speed (studs/s), coin bonus range;
 -- the server pays only when the run took at least dist / (speed * 1.6) seconds (every boost stacked the whole way)
 C.ESCAPE = { dist = 1050, speed = 30, top = 1.45, bonus = { 10, 40 } } -- top: the speed wave's peak multiplier (playtest 2 runner redesign); the server's time check uses it
@@ -318,7 +318,7 @@ C.SWIM = { air = 14, refill = 2.5, speed = 12, rise = 9, sink = 1.2, loss = 0.25
 C.BOSS = { needTier = 6, knots = 3, zone = 13, period = 0.85, perfects = 2, windup = 1.1, slamReach = 22, slamHit = 45, leash = 34, gold = 500, gems = 15 } -- slam and reward as the user's directive of 2026-11-10 set them (were 34 HP, 25 gems)
 -- the Kiln Golem in the Clay Caves hall (boss 2, same fight; needs tier 12, the Titan Hammer)
 C.BOSS2 = { needTier = 12, knots = 3, zone = 11, period = 0.75, perfects = 2, windup = 1.0, slamReach = 24, slamHit = 45, leash = 40, gold = 1500, gems = 30 }
-C.GLOOM = { hp = 100, hit = 34, loss = 0.25, shield = 5, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6, grab = 3, warn = 0.8 }
+C.GLOOM = { clay = { speed = 11, cone = 0.45, see = 80 }, hp = 100, hit = 34, loss = 0.25, shield = 5, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6, grab = 3, warn = 0.8 }
 -- cave events (ServerScriptService.CaveEvents): the roots' warning time, the first spore storm after server start, the gap
 -- between storms, a storm's length (all seconds) and what a flawless extraction pays during one
 C.EVENTS = { rootsWarn = 120, sporeFirst = 240, sporeEvery = 600, sporeLen = 180, sporeMult = 1.5 }

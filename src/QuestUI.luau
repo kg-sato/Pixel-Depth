@@ -110,8 +110,10 @@ function M.start(E)
 		if dot then dot.Visible = can end
 		-- the tutorial line in the step card
 		local st = Quests.STORY[q.story]
-		local g = Quests.guide(q) -- a finished quest keeps leading: the next step, plus where the reward waits
-		hook.questHint = st and (q.sp >= st.n and (g and (g.hint .. " (Reward waiting: J)") or "Quest done! Open QUESTS (J) to claim your reward.") or st.hint) or nil
+		local g, gp = Quests.guide(q) -- a finished quest keeps leading: the next step, plus where the reward waits
+		if g and st and q.sp >= st.n and gp >= g.n then g = nil end -- the next step is done too: only the claim is left to do
+		local keys = game:GetService("UserInputService").KeyboardEnabled -- a phone has no J key: point at the QUESTS button
+		hook.questHint = st and (q.sp >= st.n and (g and (g.hint .. (keys and " (Reward waiting: J)" or " (Reward waiting in QUESTS)")) or (keys and "Two quests done! Press J to claim your rewards." or "Two quests done! Open QUESTS to claim your rewards.")) or st.hint) or nil
 	end
 	for k, b in tabs do
 		b.Activated:Connect(function()
@@ -171,7 +173,7 @@ function M.start(E)
 			if hook.emote then hook.emote("cheer") end
 		elseif claimable() and not was then
 			sfx("sparkle", 1.4)
-			toast("QUEST COMPLETE!  PRESS J TO CLAIM", MINT, true)
+			toast(game:GetService("UserInputService").KeyboardEnabled and "QUEST COMPLETE!  PRESS J TO CLAIM" or "QUEST COMPLETE!  OPEN QUESTS TO CLAIM", MINT, true, 1.5) -- a beat later: on arrival it landed with the step card and a tip
 			if btn.Visible then pop(btn, 1.3, 0.4) end
 		end
 	end)
@@ -198,7 +200,7 @@ function M.start(E)
 	local PLACE = { cart = { "HubCart", "RIDE" }, sell = { "SellStall", "SELL" }, forge = { "Forge", "FORGE" }, egg = { "Incubator", "EGG" }, chest = { "DailyChest", "OPEN" } }
 	local function target() -- the world position and the word, or nil
 		local st, sp = Quests.guide(q)
-		if not st or sp >= st.n then return nil end
+		if not st or sp >= st.n or not st.point then return nil end -- chapter 2 quests have no place to point at
 		local inCave = plr:GetAttribute("InCave")
 		local hub, caves = workspace:FindFirstChild("Hub"), workspace:FindFirstChild("Caves")
 		local function over(m, word)

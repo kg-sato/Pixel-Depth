@@ -37,34 +37,55 @@ function M.start(E)
 	-- the soot sprites: a squashable ball (a sphere mesh), a fringe of fluff, two glowing eyes that blink
 	local visFolder = new("Folder", workspace, { Name = "GloomVis" })
 	local vis = {}
-	local function soot()
-		local m = new("Model", visFolder, { Name = "Soot" })
+	local CLAY, CLAY_D, AMBER = Color3.fromRGB(166, 226, 208), Color3.fromRGB(150, 78, 58), Color3.fromRGB(255, 176, 84) -- mint-glazed pottery: terracotta, then pale buff, vanished against the hall (Gemini 4/10 twice)
+	local MINT_SLIP, CHEEK = Color3.fromRGB(250, 236, 208), Color3.fromRGB(255, 150, 170)
+	local POSES = { { 0.15, 0.4, 1 }, { -0.15, 0.45, 1 }, { 0, 0.5, 1 }, { 0.28, 0.35, 1 }, { -0.3, 0.38, 1 } } -- frozen poses, all leaning in to grab: tilt, lean, arms up (0 or 1); a new one each time it is caught moving
+	local function soot(kind)
+		local clay = kind == 2 -- a clayling: a squat clay figure with painted amber eyes (server: Gloom, kind 2)
+		local SOOT = clay and CLAY or SOOT
+		local m = new("Model", visFolder, { Name = clay and "Clayling" or "Soot" })
 		local function p(size, cf, color, props)
-			local q = new("Part", m, { Size = size, CFrame = cf, Color = color, Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Material = Enum.Material.SmoothPlastic, TopSurface = Enum.SurfaceType.Smooth, BottomSurface = Enum.SurfaceType.Smooth })
+			local K = clay and 1.25 or 1 -- claylings are a quarter bigger: knee-high they hid behind floor clutter (Gemini)
+			local q = new("Part", m, { Size = size * K, CFrame = cf.Rotation + cf.Position * K, Color = color, Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Material = clay and Enum.Material.Rubber or Enum.Material.SmoothPlastic, TopSurface = Enum.SurfaceType.Smooth, BottomSurface = Enum.SurfaceType.Smooth })
 			for k, v in props or {} do q[k] = v end
 			return q
 		end
 		local body = p(Vector3.new(2.2, 2.2, 2.2), CFrame.new(), SOOT)
 		-- a thin violet rim: in first person a charcoal sprite vanished against the dark rock (Gemini loop grade, 2026-11-10)
-		new("Highlight", m, { FillTransparency = 1, OutlineColor = Color3.fromRGB(176, 140, 255), OutlineTransparency = 0.35, DepthMode = Enum.HighlightDepthMode.Occluded })
+		new("Highlight", m, { FillTransparency = clay and 1 or 0.84, FillColor = Color3.fromRGB(120, 90, 200), OutlineColor = clay and AMBER or Color3.fromRGB(176, 140, 255), OutlineTransparency = 0.1,
+			DepthMode = clay and Enum.HighlightDepthMode.Occluded or Enum.HighlightDepthMode.AlwaysOnTop }) -- a gloomling slips through rock: its ghost shows through the wall, so you see it coming (a sliver of fluff in the rock read as a glitch)
+		new("PointLight", body, { Color = clay and AMBER or Color3.fromRGB(150, 110, 255), Range = 8, Brightness = 0.28, Shadows = false }) -- its own dim glow: with the torch out it was two red dots in the black
 		local mesh = new("SpecialMesh", body, { MeshType = Enum.MeshType.Sphere })
 		m.PrimaryPart = body
 		local fluff = {}
-		for k = 1, 7 do
+		if clay then -- a round pot with a lid and knob, two ball arms, two feet, a mint slip band, pink cheeks (every piece an ellipsoid)
+			for k, d in { { Vector3.new(0.75, 0.95, 0.75), CFrame.new(-1.25, -0.05, -0.15), CLAY }, { Vector3.new(0.75, 0.95, 0.75), CFrame.new(1.25, -0.05, -0.15), CLAY },
+				{ Vector3.new(1.5, 0.5, 1.5), CFrame.new(0, 1.12, 0), CLAY_D }, { Vector3.new(0.5, 0.5, 0.5), CFrame.new(0, 1.5, 0), MINT_SLIP },
+				{ Vector3.new(0.85, 0.5, 1), CFrame.new(-0.55, -1.05, -0.1), CLAY_D }, { Vector3.new(0.85, 0.5, 1), CFrame.new(0.55, -1.05, -0.1), CLAY_D },
+				{ Vector3.new(1.86, 0.3, 1.86), CFrame.new(0, -0.7, 0), MINT_SLIP },
+				{ Vector3.new(0.34, 0.24, 0.1), CFrame.new(-0.72, -0.2, -0.98) * CFrame.Angles(0, 0.5, 0), CHEEK }, { Vector3.new(0.34, 0.24, 0.1), CFrame.new(0.72, -0.2, -0.98) * CFrame.Angles(0, -0.5, 0), CHEEK },
+				{ Vector3.new(0.62, 0.16, 0.12), CFrame.new(-0.42, 0.66, -0.98) * CFrame.Angles(0, 0, -0.45), CLAY_D }, { Vector3.new(0.62, 0.16, 0.12), CFrame.new(0.42, 0.66, -0.98) * CFrame.Angles(0, 0, 0.45), CLAY_D },
+				{ Vector3.new(0.34, 0.1, 0.1), CFrame.new(-0.27, -0.4, -1.03) * CFrame.Angles(0, 0, 0.55), Color3.fromRGB(70, 34, 40) }, { Vector3.new(0.34, 0.1, 0.1), CFrame.new(0, -0.4, -1.06) * CFrame.Angles(0, 0, -0.55), Color3.fromRGB(70, 34, 40) }, { Vector3.new(0.34, 0.1, 0.1), CFrame.new(0.27, -0.4, -1.03) * CFrame.Angles(0, 0, 0.55), Color3.fromRGB(70, 34, 40) } } do -- slanted brows and a zigzag crack of a grin: sneaky, not a pet
+				local f = p(d[1], d[2], d[3])
+				new("SpecialMesh", f, { MeshType = Enum.MeshType.Sphere })
+				table.insert(fluff, { part = f, off = f.CFrame, arm = k <= 2 })
+			end
+		end
+		for k = 1, clay and 0 or 7 do
 			local a = k / 7 * math.pi * 2
 			local f = p(Vector3.new(0.7, 0.7, 0.7), CFrame.new(math.cos(a) * 1.05, math.sin(a * 2) * 0.5, math.sin(a) * 1.05) * CFrame.Angles(a, a * 2, 0), SOOT:Lerp(Color3.new(0, 0, 0), 0.3))
 			table.insert(fluff, { part = f, off = f.CFrame })
 		end
 		local eyes = {}
 		for _, x in { -0.4, 0.4 } do -- two round eyes, each with a dark pupil
-			local e = p(Vector3.new(0.12, 0.5, 0.5), CFrame.new(x, 0.15, -1.06) * CFrame.Angles(0, math.pi / 2, 0), EYE, { Material = Enum.Material.Neon, Shape = Enum.PartType.Cylinder })
+			local e = p(Vector3.new(0.12, clay and 0.78 or 0.68, clay and 0.78 or 0.68), CFrame.new(x, 0.15, clay and -1.0 or -1.06) * CFrame.Angles(0, math.pi / 2, 0), clay and Color3.fromRGB(196, 118, 40) or EYE, { Material = Enum.Material.Neon, Shape = Enum.PartType.Cylinder })
 			table.insert(eyes, { part = e, off = e.CFrame })
-			local pu = p(Vector3.new(0.1, 0.24, 0.24), CFrame.new(x + 0.03, 0.12, -1.12) * CFrame.Angles(0, math.pi / 2, 0), Color3.fromRGB(26, 18, 40), { Shape = Enum.PartType.Cylinder })
+			local pu = p(Vector3.new(0.1, clay and 0.44 or 0.32, clay and 0.44 or 0.32), CFrame.new(x + 0.03, 0.12, clay and -1.06 or -1.12) * CFrame.Angles(0, math.pi / 2, 0), Color3.fromRGB(26, 18, 40), { Shape = Enum.PartType.Cylinder })
 			table.insert(eyes, { part = pu, off = pu.CFrame })
 		end
 		local puff = new("ParticleEmitter", body, { Rate = 6, Lifetime = NumberRange.new(0.8, 1.4), Speed = NumberRange.new(0.5, 1.2), SpreadAngle = Vector2.new(180, 180),
-			Size = NumberSequence.new(0.5, 1.1), Transparency = NumberSequence.new(0.45, 1), Color = ColorSequence.new(Color3.fromRGB(96, 80, 130)), LightInfluence = 0.3 }) -- soot puffs
-		return { m = m, body = body, mesh = mesh, fluff = fluff, eyes = eyes }
+			Size = NumberSequence.new(0.5, 1.1), Transparency = NumberSequence.new(0.45, 1), Color = ColorSequence.new(clay and CLAY or Color3.fromRGB(96, 80, 130)), LightInfluence = 0.3 }) -- soot puffs
+		return { m = m, body = body, mesh = mesh, fluff = fluff, eyes = eyes, clay = clay, puff = puff }
 	end
 	local function burstAt(pos, color, n) burst(pos, Vector3.yAxis, color, n) end
 	RunService.RenderStepped:Connect(function(dt)
@@ -72,7 +93,11 @@ function M.start(E)
 		if folder then
 			for _, p in folder:GetChildren() do
 				if not vis[p] then
-					local v = soot()
+					local v = soot(p:GetAttribute("Kind"))
+					if v.clay and not cave.claySeen then
+						cave.claySeen = true
+						toast("A CLAYLING! Watch it: it sneaks up when you look away!", PINK)
+					end
 					v.cf, v.seed, v.blink, v.state = p.CFrame, math.random() * 6, os.clock() + math.random() * 3, "creep"
 					vis[p] = v
 				end
@@ -81,7 +106,7 @@ function M.start(E)
 		local now = os.clock()
 		for p, v in vis do
 			if not p.Parent then
-				burstAt(v.cf.Position, Color3.fromRGB(80, 60, 110), 10) -- a puff of soot as it slips into a crack
+				burstAt(v.cf.Position, v.clay and CLAY_D or Color3.fromRGB(80, 60, 110), 10) -- a puff of soot as it slips into a crack
 				v.m:Destroy()
 				vis[p] = nil
 			else
@@ -93,6 +118,14 @@ function M.start(E)
 				end
 				v.cf = v.cf:Lerp(p.CFrame, 1 - math.exp(-dt * 10))
 				local bob = math.sin(now * 3 + v.seed) * 0.25
+				local still = v.clay and (p:GetAttribute("Seen") or state ~= "creep")
+				if v.clay then -- a clayling waddles in hops while unseen and is a statue while seen
+					bob = (state == "creep" and not still) and math.abs(math.sin(now * 9 + v.seed)) * 0.4 or 0
+					v.puff.Enabled = not still
+					if still and not v.wasStill then v.pose = POSES[math.random(#POSES)] end -- caught mid-step: a new statue pose
+					v.wasStill = still
+				end
+				local pose = (v.clay and still and state == "creep") and v.pose or nil
 				local sy, sxz, tilt = 1, 1, 0
 				if state == "pancake" then
 					local k = math.min((now - (v.since or now)) / 0.12, 1)
@@ -104,17 +137,17 @@ function M.start(E)
 				elseif state == "flee" then
 					sy, sxz = 0.8, 0.9
 				end
-				local base = v.cf * CFrame.new(0, bob - (1 - sy) * 1.1, 0) * CFrame.Angles(0, 0, tilt)
+				local base = v.cf * CFrame.new(0, bob - (1 - sy) * 1.1, 0) * CFrame.Angles(pose and pose[2] or 0, 0, tilt + (pose and pose[1] or 0))
 				v.body.CFrame = base
 				v.mesh.Scale = Vector3.new(sxz, sy, sxz)
-				for _, f in v.fluff do f.part.CFrame = base * CFrame.new(f.off.Position * Vector3.new(sxz, sy, sxz)) * f.off.Rotation * CFrame.Angles(0, now * 0.8, 0) end
+				for _, f in v.fluff do f.part.CFrame = base * CFrame.new(f.off.Position * Vector3.new(sxz, sy, sxz) + ((f.arm and pose and pose[3] == 1) and Vector3.new(0, 0.8, -1.0) or Vector3.zero)) * f.off.Rotation * CFrame.Angles(0, v.clay and 0 or now * 0.8, 0) end
 				local shut = now > v.blink and now < v.blink + 0.12
 				if now > v.blink + 0.12 then v.blink = now + 2 + math.random() * 2 end
 				for _, e in v.eyes do
 					e.part.CFrame = base * CFrame.new(e.off.Position * Vector3.new(sxz, sy, 1)) * e.off.Rotation
 					e.part.Transparency = ((shut and state ~= "windup") or state == "flee") and 1 or 0
 					e.col = e.col or e.part.Color
-					e.part.Color = (state == "windup" and e.col == EYE) and WARN or e.col
+					e.part.Color = (state == "windup" and e.part.Material == Enum.Material.Neon) and WARN or e.col
 				end
 			end
 		end

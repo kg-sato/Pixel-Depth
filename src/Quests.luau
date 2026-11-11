@@ -16,6 +16,13 @@ M.STORY = {
 	{ id = "forge", title = "Forge a new pickaxe", hint = "Visit the forge. The tracker shows what the next pickaxe needs.", ev = "buy", n = 1, gems = 5, point = "forge" },
 	{ id = "hatch", title = "Hatch an egg", hint = "Get an egg from Maribel and hatch it!", ev = "hatch", n = 1, gems = 5, point = "egg" },
 	{ id = "chest", title = "Open the daily relic chest", hint = "Open the relic chest near the spawn!", ev = "chest", n = 1, coins = 60, point = "chest" },
+	-- chapter 2, the Clay Caves (2026-11-10 night): no guide marker (no `point`), the hint says where to go
+	{ id = "warden", title = "Calm the Root Warden", hint = "Forge the Rootheart Pickaxe, then challenge the Warden at the Deep Gate!", ev = "warden", n = 1, gems = 10 },
+	{ id = "clay", title = "Go down to the Clay Caves", hint = "Take the way down behind the open Deep Gate!", ev = "clay", n = 1, coins = 100 },
+	{ id = "jars", title = "Smash 3 clay jars", hint = "Smash clay jars in the Clay Caves!", ev = "jar", n = 3, coins = 120 },
+	{ id = "echo", title = "Win Echo Tap", hint = "Tap an echo wall and find the hollow drum!", ev = "echo", n = 1, coins = 120 },
+	{ id = "geode", title = "Crack a geode", hint = "Crack your geode at the anvil by the kiln!", ev = "geode", n = 1, gems = 6 },
+	{ id = "fossil", title = "Brush a fossil clean", hint = "Brush a pale slab on the wall, gently!", ev = "fossil", n = 1, gems = 6 },
 }
 M.DAILY = {
 	{ id = "d_extract", title = "Extract 6 deposits", ev = "extract", n = 6, coins = 120 },

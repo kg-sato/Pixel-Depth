@@ -209,13 +209,32 @@ function M.start(E)
 		local col, row = (n - 1) % COLS, (n - 1) // COLS
 		local at, size = UDim2.fromScale((col + 0.5) / COLS, (row + 0.5) / ROWS), UDim2.fromScale(1 / COLS, 1 / ROWS)
 		if SHAPE[n] then
-			local a = new("Frame", board, { Size = UDim2.fromScale(0.86 / COLS, 0.86 / ROWS), Position = at, AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = AMBER, BorderSizePixel = 0, ZIndex = 32 })
+			local a = new("Frame", board, { Size = UDim2.fromScale(1 / COLS, 1 / ROWS), Position = at, -- a full cell: amber shows through the gaps between the tiles above it, a hint of where the fossil lies
+				 AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = AMBER, BorderSizePixel = 0, ZIndex = 32 })
 			new("UICorner", a, { CornerRadius = UDim.new(0.2, 0) })
 			new("Frame", a, { Size = UDim2.fromScale(0.4, 0.4), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BackgroundTransparency = 0.35, BorderSizePixel = 0, ZIndex = 33 })
 		end
 		tiles[n] = { f = new("Frame", board, { Size = UDim2.fromScale(0.94 / COLS, 0.94 / ROWS), Position = at, AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = (col + row) % 2 == 0 and CLAY_L or CLAY, BorderSizePixel = 0, ZIndex = 34 }), hp = 3 }
 	end
-	for _, tl in tiles do new("UICorner", tl.f, { CornerRadius = UDim.new(0.16, 0) }) new("UIStroke", tl.f, { Color = Color3.fromRGB(104, 52, 46), Thickness = 2 }) end
+	local srng = Random.new(7)
+	for _, tl in tiles do
+		new("UICorner", tl.f, { CornerRadius = UDim.new(0.16, 0) })
+		new("UIStroke", tl.f, { Color = Color3.fromRGB(104, 52, 46), Thickness = 2 })
+		tl.dots = {} -- grit: the flat tiles read as chocolate squares (Gemini 6/10)
+		for k = 1, 4 do
+			local d = srng:NextNumber(0.07, 0.14)
+			tl.dots[k] = new("Frame", tl.f, { Size = UDim2.fromScale(d, d), Position = UDim2.fromScale(srng:NextNumber(0.15, 0.85), srng:NextNumber(0.15, 0.85)), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = k % 2 == 0 and Color3.fromRGB(104, 52, 46) or CREAM, BackgroundTransparency = 0.45, BorderSizePixel = 0, ZIndex = 35 })
+			new("UICorner", tl.dots[k], { CornerRadius = UDim.new(1, 0) })
+		end
+	end
+	local function crumbs(tl) -- three bits of clay fly off a worn tile
+		if calm then return end
+		for k = 1, 3 do
+			local c = new("Frame", board, { Size = UDim2.fromScale(0.02, 0.024), Position = tl.f.Position, AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CLAY_L, BorderSizePixel = 0, ZIndex = 36, Rotation = k * 40 })
+			tween(c, 0.45, { Position = tl.f.Position + UDim2.fromScale((k - 2) * 0.05 + math.random() * 0.02, 0.07 + math.random() * 0.04), BackgroundTransparency = 1, Rotation = k * 40 + 120 }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+			game:GetService("Debris"):AddItem(c, 0.5)
+		end
+	end
 	local brush = new("Frame", board, { Name = "Brush", Size = UDim2.fromScale(0.07, 0.16), AnchorPoint = Vector2.new(0.5, 0.2), BackgroundColor3 = Color3.fromRGB(92, 62, 48), BorderSizePixel = 0, ZIndex = 36, Rotation = 28, Visible = false }) -- the brush under the pointer: a handle and pale bristles
 	new("UICorner", brush, { CornerRadius = UDim.new(0.3, 0) })
 	new("Frame", brush, { Size = UDim2.fromScale(1.5, 0.34), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 37 })
@@ -259,6 +278,10 @@ function M.start(E)
 			job.acc = 0
 			tl.hp -= 1
 			tl.f.BackgroundTransparency = ({ [2] = 0.35, [1] = 0.7, [0] = 1 })[tl.hp]
+			for _, d in tl.dots do d.BackgroundTransparency = ({ [2] = 0.6, [1] = 0.8, [0] = 1 })[tl.hp] end
+			local st = tl.f:FindFirstChildOfClass("UIStroke")
+			if st then st.Transparency = tl.hp == 0 and 1 or 0 end
+			crumbs(tl)
 			sfx("step", 1.5 + (3 - tl.hp) * 0.15)
 			show()
 			if job.left == 0 then
@@ -395,7 +418,7 @@ function M.start(E)
 
 	local LINES = {
 		"Kiln Keeper: \"Mind the vents. They throw you to the roof.\"", "Kiln Keeper: \"Old jars hide older things. Smash a few.\"",
-		"Kiln Keeper: \"Brush the pale slabs gently. Fossils crack.\"", "Kiln Keeper: \"The kiln stays lit. You are safe in my ring.\"",
+		"Kiln Keeper: \"Brush the pale slabs gently. Fossils crack.\"", "Kiln Keeper: \"Claylings creep when you look away. Stare them down!\"", "Kiln Keeper: \"The rope on the high ledge is the quick way home.\"", "Kiln Keeper: \"The kiln stays lit. You are safe in my ring.\"",
 	}
 	local line = 0
 	game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt)
@@ -416,7 +439,46 @@ function M.start(E)
 		if pr then pr.Enabled = false end
 	end)
 	E.vmHook.echoTap = function(k) if drums[k] and egame and not egame.busy and remote then egame.busy = true remote:FireServer("echo", egame.i, k) end end
+	-- the zip line: hang under the rope from the pad ledge to the post by the path (server: ClayCaves, Fx "zip")
+	local zipping, zipTip = false, false
+	local function zipRide()
+		local f = clay()
+		local rope = f and f:FindFirstChild("ZipRope", true)
+		local h = E.hrp()
+		local A, B = rope and rope:GetAttribute("ZipA"), rope and rope:GetAttribute("ZipB")
+		if zipping or not h or not A or not B then return end
+		zipping = true
+		local dir, len = (B - A).Unit, (B - A).Magnitude
+		local flat = (dir * Vector3.new(1, 0, 1)).Unit
+		local T, t0 = len / 30, os.clock()
+		sfx("open", 1.3)
+		if not zipTip then
+			zipTip = true
+			toast("ZIP LINE! HOLD ON", CREAM, true)
+		end
+		local conn
+		conn = RunService.RenderStepped:Connect(function()
+			local k = math.min((os.clock() - t0) / T, 1)
+			local hh = E.hrp()
+			local taken = hh ~= h or plr:GetAttribute("GrabbedUntil") ~= nil or E.cave.mgBusy -- a new character, a Gloomling's grab or a minigame owns the player now (Codex)
+			if not hh or k >= 1 or taken or not plr:GetAttribute("InCave") then -- let go at the post with a little hop forward (or the character is gone)
+				conn:Disconnect()
+				zipping = false
+				if hh and not taken then
+					hh.AssemblyLinearVelocity = flat * 14 + Vector3.new(0, 6, 0)
+					sfx("land", 1.1)
+				end
+				return
+			end
+			local e = k * k * (3 - 2 * k) * 0.35 + k * 0.65 -- a soft start and stop on a mostly even glide
+			local pos = A + dir * (1.6 + (len - 3.2) * e) - Vector3.new(0, 3.4 - math.sin(k * math.pi) * 0.5, 0) -- the rope sags a little under you
+			hh.CFrame = CFrame.new(pos) * hh.CFrame.Rotation -- the rider keeps looking where they like (first person turns the body with the camera)
+			hh.AssemblyLinearVelocity = dir * 30
+		end)
+	end
+
 	E.R.Fx.OnClientEvent:Connect(function(kind, a, b, c, d, ...)
+		if kind == "zip" then return zipRide() end
 		if kind == "clayTravel" then
 			fade.Visible = true
 			tween(fade, 0.3, { BackgroundTransparency = 0 })
@@ -524,7 +586,12 @@ function M.start(E)
 				end
 			end
 		elseif kind == "fossilBrush" then
-			for _, tl in tiles do tl.hp, tl.f.BackgroundTransparency = 3, 0 end
+			for _, tl in tiles do
+				tl.hp, tl.f.BackgroundTransparency = 3, 0
+				for _, d in tl.dots do d.BackgroundTransparency = 0.45 end
+				local st = tl.f:FindFirstChildOfClass("UIStroke")
+				if st then st.Transparency = 0 end
+			end
 			job = { i = a, cracks = 0, acc = 0 }
 			show()
 			E.openPanel(win)

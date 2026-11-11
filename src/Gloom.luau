@@ -6,6 +6,8 @@
 --   move as fast as you walk. A touch is a BONK (C.GLOOM.hit HP). At 0 HP you are caught: 25% of the unbanked ore is gone, HP
 --   refills and a 5 s golden shield keeps them off. Back at camp they scatter, HP and flares refill.
 -- - flares (C.GLOOM.flares per dive, key R or the FLARE button): every gloomling within 30 studs pancakes, then flees and is gone.
+-- - claylings (kind 2, the Clay Caves hall; roadmap i30): clay figures that walk only while you look away (C.GLOOM.clay). Look at
+--   one and it stands still and cannot hit; they are faster than a gloomling. Flares, HP and the catch work the same.
 -- Each gloomling is an invisible anchored Part in workspace.Gloom moved here at 10 Hz; every client draws its own soot sprite on it.
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
@@ -51,16 +53,27 @@ end
 local function spawn(plr, hrp)
 	local back = -hrp.CFrame.LookVector * Vector3.new(1, 0, 1)
 	if back.Magnitude < 0.1 then back = Vector3.new(1, 0, 0) end
-	local a = rng:NextNumber(-0.9, 0.9) -- from the dark behind you, a little to one side
+	local a = rng:NextNumber(-0.9, 0.9) -- claylings: from behind you, a little to one side (they only move unseen)
+	if (hrp.Position - C.CAVE2_ORIGIN).Magnitude >= 130 then
+		-- gloomlings come out of the dark AHEAD and to one side: from behind, a first-person player never saw what hit them
+		-- (three loop grades: "no creature in view, only BONK text"). You see the eyes coming for about four seconds.
+		a = (rng:NextNumber() < 0.5 and -1 or 1) * rng:NextNumber(1.9, 2.8)
+	end
 	local dir = (CFrame.Angles(0, a, 0):VectorToWorldSpace(back.Unit))
 	local pos = hrp.Position + dir * rng:NextNumber(26, 34) + Vector3.new(0, 0.5, 0)
+	local kind = (hrp.Position - C.CAVE2_ORIGIN).Magnitude < 130 and 2 or 1
+	if kind == 2 then -- a clayling stands on the hall floor, inside the walls
+		local O = C.CAVE2_ORIGIN
+		pos = Vector3.new(math.clamp(pos.X, O.X - 68, O.X + 68), O.Y + 1.65, math.clamp(pos.Z, O.Z - 48, O.Z + 48))
+	end
 	local p = Instance.new("Part")
 	p.Name, p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.Transparency, p.Size = "Gloomling", true, false, false, false, 1, Vector3.new(2, 2, 2)
 	p.CFrame = CFrame.lookAt(pos, hrp.Position)
 	p:SetAttribute("Target", plr.UserId)
 	p:SetAttribute("State", "creep")
+	p:SetAttribute("Kind", kind)
 	p.Parent = folder
-	mobs[p] = { target = plr, state = "creep", t0 = os.clock(), seed = rng:NextNumber() * 6 }
+	mobs[p] = { target = plr, state = "creep", t0 = os.clock(), seed = rng:NextNumber() * 6, kind = kind }
 end
 
 local function caught(plr, s, g)
@@ -209,10 +222,35 @@ function G.step(dt)
 		local to = hrp.Position + Vector3.new(0, 0.5, 0) - pos
 		local dist = to.Magnitude
 		local fear = fearOf(s, g)
-		if m.state == "creep" then
+		local seen = false -- a clayling in the player's view stands still and cannot hit
+		if m.kind == 2 then
+			local CL = C.GLOOM.clay
+			seen = dist < CL.see and dist > 0.1 and hrp.CFrame.LookVector:Dot(-to.Unit) > CL.cone
+			if seen ~= m.seen then
+				m.seen = seen
+				p:SetAttribute("Seen", seen)
+			end
+		end
+		if m.state == "creep" and m.kind == 2 then
+			if not seen then
+				local flat = Vector3.new(to.X, 0, to.Z)
+				if flat.Magnitude > 0.1 then
+					local at = pos + flat.Unit * math.min(C.GLOOM.clay.speed * dt, math.max(flat.Magnitude - 3, 0)) -- stops 3 studs off: at 1.5 its head-pot filled a first-person view
+					p.CFrame = CFrame.lookAt(at, Vector3.new(hrp.Position.X, at.Y, hrp.Position.Z))
+				end
+				if flat.Magnitude < C.GLOOM.reach + 1 and math.abs(to.Y) < 6 and serverNow() > g.shieldUntil and not g.grabbedUntil then -- not at a player on the ledge or a mesa above it
+					m.state, m.t0 = "windup", nowC
+					p:SetAttribute("State", "windup")
+				end
+			end
+			if dist > 110 then
+				mobs[p] = nil
+				p:Destroy()
+			end
+		elseif m.state == "creep" then
 			local speed = fear >= 0.6 and C.GLOOM.speed[2] or C.GLOOM.speed[1]
 			local side = Vector3.new(-to.Z, 0, to.X).Unit * math.sin(nowC * 2.3 + m.seed) * 0.35 -- a little weave
-			local step = (to.Unit + side).Unit * math.min(speed * dt, math.max(dist - 1.5, 0))
+			local step = (to.Unit + side).Unit * math.min(speed * dt, math.max(dist - 3.2, 0)) -- stops 3.2 studs off (was 1.5): coming from ahead it filled half the first-person view
 			p.CFrame = CFrame.lookAt(pos + step, hrp.Position)
 			if dist < C.GLOOM.reach + 1 and serverNow() > g.shieldUntil and not g.grabbedUntil then -- rears up first (C.GLOOM.warn s): step away and it misses
 				m.state, m.t0 = "windup", nowC
@@ -223,7 +261,7 @@ function G.step(dt)
 			end
 		elseif m.state == "windup" then -- the warning beat, then BONK unless the player got away (Gemini loop review, 2026-11-10)
 			if age >= C.GLOOM.warn then
-				if dist < C.GLOOM.reach + 2 and serverNow() > g.shieldUntil and not g.grabbedUntil then
+				if dist < C.GLOOM.reach + 2 and not seen and serverNow() > g.shieldUntil and not g.grabbedUntil then
 					g.hp = math.max(0, g.hp - C.GLOOM.hit)
 					m.state, m.t0, m.from = "stun", nowC, pos
 					p:SetAttribute("State", "stun")
@@ -244,7 +282,7 @@ function G.step(dt)
 		elseif m.state == "stun" then -- knocked back, dazed, then creeps again
 			local k = math.min(age / 0.4, 1)
 			local away = (pos - hrp.Position) * Vector3.new(1, 0, 1)
-			if away.Magnitude > 0.1 and k < 1 then p.CFrame = CFrame.lookAt(pos + away.Unit * 20 * dt, hrp.Position) end
+			if m.kind ~= 2 and away.Magnitude > 0.1 and k < 1 then p.CFrame = CFrame.lookAt(pos + away.Unit * 20 * dt, hrp.Position) end
 			if age > C.GLOOM.stun then
 				m.state, m.t0 = "creep", nowC
 				p:SetAttribute("State", "creep")

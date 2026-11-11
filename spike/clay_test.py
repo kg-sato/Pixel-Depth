@@ -3,6 +3,7 @@ Goes down with the DevClay hook, smashes a jar, rides a steam vent, opens a foss
 Captures captures/night/clay_*.png and prints one line per check."""
 import subprocess, sys, time, pathlib
 here = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(here))
 def night(*a): return (subprocess.run([sys.executable, str(here / "night.py"), *a], capture_output=True, text=True).stdout.strip().splitlines() or ["?"])[-1]
 P = "local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart local C=require(game.ReplicatedStorage.Shared.Config) local O=C.CAVE2_ORIGIN "
 TRIG = "local h=game.Players.LocalPlayer.Character.HumanoidRootPart local best,bd for _,d in workspace.Caves:GetDescendants() do if d:IsA('ProximityPrompt') and d:GetAttribute('%s') and d.Enabled then local m=(d.Parent.Position-h.Position).Magnitude if not bd or m<bd then best,bd=d,m end end end if best then best:InputHoldBegin() task.wait(0.1) best:InputHoldEnd() end return best and math.floor(bd) or 'none'"
@@ -17,16 +18,22 @@ night("lua", "Server", P + "h.CFrame=CFrame.new(O+Vector3.new(-30,3,14), O+Vecto
 print("jar prompt dist:", night("lua", "Client", TRIG % "ClayJar")); time.sleep(1.5); night("shot", "clay_jar")
 print("jar hidden:", night("lua", "Client", "for _,m in workspace.Caves.Clay:GetChildren() do if m:GetAttribute('Jar')==1 then return tostring(m.PrimaryPart.Transparency) end end return 'no jar'"))
 night("lua", "Server", P + "h.CFrame=CFrame.new(O+Vector3.new(38,3,-26), O+Vector3.new(58,3,-26)) return 1")
-print("vent apex:", night("lua", "Client", "local h=game.Players.LocalPlayer.Character.HumanoidRootPart local y0,top=h.Position.Y,-1e9 for i=1,90 do top=math.max(top,h.Position.Y) task.wait(0.1) end return math.floor(top-y0)..' studs up, umbrella seen='..tostring(workspace:FindFirstChild('GlideUmbrella',true)~=nil)"))
+print("vent apex:", night("lua", "Client", "local h=game.Players.LocalPlayer.Character.HumanoidRootPart local y0,top=require(game.ReplicatedStorage.Shared.Config).CAVE2_ORIGIN.Y+3,-1e9 for i=1,90 do top=math.max(top,h.Position.Y) task.wait(0.1) end return math.floor(top-y0)..' studs up, umbrella seen='..tostring(workspace:FindFirstChild('GlideUmbrella',true)~=nil)"))
 night("lua", "Server", P + "h.CFrame=CFrame.new(O+Vector3.new(38,3,-26), O+Vector3.new(58,3,-26)) return 1"); time.sleep(0.2)
 for _ in range(40):
     if "up" in night("lua", "Client", "local h=game.Players.LocalPlayer.Character.HumanoidRootPart return h.AssemblyLinearVelocity.Y>40 and 'up' or 'no'"): break
 time.sleep(1.2); night("shot", "clay_glide")
 night("lua", "Server", P + "h.CFrame=CFrame.new(O+Vector3.new(-30,3,46), O+Vector3.new(-30,5,53)) return 1"); time.sleep(1.5)
-print("fossil prompt dist:", night("lua", "Client", TRIG % "Fossil")); time.sleep(1.2); night("shot", "clay_fossil")
+import prompt_test  # aims a camera at the prompt: an unaimed prompt does not fire, and this step used to pass without opening the panel
+print("fossil prompt:", prompt_test.trigger("Fossil", "1")); time.sleep(0.6); night("shot", "clay_fossil")
+print("fossil panel open (PASS true):", night("lua", "Client", "for _,d in game.Players.LocalPlayer.PlayerGui:GetDescendants() do if d.Name=='FossilPanel' then return tostring(d.Visible) end end return 'missing'"))
 time.sleep(4)
 print("fossil paid:", night("lua", "Client", "game.ReplicatedStorage.Remotes.Clay:FireServer('fossil',1) task.wait(1) return 'sent'"))
+# the zip line: the client carries the rider from the pad ledge to the post by the path (the prompt itself: prompt_test.trigger("ZipLine", "1"))
+night("lua", "Server", P + "h.CFrame=CFrame.new(O+Vector3.new(-40,25,-49)) return 1"); time.sleep(1.5)
+night("lua", "Server", "game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1],'zip') return 1"); time.sleep(4)
+print("zip line, studs from the end post (PASS under 8):", night("lua", "Server", P + "local r=workspace.Caves.Clay:FindFirstChild('ZipRope',true) return math.floor((h.Position-r:GetAttribute('ZipB')).Magnitude)"))
 night("lua", "Server", P + "p:SetAttribute('DevClay',1) return 1"); time.sleep(3)
 print("back:", night("lua", "Server", P + "return tostring((h.Position-C.CAVE_ORIGIN).Magnitude < 120)"))
-ERR = "local n=0 for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError or (m.messageType==Enum.MessageType.MessageWarning and m.message:find('%[')) then n+=1 print(m.message) end end return n"
+ERR = "local n,t=0,'' for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError or (m.messageType==Enum.MessageType.MessageWarning and m.message:find('%[')) then n+=1 t=t..' ## '..string.sub(m.message,1,160) end end return n..t"
 for w in ("Client", "Server"): print(w, "errors:", subprocess.run([sys.executable, str(here / "night.py"), "lua", w, ERR], capture_output=True, text=True).stdout.strip()[-600:])

@@ -1043,13 +1043,13 @@ local Gloom = require(game:GetService("ServerScriptService"):WaitForChild("Gloom
 Shop.init({ data = data, fx = FxR, sendState = sendState })
 require(game:GetService("ServerScriptService"):WaitForChild("Boss")).init({ data = data, fx = FxR, sendState = sendState, hrpOf = hrpOf, analytics = A, strikes = C.DEPOSIT.strikes,
 	hurt = function(plr, n) return Gloom.hurt(plr, n) end, heal = function(plr) Gloom.heal(plr) end,
-	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt })
+	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, quest = quest })
 local CaveEvents = require(game:GetService("ServerScriptService"):WaitForChild("CaveEvents")) -- Roots Stirring and spore storms
 CaveEvents.init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, landing = function() return caveLanding end,
 	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end,
 	finish = function(s) if s.mg then s.mg.deadline = 0 end end }) -- the main loop pays an expired minigame on its next pass
 require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, sendState = sendState, remote = remote,
-	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt })
+	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, quest = quest })
 Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, analytics = A, perks = function(s) return PetJobs.perks(crewOf(s)) end,
 	-- gloomlings leave you alone on a ride, in an ore minigame (hands and eyes are busy) and for 2.5 s after it (Gemini loop review, 2026-11-10)
 	busy = function(plr) local s = data[plr] return riding[plr] ~= nil or escaping[plr] ~= nil or (s ~= nil and (s.mg ~= nil or os.clock() < (s.mgSafe or 0))) end })
@@ -1824,6 +1824,12 @@ while true do
 				s.gold += dev
 				sendState(s)
 			end
+			local devBag = plr:GetAttribute("DevBag") -- this many Rootflint in the bag (to test the full and heavy bag)
+			if devBag then
+				plr:SetAttribute("DevBag", nil)
+				s.bag, s.bagV, s.bagOres = devBag, devBag, { ["1.1"] = devBag }
+				sendState(s)
+			end
 			local devEquip = plr:GetAttribute("DevEquip") -- own and hold this pickaxe tier (to test the Root Warden)
 			if devEquip then
 				plr:SetAttribute("DevEquip", nil)
@@ -1834,6 +1840,14 @@ while true do
 			if plr:GetAttribute("DevRegrow") then -- every deposit this player mined grows back now
 				plr:SetAttribute("DevRegrow", nil)
 				for dep in s.claimed do s.claimed[dep] = 0 end
+			end
+			local devQuest = plr:GetAttribute("DevQuest") -- jump to this story quest (its number in Quests.STORY), to test a chapter
+			if devQuest then
+				plr:SetAttribute("DevQuest", nil)
+				if s.quests and Quests.STORY[devQuest] then
+					s.quests.story, s.quests.sp, s.quests.np = devQuest, 0, 0
+					QuestR:FireClient(plr, s.quests)
+				end
 			end
 			local devPet = plr:GetAttribute("DevPet") -- a crew pet by name (C.PETS), to test cave jobs
 			if devPet then

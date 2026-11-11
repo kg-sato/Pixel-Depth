@@ -53,10 +53,15 @@ function M.build(caves)
 	end
 
 	-- the shell: floor, four walls, roof (the hall is 150 x 110, 70 high; x runs east, the arrival ledge is at the west end)
-	part("Floor", Vector3.new(166, 6, 126), O * CFrame.new(0, -3, 0), CLAY_D, ROCK)
+	part("Floor", Vector3.new(166, 6, 126), O * CFrame.new(0, -3, 0), Color3.fromRGB(88, 50, 58), ROCK) -- a plum-brown floor under terracotta walls: one colour everywhere read as soup
 	part("Roof", Vector3.new(164, 6, 124), O * CFrame.new(0, 73, 0), PLUM, ROCK)
 	for _, z in { -57, 57 } do part("Wall", Vector3.new(158, 76, 6), O * CFrame.new(0, 35, z), CLAY, ROCK) end
 	for _, x in { -77, 77 } do part("Wall", Vector3.new(6, 76, 110), O * CFrame.new(x, 35, 0), CLAY, ROCK) end
+	for _, z in { -53.8, 53.8 } do part("Dado", Vector3.new(146, 1.4, 0.5), O * CFrame.new(0, 9, z), CREAM:Lerp(CLAY, 0.35), ROCK) end -- a pale painted band round the hall at head height
+	for _, x in { -73.8, 73.8 } do part("Dado", Vector3.new(0.5, 1.4, 106), O * CFrame.new(x, 9, 0), CREAM:Lerp(CLAY, 0.35), ROCK) end
+	-- a pale plastered wainscot below the band: at eye level the walls now part from the floor (the hall graded 4.5 as one-colour soup)
+	for _, z in { -53.93, 53.93 } do part("Wainscot", Vector3.new(147, 8.7, 0.54), O * CFrame.new(0, 4.15, z), CREAM:Lerp(CLAY, 0.5), ROCK) end
+	for _, x in { -73.93, 73.93 } do part("Wainscot", Vector3.new(0.54, 8.7, 106.6), O * CFrame.new(x, 4.15, 0), CREAM:Lerp(CLAY, 0.5), ROCK) end
 	for i = 1, 26 do -- clay strata: long ledges of a lighter band stepping round the walls, so the box reads as dug rock
 		local side, y = i % 4, 6 + rng:NextNumber() * 52
 		local len, deep = rng:NextNumber(18, 44), rng:NextNumber(1.2, 3)
@@ -73,6 +78,41 @@ function M.build(caves)
 		part("Slab", Vector3.new(s, 0.24 + k * 0.12, s * rng:NextNumber(0.8, 1.1)), O * CFrame.new(-60 + (i % 6) * 24 + rng:NextNumber(-3, 3), 0.07 + k * 0.06, -40 + (i // 6) * 20 + rng:NextNumber(-2, 2)) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), i % 2 == 0 and CLAY or CLAY_D:Lerp(CLAY, 0.5), { Material = Enum.Material.Sandstone, CanCollide = false })
 	end
 
+	-- dressing, so the hall reads as a dug and lived-in cavern and not a box (Gemini, 2026-11-10: flat walls, props not grounded):
+	-- clay columns along both long walls with timber beams across the roof between them, a tiled path from the arrival ledge
+	-- to the kiln, pot shelves on the south wall, roots hanging from the roof, rubble at the wall feet
+	-- column places are picked by hand per wall, clear of the ore, fossils, echo walls, shelves, crystals and the Titan's hand
+	for z, xs in { [-51] = { -66, -21, 1, 64.5 }, [51] = { -64, -38, -15, 32, 60 } } do
+		for k, x in xs do
+			part("Column", Vector3.new(5, 70.2, 5), O * CFrame.new(x, 34.9, z), k % 2 == 0 and CLAY or CLAY_D, ROCK)
+			part("ColumnFoot", Vector3.new(7, 2.6, 7), O * CFrame.new(x, 1.2, z), CREAM:Lerp(CLAY, 0.28), ROCK) -- pale feet and caps: the hall graded as one-colour soup three times
+			part("ColumnCap", Vector3.new(7, 2, 7), O * CFrame.new(x, 66.4, z), CREAM:Lerp(CLAY, 0.28), ROCK)
+			part("ColumnBand", Vector3.new(5.5, 1.2, 5.5), O * CFrame.new(x, 12 + (k % 3) * 2, z), CREAM:Lerp(CLAY, 0.4), ROCK)
+		end
+	end
+	for k = 0, 5 do part("RoofBeam", Vector3.new(2.4, 2.4, 98), O * CFrame.new(-62 + k * 24.5, 67.6, 0), BARK, { Material = Enum.Material.Wood, CanCollide = false }) end
+	for k = 0, 11 do -- the path: worn cream tiles from the ledge toward the kiln ring
+		part("PathTile", Vector3.new(3.4, 0.3, 3.4), O * CFrame.new(-55 + k * 4.2, 0.35, math.sin(k * 0.9) * 1.6) * CFrame.Angles(0, k * 0.4, 0), k % 3 == 0 and CREAM:Lerp(CLAY, 0.3) or CREAM:Lerp(CLAY, 0.55), { Material = Enum.Material.Sandstone, CanCollide = false })
+	end
+	for i, sx in { -52, 16 } do -- pot shelves against the south wall
+		for lv = 0, 1 do
+			part("Shelf", Vector3.new(10, 0.5, 2.2), O * CFrame.new(sx, 3 + lv * 3.2, 52.7), BARK, { Material = Enum.Material.Wood, CanCollide = false })
+			for q = 0, 3 do
+				local h = 1 + ((q + lv + i) % 3) * 0.4
+				part("ShelfPot", Vector3.new(1.2, h, 1.2), O * CFrame.new(sx - 3.6 + q * 2.4, 3.25 + lv * 3.2 + h / 2, 52.7), (q + lv) % 2 == 0 and CLAY_L or CLAY, DECO)
+			end
+		end
+		for _, dx in { -4.6, 4.6 } do part("ShelfPost", Vector3.new(0.5, 7.2, 0.5), O * CFrame.new(sx + dx, 3.6, 52.9), BARK, { Material = Enum.Material.Wood, CanCollide = false }) end
+	end
+	for k = 1, 12 do -- roots through the roof
+		local len = rng:NextNumber(8, 22)
+		part("HangingRoot", Vector3.new(0.9, len, 0.9), O * CFrame.new(rng:NextNumber(-66, 66), 70 - len / 2 + 0.4, rng:NextNumber(-44, 44)) * CFrame.Angles(rng:NextNumber(-0.08, 0.08), rng:NextNumber(0, 3), rng:NextNumber(-0.08, 0.08)), BARK:Lerp(PLUM, 0.3), { Material = Enum.Material.Wood, CanCollide = false, CastShadow = false })
+	end
+	for k = 1, 18 do -- rubble at the wall feet
+		local side = k % 2 == 0 and 1 or -1
+		local sz = rng:NextNumber(0.8, 2.2)
+		part("Rubble", Vector3.new(sz, sz * 0.7, sz * 1.1), O * CFrame.new(rng:NextNumber(-70, 70), sz * 0.3, side * rng:NextNumber(46.5, 51.5)) * CFrame.Angles(rng:NextNumber(0, 1), rng:NextNumber(0, 3), rng:NextNumber(0, 1)), k % 3 == 0 and CLAY_L or CLAY_D, { Material = Enum.Material.Sandstone, CanCollide = false })
+	end
 	-- the arrival ledge (west): a root arch with the way back to Camp 1
 	local arrive = O * CFrame.new(-64, 0, 0)
 	part("Ledge", Vector3.new(14, 1.2, 18), arrive * CFrame.new(0, 0.6, 0), CLAY_L, ROCK)
@@ -99,11 +139,18 @@ function M.build(caves)
 		part("KilnShard", Vector3.new(0.8 + (k % 3) * 0.5, 0.5 + (k % 2) * 0.4, 0.9), kiln * CFrame.new(math.cos(a) * (9.4 + k % 3), 0.2, math.sin(a) * (9.4 + k % 2)) * CFrame.Angles(0.2 * k, a, 0.3), k % 2 == 0 and CLAY_L or CLAY_D, DECO)
 	end
 	part("KilnChimney", Vector3.new(2.4, 5, 2.4), kiln * CFrame.new(0, 15.8, 0), CLAY_D, ROCK)
-	local mouth = part("KilnMouth", Vector3.new(4.4, 3, 0.5), kiln * CFrame.new(0, 1.7, 6.3), Color3.fromRGB(196, 84, 30), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+	local mouth = part("KilnMouth", Vector3.new(4.4, 3, 0.3), kiln * CFrame.new(0, 1.7, 4.7), Color3.fromRGB(150, 56, 22), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false }) -- the glow sits deep in the throat, coals in front of it
 	local ml = Instance.new("PointLight")
 	ml.Color, ml.Range, ml.Brightness, ml.Shadows = Color3.fromRGB(255, 130, 50), 26, 0.5, false
 	ml.Parent = mouth
 	ml:SetAttribute("Fixture", true)
+	part("KilnThroat", Vector3.new(3.6, 2.4, 1.4), kiln * CFrame.new(0, 1.5, 5.5), Color3.fromRGB(30, 14, 16), { CanCollide = false })
+	for k = -1, 1 do part("KilnCoal", Vector3.new(0.9, 0.6, 0.7), kiln * CFrame.new(k * 1.1, 1.0 + (k % 2) * 0.07, 6.9) * CFrame.Angles(0, k * 0.5, 0.2 * k), Color3.fromRGB(255, 140, 50), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false }) end
+	local embers = Instance.new("ParticleEmitter")
+	embers.Rate, embers.Lifetime, embers.Speed, embers.SpreadAngle = 7, NumberRange.new(1.2, 2.2), NumberRange.new(2, 4), Vector2.new(25, 25)
+	embers.Size, embers.Color, embers.LightEmission = NumberSequence.new(0.22, 0), ColorSequence.new(Color3.fromRGB(255, 170, 70)), 0.8
+	embers.Acceleration, embers.EmissionDirection = Vector3.new(0, 3, 0), Enum.NormalId.Top
+	embers.Parent = mouth
 	part("KilnArch", Vector3.new(6.2, 1.2, 1), kiln * CFrame.new(0, 3.8, 6.4), CLAY_D, ROCK)
 	for _, x in { -2.7, 2.7 } do part("KilnArch", Vector3.new(0.9, 3.4, 1), kiln * CFrame.new(x, 1.5, 6.4), CLAY_D, ROCK) end -- sunk 0.2 into the floor: its foot was level with the kiln's
 	-- the stall: a counter, an awning on four posts, pots on the counter, and the Kiln Keeper (a mole potter) behind it
@@ -160,7 +207,7 @@ function M.build(caves)
 			shard(Vector3.new(0.7, h, 0.7), CFrame.new(math.sin(a) * 0.8, h * 0.45 * k, math.cos(a) * 0.3 - 0.4) * CFrame.Angles(0.35, 0, -a * 0.4), ore[2]:Lerp(Color3.new(0, 0, 0), rng:NextNumber(0, 0.35)), { CastShadow = false })
 		end
 		local l = Instance.new("PointLight")
-		l.Name, l.Color, l.Range, l.Brightness, l.Shadows = "Glint", ore[2], 7, 0.35, false
+		l.Name, l.Color, l.Range, l.Brightness, l.Shadows = "Glint", ore[2], 9, 0.6, false
 		l.Parent = core
 		dep.PrimaryPart = core
 		dep.Parent = depF
@@ -231,6 +278,20 @@ function M.build(caves)
 		for k = 0, 3 do part("PadSpot", Vector3.new(0.9, 0.3, 0.9), O * CFrame.new(pd[1] + (k % 2 * 2 - 1) * 1.3, pd[2] + 2.56, pd[3] + (k // 2 * 2 - 1) * 1.3), CREAM, DECO) end
 	end
 	deposit(O * CFrame.new(-30, 22, -51.4), 3)
+	-- the zip line (roadmap i25, traversal): from the pad ledge down across the hall to a post by the path. The server only
+	-- checks the prompt; Shared.ClayClient carries the rider (Fx "zip"). The rope's ends are its attributes ZipA and ZipB.
+	do
+		local a, b = (O * CFrame.new(-40, 28.6, -46)).Position, (O * CFrame.new(-30, 7.6, 10)).Position
+		part("ZipPost", Vector3.new(0.9, 7.2, 0.9), O * CFrame.new(-40, 25.6, -46.6), BARK, { Material = Enum.Material.Wood })
+		part("ZipPost", Vector3.new(0.9, 7.7, 0.9), O * CFrame.new(-30, 4.35, 10.6), BARK, { Material = Enum.Material.Wood })
+		part("ZipFoot", Vector3.new(2.2, 0.5, 2.2), O * CFrame.new(-30, 0.25, 10.6), CLAY_D, { Material = Enum.Material.Sandstone })
+		local rope = part("ZipRope", Vector3.new(0.24, 0.24, (b - a).Magnitude), CFrame.lookAt((a + b) / 2, b), CREAM:Lerp(BARK, 0.35), DECO)
+		rope:SetAttribute("ZipA", a)
+		rope:SetAttribute("ZipB", b)
+		local handle = part("ZipHandle", Vector3.new(1.5, 0.3, 0.3), CFrame.new(a + (b - a).Unit * 1.6 - Vector3.new(0, 0.9, 0)), AMBER, { CanCollide = false, Material = Enum.Material.Wood })
+		prompt(handle, "Ride", "Zip line", "ZipLine", 1, 10)
+		for k = 0, 2 do part("ZipFlag", Vector3.new(0.1, 0.9, 0.7), CFrame.new(a + (b - a) * (0.25 + k * 0.25) - Vector3.new(0, 0.6, 0)), k % 2 == 0 and AMBER or CREAM, DECO) end -- little flags along the rope: it reads from the floor
+	end
 	-- the lost critter (pt2_21): a small cage at the end of the pad ledge. Free it once, ever: it leaves an egg behind.
 	do
 		local cage = Instance.new("Model")
@@ -396,6 +457,7 @@ function M.init(ctx)
 				hrp.CFrame = goal + Vector3.new(0, 2, 0)
 			end
 		end)
+		if to == 2 and ctx.quest then ctx.quest(s, "clay") end
 		if to == 2 and not s.tips.clay then
 			s.tips.clay = true
 			if ctx.analytics then ctx.analytics.event(s, "ClayCavesReached") end
@@ -407,6 +469,13 @@ function M.init(ctx)
 	end
 	for _, d in clay:GetDescendants() do
 		if d:IsA("ProximityPrompt") and d:GetAttribute("ClayPortal") then d.Triggered:Connect(function(plr) travel(plr, 1, d) end) end
+		if d:IsA("ProximityPrompt") and d:GetAttribute("ZipLine") then
+			d.Triggered:Connect(function(plr) -- nothing is paid: the server checks the place and the client rides (its own character)
+				local s = ctx.data[plr]
+				if not s or s.mg or ctx.busy(plr) or not ctx.nearPrompt(plr, d) then return end
+				ctx.fx:FireClient(plr, "zip")
+			end)
+		end
 	end
 	if stairs then
 		local pr = stairs:FindFirstChildOfClass("ProximityPrompt")
@@ -425,6 +494,7 @@ function M.init(ctx)
 			s.gold += gold
 			if shard then s.shards = (s.shards or 0) + 1 end
 			if ctx.analytics then ctx.analytics.earn(s, "Coins", gold, s.gold, "ClayJar") end
+			if ctx.quest then ctx.quest(s, "jar") end
 			ctx.fx:FireClient(plr, "jar", i, gold, shard and s.shards or nil, K.jarEvery, geode and s.geodes or nil)
 			ctx.sendState(s)
 		end)
@@ -458,6 +528,7 @@ function M.init(ctx)
 				ctx.analytics.earn(s, "Coins", gold, s.gold, "EchoTap")
 				ctx.analytics.event(s, "EchoTap", g.taps)
 			end
+			if ctx.quest then ctx.quest(s, "echo") end
 			ctx.fx:FireClient(plr, "echoTap", drum, 0, gold)
 			ctx.sendState(s)
 		elseif g.taps >= K.echoTaps then
@@ -512,15 +583,20 @@ function M.init(ctx)
 			ctx.analytics.earn(s, "Gems", gems, s.gems, "Geode")
 			ctx.analytics.earn(s, "Coins", gold, s.gold, "Geode")
 		end
+		if ctx.quest then ctx.quest(s, "geode") end
 		ctx.fx:FireClient(plr, "geodeWin", gems, gold, s.geodes)
 		ctx.sendState(s)
 	end
 	for i, pr in fossils do
 		pr.Triggered:Connect(function(plr)
 			local s = ctx.data[plr]
-			if not s or s.mg or ctx.busy(plr) then return end
+			if not s or s.mg or ctx.busy(plr) or not ctx.nearPrompt(plr, pr) then return end -- the distance check covers the quest credit below too (Codex)
 			s.fossils = s.fossils or {}
-			if s.fossils[tostring(i)] then ctx.fx:FireClient(plr, "fossilHave", i) return end
+			if s.fossils[tostring(i)] then
+				if ctx.quest then ctx.quest(s, "fossil") end -- a fossil cleaned before the quest came up still counts: each pays once ever, so the chapter could not be finished (Codex)
+				ctx.fx:FireClient(plr, "fossilHave", i)
+				return
+			end
 			brushing[plr] = { i = i, t = os.clock() }
 			ctx.fx:FireClient(plr, "fossilBrush", i)
 		end)
@@ -543,6 +619,7 @@ function M.init(ctx)
 			ctx.analytics.earn(s, "Gems", K.fossilGems, s.gems, "Fossil")
 			ctx.analytics.event(s, "Fossil_" .. i)
 		end
+		if ctx.quest then ctx.quest(s, "fossil") end
 		ctx.fx:FireClient(plr, "fossilDone", i, K.fossilGems, n, #fossils)
 		ctx.sendState(s)
 	end)

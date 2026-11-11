@@ -28,12 +28,20 @@ function M.start(E)
 	badge.ZIndex = 3
 	local badgeT = text(badge, "0/10", UDim2.fromScale(0.82, 0.62), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), DEEP_GOLD, 700, false)
 	badgeT.ZIndex = 4
+	local nubs = {} -- ore bits poke out of a full bag (board 8)
+	for _, d in { { 0.3, 10, 1 }, { 0.52, -12, 3 }, { 0.73, 16, 2 } } do
+		local n = new("Frame", invBtn, { Name = "OreNub", Size = UDim2.fromScale(0.17, 0.17), Position = UDim2.fromScale(d[1], 0.07), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = d[2], BackgroundColor3 = C.LAYERS[1][4][d[3]][2], BorderSizePixel = 0, Visible = false, ZIndex = 3 })
+		new("UICorner", n, { CornerRadius = UDim.new(0.25, 0) })
+		new("UIStroke", n, { Color = Color3.fromRGB(62, 42, 86), Thickness = 1.5 })
+		table.insert(nubs, { f = n, x = d[1], r = d[2] })
+	end
 
 	-- a heavy bag shows on the bag button only (red count, a beat) and in the footsteps: the bottom ribbon and the centre
 	-- headline said the same thing three times (the user, 2026-11-10)
 	-- the panel
 	local inv = panel(gui, S(880, 480), S(640, 312), Vector2.new(0.5, 0.5), "panel")
 	fit(inv, 880, 480)
+	local invHome = inv.Position
 	inv.Name, inv.Visible = "Inventory", false
 	if inv:FindFirstChild("Skin") then inv.Skin.ImageColor3 = Color3.fromRGB(245, 239, 251) end -- frosted parchment, not clinical white (Gemini r3)
 	if E.addModal then E.addModal(inv) end -- audit 03: the scrim, the blur and the prompt pause follow this panel
@@ -143,9 +151,20 @@ function M.start(E)
 		local n = 0
 		if ui.tab == "bag" or ui.tab == "bank" then
 			local src = ui.tab == "bag" and st.bagOres or st.ores
+			ui.seen = ui.seen or { bag = {}, bank = {} }
+			local seen = ui.seen[ui.tab]
 			for _, k in sortedKeys(src) do
 				n += 1
 				slot(n, C.ORE_ICON[k], C.oreName(k), "x" .. commas(src[k]) .. (ui.tab == "bank" and ("  ·  " .. commas(src[k] * price(k)) .. "c") or ""), ui.tab == "bank" and k or nil)
+				if inv.Visible and src[k] > (seen[k] or 0) then -- more of this ore than the last look: its slot flashes the ore's colour
+					local L, i = k:match("^(%d+)%.(%d+)$")
+					local o = C.LAYERS[tonumber(L)] and C.LAYERS[tonumber(L)][4][tonumber(i)]
+					local fl = new("Frame", ui.slots[#ui.slots], { Size = UDim2.fromScale(1, 1), BackgroundColor3 = o and o[2] or MINT, BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 12 })
+					new("UICorner", fl, { CornerRadius = UDim.new(0.12, 0) })
+					tween(fl, 0.7, { BackgroundTransparency = 1 })
+					task.delay(0.75, function() fl:Destroy() end)
+				end
+				seen[k] = src[k]
 			end
 			emptyT.Text = ui.tab == "bag" and "Your bag is empty. Mine a glowing vein!" or "No banked ore yet. Bank at the camp fire."
 		else
@@ -170,8 +189,18 @@ function M.start(E)
 		ui.sell = sellMode == true
 		ui.tab = ui.sell and "bank" or ui.tab
 		ui.picks = {}
-		refresh()
-		if not inv.Visible then openPanel(inv) end
+		if not inv.Visible then
+			openPanel(inv)
+			if not ui.sell and invBtn.Visible then -- the panel grows out of the bag button (board 8)
+				local gs = gui.AbsoluteSize
+				local c = invBtn.AbsolutePosition + invBtn.AbsoluteSize / 2 - gui.AbsolutePosition
+				inv.Position = UDim2.fromScale(c.X / gs.X, c.Y / gs.Y)
+				tween(inv, 0.28, { Position = invHome }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+			else
+				inv.Position = invHome
+			end
+		end
+		refresh() -- after the panel shows: the new-ore flash only plays on a visible panel (Codex)
 		pop(invBtn, 0.85)
 		sfx("click", 1)
 	end
@@ -184,6 +213,8 @@ function M.start(E)
 			if ui.sell and k ~= "bank" then return end -- selling works on the ore bank
 			ui.tab = k
 			refresh()
+			pop(b, 1.12, 0.22) -- the picked tab lifts
+			sfx("tab", 1)
 		end)
 	end
 	invBtn.Activated:Connect(function() if inv.Visible then shut() else open(false) end end)
@@ -315,6 +346,10 @@ function M.start(E)
 	game:GetService("RunService").Heartbeat:Connect(function()
 		local now = os.clock()
 		badge.Rotation = ui.heavy and math.sin(now * 3) * 6 or 0
+		for i, n in nubs do
+			n.f.Visible = ui.full == true
+			n.f.Rotation = n.r + (ui.heavy and math.sin(now * 4 + i) * 8 or 0)
+		end
 		if ui.full and os.clock() >= (ui.beat or 0) then -- a full bag beats on its button, faster once it is over the limit
 			ui.beat = os.clock() + (ui.heavy and 0.9 or 1.8)
 			pop(invBtn, ui.heavy and 1.14 or 1.07, 0.4)

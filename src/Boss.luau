@@ -36,6 +36,7 @@ local function finish(plr, s, won)
 			ctx.analytics.event(s, def.event .. "Defeated")
 		end
 		ctx.fx:FireClient(plr, "bossWin", B.gold, B.gems, def.id)
+		if def.id == 1 and ctx.quest then ctx.quest(s, "warden") end
 	else
 		ctx.fx:FireClient(plr, "bossLose", def.id)
 	end

@@ -16,6 +16,8 @@ function M.start(E)
 	local GOLD, PINK, MINT = E.GOLD, E.PINK, E.MINT
 	local calm = false
 	pcall(function() calm = game:GetService("GuiService").ReducedMotionEnabled end)
+	local UIS = game:GetService("UserInputService")
+	local touch = UIS.TouchEnabled and not UIS.KeyboardEnabled -- a phone has no R key: name the flare button instead
 
 	local layer = new("Frame", top, { Name = "DeathScreen", Size = UDim2.fromScale(1, 1), BackgroundColor3 = DARK, BackgroundTransparency = 1, Visible = false, ZIndex = 60 })
 	local edges = {}
@@ -81,7 +83,10 @@ function M.start(E)
 		fill.Size = UDim2.fromScale(opts.drain and 1 or 0, 1)
 		tween(fill, opts.secs, { Size = UDim2.fromScale(opts.drain and 0 or 1, 1) }, Enum.EasingStyle.Linear)
 		tween(layer, 0.4, { BackgroundTransparency = opts.dark or 1 })
-		for _, f in edges do tween(f, 0.3, { BackgroundTransparency = opts.edges or 0 }) end
+		for _, f in edges do
+			f.BackgroundColor3 = opts.edgeColor or SOOT
+			tween(f, 0.3, { BackgroundTransparency = opts.edges or 0 })
+		end
 		return my
 	end
 	local function hide(my, after)
@@ -146,8 +151,8 @@ function M.start(E)
 		if kind == "grabbed" then
 			local secs = a or C.GLOOM.grab
 			soot(16)
-			local my = show({ title = "GRABBED!", titleColor = PINK, big = "FLARE NOW   [ R ]", bigColor = GOLD, note = "or a friend can flare you free", secs = secs, drain = true,
-				bar = PINK, edge = PINK, lit = true, y = 0.4, scale = 0.8, dark = 0.6, edges = 0.15, hud = false })
+			local my = show({ title = "GRABBED!", titleColor = PINK, big = touch and "TAP THE FLARE!" or "FLARE NOW   [ R ]", bigColor = GOLD, note = "or a friend can flare you free", secs = secs, drain = true,
+				bar = PINK, edge = PINK, lit = true, y = 0.3, scale = 0.8, dark = 0.7, edges = 0.15, hud = false })
 			task.spawn(function() -- the plate shivers while it holds you
 				while my == token and layer.Visible do
 					card.Rotation = calm and 0 or math.noise(os.clock() * 16, 4) * 5
@@ -158,8 +163,10 @@ function M.start(E)
 			task.delay(secs + 0.4, function() hide(my) end)
 		elseif kind == "caught" and (a or 0) >= 0 then
 			soot(20)
-			local my = show({ title = a > 0 and "A GLOOMLING GOT YOUR ORE" or "A GLOOMLING GOT YOU", titleColor = PINK, big = a > 0 and ("-" .. E.commas(a) .. " ORE") or "NOTHING LOST",
-				note = "Golden shield: RUN to the light!", secs = C.GLOOM.shield, drain = true, bar = GOLD, edge = GOLD, y = 0.4, scale = 0.8, dark = 0.72, edges = 0.3, hud = false })
+			local hr = E.hrp()
+			local who = (hr and (hr.Position - E.C.CAVE2_ORIGIN).Magnitude < 130) and "CLAYLING" or "GLOOMLING" -- the Clay Caves hall has claylings (server: Gloom kind 2)
+			local my = show({ title = a > 0 and ("A " .. who .. " GOT YOUR ORE") or ("A " .. who .. " GOT YOU"), titleColor = PINK, big = a > 0 and ("-" .. E.commas(a) .. " ORE") or "NOTHING LOST",
+				note = "Golden shield: RUN to the light!", secs = C.GLOOM.shield, drain = true, bar = GOLD, edge = GOLD, y = 0.3, scale = 0.8, dark = 0.85, edges = 0.74, edgeColor = GOLD, hud = false }) -- golden edges: the shield the card promises
 			task.delay(2.4, function() hide(my) end)
 		elseif kind == "rescued" then
 			local my = show({ title = b and "FLARED FREE!" or "RESCUED!", titleColor = MINT, big = "NOTHING LOST", bigColor = MINT, note = b and "" or ("by " .. tostring(a)), secs = 1.2,

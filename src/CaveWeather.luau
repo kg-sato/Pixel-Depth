@@ -91,7 +91,9 @@ function M.start(E)
 		else
 			lastLeft = nil
 		end
-		ribbon.Visible = left ~= nil and left > 0 and not (E.isBusy and E.isBusy())
+		local hud = E.gui:FindFirstChild("CaveHud")
+		local loot = hud and hud:FindFirstChild("ResultDim")
+		ribbon.Visible = left ~= nil and left > 0 and not (E.isBusy and E.isBusy()) and not (loot and loot.Visible) -- not under a minigame or its loot card
 	end)
 end
 

@@ -89,13 +89,13 @@ function M.start(E)
 		if flameOf ~= cave.tvm then -- a new torch model: find its flame blocks once, not every frame
 			flameOf, flames = cave.tvm, {}
 			for _, d in cave.tvm:GetDescendants() do
-				if d:IsA("BasePart") and d.Name:sub(1, 5) == "Flame" then flames[d] = d.Color end
+				if d:IsA("BasePart") and d.Name:sub(1, 5) == "Flame" then flames[d] = d.Color:Lerp(Color3.fromRGB(200, 90, 20), 0.52) end -- a deeper orange base: near the eye the pale flame was a white blob
 			end
 		end
 		for d in flames do -- the flame gutters: each flame block flickers on its own, harder when low
 			do
 				local n = math.noise(now * 7, d.Size.X * 13.7, d.Size.Y * 5.1)
-				d.Color = flames[d]:Lerp(n > 0 and Color3.new(1, 1, 0.8) or Color3.new(0.4, 0.1, 0), math.abs(n) * (0.35 + low * 0.3))
+				d.Color = flames[d]:Lerp(n > 0 and Color3.new(1, 0.7, 0.3) or Color3.new(0.4, 0.1, 0), math.abs(n) * (0.35 + low * 0.3))
 			end
 		end
 		return CFrame.new(-1.3 - sway.X * 0.7 + shiver + thrust * 0.5, -1.1 + bob - sway.Y * 0.7 + landY + lift + thrust * 0.45, -2.4 - thrust * 1.1)
