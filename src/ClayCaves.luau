@@ -16,7 +16,7 @@ local K = C.CLAY
 local CLAY, CLAY_D, CLAY_L = Color3.fromRGB(150, 78, 58), Color3.fromRGB(104, 52, 46), Color3.fromRGB(196, 112, 78)
 local PLUM, CREAM, BARK, AMBER = Color3.fromRGB(58, 36, 72), Color3.fromRGB(240, 222, 190), Color3.fromRGB(92, 62, 48), Color3.fromRGB(255, 176, 84)
 local DECO = { CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false }
-local jars, fossils = {}, {}
+local jars, fossils, echoes = {}, {}, {}
 
 function M.build(caves)
 	local O = CFrame.new(C.CAVE2_ORIGIN)
@@ -104,7 +104,7 @@ function M.build(caves)
 	-- the stall: a counter, an awning on four posts, pots on the counter, and the Kiln Keeper (a mole potter) behind it
 	local stall = O * CFrame.new(-10, 0, -10) * CFrame.Angles(0, 0.5, 0)
 	part("Counter", Vector3.new(8, 2.6, 2.4), stall * CFrame.new(0, 2.05, 0), BARK, { Material = Enum.Material.Wood })
-	part("CounterTop", Vector3.new(8.6, 0.4, 3), stall * CFrame.new(0, 3.55, 0), CREAM)
+	part("CounterTop", Vector3.new(8.6, 0.4, 3), stall * CFrame.new(0, 3.55, 0), Color3.fromRGB(176, 150, 124), { Material = Enum.Material.Sandstone })
 	for _, x in { -4, 4 } do for _, z in { -2.6, 1.4 } do part("Post", Vector3.new(0.5, 8, 0.5), stall * CFrame.new(x, 4.75, z), BARK, { Material = Enum.Material.Wood }) end end
 	for k = 0, 4 do part("Awning", Vector3.new(1.84, 0.4, 5.4), stall * CFrame.new(-3.68 + k * 1.84, 9 + (k % 2) * 0.06, -0.6) * CFrame.Angles(0.14, 0, 0), k % 2 == 0 and CLAY_L or CREAM, DECO) end
 	for i, x in { -2.6, -0.6, 1.6 } do
@@ -121,7 +121,14 @@ function M.build(caves)
 	for _, x in { -1.9, 1.9 } do part("KeeperPaw", Vector3.new(0.9, 0.9, 1.1), keeper * CFrame.new(x, 3.2, 0.9), SNOUT, DECO) end
 	part("KeeperHat", Vector3.new(3, 0.5, 2.7), keeper * CFrame.new(0, 6.6, 0.1), CLAY_L, DECO)
 	prompt(body, "Talk", "Kiln Keeper", "Keeper", true, 12)
-	lamp(Vector3.new(-2, 20, 4), 1.1)
+	-- the Keeper is also the caves' trader (roadmap pt2_21, the user 2026-11-09: rooms where eggs can be bought, some free):
+	-- an egg in a clay pot on the counter, for coins (ClayCaves.init)
+	local pot = part("EggPot", Vector3.new(1.5, 1.1, 1.5), stall * CFrame.new(3.2, 4.3, 0.2), CLAY_D, { CanCollide = false })
+	part("EggPotEgg", Vector3.new(1, 1.3, 1), stall * CFrame.new(3.2, 5.2, 0.2), CREAM, DECO)
+	part("EggPotSpot", Vector3.new(0.5, 0.3, 0.2), stall * CFrame.new(3.2, 5.3, 0.72), AMBER, DECO)
+	local buy = prompt(pot, "Buy egg", K.eggCost .. " coins", "ClayEgg", true, 9)
+	buy.KeyboardKeyCode = Enum.KeyCode.E
+	lamp(Vector3.new(-2, 22, 6), 0.7)
 	for _, x in { -42, -12, 18 } do for _, z in { -34, 34 } do lamp(Vector3.new(x, 26, z), 1.0) end end -- two rows of lamps down the hall: without them it was a dark red box
 
 	-- two mesas (east) with rare ore on top, and a steam vent in front of each
@@ -196,6 +203,35 @@ function M.build(caves)
 		for k = 0, 3 do part("PadSpot", Vector3.new(0.9, 0.3, 0.9), O * CFrame.new(pd[1] + (k % 2 * 2 - 1) * 1.3, pd[2] + 2.56, pd[3] + (k // 2 * 2 - 1) * 1.3), CREAM, DECO) end
 	end
 	deposit(O * CFrame.new(-30, 22, -51.4), 3)
+	-- the lost critter (pt2_21): a small cage at the end of the pad ledge. Free it once, ever: it leaves an egg behind.
+	do
+		local cage = Instance.new("Model")
+		cage.Name = "CritterCage"
+		local cf = O * CFrame.new(-24, 22, -48)
+		local function cp(name, size, c, color, props)
+			local p = part(name, size, cf * c, color, props)
+			p.Parent = cage
+			return p
+		end
+		local floor = cp("CageFloor", Vector3.new(3.2, 0.3, 3.2), CFrame.new(0, 0.15, 0), BARK)
+		cp("CageTop", Vector3.new(3.2, 0.3, 3.2), CFrame.new(0, 3.05, 0), BARK)
+		for k = 0, 7 do
+			local a = k / 8 * math.pi * 2
+			cp("CageBar", Vector3.new(0.2, 2.6, 0.2), CFrame.new(math.cos(a) * 1.4, 1.6, math.sin(a) * 1.4), PLUM, { CanCollide = false })
+		end
+		local PINK = Color3.fromRGB(255, 170, 190)
+		cp("Critter", Vector3.new(1.2, 1.1, 1.2), CFrame.new(0, 0.85, 0), PINK, DECO)
+		cp("Critter", Vector3.new(0.34, 0.5, 0.3), CFrame.new(-0.36, 1.6, 0), PINK, DECO)
+		cp("Critter", Vector3.new(0.34, 0.5, 0.3), CFrame.new(0.36, 1.6, 0), PINK, DECO)
+		for _, x in { -0.28, 0.28 } do cp("Critter", Vector3.new(0.2, 0.24, 0.08), CFrame.new(x, 0.95, 0.62), Color3.fromRGB(26, 18, 34), DECO) end
+		cage.PrimaryPart = floor
+		cage.Parent = folder
+		local hold = Instance.new("Attachment")
+		hold.Position = Vector3.new(0, 2.2, 0)
+		hold.Parent = floor
+		local pr = prompt(floor, "Free", "Lost critter", "Critter", 1, 8)
+		pr.Parent = hold
+	end
 	deposit(O * CFrame.new(-40, 22, -51.4), 2)
 	-- pale shafts of light through cracks in the roof (the directive's root god-rays): see-through slanted beams, no collision
 	for i, r in { { -30, 10 }, { 8, -30 }, { 30, 28 }, { -8, 40 } } do
@@ -277,6 +313,18 @@ function M.build(caves)
 		slab:SetAttribute("Fossil", i)
 		fossils[i] = prompt(slab, "Brush", "Old fossil", "Fossil", i, 9)
 	end
+	-- echo walls (roadmap i31, the Echo Tap minigame): a ribbed panel of five clay drums on the wall. One is hollow: tap them
+	-- and listen (and watch the ring): the nearer to the hollow one, the deeper the note and the wider the ring.
+	for i, e in { { 2, 53.4, math.pi }, { -73.4, -34, math.pi / 2 }, { 46, 53.4, math.pi } } do
+		local cf = O * CFrame.new(e[1], 5, e[2]) * CFrame.Angles(0, e[3], 0)
+		local back = part("EchoWall", Vector3.new(11, 4.4, 0.8), cf, CLAY_D, ROCK)
+		for k = -2, 2 do
+			part("EchoDrum", Vector3.new(1.7, 3.4, 0.5), cf * CFrame.new(k * 2.05, 0, 0.56), k % 2 == 0 and CLAY_L or CREAM, { CanCollide = false, CastShadow = false })
+			part("EchoBand", Vector3.new(1.84, 0.3, 0.6), cf * CFrame.new(k * 2.05, 1.1, 0.56), PLUM, DECO)
+		end
+		back:SetAttribute("Echo", i)
+		echoes[i] = prompt(back, "Tap", "Echo wall", "Echo", i, 10)
+	end
 	return folder
 end
 
@@ -287,12 +335,15 @@ function M.init(ctx)
 	local remote = ctx.remote("Clay")
 	local landing = clay:FindFirstChild("ClayLanding")
 	local stairs = caves:FindFirstChild("ClayStairs", true) -- in Camp 1's Deep Gate alcove (CaveBuilder)
-	local jarAt, brushing = {}, {} -- [plr] = { [jar] = next time }, [plr] = { i, started }
-	Players.PlayerRemoving:Connect(function(plr) jarAt[plr], brushing[plr] = nil, nil end)
+	local brushing = {} -- [plr] = { i, started }; the jars' cooldowns are saved (ctx.coolSet)
+	Players.PlayerRemoving:Connect(function(plr) brushing[plr] = nil end)
 
-	local function travel(plr, to)
+	local function travel(plr, to, from) -- from: the prompt used (nil for the Studio hook)
 		local s, hrp = ctx.data[plr], ctx.hrpOf(plr)
-		if not s or not hrp or ctx.busy(plr) or s.mg then return end
+		if not s or not hrp or ctx.busy(plr) or s.mg or not plr:GetAttribute("InCave") then return end
+		if from and not ctx.nearPrompt(plr, from) then return end
+		if os.clock() < (s.travelCool or 0) then return end
+		s.travelCool = os.clock() + 2
 		if to == 2 and not s.tips.gate1 then return end -- the Root Warden still guards the gate
 		local goal = to == 2 and landing.CFrame or (stairs and stairs.CFrame * CFrame.new(0, 1, -4))
 		if not goal then return end
@@ -313,18 +364,17 @@ function M.init(ctx)
 		return hrp ~= nil and (hrp.Position - p.Position).Magnitude <= d
 	end
 	for _, d in clay:GetDescendants() do
-		if d:IsA("ProximityPrompt") and d:GetAttribute("ClayPortal") then d.Triggered:Connect(function(plr) travel(plr, 1) end) end
+		if d:IsA("ProximityPrompt") and d:GetAttribute("ClayPortal") then d.Triggered:Connect(function(plr) travel(plr, 1, d) end) end
 	end
 	if stairs then
 		local pr = stairs:FindFirstChildOfClass("ProximityPrompt")
-		if pr then pr.Triggered:Connect(function(plr) travel(plr, 2) end) end
+		if pr then pr.Triggered:Connect(function(plr) travel(plr, 2, pr) end) end
 	end
 	for i, pr in jars do
 		pr.Triggered:Connect(function(plr)
 			local s = ctx.data[plr]
-			jarAt[plr] = jarAt[plr] or {}
-			if not s or os.clock() < (jarAt[plr][i] or 0) or not near(plr, pr.Parent, 14) then return end
-			jarAt[plr][i] = os.clock() + K.jarEvery
+			if not s or ctx.coolLeft(s, "jar" .. i) > 0 or not near(plr, pr.Parent, 14) then return end
+			ctx.coolSet(s, "jar" .. i, K.jarEvery) -- saved: a rejoin does not refill the jar
 			local rng = Random.new()
 			local gold = rng:NextInteger(K.jarGold[1], K.jarGold[2])
 			local shard = rng:NextNumber() < K.shardOdds
@@ -334,6 +384,44 @@ function M.init(ctx)
 			ctx.fx:FireClient(plr, "jar", i, gold, shard and s.shards or nil, K.jarEvery)
 			ctx.sendState(s)
 		end)
+	end
+	-- Echo Tap: the server hides the hollow drum (1..5) and answers every tap with how far off it was; K.echoTaps taps at most
+	local echo = {} -- [plr] = { i, target, taps }; the walls' cooldowns are saved (ctx.coolSet)
+	Players.PlayerRemoving:Connect(function(plr) echo[plr] = nil end)
+	for i, pr in echoes do
+		pr.Triggered:Connect(function(plr)
+			local s = ctx.data[plr]
+			if not s or s.mg or ctx.busy(plr) or not near(plr, pr.Parent, 18) then return end
+			if echo[plr] and echo[plr].i == i then return end -- a game on this wall is already running: no reroll of the hollow drum
+			local wait = ctx.coolLeft(s, "echo" .. i)
+			if wait > 0 then ctx.fx:FireClient(plr, "echoEmpty", math.ceil(wait / 60)) return end
+			echo[plr] = { i = i, target = math.random(1, 5), taps = 0 }
+			ctx.fx:FireClient(plr, "echoStart", i, K.echoTaps)
+		end)
+	end
+	local function echoTap(plr, i, drum)
+		local s, g = ctx.data[plr], echo[plr]
+		if not s or not g or g.i ~= i or type(drum) ~= "number" or drum < 1 or drum > 5 or drum % 1 ~= 0 or not near(plr, echoes[i].Parent, 18) then return end
+		g.taps += 1
+		local off = math.abs(drum - g.target)
+		if off == 0 then
+			echo[plr] = nil
+			ctx.coolSet(s, "echo" .. i, K.echoEvery)
+			local gold = K.echoGold[1] + (K.echoTaps - g.taps) * K.echoGold[2] -- fewer taps, more coins
+			s.gold += gold
+			if ctx.analytics then
+				ctx.analytics.earn(s, "Coins", gold, s.gold, "EchoTap")
+				ctx.analytics.event(s, "EchoTap", g.taps)
+			end
+			ctx.fx:FireClient(plr, "echoTap", drum, 0, gold)
+			ctx.sendState(s)
+		elseif g.taps >= K.echoTaps then
+			echo[plr] = nil
+			ctx.coolSet(s, "echo" .. i, 30) -- a miss: try again in half a minute
+			ctx.fx:FireClient(plr, "echoTap", drum, off, -1, g.target)
+		else
+			ctx.fx:FireClient(plr, "echoTap", drum, off)
+		end
 	end
 	for i, pr in fossils do
 		pr.Triggered:Connect(function(plr)
@@ -345,7 +433,8 @@ function M.init(ctx)
 			ctx.fx:FireClient(plr, "fossilBrush", i)
 		end)
 	end
-	remote.OnServerEvent:Connect(function(plr, what, i)
+	remote.OnServerEvent:Connect(function(plr, what, i, ...)
+		if what == "echo" then return echoTap(plr, i, ...) end
 		local s, b = ctx.data[plr], brushing[plr]
 		if what ~= "fossil" or not s or not b or b.i ~= i or not fossils[i] then return end
 		brushing[plr] = nil
@@ -364,6 +453,33 @@ function M.init(ctx)
 		ctx.fx:FireClient(plr, "fossilDone", i, K.fossilGems, n, #fossils)
 		ctx.sendState(s)
 	end)
+	for _, d in clay:GetDescendants() do
+		if d:IsA("ProximityPrompt") and d:GetAttribute("ClayEgg") then
+			d.Triggered:Connect(function(plr) -- the Keeper's egg: coins for one egg (hatch it at the incubator in town)
+				local s = ctx.data[plr]
+				if not s or not near(plr, d.Parent, 16) then return end
+				if s.gold < K.eggCost then ctx.fx:FireClient(plr, "clayEgg", false, K.eggCost - s.gold) return end
+				s.gold -= K.eggCost
+				s.eggs += 1
+				if ctx.analytics then ctx.analytics.spend(s, "Coins", K.eggCost, s.gold, "KeeperEgg") end
+				ctx.fx:FireClient(plr, "egg", s.eggs)
+				ctx.fx:FireClient(plr, "clayEgg", true, K.eggCost)
+				ctx.sendState(s)
+			end)
+		elseif d:IsA("ProximityPrompt") and d:GetAttribute("Critter") then
+			d.Triggered:Connect(function(plr) -- the lost critter: free it once, ever; it leaves an egg
+				local s = ctx.data[plr]
+				if not s or not ctx.nearPrompt(plr, d, 16) then return end
+				if s.tips.critter1 then ctx.fx:FireClient(plr, "critter", false) return end
+				s.tips.critter1 = true
+				s.eggs += 1
+				if ctx.analytics then ctx.analytics.event(s, "LostCritterFreed") end
+				ctx.fx:FireClient(plr, "egg", s.eggs)
+				ctx.fx:FireClient(plr, "critter", true)
+				ctx.sendState(s)
+			end)
+		end
+	end
 	if game:GetService("RunService"):IsStudio() then -- Studio test hook: player attribute DevClay = 2 (go down, gate or not) or 1 (back)
 		local function hook(plr)
 			plr:GetAttributeChangedSignal("DevClay"):Connect(function()

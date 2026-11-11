@@ -217,6 +217,45 @@ function M.start(E)
 	end)
 	E.vmHook.fossilStroke = function(x, y) if job then stroke(board.AbsolutePosition + board.AbsoluteSize * Vector2.new(x, y)) end end -- for the Play test
 
+	-- Echo Tap: five drums in a row. Tap one: the server says how far the hollow drum is. Near = a deep note and a wide ring.
+	local ewin = E.panel(E.gui, E.S(600, 300), E.S(640, 300), Vector2.new(0.5, 0.5), "panel")
+	E.fit(ewin, 600, 300)
+	ewin.Name, ewin.Visible, ewin.ZIndex = "EchoPanel", false, 30
+	if E.addModal then E.addModal(ewin) end
+	E.ribbonTitle(ewin, "ECHO TAP", "ribbonLilac", 0.5)
+	local eclose = E.closeButton(ewin, "EchoClose")
+	pcall(function() eclose.Modal = true end)
+	local ehint = text(ewin, "", UDim2.fromScale(0.88, 0.1), UDim2.fromScale(0.5, 0.26), Vector2.new(0.5, 0.5), E.INK, 700, false)
+	local drums, egame = {}, nil -- egame = { i, left, busy }
+	for k = 1, 5 do
+		local b = new("TextButton", ewin, { Text = "", AutoButtonColor = false, Size = UDim2.fromScale(0.14, 0.46), Position = UDim2.fromScale(0.5 + (k - 3) * 0.17, 0.62), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = k % 2 == 0 and CREAM or CLAY_L, BorderSizePixel = 0, ZIndex = 31 })
+		new("UICorner", b, { CornerRadius = UDim.new(0.2, 0) })
+		new("UIStroke", b, { Color = Color3.fromRGB(104, 52, 46), Thickness = 3 })
+		local ring = new("Frame", b, { Size = UDim2.fromScale(0.2, 0.2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 32 })
+		new("UIAspectRatioConstraint", ring, { AspectRatio = 1 })
+		new("UICorner", ring, { CornerRadius = UDim.new(1, 0) })
+		local rs = new("UIStroke", ring, { Color = AMBER, Thickness = 4, Transparency = 1 })
+		drums[k] = { b = b, ring = ring, stroke = rs }
+		b.Activated:Connect(function()
+			if not egame or egame.busy or not remote then return end
+			egame.busy = true
+			remote:FireServer("echo", egame.i, k)
+		end)
+	end
+	eclose.Activated:Connect(function()
+		egame = nil
+		E.closePanel(ewin)
+	end)
+	local function ringOut(k, off, color) -- the ring grows wider the nearer the hollow drum is
+		local d = drums[k]
+		d.stroke.Color, d.stroke.Transparency = color or AMBER, 0
+		d.ring.Size = UDim2.fromScale(0.2, 0.2)
+		local wide = 2.6 - math.min(off, 4) * 0.5
+		tween(d.ring, 0.5, { Size = UDim2.fromScale(wide, wide) })
+		tween(d.stroke, 0.5, { Transparency = 1 })
+		E.pop(d.b, 0.9, 0.25)
+	end
+
 	local LINES = {
 		"Kiln Keeper: \"Mind the vents. They throw you to the roof.\"", "Kiln Keeper: \"Old jars hide older things. Smash a few.\"",
 		"Kiln Keeper: \"Brush the pale slabs gently. Fossils crack.\"", "Kiln Keeper: \"The kiln stays lit. You are safe in my ring.\"",
@@ -230,6 +269,16 @@ function M.start(E)
 		end
 	end)
 
+	E.R.State.OnClientEvent:Connect(function(st) -- a player who freed the critter on an earlier visit finds the cage open and empty
+		local f = clay()
+		local cage = f and f:FindFirstChild("CritterCage")
+		if not cage or cage:GetAttribute("Open") or not (st and st.tips and st.tips.critter1) then return end
+		cage:SetAttribute("Open", true)
+		for _, p in cage:GetChildren() do if p.Name == "CageBar" or p.Name == "Critter" then p.Transparency = 1 end end
+		local pr = cage:FindFirstChildWhichIsA("ProximityPrompt", true)
+		if pr then pr.Enabled = false end
+	end)
+	E.vmHook.echoTap = function(k) if drums[k] and egame and not egame.busy and remote then egame.busy = true remote:FireServer("echo", egame.i, k) end end
 	E.R.Fx.OnClientEvent:Connect(function(kind, a, b, c, d)
 		if kind == "clayTravel" then
 			fade.Visible = true
@@ -264,11 +313,76 @@ function M.start(E)
 				local vp = workspace.CurrentCamera.ViewportSize
 				E.fly("coin", UDim2.fromOffset(vp.X / 2, vp.Y * 0.55), E.goldPill, 6, 0.05)
 			end
+		elseif kind == "echoStart" then
+			egame = { i = a, left = b }
+			ehint.Text = "One drum is hollow. Deep note, wide ring = close.  " .. b .. " taps"
+			E.openPanel(ewin)
+		elseif kind == "echoEmpty" then
+			toast("This wall is quiet for " .. a .. " more min.", CREAM, false)
+		elseif kind == "echoTap" then -- a = the drum, b = how far off, c = coins on a find (-1 = out of taps), d = where it was
+			if not egame then return end
+			egame.busy = false
+			if b == 0 then
+				sfx("upgrade", 0.6)
+				sfx("claim", 1)
+				ringOut(a, 0, E.MINT)
+				ehint.Text = "HOLLOW!  +" .. c .. " COINS"
+				local done = egame
+				egame = nil
+				task.delay(1.1, function()
+					E.closePanel(ewin)
+					toast("ECHO TAP  +" .. c .. " COINS", E.GOLD, true)
+					if E.fly then
+						local vp = workspace.CurrentCamera.ViewportSize
+						E.fly("coin", UDim2.fromOffset(vp.X / 2, vp.Y / 2), E.goldPill, 8, 0.05)
+					end
+				end)
+			else
+				sfx("land", 1.5 - (4 - math.min(b, 4)) * 0.22) -- nearer = a deeper thud
+				ringOut(a, b)
+				egame.left -= 1
+				if c == -1 then
+					ringOut(d, 0, E.PINK)
+					ehint.Text = "Out of taps. It was this one."
+					egame = nil
+					task.delay(1.4, function() E.closePanel(ewin) end)
+				else
+					ehint.Text = (b == 1 and "Very close!  " or (b == 2 and "Close.  " or "Far.  ")) .. egame.left .. " taps left"
+				end
+			end
 		elseif kind == "fossilBrush" then
 			for _, tl in tiles do tl.hp, tl.f.BackgroundTransparency = 3, 0 end
 			job = { i = a, cracks = 0, acc = 0 }
 			show()
 			E.openPanel(win)
+		elseif kind == "clayEgg" then
+			if a then
+				sfx("coin", 0.9)
+				toast("KILN EGG BOUGHT!  HATCH IT IN TOWN", CREAM, true)
+				if E.vmHook.emote then E.vmHook.emote("cheer") end
+			else
+				sfx("error", 1)
+				toast("You need " .. b .. " more coins for the egg.", E.PINK, false)
+			end
+		elseif kind == "critter" then
+			local f = clay()
+			local cage = f and f:FindFirstChild("CritterCage")
+			if a and cage then -- the bars drop away, the critter hops out and is gone in a puff
+				sfx("claim", 1.3)
+				for _, p in cage:GetChildren() do
+					if p.Name == "CageBar" then tween(p, 0.4, { Transparency = 1 }) end
+					if p.Name == "Critter" then
+						tween(p, 0.5, { CFrame = p.CFrame + Vector3.new(0, 2.5, 3) }, Enum.EasingStyle.Back)
+						task.delay(0.55, function() p.Transparency = 1 end)
+					end
+				end
+				task.delay(0.55, function() if E.burst and cage.PrimaryPart then E.burst(cage.PrimaryPart.Position + Vector3.new(0, 3, 3), Vector3.yAxis, Color3.fromRGB(255, 170, 190), 24) end end)
+				local pr = cage:FindFirstChildWhichIsA("ProximityPrompt", true)
+				if pr then pr.Enabled = false end
+				toast("THE CRITTER IS FREE!  IT LEFT YOU AN EGG", CREAM, true)
+			else
+				toast("The cage is empty. It got away safe.", CREAM, false)
+			end
 		elseif kind == "secret" then
 			if a > 0 then
 				sfx("claim", 1.2)

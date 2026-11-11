@@ -69,6 +69,17 @@ if C.CAVES_ON then
 	local caves = CaveBuilder.build(workspace, C.CAVE_ORIGIN, os.time() // 3600)
 	caveLanding = caves:FindFirstChild("LiftLanding", true)
 	require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).build(caves) -- Camp 2's hall; its ore joins Caves.Deposits
+	local ids = { CaveNest = 0, CaveShrine = 0 } -- a number per nest and shrine prompt, for the saved cooldown keys
+	for _, d in caves:GetDescendants() do
+		if d:IsA("ProximityPrompt") then
+			for kind in ids do
+				if d:GetAttribute(kind) then
+					ids[kind] += 1
+					d:SetAttribute("CoolId", ids[kind])
+				end
+			end
+		end
+	end
 end
 
 local plots = Instance.new("Folder")
@@ -460,6 +471,19 @@ local function target(s) -- tutorial target cell {r, c, d}
 	return t or nil
 end
 
+-- Reward cooldowns that must survive a rejoin (cave nests, shrine chests, clay jars, echo walls): s.cool[key] = the os.time() it
+-- ends, saved with the profile (Codex review, 2026-11-10: they lived in memory, so leaving and rejoining paid again).
+local function coolLeft(s, key) return math.max(0, ((s.cool and s.cool[key]) or 0) - os.time()) end
+local function coolSet(s, key, secs)
+	s.cool = s.cool or {}
+	s.cool[key] = os.time() + secs
+end
+local function nearPrompt(plr, prompt, reach) -- the server's own distance check: a client can fire a prompt from anywhere
+	local hrp = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+	local par = prompt.Parent
+	local at = par and (par:IsA("Attachment") and par.WorldPosition or (par:IsA("BasePart") and par.Position))
+	return hrp ~= nil and at ~= nil and (hrp.Position - at).Magnitude <= (reach or prompt.MaxActivationDistance + 8)
+end
 local function save(s) -- mirror the saved fields into the ProfileStore session (it autosaves and saves on leave)
 	local d = s.profile and s.profile.Data
 	if not d then return end
@@ -468,6 +492,9 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
 	d.wear, d.quests, d.lanterns = s.wear, s.quests, s.lanterns
 	d.shards, d.fossils = s.shards or 0, s.fossils or {}
+	d.cool = {}
+	for k, v in s.cool or {} do if v > os.time() then d.cool[k] = v end end -- only cooldowns still running
+	if s.altarOwed then d.gold += s.altarOwed end -- left between paying the altar and its hatch: the coins come back
 	local names = {}
 	for i, p in s.pets do names[i] = p.name end
 	d.pets = names
@@ -840,13 +867,13 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	if not prompt:GetAttribute("CaveNest") then return end
 	local s = data[plr]
 	local egg = prompt.Parent
-	if not s or not plr:GetAttribute("InCave") then return end
-	s.nestsOpen = s.nestsOpen or {}
-	if (s.nestsOpen[egg] or 0) > os.clock() then
-		FxR:FireClient(plr, "nestEmpty", math.ceil((s.nestsOpen[egg] - os.clock()) / 60))
+	if not s or not plr:GetAttribute("InCave") or not nearPrompt(plr, prompt) then return end
+	local key = "nest" .. tostring(prompt:GetAttribute("CoolId"))
+	if coolLeft(s, key) > 0 then
+		FxR:FireClient(plr, "nestEmpty", math.ceil(coolLeft(s, key) / 60))
 		return
 	end
-	s.nestsOpen[egg] = os.clock() + C.DEPOSIT.nests.regrow
+	coolSet(s, key, C.DEPOSIT.nests.regrow)
 	s.eggs += 1
 	A.event(s, "NestEgg")
 	FxR:FireClient(plr, "egg", s.eggs)
@@ -856,7 +883,7 @@ end)
 game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- the Egg Altar: pay coins, roll an egg, it hatches
 	if not prompt:GetAttribute("EggAltar") then return end
 	local s = data[plr]
-	if not s or not plr:GetAttribute("InCave") or os.clock() < (s.altarCool or 0) then return end
+	if not s or not plr:GetAttribute("InCave") or os.clock() < (s.altarCool or 0) or not nearPrompt(plr, prompt) then return end
 	local AL = C.ALTAR
 	if s.gold < AL.cost then
 		FxR:FireClient(plr, "altarPoor", AL.cost - s.gold)
@@ -864,6 +891,7 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	end
 	s.altarCool = os.clock() + 4
 	s.gold -= AL.cost
+	s.altarOwed = AL.cost
 	A.spend(s, "Coins", AL.cost, s.gold, "EggAltar")
 	s.altarPity = (s.altarPity or 0) + 1
 	local pick = #AL.eggs
@@ -880,6 +908,7 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	sendState(s)
 	task.delay(1.6, function()
 		if data[plr] == s then
+			s.altarOwed = nil
 			hatchFrom(s, AL.eggs[pick][3])
 			sendState(s)
 		end
@@ -970,14 +999,14 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	if not prompt:GetAttribute("CaveShrine") then return end
 	local s = data[plr]
 	local chest = prompt.Parent
-	if not s or not plr:GetAttribute("InCave") then return end
-	s.shrinesOpen = s.shrinesOpen or {}
-	if (s.shrinesOpen[chest] or 0) > os.clock() then
-		FxR:FireClient(plr, "shrineEmpty", math.ceil((s.shrinesOpen[chest] - os.clock()) / 60))
+	if not s or not plr:GetAttribute("InCave") or not nearPrompt(plr, prompt) then return end
+	local key = "shrine" .. tostring(prompt:GetAttribute("CoolId"))
+	if coolLeft(s, key) > 0 then
+		FxR:FireClient(plr, "shrineEmpty", math.ceil(coolLeft(s, key) / 60))
 		return
 	end
 	local SH = C.DEPOSIT.shrines
-	s.shrinesOpen[chest] = os.clock() + SH.regrow
+	coolSet(s, key, SH.regrow)
 	local L = chest:GetAttribute("Layer") or 1
 	local gold = SH.gold * 3 ^ (L - 1)
 	s.gold += gold
@@ -1012,13 +1041,13 @@ local Gloom = require(game:GetService("ServerScriptService"):WaitForChild("Gloom
 Shop.init({ data = data, fx = FxR, sendState = sendState })
 require(game:GetService("ServerScriptService"):WaitForChild("Boss")).init({ data = data, fx = FxR, sendState = sendState, hrpOf = hrpOf, analytics = A, strikes = C.DEPOSIT.strikes,
 	hurt = function(plr, n) return Gloom.hurt(plr, n) end, heal = function(plr) Gloom.heal(plr) end,
-	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
+	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt })
 local CaveEvents = require(game:GetService("ServerScriptService"):WaitForChild("CaveEvents")) -- Roots Stirring and spore storms
 CaveEvents.init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, landing = function() return caveLanding end,
 	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end,
 	finish = function(s) if s.mg then s.mg.deadline = 0 end end }) -- the main loop pays an expired minigame on its next pass
 require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, sendState = sendState, remote = remote,
-	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
+	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt })
 Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, analytics = A, perks = function(s) return PetJobs.perks(crewOf(s)) end,
 	-- gloomlings leave you alone on a ride, in an ore minigame (hands and eyes are busy) and for 2.5 s after it (Gemini loop review, 2026-11-10)
 	busy = function(plr) local s = data[plr] return riding[plr] ~= nil or escaping[plr] ~= nil or (s ~= nil and (s.mg ~= nil or os.clock() < (s.mgSafe or 0))) end })
@@ -1616,7 +1645,7 @@ for _, d in hub:GetDescendants() do
 		local kind = d.Parent:GetAttribute("Station")
 		d.Triggered:Connect(function(plr)
 			local s = data[plr]
-			if s and STATION[kind] then STATION[kind](s) end
+			if s and STATION[kind] and not plr:GetAttribute("InCave") and nearPrompt(plr, d) then STATION[kind](s) end
 		end)
 	end
 end
@@ -1672,6 +1701,8 @@ local function onJoin(plr)
 	s.quests = Quests.clean(d.quests, Quests.day())
 	s.lanterns = {} -- lost lanterns found: { ["1"] = true, ... }
 	for k = 1, C.LANTERN.count do if type(d.lanterns) == "table" and d.lanterns[tostring(k)] == true then s.lanterns[tostring(k)] = true end end
+	s.cool = {}
+	for k, v in type(d.cool) == "table" and d.cool or {} do if type(k) == "string" and type(v) == "number" and v > os.time() then s.cool[k] = v end end
 	s.shards = type(d.shards) == "number" and d.shards or 0 -- Clay Caves: relic shards from jars, fossils brushed clean ({ ["1"] = true, ... })
 	s.fossils = {}
 	for k = 1, 3 do if type(d.fossils) == "table" and d.fossils[tostring(k)] == true then s.fossils[tostring(k)] = true end end

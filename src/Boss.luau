@@ -121,10 +121,12 @@ end
 
 function M.init(c)
 	ctx = c
-	local function challenge(plr, id)
+	local function challenge(plr, id, hook) -- hook: the Studio test hook may start it from anywhere
 		local def = DEFS[id] or DEFS[1]
 		local s = ctx.data[plr]
 		if not s or s.mg or s.boss or not plr:GetAttribute("InCave") or ctx.busy(plr) or not modelOf(def) then return end
+		local hrp, w = ctx.hrpOf(plr), modelOf(def)
+		if not hook and (not hrp or (hrp.Position - w.PrimaryPart.Position).Magnitude > def.B.leash) then return end -- a client can fire the prompt from afar
 		if s.tips[def.tip] then
 			ctx.fx:FireClient(plr, "bossOpen", def.id)
 			return
@@ -147,7 +149,7 @@ function M.init(c)
 				local v = plr:GetAttribute("DevBoss")
 				if v then
 					plr:SetAttribute("DevBoss", nil)
-					challenge(plr, v == true and 1 or v)
+					challenge(plr, v == true and 1 or v, true)
 				end
 			end)
 		end
