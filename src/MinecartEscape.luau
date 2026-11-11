@@ -226,7 +226,7 @@ function M.play(opt)
 	lampA.Position = Vector3.new(0, 2.7, -1.9)
 	lampA.Parent = cart.PrimaryPart
 	local headLamp = Instance.new("SpotLight")
-	headLamp.Face, headLamp.Angle, headLamp.Range, headLamp.Brightness, headLamp.Color = Enum.NormalId.Front, 75, 44, 2, Color3.fromRGB(255, 226, 180)
+	headLamp.Face, headLamp.Angle, headLamp.Range, headLamp.Brightness, headLamp.Color = Enum.NormalId.Front, 75, 44, 1.5, Color3.fromRGB(255, 226, 180)
 	headLamp.Parent = lampA
 	local sparks = {}
 	for _, x in { -1.5, 1.5 } do
@@ -388,7 +388,7 @@ function M.play(opt)
 				part(world, Vector3.new(2.4, rng:NextNumber(6, 12), 2.4), cf * CFrame.new(q * 2 - 2, 0, (q % 2) * 2) * CFrame.Angles(rng:NextNumber(-0.4, 0.4), q, rng:NextNumber(-0.4, 0.4)), col:Lerp(Color3.new(1, 1, 1), 0.2), { Material = q == 1 and Enum.Material.Neon or Enum.Material.Glass, Transparency = q == 1 and 0 or 0.2 })
 			end
 			local l = Instance.new("PointLight")
-			l.Color, l.Range, l.Brightness = col, 40, 1.6
+			l.Color, l.Range, l.Brightness = col, 26, 1.3
 			l.Parent = world:GetChildren()[#world:GetChildren()]
 		end
 		-- demo audit 12: the bridge crossed an open void. The cavern has rock now: side walls, a roof, a glowing lake far below

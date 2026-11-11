@@ -141,7 +141,8 @@ function M.start(E)
 			dust.Rate = (walking and not calm) and 9 or 0
 			if walking and now >= nextStep then -- soft footsteps, in time with the stride
 				nextStep = now + 5 / math.max(hum.WalkSpeed, 8)
-				sfx("step")
+				sfx("step", E.vmHook.stepPitch and E.vmHook.stepPitch() or 1) -- the floor underfoot sets the pitch (Shared.AudioManager)
+				if E.vmHook.heavy then sfx("clink", 1.7) end -- an over-full bag rattles
 			end
 		end
 		if calm or not plr:GetAttribute("InCave") then return end

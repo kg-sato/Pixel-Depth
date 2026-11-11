@@ -240,7 +240,10 @@ function M.start(E)
 		end
 		local busy = E.isBusy and E.isBusy() or plr:GetAttribute("Seated") == true -- not in a minigame or a cart ride
 		for _, m in hook.modals or {} do if m.Visible then busy = true end end
-		marker.Visible = pos ~= nil and not busy
+		local h = E.hrp()
+		local far = pos and h and (pos - h.Position).Magnitude or 0
+		-- a sign near its place, not a pill hanging in the air all through the caves (the user, 2026-11-10)
+		marker.Visible = pos ~= nil and not busy and far <= (tagText.Text == "RIDE UP" and 14 or 60)
 		if not marker.Visible then return end
 		local cam = workspace.CurrentCamera
 		local v = cam:WorldToViewportPoint(pos)
@@ -248,7 +251,7 @@ function M.start(E)
 		local x, y = v.X, v.Y
 		if v.Z < 0 then x, y = vp.X - x, vp.Y * 0.9 end -- behind you: point along the bottom edge
 		x = math.clamp(x, vp.X * 0.2, vp.X * 0.8) -- stay between the side columns
-		y = math.clamp(y - math.abs(math.sin(now * 3)) * vp.Y * 0.02, vp.Y * 0.24, vp.Y * 0.78) -- under the step card, over the talisman
+		y = math.clamp(y - math.abs(math.sin(now * 3)) * vp.Y * 0.02, vp.Y * 0.24, vp.Y * 0.66) -- under the step card, over the talisman
 		marker.Position = UDim2.fromOffset(x, y - (gui.IgnoreGuiInset and 0 or game:GetService("GuiService"):GetGuiInset().Y))
 		local mp, ms = marker.AbsolutePosition, marker.AbsoluteSize
 		for _, c in gui:GetChildren() do -- a prompt bubble says what to do: the marker yields where it would sit on one

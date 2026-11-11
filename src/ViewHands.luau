@@ -8,7 +8,7 @@ local M = {}
 
 function M.start(E)
 	local hook = E.vmHook
-	local GLOVE, CUFF, SLEEVE = Color3.fromRGB(98, 62, 44), Color3.fromRGB(58, 38, 34), Color3.fromRGB(52, 40, 74) -- worn leather: a pale glove blew out to yellow beside the torch
+	local GLOVE, CUFF, SLEEVE = Color3.fromRGB(146, 102, 70), Color3.fromRGB(62, 46, 86), Color3.fromRGB(80, 64, 118) -- a tan mitt, a plum cuff, a lilac sleeve: the dark leather read as wooden blocks (the user, 2026-11-10)
 
 	hook.vmHands = function(vm, root, at, k) -- at: where the fist sits (default: the model's pivot, the pickaxe's grip point); k: size
 		local grip = at or vm:GetPivot()
@@ -17,7 +17,6 @@ function M.start(E)
 			local q = Instance.new("Part")
 			q.Name, q.Size, q.CFrame, q.Color = "ViewHand", size * k, grip * (cf.Rotation + cf.Position * k), color
 			q.Material, q.Anchored, q.CanCollide, q.CanQuery, q.CanTouch, q.CastShadow, q.Massless = Enum.Material.SmoothPlastic, false, false, false, false, false, true
-			pcall(function() q.Material = Enum.Material.Leather end) -- stitched leather, not bare blocks
 			q.TopSurface, q.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
 			q.Parent = vm
 			local w = Instance.new("WeldConstraint")
@@ -33,7 +32,7 @@ function M.start(E)
 		end
 		p(Vector3.new(0.18, 0.34, 0.22), CFrame.new(0.24, 0.22, -0.1) * CFrame.Angles(0, 0, -0.5), GLOVE:Lerp(Color3.new(1, 1, 1), 0.25)) -- the thumb, wrapped up along the handle
 		p(Vector3.new(0.46, 0.4, 0.26), CFrame.new(0, -0.02, 0.46), CUFF) -- the cuff, toward the body
-		p(Vector3.new(0.5, 0.09, 0.3), CFrame.new(0, 0.16, 0.46), Color3.fromRGB(120, 84, 60)) -- its stitched band
+		p(Vector3.new(0.5, 0.09, 0.3), CFrame.new(0, 0.16, 0.46), Color3.fromRGB(236, 196, 116)) -- its butter band
 		p(Vector3.new(0.14, 0.14, 0.06), CFrame.new(0.12, 0.02, 0.6), Color3.fromRGB(214, 168, 84)).Material = Enum.Material.Metal -- a brass buckle
 		p(Vector3.new(0.4, 0.38, 2.2), CFrame.new(0.02, -0.4, 1.62) * CFrame.Angles(-0.35, 0, 0), SLEEVE) -- the whole forearm, running off the bottom of the screen (the user, 2026-11-10: arms in view like the cart ride)
 		p(Vector3.new(0.44, 0.1, 0.3), CFrame.new(0.02, -0.12, 0.86) * CFrame.Angles(-0.35, 0, 0), SLEEVE:Lerp(Color3.new(1, 1, 1), 0.14)) -- a rolled sleeve hem

@@ -86,7 +86,7 @@ function Cave.build(parent, origin, seed)
 	-- a miner's lantern (demo audit 09: bare neon cubes blew out under bloom): a small neon wick inside amber glass panes, a brass
 	-- cap, base and corner struts. The light sits on the wick; the fixture keeps its glow through the playtest 2 dimming pass.
 	local BRASS, BRASS_DARK = Color3.fromRGB(60, 54, 62), Color3.fromRGB(43, 42, 45) -- dark iron: brass lit by its own flame read as mustard plastic (Gemini r3)
-	local function lantern(g, name, cf, color, range, s)
+	local function lantern(g, name, cf, color, range, s, b) -- b: light brightness (default 0.6); lamps you can walk right up to take less
 		s = s or 1
 		cf = typeof(cf) == "Vector3" and CFrame.new(cf) or cf
 		local core = part(g, name, Vector3.new(0.2, 0.3, 0.2) * s, cf * CFrame.new(0, -0.04 * s, 0), color, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false }) -- a small flame
@@ -100,7 +100,7 @@ function Cave.build(parent, origin, seed)
 			for _, y in { -0.62, 0.62 } do part(g, "LanternBracket", Vector3.new(0.2, 0.26, 0.2) * s, cf * CFrame.new(o[1] * 0.46 * s, y * s, o[2] * 0.46 * s), Color3.fromRGB(112, 84, 48), { CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false }) end -- brass corner brackets on the hammered iron
 			part(g, "LanternStrut", Vector3.new(0.12, 1.06, 0.12) * s, cf * CFrame.new(o[1] * 0.44 * s, 0, o[2] * 0.44 * s), BRASS_DARK, DECO)
 		end
-		local l = glow(core, color, range, 0.6) -- soft and wide. The audit asked for 1.2 to 1.8: tried 1.2, the whole camp floor went white (captures/night/p1_camp.png)
+		local l = glow(core, color, range, b or 0.6) -- soft and wide. The audit asked for 1.2 to 1.8: tried 1.2, the whole camp floor went white (captures/night/p1_camp.png)
 		l:SetAttribute("Fixture", true)
 		return core
 	end
@@ -298,7 +298,7 @@ function Cave.build(parent, origin, seed)
 			local S = 1.45
 			for _, s in { -1, 1 } do
 				part("Camp", "TentSide", Vector3.new(7, 0.6, 5.6) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, 0) * CFrame.Angles(0, 0, s * 0.9), col)
-				part("Camp", "TentStripe", Vector3.new(7.05, 0.65, 1.2) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, 0) * CFrame.Angles(0, 0, s * 0.9), PAL.cream, DECO)
+				part("Camp", "TentStripe", Vector3.new(7.12, 0.72, 1.2) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, 0) * CFrame.Angles(0, 0, s * 0.9), PAL.cream, DECO)
 			end
 			part("Camp", "TentBack", Vector3.new(6.4, 4.6, 0.4) * S, base * CFrame.new(0, 2.1 * S, -2.7 * S), col:Lerp(Color3.new(0, 0, 0), 0.25))
 			part("Camp", "Bedroll", Vector3.new(2.2, 0.6, 4) * S, base * CFrame.new(0, 0.3, 0), PAL.lilac, DECO)
@@ -409,7 +409,7 @@ function Cave.build(parent, origin, seed)
 		for _, z in { -5, 5 } do -- lantern posts on the platform light the arrival
 			part("Camp", "PlatformPost", Vector3.new(0.6, 5, 0.6), st * CFrame.new(6.6, 3.5, z), PAL.bark)
 			part("Camp", "PlatformArm", Vector3.new(1.6, 0.4, 0.4), st * CFrame.new(5.9, 5.8, z), PAL.bark)
-			lantern("Camp", "PlatformLamp", st * CFrame.new(5.3, 5.1, z), PAL.warm:Lerp(PAL.cream, 0.5), 24, 0.9)
+			lantern("Camp", "PlatformLamp", st * CFrame.new(5.3, 5.1, z), PAL.warm:Lerp(PAL.cream, 0.5), 24, 0.9, 0.42)
 		end
 		for k = -2, 2 do -- plank seams across the deck
 			part("Camp", "PlankSeam", Vector3.new(5.1, 0.08, 0.16), st * CFrame.new(4.6, 1.02, k * 2.4), PAL.bark:Lerp(Color3.new(0, 0, 0), 0.35), DECO)
@@ -437,7 +437,7 @@ function Cave.build(parent, origin, seed)
 		local fill = part("Camp", "WarmFill", Vector3.new(1, 1, 1), W(0, 0, 22), PAL.warm, { Transparency = 1, CanCollide = false, CanQuery = false })
 		glow(fill, Color3.fromRGB(255, 200, 150), 70, 0.5)
 		for _, at in { { -5, 5 }, { 5, 6 }, { -6.5, -1.5 } } do -- a lantern glow by each tent
-			lantern("Camp", "TentLamp", W(at[1], at[2], 1.2) + Vector3.new(2.5, 0, 2.5), PAL.warm, 24, 0.9)
+			lantern("Camp", "TentLamp", W(at[1], at[2], 1.2) + Vector3.new(2.5, 0, 2.5), PAL.warm, 24, 0.9, 0.3) -- on the ground by the tent: at 0.6 the tent and chest beside it burned out yellow
 		end
 		return exits
 	end
@@ -963,7 +963,7 @@ function Cave.build(parent, origin, seed)
 				part("Shrines", "MuralFrame", Vector3.new(4.8, 0.3, 0.6), base * CFrame.new(-4.1, 4.05, 1.1), PAL.bark)
 				part("Shrines", "MuralFrame", Vector3.new(4.8, 0.3, 0.6), base * CFrame.new(-4.1, 0.55, 1.1), PAL.bark)
 				local function dot(x, y, w, h, col) -- x, y on the slab face, from its centre
-					part("Shrines", "MuralDot", Vector3.new(w, h, 0.12), base * CFrame.new(-4.1 + x, 2.3 + y, 0.86), col, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+					part("Shrines", "MuralDot", Vector3.new(w, h, 0.12), base * CFrame.new(-4.1 + x, 2.3 + y, 0.86), col:Lerp(Color3.new(0, 0, 0), 0.35), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 				end
 				local function miner(x, y, lit) -- a little figure holding a lantern
 					dot(x, y + 0.42, 0.24, 0.24, PAL.cream)
@@ -988,7 +988,7 @@ function Cave.build(parent, origin, seed)
 				look.MaxActivationDistance, look.RequiresLineOfSight, look.Style = 7, false, Enum.ProximityPromptStyle.Custom
 				look:SetAttribute("Mural", (made - 1) % 3 + 1)
 				look.Parent = slab
-				local lost = lantern("Shrines", "LostLantern", base * CFrame.new(2.7, 0.75, -0.3) * CFrame.Angles(0, 0.5, 0.12), PAL.warm, 12, 1)
+				local lost = lantern("Shrines", "LostLantern", base * CFrame.new(2.7, 0.75, -0.3) * CFrame.Angles(0, 0.5, 0.12), PAL.warm, 12, 1, 0.28)
 				local spot = part("Shrines", "LostLanternSpot", Vector3.new(1.2, 1.5, 1.2), base * CFrame.new(2.7, 0.75, -0.3), PAL.warm, { Transparency = 1, CanCollide = false, CastShadow = false })
 				local take = Instance.new("ProximityPrompt")
 				take.ActionText, take.ObjectText, take.KeyboardKeyCode = "Take", "Lost lantern", Enum.KeyCode.E

@@ -110,6 +110,12 @@ function M.start(E)
 		local bolt = hub and hub:FindFirstChild("Bolt", true)
 		return bolt and (bolt:IsA("Model") and (bolt.PrimaryPart or bolt:FindFirstChildWhichIsA("BasePart", true)) or bolt)
 	end
+	game:GetService("RunService").Heartbeat:Connect(function() -- the beacon shone through the scrim of an open panel
+		if not beacon then return end
+		local m = false
+		for _, f in E.vmHook.modals or {} do m = m or f.Visible end
+		beacon.Enabled = not m
+	end)
 	local function setBeacon(on)
 		local p = on and boltPart()
 		if p and not beacon then
@@ -219,7 +225,7 @@ function M.start(E)
 	local caveHud = gui:FindFirstChild("CaveHud")
 	local tipBanner = caveHud and caveHud:FindFirstChild("TipBanner")
 	band(tipBanner, 700, 66, tipBanner and tipBanner:FindFirstChildWhichIsA("TextLabel"))
-	local rights = { E.layerPill, caveHud and caveHud:FindFirstChild("Minimap"), caveHud and caveHud:FindFirstChild("CampPill") }
+	local rights = { caveHud and caveHud:FindFirstChild("Minimap"), caveHud and caveHud:FindFirstChild("CampPill") }
 	local function shown(o)
 		local p = o
 		while p and p ~= gui do

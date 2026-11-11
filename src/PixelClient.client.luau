@@ -319,8 +319,9 @@ for _, b in { railForge, railLift } do fit(b, 1, 1) end
 railForge.Name, railLift.Name = "Upgrades", "Surface"
 railForge.Visible = false -- playtest 2: the forge opens at Bolt only; SURFACE stays alone on the rail
 
-local layerPill = panel(gui, S(300, 46), S(1260, 18), Vector2.new(1, 0), "pillLilac")
-fit(layerPill, 300, 46)
+-- the location breadcrumb sits in the middle of Roblox's top bar (58 px, fixed size): on the right the player list covered it
+local layerPill = panel(top, UDim2.fromOffset(270, 36), UDim2.new(0.5, 0, 0, 11), Vector2.new(0.5, 0), "pillLilac")
+layerPill.Name = "LocationPill"
 local layerNum = text(layerPill, "CAMP", UDim2.fromScale(0.27, 0.46), UDim2.fromScale(0.05, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
 layerNum.TextXAlignment = Enum.TextXAlignment.Left
 local layerName = text(layerPill, "", UDim2.fromScale(0.4, 0.42), UDim2.fromScale(0.35, 0.5), Vector2.new(0, 0.5), INK, 700, false)
@@ -476,24 +477,12 @@ local fade = new("Frame", top, { Size = UDim2.fromScale(1, 1), BackgroundColor3 
 local fadeText = text(fade, "", UDim2.fromScale(0.5, 0.07), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), LILAC)
 fadeText.ZIndex = 51
 
-local toasts = 0 -- live toasts stack downwards instead of overlapping
-local function toast(msg, color, big, delay)
-	task.delay(delay or 0, function()
-		local y = 0.74 + (toasts % 3) * 0.055 -- under the centre cards (the loot card ends at 0.62), above the DIG button
-		toasts += 1
-		if uiSound then uiSound("pop", big and 0.9 or 1.1) end
-		local t = text(gui, msg, UDim2.fromScale(big and 0.6 or 0.4, big and 0.08 or 0.06), UDim2.fromScale(0.5, y + 0.06), Vector2.new(0.5, 0.5), color, 700)
-		tween(t, 0.35, { Position = UDim2.fromScale(0.5, y) }, Enum.EasingStyle.Back)
-		pop(t, 0.4)
-		task.delay(1.7, function()
-			tween(t, 0.45, { TextTransparency = 1, TextStrokeTransparency = 1, Position = UDim2.fromScale(0.5, y - 0.06) })
-			task.delay(0.5, function()
-				t:Destroy()
-				toasts -= 1
-			end)
-		end)
-	end)
-end
+-- every toast goes through one queue (Shared.ToastManager): one line at a time, none over a minigame, a ride or a panel
+local Toasts = require(RS.Shared:WaitForChild("ToastManager"))
+local toastHold -- set further down, once the cave state and the modal list exist
+Toasts.start({ gui = gui, text = text, tween = tween, pop = pop, sfx = function(...) if uiSound then uiSound(...) end end,
+	hold = function() return toastHold ~= nil and toastHold() end })
+local function toast(msg, color, big, delay) Toasts.show(msg, color, big, delay) end
 
 -- Gold count-up with a coin flip
 local goldShown, goldGoal = 0, 0
@@ -1011,7 +1000,12 @@ local function buildViewmodel()
 	if grip then grip:Destroy() end
 	local root = vm.PrimaryPart or vm:FindFirstChildWhichIsA("BasePart", true)
 	for _, p in vm:GetDescendants() do
-		if p:IsA("BasePart") then p.Anchored, p.CastShadow, p.CanCollide, p.CanQuery = p == root, false, false, false end
+		if p:IsA("BasePart") then
+			p.Anchored, p.CastShadow, p.CanCollide, p.CanQuery = p == root, false, false, false
+			p.Color = p.Color:Lerp(Color3.new(0, 0, 0), 0.5) -- this close to the torch a full-bright tool blew out to a yellow glow
+		elseif p:IsA("PointLight") or p:IsA("ParticleEmitter") then
+			p.Enabled = false
+		end
 	end
 	local cf, size = vm:GetBoundingBox()
 	vm.WorldPivot = CFrame.new(cf.Position - Vector3.new(0, size.Y * 0.16, 0)) -- swing from the grip: mid-handle (at 0.38 the hand sat on the pommel)
@@ -1021,7 +1015,7 @@ local function buildViewmodel()
 	local a0 = new("Attachment", root, { Position = root.CFrame:PointToObjectSpace(vm:GetBoundingBox().Position + Vector3.new(0, sz.Y * 0.45, 0)) })
 	local a1 = new("Attachment", root, { Position = a0.Position + Vector3.new(0.6, 0, 0) })
 	vmTrail = new("Trail", root, { Attachment0 = a0, Attachment1 = a1, Lifetime = 0.12, LightEmission = 0.8, Color = ColorSequence.new(WHITE), Transparency = NumberSequence.new(0.3, 1), Enabled = false })
-	if forgeUI.vmHands then forgeUI.vmHands(vm, root, vm:GetPivot() * CFrame.Angles(0, -(forgeUI.vmYaw or 0), 0), 1.2) end -- the gloved hand on the handle (Shared.ViewHands)
+	if forgeUI.vmHands then forgeUI.vmHands(vm, root, vm:GetPivot() * CFrame.Angles(0, -(forgeUI.vmYaw or 0), 0), 1.45) end -- the gloved hand on the handle (Shared.ViewHands)
 	vm.Parent = cam
 end
 
@@ -1428,7 +1422,8 @@ end)()
 				tween(ic, 0.35, { Position = mid, Rotation = math.random(-90, 90) }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out).Completed:Connect(function()
 					tween(ic, 0.4, { Position = UDim2.fromOffset(to.X, to.Y), Size = UDim2.fromOffset(20, 20) }, Enum.EasingStyle.Quad, Enum.EasingDirection.In).Completed:Connect(function()
 						ic:Destroy()
-						sfx("coin", 1 + k * 0.03)
+						sfx("coin", (1 + k * 0.03) * (0.95 + math.random() * 0.1))
+						if k % 3 == 1 then pop(toObj, 1.12, 0.2) end -- the pill takes each landing
 					end)
 				end)
 			end)
@@ -1626,12 +1621,25 @@ do
 		cave.fuel = math.clamp(1 - (now - cave.relitAt) / (C.TORCH.time * job.torch), 0, 1)
 		cave.fear = here and 0 or math.clamp(((1 - cave.fuel) * 1.15 - 0.1) * job.fear, 0, 1)
 		-- the torch: the head lantern shrinks and dims with the fuel and flickers like a flame (LGT-01)
+		do -- the torch light sat 1 stud from the first-person hands and the pickaxe's gem light inside them: under the Realistic style
+			-- both blew the tool and gloves out to a yellow glow (the user, 2026-11-10). The light moves up behind the head, the gem light goes off.
+			local ch = plr.Character
+			local torch, root = ch and ch:FindFirstChild("HeldTorch"), ch and ch:FindFirstChild("HumanoidRootPart")
+			local fresh = torch and torch:FindFirstChild("Lantern", true)
+			if fresh and root then
+				local a = root:FindFirstChild("LanternAnchor") or new("Attachment", root, { Name = "LanternAnchor", Position = Vector3.new(-1.2, 3.5, 2.5) })
+				a:ClearAllChildren()
+				fresh.Parent = a
+			end
+			local gl = ch and ch:FindFirstChild("GemLight", true)
+			if gl and gl.Enabled then gl.Enabled = false end
+		end
 		local lantern = plr.Character and plr.Character:FindFirstChild("Lantern", true) -- on the torch in the left hand
 		if lantern then
 			local flick = math.noise(now * 6, 1.7) * 0.18 + math.noise(now * 17, 4.2) * 0.08
 			lantern.Color = plr:GetAttribute("TorchColor") or Color3.fromRGB(255, 196, 120) -- the lantern cosmetic (Shared.WardrobeUI)
 			lantern.Range = C.TORCH.minRange + (C.TORCH.range - C.TORCH.minRange) * cave.fuel ^ 0.5 + flick * 2 + job.light
-			lantern.Brightness = 0.22 + 0.5 * cave.fuel + flick * 0.3 -- soft: close things blew out white (the floor, then chests and tents; Gemini 2026-11-09)
+			lantern.Brightness = 0.18 + 0.4 * cave.fuel + flick * 0.25 -- soft: close things blew out white (the floor, then chests and tents; Gemini 2026-11-09)
 		end
 		if cave.tick then cave.tick(now, h) end
 	end
@@ -1676,7 +1684,7 @@ end
 	local campIcon = icon(mapPanel, "camp", UDim2.fromScale(0.2, 0.2), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5)) -- the smooth campfire icon
 	campIcon.Name, campIcon.ZIndex = "CampIcon", 6
 	new("UIAspectRatioConstraint", campIcon, { AspectRatio = 1 })
-	local campPill = panel(caveHud, S(124, 30), S(1240, 304), Vector2.new(1, 0), "pillButter") -- docked on the radar's bottom rim
+	local campPill = panel(caveHud, S(124, 30), S(1240, 322), Vector2.new(1, 0), "pillButter") -- just under the radar (on its rim the two rectangles overlapped)
 	fit(campPill, 124, 30)
 	campPill.ZIndex = 7
 	campPill.Name = "CampPill"
@@ -1966,7 +1974,7 @@ end
 	psTitleBar.ZIndex = 12 -- above the minigame's dim backdrop
 	local psTitle = text(psTitleBar, "PERFECT STRIKE", UDim2.fromScale(0.86, 0.44), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), INK, 700, false)
 	psTitle.ZIndex = 3
-	local psPop = text(ps, "PERFECT!", S(360, 52), S(640, 290), Vector2.new(0.5, 0.5), BUTTER)
+	local psPop = text(ps, "PERFECT!", S(360, 44), S(640, 512), Vector2.new(0.5, 0.5), BUTTER)
 	psPop.ZIndex, psPop.Visible = 14, false
 	local pipTrack = new("Frame", ps, { Size = S(130, 36), Position = S(640, 460), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = SLATE, BorderSizePixel = 0, ZIndex = 11 })
 	new("UICorner", pipTrack, { CornerRadius = UDim.new(0.5, 0) })
@@ -2131,7 +2139,8 @@ end
 			if perfect then -- the hit recipe from the VFX note: hit-stop, FOV punch, a soft brightness lift, rising pitch
 				mg.streak = (mg.streak or 0) + 1
 				mg.freezeUntil = os.clock() + 0.07 -- the needle holds for 70 ms; UI and sound keep going
-				local up = 1 + 0.06 * (mg.streak - 1)
+				local up = ({ 1, 1.06, 1.12, 1.18 })[mg.streak] or 1.33 -- the ladder: every perfect in a row rings a step higher
+				if n >= D.strikes and mg.streak >= D.strikes then up = 1.33 sfx("claim", 1.33) end -- flawless: the top note and a bell
 				sfx("clink", 1.5 * up) -- the hammer clink, then a rising chime chord (root, third, fifth)
 				sfx("sparkle", 1.25)
 				for k, iv in { 1, 1.26, 1.5 } do task.delay(0.05 * k, function() sfx("upgrade", 1.6 * iv * up) end) end
@@ -2555,6 +2564,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		if lid then tween(lid, 0.35, { CFrame = lid.CFrame * CFrame.new(0, 0.6, 0.8) * CFrame.Angles(math.rad(-100), 0, 0) }, Enum.EasingStyle.Back) end
 		if chest then burst(chest.Position + Vector3.new(0, 1.5, 0), Vector3.yAxis, GOLD, 40) end
 		toast("SHRINE CHEST  +" .. commas(gold) .. " GOLD", GOLD, true)
+		if forgeUI.fly then forgeUI.fly("coin", UDim2.fromOffset(cam.ViewportSize.X / 2, cam.ViewportSize.Y / 2), goldPill, 8, 0.05) end
 	elseif kind == "shrine" then
 		toast("A HIDDEN SHRINE!", LILAC, true)
 		shake(0.3)
@@ -2585,15 +2595,13 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		end)
 	elseif kind == "drowned" then -- out of air in the lake, or a fall to the chasm floor: the server woke us at Camp 1
 		local lost, why = ...
-		fadeText.Text = why == "fell" and "YOU FELL INTO THE DARK..." or "YOU PASSED OUT..."
-		fade.BackgroundTransparency = 0
-		fadeText.TextTransparency = 0
-		task.delay(1.1, function()
-			tween(fade, 0.6, { BackgroundTransparency = 1 })
-			tween(fadeText, 0.6, { TextTransparency = 1, TextStrokeTransparency = 1 })
-			task.delay(0.61, function() fadeText.TextStrokeTransparency = 0 end)
-		end)
-		toast(lost > 0 and ((why == "fell" and "The deep took " or "The lake took ") .. commas(lost) .. " ore") or "You woke up at camp", PINK, true, 1.2)
+		if forgeUI.death then -- Shared.DeathScreen: the tumble, the closing dark, the card with the lost ore
+			forgeUI.death(lost, why)
+		else
+			fade.BackgroundTransparency = 0
+			tween(fade, 1.7, { BackgroundTransparency = 1 })
+			toast(lost > 0 and ((why == "fell" and "The deep took " or "The lake took ") .. commas(lost) .. " ore") or "You woke up at camp", PINK, true, 1.2)
+		end
 	elseif kind == "escapeDone" then
 		cave.escapeBonus = (...) or 0
 	elseif kind == "ride" then -- the minecart ride down to Camp 1 (ReplicatedStorage.Shared.MinecartRide)
@@ -2700,7 +2708,7 @@ end)()
 		bagPill = bagPill, goldPill = goldPill, burst = burst, shake = shake, ICON = ICON, fly = function(...) if forgeUI.fly then forgeUI.fly(...) end end,
 		isBusy = function() return cave ~= nil and cave.mgBusy == true end,
 		cave = cave, caveHud = caveHud, hrp = hrp, feed = feed, layerPill = layerPill, icon = icon, keyCap = keyCap, CREAM = CREAM, LILAC = LILAC,
-		addModal = function(f) table.insert(forgeUI.modals, f) end, vmHook = forgeUI,
+		addModal = function(f) table.insert(forgeUI.modals, f) end, vmHook = forgeUI, top = top,
 	}
 	do -- sitting in the minecart (playtest 2): the server sets Seated while it holds us in a cart; our own Animator plays the sit pose
 		local SIT = { [Enum.HumanoidRigType.R15] = "rbxassetid://2506281703", [Enum.HumanoidRigType.R6] = "rbxassetid://178130996" }
@@ -2724,7 +2732,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
@@ -2794,6 +2802,12 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	local modal = forge.Visible or odds.Visible or mapP.Visible or night.Visible
 	for _, m in forgeUI.modals do modal = modal or m.Visible end
 	local card = caveHud:FindFirstChild("ResultDim")
+	if not toastHold then toastHold = function()
+		if cave.mgBusy or plr:GetAttribute("Seated") or fade.BackgroundTransparency < 0.5 or (forgeUI.deathPlaying and forgeUI.deathPlaying()) then return true end
+		if forge.Visible or odds.Visible or mapP.Visible or night.Visible then return true end
+		for _, m in forgeUI.modals do if m.Visible then return true end end
+		return false
+	end end
 	local promptsOn = not (modal or cave.mgBusy or (card and card.Visible)) -- audit 05: no world prompt over a modal or a loot card
 	caveHud.Visible = inCave and not modal -- the cave HUD and its tip ribbon step back behind a modal
 	layerPill.Visible, goldPill.Parent.Parent.Visible = not modal, not (modal or cave.mgBusy) -- so do the location pill and the left column (Gemini r2: they floated over the blur)

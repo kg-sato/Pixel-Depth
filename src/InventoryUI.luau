@@ -29,12 +29,8 @@ function M.start(E)
 	local badgeT = text(badge, "0/10", UDim2.fromScale(0.82, 0.62), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), DEEP_GOLD, 700, false)
 	badgeT.ZIndex = 4
 
-	-- the heavy-bag pill, bottom centre (the top centre holds the step card and the tip ribbon)
-	local heavyPill = panel(gui, S(440, 40), S(640, 562), Vector2.new(0.5, 1), "pillButter")
-	fit(heavyPill, 440, 40)
-	heavyPill.Name, heavyPill.Visible = "HeavyPill", false
-	text(heavyPill, "HEAVY BAG: YOU WALK SLOWER. BANK AT CAMP", UDim2.fromScale(0.9, 0.5), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), DEEP_GOLD, 700, false)
-
+	-- a heavy bag shows on the bag button only (red count, a beat) and in the footsteps: the bottom ribbon and the centre
+	-- headline said the same thing three times (the user, 2026-11-10)
 	-- the panel
 	local inv = panel(gui, S(880, 480), S(640, 312), Vector2.new(0.5, 0.5), "panel")
 	fit(inv, 880, 480)
@@ -113,7 +109,8 @@ function M.start(E)
 		local ct = text(f, count, UDim2.fromScale(0.9, 0.15), UDim2.fromScale(0.5, 0.85), Vector2.new(0.5, 0.5), MUTED, 700, false)
 		nm.ZIndex, ct.ZIndex = 8, 8
 		if key and neededBy(key) > 0 then -- a reminder that the next pickaxe uses this ore
-			local tag = panel(f, UDim2.fromScale(1.0, 0.2), UDim2.fromScale(0.5, 0.02), Vector2.new(0.5, 0.5), "pillButter")
+			local tag = panel(f, UDim2.fromScale(0.9, 0.16), UDim2.fromScale(0.5, 0.11), Vector2.new(0.5, 0.5), "pillButter") -- inside the card: on its top edge it hung over the row above
+			ic.Position, ic.Size = UDim2.fromScale(0.5, 0.4), UDim2.fromScale(0.44, 0.38)
 			tag.ZIndex = 9
 			local tt = text(tag, "NEXT PICK: " .. neededBy(key), UDim2.fromScale(0.86, 0.6), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), DEEP_GOLD, 700, false)
 			tt.ZIndex = 10
@@ -228,11 +225,8 @@ function M.start(E)
 		local heavy = (s.bag or 0) > (s.cap or pack.cap)
 		badgeT.Text = commas(s.bag or 0) .. "/" .. commas(s.cap or pack.cap)
 		setKind(badge, heavy and "pillPink" or "pillButter")
-		if heavy and not ui.heavy then
-			pop(heavyPill, 1.2, 0.4)
-			toast("YOUR BAG IS FULL: YOU WALK SLOWER UNTIL YOU BANK", BUTTER, false)
-		end
-		ui.heavy = heavy
+		ui.heavy, ui.full = heavy, (s.bag or 0) >= (s.cap or pack.cap)
+		E.vmHook.heavy = heavy -- Juice adds a clink to heavy footsteps
 		if inv.Visible then refresh() end
 		-- egg tip (board 4/5): after the first forge, with no egg in hand, point to Maribel's stall once
 		if (s.pick or 1) >= 2 and (s.eggs or 0) == 0 and not (s.tips and s.tips.eggTip) and not ui.eggTip then
@@ -321,7 +315,10 @@ function M.start(E)
 	game:GetService("RunService").Heartbeat:Connect(function()
 		local now = os.clock()
 		badge.Rotation = ui.heavy and math.sin(now * 3) * 6 or 0
-		heavyPill.Visible = ui.heavy == true and not isBusy() -- steps back during minigames
+		if ui.full and os.clock() >= (ui.beat or 0) then -- a full bag beats on its button, faster once it is over the limit
+			ui.beat = os.clock() + (ui.heavy and 0.9 or 1.8)
+			pop(invBtn, ui.heavy and 1.14 or 1.07, 0.4)
+		end
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 		if not hum or isBusy() then return end
 		local want = ui.heavy and base * HEAVY or base

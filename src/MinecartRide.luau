@@ -338,7 +338,7 @@ function M.play(opt)
 	lampA.Position = Vector3.new(0, 2.7, -1.9)
 	lampA.Parent = cart.PrimaryPart
 	local headLamp = Instance.new("SpotLight")
-	headLamp.Face, headLamp.Angle, headLamp.Range, headLamp.Brightness, headLamp.Color, headLamp.Shadows = Enum.NormalId.Front, 75, 44, 2.2, Color3.fromRGB(255, 226, 180), false
+	headLamp.Face, headLamp.Angle, headLamp.Range, headLamp.Brightness, headLamp.Color, headLamp.Shadows = Enum.NormalId.Front, 75, 44, 1.5, Color3.fromRGB(255, 226, 180), false
 	headLamp.Parent = lampA
 	-- wheel sparks: two emitters at the front wheels, pointing back along the rails
 	local sparks = {}
