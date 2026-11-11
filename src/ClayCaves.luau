@@ -53,18 +53,18 @@ function M.build(caves)
 	end
 
 	-- the shell: floor, four walls, roof (the hall is 150 x 110, 70 high; x runs east, the arrival ledge is at the west end)
-	part("Floor", Vector3.new(158, 6, 118), O * CFrame.new(0, -3, 0), CLAY_D, ROCK)
-	part("Roof", Vector3.new(158, 6, 118), O * CFrame.new(0, 73, 0), PLUM, ROCK)
+	part("Floor", Vector3.new(166, 6, 126), O * CFrame.new(0, -3, 0), CLAY_D, ROCK)
+	part("Roof", Vector3.new(164, 6, 124), O * CFrame.new(0, 73, 0), PLUM, ROCK)
 	for _, z in { -57, 57 } do part("Wall", Vector3.new(158, 76, 6), O * CFrame.new(0, 35, z), CLAY, ROCK) end
 	for _, x in { -77, 77 } do part("Wall", Vector3.new(6, 76, 110), O * CFrame.new(x, 35, 0), CLAY, ROCK) end
 	for i = 1, 26 do -- clay strata: long ledges of a lighter band stepping round the walls, so the box reads as dug rock
 		local side, y = i % 4, 6 + rng:NextNumber() * 52
 		local len, deep = rng:NextNumber(18, 44), rng:NextNumber(1.2, 3)
 		if side < 2 then
-			local z = (side == 0 and -1 or 1) * (54 - deep / 2 + 0.05)
+			local z = (side == 0 and -1 or 1) * (54 - deep / 2 + 0.05 + i * 0.05) -- each ledge's hidden back face at its own depth in the wall
 			part("Strata", Vector3.new(len, rng:NextNumber(2, 5), deep), O * CFrame.new(rng:NextNumber(-55, 55), y, z), i % 3 == 0 and CLAY_L or CLAY_D, ROCK)
 		else
-			local x = (side == 2 and -1 or 1) * (74 - deep / 2 + 0.05)
+			local x = (side == 2 and -1 or 1) * (74 - deep / 2 + 0.05 + i * 0.05)
 			part("Strata", Vector3.new(deep, rng:NextNumber(2, 5), len), O * CFrame.new(x, y, rng:NextNumber(-36, 36)), i % 3 == 0 and CLAY_L or CLAY_D, ROCK)
 		end
 	end
@@ -100,7 +100,7 @@ function M.build(caves)
 	ml.Parent = mouth
 	ml:SetAttribute("Fixture", true)
 	part("KilnArch", Vector3.new(6.2, 1.2, 1), kiln * CFrame.new(0, 3.8, 6.4), CLAY_D, ROCK)
-	for _, x in { -2.7, 2.7 } do part("KilnArch", Vector3.new(0.9, 3.4, 1), kiln * CFrame.new(x, 1.5, 6.4), CLAY_D, ROCK) -- sunk 0.2 into the floor: its foot was level with the kiln's end
+	for _, x in { -2.7, 2.7 } do part("KilnArch", Vector3.new(0.9, 3.4, 1), kiln * CFrame.new(x, 1.5, 6.4), CLAY_D, ROCK) end -- sunk 0.2 into the floor: its foot was level with the kiln's
 	-- the stall: a counter, an awning on four posts, pots on the counter, and the Kiln Keeper (a mole potter) behind it
 	local stall = O * CFrame.new(-10, 0, -10) * CFrame.Angles(0, 0.5, 0)
 	part("Counter", Vector3.new(8, 2.6, 2.4), stall * CFrame.new(0, 2.05, 0), BARK, { Material = Enum.Material.Wood })
