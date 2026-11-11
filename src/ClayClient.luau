@@ -39,7 +39,7 @@ function M.start(E)
 		local f = clay()
 		if f == ventsOf then return end
 		ventsOf, vents, pads = f, {}, {}
-		for _, d in f and f:GetDescendants() or {} do
+		for _, d in f and f.Parent:GetDescendants() or {} do -- the whole cave model: a pad also sits on the secret ledge in Camp 1's chasm
 			if d:IsA("BasePart") and d:GetAttribute("BouncePad") then table.insert(pads, { part = d, size = d.Size, power = d:GetAttribute("BouncePad") }) end
 			if d:IsA("BasePart") and d:GetAttribute("SteamVent") then
 				local em = new("ParticleEmitter", d, {
@@ -92,7 +92,7 @@ function M.start(E)
 		end
 		for _, pd in pads do -- a spore pad: land on the cap and it throws you up, squashing and springing back
 			local d = h.Position - pd.part.Position
-			if now - launchedAt > 0.4 and Vector2.new(d.X, d.Z).Magnitude < 2.9 and d.Y > 0 and d.Y < 5 and h.AssemblyLinearVelocity.Y < 2 then
+			if now - launchedAt > 0.4 and Vector2.new(d.X, d.Z).Magnitude < pd.size.X / 2 + 0.3 and d.Y > 0 and d.Y < 5 and h.AssemblyLinearVelocity.Y < 2 then
 				launchedAt = now
 				local vel = h.AssemblyLinearVelocity
 				h.AssemblyLinearVelocity = Vector3.new(vel.X, pd.power, vel.Z)
@@ -269,6 +269,14 @@ function M.start(E)
 			job = { i = a, cracks = 0, acc = 0 }
 			show()
 			E.openPanel(win)
+		elseif kind == "secret" then
+			if a > 0 then
+				sfx("claim", 1.2)
+				toast("SECRET LEDGE!  +" .. a .. " GEMS", AMBER, true)
+				if E.vmHook.emote then E.vmHook.emote("cheer") end
+			else
+				toast("The old chest is empty now.", CREAM, false)
+			end
 		elseif kind == "fossilHave" then
 			toast("You already brushed this fossil clean.", CREAM, false)
 		elseif kind == "fossilDone" then

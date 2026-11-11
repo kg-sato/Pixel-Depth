@@ -326,6 +326,7 @@ C.EVENTS = { rootsWarn = 120, sporeFirst = 240, sporeEvery = 600, sporeLen = 180
 -- player (s), its coins, the odds of a relic shard, the least seconds a fossil takes to brush and its gems (once ever), the
 -- steam launch speed (studs/s; 150 rises about 57 studs) and the glide's fall speed
 C.CLAY = { mesa = { 40, 50 }, jarEvery = 600, jarGold = { 15, 40 }, shardOdds = 0.3, brushMin = 4, fossilGems = 3, launch = 150, glideFall = 14 }
+C.SECRET_GEMS = 10 -- the chest on the secret ledge under the chasm bridge (once per player, ever)
 C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
 C.CAVE2_ORIGIN = Vector3.new(-3000, 0, 1200) -- Camp 2 (Clay Caves), clear of Camp 1's caves (z -56..252); the camp is not built yet

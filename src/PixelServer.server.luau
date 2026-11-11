@@ -951,6 +951,21 @@ do -- kill floor at the chasm bottom (playtest 2): a fall ends the dive like pas
 	end
 end
 Players.PlayerRemoving:Connect(function(plr) riding[plr], escaping[plr] = nil, nil end)
+game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- the secret ledge under the chasm bridge: gems, once ever
+	if not prompt:GetAttribute("SecretLedge") then return end
+	local s, hrp = data[plr], hrpOf(plr)
+	if not s or not hrp or (hrp.Position - prompt.Parent.WorldPosition).Magnitude > 14 then return end
+	if s.tips.secret1 then
+		FxR:FireClient(plr, "secret", 0)
+		return
+	end
+	s.tips.secret1 = true
+	s.gems += C.SECRET_GEMS
+	A.earn(s, "Gems", C.SECRET_GEMS, s.gems, "SecretLedge")
+	A.event(s, "SecretLedge")
+	FxR:FireClient(plr, "secret", C.SECRET_GEMS)
+	sendState(s)
+end)
 game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- a hidden cave shrine: coins and gems, once an hour each
 	if not prompt:GetAttribute("CaveShrine") then return end
 	local s = data[plr]

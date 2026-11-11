@@ -480,6 +480,27 @@ function Cave.build(parent, origin, seed)
 				part("Chasm", "Rail", Vector3.new(0.25, 0.25, (b - a).Magnitude + 0.1), CFrame.lookAt((a + b) / 2, b), PAL.rope, DECO)
 			end
 		end
+		-- the secret ledge (roadmap pt2_23, the user 2026-11-09: "a hidden feature for jumping from one exact spot"): a dark shelf
+		-- 6 studs under the middle of the bridge and 4.6 studs out to one side. Jump off the middle plank to land on it; a small
+		-- chest there pays once ever (PixelServer, prompt attribute SecretLedge) and a spore pad throws you back up to the bridge.
+		do
+			local at = cf(19, 2.6, -14.5)
+			part("Chasm", "SecretLedge", Vector3.new(12, 1, 7), at * CFrame.new(1, 0, 0), PAL.rock[2], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
+			part("Chasm", "SecretMoss", Vector3.new(1.2, 0.2, 1.2), at * CFrame.new(2.4, 0.6, 2), PAL.mint, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+			local chest = part("Chasm", "SecretChest", Vector3.new(2.2, 1.3, 1.5), at * CFrame.new(5, 1.15, -1.8), PAL.bark, { Material = Enum.Material.Wood })
+			part("Chasm", "SecretChestLid", Vector3.new(2.4, 0.5, 1.7), at * CFrame.new(5, 2.05, -1.8), PAL.cream)
+			local pr = Instance.new("ProximityPrompt")
+			pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.GamepadKeyCode = "Open", "Old chest", Enum.KeyCode.F, Enum.KeyCode.ButtonX
+			pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.Style = 7, false, Enum.ProximityPromptStyle.Custom
+			pr:SetAttribute("SecretLedge", 1)
+			local hold = Instance.new("Attachment") -- the prompt sits over the chest: a prompt only shows while its point is on screen, and the chest is at your feet
+			hold.Position = Vector3.new(0, 1.6, 0)
+			hold.Parent = chest
+			pr.Parent = hold
+			part("Chasm", "PadStem", Vector3.new(1.2, 0.8, 1.2), at * CFrame.new(-3.6, 0.9, 0), PAL.cream, { CanCollide = false })
+			local cap = part("Chasm", "BouncePad", Vector3.new(3, 0.8, 3), at * CFrame.new(-3.6, 1.7, 0), Color3.fromRGB(50, 140, 130), { Material = Enum.Material.Neon, CanCollide = false })
+			cap:SetAttribute("BouncePad", 70)
+		end
 		-- glowing teal crystal clusters on both walls all the way down, mint moss glows on the ledges (ENV-01)
 		for k = 1, 16 do
 			local u = 9 + (k - 1) * 1.3

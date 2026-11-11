@@ -45,6 +45,8 @@ function M.start(E)
 			return q
 		end
 		local body = p(Vector3.new(2.2, 2.2, 2.2), CFrame.new(), SOOT)
+		-- a thin violet rim: in first person a charcoal sprite vanished against the dark rock (Gemini loop grade, 2026-11-10)
+		new("Highlight", m, { FillTransparency = 1, OutlineColor = Color3.fromRGB(176, 140, 255), OutlineTransparency = 0.35, DepthMode = Enum.HighlightDepthMode.Occluded })
 		local mesh = new("SpecialMesh", body, { MeshType = Enum.MeshType.Sphere })
 		m.PrimaryPart = body
 		local fluff = {}
