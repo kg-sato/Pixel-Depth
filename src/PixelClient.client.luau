@@ -1010,7 +1010,7 @@ local function buildViewmodel()
 	end
 	local cf, size = vm:GetBoundingBox()
 	vm.WorldPivot = CFrame.new(cf.Position - Vector3.new(0, size.Y * 0.16, 0)) -- swing from the grip: mid-handle (at 0.38 the hand sat on the pommel)
-	vm:ScaleTo(vm:GetScale() * (3.6 / math.max(size.Y, 0.1))) -- a chunkier tool in the hand (audit 15: it read as a thin wand)
+	vm:ScaleTo(vm:GetScale() * (3.2 / math.max(size.Y, 0.1))) -- a chunkier tool in the hand (audit 15: it read as a thin wand)
 	new("Highlight", vm, { FillTransparency = 1, OutlineColor = Color3.fromRGB(255, 236, 200), OutlineTransparency = 0.7, DepthMode = Enum.HighlightDepthMode.Occluded })
 	local _, sz = vm:GetBoundingBox()
 	local a0 = new("Attachment", root, { Position = root.CFrame:PointToObjectSpace(vm:GetBoundingBox().Position + Vector3.new(0, sz.Y * 0.45, 0)) })
@@ -2816,7 +2816,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		for _, m in forgeUI.modals do if m.Visible then return true end end
 		return false
 	end end
-	local promptsOn = not (modal or cave.mgBusy or (card and card.Visible)) -- audit 05: no world prompt over a modal or a loot card
+	local promptsOn = not (modal or cave.mgBusy or forgeUI.cardUp or (card and card.Visible)) -- audit 05: no world prompt over a modal or a loot card
 	caveHud.Visible = inCave and not modal -- the cave HUD and its tip ribbon step back behind a modal
 	layerPill.Visible, goldPill.Parent.Parent.Visible = not modal, not (modal or cave.mgBusy) -- so do the location pill and the left column (Gemini r2: they floated over the blur)
 	if PPS.Enabled ~= promptsOn then PPS.Enabled = promptsOn end

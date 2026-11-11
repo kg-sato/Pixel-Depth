@@ -260,7 +260,8 @@ function M.start(E)
 		for _, c in over do -- a prompt bubble says what to do, and the step card, tip ribbon and toast lane are taken: the marker yields where it would sit on one
 			if c.Visible then
 				local cp, cs = c.AbsolutePosition, c.AbsoluteSize
-				if mp.X < cp.X + cs.X and cp.X < mp.X + ms.X and mp.Y < cp.Y + cs.Y and cp.Y < mp.Y + ms.Y then marker.Visible = false end
+				local pad = 12
+				if mp.X < cp.X + cs.X + pad and cp.X < mp.X + ms.X + pad and mp.Y < cp.Y + cs.Y + pad and cp.Y < mp.Y + ms.Y + pad then marker.Visible = false end
 			end
 		end
 	end)

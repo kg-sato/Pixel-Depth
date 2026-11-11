@@ -19,11 +19,13 @@ function M.count() return #queue + (live and 1 or 0) end
 function M.start(e)
 	E = e
 	game:GetService("RunService").Heartbeat:Connect(function(dt)
-		local hold = E.hold()
+		local ok, hold = pcall(E.hold) -- a hold check that throws must not freeze a line on screen
+		if not ok then hold = false end
 		if live then
 			live.label.Visible = not hold
+			if not hold then live.seen += dt end
 			if hold then live.t += dt return end -- a held line keeps its remaining time
-			if os.clock() < live.t - (#queue > 0 and 1.2 or 0) then return end -- a waiting line shortens the one on screen
+			if os.clock() < live.t - (#queue > 0 and 1.2 or 0) and live.seen < 4 then return end -- a waiting line shortens the one on screen
 			local l = live.label
 			live = nil
 			E.tween(l, 0.3, { BackgroundTransparency = 1, Position = UDim2.fromScale(0.5, LANE - 0.05) })
@@ -48,7 +50,7 @@ function M.start(e)
 		l.Parent = E.gui
 		E.tween(l, 0.35, { Position = UDim2.fromScale(0.5, LANE) }, Enum.EasingStyle.Back)
 		E.pop(l, 0.6, 0.35)
-		live = { msg = t.msg, label = l, t = os.clock() + 2.5 }
+		live = { msg = t.msg, label = l, t = os.clock() + 2.5, seen = 0 }
 	end)
 end
 

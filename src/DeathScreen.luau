@@ -67,6 +67,7 @@ function M.start(E)
 		token += 1
 		local my = token
 		layer.Visible, card.Visible = true, true
+		E.vmHook.cardUp = true
 		title.Text, title.TextColor3 = opts.title, opts.titleColor or E.LILAC
 		big.Text, big.TextColor3 = opts.big or "", opts.bigColor or PINK
 		note.Text = opts.note or ""
@@ -87,7 +88,12 @@ function M.start(E)
 		tween(layer, after or 0.5, { BackgroundTransparency = 1 })
 		for _, f in edges do tween(f, after or 0.5, { BackgroundTransparency = 1 }) end
 		task.delay(0.2, function() if my == token then card.Visible = false end end)
-		task.delay((after or 0.5) + 0.05, function() if my == token then layer.Visible = false end end)
+		task.delay((after or 0.5) + 0.05, function()
+			if my == token then
+				layer.Visible = false
+				E.vmHook.cardUp = false
+			end
+		end)
 	end
 
 	local tumbleAt = -10
