@@ -95,6 +95,7 @@ function M.start(E)
 
 	local unlocked = false -- shown once the first ore exists
 	local openUntil, hovering = 0, false
+	local showUntil = os.clock() + 12 -- the pill's own time on screen in the caves
 	local function unfold(sec) openUntil = math.max(openUntil, os.clock() + sec) end
 	local hit = new("TextButton", pill, { Text = "", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 6 })
 	hit.MouseEnter:Connect(function() hovering = true end)
@@ -174,11 +175,14 @@ function M.start(E)
 		ring.set((oreShare + math.clamp((s.gold or 0) / math.max(nxt.cost, 1), 0, 1)) / 2)
 		if ready then
 			sumT.Text, sumT.TextColor3 = "READY TO FORGE", DEEP_MINT
+			showUntil = os.clock() + 20 -- good news stays a while longer
 			head.Text, head.TextColor3 = "READY TO FORGE", DEEP_MINT
 			hint.Text, hint.TextColor3 = plr:GetAttribute("InCave") and "Ride up and visit Bolt in town." or "Visit Bolt at the forge.", DEEP_MINT
 			setKind(pill, "pillMint")
 		else
+			local before = sumT.Text
 			sumT.Text, sumT.TextColor3 = (want > 0 and ("ORE " .. got .. "/" .. want .. "   ") or "") .. "COINS " .. commas(math.min(s.gold or 0, nxt.cost)) .. "/" .. commas(nxt.cost), HEAD
+			if sumT.Text ~= before then showUntil = os.clock() + 8 end
 			head.Text, head.TextColor3 = "NEXT UPGRADE NEEDS", HEAD
 			setKind(pill, "card")
 			if firstShort then
@@ -238,7 +242,9 @@ function M.start(E)
 	game:GetService("RunService").Heartbeat:Connect(function()
 		local scrim = gui:FindFirstChild("Scrim")
 		local busy = (E.isBusy and E.isBusy()) or (scrim and scrim.Visible and scrim.BackgroundTransparency < 0.9) -- a minigame or a modal is up
-		pillRow.Visible = unlocked and not busy
+		-- in the caves the pill shows for 8 s after its numbers change, then steps away (top games keep the HUD small: vault
+		-- Research/UI/Viral Game HUDs (2026-11-10)); in town it stays
+		pillRow.Visible = unlocked and not busy and (E.plr:GetAttribute("InCave") ~= true or os.clock() < showUntil or hovering)
 		local open = pillRow.Visible and (hovering or os.clock() < openUntil)
 		cardRow.Visible = open
 		feedRow.Visible = not open -- the feed gives its place to the open card

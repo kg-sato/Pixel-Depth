@@ -183,6 +183,24 @@ function M.build(caves)
 			end
 		end
 	end
+	-- spore bounce pads (the directive's cave traversal): three spongy teal caps that throw you up a step each, to a ledge on the
+	-- north wall with a jar-sized reward of ore. Shared.ClayClient does the bounce.
+	local TEAL = Color3.fromRGB(72, 200, 186)
+	part("PadLedge", Vector3.new(26, 2, 10), O * CFrame.new(-34, 21, -49.5), CLAY_L, ROCK)
+	for i, pd in { { -62, 0, -44, 100 }, { -54, 9, -47, 95 } } do
+		if pd[2] > 0 then part("PadStep", Vector3.new(8, pd[2], 8), O * CFrame.new(pd[1], pd[2] / 2, pd[3]), CLAY, ROCK) end
+		part("PadStem", Vector3.new(1.6, 1.4, 1.6), O * CFrame.new(pd[1], pd[2] + 0.7, pd[3]), CREAM, { CanCollide = false })
+		local cap = part("BouncePad", Vector3.new(5.4, 1.1, 5.4), O * CFrame.new(pd[1], pd[2] + 1.95, pd[3]), TEAL, { Material = Enum.Material.Neon, CanCollide = false })
+		cap.Color = TEAL:Lerp(Color3.new(0, 0, 0), 0.3)
+		cap:SetAttribute("BouncePad", pd[4])
+		for k = 0, 3 do part("PadSpot", Vector3.new(0.9, 0.3, 0.9), O * CFrame.new(pd[1] + (k % 2 * 2 - 1) * 1.3, pd[2] + 2.56, pd[3] + (k // 2 * 2 - 1) * 1.3), CREAM, DECO) end
+	end
+	deposit(O * CFrame.new(-30, 22, -51.4), 3)
+	deposit(O * CFrame.new(-40, 22, -51.4), 2)
+	-- pale shafts of light through cracks in the roof (the directive's root god-rays): see-through slanted beams, no collision
+	for i, r in { { -30, 10 }, { 8, -30 }, { 30, 28 }, { -8, 40 } } do
+		part("GodRay", Vector3.new(5 + i, 76, 0.2), O * CFrame.new(r[1], 34, r[2]) * CFrame.Angles(0, i * 0.9, 0) * CFrame.Angles(0, 0, 0.16), Color3.fromRGB(190, 255, 226), { Material = Enum.Material.Neon, Transparency = 0.9, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+	end
 	-- common ore along the walls
 	for i, d in { { -40, -52.2, 0 }, { -12, -52.2, 0 }, { 22, -52.2, 0 }, { -44, 52.2, math.pi }, { -8, 52.2, math.pi }, { 26, 52.2, math.pi }, { 72.2, 0, -math.pi / 2 }, { -72.2, 30, math.pi / 2 } } do
 		deposit(O * CFrame.new(d[1], 0.1, d[2]) * CFrame.Angles(0, d[3], 0), i % 3 == 0 and 2 or 1)

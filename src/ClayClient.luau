@@ -34,12 +34,13 @@ function M.start(E)
 	end
 	bp(Vector3.new(1.2, 0.5, 1.2), CFrame.new(0, 2.5, 0), AMBER)
 
-	local vents, ventsOf = {}, nil
+	local vents, ventsOf, pads = {}, nil, {}
 	local function findVents()
 		local f = clay()
 		if f == ventsOf then return end
-		ventsOf, vents = f, {}
+		ventsOf, vents, pads = f, {}, {}
 		for _, d in f and f:GetDescendants() or {} do
+			if d:IsA("BasePart") and d:GetAttribute("BouncePad") then table.insert(pads, { part = d, size = d.Size, power = d:GetAttribute("BouncePad") }) end
 			if d:IsA("BasePart") and d:GetAttribute("SteamVent") then
 				local em = new("ParticleEmitter", d, {
 					Rate = 0, Lifetime = NumberRange.new(1.1, 1.7), Speed = NumberRange.new(38, 56), SpreadAngle = Vector2.new(7, 7), EmissionDirection = Enum.NormalId.Top,
@@ -87,6 +88,17 @@ function M.start(E)
 					told = true
 					toast("STEAM UPDRAFT! STEER WITH THE MOVE KEYS AND GLIDE", CREAM, true)
 				end
+			end
+		end
+		for _, pd in pads do -- a spore pad: land on the cap and it throws you up, squashing and springing back
+			local d = h.Position - pd.part.Position
+			if now - launchedAt > 0.4 and Vector2.new(d.X, d.Z).Magnitude < 2.9 and d.Y > 0 and d.Y < 5 and h.AssemblyLinearVelocity.Y < 2 then
+				launchedAt = now
+				local vel = h.AssemblyLinearVelocity
+				h.AssemblyLinearVelocity = Vector3.new(vel.X, pd.power, vel.Z)
+				sfx("pop", 0.7)
+				pd.part.Size = pd.size * Vector3.new(1.25, 0.5, 1.25)
+				tween(pd.part, 0.45, { Size = pd.size }, Enum.EasingStyle.Elastic)
 			end
 		end
 		if gliding then

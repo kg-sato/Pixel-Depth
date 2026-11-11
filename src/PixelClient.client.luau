@@ -2565,6 +2565,12 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		local lid = chest and chest.Parent and chest.Parent:FindFirstChild(chest:GetAttribute("Lid") or "ChestLid")
 		if lid then tween(lid, 0.35, { CFrame = lid.CFrame * CFrame.new(0, 0.6, 0.8) * CFrame.Angles(math.rad(-100), 0, 0) }, Enum.EasingStyle.Back) end
 		if chest then burst(chest.Position + Vector3.new(0, 1.5, 0), Vector3.yAxis, GOLD, 40) end
+		for _, pr in chest and chest:GetChildren() or {} do -- an opened chest keeps no "Open" prompt for this player until it refills
+			if pr:IsA("ProximityPrompt") and pr:GetAttribute("CaveShrine") then
+				pr.Enabled = false
+				task.delay(C.DEPOSIT.shrines.regrow, function() if pr.Parent then pr.Enabled = true end end)
+			end
+		end
 		toast("SHRINE CHEST  +" .. commas(gold) .. " GOLD", GOLD, true)
 		if forgeUI.fly then forgeUI.fly("coin", UDim2.fromOffset(cam.ViewportSize.X / 2, cam.ViewportSize.Y / 2), goldPill, 8, 0.05) end
 	elseif kind == "shrine" then
