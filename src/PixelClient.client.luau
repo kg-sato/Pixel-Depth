@@ -1003,7 +1003,7 @@ local function buildViewmodel()
 		if p:IsA("BasePart") then
 			p.Anchored, p.CastShadow, p.CanCollide, p.CanQuery = p == root, false, false, false
 			p.Color = p.Color:Lerp(Color3.new(0, 0, 0), 0.45)
-			if p.Material == Enum.Material.SmoothPlastic or p.Material == Enum.Material.Metal then p.Material = Enum.Material.Fabric end -- matte: smooth plastic threw a white shine under every lamp (measured: 33 % of the hand blown out, 9 % with Fabric) -- this close to the torch a full-bright tool blew out to a yellow glow
+			if p.Material == Enum.Material.SmoothPlastic or p.Material == Enum.Material.Metal then p.Material = Enum.Material.Rubber end -- matte and plain: smooth plastic threw a white shine under every lamp (33 % of the hand blown out, 2 % with Rubber; Fabric read as wood) -- this close to the torch a full-bright tool blew out to a yellow glow
 		elseif p:IsA("PointLight") or p:IsA("ParticleEmitter") then
 			p.Enabled = false
 		end
@@ -1261,6 +1261,7 @@ local STEPS = {
 	"Your crew digs with you. Go deeper!",
 }
 local stepShown, stepDoneAt, stepExpired = "", nil, false
+local stepSince, stepSmall = 0, false
 local function stepMessage()
 	if not state then return "" end
 	if forgeUI.questHint then return forgeUI.questHint end -- the tutorial: the open story quest (Shared.QuestUI)
@@ -2222,8 +2223,8 @@ end)()
 		ore = { "gem", keys and "WICK: SPARKLES ARE ORE! PRESS E" or "WICK: SPARKLES ARE ORE! TAP EXTRACT" },
 		fear = { "crew", "WICK: EEK, THE DARK! FLARE IT OR RUN TO LIGHT" },
 	}
-	local banner = panel(caveHud, S(700, 66), S(640, 96), Vector2.new(0.5, 0), "ribbonLilac")
-	fit(banner, 700, 66)
+	local banner = panel(caveHud, S(540, 52), S(640, 96), Vector2.new(0.5, 0), "ribbonLilac") -- was 700 x 66: top games keep tips small
+	fit(banner, 540, 52)
 	banner.Name, banner.Visible, banner.ZIndex = "TipBanner", false, 6
 	local bIcon = icon(banner, "camp", UDim2.fromScale(0.08, 0.7), UDim2.fromScale(0.17, 0.42), Vector2.new(0.5, 0.5))
 	new("UIAspectRatioConstraint", bIcon, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
@@ -2920,8 +2921,14 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 
 	-- tutorial
 	local msg = stepMessage()
+	-- top games keep the HUD small (Research/UI/Viral Game HUDs (2026-11-10)): eight seconds after it last changed, the card shrinks
+	local small = inCave and now - stepSince > 8
+	if small ~= stepSmall then
+		stepSmall = small
+		tween(scaler(stepCard), 0.35, { Scale = small and 0.74 or 1 })
+	end
 	if msg ~= stepShown then
-		stepShown, stepExpired = msg, false
+		stepShown, stepExpired, stepSince = msg, false, now
 		stepText.Text = msg
 		stepCard.Visible = msg ~= ""
 		stepCard.Position = S(640, -40)

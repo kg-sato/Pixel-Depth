@@ -224,7 +224,7 @@ function M.start(E)
 	band(gui:FindFirstChild("StepCard"), 560, 62, gui:FindFirstChild("StepCard") and gui.StepCard:FindFirstChildWhichIsA("TextLabel"))
 	local caveHud = gui:FindFirstChild("CaveHud")
 	local tipBanner = caveHud and caveHud:FindFirstChild("TipBanner")
-	band(tipBanner, 700, 66, tipBanner and tipBanner:FindFirstChildWhichIsA("TextLabel"))
+	band(tipBanner, 540, 52, tipBanner and tipBanner:FindFirstChildWhichIsA("TextLabel"))
 	local rights = { caveHud and caveHud:FindFirstChild("Minimap"), caveHud and caveHud:FindFirstChild("CampPill") }
 	local function shown(o)
 		local p = o

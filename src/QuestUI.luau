@@ -186,7 +186,7 @@ function M.start(E)
 
 	-- the guide marker: a small sign over the place the open story quest leads to. It is drawn on the HUD from the place's
 	-- screen position (like the ore glints), so it shows through walls and slides to the screen edge when the place is out of view
-	local marker = new("Frame", gui, { Name = "QuestMarker", Size = S(104, 60), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, Visible = false, ZIndex = 1 })
+	local marker = new("Frame", gui, { Name = "QuestMarker", Size = S(82, 48), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, Visible = false, ZIndex = 1 })
 	local tip = new("Frame", marker, { Size = UDim2.fromScale(0.2, 0.35), Position = UDim2.fromScale(0.5, 0.72), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 45, BackgroundColor3 = GOLD, BorderSizePixel = 0 })
 	new("UIAspectRatioConstraint", tip, { AspectRatio = 1 })
 	new("UIStroke", tip, { Color = INK, Thickness = 2 })
@@ -250,7 +250,7 @@ function M.start(E)
 		local vp = cam.ViewportSize
 		local x, y = v.X, v.Y
 		if v.Z < 0 then x, y = vp.X - x, vp.Y * 0.9 end -- behind you: point along the bottom edge
-		x = math.clamp(x, vp.X * 0.2, vp.X * 0.8) -- stay between the side columns
+		x = math.clamp(x, vp.X * 0.27, vp.X * 0.8) -- stay between the side columns
 		y = math.clamp(y - math.abs(math.sin(now * 3)) * vp.Y * 0.02, vp.Y * 0.24, vp.Y * 0.66) -- under the step card, over the talisman
 		marker.Position = UDim2.fromOffset(x, y - (gui.IgnoreGuiInset and 0 or game:GetService("GuiService"):GetGuiInset().Y))
 		local mp, ms = marker.AbsolutePosition, marker.AbsoluteSize

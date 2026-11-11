@@ -43,6 +43,7 @@ function M.start(E)
 		local cam = workspace.CurrentCamera
 		if cam.CameraType == Enum.CameraType.Scriptable then return nil end -- a ride or a cutscene owns the view
 		local d = dressed[pet.model] or dress(pet.model)
+		if not d.big then d.big = true pet.model:ScaleTo(1.6) end -- big enough to read at the edge of the view
 		if now >= nextScan then -- twice a second: the nearest rare deposit and any Gloomling close by
 			nextScan = now + 0.5
 			rare, gloomNear = nil, false
@@ -70,7 +71,7 @@ function M.start(E)
 		local bounce = hop < 1 and math.abs(math.sin(hop * math.pi * 3)) * 0.9 * (1 - hop) or 0
 		local moving = h.AssemblyLinearVelocity.Magnitude > 2
 		local bob = moving and math.abs(math.sin(now * 9)) * 0.35 or math.sin(now * 2.2) * 0.12 -- it bounds when you walk, floats when you stand
-		local off = gloomNear and Vector3.new(2.6, -2.5, -4.2) or Vector3.new(-7.2, -0.9 + bob + bounce, -10.5) -- out in the open, left of and above the torch hand (nearer, it sat in the hand) -- cowering: low, by the pickaxe
+		local off = gloomNear and Vector3.new(2.6, -2.5, -4.2) or Vector3.new(-6.2, -0.6 + bob + bounce, -9) -- out in the open, left of and above the torch hand (nearer, it sat in the hand) -- cowering: low, by the pickaxe
 		local goal = cam.CFrame:PointToWorldSpace(off)
 		pet.pos = pet.pos:Lerp(goal, 1 - math.exp(-dt * (gloomNear and 12 or 7)))
 		local face = rare and not gloomNear and rare.PrimaryPart.Position or pet.pos + cam.CFrame.LookVector * 3 + cam.CFrame.RightVector * 8 -- it trots ahead, half turned to you

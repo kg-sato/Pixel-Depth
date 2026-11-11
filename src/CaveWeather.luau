@@ -25,8 +25,8 @@ function M.start(E)
 	})
 	local wipe = new("Frame", E.top, { Name = "RootsWipe", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(46, 34, 44), BackgroundTransparency = 1, Visible = false, ZIndex = 55 })
 
-	local ribbon = new("Frame", E.gui, { Size = E.S(700, 46), Position = E.S(640, 536), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = Color3.fromRGB(214, 78, 52), BorderSizePixel = 0 }) -- warning red: a pale pink pill had no urgency (Gemini, 2026-11-10)
-	E.fit(ribbon, 700, 46)
+	local ribbon = new("Frame", E.gui, { Size = E.S(560, 42), Position = E.S(640, 524), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = Color3.fromRGB(215, 104, 72), BorderSizePixel = 0 }) -- warning red: a pale pink pill had no urgency (Gemini, 2026-11-10)
+	E.fit(ribbon, 560, 42)
 	new("UICorner", ribbon, { CornerRadius = UDim.new(0.5, 0) })
 	new("UIStroke", ribbon, { Color = E.WHITE, Thickness = 2 })
 	ribbon.Name, ribbon.Visible = "RootsRibbon", false

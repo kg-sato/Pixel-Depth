@@ -38,7 +38,7 @@ function M.start(e)
 		-- a dark pill behind the words: bare text lay across the first-person hands (Gemini, 2026-11-10)
 		local l = Instance.new("Frame")
 		l.Name, l.ZIndex, l.AnchorPoint, l.BorderSizePixel = "Toast", 20, Vector2.new(0.5, 0.5), 0
-		l.Size, l.Position = UDim2.fromScale(t.big and 0.56 or 0.42, t.big and 0.075 or 0.06), UDim2.fromScale(0.5, LANE + 0.06)
+		l.Size, l.Position = UDim2.fromScale(math.clamp(0.07 + #t.msg * (t.big and 0.0066 or 0.0054), 0.16, 0.5), t.big and 0.07 or 0.058), UDim2.fromScale(0.5, LANE + 0.06) -- as wide as its words need, never a bar across the screen
 		l.BackgroundColor3, l.BackgroundTransparency = Color3.fromRGB(38, 28, 54), 0.22
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0.5, 0)

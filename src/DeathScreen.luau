@@ -48,16 +48,17 @@ function M.start(E)
 	-- the icon: a small voxel lantern (cap, glass, base) whose wick is lit or snuffed
 	local icon = new("Frame", card, { Size = UDim2.fromScale(0.16, 0.3), Position = UDim2.fromScale(0.5, 0.19), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 64 })
 	new("UIAspectRatioConstraint", icon, { AspectRatio = 0.8 })
-	block(icon, UDim2.fromScale(0.5, 0.12), UDim2.fromScale(0.5, 0.06), EDGE)
-	block(icon, UDim2.fromScale(0.86, 0.14), UDim2.fromScale(0.5, 0.2), EDGE)
+	local CREAM = Color3.fromRGB(255, 235, 175) -- a pale lantern: the lilac one sank into the card
+	block(icon, UDim2.fromScale(0.5, 0.12), UDim2.fromScale(0.5, 0.06), CREAM)
+	block(icon, UDim2.fromScale(0.86, 0.14), UDim2.fromScale(0.5, 0.2), CREAM)
 	local glass = block(icon, UDim2.fromScale(0.7, 0.52), UDim2.fromScale(0.5, 0.53), DARK)
-	block(icon, UDim2.fromScale(0.86, 0.14), UDim2.fromScale(0.5, 0.88), EDGE)
+	block(icon, UDim2.fromScale(0.86, 0.14), UDim2.fromScale(0.5, 0.88), CREAM)
 	local wick = block(glass, UDim2.fromScale(0.34, 0.5), UDim2.fromScale(0.5, 0.58), GOLD, 65)
 	local title = text(card, "", UDim2.fromScale(0.88, 0.17), UDim2.fromScale(0.5, 0.45), Vector2.new(0.5, 0.5), E.LILAC, 700)
 	local big = text(card, "", UDim2.fromScale(0.8, 0.17), UDim2.fromScale(0.5, 0.63), Vector2.new(0.5, 0.5), PINK, 700, false)
 	local note = text(card, "", UDim2.fromScale(0.84, 0.085), UDim2.fromScale(0.5, 0.78), Vector2.new(0.5, 0.5), E.CREAM, 700, false)
 	title.ZIndex, big.ZIndex, note.ZIndex = 64, 64, 64
-	local track = block(card, UDim2.fromScale(0.7, 0.045), UDim2.fromScale(0.5, 0.9), DARK)
+	local track = block(card, UDim2.fromScale(0.7, 0.05), UDim2.fromScale(0.5, 0.9), Color3.fromRGB(84, 64, 112))
 	local fill = new("Frame", track, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = GOLD, BorderSizePixel = 0, ZIndex = 65 })
 	new("UICorner", fill, { CornerRadius = UDim.new(0.5, 0) })
 
