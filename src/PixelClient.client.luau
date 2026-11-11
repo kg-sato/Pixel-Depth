@@ -2181,7 +2181,7 @@ end
 				for i = 1, math.min(count, 6) do task.delay(i * 0.07, function() oreFly(core.Position, col) end) end
 			end
 			sfx("breakRock", 0.9)
-			if dep:GetAttribute("OreName") == "Root Knot" then -- a Root Warden knot: no ore card (BossClient shows the result)
+			if dep:GetAttribute("OreName") == "Root Knot" or dep:GetAttribute("OreName") == "Kiln Vent" then -- a Root Warden knot: no ore card (BossClient shows the result)
 				task.delay(0.5, close)
 				return
 			end

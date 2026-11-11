@@ -202,10 +202,50 @@ function M.build(caves)
 		part("GodRay", Vector3.new(5 + i, 76, 0.2), O * CFrame.new(r[1], 34, r[2]) * CFrame.Angles(0, i * 0.9, 0) * CFrame.Angles(0, 0, 0.16), Color3.fromRGB(190, 255, 226), { Material = Enum.Material.Neon, Transparency = 0.9, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
 	end
 	-- common ore along the walls
-	for i, d in { { -40, -52.2, 0 }, { -12, -52.2, 0 }, { 22, -52.2, 0 }, { -44, 52.2, math.pi }, { -8, 52.2, math.pi }, { 26, 52.2, math.pi }, { 72.2, 0, -math.pi / 2 }, { -72.2, 30, math.pi / 2 } } do
+	for i, d in { { -40, -52.2, 0 }, { -12, -52.2, 0 }, { 22, -52.2, 0 }, { -44, 52.2, math.pi }, { -8, 52.2, math.pi }, { 26, 52.2, math.pi }, { 72.2, 44, -math.pi / 2 }, { -72.2, 30, math.pi / 2 } } do
 		deposit(O * CFrame.new(d[1], 0.1, d[2]) * CFrame.Angles(0, d[3], 0), i % 3 == 0 and 2 or 1)
 	end
 
+	-- the Kiln Golem (boss 2; ServerScriptService.Boss runs the fight, Shared.BossClient shows it): a squat fired-clay golem asleep
+	-- between the mesas, three glowing kiln vents on its chest. It needs the Titan Hammer (C.BOSS2).
+	do
+		local g = Instance.new("Model")
+		g.Name = "KilnGolem"
+		local base = O * CFrame.new(64, 0, 0) * CFrame.Angles(0, math.pi / 2, 0)
+		local function gp(name, size, cf, color, props)
+			local p = part(name, size, base * cf, color, props)
+			p.Parent = g
+			return p
+		end
+		local body = gp("GolemBody", Vector3.new(8, 6, 5.6), CFrame.new(0, 3.9, 0), CLAY)
+		gp("GolemBand", Vector3.new(8.4, 1, 6), CFrame.new(0, 2.2, 0), CREAM)
+		gp("GolemHead", Vector3.new(4.6, 3.6, 4), CFrame.new(0, 8.6, -1), CLAY_L)
+		gp("GolemLid", Vector3.new(5, 0.8, 4.4), CFrame.new(0, 10.8, -1), CLAY_D)
+		gp("GolemChimney", Vector3.new(1.6, 2, 1.6), CFrame.new(0, 12.2, -1), CLAY_D)
+		for _, x in { -1, 1 } do
+			gp("WardenEye", Vector3.new(0.9, 0.25, 0.1), CFrame.new(x, 9, -3.04), Color3.fromRGB(40, 28, 46), DECO)
+			gp("GolemArm", Vector3.new(2.2, 5.6, 2.2), CFrame.new(x * 5.2, 3.6, -0.6) * CFrame.Angles(0, 0, x * 0.16), CLAY_D)
+			gp("GolemFist", Vector3.new(3, 2.2, 3), CFrame.new(x * 5.7, 1.1, -1.2), CLAY_L)
+			gp("GolemLeg", Vector3.new(2.6, 1.8, 2.8), CFrame.new(x * 2.3, 0.9, 0.6), CLAY_D)
+		end
+		for k, at in { { -2, 5.2 }, { 2, 4 }, { 0, 2.8 } } do
+			local km = Instance.new("Model")
+			km.Name = "Knot" .. k
+			local kn = part("KnotCore", Vector3.new(1.5, 1.5, 1.5), base * CFrame.new(at[1], at[2], -2.9), Color3.fromRGB(255, 130, 50), { Material = Enum.Material.Neon, Shape = Enum.PartType.Ball, CanCollide = false, CastShadow = false })
+			kn.Parent = km
+			km.PrimaryPart = kn
+			km:SetAttribute("Layer", 2)
+			km:SetAttribute("Ore", 3)
+			km:SetAttribute("OreName", "Kiln Vent")
+			km.Parent = g
+			local l = Instance.new("PointLight")
+			l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 130, 50), 8, 0.5, false
+			l.Parent = kn
+		end
+		g.PrimaryPart = body
+		g.Parent = folder
+		prompt(body, "Challenge", "Kiln Golem", "BossGate", 2, 14)
+	end
 	-- clay jars: a body, a neck and a rim; the prompt sits on the body. Shared for everyone; the server pays per player.
 	for i, at in { { -30, 18 }, { -26, 22 }, { 20, 16 }, { 34, -4 }, { -46, -30 }, { 12, 38 }, { 44, 40 }, { -20, -40 } } do
 		local s = 0.9 + (i % 3) * 0.25

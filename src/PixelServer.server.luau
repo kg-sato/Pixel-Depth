@@ -467,6 +467,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
 	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
 	d.wear, d.quests, d.lanterns = s.wear, s.quests, s.lanterns
+	d.shards, d.fossils = s.shards or 0, s.fossils or {}
 	local names = {}
 	for i, p in s.pets do names[i] = p.name end
 	d.pets = names
@@ -1656,6 +1657,9 @@ local function onJoin(plr)
 	s.quests = Quests.clean(d.quests, Quests.day())
 	s.lanterns = {} -- lost lanterns found: { ["1"] = true, ... }
 	for k = 1, C.LANTERN.count do if type(d.lanterns) == "table" and d.lanterns[tostring(k)] == true then s.lanterns[tostring(k)] = true end end
+	s.shards = type(d.shards) == "number" and d.shards or 0 -- Clay Caves: relic shards from jars, fossils brushed clean ({ ["1"] = true, ... })
+	s.fossils = {}
+	for k = 1, 3 do if type(d.fossils) == "table" and d.fossils[tostring(k)] == true then s.fossils[tostring(k)] = true end end
 	s.wear = Wardrobe.clean(d.wear) -- the wardrobe: only known slots and items survive a load
 	s.wear.presets = {}
 	for k = 1, 3 do

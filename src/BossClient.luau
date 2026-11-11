@@ -8,13 +8,16 @@ function M.start(E)
 	local R, plr, gui, new, S, fit, panel, text, toast, sfx, shake, burst, tween = E.R, E.plr, E.gui, E.new, E.S, E.fit, E.panel, E.text, E.toast, E.sfx, E.shake, E.burst, E.tween
 	local INK, PINK, GOLD, MINT = E.INK, E.PINK, E.GOLD, E.MINT
 	local AMBER = Color3.fromRGB(255, 186, 92)
-	local function warden() return workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild("Warden", true) end
+	-- two bosses share this client (server: Boss.DEFS): every Fx event carries the boss number last, use(id) switches to it
+	local NAMES, TITLES = { "Warden", "KilnGolem" }, { "ROOT WARDEN", "KILN GOLEM" }
+	local now, bases = 1, {}
+	local function warden() return workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild(NAMES[now], true) end
 
 	-- the boss bar: name and one pip per knot
 	local bar = panel(gui, S(360, 64), S(640, 120), Vector2.new(0.5, 0.5), "pillButter")
 	fit(bar, 360, 64)
 	bar.Name, bar.Visible = "BossBar", false
-	text(bar, "ROOT WARDEN", UDim2.fromScale(0.8, 0.4), UDim2.fromScale(0.5, 0.3), Vector2.new(0.5, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
+	local barTitle = text(bar, "ROOT WARDEN", UDim2.fromScale(0.8, 0.4), UDim2.fromScale(0.5, 0.3), Vector2.new(0.5, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
 	local pips = {}
 	for k = 1, 3 do
 		local p = new("Frame", bar, { Size = UDim2.fromScale(0.16, 0.28), Position = UDim2.fromScale(0.3 + (k - 1) * 0.2, 0.7), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = AMBER, BorderSizePixel = 0, ZIndex = 3 })
@@ -22,11 +25,24 @@ function M.start(E)
 		new("UIStroke", p, { Color = INK, Thickness = 2 })
 		pips[k] = p
 	end
+	game:GetService("RunService").Heartbeat:Connect(function() -- beside the dial while a Perfect Strike is up: at the top it lay on the strike's title
+		if not bar.Visible then return end
+		local hud = gui:FindFirstChild("CaveHud")
+		local ps = hud and hud:FindFirstChild("PerfectStrike")
+		bar.Position = (ps and ps.Visible) and S(1050, 300) or S(640, 120)
+	end)
 	local jump = text(gui, "JUMP!", S(420, 110), S(640, 300), Vector2.new(0.5, 0.5), PINK, 700, false)
 	jump.Visible = false
 	new("UIStroke", jump, { Color = INK, Thickness = 4 })
 
-	local base -- the Warden's resting pivot
+	local base -- the boss's resting pivot
+	local function use(id)
+		if type(id) ~= "number" or id == now or not NAMES[id] then return end
+		bases[now] = base
+		now = id
+		base = bases[now]
+		barTitle.Text = TITLES[now]
+	end
 	local function eyes(on)
 		local w = warden()
 		if not w then return end
@@ -42,7 +58,7 @@ function M.start(E)
 		local caves = workspace:FindFirstChild("Caves")
 		if not caves then return end
 		for _, p in caves:GetDescendants() do
-			if p:IsA("BasePart") and p:GetAttribute("GateDoor") then
+			if now == 1 and p:IsA("BasePart") and p:GetAttribute("GateDoor") then
 				p.CanCollide = false
 				if animate then tween(p, 1.2, { Transparency = 1 }) else p.Transparency = 1 end
 				for _, l in p:GetChildren() do if l:IsA("PointLight") then l.Enabled = false end end
@@ -69,7 +85,9 @@ function M.start(E)
 		for _, p in pips do p.BackgroundColor3 = AMBER end
 	end
 
-	R.Fx.OnClientEvent:Connect(function(kind, a, b)
+	local ID_AT = { bossStart = 2, bossKnot = 3, bossSlam = 2, bossWin = 3, bossLose = 1, bossLocked = 2, bossOpen = 1, bossHit = 2, bossDodge = 1, bossHold = 1 }
+	R.Fx.OnClientEvent:Connect(function(kind, a, b, c)
+		if ID_AT[kind] then use(({ a, b, c })[ID_AT[kind]]) end
 		if kind == "bossStart" then
 			local w = warden()
 			base = base or (w and w:GetPivot())
@@ -79,7 +97,7 @@ function M.start(E)
 			eyes(true)
 			shake(0.6)
 			sfx("breakRock", 0.5)
-			toast("THE ROOT WARDEN WAKES!  CRACK ITS 3 KNOTS", AMBER, true)
+			toast(now == 2 and "THE KILN GOLEM WAKES!  SEAL ITS 3 VENTS" or "THE ROOT WARDEN WAKES!  CRACK ITS 3 KNOTS", AMBER, true)
 		elseif kind == "bossKnot" then
 			pips[3 - a].BackgroundColor3 = Color3.fromRGB(90, 80, 110)
 			if b and b.PrimaryPart then
@@ -124,9 +142,10 @@ function M.start(E)
 			prompt(true)
 			openDoor(true)
 			sfx("upgrade", 1)
-			toast("THE DEEP GATE IS OPEN!", GOLD, true) -- one at a time (Gemini: the three stacked into each other)
+			local won = now
+			toast(won == 2 and "THE KILN GOLEM YIELDS!" or "THE DEEP GATE IS OPEN!", GOLD, true)
 			task.delay(2.2, function() toast("+" .. a .. " COINS  +" .. b .. " GEMS", GOLD, true) end)
-			task.delay(4.4, function() toast("LANTERN FOUND! Old Gran's first lost lantern", MINT, true) end)
+			task.delay(4.4, function() toast(won == 2 and "The road past the kiln opens with the next camp." or "LANTERN FOUND! Old Gran's first lost lantern", MINT, true) end)
 		elseif kind == "bossLose" then
 			bar.Visible = false
 			eyes(false)
@@ -134,11 +153,11 @@ function M.start(E)
 			local w = warden()
 			if w and base then w:PivotTo(base) end
 			resetKnots()
-			toast("The Warden pushed you back. Catch your breath and try again!", PINK, true)
+			toast(now == 2 and "The Golem pushed you back. Catch your breath and try again!" or "The Warden pushed you back. Catch your breath and try again!", PINK, true)
 		elseif kind == "bossLocked" then
 			toast("TOO TOUGH FOR THAT PICK. HOLD THE " .. string.upper(a) .. " (BOLT CAN FORGE IT)", PINK, true)
 		elseif kind == "bossOpen" then
-			toast("The Warden is asleep. The way to the Clay Caves is open for you.", MINT, false)
+			toast(now == 2 and "The Golem sleeps. You have already beaten it." or "The Warden is asleep. The way to the Clay Caves is open for you.", MINT, false)
 		end
 	end)
 	-- a returning player who already won: the door is open for them
