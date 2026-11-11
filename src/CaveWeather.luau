@@ -21,7 +21,8 @@ function M.start(E)
 		Rate = 0, Lifetime = NumberRange.new(4, 7), Speed = NumberRange.new(0.6, 2), SpreadAngle = Vector2.new(180, 180), Color = ColorSequence.new(TEAL),
 		Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.2, 0.5), NumberSequenceKeypoint.new(1, 0) }),
 		Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.2, 0.25), NumberSequenceKeypoint.new(1, 1) }),
-		LightEmission = 0.8, Shape = Enum.ParticleEmitterShape.Box, Acceleration = Vector3.new(0.4, 0.15, 0.2),
+		LightEmission = 0.6, Shape = Enum.ParticleEmitterShape.Box, Acceleration = Vector3.new(0.4, 0.15, 0.2),
+		Texture = "rbxasset://textures/particles/smoke_main.dds",
 	})
 	local wipe = new("Frame", E.top, { Name = "RootsWipe", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(46, 34, 44), BackgroundTransparency = 1, Visible = false, ZIndex = 55 })
 

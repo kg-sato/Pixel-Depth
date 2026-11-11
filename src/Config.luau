@@ -327,6 +327,10 @@ C.EVENTS = { rootsWarn = 120, sporeFirst = 240, sporeEvery = 600, sporeLen = 180
 -- steam launch speed (studs/s; 150 rises about 57 studs) and the glide's fall speed
 C.CLAY = { mesa = { 40, 50 }, jarEvery = 600, jarGold = { 15, 40 }, shardOdds = 0.3, brushMin = 4, fossilGems = 3, launch = 150, glideFall = 14, eggCost = 120, echoTaps = 4, echoGold = { 20, 12 }, echoEvery = 600 } -- eggCost: the Kiln Keeper's egg (the altar in the caves rolls for 150)
 C.SECRET_GEMS = 10 -- the chest on the secret ledge under the chasm bridge (once per player, ever)
+-- Cave rock: false = Roblox's plain Slate, true = the glossy mottled "PixelCaveRock" variant of the glass pass. Off since
+-- 2026-11-10 night: in a Gemini A/B of the same view the variant scored readability 3, mood 4, style fit 2 and plain Slate
+-- 6, 7, 5 (the blotches read as false edges; Overnight/agy/20261110_222035_floor_ab.md). Set true to get the old look back.
+C.CAVE_ROCK_VARIANT = false
 C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
 C.CAVE2_ORIGIN = Vector3.new(-3000, 0, 1200) -- Camp 2 (Clay Caves), clear of Camp 1's caves (z -56..252); the camp is not built yet

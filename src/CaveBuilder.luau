@@ -54,7 +54,7 @@ function Cave.build(parent, origin, seed)
 	seed = seed or 1
 	local rng = Random.new(seed)
 	local rocky = ensureVariant()
-	local ROCK = rocky and { Material = Enum.Material.Slate, MaterialVariant = ROCK_VARIANT } or {}
+	local ROCK = (rocky and C.CAVE_ROCK_VARIANT) and { Material = Enum.Material.Slate, MaterialVariant = ROCK_VARIANT } or { Material = Enum.Material.Slate }
 	local model = Instance.new("Model")
 	model.Name = "Caves"
 	model:SetAttribute("Seed", seed)

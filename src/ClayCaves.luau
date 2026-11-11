@@ -70,7 +70,7 @@ function M.build(caves)
 	end
 	for i = 0, 29 do -- floor slabs of baked clay on a loose grid (one per 24 x 20 cell, so no two overlap), sunk 0.05 into the floor
 		local s, k = rng:NextNumber(6, 10), i % 4
-		part("Slab", Vector3.new(s, 0.24 + k * 0.12, s * rng:NextNumber(0.8, 1.1)), O * CFrame.new(-60 + (i % 6) * 24 + rng:NextNumber(-3, 3), 0.07 + k * 0.06, -40 + (i // 6) * 20 + rng:NextNumber(-2, 2)) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), i % 2 == 0 and CLAY or CLAY_L, { Material = Enum.Material.Sandstone, CanCollide = false })
+		part("Slab", Vector3.new(s, 0.24 + k * 0.12, s * rng:NextNumber(0.8, 1.1)), O * CFrame.new(-60 + (i % 6) * 24 + rng:NextNumber(-3, 3), 0.07 + k * 0.06, -40 + (i // 6) * 20 + rng:NextNumber(-2, 2)) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), i % 2 == 0 and CLAY or CLAY_D:Lerp(CLAY, 0.5), { Material = Enum.Material.Sandstone, CanCollide = false })
 	end
 
 	-- the arrival ledge (west): a root arch with the way back to Camp 1
@@ -93,6 +93,11 @@ function M.build(caves)
 	for i, s in { { 13, 4, 0 }, { 11.4, 4, 4 }, { 9, 3.4, 7.7 }, { 5.6, 2.6, 10.7 } } do -- a stepped beehive kiln
 		part("Kiln", Vector3.new(s[1], s[2], s[1]), kiln * CFrame.new(0, s[3] + s[2] / 2, 0), i % 2 == 0 and CLAY_L or CLAY, ROCK)
 	end
+	part("KilnSkirt", Vector3.new(16.4, 0.7, 16.4), kiln * CFrame.new(0, 0.3, 0), CLAY_D, ROCK)
+	for k = 1, 9 do -- broken clay round the kiln's foot, so it sits in the floor instead of on it
+		local a = k * 0.7
+		part("KilnShard", Vector3.new(0.8 + (k % 3) * 0.5, 0.5 + (k % 2) * 0.4, 0.9), kiln * CFrame.new(math.cos(a) * (9.4 + k % 3), 0.2, math.sin(a) * (9.4 + k % 2)) * CFrame.Angles(0.2 * k, a, 0.3), k % 2 == 0 and CLAY_L or CLAY_D, DECO)
+	end
 	part("KilnChimney", Vector3.new(2.4, 5, 2.4), kiln * CFrame.new(0, 15.8, 0), CLAY_D, ROCK)
 	local mouth = part("KilnMouth", Vector3.new(4.4, 3, 0.5), kiln * CFrame.new(0, 1.7, 6.3), Color3.fromRGB(196, 84, 30), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 	local ml = Instance.new("PointLight")
@@ -103,6 +108,7 @@ function M.build(caves)
 	for _, x in { -2.7, 2.7 } do part("KilnArch", Vector3.new(0.9, 3.4, 1), kiln * CFrame.new(x, 1.5, 6.4), CLAY_D, ROCK) end -- sunk 0.2 into the floor: its foot was level with the kiln's
 	-- the stall: a counter, an awning on four posts, pots on the counter, and the Kiln Keeper (a mole potter) behind it
 	local stall = O * CFrame.new(-10, 0, -10) * CFrame.Angles(0, 0.5, 0)
+	part("StallMat", Vector3.new(11, 0.3, 7.4), stall * CFrame.new(0, 0.84, -0.6), PLUM:Lerp(CLAY, 0.4), { CanCollide = false })
 	part("Counter", Vector3.new(8, 2.6, 2.4), stall * CFrame.new(0, 2.05, 0), BARK, { Material = Enum.Material.Wood })
 	part("CounterTop", Vector3.new(8.6, 0.4, 3), stall * CFrame.new(0, 3.55, 0), Color3.fromRGB(176, 150, 124), { Material = Enum.Material.Sandstone })
 	for _, x in { -4, 4 } do for _, z in { -2.6, 1.4 } do part("Post", Vector3.new(0.5, 8, 0.5), stall * CFrame.new(x, 4.75, z), BARK, { Material = Enum.Material.Wood }) end end
@@ -190,6 +196,28 @@ function M.build(caves)
 			end
 		end
 	end
+	-- the Titan's hand (Camp 2 brief: "a terracotta cavern where a sleeping stone Titan's hand rests"): a giant grey stone hand
+	-- lying palm up against the north wall, fingers curled, moss in its creases. It is the hall's landmark; you can climb it.
+	do
+		local STONE, STONE_D, MOSS = Color3.fromRGB(122, 112, 142), Color3.fromRGB(92, 84, 112), Color3.fromRGB(96, 150, 104)
+		local H = O * CFrame.new(30, 0, -40) * CFrame.Angles(0, -0.25, 0)
+		local SL = { Material = Enum.Material.Slate }
+		part("TitanPalm", Vector3.new(16, 4.4, 13), H * CFrame.new(0, 2.2, 0), STONE, SL)
+		part("TitanWrist", Vector3.new(11, 5.4, 9), H * CFrame.new(0, 2.7, -10.4), STONE_D, SL)
+		part("TitanMoss", Vector3.new(9, 0.5, 6), H * CFrame.new(-1, 4.6, -1.4), MOSS, { Material = Enum.Material.Grass, CanCollide = false })
+		for k = 0, 3 do -- four fingers: a knuckle lying on the floor, then a tip curling up
+			local x = -6 + k * 4
+			local len = k == 1 and 8.5 or (k == 3 and 6 or 7.5)
+			part("TitanFinger", Vector3.new(3.3, 3.6, len), H * CFrame.new(x, 1.8, 6.5 + len / 2), k % 2 == 0 and STONE or STONE_D, SL)
+			part("TitanFingerTip", Vector3.new(3.1, 3.2, 5.4), H * CFrame.new(x, 4.4, 6.5 + len + 1.2) * CFrame.Angles(-0.85, 0, 0), k % 2 == 0 and STONE_D or STONE, SL)
+			part("TitanNail", Vector3.new(2.3, 0.4, 2.2), H * CFrame.new(x, 6.9, 6.5 + len + 2.9) * CFrame.Angles(-0.85, 0, 0), Color3.fromRGB(176, 166, 196), { CanCollide = false, CastShadow = false })
+		end
+		part("TitanThumb", Vector3.new(7.5, 3.4, 3.6), H * CFrame.new(-11.2, 1.7, 1) * CFrame.Angles(0, 0.5, 0), STONE_D, SL)
+		part("TitanThumbTip", Vector3.new(4.6, 3, 3.2), H * CFrame.new(-15.2, 3.6, 3.6) * CFrame.Angles(0, 0.5, 0.7), STONE, SL)
+		for i, r in { { -5, 4.9, 3 }, { 4, 4.9, -3 }, { 0, 4.9, 4.5 } } do -- runes cut in the palm, faintly lit
+			part("TitanRune", Vector3.new(1.6, 0.2, 0.5), H * CFrame.new(r[1], r[2] - 0.38, r[3]) * CFrame.Angles(0, i * 1.1, 0), Color3.fromRGB(120, 200, 190), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+		end
+	end
 	-- spore bounce pads (the directive's cave traversal): three spongy teal caps that throw you up a step each, to a ledge on the
 	-- north wall with a jar-sized reward of ore. Shared.ClayClient does the bounce.
 	local TEAL = Color3.fromRGB(72, 200, 186)
@@ -235,7 +263,7 @@ function M.build(caves)
 	deposit(O * CFrame.new(-40, 22, -51.4), 2)
 	-- pale shafts of light through cracks in the roof (the directive's root god-rays): see-through slanted beams, no collision
 	for i, r in { { -30, 10 }, { 8, -30 }, { 30, 28 }, { -8, 40 } } do
-		part("GodRay", Vector3.new(5 + i, 76, 0.2), O * CFrame.new(r[1], 34, r[2]) * CFrame.Angles(0, i * 0.9, 0) * CFrame.Angles(0, 0, 0.16), Color3.fromRGB(190, 255, 226), { Material = Enum.Material.Neon, Transparency = 0.9, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+		part("GodRay", Vector3.new(3 + i * 0.6, 76, 0.2), O * CFrame.new(r[1], 34, r[2]) * CFrame.Angles(0, i * 0.9, 0) * CFrame.Angles(0, 0, 0.16), Color3.fromRGB(150, 210, 190), { Material = Enum.Material.Neon, Transparency = 0.955, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
 	end
 	-- common ore along the walls
 	for i, d in { { -40, -52.2, 0 }, { -12, -52.2, 0 }, { 22, -52.2, 0 }, { -44, 52.2, math.pi }, { -8, 52.2, math.pi }, { 26, 52.2, math.pi }, { 72.2, 44, -math.pi / 2 }, { -72.2, 30, math.pi / 2 } } do

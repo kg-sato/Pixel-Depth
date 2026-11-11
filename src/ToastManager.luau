@@ -3,7 +3,7 @@
 -- queue: one line on screen at a time, in one lane, and none while a minigame, a ride or a full-screen panel is up
 -- (E.hold() is true): those lines wait and show afterwards. A line that is already showing or waiting is not added twice.
 local M = {}
-local LANE, MAX = 0.74, 6 -- the lane sits under the loot card (ends at 0.62) and over the bottom buttons
+local LANE, MAX = 0.69, 6 -- the lane sits under the loot card (ends at 0.62) and over the bottom buttons
 local queue, live, E, gap = {}, nil, nil, 0
 
 function M.show(msg, color, big, delay)

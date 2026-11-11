@@ -51,7 +51,7 @@ function M.start(E)
 	local CREAM = Color3.fromRGB(255, 235, 175) -- a pale lantern: the lilac one sank into the card
 	block(icon, UDim2.fromScale(0.5, 0.12), UDim2.fromScale(0.5, 0.06), CREAM)
 	block(icon, UDim2.fromScale(0.86, 0.14), UDim2.fromScale(0.5, 0.2), CREAM)
-	local glass = block(icon, UDim2.fromScale(0.7, 0.52), UDim2.fromScale(0.5, 0.53), DARK)
+	local glass = block(icon, UDim2.fromScale(0.7, 0.52), UDim2.fromScale(0.5, 0.53), Color3.fromRGB(104, 88, 140))
 	block(icon, UDim2.fromScale(0.86, 0.14), UDim2.fromScale(0.5, 0.88), CREAM)
 	local wick = block(glass, UDim2.fromScale(0.34, 0.5), UDim2.fromScale(0.5, 0.58), GOLD, 65)
 	local title = text(card, "", UDim2.fromScale(0.88, 0.17), UDim2.fromScale(0.5, 0.45), Vector2.new(0.5, 0.5), E.LILAC, 700)
@@ -68,6 +68,7 @@ function M.start(E)
 		local my = token
 		layer.Visible, card.Visible = true, true
 		E.vmHook.cardUp = true
+		if opts.hud == false then E.gui.Enabled = false end
 		title.Text, title.TextColor3 = opts.title, opts.titleColor or E.LILAC
 		big.Text, big.TextColor3 = opts.big or "", opts.bigColor or PINK
 		note.Text = opts.note or ""
@@ -92,6 +93,7 @@ function M.start(E)
 			if my == token then
 				layer.Visible = false
 				E.vmHook.cardUp = false
+				if not playing then E.gui.Enabled = true end
 			end
 		end)
 	end
@@ -145,7 +147,7 @@ function M.start(E)
 			local secs = a or C.GLOOM.grab
 			soot(16)
 			local my = show({ title = "GRABBED!", titleColor = PINK, big = "FLARE NOW   [ R ]", bigColor = GOLD, note = "or a friend can flare you free", secs = secs, drain = true,
-				bar = PINK, edge = PINK, lit = true, y = 0.4, scale = 0.8, dark = 0.6, edges = 0.15 })
+				bar = PINK, edge = PINK, lit = true, y = 0.4, scale = 0.8, dark = 0.6, edges = 0.15, hud = false })
 			task.spawn(function() -- the plate shivers while it holds you
 				while my == token and layer.Visible do
 					card.Rotation = calm and 0 or math.noise(os.clock() * 16, 4) * 5
@@ -157,7 +159,7 @@ function M.start(E)
 		elseif kind == "caught" and (a or 0) >= 0 then
 			soot(20)
 			local my = show({ title = a > 0 and "A GLOOMLING GOT YOUR ORE" or "A GLOOMLING GOT YOU", titleColor = PINK, big = a > 0 and ("-" .. E.commas(a) .. " ORE") or "NOTHING LOST",
-				note = "Golden shield: RUN to the light!", secs = C.GLOOM.shield, drain = true, bar = GOLD, edge = GOLD, y = 0.4, scale = 0.8, dark = 0.72, edges = 0.3 })
+				note = "Golden shield: RUN to the light!", secs = C.GLOOM.shield, drain = true, bar = GOLD, edge = GOLD, y = 0.4, scale = 0.8, dark = 0.72, edges = 0.3, hud = false })
 			task.delay(2.4, function() hide(my) end)
 		elseif kind == "rescued" then
 			local my = show({ title = b and "FLARED FREE!" or "RESCUED!", titleColor = MINT, big = "NOTHING LOST", bigColor = MINT, note = b and "" or ("by " .. tostring(a)), secs = 1.2,

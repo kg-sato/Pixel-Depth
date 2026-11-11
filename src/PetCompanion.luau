@@ -28,7 +28,7 @@ function M.start(E)
 		cube(Vector3.new(0.3, 0.36, 0.3), Vector3.new(0, 0.3, -0.8), Color3.fromRGB(70, 60, 66))
 		local bead = cube(Vector3.new(0.3, 0.34, 0.3), Vector3.new(0, 0.3, -1.03), WARM, true)
 		local light = Instance.new("PointLight")
-		light.Range, light.Brightness, light.Color, light.Shadows = 11, 0.6, WARM, false
+		light.Range, light.Brightness, light.Color, light.Shadows = 9, 0.3, WARM, false
 		light.Parent = bead
 		for _, d in model:GetDescendants() do -- the pet's own back glow is 1.2: this close to the camera it burned out
 			if d:IsA("PointLight") and d ~= light then d.Brightness = 0.25 end
@@ -71,7 +71,7 @@ function M.start(E)
 		local bounce = hop < 1 and math.abs(math.sin(hop * math.pi * 3)) * 0.9 * (1 - hop) or 0
 		local moving = h.AssemblyLinearVelocity.Magnitude > 2
 		local bob = moving and math.abs(math.sin(now * 9)) * 0.35 or math.sin(now * 2.2) * 0.12 -- it bounds when you walk, floats when you stand
-		local off = gloomNear and Vector3.new(2.6, -2.5, -4.2) or Vector3.new(-6.2, -0.6 + bob + bounce, -9) -- out in the open, left of and above the torch hand (nearer, it sat in the hand) -- cowering: low, by the pickaxe
+		local off = gloomNear and Vector3.new(2.6, -2.5, -4.2) or Vector3.new(-7.4, -0.4 + bob + bounce, -10) -- out in the open, left of and above the torch hand (nearer, it sat in the hand) -- cowering: low, by the pickaxe
 		local goal = cam.CFrame:PointToWorldSpace(off)
 		pet.pos = pet.pos:Lerp(goal, 1 - math.exp(-dt * (gloomNear and 12 or 7)))
 		local face = rare and not gloomNear and rare.PrimaryPart.Position or pet.pos + cam.CFrame.LookVector * 3 + cam.CFrame.RightVector * 8 -- it trots ahead, half turned to you
@@ -80,7 +80,7 @@ function M.start(E)
 		local cf = CFrame.lookAt(pet.pos + shiver, flat + shiver) * CFrame.new(0, 0, 0) * CFrame.Angles(gloomNear and 0.35 or -bounce * 0.3, 0, 0)
 		local c = gloomNear and RED:Lerp(WARM, math.noise(now * 14, 5) * 0.5 + 0.5) or WARM
 		d.bead.Color, d.light.Color = c, c
-		d.light.Brightness = gloomNear and 0.2 + math.abs(math.noise(now * 18, 9)) * 0.5 or 0.6
+		d.light.Brightness = gloomNear and 0.2 + math.abs(math.noise(now * 18, 9)) * 0.5 or 0.3
 		return cf
 	end
 end

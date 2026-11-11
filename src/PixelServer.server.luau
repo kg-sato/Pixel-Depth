@@ -820,6 +820,8 @@ SurfaceR.OnServerEvent:Connect(function(plr, dir, report) -- the rail lift butto
 	local s = data[plr]
 	local hrp = hrpOf(plr)
 	if dir == "arrived" then -- the ride down (or the burst out of the shaft) has ended on this client
+		local r = riding[plr]
+		if r and r.down and os.clock() - r.down < 1.2 then return end -- too early: the cut to the cave has not happened yet (Codex review)
 		endRide(plr)
 		return
 	end
@@ -1441,7 +1443,7 @@ BuyR.OnServerEvent:Connect(function(plr, what, arg)
 		return
 	end
 	local list = (what == "pick" and C.PICKS) or (what == "pack" and C.PACKS)
-	if not s or not list then return end
+	if not s or not list or plr:GetAttribute("InCave") then return end -- forging and packs are bought in town (Codex review: it worked from anywhere)
 	local nxt = list[s[what] + 1]
 	if not nxt or s.gold < nxt.cost then return end
 	local need = what == "pick" and C.PICK_ORE[s.pick + 1] -- forging also spends ore from the bank

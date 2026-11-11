@@ -22,6 +22,72 @@ function M.start(E)
 	-- the travel fade
 	local fade = new("Frame", E.top, { Name = "ClayFade", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(20, 12, 26), BackgroundTransparency = 1, Visible = false, ZIndex = 54 })
 
+	-- the tunnel ride between Camp 1 and the Clay Caves (roadmap phase 10: "the alcove becomes a short second minecart ride"):
+	-- seen only by this player. A sloping clay tunnel of timber ribs and lamps stands high over the hall; on travel the camera
+	-- rides a cart nose down (or up) it for 2.3 s between two fades, while the server moves the character.
+	local calm = false
+	pcall(function() calm = game:GetService("GuiService").ReducedMotionEnabled end)
+	local tunnel
+	local function buildTunnel()
+		tunnel = new("Model", fxFolder, { Name = "ClayTunnel" })
+		local top = CFrame.new(C.CAVE2_ORIGIN + Vector3.new(0, 300, 0)) * CFrame.Angles(-0.32, 0, 0) -- runs along -Z, sloping down
+		local function tp(size, cf, color, props)
+			local p = new("Part", tunnel, { Size = size, CFrame = top * cf, Color = color, Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Material = Enum.Material.Sandstone })
+			for k, v in props or {} do p[k] = v end
+			return p
+		end
+		local WOOD = Color3.fromRGB(92, 62, 48)
+		tp(Vector3.new(11, 1, 150), CFrame.new(0, -3.4, -70), Color3.fromRGB(104, 52, 46))
+		tp(Vector3.new(11, 1, 150), CFrame.new(0, 5.4, -70), Color3.fromRGB(58, 36, 72))
+		for _, x in { -5.6, 5.6 } do tp(Vector3.new(1, 9.8, 150), CFrame.new(x, 1, -70), CLAY) end
+		for _, x in { -1.5, 1.5 } do tp(Vector3.new(0.3, 0.3, 150), CFrame.new(x, -2.7, -70), Color3.fromRGB(138, 128, 168), { Material = Enum.Material.Metal }) end
+		for _, z in { 5.4, -145.4 } do tp(Vector3.new(12.2, 9.8, 1), CFrame.new(0, 1, z), Color3.fromRGB(20, 12, 26)) end
+		for k = 0, 18 do
+			local z = -k * 8
+			tp(Vector3.new(3.4, 0.3, 0.9), CFrame.new(0, -2.86, z - 4), WOOD, { Material = Enum.Material.Wood }) -- a tie
+			for _, x in { -4.6, 4.6 } do tp(Vector3.new(0.9, 8, 0.9), CFrame.new(x, 0.9, z), WOOD, { Material = Enum.Material.Wood }) end
+			tp(Vector3.new(10.2, 0.9, 0.9), CFrame.new(0, 4.6, z), WOOD, { Material = Enum.Material.Wood })
+			if k % 2 == 0 then
+				local lamp = tp(Vector3.new(0.5, 0.6, 0.5), CFrame.new(k % 4 == 0 and -3.9 or 3.9, 3.2, z - 0.6), AMBER, { Material = Enum.Material.Neon })
+				new("PointLight", lamp, { Color = AMBER, Range = 16, Brightness = 0.5, Shadows = false })
+			end
+		end
+		return top
+	end
+	local tunnelTop
+	local function tunnelRide(down)
+		local cam = workspace.CurrentCamera
+		if cam.CameraType == Enum.CameraType.Scriptable then return false end -- something else owns the view
+		tunnelTop = tunnelTop or buildTunnel()
+		local t0, len = os.clock() + 0.35, 2.3
+		task.delay(0.35, function()
+			tween(fade, 0.25, { BackgroundTransparency = 1 })
+			cam.CameraType = Enum.CameraType.Scriptable
+			E.gui.Enabled = false
+			local conn
+			local nextClack = 0
+			conn = RunService.RenderStepped:Connect(function()
+				local t = (os.clock() - t0) / len
+				if t >= 1 then
+					conn:Disconnect()
+					cam.CameraType = Enum.CameraType.Custom
+					E.gui.Enabled = true
+					return
+				end
+				if t > 0.86 and fade.BackgroundTransparency > 0.9 then tween(fade, 0.25, { BackgroundTransparency = 0 }) end
+				local e = t * t * (3 - 2 * t) -- ease in and out
+				local z = down and (-8 - e * 126) or (-134 + e * 126)
+				local sway = math.sin(os.clock() * 9) * 0.05
+				cam.CFrame = tunnelTop * CFrame.new(math.sin(os.clock() * 2.2) * 0.25, -0.9 + math.abs(math.sin(os.clock() * 13)) * 0.07, z) * CFrame.Angles(0, down and 0 or math.pi, sway)
+				if os.clock() >= nextClack then
+					nextClack = os.clock() + 0.16
+					sfx("step", 0.55)
+				end
+			end)
+		end)
+		return true
+	end
+
 	-- the umbrella: a clay-cloth canopy over the head while gliding
 	local brolly = new("Model", nil, { Name = "GlideUmbrella" })
 	local function bp(size, cf, color)
@@ -231,6 +297,11 @@ function M.start(E)
 		local b = new("TextButton", ewin, { Text = "", AutoButtonColor = false, Size = UDim2.fromScale(0.14, 0.46), Position = UDim2.fromScale(0.5 + (k - 3) * 0.17, 0.62), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = k % 2 == 0 and CREAM or CLAY_L, BorderSizePixel = 0, ZIndex = 31 })
 		new("UICorner", b, { CornerRadius = UDim.new(0.2, 0) })
 		new("UIStroke", b, { Color = Color3.fromRGB(104, 52, 46), Thickness = 3 })
+		-- a drum, not a chip: a pale skin on top, two dark hoops and a stand line
+		local head = new("Frame", b, { Size = UDim2.fromScale(0.86, 0.2), Position = UDim2.fromScale(0.5, 0.13), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(250, 240, 220), BorderSizePixel = 0, ZIndex = 32 })
+		new("UICorner", head, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", head, { Color = Color3.fromRGB(104, 52, 46), Thickness = 2 })
+		for _, y in { 0.34, 0.86 } do new("Frame", b, { Size = UDim2.fromScale(1, 0.05), Position = UDim2.fromScale(0.5, y), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(104, 52, 46), BorderSizePixel = 0, ZIndex = 32 }) end
 		local ring = new("Frame", b, { Size = UDim2.fromScale(0.2, 0.2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 32 })
 		new("UIAspectRatioConstraint", ring, { AspectRatio = 1 })
 		new("UICorner", ring, { CornerRadius = UDim.new(1, 0) })
@@ -284,7 +355,8 @@ function M.start(E)
 			fade.Visible = true
 			tween(fade, 0.3, { BackgroundTransparency = 0 })
 			sfx("open", 0.6)
-			task.delay(0.8, function()
+			local rode = not calm and tunnelRide(a == 2) -- a 2.3 s cart ride through a clay tunnel (down, or back up)
+			task.delay(rode and 2.75 or 0.8, function()
 				tween(fade, 0.7, { BackgroundTransparency = 1 })
 				task.delay(0.72, function() fade.Visible = false end)
 				toast(a == 2 and "THE CLAY CAVES  -  KILN CAMP" or "BACK AT CAMP 1", CREAM, true)
