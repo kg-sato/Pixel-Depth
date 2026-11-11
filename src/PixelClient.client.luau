@@ -2732,7 +2732,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
@@ -2942,6 +2942,8 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	local look = h.CFrame.LookVector
 	local right = h.CFrame.RightVector
 	for i, pet in petObjs do
+		local lead = forgeUI.petPose and forgeUI.petPose(i, pet, h, now, dt) -- in a cave the lead pet keeps to the edge of the view (Shared.PetCompanion)
+		if lead then pet.model:PivotTo(lead) continue end
 		local side = (i % 2 == 0) and 1 or -1
 		local goalP = h.Position - look * (3 + math.floor((i - 1) / 2) * 2) + right * side * 2.2 + Vector3.new(0, -1.2 + math.sin(now * 5 + i) * 0.25, 0)
 		if now < pet.digUntil then goalP = pet.digPos + Vector3.new(0, math.abs(math.sin((now - pet.hop) * 18)) * 0.6, 0) end
@@ -2950,7 +2952,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	end
 
 	-- depth label
-	local row = inMine and math.max(1, math.floor((-C.CRUST * B - h.Position.Y + 3) / B) + 1) or (inCave and -1 or 0)
+	local row = inMine and math.max(1, math.floor((-C.CRUST * B - h.Position.Y + 3) / B) + 1) or (inCave and ((h.Position - C.CAVE2_ORIGIN).Magnitude < 300 and -2 or -1) or 0)
 	if row ~= lastRow then
 		local L = layerOf(math.max(row, 1))
 		layerName.Size = UDim2.fromScale(inMine and 0.4 or 0.58, 0.46) -- the wide font needs the room when no depth shows
@@ -2959,7 +2961,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 			layerName.Text = C.LAYERS[L][1]:upper()
 			layerDepth.Text = row * B .. " M"
 		elseif inCave then
-			layerNum.Text, layerName.Text, layerDepth.Text = "CAVES", "CAMP 1 DEPTHS", ""
+			layerNum.Text, layerName.Text, layerDepth.Text = "CAVES", row == -2 and "CLAY CAVES" or "CAMP 1 DEPTHS", ""
 		else
 			layerNum.Text, layerName.Text, layerDepth.Text = "CAMP", "HOLLOW MOUNTAIN", ""
 		end

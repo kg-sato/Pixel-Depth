@@ -68,6 +68,7 @@ if C.CAVES_ON then
 	if oldCaves then oldCaves:Destroy() end
 	local caves = CaveBuilder.build(workspace, C.CAVE_ORIGIN, os.time() // 3600)
 	caveLanding = caves:FindFirstChild("LiftLanding", true)
+	require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).build(caves) -- Camp 2's hall; its ore joins Caves.Deposits
 end
 
 local plots = Instance.new("Folder")
@@ -996,6 +997,12 @@ Shop.init({ data = data, fx = FxR, sendState = sendState })
 require(game:GetService("ServerScriptService"):WaitForChild("Boss")).init({ data = data, fx = FxR, sendState = sendState, hrpOf = hrpOf, analytics = A, strikes = C.DEPOSIT.strikes,
 	hurt = function(plr, n) return Gloom.hurt(plr, n) end, heal = function(plr) Gloom.heal(plr) end,
 	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
+local CaveEvents = require(game:GetService("ServerScriptService"):WaitForChild("CaveEvents")) -- Roots Stirring and spore storms
+CaveEvents.init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, landing = function() return caveLanding end,
+	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end,
+	finish = function(s) if s.mg then s.mg.deadline = 0 end end }) -- the main loop pays an expired minigame on its next pass
+require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, sendState = sendState, remote = remote,
+	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end })
 Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, analytics = A, perks = function(s) return PetJobs.perks(crewOf(s)) end,
 	-- gloomlings leave you alone on a ride, in an ore minigame (hands and eyes are busy) and for 2.5 s after it (Gemini loop review, 2026-11-10)
 	busy = function(plr) local s = data[plr] return riding[plr] ~= nil or escaping[plr] ~= nil or (s ~= nil and (s.mg ~= nil or os.clock() < (s.mgSafe or 0))) end })
@@ -1071,6 +1078,8 @@ local function finishMinigame(s)
 	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) + 0.5)
 	local job = PetJobs.perks(crewOf(s)) -- Kobold +1 ore, Goldbristle +1 on rare, Ninering doubles every 9th deposit
 	count += job.ore + (idx == 3 and job.rareOre or 0)
+	local flawless = (mg.kind == "strike" and mg.perfects >= D.strikes) or (mg.kind ~= "strike" and grade == D.grades[1][1])
+	count = math.floor(count * CaveEvents.sporeMult(flawless) + 0.5) -- a spore storm: flawless extractions pay half as much again
 	if mg.coop then -- a friend is working this deposit too: x1.5 ore for you both
 		count = math.floor(count * D.coop.mult + 0.5)
 		FxR:FireClient(s.player, "coopBonus", D.coop.mult)

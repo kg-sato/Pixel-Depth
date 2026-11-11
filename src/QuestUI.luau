@@ -254,8 +254,11 @@ function M.start(E)
 		y = math.clamp(y - math.abs(math.sin(now * 3)) * vp.Y * 0.02, vp.Y * 0.24, vp.Y * 0.66) -- under the step card, over the talisman
 		marker.Position = UDim2.fromOffset(x, y - (gui.IgnoreGuiInset and 0 or game:GetService("GuiService"):GetGuiInset().Y))
 		local mp, ms = marker.AbsolutePosition, marker.AbsoluteSize
-		for _, c in gui:GetChildren() do -- a prompt bubble says what to do: the marker yields where it would sit on one
-			if c.Name == "PromptUI" and c.Visible then
+		local hud = gui:FindFirstChild("CaveHud")
+		local over = { gui:FindFirstChild("StepCard"), hud and hud.Visible and hud:FindFirstChild("TipBanner") or nil }
+		for _, c in gui:GetChildren() do if c.Name == "PromptUI" or c.Name == "Toast" then table.insert(over, c) end end
+		for _, c in over do -- a prompt bubble says what to do, and the step card, tip ribbon and toast lane are taken: the marker yields where it would sit on one
+			if c.Visible then
 				local cp, cs = c.AbsolutePosition, c.AbsoluteSize
 				if mp.X < cp.X + cs.X and cp.X < mp.X + ms.X and mp.Y < cp.Y + cs.Y and cp.Y < mp.Y + ms.Y then marker.Visible = false end
 			end

@@ -315,8 +315,15 @@ C.SWIM = { air = 14, refill = 2.5, speed = 12, rise = 9, sink = 1.2, loss = 0.25
 -- the Root Warden at Camp 1's Deep Gate (ServerScriptService.Boss): the pickaxe tier you must hold (6 = Rootheart), knots to
 -- crack, the knots' Perfect Strike (zone degrees, needle period, PERFECTs out of 3 to crack one), the slam (wind-up seconds,
 -- reach in studs, HP it costs), how far you may walk off, and the reward
-C.BOSS = { needTier = 6, knots = 3, zone = 13, period = 0.85, perfects = 2, windup = 1.1, slamReach = 22, slamHit = 34, leash = 34, gold = 500, gems = 25 }
+C.BOSS = { needTier = 6, knots = 3, zone = 13, period = 0.85, perfects = 2, windup = 1.1, slamReach = 22, slamHit = 45, leash = 34, gold = 500, gems = 15 } -- slam and reward as the user's directive of 2026-11-10 set them (were 34 HP, 25 gems)
 C.GLOOM = { hp = 100, hit = 34, loss = 0.25, shield = 5, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6, grab = 3, warn = 0.8 }
+-- cave events (ServerScriptService.CaveEvents): the roots' warning time, the first spore storm after server start, the gap
+-- between storms, a storm's length (all seconds) and what a flawless extraction pays during one
+C.EVENTS = { rootsWarn = 120, sporeFirst = 240, sporeEvery = 600, sporeLen = 180, sporeMult = 1.5 }
+-- the Clay Caves hall (ServerScriptService.ClayCaves, Shared.ClayClient): the two mesa heights in studs, a jar's cooldown per
+-- player (s), its coins, the odds of a relic shard, the least seconds a fossil takes to brush and its gems (once ever), the
+-- steam launch speed (studs/s; 150 rises about 57 studs) and the glide's fall speed
+C.CLAY = { mesa = { 40, 50 }, jarEvery = 600, jarGold = { 15, 40 }, shardOdds = 0.3, brushMin = 4, fossilGems = 3, launch = 150, glideFall = 14 }
 C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
 C.CAVE2_ORIGIN = Vector3.new(-3000, 0, 1200) -- Camp 2 (Clay Caves), clear of Camp 1's caves (z -56..252); the camp is not built yet

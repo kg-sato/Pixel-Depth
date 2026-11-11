@@ -248,9 +248,16 @@ function Cave.build(parent, origin, seed)
 			local soon = gp("SoonSign", Vector3.new(4.6, 1.6, 0.25), back * CFrame.new(0, 3.9, 2.8), PAL.cream)
 			local sg2 = sg:Clone()
 			sg2.Face = Enum.NormalId.Front
-			sg2.TextLabel.Text, sg2.TextLabel.TextColor3 = "CLAY CAVES: COMING SOON", Color3.fromRGB(111, 88, 176)
+			sg2.TextLabel.Text, sg2.TextLabel.TextColor3 = "CLAY CAVES: THE WAY DOWN", Color3.fromRGB(111, 88, 176)
 			sg2.Parent = soon
 			lantern("Gate", "AlcoveLamp", back * CFrame.new(0, 8.5, 5), PAL.warm:Lerp(PAL.cream, 0.5), 20, 0.9)
+			-- the way down to the Clay Caves hall (ServerScriptService.ClayCaves binds the prompt; the second cart ride is phase 10)
+			local stairs = gp("ClayStairs", Vector3.new(6, 3, 1), back * CFrame.new(0, 1.5, 4.2), Color3.fromRGB(14, 8, 22), { Transparency = 1, CanCollide = false, CanQuery = false })
+			local down = Instance.new("ProximityPrompt")
+			down.ActionText, down.ObjectText, down.KeyboardKeyCode, down.GamepadKeyCode = "Go down", "Clay Caves", Enum.KeyCode.F, Enum.KeyCode.ButtonX
+			down.MaxActivationDistance, down.RequiresLineOfSight, down.Style = 9, false, Enum.ProximityPromptStyle.Custom
+			down:SetAttribute("ClayPortal", 2)
+			down.Parent = stairs
 			-- the Root Warden: a hulking moss-backed root golem asleep in front of the door, three amber knots on its chest
 			local w = Instance.new("Model")
 			w.Name = "Warden"
