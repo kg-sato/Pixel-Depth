@@ -341,6 +341,20 @@ function M.build(caves)
 		slab:SetAttribute("Fossil", i)
 		fossils[i] = prompt(slab, "Brush", "Old fossil", "Fossil", i, 9)
 	end
+	-- the geode anvil by the kiln (roadmap i31, the Geode Lock minigame): a stone block with a cradle and a sample geode.
+	-- Geodes come from clay jars and Echo Tap wins; crack one here by repeating the order its facets light up in.
+	do
+		local at = O * CFrame.new(17, 0, 1) * CFrame.Angles(0, -0.6, 0)
+		local block = part("GeodeAnvil", Vector3.new(4.4, 2.6, 3.4), at * CFrame.new(0, 1.3, 0), Color3.fromRGB(92, 84, 112), { Material = Enum.Material.Slate })
+		part("GeodeCradle", Vector3.new(2.6, 0.5, 2.6), at * CFrame.new(0, 2.85, 0), CLAY_D, { CanCollide = false })
+		part("GeodeShell", Vector3.new(1.9, 1.5, 1.9), at * CFrame.new(0, 3.8, 0), Color3.fromRGB(120, 112, 128), { Shape = Enum.PartType.Ball, CanCollide = false })
+		part("GeodeHeart", Vector3.new(1.1, 0.9, 0.5), at * CFrame.new(0, 3.85, 0.72), Color3.fromRGB(150, 110, 255):Lerp(Color3.new(0, 0, 0), 0.25), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+		local hold = Instance.new("Attachment")
+		hold.Position = Vector3.new(0, 2.6, 0)
+		hold.Parent = block
+		local pr = prompt(block, "Crack", "Geode", "GeodeAnvil", true, 9)
+		pr.Parent = hold
+	end
 	-- echo walls (roadmap i31, the Echo Tap minigame): a ribbed panel of five clay drums on the wall. One is hollow: tap them
 	-- and listen (and watch the ring): the nearer to the hollow one, the deeper the note and the wider the ring.
 	for i, e in { { 2, 53.4, math.pi }, { -73.4, -34, math.pi / 2 }, { 46, 53.4, math.pi } } do
@@ -406,10 +420,12 @@ function M.init(ctx)
 			local rng = Random.new()
 			local gold = rng:NextInteger(K.jarGold[1], K.jarGold[2])
 			local shard = rng:NextNumber() < K.shardOdds
+			local geode = rng:NextNumber() < K.geodeOdds
+			if geode then s.geodes = (s.geodes or 0) + 1 end
 			s.gold += gold
 			if shard then s.shards = (s.shards or 0) + 1 end
 			if ctx.analytics then ctx.analytics.earn(s, "Coins", gold, s.gold, "ClayJar") end
-			ctx.fx:FireClient(plr, "jar", i, gold, shard and s.shards or nil, K.jarEvery)
+			ctx.fx:FireClient(plr, "jar", i, gold, shard and s.shards or nil, K.jarEvery, geode and s.geodes or nil)
 			ctx.sendState(s)
 		end)
 	end
@@ -437,6 +453,7 @@ function M.init(ctx)
 			ctx.coolSet(s, "echo" .. i, K.echoEvery)
 			local gold = K.echoGold[1] + (K.echoTaps - g.taps) * K.echoGold[2] -- fewer taps, more coins
 			s.gold += gold
+			s.geodes = (s.geodes or 0) + 1 -- every hollow drum hides a geode
 			if ctx.analytics then
 				ctx.analytics.earn(s, "Coins", gold, s.gold, "EchoTap")
 				ctx.analytics.event(s, "EchoTap", g.taps)
@@ -451,6 +468,53 @@ function M.init(ctx)
 			ctx.fx:FireClient(plr, "echoTap", drum, off)
 		end
 	end
+	-- Geode Lock: the server makes the order (5 of 6 facets), shows 3, then 4, then 5; every facet the client taps is checked
+	-- here. A wrong tap ends the try and keeps the geode. Three rounds right cracks it: gems and coins.
+	local lock = {} -- [plr] = { seq, round, at, till }
+	Players.PlayerRemoving:Connect(function(plr) lock[plr] = nil end)
+	for _, d in clay:GetDescendants() do
+		if d:IsA("ProximityPrompt") and d:GetAttribute("GeodeAnvil") then
+			d.Triggered:Connect(function(plr)
+				local s = ctx.data[plr]
+				if not s or s.mg or ctx.busy(plr) or not ctx.nearPrompt(plr, d, 16) then return end
+				if (s.geodes or 0) < 1 then ctx.fx:FireClient(plr, "geodeNone") return end
+				if lock[plr] and os.clock() < lock[plr].till then return end -- one try at a time
+				local seq = {}
+				for k = 1, 5 do seq[k] = math.random(1, 6) end
+				lock[plr] = { seq = seq, round = 1, at = 1, till = os.clock() + 75 }
+				ctx.fx:FireClient(plr, "geodeStart", { seq[1], seq[2], seq[3] }, s.geodes)
+			end)
+		end
+	end
+	local function geodeTap(plr, facet)
+		local s, g = ctx.data[plr], lock[plr]
+		if not s or not g or os.clock() > g.till or type(facet) ~= "number" or facet % 1 ~= 0 or facet < 1 or facet > 6 or (s.geodes or 0) < 1 then return end
+		if facet ~= g.seq[g.at] then
+			lock[plr] = nil
+			ctx.fx:FireClient(plr, "geodeMiss", g.seq[g.at])
+			return
+		end
+		g.at += 1
+		if g.at <= g.round + 2 then return end -- more facets to go in this round
+		if g.round < 3 then
+			g.round, g.at = g.round + 1, 1
+			local show = {}
+			for k = 1, g.round + 2 do show[k] = g.seq[k] end
+			ctx.fx:FireClient(plr, "geodeRound", show, g.round)
+			return
+		end
+		lock[plr] = nil
+		s.geodes -= 1
+		local gems, gold = math.random(K.geodeGems[1], K.geodeGems[2]), K.geodeGold
+		s.gems += gems
+		s.gold += gold
+		if ctx.analytics then
+			ctx.analytics.earn(s, "Gems", gems, s.gems, "Geode")
+			ctx.analytics.earn(s, "Coins", gold, s.gold, "Geode")
+		end
+		ctx.fx:FireClient(plr, "geodeWin", gems, gold, s.geodes)
+		ctx.sendState(s)
+	end
 	for i, pr in fossils do
 		pr.Triggered:Connect(function(plr)
 			local s = ctx.data[plr]
@@ -463,6 +527,7 @@ function M.init(ctx)
 	end
 	remote.OnServerEvent:Connect(function(plr, what, i, ...)
 		if what == "echo" then return echoTap(plr, i, ...) end
+		if what == "geode" then return geodeTap(plr, i) end
 		local s, b = ctx.data[plr], brushing[plr]
 		if what ~= "fossil" or not s or not b or b.i ~= i or not fossils[i] then return end
 		brushing[plr] = nil

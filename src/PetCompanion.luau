@@ -39,11 +39,21 @@ function M.start(E)
 	end
 
 	hook.petPose = function(i, pet, h, now, dt)
-		if i ~= 1 or plr:GetAttribute("InCave") ~= true or plr.CameraMode ~= Enum.CameraMode.LockFirstPerson then return nil end
+		if i ~= 1 or plr:GetAttribute("InCave") ~= true or plr.CameraMode ~= Enum.CameraMode.LockFirstPerson then
+			local was = dressed[pet.model]
+			if was and was.big then -- back in town: its own size again
+				was.big = false
+				pet.model:ScaleTo(was.scale0)
+			end
+			return nil
+		end
 		local cam = workspace.CurrentCamera
 		if cam.CameraType == Enum.CameraType.Scriptable then return nil end -- a ride or a cutscene owns the view
 		local d = dressed[pet.model] or dress(pet.model)
-		if not d.big then d.big = true pet.model:ScaleTo(1.6) end -- big enough to read at the edge of the view
+		if not d.big then -- big enough to read at the edge of the view
+			d.big, d.scale0 = true, d.scale0 or pet.model:GetScale()
+			pet.model:ScaleTo(d.scale0 * 1.6)
+		end
 		if now >= nextScan then -- twice a second: the nearest rare deposit and any Gloomling close by
 			nextScan = now + 0.5
 			rare, gloomNear = nil, false

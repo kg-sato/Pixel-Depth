@@ -445,6 +445,7 @@ function M.play(opt)
 	end))
 	local boosts, boostUntil, slowUntil, dodges, hits = 0, {}, 0, 0, 0
 	local hazards, nextSpawn = {}, 1.2
+	local forks = 0 -- forks passed (roadmap pt2_22): twice a run the lanes offer a choice, gold with a rock or a clear side
 	local shakeAmp, phase, done, resultAt, bonus = 0, "run", false, nil, nil
 	local runTime, landed, card = 0, false, nil
 	local lastCount = 4
@@ -602,6 +603,7 @@ function M.play(opt)
 				elseif not taught.beam and t > 6 then kind = "beam" -- each new verb alone once, with a hint
 				elseif not taught.gap and t > 9.5 then kind = "gap"
 				elseif not taught.cart and t > 13 then kind = "cart"
+				elseif taught.cart and ((p > 0.28 and forks == 0) or (p > 0.8 and forks == 1)) then kind = "fork"
 				elseif t < 6 then kind = "rock"
 				else
 					local r = rng:NextNumber()
@@ -620,6 +622,18 @@ function M.play(opt)
 						local l2 = lane % 3 + 1
 						spawnRock(l2, ahead, l2 == cur)
 					end
+				elseif kind == "fork" then -- a signpost, the middle blocked by a cart: one side is a line of gold orbs ending in a rock, the other is clear
+					forks += 1
+					local gold = rng:NextNumber() < 0.5 and 1 or 3
+					local post = pathCF(ahead - 5)
+					part(world, Vector3.new(0.5, 4.6, 0.5), post * CFrame.new(0, 2.3, 0), BARK)
+					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(LANES[gold] * 0.6, 4.1, 0), BUTTER, { Material = Enum.Material.Neon })
+					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(-LANES[gold] * 0.6, 4.1, 0), MINT, { Material = Enum.Material.Neon })
+					spawnCart(ahead + 6, 2)
+					if not taught.fork then hazards[#hazards].teach = "FORK!  GOLD SIDE: ORBS, THEN A ROCK.  MINT SIDE: CLEAR" end
+					taught.fork = true
+					for k = 0, 3 do spawnOrb(gold, ahead + 6 + k * 5) end
+					spawnRock(gold, ahead + 32, false)
 				elseif kind == "beam" then
 					spawnBeam(ahead)
 				elseif kind == "gap" then

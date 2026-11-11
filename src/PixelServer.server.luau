@@ -491,7 +491,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
 	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
 	d.wear, d.quests, d.lanterns = s.wear, s.quests, s.lanterns
-	d.shards, d.fossils = s.shards or 0, s.fossils or {}
+	d.shards, d.fossils, d.geodes = s.shards or 0, s.fossils or {}, s.geodes or 0
 	d.cool = {}
 	for k, v in s.cool or {} do if v > os.time() then d.cool[k] = v end end -- only cooldowns still running
 	if s.altarOwed then d.gold += s.altarOwed end -- left between paying the altar and its hatch: the coins come back
@@ -1705,6 +1705,7 @@ local function onJoin(plr)
 	for k = 1, C.LANTERN.count do if type(d.lanterns) == "table" and d.lanterns[tostring(k)] == true then s.lanterns[tostring(k)] = true end end
 	s.cool = {}
 	for k, v in type(d.cool) == "table" and d.cool or {} do if type(k) == "string" and type(v) == "number" and v > os.time() then s.cool[k] = v end end
+	s.geodes = type(d.geodes) == "number" and math.max(0, math.floor(d.geodes)) or 0
 	s.shards = type(d.shards) == "number" and d.shards or 0 -- Clay Caves: relic shards from jars, fossils brushed clean ({ ["1"] = true, ... })
 	s.fossils = {}
 	for k = 1, 3 do if type(d.fossils) == "table" and d.fossils[tostring(k)] == true then s.fossils[tostring(k)] = true end end

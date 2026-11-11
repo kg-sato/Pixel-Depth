@@ -61,6 +61,8 @@ function M.start(E)
 		tunnelTop = tunnelTop or buildTunnel()
 		local t0, len = os.clock() + 0.35, 2.3
 		task.delay(0.35, function()
+			-- something else took the view or the HUD in the meantime (a minigame, the death screen, a cutscene): no ride, the fade covers the move
+			if cam.CameraType == Enum.CameraType.Scriptable or (E.isBusy and E.isBusy()) or (E.vmHook.deathPlaying and E.vmHook.deathPlaying()) or not E.gui.Enabled then return end
 			tween(fade, 0.25, { BackgroundTransparency = 1 })
 			cam.CameraType = Enum.CameraType.Scriptable
 			E.gui.Enabled = false
@@ -266,18 +268,21 @@ function M.start(E)
 			end
 		end
 	end
-	local held = false
+	local held, finger = false, nil -- finger: the touch that began the stroke (a second finger must not steer or end it)
 	UIS.InputBegan:Connect(function(io)
-		if job and (io.UserInputType == Enum.UserInputType.MouseButton1 or io.UserInputType == Enum.UserInputType.Touch) then
-			held = true
+		local touch = io.UserInputType == Enum.UserInputType.Touch
+		if job and not held and (io.UserInputType == Enum.UserInputType.MouseButton1 or touch) then
+			held, finger = true, touch and io or nil
 			job.last, job.lastT = Vector2.new(io.Position.X, io.Position.Y), os.clock()
 		end
 	end)
 	UIS.InputEnded:Connect(function(io)
-		if io.UserInputType == Enum.UserInputType.MouseButton1 or io.UserInputType == Enum.UserInputType.Touch then held = false end
+		if io.UserInputType == Enum.UserInputType.MouseButton1 and not finger then held = false end
+		if io.UserInputType == Enum.UserInputType.Touch and io == finger then held, finger = false, nil end
 	end)
 	UIS.InputChanged:Connect(function(io)
-		if job and held and (io.UserInputType == Enum.UserInputType.MouseMovement or io.UserInputType == Enum.UserInputType.Touch) then
+		if not job or not held then return end
+		if (io.UserInputType == Enum.UserInputType.MouseMovement and not finger) or (io.UserInputType == Enum.UserInputType.Touch and io == finger) then
 			stroke(Vector2.new(io.Position.X, io.Position.Y))
 		end
 	end)
@@ -292,6 +297,8 @@ function M.start(E)
 	local eclose = E.closeButton(ewin, "EchoClose")
 	pcall(function() eclose.Modal = true end)
 	local ehint = text(ewin, "", UDim2.fromScale(0.88, 0.1), UDim2.fromScale(0.5, 0.26), Vector2.new(0.5, 0.5), E.INK, 700, false)
+	local estage = new("Frame", ewin, { Size = UDim2.fromScale(0.92, 0.62), Position = UDim2.fromScale(0.5, 0.63), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(74, 46, 60), BorderSizePixel = 0, ZIndex = 30 }) -- a dark clay wall behind the drums: on the bare panel they read as colour chips
+	new("UICorner", estage, { CornerRadius = UDim.new(0.08, 0) })
 	local drums, egame = {}, nil -- egame = { i, left, busy }
 	for k = 1, 5 do
 		local b = new("TextButton", ewin, { Text = "", AutoButtonColor = false, Size = UDim2.fromScale(0.14, 0.46), Position = UDim2.fromScale(0.5 + (k - 3) * 0.17, 0.62), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = k % 2 == 0 and CREAM or CLAY_L, BorderSizePixel = 0, ZIndex = 31 })
@@ -327,6 +334,65 @@ function M.start(E)
 		E.pop(d.b, 0.9, 0.25)
 	end
 
+	-- Geode Lock: six facets round a geode light up in an order; tap them back in the same order. Three rounds (3, 4, 5).
+	local gwin = E.panel(E.gui, E.S(520, 400), E.S(640, 300), Vector2.new(0.5, 0.5), "panel")
+	E.fit(gwin, 520, 400)
+	gwin.Name, gwin.Visible, gwin.ZIndex = "GeodePanel", false, 30
+	if E.addModal then E.addModal(gwin) end
+	E.ribbonTitle(gwin, "GEODE LOCK", "ribbonLilac", 0.56)
+	local gclose = E.closeButton(gwin, "GeodeClose")
+	pcall(function() gclose.Modal = true end)
+	local ghint = text(gwin, "", UDim2.fromScale(0.88, 0.08), UDim2.fromScale(0.5, 0.2), Vector2.new(0.5, 0.5), E.INK, 700, false)
+	local gstage = new("Frame", gwin, { Size = UDim2.fromScale(0.9, 0.7), Position = UDim2.fromScale(0.5, 0.61), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(46, 34, 66), BorderSizePixel = 0, ZIndex = 30 }) -- a dark slab of rock behind the geode
+	new("UICorner", gstage, { CornerRadius = UDim.new(0.08, 0) })
+	local FACET = { Color3.fromRGB(255, 157, 176), Color3.fromRGB(255, 217, 112), Color3.fromRGB(127, 220, 180), Color3.fromRGB(142, 200, 255), Color3.fromRGB(185, 164, 238), Color3.fromRGB(255, 176, 84) }
+	local core = new("Frame", gwin, { Size = UDim2.fromScale(0.2, 0.26), Position = UDim2.fromScale(0.5, 0.6), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(120, 112, 128), BorderSizePixel = 0, ZIndex = 31 })
+	new("UIAspectRatioConstraint", core, { AspectRatio = 1 })
+	new("UICorner", core, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", core, { Color = Color3.fromRGB(70, 60, 86), Thickness = 4 })
+	local facets, ggame = {}, nil -- ggame = { input = true/false }
+	local ggen, egen = 0, 0 -- a number per opening of each panel: a late timer closes only the opening that set it
+	for k = 1, 6 do
+		local a = (k - 1) / 6 * math.pi * 2 - math.pi / 2
+		local b = new("TextButton", gwin, { Text = "", AutoButtonColor = false, Size = UDim2.fromScale(0.16, 0.2), Position = UDim2.fromScale(0.5 + math.cos(a) * 0.3, 0.6 + math.sin(a) * 0.3), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = FACET[k]:Lerp(Color3.new(0, 0, 0), 0.45), BorderSizePixel = 0, ZIndex = 31, Rotation = 45 })
+		new("UIAspectRatioConstraint", b, { AspectRatio = 1 })
+		new("UICorner", b, { CornerRadius = UDim.new(0.22, 0) })
+		new("UIStroke", b, { Color = Color3.fromRGB(70, 60, 86), Thickness = 3 })
+		facets[k] = b
+		b.Activated:Connect(function()
+			if not ggame or not ggame.input or not remote then return end
+			sfx("clink", 1 + k * 0.12)
+			b.BackgroundColor3 = FACET[k]
+			tween(b, 0.3, { BackgroundColor3 = FACET[k]:Lerp(Color3.new(0, 0, 0), 0.45) })
+			remote:FireServer("geode", k)
+		end)
+	end
+	local function showOrder(order, round)
+		local mine = { input = false }
+		ggame = mine
+		ghint.Text = "Watch the order...  round " .. round .. " of 3"
+		task.spawn(function()
+			task.wait(0.6)
+			for _, k in order do
+				if ggame ~= mine then return end -- closed, or a newer round replaced this one
+				sfx("clink", 1 + k * 0.12)
+				facets[k].BackgroundColor3 = FACET[k]
+				E.pop(facets[k], 1.25, 0.3)
+				task.wait(0.4)
+				tween(facets[k], 0.2, { BackgroundColor3 = FACET[k]:Lerp(Color3.new(0, 0, 0), 0.45) })
+				task.wait(0.18)
+			end
+			if ggame == mine then
+				mine.input = true
+				ghint.Text = "Your turn: tap them in the same order"
+			end
+		end)
+	end
+	gclose.Activated:Connect(function()
+		ggame = nil
+		E.closePanel(gwin)
+	end)
+
 	local LINES = {
 		"Kiln Keeper: \"Mind the vents. They throw you to the roof.\"", "Kiln Keeper: \"Old jars hide older things. Smash a few.\"",
 		"Kiln Keeper: \"Brush the pale slabs gently. Fossils crack.\"", "Kiln Keeper: \"The kiln stays lit. You are safe in my ring.\"",
@@ -350,7 +416,7 @@ function M.start(E)
 		if pr then pr.Enabled = false end
 	end)
 	E.vmHook.echoTap = function(k) if drums[k] and egame and not egame.busy and remote then egame.busy = true remote:FireServer("echo", egame.i, k) end end
-	E.R.Fx.OnClientEvent:Connect(function(kind, a, b, c, d)
+	E.R.Fx.OnClientEvent:Connect(function(kind, a, b, c, d, ...)
 		if kind == "clayTravel" then
 			fade.Visible = true
 			tween(fade, 0.3, { BackgroundTransparency = 0 })
@@ -381,11 +447,45 @@ function M.start(E)
 			sfx("breakRock", 1.4)
 			toast("CLAY JAR  +" .. b .. " COINS", E.GOLD, false)
 			if c then toast("RELIC SHARD!  YOU HOLD " .. c, AMBER, true) end
+			local geodes = select(1, ...)
+			if geodes then toast("A GEODE!  CRACK IT AT THE ANVIL BY THE KILN", AMBER, true) end
 			if E.fly then
 				local vp = workspace.CurrentCamera.ViewportSize
 				E.fly("coin", UDim2.fromOffset(vp.X / 2, vp.Y * 0.55), E.goldPill, 6, 0.05)
 			end
+		elseif kind == "geodeNone" then
+			toast("No geode to crack. Smash jars or win Echo Tap.", CREAM, false)
+		elseif kind == "geodeStart" then
+			ggen += 1
+			E.openPanel(gwin)
+			showOrder(a, 1)
+		elseif kind == "geodeRound" then
+			sfx("sparkle", 1.2)
+			showOrder(a, b)
+		elseif kind == "geodeMiss" then
+			sfx("error", 1)
+			if ggame then
+				ggame = nil
+				ghint.Text = "Not that one. The geode is safe: try again."
+				E.pop(facets[a], 1.3, 0.4)
+				facets[a].BackgroundColor3 = FACET[a]
+				local gen = ggen
+				task.delay(1.5, function() if gen == ggen then E.closePanel(gwin) end end)
+			end
+		elseif kind == "geodeWin" then
+			ggame = nil
+			sfx("breakRock", 1.2)
+			sfx("claim", 1)
+			ghint.Text = "CRACKED!  +" .. a .. " GEMS  +" .. b .. " COINS"
+			E.pop(core, 1.4, 0.4)
+			local gen = ggen
+			task.delay(1.2, function()
+				if gen == ggen then E.closePanel(gwin) end
+				toast("GEODE CRACKED!  +" .. a .. " GEMS", AMBER, true)
+				if E.vmHook.emote then E.vmHook.emote("cheer") end
+			end)
 		elseif kind == "echoStart" then
+			egen += 1
 			egame = { i = a, left = b }
 			ehint.Text = "One drum is hollow. Deep note, wide ring = close.  " .. b .. " taps"
 			E.openPanel(ewin)
@@ -399,11 +499,11 @@ function M.start(E)
 				sfx("claim", 1)
 				ringOut(a, 0, E.MINT)
 				ehint.Text = "HOLLOW!  +" .. c .. " COINS"
-				local done = egame
+				local gen = egen
 				egame = nil
 				task.delay(1.1, function()
-					E.closePanel(ewin)
-					toast("ECHO TAP  +" .. c .. " COINS", E.GOLD, true)
+					if gen == egen then E.closePanel(ewin) end
+					toast("ECHO TAP  +" .. c .. " COINS AND A GEODE", E.GOLD, true)
 					if E.fly then
 						local vp = workspace.CurrentCamera.ViewportSize
 						E.fly("coin", UDim2.fromOffset(vp.X / 2, vp.Y / 2), E.goldPill, 8, 0.05)
@@ -417,7 +517,8 @@ function M.start(E)
 					ringOut(d, 0, E.PINK)
 					ehint.Text = "Out of taps. It was this one."
 					egame = nil
-					task.delay(1.4, function() E.closePanel(ewin) end)
+					local gen = egen
+					task.delay(1.4, function() if gen == egen then E.closePanel(ewin) end end)
 				else
 					ehint.Text = (b == 1 and "Very close!  " or (b == 2 and "Close.  " or "Far.  ")) .. egame.left .. " taps left"
 				end

@@ -34,11 +34,11 @@ function M.start(E)
 	local ribbonText = E.text(ribbon, "", UDim2.fromScale(0.92, 0.56), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), E.WHITE, 700)
 	local cc = new("ColorCorrectionEffect", Lighting, { Name = "SporeTint", TintColor = Color3.new(1, 1, 1) })
 	local storm, glints, nextRumble, lastLeft = false, {}, 0, nil
-	local function setStorm(on)
+	local function setStorm(on, inCave)
 		if on == storm then return end
 		storm = on
 		local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
-		if atmo then
+		if atmo and (on or inCave) then -- when you leave the caves mid-storm PixelClient sets the town's air: no tween back to cave values
 			tween(atmo, 2.5, on and { Color = TEAL:Lerp(BASE.Color, 0.45), Decay = TEAL:Lerp(BASE.Decay, 0.6), Density = BASE.Density + 0.16, Haze = 2.4 }
 				or { Color = BASE.Color, Decay = BASE.Decay, Density = BASE.Density, Haze = BASE.Haze })
 		end
@@ -54,7 +54,7 @@ function M.start(E)
 		else
 			for d, b in glints do if d.Parent then d.Brightness = b end end
 			table.clear(glints)
-			E.toast("The spores settle.", TEAL, false)
+			if inCave then E.toast("The spores settle.", TEAL, false) end
 		end
 	end
 
@@ -73,7 +73,7 @@ function M.start(E)
 		local inCave = plr:GetAttribute("InCave") == true
 		box.Position = workspace.CurrentCamera.CFrame.Position
 		local ends = workspace:GetAttribute("SporeStorm")
-		setStorm(inCave and ends ~= nil and now < ends)
+		setStorm(inCave and ends ~= nil and now < ends, inCave)
 		local at = workspace:GetAttribute("RootsStirAt")
 		local left = at and inCave and math.ceil(at - now) or nil
 		if left and left > 0 then

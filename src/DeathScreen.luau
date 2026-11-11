@@ -62,6 +62,7 @@ function M.start(E)
 	local fill = new("Frame", track, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = GOLD, BorderSizePixel = 0, ZIndex = 65 })
 	new("UICorner", fill, { CornerRadius = UDim.new(0.5, 0) })
 
+	local playing = false -- the death screen is up (declared here: show and hide below read it)
 	local token = 0 -- every show takes a new number: a later screen cancels an earlier one's timers
 	local function show(opts)
 		token += 1
@@ -107,7 +108,6 @@ function M.start(E)
 		cam.CFrame = cam.CFrame * CFrame.Angles(0.9 * k, 0, 1.4 * k * math.sin(t * 5))
 	end)
 
-	local playing = false
 	E.vmHook.death = function(lost, why)
 		if playing then return end
 		playing = true

@@ -423,6 +423,10 @@ function Cave.build(parent, origin, seed)
 		end
 		local landing = part("Camp", "LiftLanding", Vector3.new(4, 0.2, 4), st * CFrame.new(4.6, 1.1, 2) * CFrame.Angles(0, math.pi, 0), PAL.plank, { Transparency = 1, CanCollide = false })
 		landing:SetAttribute("Landing", true)
+		-- pale shafts of light over the camp (the directive's root god-rays): thin see-through slanted beams, no collision
+		for i, r in { { 12, -9 }, { -14, 6 }, { 4, 17 } } do
+			part("Camp", "GodRay", Vector3.new(3 + i * 0.6, 60, 0.2), CFrame.new(origin + Vector3.new(r[1], 28, r[2])) * CFrame.Angles(0, i * 1.3, 0) * CFrame.Angles(0, 0, 0.18), Color3.fromRGB(150, 210, 190), { Material = Enum.Material.Neon, Transparency = 0.955, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+		end
 		-- the runic boundary ring (CMP-01): glowing mint segments on the floor round the safe zone; inside it you are safe
 		local ringR = 8.6 * CELL
 		for k = 0, 47 do

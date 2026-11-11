@@ -29,6 +29,7 @@ function M.start(E)
 	local heart = thud and thud:Clone() -- outside the group: the heartbeat stays clear while the world goes dull
 	if heart then
 		heart.Name, heart.Volume = "PixelHeart", 0
+		heart.SoundGroup = nil -- the clone carried the group over
 		heart.Parent = SoundService
 	end
 
