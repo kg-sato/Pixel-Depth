@@ -34,7 +34,8 @@ function M.start(E)
 	local Lighting = game:GetService("Lighting")
 	local DEEP_MINT = Color3.fromRGB(32, 156, 92) -- gains read as bright green
 	local function rarityOf(what, i) return C.RARITIES[what == "pick" and C.PICK_RARITY[i] or math.min(i, #C.RARITIES)] end
-	local function tones(col) return col:Lerp(WHITE, 0.74), col:Lerp(INK, 0.18) end -- card fill, card rim
+	local PARCH, CHALK = Color3.fromRGB(243, 230, 196), Color3.fromRGB(255, 250, 235) -- blueprint pass 2026-11-12: plans on parchment, chalk-white lines
+	local function tones(col) return col:Lerp(PARCH, 0.8), col:Lerp(INK, 0.18) end -- card fill (a parchment note tinted by rarity), card rim
 	local function short(name) return (name:gsub(" Pickaxe", "")) end
 	local function shortNum(n) return n >= 1e6 and (string.format("%.1fM", n / 1e6):gsub("%.0M", "M")) or (n >= 1e4 and (math.floor(n / 1e3) .. "K") or commas(n)) end
 	local function lvOf(i) return getState() and getState().lv and getState().lv[tostring(i)] or 1 end
@@ -68,12 +69,13 @@ function M.start(E)
 		local p = panel(forge, UDim2.fromScale(w, 0.095), UDim2.fromScale(x, 0.085), Vector2.new(0, 0.5), iconName == "gem" and "pillPink" or "pillButter")
 		local ic = icon(p, iconName, UDim2.fromScale(0.3, 0.8), UDim2.fromScale(0.05, 0.5), Vector2.new(0, 0.5))
 		new("UIAspectRatioConstraint", ic, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-		local t = text(p, "0", UDim2.fromScale(0.56, 0.52), UDim2.fromScale(0.4, 0.5), Vector2.new(0, 0.5), color, 700, false)
+		local t = text(p, "0", UDim2.fromScale(0.56, 0.7), UDim2.fromScale(0.4, 0.5), Vector2.new(0, 0.5), color, 700, false)
+		t.Font = Enum.Font.Bangers
 		t.TextXAlignment = Enum.TextXAlignment.Left
 		return p, t
 	end
-	local coinP, coinT = pill(0.67, 0.15, "coin", Color3.fromRGB(184, 122, 26))
-	local gemP, gemT = pill(0.83, 0.12, "gem", Color3.fromRGB(214, 74, 126))
+	local coinP, coinT = pill(0.67, 0.15, "coin", Color3.fromRGB(59, 36, 22))
+	local gemP, gemT = pill(0.83, 0.12, "gem", Color3.fromRGB(140, 30, 62))
 
 	-- left: category tabs
 	for i, t in { { "pick", "PICKAXES", "pick" }, { "pack", "BACKPACKS", "bag" }, { "charm", "CHARMS", "star" } } do
@@ -90,17 +92,20 @@ function M.start(E)
 	-- middle: the gear grid (4 x 3), one card per tier
 	local tray = panel(forge, UDim2.fromScale(0.44, 0.78), UDim2.fromScale(0.215, 0.17), nil, "slot")
 	tray.Name = "Grid"
+	tray.Skin.Visible = false -- the plans lie straight on the blueprint, inside a chalk frame
+	round(tray, 0.03)
+	new("UIStroke", tray, { Color = CHALK, Thickness = 2, Transparency = 0.35 })
 	for i = 1, 12 do
 		local col, row = (i - 1) % 4, (i - 1) // 4
 		local b = new("TextButton", tray, {
 			Name = "Card" .. i, Text = "", AutoButtonColor = false, BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.5),
 			Size = UDim2.fromScale(0.215, 0.29), Position = UDim2.fromScale(0.035 + (col + 0.5) * 0.2325, 0.04 + (row + 0.5) * 0.3133), ZIndex = 2,
 		})
-		round(new("Frame", b, { Name = "Shadow", Size = UDim2.fromScale(1, 1), Position = UDim2.new(0.5, 0, 0.5, 5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(70, 48, 110), BackgroundTransparency = 0.72, BorderSizePixel = 0, ZIndex = 2 }), 0.14)
+		round(new("Frame", b, { Name = "Shadow", Size = UDim2.fromScale(1, 1), Position = UDim2.new(0.5, 0, 0.5, 5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(12, 28, 74), BackgroundTransparency = 0.55, BorderSizePixel = 0, ZIndex = 2 }), 0.14)
 		local face = new("Frame", b, { Name = "Face", Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 3 })
 		round(face, 0.14)
 		local rim = new("UIStroke", face, { ApplyStrokeMode = Enum.ApplyStrokeMode.Border, Thickness = 3 })
-		new("UIGradient", face, { Rotation = 90, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)), ColorSequenceKeypoint.new(0.55, Color3.fromRGB(246, 242, 250)), ColorSequenceKeypoint.new(1, Color3.fromRGB(214, 206, 228)) }) })
+		new("UIGradient", face, { Rotation = 90, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)), ColorSequenceKeypoint.new(0.55, Color3.fromRGB(250, 244, 230)), ColorSequenceKeypoint.new(1, Color3.fromRGB(222, 206, 168)) }) })
 		round(new("Frame", face, { Name = "Gloss", Size = UDim2.fromScale(0.86, 0.075), Position = UDim2.fromScale(0.5, 0.03), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = WHITE, BackgroundTransparency = 0.35, BorderSizePixel = 0, ZIndex = 4 }))
 		local lip = new("Frame", face, { Name = "Lip", Size = UDim2.fromScale(0.9, 0.06), Position = UDim2.fromScale(0.5, 0.985), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 0.55, BorderSizePixel = 0, ZIndex = 4 })
 		round(lip)
@@ -156,9 +161,25 @@ function M.start(E)
 	-- right: the detail card for the selected tier
 	local det = panel(forge, UDim2.fromScale(0.305, 0.78), UDim2.fromScale(0.668, 0.17), nil, "panel")
 	det.Name = "Detail"
+	det.Skin.Visible = false -- drawn on the blueprint: a chalk frame, a dashed-look circle round the tool and a callout line
+	round(det, 0.04)
+	new("UIStroke", det, { Color = CHALK, Thickness = 2, Transparency = 0.35 })
+	do
+		local ring = new("Frame", det, { Name = "PlanRing", Size = UDim2.fromScale(0.62, 0.62), Position = UDim2.fromScale(0.5, 0.235), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 2 })
+		new("UIAspectRatioConstraint", ring, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Width })
+		round(ring)
+		new("UIStroke", ring, { Color = CHALK, Thickness = 2, Transparency = 0.45 })
+		for _, a in { 0, 90 } do -- centre lines, like a drawn plan
+			new("Frame", ring, { Size = UDim2.new(1.16, 0, 0, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = a, BackgroundColor3 = CHALK, BackgroundTransparency = 0.7, BorderSizePixel = 0, ZIndex = 2 })
+		end
+		local stamp = new("Frame", det, { Name = "Stamp", Size = UDim2.fromScale(0.36, 0.058), Position = UDim2.fromScale(0.2, 0.04), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = -6, BackgroundTransparency = 1, ZIndex = 6 })
+		new("UIStroke", stamp, { Color = Color3.fromRGB(255, 143, 168), Thickness = 2.5 })
+		local st = text(stamp, "BOLT'S PLANS", UDim2.fromScale(0.86, 0.72), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 143, 168), 700, false)
+		st.Font, st.ZIndex = Enum.Font.Bangers, 6
+	end
 	local stage = new("Frame", det, { Name = "Stage", Size = UDim2.fromScale(0.9, 0.42), Position = UDim2.fromScale(0.5, 0.235), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 2 })
 	local glows = {}
-	local rays = new("ImageLabel", stage, { Name = "Rays", Image = FX_RAYS, ImageTransparency = 0.35, BackgroundTransparency = 1, Size = UDim2.fromScale(1.3, 1.3), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 2 })
+	local rays = new("ImageLabel", stage, { Name = "Rays", Image = FX_RAYS, ImageTransparency = 0.6, BackgroundTransparency = 1, Size = UDim2.fromScale(1.3, 1.3), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 2 })
 	new("UIAspectRatioConstraint", rays, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 	for k, g in { { 1.25, 0.1 }, { 0.7, 0.25 } } do -- a wide soft glow in the rarity colour, a brighter core
 		local c = new("ImageLabel", stage, { Image = FX_GLOW, ImageTransparency = g[2], BackgroundTransparency = 1, Size = UDim2.fromScale(g[1], g[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
@@ -173,7 +194,8 @@ function M.start(E)
 		new("UIAspectRatioConstraint", s, { AspectRatio = 1 })
 		twinkles[k] = scaler(s)
 	end
-	local dName = text(det, "", UDim2.fromScale(0.92, 0.075), UDim2.fromScale(0.5, 0.47), Vector2.new(0.5, 0.5), INK, 700, false)
+	local dName = text(det, "", UDim2.fromScale(0.92, 0.085), UDim2.fromScale(0.5, 0.47), Vector2.new(0.5, 0.5), CHALK, 700, false)
+	dName.Font = Enum.Font.Bangers
 	local rar = new("Frame", det, { Name = "Rarity", Size = UDim2.fromScale(0.36, 0.062), Position = UDim2.fromScale(0.5, 0.548), AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0, ZIndex = 2 })
 	round(rar)
 	new("UIStroke", rar, { Color = WHITE, Thickness = 2 })
@@ -229,7 +251,7 @@ function M.start(E)
 		end
 		return "NEEDS  " .. table.concat(parts, "   "), ok
 	end
-	local lvLabel = text(det, "", UDim2.fromScale(0.5, 0.038), UDim2.fromScale(0.06, 0.743), nil, INK, 700, false)
+	local lvLabel = text(det, "", UDim2.fromScale(0.5, 0.038), UDim2.fromScale(0.06, 0.743), nil, CHALK, 700, false)
 	lvLabel.TextXAlignment = Enum.TextXAlignment.Left
 	local pips = {}
 	for k = 1, C.FORGE.maxLv do
@@ -297,8 +319,8 @@ function M.start(E)
 				setRow(2, "Strike Zone", "star", zone(lv), not maxed and zone(lv + 1) or nil)
 				lvLabel.Text = "LV " .. lv .. " / " .. C.FORGE.maxLv
 				for k, p in pips do
-					p.frame.BackgroundColor3 = k <= lv and BUTTER or Color3.fromRGB(226, 218, 246)
-					p.stroke.Color = k <= lv and Color3.fromRGB(196, 138, 46) or LILAC
+					p.frame.BackgroundColor3 = k <= lv and BUTTER or Color3.fromRGB(30, 62, 140)
+					p.stroke.Color = k <= lv and Color3.fromRGB(196, 138, 46) or CHALK
 				end
 				local cost = C.upgradeCost(i, lv)
 				mode = { kind = cost and "upgrade" or "none", cost = cost }
