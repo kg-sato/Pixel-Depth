@@ -34,6 +34,7 @@ local SND = { clack = { 9113120822, 0, true }, wind = { 9125742262, 0, true }, r
 local E = C.ESCAPE
 
 local CartFX = require(script.Parent:WaitForChild("CartFX"))
+local EscapeHUD = require(script.Parent:WaitForChild("EscapeHUD"))
 local function part(parent, size, cf, color, props)
 	local p = Instance.new("Part")
 	p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow = true, false, false, false, false
@@ -295,8 +296,7 @@ function M.play(opt)
 	local fill = frame({ Parent = bar, Size = UDim2.fromScale(0, 1), BackgroundColor3 = BUTTER, ZIndex = 4 })
 	round(fill)
 	local barText = label(bar, "ESCAPE", UDim2.fromScale(0.5, 0.8), UDim2.fromScale(0.5, 0.5), INK, 5)
-	local timer = label(gui, "0.0", UDim2.fromScale(0.1, 0.05), UDim2.fromScale(0.74, 0.06), WHITE, 4)
-	stroke(timer, INK, 3)
+	local hud = EscapeHUD.start({ gui = gui, calm = calm, keys = UIS.KeyboardEnabled }) -- the stopwatch chip, the gap meter, the warning chevrons
 	local pips = {}
 	for i = 1, 3 do
 		local p = frame({ Size = UDim2.fromScale(0.022, 0.04), Position = UDim2.fromScale(0.5 - 0.03 + (i - 1) * 0.03, 0.115), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BUTTER, BackgroundTransparency = 0.75, ZIndex = 3 })
@@ -309,7 +309,7 @@ function M.play(opt)
 	local big = label(gui, "", UDim2.fromScale(0.5, 0.16), UDim2.fromScale(0.5, 0.42), WHITE, 6)
 	local bigStroke = stroke(big, INK, 5)
 	local touch = UIS.TouchEnabled and not UIS.KeyboardEnabled
-	local hint = label(gui, touch and "HOLD LEFT OR RIGHT TO LEAN, SWIPE UP TO JUMP, DOWN TO DUCK" or "LEAN  A / D    JUMP  SPACE    DUCK  S", UDim2.fromScale(0.6, 0.045), UDim2.fromScale(0.5, 0.9), WHITE, 4)
+	local hint = label(gui, touch and "HOLD LEFT OR RIGHT TO LEAN, SWIPE UP TO JUMP, DOWN TO DUCK" or "LEAN  A / D    JUMP  SPACE    DUCK  S", UDim2.fromScale(0.6, 0.045), UDim2.fromScale(0.5, 0.83), WHITE, 4)
 	local hintStroke = stroke(hint, INK, 3)
 	local flash = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, ZIndex = 8 })
 	local soot = {} -- the Gloom closing in: the screen edges go sooty
@@ -320,12 +320,7 @@ function M.play(opt)
 		g.Parent = f
 		soot[i] = f
 	end
-	local meter = frame({ Size = UDim2.fromScale(0.16, 0.03), Position = UDim2.fromScale(0.13, 0.94), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, ZIndex = 3 })
-	round(meter)
-	stroke(meter, INK, 3)
-	local meterFill = frame({ Parent = meter, Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(120, 90, 170), ZIndex = 4 })
-	round(meterFill)
-	label(meter, "THE GLOOM", UDim2.fromScale(0.9, 0.85), UDim2.fromScale(0.5, -0.9), WHITE, 5)
+
 	local vignette = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 80, 110), BackgroundTransparency = 1, ZIndex = 2 })
 
 	-- input: keys, the left stick, or touches on a screen half
@@ -569,10 +564,12 @@ function M.play(opt)
 			if t < 0 and count ~= lastCount then
 				lastCount = count
 				big.Text = tostring(count)
+				hud.pop(big)
 				sfx("click", 1 + (3 - count) * 0.15)
 			elseif t >= 0 and lastCount > 0 then
 				lastCount = 0
 				big.Text = "ESCAPE!"
+				hud.pop(big)
 				sfx("upgrade", 1.1)
 				play("whoosh", 1)
 				snd.clack:Play()
@@ -654,9 +651,26 @@ function M.play(opt)
 			duckY += ((ducking and 1.4 or 0) - duckY) * (1 - math.exp(-dt / 0.06))
 			-- hazards: rocks drop to land as the cart arrives; passing a lane checks the lean
 			local myLane = lean < -0.5 and 1 or (lean > 0.5 and 3 or 2)
+			local warnDir, warnGap = nil, math.max(speed, 1) * 0.9 -- the nearest thing that will hit within 0.9 s says what to do
 			for i = #hazards, 1, -1 do
 				local h = hazards[i]
 				local gap = h.at - dist
+				if h.kind ~= "orb" and not h.passed and gap > 0 and gap < warnGap then
+					local mine = h.lane == myLane or h.lane == 0
+					if h.kind == "beam" then
+						warnGap, warnDir = gap, now < duckUntil and nil or "down"
+					elseif mine and (h.kind == "gap" or h.lane == 0) then
+						warnGap, warnDir = gap, jumpY > 0 and nil or "up"
+					elseif mine then
+						local side = myLane == 3 and "left" or "right"
+						if myLane == 2 then -- from the middle: lean away from a second hazard beside this one
+							for _, o in hazards do
+								if o ~= h and o.kind ~= "orb" and o.lane == 3 and math.abs(o.at - h.at) < 8 then side = "left" end
+							end
+						end
+						warnGap, warnDir = gap, side
+					end
+				end
 				if h.kind == "rock" then
 					local fall = 1 - math.clamp(gap / math.max(speed * 0.6, 8), 0, 1) -- the last 0.6 s: falls from the ceiling
 					h.rock:PivotTo(h.base * CFrame.new(0, -fall * 8, 0) * CFrame.Angles(fall * 2, 0, fall))
@@ -727,7 +741,8 @@ function M.play(opt)
 			end
 			local near = 1 - gloom.gap
 			for _, f in soot do f.BackgroundTransparency = 1 - near * (0.75 + 0.1 * math.sin(now * 7)) end
-			meterFill.Size = UDim2.fromScale(math.clamp(gloom.gap, 0.02, 1), 1)
+			hud.gap(gloom.gap, now)
+			hud.warn(t > 0 and warnDir or nil, now)
 			snd.rumble.Volume = 0.15 + near * 0.6
 			local inCav = dist > CAV0 and dist < CAV1
 			if atmo then atmo.Density = inCav and 0.05 or math.min(atmoDensity or 0.14, 0.14) end
@@ -742,7 +757,7 @@ function M.play(opt)
 			tunnel.exit.CFrame = pathCF(E.dist + 6) * CFrame.new(0, 4.5, 0)
 			fill.Size = UDim2.fromScale(math.clamp(dist / E.dist, 0, 1), 1)
 			barText.Text = string.format("ESCAPE  %d%%", math.clamp(math.floor(dist / E.dist * 100), 0, 100))
-			timer.Text = string.format("%.1f", math.max(t, 0))
+			hud.time(t)
 			for _, e in sparks do e.Rate = (live > 0 or now < slowUntil) and 30 or 0 end
 			snd.clack.Volume = t > 0 and 0.2 + math.min(speed / 48, 1) * 0.4 or 0
 			snd.clack.PlaybackSpeed = 0.7 + math.min(speed / 48, 1) * 0.8
@@ -785,7 +800,8 @@ function M.play(opt)
 			if bonus or t - resultAt > 4 then
 				phase = "town"
 				resultAt = t
-				bar.Visible, timer.Visible, hint.Visible, meter.Visible = false, false, false, false
+				bar.Visible, hint.Visible = false, false
+				hud.hide()
 				for _, f in soot do f.BackgroundTransparency = 1 end
 				for _, p in pips do p.Visible = false end
 				for _, p in cart:GetDescendants() do -- back to the town cart's own colours for the burst out of the shaft
