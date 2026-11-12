@@ -1836,10 +1836,18 @@ end
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 		view.GroupTransparency += ((hum and hum.MoveDirection.Magnitude > 0.1 and 0.8 or 0) - view.GroupTransparency) * 0.1 -- 20% while walking
 		local lv = cam.CFrame.LookVector
-		me.Rotation = math.deg(math.atan2(lv.X, -lv.Z))
+		local yaw = math.deg(math.atan2(lv.X, -lv.Z))
+		me.Rotation = yaw
+		-- heading-up radar (C.RADAR_HEADING_UP; the Studio attribute DevHeadingUp flips it for an A/B): the map turns so that ahead is up, N rides the rim
+		local turn = (C.RADAR_HEADING_UP ~= (plr:GetAttribute("DevHeadingUp") ~= nil)) and -yaw or 0
+		view.Rotation, view2.Rotation = turn, turn
+		local tr = math.rad(turn)
+		local nr = turn == 0 and 0.47 or 0.41 -- heading-up: N stays inside the rim, clear of the camp pill under the radar
+		north.Position = UDim2.fromScale(0.5 + math.sin(tr) * nr, 0.5 - math.cos(tr) * nr)
 		local to = C.CAVE_ORIGIN - p
 		if (C.CAVE2_ORIGIN - p).Magnitude < to.Magnitude then to = C.CAVE2_ORIGIN - p end -- the nearer camp (the Clay Caves hall has its own ring)
 		local cv = Vector2.new(to.X, to.Z) / C.MAP_VIEW -- camp offset in view widths
+		cv = Vector2.new(cv.X * math.cos(tr) - cv.Y * math.sin(tr), cv.X * math.sin(tr) + cv.Y * math.cos(tr))
 		local edge = math.max(math.abs(cv.X), math.abs(cv.Y))
 		if edge > 0.42 then cv *= 0.42 / edge end -- off the view: stick to the rim, pointing the way
 		campIcon.Position = UDim2.fromScale(0.5 + cv.X * 0.8, 0.5 + cv.Y * 0.8)

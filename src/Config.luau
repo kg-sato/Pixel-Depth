@@ -359,6 +359,7 @@ function C.campAt(pos) -- which camp's safe ring holds this position (1 or 2), o
 	end
 	return nil
 end
+C.RADAR_HEADING_UP = true -- true: the cave radar turns with you (ahead is up, N rides the rim); false: north is always up. Gemini A/B 2026-11-11 (same view, facing south): heading-up 8, 7, 6 against north-up 3, 3, 5 for turning toward camp, matching the tunnels and clutter
 C.MAP_VIEW = 160 -- studs across the cave minimap (HUD-01); floors show once your torchlight reaches them (fog of war)
 -- Ore deposits (stage 4, refs ORE-01/02, EXT-01/02, board artboard CaveUI): crystal clusters hidden against cave walls,
 -- a starburst glint every `glint` seconds. The cave piece sets the layer (deeper pieces hold later layers), depth raises
