@@ -1705,7 +1705,7 @@ end
 	-- compass on the minimap (the user, 2026-11-08: the top ribbon goes): north is always up, so N sits on the top rim; the camp
 	-- campfire icon shows where Camp 1 is and sticks to the rim, pointing the way, once it leaves the view
 	local north = panel(mapPanel, UDim2.fromScale(0.24, 0.16), UDim2.fromScale(0.5, 0.03), Vector2.new(0.5, 0.5), "pink")
-	north.ZIndex = 6
+	north.ZIndex, north.Name = 6, "North"
 	text(north, "N", UDim2.fromScale(0.6, 0.62), UDim2.fromScale(0.5, 0.46), Vector2.new(0.5, 0.5), WHITE).ZIndex = 7
 	local campIcon = icon(mapPanel, "camp", UDim2.fromScale(0.2, 0.2), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5)) -- the smooth campfire icon
 	campIcon.Name, campIcon.ZIndex = "CampIcon", 6
@@ -2810,7 +2810,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
