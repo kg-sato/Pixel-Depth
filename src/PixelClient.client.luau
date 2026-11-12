@@ -1392,7 +1392,7 @@ end)()
 -- time, bursts open with a flash and rays, coins and gems fly into the pills, and a 7-day streak track shows the run.
 ;(function()
 	local GuiService = game:GetService("GuiService")
-	local CHEST = { closed = "rbxassetid://97587431872757", open = "rbxassetid://130450967787337" } -- art/icons_soft/out (ChatGPT)
+	local CHEST = { closed = "rbxassetid://139518055862953", open = "rbxassetid://120090896134682" } -- brass-bound field chest (art/icons_notebook); the pink one was 97587431872757 / 130450967787337
 	task.spawn(function() -- load the chest art up front, or the open frame blinks empty on first use
 		local warm = {}
 		for _, id in CHEST do table.insert(warm, new("ImageLabel", nil, { Image = id })) end
@@ -1431,7 +1431,7 @@ end)()
 	-- the daily chest show, in its own layer above everything
 	local layer = new("ScreenGui", gui.Parent, { Name = "DailyChest", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 12, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Enabled = false })
 	local scrim = new("TextButton", layer, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, Text = "", AutoButtonColor = false })
-	local rays = new("ImageLabel", layer, { Image = FX_RAYS, ImageColor3 = Color3.fromRGB(255, 196, 228), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(560, 560), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
+	local rays = new("ImageLabel", layer, { Image = FX_RAYS, ImageColor3 = Color3.fromRGB(255, 226, 150), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(560, 560), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
 	new("UIAspectRatioConstraint", rays, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 	local glow = new("ImageLabel", layer, { Image = FX_GLOW, ImageColor3 = Color3.fromRGB(255, 220, 160), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(420, 420), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
 	new("UIAspectRatioConstraint", glow, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
@@ -1455,9 +1455,9 @@ end)()
 	local rGems = text(reward, "", UDim2.fromScale(0.3, 0.5), UDim2.fromScale(0.66, 0.5), Vector2.new(0, 0.5), DEEP_GEM, 700, false)
 	rGems.TextXAlignment = Enum.TextXAlignment.Left
 	local track = new("Frame", layer, { Size = S(560, 56), Position = S(640, 500), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1 })
-	local bar = new("Frame", track, { Size = UDim2.fromScale(6 / 7, 0.22), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(226, 218, 246), BorderSizePixel = 0 })
+	local bar = new("Frame", track, { Size = UDim2.fromScale(6 / 7, 0.22), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(205, 188, 150), BorderSizePixel = 0 })
 	new("UICorner", bar, { CornerRadius = UDim.new(0.5, 0) })
-	new("UIStroke", bar, { Color = LILAC, Thickness = 2 })
+	new("UIStroke", bar, { Color = Color3.fromRGB(59, 36, 22), Thickness = 2 })
 	local barFill = new("Frame", bar, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = BUTTER, BorderSizePixel = 0 })
 	new("UICorner", barFill, { CornerRadius = UDim.new(0.5, 0) })
 	local streakT = text(track, "", UDim2.fromScale(0.4, 0.36), UDim2.fromScale(0.5, -0.22), Vector2.new(0.5, 0.5), PLUM_SOFT, 700, false)
@@ -1597,9 +1597,9 @@ end)()
 			tween(barFill, 0.5, { Size = UDim2.fromScale(math.clamp((streak - 1) / 6, 0, 1), 1) }, Enum.EasingStyle.Quad)
 			for d, o in days do
 				local done, today = d < streak, d == streak
-				o.c.BackgroundColor3 = (done or today) and (d == 7 and PINK or BUTTER) or Color3.fromRGB(226, 218, 246)
-				o.st.Color = (done or today) and Color3.fromRGB(196, 138, 46) or LILAC
-				o.l.TextColor3 = (done or today) and WHITE or PLUM_SOFT
+				o.c.BackgroundColor3 = (done or today) and Color3.fromRGB(240, 180, 58) or Color3.fromRGB(227, 210, 166)
+				o.st.Color = Color3.fromRGB(59, 36, 22)
+				o.l.TextColor3 = (done or today) and WHITE or Color3.fromRGB(110, 92, 70)
 				scaler(o.c).Scale = 0.3
 				task.delay(d * 0.05, function() tween(scaler(o.c), 0.3, { Scale = today and 1.25 or 1 }, Enum.EasingStyle.Back) end)
 			end
@@ -2897,7 +2897,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "TouchControls" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end

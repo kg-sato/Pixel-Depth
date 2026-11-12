@@ -11,6 +11,7 @@ EDGE = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 INK, BRASS, BRASS_D, WOOD, WOOD_D, LEATHER, PAPER, BERRY, BERRY_D, TEAL, STEEL, FLAME, FLAME_D = (
     "#3B2416", "#E9BE62", "#B9862E", "#B27A45", "#7A5030", "#8A5A3A", "#F3E6C4", "#D8456B", "#9C2947", "#2F9E8E", "#B8BCC6", "#FFB52E", "#F0782A")
 ST = f'stroke="{INK}" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"'
+ST2 = f'stroke="{INK}" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"'  # the chest is drawn larger: a finer line
 THIN = f'stroke="{INK}" stroke-width="6" stroke-linejoin="round" stroke-linecap="round" fill="none"'
 
 
@@ -37,6 +38,9 @@ ICONS = {
     "heart": f'<path d="M64 110 C12 74 10 42 30 28 C46 18 60 28 64 42 C68 28 82 18 98 28 C118 42 116 74 64 110 Z" fill="{BERRY}" {ST}/><path d="M32 44 Q36 34 46 34" stroke="#FFFFFF" stroke-opacity="0.6" stroke-width="7" fill="none" stroke-linecap="round"/>',
     "torch": f'<path d="M64 10 C90 40 100 60 84 82 C76 94 52 94 44 82 C30 62 44 46 52 34 C56 46 62 44 64 10 Z" fill="{FLAME}" stroke="{FLAME_D}" stroke-width="7" stroke-linejoin="round"/><path d="M64 50 C74 62 76 72 68 80 C62 84 56 80 56 72 C56 64 62 60 64 50 Z" fill="#FFE9A8"/><rect x="50" y="88" width="28" height="30" rx="5" fill="{WOOD}" {ST}/>',
     "calm": lantern("calm"), "uneasy": lantern("uneasy"), "scared": lantern("scared"),
+    # the daily relic chest: brass-bound wood (Gemini rated the pink candy chest 3 of 10 against the notebook look)
+    "chestClosed": f'<rect x="14" y="62" width="100" height="54" rx="6" fill="{WOOD}" {ST2}/><path d="M14 80 H114 M14 98 H114" stroke="{WOOD_D}" stroke-width="3" opacity="0.6"/><rect x="14" y="62" width="20" height="54" fill="{BRASS}" {ST2}/><rect x="94" y="62" width="20" height="54" fill="{BRASS}" {ST2}/><circle cx="24" cy="72" r="2.5" fill="{INK}"/><circle cx="24" cy="106" r="2.5" fill="{INK}"/><circle cx="104" cy="72" r="2.5" fill="{INK}"/><circle cx="104" cy="106" r="2.5" fill="{INK}"/><path d="M12 64 Q12 28 64 28 Q116 28 116 64 Z" fill="{WOOD}" {ST2}/><path d="M26 62 Q28 40 64 38 Q100 40 102 62" stroke="{WOOD_D}" stroke-width="3" fill="none" opacity="0.6"/><path d="M12 64 Q12 30 32 29 L34 64 Z" fill="{BRASS}" {ST2}/><path d="M116 64 Q116 30 96 29 L94 64 Z" fill="{BRASS}" {ST2}/><rect x="10" y="58" width="108" height="10" rx="3" fill="{BRASS}" {ST2}/><rect x="54" y="54" width="20" height="26" rx="4" fill="{BRASS}" {ST2}/><circle cx="64" cy="64" r="4" fill="{INK}"/><path d="M64 66 V74" stroke="{INK}" stroke-width="4" stroke-linecap="round"/>',
+    "chestOpen": f'<path d="M16 60 Q14 14 64 10 Q114 14 112 60 Z" fill="{WOOD_D}" {ST2}/><path d="M26 56 Q26 24 64 20 Q102 24 102 56 Z" fill="#3A2A22"/><path d="M16 60 Q14 16 34 13 L36 58 Z" fill="{BRASS}" {ST2}/><path d="M112 60 Q114 16 94 13 L92 58 Z" fill="{BRASS}" {ST2}/><ellipse cx="64" cy="62" rx="44" ry="14" fill="{FLAME}"/><circle cx="46" cy="56" r="11" fill="{BRASS}" stroke="{BRASS_D}" stroke-width="3"/><circle cx="66" cy="52" r="12" fill="{BRASS}" stroke="{BRASS_D}" stroke-width="3"/><circle cx="84" cy="57" r="10" fill="{BRASS}" stroke="{BRASS_D}" stroke-width="3"/><path d="M56 60 L64 48 L72 60 L64 70 Z" fill="{BERRY}" stroke="{BERRY_D}" stroke-width="3" stroke-linejoin="round"/><path d="M88 62 L94 54 L100 62 L94 69 Z" fill="{TEAL}" stroke="{INK}" stroke-width="3" stroke-linejoin="round"/><rect x="14" y="62" width="100" height="54" rx="6" fill="{WOOD}" {ST2}/><path d="M14 80 H114 M14 98 H114" stroke="{WOOD_D}" stroke-width="3" opacity="0.6"/><rect x="14" y="62" width="20" height="54" fill="{BRASS}" {ST2}/><rect x="94" y="62" width="20" height="54" fill="{BRASS}" {ST2}/><circle cx="24" cy="72" r="2.5" fill="{INK}"/><circle cx="24" cy="106" r="2.5" fill="{INK}"/><circle cx="104" cy="72" r="2.5" fill="{INK}"/><circle cx="104" cy="106" r="2.5" fill="{INK}"/><rect x="10" y="60" width="108" height="9" rx="3" fill="{BRASS}" {ST2}/>',
 }
 
 
@@ -51,20 +55,20 @@ def main():
             '<feDiffuseLighting in="bump" surfaceScale="3" diffuseConstant="1" lighting-color="#FFFFFF" result="diff"><feDistantLight azimuth="225" elevation="60"/></feDiffuseLighting>'
             '<feComposite in="SourceGraphic" in2="diff" operator="arithmetic" k1="0.5" k2="0.6" k3="0" k4="0" result="shaded"/><feComposite in="shaded" in2="SourceAlpha" operator="in" result="body"/>'
             '<feMerge><feMergeNode in="sh"/><feMergeNode in="body"/><feMergeNode in="specIn"/></feMerge></filter></defs></svg>')
-    body = defs + "".join(f'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 128 128" style="position:absolute;left:{(i % 4) * 256}px;top:{(i // 4) * 256}px"><g filter="url(#lit)" transform="translate(6 3) scale(0.9)">{ICONS[n]}</g></svg>' for i, n in enumerate(names))
+    body = defs + "".join(f'<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 128 128" style="position:absolute;left:{(i % 4) * 512}px;top:{(i // 4) * 512}px"><g filter="url(#lit)" transform="translate(6 3) scale(0.9)">{ICONS[n]}</g></svg>' for i, n in enumerate(names))
     page.write_text('<!doctype html><html><body style="margin:0;background:transparent">' + body + "</body></html>", encoding="utf-8")
-    H = ((len(names) + 3) // 4) * 256
+    H = ((len(names) + 3) // 4) * 512
     png = out / "_sheet.png"
     if png.exists(): png.unlink()
     p = subprocess.Popen([EDGE, "--headless=new", "--disable-gpu", "--no-first-run", f"--user-data-dir={out / '_edgeprof'}", "--hide-scrollbars", "--force-device-scale-factor=1",
-                          "--default-background-color=00000000", f"--window-size=1024,{H}", f"--screenshot={png}", page.as_uri()], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                          "--default-background-color=00000000", f"--window-size=2048,{H}", f"--screenshot={png}", page.as_uri()], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     t0 = time.time()
     while time.time() - t0 < 40 and p.poll() is None and not png.exists(): time.sleep(0.5)
     time.sleep(1.5)
     if p.poll() is None: subprocess.run(["taskkill", "/F", "/T", "/PID", str(p.pid)], capture_output=True)  # only the browser started here
     sheet = Image.open(png).convert("RGBA")
     for i, n in enumerate(names):
-        sheet.crop(((i % 4) * 256, (i // 4) * 256, (i % 4) * 256 + 256, (i // 4) * 256 + 256)).save(out / f"{n}.png")
+        sheet.crop(((i % 4) * 512, (i // 4) * 512, (i % 4) * 512 + 512, (i // 4) * 512 + 512)).save(out / f"{n}.png")
     bg = Image.new("RGBA", sheet.size, (169, 113, 63, 255)); bg.alpha_composite(sheet); bg.convert("RGB").save(out / "_preview.jpg", quality=90)
     print("icons", len(names), sheet.size)
 
