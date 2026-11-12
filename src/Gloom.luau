@@ -193,7 +193,7 @@ function G.step(dt)
 		if not caving then
 			if hrp and not plr:GetAttribute("InCave") then -- in town: a fresh torch, full HP and flares for the next dive
 				g.inCamp, g.relitAt, g.blocked = true, serverNow(), false
-				if g.hp < C.GLOOM.hp or g.flares < maxFlares(s) then g.hp, g.flares = C.GLOOM.hp, maxFlares(s) publish(plr, g) end
+				if g.hp ~= C.GLOOM.hp or g.flares ~= maxFlares(s) or g.shieldUntil > serverNow() then g.hp, g.flares, g.shieldUntil = C.GLOOM.hp, maxFlares(s), 0 publish(plr, g) end -- ~= and the shield: a boon's spare flare or shield ends with the dive
 			end
 			scatter(plr)
 		else

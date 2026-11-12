@@ -17,7 +17,7 @@ function M.init(ctx)
 	local function watch(plr) -- a dive ends when the player leaves the caves: every shrine can bless again next time
 		plr:GetAttributeChangedSignal("InCave"):Connect(function()
 			local s = ctx.data[plr]
-			if s and not plr:GetAttribute("InCave") then s.boons, s.boonOffer = nil, nil end
+			if s and not plr:GetAttribute("InCave") then s.boons, s.boonOffer, s.boonOffers = nil, nil, nil end
 		end)
 	end
 	Players.PlayerAdded:Connect(watch)
@@ -34,13 +34,15 @@ function M.init(ctx)
 			ctx.fx:FireClient(plr, "boonSpent")
 			return
 		end
-		local offer = s.boonOffer
-		if not offer or offer.id ~= id then -- the same two until one is taken: praying again does not reroll
+		s.boonOffers = s.boonOffers or {}
+		local offer = s.boonOffers[id]
+		if not offer then -- each shrine keeps its two for the whole dive: praying again, here or after another shrine, does not reroll
 			local kinds = table.clone(C.BOON.order)
 			table.remove(kinds, rng:NextInteger(1, #kinds))
 			offer = { id = id, prompt = prompt, kinds = kinds }
-			s.boonOffer = offer
+			s.boonOffers[id] = offer
 		end
+		s.boonOffer = offer -- the one the card on screen shows
 		ctx.fx:FireClient(plr, "boonOffer", offer.kinds[1], offer.kinds[2])
 	end)
 

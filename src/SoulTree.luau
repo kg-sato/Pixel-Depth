@@ -31,17 +31,15 @@ function M.rank(s, id)
 	return s.soul.nodes[id] or 0
 end
 
-function M.earn(s, n) -- n gloomlings flattened; at most T.perHour shards an hour (the window and the cap survive a rejoin in s.cool)
+function M.earn(s, n) -- n gloomlings flattened; at most T.perHour shards an hour
 	if not T.on or not ctx or not s or not s.soul or n <= 0 then return end
-	if ctx.coolLeft(s, "soulCap") > 0 then return end
-	if ctx.coolLeft(s, "soulHour") <= 0 then
-		ctx.coolSet(s, "soulHour", 3600)
-		s.soulN = 0
-	end
-	n = math.min(n, T.perHour - (s.soulN or 0))
+	-- one saved timestamp holds the whole allowance (Codex review 2026-11-11: a count kept only in the session came back
+	-- full after a rejoin): every shard adds 3600 / perHour seconds of debt, and the debt may not pass one hour
+	local slice = 3600 / T.perHour
+	local debt = ctx.coolLeft(s, "soulDebt")
+	n = math.min(n, math.floor((3600 - debt) / slice + 0.001))
 	if n <= 0 then return end
-	s.soulN = (s.soulN or 0) + n
-	if s.soulN >= T.perHour then ctx.coolSet(s, "soulCap", math.max(1, ctx.coolLeft(s, "soulHour"))) end
+	ctx.coolSet(s, "soulDebt", debt + n * slice)
 	s.soul.shards += n
 	ctx.fx:FireClient(s.player, "soulShard", n, s.soul.shards)
 	ctx.sendState(s)
@@ -82,6 +80,10 @@ function M.init(c)
 	Players.PlayerRemoving:Connect(function(plr) last[plr] = nil end)
 	if game:GetService("RunService"):IsStudio() then -- Studio test hook: player attribute DevSoul = n sets the shards
 		local function hook(plr)
+			plr:GetAttributeChangedSignal("DevSoulEarn"):Connect(function() -- DevSoulEarn = n: earn n shards through the capped path
+				local s, n = c.data[plr], plr:GetAttribute("DevSoulEarn")
+				if s and type(n) == "number" then M.earn(s, n) end
+			end)
 			plr:GetAttributeChangedSignal("DevSoul"):Connect(function()
 				local s, n = c.data[plr], plr:GetAttribute("DevSoul")
 				if s and s.soul and type(n) == "number" then

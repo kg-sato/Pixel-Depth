@@ -229,7 +229,7 @@ function M.start(E)
 
 	-- Wick and Smudge at Camp 1: a bubble with a line when you are close (Lore and Gameplay Plan, cast table)
 	local LINES = {
-		Wick = { "Torch relit! Your ore's safe with me.", "Ore's out there. Look for sparkles!", "Low torch? Come back to camp.", "Gloomlings hate flares. Press R!", "Banked ore is safe ore." },
+		Wick = { "One rule down here: stay in the light.", "Torch relit! Your ore's safe with me.", "Hold Tab for your tools.", "Shrine runes give blessings. Pray!", "Ore's out there. Look for sparkles!", "Low torch? Come back to camp.", "Gloomlings hate flares. Press R!", "Banked ore is safe ore." },
 		Smudge = { "...is it bright in there? Can I come?", "I'm not scary. Promise.", "The dark is SO dark." },
 	}
 	local bubbles = {}

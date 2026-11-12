@@ -4,8 +4,9 @@
 -- next Tab or a click. An action that cannot be used here is dimmed and the hub says why. Client only: every action
 -- goes through the same function its own key calls, so the server checks stay where they were (flares are counted by
 -- the server, the wardrobe saves through its own remote).
--- shortcut: keyboard and mouse only; touch and gamepad players use each action's own button. Add a HUD button and a
--- stick direction when the wheel gets more than these four actions.
+-- Every slot is also a tap target, and on a touch device (no keyboard) a TOOLS button in the left column opens the
+-- wheel, since there is no Tab to hold (Studio hook: client attribute DevTouch shows the button on a PC).
+-- shortcut: no gamepad entry yet; add a stick direction when the game is tested on a console.
 local M = {}
 
 function M.start(E)
@@ -46,6 +47,7 @@ function M.start(E)
 	local root = new("TextButton", E.gui, { Name = "UtilityWheel", Text = "", AutoButtonColor = false, Modal = true, BackgroundColor3 = INK, BackgroundTransparency = 0.36, BorderSizePixel = 0, Size = UDim2.new(1, 0, 1, 80), Position = UDim2.fromOffset(0, -80), ZIndex = 40, Visible = false }) -- 80 px up: over the top bar inset too -- the scrim keeps torches and signs from shining through (Gemini r1: readability 3 to 5)
 	local holder = new("Frame", root, { Size = E.S(330, 330), Position = UDim2.new(0.5, 0, 0.5, 40), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 40 })
 	E.fit(holder, 1, 1)
+	holder.Name = "Holder"
 	local pop = new("UIScale", holder, { Scale = 1 })
 	local function disc(parent, k, x, y, color, tr, z)
 		local d = new("Frame", parent, { Size = UDim2.fromScale(k, k), Position = UDim2.fromScale(x, y), AnchorPoint = MID, BackgroundColor3 = color, BackgroundTransparency = tr, BorderSizePixel = 0, ZIndex = z })
@@ -62,6 +64,7 @@ function M.start(E)
 	for _, s in SLOTS do
 		local d = disc(holder, 0.27, s.x, s.y, CREAM, 0, 41)
 		s.fill = s.tint:Lerp(WHITE, 0.45)
+		d.Name = s.name
 		new("UIGradient", d, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(226, 220, 236)) }) -- pillowy: lighter on top
 		s.lock = new("ImageLabel", d, { Image = E.ICON.lock, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 44, Visible = false })
 		s.disc, s.rim, s.scale = d, new("UIStroke", d, { Color = INK, Thickness = 3 }), new("UIScale", d, { Scale = 1 })
@@ -76,6 +79,8 @@ function M.start(E)
 		end
 		s.label = E.text(d, s.name, UDim2.fromScale(1.5, 0.22), UDim2.fromScale(0.5, 1.13), MID, INK, nil, false) -- outside the disc: the name never covers the icon
 		s.label.ZIndex = 43
+		s.sub = E.text(d, "", UDim2.fromScale(1.7, 0.15), UDim2.fromScale(0.5, 1.31), MID, Color3.fromRGB(150, 135, 170), nil, false) -- why a locked slot is locked
+		s.sub.ZIndex = 43
 		if s.key then
 			s.cap = E.keyCap(d, s.key, UDim2.fromScale(0.3, 0.3), UDim2.fromScale(0.9, 0.12))
 			s.cap.ZIndex = 44
@@ -92,8 +97,9 @@ function M.start(E)
 	new("UIStroke", dot, { Color = INK, Thickness = 2 })
 
 	local origin, sel, openedAt = Vector2.zero, nil, 0
+	local tools -- the touch-only TOOLS button (made below)
 	local function close()
-		if root.Visible then hook.cardUp = false end
+		if root.Visible then hook.cardUp, hook.wheelOpen = false, false end
 		root.Visible = false
 		sel = nil
 	end
@@ -118,6 +124,7 @@ function M.start(E)
 		origin, sel, openedAt = UIS:GetMouseLocation(), nil, os.clock()
 		root.Visible = true
 		hook.cardUp = true -- world prompts and the location pill step back, as under a loot card
+		hook.wheelOpen = true -- PixelClient frees the mouse in first person, as it does for a panel
 		pcall(E.sfx, "open", 1.2)
 		if not calm then
 			pop.Scale = 0.8
@@ -140,7 +147,7 @@ function M.start(E)
 		for i, s in SLOTS do
 			local why = s.why()
 			local off, on = why ~= nil, i == sel
-			s.label.Text = off and string.upper(why) or s.name -- a locked slot says why, and its key cap goes (the key would not work either)
+			s.sub.Text = off and why or "" -- a locked slot keeps its name and says why underneath; its key cap goes (the key would not work either)
 			if s.cap then s.cap.Visible = not off end
 			-- unusable: a flat grey disc with a lock, never see-through (Gemini r1: transparency turned to sludge over the world)
 			s.disc.BackgroundColor3 = off and OFF or (on and s.tint or s.fill)
@@ -152,11 +159,31 @@ function M.start(E)
 			s.scale.Scale += ((on and 1.14 or 1) - s.scale.Scale) * 0.35
 		end
 		local s = sel and SLOTS[sel]
-		hubName.Text = s and s.name or "TAB"
-		hubWhy.Text = s and s.why() or (sel and "" or "push and let go")
+		hubName.Text = s and s.name or ((tools and tools.Visible) and "TOOLS" or "TAB")
+		hubWhy.Text = s and s.why() or (sel and "" or ((tools and tools.Visible) and "tap one" or "push and let go"))
 	end)
 
 	root.Activated:Connect(commit)
+	for i, s in SLOTS do -- a tap or a click straight on a slot picks it
+		local tap = new("TextButton", s.disc, { Name = "Tap", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 46 })
+		tap.Activated:Connect(function()
+			sel = i
+			commit()
+		end)
+	end
+	tools = E.button(E.gui, "TOOLS", E.S(76, 76), E.S(20, 400), nil, "lilac", "star", true)
+	E.fit(tools, 1, 1)
+	tools.Name = "ToolsButton"
+	tools.Activated:Connect(function() if root.Visible then close() else open() end end)
+	local function touchOnly() tools.Visible = (UIS.TouchEnabled and not UIS.KeyboardEnabled) or plr:GetAttribute("DevTouch") ~= nil end
+	plr:GetAttributeChangedSignal("DevTouch"):Connect(touchOnly)
+	touchOnly()
+	task.spawn(function()
+		for _ = 1, 50 do
+			if E.addRow then E.addRow(tools, 76) return end
+			task.wait(0.1)
+		end
+	end)
 	UIS.InputBegan:Connect(function(io, gp)
 		if gp or io.KeyCode ~= Enum.KeyCode.Tab then return end
 		if root.Visible then close() else open() end

@@ -774,9 +774,9 @@ local function hatchShow(name)
 	tween(vpSc, 0.4, { Scale = 1 }, Enum.EasingStyle.Back) -- the egg and plinth drop in
 	local world = new("WorldModel", vp, {})
 	local vcam = new("Camera", vp, { FieldOfView = 30 })
-	local cine = tier >= #C.RARITIES and forgeUI.hatchCine and forgeUI.hatchCine({ ov = ov, stage = stage, vcam = vcam, buildT = buildT }) or nil -- Secret: Shared.HatchCine
 	vp.CurrentCamera = vcam
 	vcam.CFrame = CFrame.lookAt(Vector3.new(0, 1.2, -9), Vector3.new(0, 0.6, 0))
+	local cine = tier >= #C.RARITIES and forgeUI.hatchCine and forgeUI.hatchCine({ ov = ov, stage = stage, vcam = vcam, buildT = buildT }) or nil -- Secret: Shared.HatchCine (after the camera is placed: it shakes from this pose)
 	local plinth = new("Part", world, { Anchored = true, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.5, 3.6, 3.6), Color = Color3.fromRGB(96, 76, 128), CFrame = CFrame.new(0, -1.05, 0) * CFrame.Angles(0, 0, math.rad(90)) })
 	local rim = new("Part", world, { Anchored = true, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.12, 3.9, 3.9), Color = rc, Material = Enum.Material.Neon, Transparency = 0.85, CFrame = CFrame.new(0, -0.78, 0) * CFrame.Angles(0, 0, math.rad(90)) })
 	local egg = new("Part", world, { Anchored = true, Size = Vector3.new(2.2, 2.8, 2.2), Color = C.EGG_COLOR, CFrame = CFrame.new(0, 0.6, 0) })
@@ -835,6 +835,7 @@ local function hatchShow(name)
 	tween(eggMesh, 0.08, { Scale = Vector3.new(0.65, 1.45, 0.65) }, Enum.EasingStyle.Exponential, Enum.EasingDirection.In)
 	task.wait(0.08)
 	phase = "done"
+	if cine then cine.snap() end
 
 	-- TIER CLIMB (Rare and up, from ropilotai's rare rolling reels): the egg hides, a four-point star flare steps up through the
 	-- rarity colours one flash at a time until it reaches this pet's tier, so the tier rises in front of the player.
@@ -848,7 +849,7 @@ local function hatchShow(name)
 			title.Text = tier >= 6 and "THE ROOTS AWAKEN..." or "THE DEEP STIRS..."
 			title.TextColor3 = CREAM
 			pop(title, 0.8, 0.5)
-			task.wait(0.9)
+			task.wait(0.5) -- was 0.9: a dead black beat in the recording (video judge 2026-11-11)
 			task.delay(1.6 + tier * 0.1, function() tween(dark, 0.3, { BackgroundTransparency = 1 }); task.delay(0.35, function() dark:Destroy() end) end)
 		end
 		local bloom = new("Frame", ov, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 22 })
@@ -882,7 +883,7 @@ local function hatchShow(name)
 			tween(bloom, 0.3, { BackgroundTransparency = 0.9 })
 			sfx("hit", 1 + i * 0.18)
 			if i > 1 then sfx("sparkle", 0.8 + i * 0.1) end
-			task.wait(i == tier and 0.5 or 0.34)
+			task.wait(i == tier and 0.55 or math.max(0.15, 0.36 - (i - 1) * 0.05)) -- the climb quickens tier by tier, then holds on the last (was an even 0.34)
 		end
 		label:Destroy()
 		flare:Destroy()
@@ -964,8 +965,8 @@ local function hatchShow(name)
 	local spinT = os.clock()
 	local spin = RunService.RenderStepped:Connect(function()
 		local t = os.clock() - spinT
-		m:ScaleTo(1 + math.sin(t * 5) * 0.035) -- breathing, so the pet never freezes
-		m:PivotTo(CFrame.new(0, math.abs(math.sin(t * 4)) * 0.35 * math.exp(-t * 0.8) + math.sin(t * 4.5) * 0.08, 0) * CFrame.Angles(0, math.rad(20) + math.sin(t * 1.6) * 0.45, math.sin(t * 1.6) * 0.06))
+		m:ScaleTo(1 + math.sin(t * 5) * 0.05) -- breathing, so the pet never freezes
+		m:PivotTo(CFrame.new(0, math.abs(math.sin(t * 4)) * 0.35 * math.exp(-t * 0.8) + math.sin(t * 4.5) * 0.08 + math.max(0, math.sin(t * 3.1)) ^ 6 * 0.22, 0) * CFrame.Angles(0, math.rad(20) + math.sin(t * 1.6) * 0.45, math.sin(t * 1.6) * 0.06))
 		if shine then
 			local s = (t * 0.8) % 1.15 -- sweeps back to back with a short gap
 			sheen.Visible = s < 1
@@ -976,11 +977,18 @@ local function hatchShow(name)
 	local function close()
 		if closed then return end
 		closed = true
-		conn:Disconnect()
-		spin:Disconnect()
-		ov:Destroy()
-		hatchBusy = false
-		syncPets()
+		-- a short dip to the backdrop colour instead of a hard cut back to the town (video judge 2026-11-11)
+		local veil = new("Frame", top, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 40 })
+		tween(veil, 0.16, { BackgroundTransparency = 0 })
+		task.delay(0.17, function()
+			conn:Disconnect()
+			spin:Disconnect()
+			ov:Destroy()
+			hatchBusy = false
+			syncPets()
+			tween(veil, 0.35, { BackgroundTransparency = 1 })
+			task.delay(0.4, function() veil:Destroy() end)
+		end)
 	end
 	task.delay(0.6, function() ov.Activated:Connect(close) end)
 	task.delay(4.5, close)
@@ -2913,7 +2921,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	end
 	-- a free mouse while a panel is open (or Left Alt is held) so PC players can click the HUD in first person
 	if inMine or inCave then
-		local free = modal or sellPop.Visible or UIS:IsKeyDown(Enum.KeyCode.LeftAlt)
+		local free = modal or sellPop.Visible or UIS:IsKeyDown(Enum.KeyCode.LeftAlt) or forgeUI.wheelOpen == true
 		if free then
 			UIS.MouseBehavior = Enum.MouseBehavior.Default
 		end
