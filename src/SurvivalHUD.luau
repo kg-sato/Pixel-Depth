@@ -15,7 +15,7 @@ function M.start(E)
 	local Radial = require(script.Parent:WaitForChild("Radial"))
 	local AMBER, VIOLET, PLUM = Color3.fromRGB(255, 196, 60), Color3.fromRGB(150, 110, 235), Color3.fromRGB(38, 28, 58)
 
-	local root = new("Frame", caveHud, { Name = "Survival", Size = S(134, 134), Position = S(20, 574), AnchorPoint = Vector2.new(0, 1), BackgroundTransparency = 1, ZIndex = 2 })
+	local root = new("Frame", caveHud, { Name = "Survival", Size = S(146, 146), Position = S(22, 574), AnchorPoint = Vector2.new(0, 1), BackgroundTransparency = 1, ZIndex = 2 })
 	new("UIAspectRatioConstraint", root, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 	local function disc(parent, w, h, pos, color, transparency, z)
 		local f = new("Frame", parent, { Size = UDim2.fromScale(w, h), Position = pos, AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = color, BackgroundTransparency = transparency, BorderSizePixel = 0, ZIndex = z })
@@ -50,7 +50,8 @@ function M.start(E)
 	end
 
 	-- the flare collar: a small glass slot hooked on the talisman's right shoulder
-	local collar = new("TextButton", root, { Name = "Flare", Text = "", AutoButtonColor = false, Size = UDim2.fromScale(0.8, 0.36), Position = UDim2.fromScale(0.92, 0.77), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.fromRGB(90, 58, 42), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 3 }) -- a leather strap (Field Notebook pass; was dark glass)
+	local collar = new("TextButton", root, { Name = "Flare", Text = "", AutoButtonColor = false, Size = UDim2.fromScale(0.8, 0.36), Position = UDim2.fromScale(0.92, 0.77), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 3 }) -- a brass bracket fitted to the dial (was a floating dark chip)
+	local collarShade = new("UIGradient", collar, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(240, 204, 120), Color3.fromRGB(168, 120, 42)) })
 	new("UICorner", collar, { CornerRadius = UDim.new(0.5, 0) })
 	new("UIStroke", collar, { Color = Color3.fromRGB(42, 24, 16), Thickness = 3, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }) -- the same bronze rim: one piece of hardware
 	local flareBox = new("Frame", collar, { Size = UDim2.fromScale(0.36, 0.86), Position = UDim2.fromScale(0.2, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 4 })
@@ -60,7 +61,8 @@ function M.start(E)
 	local key = new("Frame", collar, { Size = UDim2.fromScale(0.24, 0.62), Position = UDim2.fromScale(0.53, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, BorderSizePixel = 0, ZIndex = 4 })
 	new("UICorner", key, { CornerRadius = UDim.new(0.25, 0) })
 	text(key, "R", UDim2.fromScale(0.7, 0.8), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), INK, 700, false).ZIndex = 5
-	local count = text(collar, "x2", UDim2.fromScale(0.26, 0.6), UDim2.fromScale(0.82, 0.5), Vector2.new(0.5, 0.5), CREAM, 700, false)
+	local count = text(collar, "x2", UDim2.fromScale(0.28, 0.7), UDim2.fromScale(0.82, 0.5), Vector2.new(0.5, 0.5), Color3.fromRGB(42, 24, 16), 700, false)
+	count.Font = Enum.Font.Bangers
 	count.ZIndex = 5
 	collar.Activated:Connect(function() if cave.flare then cave.flare() end end)
 
@@ -140,8 +142,8 @@ function M.start(E)
 			end
 			lastFl = fl
 			count.Text = "x" .. fl
-			collar.BackgroundColor3 = fl > 0 and PLUM or Color3.fromRGB(70, 60, 86)
-			count.TextColor3 = fl > 0 and CREAM or PINK
+			collarShade.Color = fl > 0 and ColorSequence.new(Color3.fromRGB(240, 204, 120), Color3.fromRGB(168, 120, 42)) or ColorSequence.new(Color3.fromRGB(150, 138, 120), Color3.fromRGB(96, 86, 72)) -- spent: dull pewter
+			count.TextColor3 = fl > 0 and Color3.fromRGB(42, 24, 16) or Color3.fromRGB(120, 36, 48)
 		end
 		wipe.root.Visible = fl <= 0 or now - flareAt < 1.5
 		wipe.set(fl > 0 and math.clamp(1 - (now - flareAt) / 1.5, 0, 1) or 1) -- a short recharge sweep after each flare; spent = covered

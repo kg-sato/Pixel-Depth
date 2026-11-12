@@ -318,7 +318,7 @@ local goldPill = panel(gui, S(170, 46), S(20, 18), nil, "pillButter")
 fit(goldPill, 170, 46)
 local coinIcon = icon(goldPill, "coin", UDim2.fromScale(0.2, 0.68), UDim2.fromScale(0.06, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", coinIcon, { AspectRatio = 1 })
-local goldText = text(goldPill, "0", UDim2.fromScale(0.64, 0.56), UDim2.fromScale(0.3, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(122, 78, 12), 700, false)
+local goldText = text(goldPill, "0", UDim2.fromScale(0.62, 0.8), UDim2.fromScale(0.3, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(59, 36, 22), 700, false) -- larger and darker: thin gold digits vanished on a phone
 goldText.TextXAlignment, goldText.Font = Enum.TextXAlignment.Left, HEAD
 goldPill.Name = "GoldPill"
 
@@ -1406,7 +1406,8 @@ end)()
 	gemPill.Name = "GemPill"
 	local gemIc = icon(gemPill, "gem", UDim2.fromScale(0.34, 0.74), UDim2.fromScale(0.06, 0.5), Vector2.new(0, 0.5))
 	new("UIAspectRatioConstraint", gemIc, { AspectRatio = 1 })
-	local gemText = text(gemPill, "0", UDim2.fromScale(0.5, 0.56), UDim2.fromScale(0.44, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(184, 46, 100), 700, false) -- deeper than DEEP_GEM: 2.8:1 on the pink pill measured with spike/hud_contrast.luau, now about 4:1
+	local gemText = text(gemPill, "0", UDim2.fromScale(0.5, 0.8), UDim2.fromScale(0.44, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(140, 30, 62), 700, false) -- deeper than DEEP_GEM: 2.8:1 on the pink pill measured with spike/hud_contrast.luau, now about 4:1
+	gemText.Font = HEAD
 	gemText.TextXAlignment = Enum.TextXAlignment.Left
 	eggPill.Position = S(320, 84) -- the egg pill moves under the gem pill's row, right of the bag
 	local shown, goal = nil, 0

@@ -91,7 +91,12 @@ function M.start(E)
 	end
 	local minus = block(sRow, "-", UDim2.fromScale(0.1, 0.84), UDim2.fromScale(0.41, 0.5), PAPER)
 	local plus = block(sRow, "+", UDim2.fromScale(0.1, 0.84), UDim2.fromScale(0.93, 0.5), PAPER)
+	local pin = new("Frame", sRow, { Size = UDim2.fromScale(0.05, 0.92), AnchorPoint = MID, BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0, ZIndex = 35 }) -- a brass pin riding the pencil scale
+	new("UICorner", pin, { CornerRadius = UDim.new(0.3, 0) })
+	new("UIStroke", pin, { Color = Color3.fromRGB(59, 36, 22), Thickness = 2.5 })
+	new("UIGradient", pin, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(244, 210, 126), Color3.fromRGB(160, 114, 40)) })
 	local function showSound()
+		pin.Position = UDim2.fromScale(0.45 + math.max(set.sound, 0.4) * 0.036, 0.5)
 		for i, p in pips do p.BackgroundColor3 = i <= set.sound and INK or Color3.fromRGB(205, 188, 150) end -- pencil strokes, not teal bars
 		local g = group()
 		if g then g.Volume = set.sound / 10 end
@@ -123,14 +128,14 @@ function M.start(E)
 	note.TextXAlignment, note.TextWrapped, note.ZIndex = Enum.TextXAlignment.Left, true, 34
 
 	-- right page: the keys on a torn scrap, over a pink splat
-	local splat2 = new("Frame", right, { Size = UDim2.fromScale(0.5, 0.2), Position = UDim2.fromScale(0.3, 0.14), AnchorPoint = MID, BackgroundColor3 = BERRY, BorderSizePixel = 0, Rotation = 5, ZIndex = 32 })
+	local splat2 = new("Frame", right, { Size = UDim2.fromScale(0.46, 0.15), Position = UDim2.fromScale(0.28, 0.12), AnchorPoint = MID, BackgroundColor3 = BERRY, BorderSizePixel = 0, Rotation = 5, ZIndex = 32 })
 	new("UICorner", splat2, { CornerRadius = UDim.new(0.5, 0) })
 	local kh = new("Frame", right, { Size = UDim2.fromScale(0.3, 0.1), Position = UDim2.fromScale(0.07, 0.07), BackgroundColor3 = INK, BorderSizePixel = 0, Rotation = -2, ZIndex = 33 })
 	local kt = text(kh, "KEYS", UDim2.fromScale(0.8, 0.74), UDim2.fromScale(0.5, 0.5), MID, MARI, 700, false)
 	kt.Font, kt.ZIndex = HEAD, 34
 	local KEYS = { { "TAB", "Tool wheel" }, { "N", "This notebook" }, { "Q", "Minecart" }, { "B", "Bag" }, { "J", "Quests" }, { "V", "Outfits" }, { "T", "Sonar (caves)" }, { "R", "Flare (caves)" }, { "Z", "Ping friends" } }
 	for i, k in KEYS do
-		local f = new("Frame", right, { Size = UDim2.fromScale(0.86, 0.072), Position = UDim2.fromScale(0.07, 0.125 + i * 0.079), BackgroundTransparency = 1, ZIndex = 33 })
+		local f = new("Frame", right, { Size = UDim2.fromScale(0.86, 0.072), Position = UDim2.fromScale(0.07, 0.165 + i * 0.075), BackgroundTransparency = 1, ZIndex = 33 })
 		local cap = new("Frame", f, { Size = UDim2.fromScale(0.17, 0.92), Position = UDim2.fromScale(0, 0.5), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = MARI, BorderSizePixel = 0, ZIndex = 33 })
 		new("UICorner", cap, { CornerRadius = UDim.new(0.16, 0) })
 		new("UIStroke", cap, { Color = INK, Thickness = 2 })
