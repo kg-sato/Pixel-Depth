@@ -85,6 +85,13 @@ local MINT, PINK, LILAC, BUTTER, SKY = Color3.fromRGB(127, 220, 180), Color3.fro
 local GOLD, PLUM_SOFT = Color3.fromRGB(255, 206, 84), Color3.fromRGB(122, 98, 150)
 local FONT = Enum.Font.PatrickHand -- notebook handwriting for sentences (was FredokaOne with the soft kit)
 local HEAD = Enum.Font.Bangers -- comic capitals for buttons, titles, key caps and numbers
+local GLASS = C.UI_KIT == "glass" and C.UI_GLASS or nil -- directive v8: the cut-glass kit; nil = the Field Notebook kit above
+if GLASS then
+	for k, v in GLASS.skin do SKIN[k] = v end
+	for k, v in GLASS.icon do ICON[k] = v end
+	for k in DEEP do DEEP[k] = Color3.fromRGB(46, 30, 96) end
+	SPRITE.close, FONT, HEAD = GLASS.close, Enum.Font.TitilliumWeb, Enum.Font.Oswald
+end
 
 local gui = Instance.new("ScreenGui")
 gui.Name, gui.ResetOnSpawn, gui.ZIndexBehavior = "PixelHUD", false, Enum.ZIndexBehavior.Sibling
@@ -92,6 +99,7 @@ gui.Parent = plr:WaitForChild("PlayerGui")
 local top = Instance.new("ScreenGui") -- full-screen layer for the hatch show, the lift fade and the frenzy edge
 top.Name, top.ResetOnSpawn, top.IgnoreGuiInset, top.DisplayOrder = "PixelTop", false, true, 10
 top.Parent = gui.Parent
+task.spawn(function() require(RS.Shared:WaitForChild("LoadingScreen")).start({ C = C, plr = plr }) end) -- the neon logo over the first seconds (directive v8)
 
 local function new(cls, parent, props)
 	local o = Instance.new(cls)
@@ -179,9 +187,9 @@ local function panel(parent, size, pos, anchor, kind)
 end
 -- Blueprint paper over a panel's page: the forge and the Soul Tree are plans pinned in the notebook (Unrailed; art/ui_notebook/grid.png)
 local function blueprint(o)
-	local g = new("ImageLabel", o, { Name = "Blueprint", Image = "rbxassetid://132351994400997", ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.fromOffset(48, 48), BackgroundColor3 = Color3.fromRGB(43, 99, 198), BorderSizePixel = 0, Size = UDim2.fromScale(0.955, 0.9), Position = UDim2.fromScale(0.5, 0.49), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 1 })
+	local g = new("ImageLabel", o, { Name = "Blueprint", Image = GLASS and GLASS.grid or "rbxassetid://132351994400997", ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.fromOffset(48, 48), BackgroundColor3 = GLASS and Color3.fromRGB(26, 18, 52) or Color3.fromRGB(43, 99, 198), BackgroundTransparency = GLASS and 0.08 or 0, BorderSizePixel = 0, Size = UDim2.fromScale(0.955, 0.9), Position = UDim2.fromScale(0.5, 0.49), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 1 })
 	new("UICorner", g, { CornerRadius = UDim.new(0.02, 0) })
-	new("UIStroke", g, { Color = Color3.fromRGB(27, 63, 134), Thickness = 3 })
+	new("UIStroke", g, { Color = GLASS and Color3.fromRGB(150, 232, 255) or Color3.fromRGB(27, 63, 134), Thickness = GLASS and 1.5 or 3 })
 	return g
 end
 local function icon(parent, name, size, pos, anchor)
@@ -252,6 +260,7 @@ local function button(parent, label, size, pos, anchor, kind, iconName, vertical
 end
 -- in the caves the paper pieces of the HUD are lantern-lit, not daylight white (Gemini: the bright stationery glared in the dark)
 local function paperTone(dark)
+	if GLASS then return end -- glass takes the world's light through its own transparency
 	local tone = dark and Color3.fromRGB(196, 172, 132) or Color3.new(1, 1, 1)
 	for sk in skinned do
 		local k = sk.Parent and sk.Parent:GetAttribute("Kind")
@@ -318,7 +327,7 @@ local goldPill = panel(gui, S(170, 46), S(20, 18), nil, "pillButter")
 fit(goldPill, 170, 46)
 local coinIcon = icon(goldPill, "coin", UDim2.fromScale(0.2, 0.68), UDim2.fromScale(0.06, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", coinIcon, { AspectRatio = 1 })
-local goldText = text(goldPill, "0", UDim2.fromScale(0.62, 0.8), UDim2.fromScale(0.3, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(59, 36, 22), 700, false) -- larger and darker: thin gold digits vanished on a phone
+local goldText = text(goldPill, "0", UDim2.fromScale(0.62, 0.8), UDim2.fromScale(0.3, 0.5), Vector2.new(0, 0.5), GLASS and INK or Color3.fromRGB(59, 36, 22), 700, false) -- larger and darker: thin gold digits vanished on a phone
 goldText.TextXAlignment, goldText.Font = Enum.TextXAlignment.Left, HEAD
 goldPill.Name = "GoldPill"
 
@@ -380,7 +389,7 @@ do -- a small wooden plank nailed over the card's corner names it (Field Noteboo
 	local plank = new("Frame", stepCard, { Name = "Plank", Size = UDim2.fromScale(0.3, 0.66), Position = UDim2.fromScale(0.03, -0.06), AnchorPoint = Vector2.new(0, 0.5), Rotation = -2, ZIndex = 3 })
 	skin(plank, "ribbonPink")
 	local pt = text(plank, "NEXT UP", UDim2.fromScale(0.74, 0.6), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 247, 226), 700)
-	pt.Font, pt.ZIndex, pt.TextStrokeColor3 = HEAD, 4, Color3.fromRGB(59, 36, 22)
+	pt.Font, pt.ZIndex, pt.TextStrokeColor3 = HEAD, 4, DEEP.ribbonPink
 end
 
 local digBtn = button(gui, "DIG", S(220, 82), S(640, 570), Vector2.new(0.5, 1), "mint", "pick")
@@ -1392,13 +1401,6 @@ end)()
 -- time, bursts open with a flash and rays, coins and gems fly into the pills, and a 7-day streak track shows the run.
 ;(function()
 	local GuiService = game:GetService("GuiService")
-	local CHEST = { closed = "rbxassetid://139518055862953", open = "rbxassetid://120090896134682" } -- brass-bound field chest (art/icons_notebook); the pink one was 97587431872757 / 130450967787337
-	task.spawn(function() -- load the chest art up front, or the open frame blinks empty on first use
-		local warm = {}
-		for _, id in CHEST do table.insert(warm, new("ImageLabel", nil, { Image = id })) end
-		pcall(function() game:GetService("ContentProvider"):PreloadAsync(warm) end)
-	end)
-	local FX_GLOW, FX_RAYS = "rbxassetid://77591933607769", "rbxassetid://98789616938156"
 	local DEEP_GEM = Color3.fromRGB(214, 74, 126)
 	-- the gem pill, right of the gold pill
 	local gemPill = panel(gui, S(128, 46), S(198, 18), nil, "pillPink")
@@ -1428,201 +1430,13 @@ end)()
 		goal = g
 	end)
 
-	-- the daily chest show, in its own layer above everything
-	local layer = new("ScreenGui", gui.Parent, { Name = "DailyChest", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 12, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Enabled = false })
-	local scrim = new("TextButton", layer, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, Text = "", AutoButtonColor = false })
-	local rays = new("ImageLabel", layer, { Image = FX_RAYS, ImageColor3 = Color3.fromRGB(255, 226, 150), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(560, 560), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
-	new("UIAspectRatioConstraint", rays, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-	local glow = new("ImageLabel", layer, { Image = FX_GLOW, ImageColor3 = Color3.fromRGB(255, 220, 160), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(420, 420), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
-	new("UIAspectRatioConstraint", glow, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-	local chest = new("ImageLabel", layer, { Image = CHEST.closed, BackgroundTransparency = 1, Size = S(250, 250), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit })
-	new("UIAspectRatioConstraint", chest, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-	local title = panel(layer, S(440, 84), S(640, 70), Vector2.new(0.5, 0.5), "ribbonPink")
-	fit(title, 440, 84)
-	local titleT = text(title, "DAILY CHEST", UDim2.fromScale(0.62, 0.52), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), WHITE)
-	titleT.TextStrokeColor3 = DEEP.ribbonPink
-	local card = panel(layer, S(640, 210), S(640, 486), Vector2.new(0.5, 0.5), "panel") -- the kit card holding rewards, streak and COLLECT
-	fit(card, 640, 210)
-	card.Visible = false
-	local reward = panel(layer, S(420, 64), S(640, 418), Vector2.new(0.5, 0.5), "pill")
-	fit(reward, 420, 64)
-	local rCoin = icon(reward, "coin", UDim2.fromScale(0.12, 0.62), UDim2.fromScale(0.12, 0.5), Vector2.new(0.5, 0.5))
-	new("UIAspectRatioConstraint", rCoin, { AspectRatio = 1 })
-	local rGold = text(reward, "", UDim2.fromScale(0.3, 0.5), UDim2.fromScale(0.2, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(184, 122, 26), 700, false)
-	rGold.TextXAlignment = Enum.TextXAlignment.Left
-	local rGemI = icon(reward, "gem", UDim2.fromScale(0.12, 0.62), UDim2.fromScale(0.58, 0.5), Vector2.new(0.5, 0.5))
-	new("UIAspectRatioConstraint", rGemI, { AspectRatio = 1 })
-	local rGems = text(reward, "", UDim2.fromScale(0.3, 0.5), UDim2.fromScale(0.66, 0.5), Vector2.new(0, 0.5), DEEP_GEM, 700, false)
-	rGems.TextXAlignment = Enum.TextXAlignment.Left
-	local track = new("Frame", layer, { Size = S(560, 56), Position = S(640, 500), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1 })
-	local bar = new("Frame", track, { Size = UDim2.fromScale(6 / 7, 0.22), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(205, 188, 150), BorderSizePixel = 0 })
-	new("UICorner", bar, { CornerRadius = UDim.new(0.5, 0) })
-	new("UIStroke", bar, { Color = Color3.fromRGB(59, 36, 22), Thickness = 2 })
-	local barFill = new("Frame", bar, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = BUTTER, BorderSizePixel = 0 })
-	new("UICorner", barFill, { CornerRadius = UDim.new(0.5, 0) })
-	local streakT = text(track, "", UDim2.fromScale(0.4, 0.36), UDim2.fromScale(0.5, -0.22), Vector2.new(0.5, 0.5), PLUM_SOFT, 700, false)
-	local days = {}
-	for d = 1, 7 do
-		local c = new("Frame", track, { Size = UDim2.fromScale(0.11, 0.9), Position = UDim2.fromScale((d - 0.5) / 7, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BorderSizePixel = 0 })
-		new("UIAspectRatioConstraint", c, { AspectRatio = 1 })
-		new("UICorner", c, { CornerRadius = UDim.new(0.5, 0) })
-		local st = new("UIStroke", c, { Thickness = 3 })
-		local l = text(c, tostring(d), UDim2.fromScale(0.6, 0.55), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), WHITE)
-		if d == 7 then -- the day 7 jackpot: a little chest instead of the number
-			l.Visible = false
-			new("ImageLabel", c, { Image = CHEST.closed, BackgroundTransparency = 1, Size = UDim2.fromScale(1.25, 1.25), Position = UDim2.fromScale(0.5, 0.45), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 3 })
-		end
-		days[d] = { c = c, st = st, l = l }
-	end
-	local collect = button(layer, "COLLECT", S(220, 64), S(640, 560), Vector2.new(0.5, 0.5), "mint", "coin")
-	fit(collect, 220, 64)
-	local busy, spin = false, nil
-	local flyLayer = new("ScreenGui", gui.Parent, { Name = "RewardFly", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 13 })
-	local fly
-	fly = function(iconName, from, toObj, n, delay0)
-		local inset = GuiService:GetGuiInset()
-		for k = 1, n do
-			task.delay(delay0 + k * 0.05, function()
-				local to = toObj.AbsolutePosition + toObj.AbsoluteSize * Vector2.new(0.15, 0.5) + inset
-				local ic = icon(flyLayer, iconName, UDim2.fromOffset(34, 34), from, Vector2.new(0.5, 0.5))
-				ic.ZIndex = 20
-				local mid = from + UDim2.fromOffset(math.random(-160, 160), -math.random(80, 180))
-				tween(ic, 0.35, { Position = mid, Rotation = math.random(-90, 90) }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out).Completed:Connect(function()
-					tween(ic, 0.4, { Position = UDim2.fromOffset(to.X, to.Y), Size = UDim2.fromOffset(20, 20) }, Enum.EasingStyle.Quad, Enum.EasingDirection.In).Completed:Connect(function()
-						ic:Destroy()
-						sfx("coin", (1 + k * 0.03) * (0.95 + math.random() * 0.1))
-						if k % 3 == 1 then pop(toObj, 1.12, 0.2) end -- the pill takes each landing
-					end)
-				end)
-			end)
-		end
-	end
+	-- the daily chest show lives in ReplicatedStorage.Shared.DailyChestUI (directive v8: a glass card with a real 3D chest)
+	local Daily = require(RS.Shared:WaitForChild("DailyChestUI")).start({
+		gui = gui, new = new, S = S, panel = panel, fit = fit, text = text, icon = icon, button = button, tween = tween, pop = pop, sfx = sfx, shake = shake,
+		commas = commas, ICON = ICON, DEEP = DEEP, goldPill = goldPill, gemPill = gemPill, WHITE = WHITE, BUTTER = BUTTER, PLUM_SOFT = PLUM_SOFT, DEEP_GEM = DEEP_GEM, GLASS = GLASS,
+	})
+	local show, fly = Daily.show, Daily.fly
 	forgeUI.fly = fly -- shared: selling ore flies coins too
-	local function show(gold, streak, gems)
-		if busy then return end
-		busy = true
-		layer.Enabled = true
-		chest.Image, chest.Rotation = CHEST.closed, 0
-		rays.ImageTransparency, glow.ImageTransparency, scrim.BackgroundTransparency = 1, 1, 1
-		titleT.Text = "DAY " .. streak .. " CHEST"
-		rGold.Text, rGems.Text = "+" .. commas(gold), "+" .. commas(gems)
-		for _, o in { title, reward, track, collect, card } do o.Visible = false end
-		barFill.Size = UDim2.fromScale(0, 1)
-		streakT.Text = streak >= 7 and "7 DAY STREAK! JACKPOT" or (streak .. " DAY STREAK  -  DAY 7 JACKPOT")
-		tween(scrim, 0.25, { BackgroundTransparency = 0.25 })
-		-- drop in
-		chest.Position = S(640, 120)
-		scaler(chest).Scale = 0.8
-		tween(chest, 0.45, { Position = S(640, 268) }, Enum.EasingStyle.Bounce)
-		tween(scaler(chest), 0.45, { Scale = 1 }, Enum.EasingStyle.Back)
-		title.Visible = true
-		pop(title, 0.6, 0.35)
-		-- wind-up (chest opening in 7 steps, vasilev.yegor reel, vault Instagram Saved Posts Review 2026-11-12):
-		-- 1 the wobble gets faster and harder, then the chest squashes down; 2 it springs up tall
-		local ratio = chest:FindFirstChildOfClass("UIAspectRatioConstraint") -- squash and stretch: width through the ratio, height through the scale
-		ratio.AspectRatio = 1
-		local t0, gap = 0.55, 0.22
-		for k = 1, 7 do
-			task.delay(t0, function()
-				sfx("swing", 0.8 + k * 0.08)
-				local a = 3 + k * 1.6
-				tween(chest, gap * 0.4, { Rotation = (k % 2 == 0) and a or -a }).Completed:Connect(function() tween(chest, gap * 0.4, { Rotation = 0 }) end)
-			end)
-			t0 += gap
-			gap *= 0.8
-		end
-		task.delay(1.4, function()
-			tween(ratio, 0.1, { AspectRatio = 1.32 })
-			tween(scaler(chest), 0.1, { Scale = 0.84 })
-		end)
-		task.delay(1.52, function()
-			tween(ratio, 0.07, { AspectRatio = 0.8 })
-			tween(scaler(chest), 0.07, { Scale = 1.18 }, Enum.EasingStyle.Back)
-		end)
-		-- burst open: a flash, rays and glow, the lid flips (open art), coins and gems fly to the pills
-		task.delay(1.6, function()
-			chest.Image = CHEST.open
-			sfx("upgrade", 1)
-			sfx("sparkle", 1.2)
-			-- 3 slam: the lid flies open, the picture holds for a few frames (hit-stop), then everything lets go
-			scaler(chest).Scale = 1.3
-			task.wait(0.07)
-			tween(scaler(chest), 0.35, { Scale = 1 }, Enum.EasingStyle.Back)
-			tween(ratio, 0.45, { AspectRatio = 1 }, Enum.EasingStyle.Elastic)
-			do -- 5 shockwave: a ring of light rushes out on the slam
-				local ring = new("Frame", layer, { Size = S(80, 80), Position = S(640, 290), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 4 })
-				new("UIAspectRatioConstraint", ring, { AspectRatio = 1.9, DominantAxis = Enum.DominantAxis.Height })
-				new("UICorner", ring, { CornerRadius = UDim.new(0.5, 0) })
-				local rs = new("UIStroke", ring, { Color = Color3.fromRGB(255, 240, 190), Thickness = 7 })
-				tween(ring, 0.4, { Size = S(520, 520) }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
-				tween(rs, 0.4, { Transparency = 1, Thickness = 1 }).Completed:Connect(function() ring:Destroy() end)
-			end
-			glow.ImageTransparency, rays.ImageTransparency = 0, 0.2
-			scaler(glow).Scale = 0.4
-			tween(scaler(glow), 0.4, { Scale = 1 }, Enum.EasingStyle.Back)
-			tween(glow, 0.6, { ImageTransparency = 0.35 })
-			if spin then spin:Disconnect() end
-			spin = RunService.RenderStepped:Connect(function() rays.Rotation = os.clock() * 20 % 360 end)
-			local from = S(640, 250)
-			fly("coin", from, goldPill, 10, 0.1)
-			fly("gem", from, gemPill, math.min(8, gems), 0.25)
-			card.Visible, reward.Visible = true, true
-			pop(card, 0.8, 0.3)
-			pop(reward, 0.6, 0.35)
-			shake(0.6)
-			for k = 1, 9 do -- 6 stars: they shoot up and out, then pop like bubbles
-				local sp = new("ImageLabel", layer, { Image = ICON.star, BackgroundTransparency = 1, Size = S(54, 54), Position = S(640, 250), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = math.random(-30, 30), ZIndex = 5 })
-				new("UIAspectRatioConstraint", sp, { AspectRatio = 1 })
-				scaler(sp).Scale = 0
-				task.delay(0.2 + k * 0.03, function()
-					tween(scaler(sp), 0.2, { Scale = 0.6 + math.random() * 0.6 }, Enum.EasingStyle.Back)
-					tween(sp, 0.7 + math.random() * 0.4, { Position = S(640 + (k - 5) * 46 + math.random(-20, 20), 250 - 90 - math.random(0, 110)), Rotation = math.random(-60, 60) }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out).Completed:Connect(function()
-						tween(scaler(sp), 0.09, { Scale = 1.5 }).Completed:Connect(function() sp:Destroy() end)
-						tween(sp, 0.09, { ImageTransparency = 1 })
-					end)
-				end)
-			end
-			task.spawn(function() -- 7 magic dust: tiny sparks keep floating up while the chest stands open
-				while layer.Enabled and chest.Image == CHEST.open do
-					local d = new("Frame", layer, { Size = UDim2.fromOffset(5, 5), Position = S(640 + math.random(-80, 80), 262), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 232, 170), BorderSizePixel = 0, ZIndex = 5 })
-					new("UICorner", d, { CornerRadius = UDim.new(0.5, 0) })
-					tween(d, 1.3, { Position = d.Position - UDim2.fromScale(math.random(-20, 20) / 1280, (90 + math.random(0, 80)) / 592), BackgroundTransparency = 1 }, Enum.EasingStyle.Sine, Enum.EasingDirection.Out).Completed:Connect(function() d:Destroy() end)
-					task.wait(0.09)
-				end
-			end)
-		end)
-		-- the streak track fills up to today, today pops
-		task.delay(2.1, function()
-			track.Visible = true
-			tween(barFill, 0.5, { Size = UDim2.fromScale(math.clamp((streak - 1) / 6, 0, 1), 1) }, Enum.EasingStyle.Quad)
-			for d, o in days do
-				local done, today = d < streak, d == streak
-				o.c.BackgroundColor3 = (done or today) and Color3.fromRGB(240, 180, 58) or Color3.fromRGB(227, 210, 166)
-				o.st.Color = Color3.fromRGB(59, 36, 22)
-				o.l.TextColor3 = (done or today) and WHITE or Color3.fromRGB(110, 92, 70)
-				scaler(o.c).Scale = 0.3
-				task.delay(d * 0.05, function() tween(scaler(o.c), 0.3, { Scale = today and 1.25 or 1 }, Enum.EasingStyle.Back) end)
-			end
-		end)
-		task.delay(2.6, function()
-			collect.Visible = true
-			pop(collect, 0.5, 0.3)
-		end)
-	end
-	local function hide()
-		if not collect.Visible then return end
-		tween(scrim, 0.2, { BackgroundTransparency = 1 })
-		for _, o in { chest, title, reward, track, collect, rays, glow, card } do tween(scaler(o), 0.18, { Scale = 0 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In) end
-		task.delay(0.22, function()
-			layer.Enabled = false
-			for _, o in { chest, title, reward, track, collect, rays, glow, card } do scaler(o).Scale = 1 end
-			if spin then spin:Disconnect() spin = nil end
-			busy = false
-		end)
-	end
-	collect.Activated:Connect(hide)
-	scrim.Activated:Connect(hide)
-
 	R.Fx.OnClientEvent:Connect(function(kind, ...)
 		if kind == "dailyChest" then
 			local gold, streak, gems = ...
@@ -1766,7 +1580,7 @@ end
 		new("UICorner", d, { CornerRadius = UDim.new(0.5, 0) })
 		return d
 	end
-	new("ImageLabel", mapPanel, { Image = "rbxassetid://117032895507459", BackgroundTransparency = 1, Size = UDim2.fromScale(1.17, 1.17), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 1 }) -- the painted brass case (art/ui_notebook/dial.png)
+	new("ImageLabel", mapPanel, { Image = GLASS and GLASS.ring or "rbxassetid://117032895507459", BackgroundTransparency = 1, Size = UDim2.fromScale(1.17, 1.17), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 1 }) -- the painted brass case (art/ui_notebook/dial.png)
 	local view = disc(2, 0.2) -- nearly opaque: the see-through face bled into the dark cave
 	view.BackgroundColor3 = Color3.fromRGB(36, 25, 24)
 	new("UIGradient", new("UIStroke", view, { Color = Color3.new(1, 1, 1), Thickness = 1.5 }), { Rotation = 50, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(240, 200, 110)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 106, 34)), ColorSequenceKeypoint.new(1, Color3.fromRGB(228, 182, 86)) }) }) -- a thick brass bezel, like the mining gauge (Field Notebook pass: was a 2.5 px line)
@@ -2873,7 +2687,7 @@ end)()
 		bagPill = bagPill, goldPill = goldPill, burst = burst, shake = shake, ICON = ICON, fly = function(...) if forgeUI.fly then forgeUI.fly(...) end end,
 		isBusy = function() return cave ~= nil and cave.mgBusy == true end,
 		cave = cave, caveHud = caveHud, hrp = hrp, feed = feed, layerPill = layerPill, icon = icon, keyCap = keyCap, CREAM = CREAM, LILAC = LILAC,
-		addModal = function(f) table.insert(forgeUI.modals, f) end, vmHook = forgeUI, top = top, blueprint = blueprint,
+		addModal = function(f) table.insert(forgeUI.modals, f) end, vmHook = forgeUI, top = top, blueprint = blueprint, GLASS = GLASS, HEAD = HEAD, FONT = FONT,
 	}
 	do -- sitting in the minecart (playtest 2): the server sets Seated while it holds us in a cart; our own Animator plays the sit pose
 		local SIT = { [Enum.HumanoidRigType.R15] = "rbxassetid://2506281703", [Enum.HumanoidRigType.R6] = "rbxassetid://178130996" }
@@ -2897,7 +2711,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "TouchControls" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "TouchControls", "SpatialWorldUI" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end

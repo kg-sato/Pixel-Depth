@@ -275,6 +275,17 @@ C.HUD_ICON = {
 	heart = "rbxassetid://107022845042825", torch = "rbxassetid://125552730003959", flare = "rbxassetid://82298098853202",
 	calm = "rbxassetid://80792023358751", uneasy = "rbxassetid://130742072901296", scared = "rbxassetid://133618194231677",
 }
+-- UI kit switch (directive v8, 2026-11-12: back to frosted and cut glass). "glass" = the cut-glass kit (art/ui_cutglass, pd_ui_cutglass.py);
+-- "notebook" = the Field Notebook kit (art/ui_notebook). Same sizes and 9-slice centres, so only image ids, fonts and a few tints change.
+C.UI_KIT = "glass"
+C.LOADING = { on = true, min = 2.6 } -- the neon logo screen (Shared.LoadingScreen): min = shortest time on screen, seconds
+C.UI_GLASS = {
+	skin = { panel = "rbxassetid://107362333346895", card = "rbxassetid://97918344127708", pill = "rbxassetid://100785510032276", dark = "rbxassetid://70950595988467", mint = "rbxassetid://102529585896830", pink = "rbxassetid://119251091231924", lilac = "rbxassetid://109778779667382", butter = "rbxassetid://114758646384801", sky = "rbxassetid://116193855956242", off = "rbxassetid://134240017159711", keycap = "rbxassetid://129609675881651", keycapDown = "rbxassetid://115458790332683", slot = "rbxassetid://86709658545679", tab = "rbxassetid://92640545104927", tabOn = "rbxassetid://115853552123041", ribbonPink = "rbxassetid://133120868888767", ribbonLilac = "rbxassetid://79353846907539", pillButter = "rbxassetid://116635405340383", pillLilac = "rbxassetid://128414825736563", pillMint = "rbxassetid://127653818797462", pillPink = "rbxassetid://119409823878812" },
+	close = "rbxassetid://82947845510250", grid = "rbxassetid://138644514798393", ring = "rbxassetid://72989620543137", hex = "rbxassetid://96355459042389", hexOn = "rbxassetid://122116468937327", orbShell = "rbxassetid://110981679928997", orbLiquid = "rbxassetid://125297458947768",
+	icon = { coin = "rbxassetid://108767995994321", gem = "rbxassetid://109272506073747", pick = "rbxassetid://82124767195252", bag = "rbxassetid://70678886244636", crew = "rbxassetid://121813663831714", surface = "rbxassetid://113100619996978", star = "rbxassetid://98230996667759", map = "rbxassetid://109855398030402", hammer = "rbxassetid://118028256132989", lock = "rbxassetid://129198159082909" }, -- the glossy soft-kit icons suit glass (art/icons_soft)
+	hud = { heart = "rbxassetid://112840156135846", torch = "rbxassetid://132878882630763", flare = "rbxassetid://136155303523972", calm = "rbxassetid://85218255319100", uneasy = "rbxassetid://108597473207994", scared = "rbxassetid://82253085768781" },
+}
+if C.UI_KIT == "glass" then for k, v in C.UI_GLASS.hud do C.HUD_ICON[k] = v end end
 C.EGG_COINS = 75
 -- the Egg Altar in the caves (playtest 2: "rarer ones should be found in caves ... players will need to roll for them"; board PT2_Eggs).
 -- Coins only, odds shown on the altar; each egg hatches on the spot from its rarity up. Guaranteed Obsidian within `pity` rolls.
