@@ -13,6 +13,7 @@ local ProfileStore = require(game:GetService("ServerScriptService"):WaitForChild
 local HubBuilder = require(game:GetService("ServerScriptService"):WaitForChild("HubBuilder"))
 local CaveBuilder = require(game:GetService("ServerScriptService"):WaitForChild("CaveBuilder"))
 local Store = ProfileStore.New(C.SAVE_STORE, C.SAVE_TEMPLATE)
+local SoulTree = require(game:GetService("ServerScriptService"):WaitForChild("SoulTree")) -- behind C.SOUL_TREE.on (false: no saved field, every rank 0)
 
 do -- the forge cutscene (client, ReplicatedStorage.Shared.ForgeCutscene) shows the real pickaxe models: a copy for clients
 	local lib = SS:FindFirstChild("Pickaxes")
@@ -492,6 +493,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
 	d.wear, d.quests, d.lanterns = s.wear, s.quests, s.lanterns
 	d.shards, d.fossils, d.geodes = s.shards or 0, s.fossils or {}, s.geodes or 0
+	if C.SOUL_TREE.on then d.soul = s.soul end -- flag off: the field is never written
 	d.cool = {}
 	for k, v in s.cool or {} do if v > os.time() then d.cool[k] = v end end -- only cooldowns still running
 	if s.altarOwed then d.gold += s.altarOwed end -- left between paying the altar and its hatch: the coins come back
@@ -508,7 +510,7 @@ local function sendState(s)
 		gold = s.gold, bag = s.bag, cap = cap(s), pick = s.pick, pack = s.pack, step = s.step, target = target(s),
 		pets = pets, ox = s.ox, oz = s.oz, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs,
 		deepest = s.deepest, goal = s.goal, gems = s.gems, lv = s.lv, equip = s.equip, tips = s.tips,
-		ores = s.ores, bagOres = s.bagOres, wear = s.wear, lanterns = s.lanterns,
+		ores = s.ores, bagOres = s.bagOres, wear = s.wear, lanterns = s.lanterns, soul = s.soul,
 	})
 end
 
@@ -1050,7 +1052,9 @@ CaveEvents.init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, landing =
 	finish = function(s) if s.mg then s.mg.deadline = 0 end end }) -- the main loop pays an expired minigame on its next pass
 require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, sendState = sendState, remote = remote,
 	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, quest = quest })
+SoulTree.init({ data = data, fx = FxR, sendState = sendState, remote = remote, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, analytics = A })
 Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, analytics = A, perks = function(s) return PetJobs.perks(crewOf(s)) end,
+	soul = SoulTree.rank, soulEarn = SoulTree.earn,
 	-- gloomlings leave you alone on a ride, in an ore minigame (hands and eyes are busy) and for 2.5 s after it (Gemini loop review, 2026-11-10)
 	busy = function(plr) local s = data[plr] return riding[plr] ~= nil or escaping[plr] ~= nil or (s ~= nil and (s.mg ~= nil or os.clock() < (s.mgSafe or 0))) end })
 
@@ -1706,6 +1710,7 @@ local function onJoin(plr)
 	s.cool = {}
 	for k, v in type(d.cool) == "table" and d.cool or {} do if type(k) == "string" and type(v) == "number" and v > os.time() then s.cool[k] = v end end
 	s.geodes = type(d.geodes) == "number" and math.max(0, math.floor(d.geodes)) or 0
+	s.soul = C.SOUL_TREE.on and SoulTree.clean(d.soul) or nil
 	s.shards = type(d.shards) == "number" and d.shards or 0 -- Clay Caves: relic shards from jars, fossils brushed clean ({ ["1"] = true, ... })
 	s.fossils = {}
 	for k = 1, 3 do if type(d.fossils) == "table" and d.fossils[tostring(k)] == true then s.fossils[tostring(k)] = true end end

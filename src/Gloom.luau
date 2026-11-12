@@ -19,11 +19,15 @@ local mobs = {} -- part -> { target = plr, state, t0, home }
 local rng = Random.new()
 
 local function serverNow() return workspace:GetServerTimeNow() end
+-- Soul Tree ranks (ServerScriptService.SoulTree through ctx.soul; every rank is 0 while C.SOUL_TREE.on is false)
+local function soul(s, id) return (ctx and ctx.soul and s) and ctx.soul(s, id) or 0 end
+local function maxFlares(s) return C.GLOOM.flares + soul(s, "flare") * C.SOUL_TREE.nodes.flare.each end
+local function shieldFor(s) return C.GLOOM.shield + soul(s, "shield") * C.SOUL_TREE.nodes.shield.each end
 local function st(s) -- the player's gloom state, kept on the session
 	if not s.gloom then
-		s.gloom = { relitAt = serverNow(), hp = C.GLOOM.hp, shieldUntil = 0, flares = C.GLOOM.flares, inCamp = true, nextSpawn = 0 }
+		s.gloom = { relitAt = serverNow(), hp = C.GLOOM.hp, shieldUntil = 0, flares = maxFlares(s), inCamp = true, nextSpawn = 0 }
 		s.player:SetAttribute("HP", C.GLOOM.hp)
-		s.player:SetAttribute("Flares", C.GLOOM.flares)
+		s.player:SetAttribute("Flares", maxFlares(s))
 	end
 	return s.gloom
 end
@@ -81,7 +85,7 @@ local function caught(plr, s, g)
 	if job.block and not g.blocked then -- Fafnir takes the first catch of the dive
 		g.blocked = true
 		g.hp = C.GLOOM.hp
-		g.shieldUntil = serverNow() + C.GLOOM.shield
+		g.shieldUntil = serverNow() + shieldFor(s)
 		publish(plr, g)
 		scatter(plr)
 		ctx.fx:FireClient(plr, "caught", -1)
@@ -89,7 +93,7 @@ local function caught(plr, s, g)
 	end
 	local lost = ctx.lose(s, job.loss or C.GLOOM.loss)
 	g.hp = C.GLOOM.hp
-	g.shieldUntil = serverNow() + C.GLOOM.shield
+	g.shieldUntil = serverNow() + shieldFor(s)
 	publish(plr, g)
 	scatter(plr)
 	ctx.fx:FireClient(plr, "caught", lost)
@@ -117,7 +121,7 @@ function G.init(c)
 			if og and og.grabbedUntil and ohrp and (ohrp.Position - hrp.Position).Magnitude < C.GLOOM.flareRange then
 				og.grabbedUntil = nil
 				og.hp = C.GLOOM.hp
-				og.shieldUntil = serverNow() + C.GLOOM.shield
+				og.shieldUntil = serverNow() + shieldFor(os2)
 				other:SetAttribute("GrabbedUntil", nil)
 				publish(other, og)
 				scatter(other)
@@ -130,12 +134,15 @@ function G.init(c)
 		g.lastFlare = os.clock()
 		publish(plr, g)
 		ctx.fx:FireAllClients("flareFx", hrp.Position + hrp.CFrame.LookVector * 2 + Vector3.new(0, 2, 0), plr.UserId)
+		local flat = 0
 		for p, m in mobs do
 			if (p.Position - hrp.Position).Magnitude < C.GLOOM.flareRange and m.state ~= "flee" then
+				if m.state ~= "pancake" then flat += 1 end
 				m.state, m.t0 = "pancake", os.clock()
 				p:SetAttribute("State", "pancake")
 			end
 		end
+		if flat > 0 and ctx.soulEarn then ctx.soulEarn(s, flat) end -- Gloom Shards for the Soul Tree (nothing while its flag is off)
 	end)
 	Players.PlayerRemoving:Connect(function(plr)
 		for p, m in mobs do if m.target == plr then mobs[p] = nil p:Destroy() end end
@@ -168,7 +175,7 @@ function G.step(dt)
 		if not caving then
 			if hrp and not plr:GetAttribute("InCave") then -- in town: a fresh torch, full HP and flares for the next dive
 				g.inCamp, g.relitAt, g.blocked = true, serverNow(), false
-				if g.hp < C.GLOOM.hp or g.flares < C.GLOOM.flares then g.hp, g.flares = C.GLOOM.hp, C.GLOOM.flares publish(plr, g) end
+				if g.hp < C.GLOOM.hp or g.flares < maxFlares(s) then g.hp, g.flares = C.GLOOM.hp, maxFlares(s) publish(plr, g) end
 			end
 			scatter(plr)
 		else
@@ -179,7 +186,7 @@ function G.step(dt)
 			if here then
 				g.relitAt = serverNow()
 				-- full HP and flares at camp (not mid-fight with the Root Warden, who sleeps inside the ring)
-				if not s.boss and (g.hp < C.GLOOM.hp or g.flares < C.GLOOM.flares) then g.hp, g.flares = C.GLOOM.hp, C.GLOOM.flares publish(plr, g) end
+				if not s.boss and (g.hp < C.GLOOM.hp or g.flares < maxFlares(s)) then g.hp, g.flares = C.GLOOM.hp, maxFlares(s) publish(plr, g) end
 				scatter(plr)
 			elseif g.inCamp then -- just left the ring: the HUD's torch counts from here
 				plr:SetAttribute("RelitAt", g.relitAt)
@@ -262,7 +269,7 @@ function G.step(dt)
 		elseif m.state == "windup" then -- the warning beat, then BONK unless the player got away (Gemini loop review, 2026-11-10)
 			if age >= C.GLOOM.warn then
 				if dist < C.GLOOM.reach + 2 and not seen and serverNow() > g.shieldUntil and not g.grabbedUntil then
-					g.hp = math.max(0, g.hp - C.GLOOM.hit)
+					g.hp = math.max(0, g.hp - math.max(1, C.GLOOM.hit - soul(ctx.data[m.target], "hide") * C.SOUL_TREE.nodes.hide.each))
 					m.state, m.t0, m.from = "stun", nowC, pos
 					p:SetAttribute("State", "stun")
 					if g.hp <= 0 then -- GRABBED: a flare (yours or a friend's) within C.GLOOM.grab seconds frees you

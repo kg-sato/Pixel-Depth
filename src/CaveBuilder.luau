@@ -166,6 +166,17 @@ function Cave.build(parent, origin, seed)
 		sparks.Size, sparks.Lifetime, sparks.Speed = NumberSequence.new(0.25, 0), NumberRange.new(1.5, 2.5), NumberRange.new(3, 6)
 		sparks.SpreadAngle, sparks.Acceleration = Vector2.new(15, 15), Vector3.new(0, 1, 0)
 		sparks.Parent = flame
+		if C.SOUL_TREE.on then -- the Soul Tree is tended at the campfire (ServerScriptService.SoulTree checks the distance to this prompt)
+			local at = Instance.new("Attachment")
+			at.Position = Vector3.new(0, 2.4, 0)
+			at.Parent = flame
+			local pr = Instance.new("ProximityPrompt")
+			pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode = "Tend", "Soul Tree", Enum.KeyCode.F
+			pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.Style = 10, false, Enum.ProximityPromptStyle.Custom
+			pr:SetAttribute("SoulTree", true)
+			game:GetService("CollectionService"):AddTag(pr, "SoulTree")
+			pr.Parent = at
+		end
 		-- Wick the glowworm (Camp 1's keeper): pale mint segments, a glowing tail tip, big eyes and antennae, facing the rail station
 		do
 			local wick = CFrame.lookAt(fire + Vector3.new(9, 0, -4), W(-1, -7, 0)) -- out of the fire's glare (it washed him white)
@@ -1158,7 +1169,58 @@ function Cave.build(parent, origin, seed)
 	model:SetAttribute("Ceilings", nCeil)
 	model:SetAttribute("Walls", nWall)
 	model:SetAttribute("Cells", #list)
-	model.Parent = parent
+	model.Parent = parent -- rims below need the floors in the workspace to raycast against
+	-- floor-edge rims (2026-11-11, Gemini A/B: a wide soft peach band on edges that drop away lifted dying-torch readability
+	-- from 3 to 7; the violet and thin amber versions looked like debug overlays). Built once here from the floors; the
+	-- rims are faint, do not collide and do not query, so they cost no gameplay. spike/edge_rim.luau is the test copy.
+	if require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Config")).CAVE_FLOOR_RIMS then -- off: Gemini said do not ship as built (dense grid on the chasm floor, stray outline on a wall)
+		local rims = Instance.new("Folder")
+		rims.Name = "Rims"
+		rims.Parent = model
+		local prm = RaycastParams.new()
+		prm.FilterType, prm.FilterDescendantsInstances = Enum.RaycastFilterType.Exclude, { rims }
+		local RIM = Color3.fromRGB(124, 94, 66)
+		local overlap = OverlapParams.new()
+		overlap.FilterType, overlap.FilterDescendantsInstances = Enum.RaycastFilterType.Exclude, { rims }
+		local nRim = 0
+		for _, f in model:GetDescendants() do
+			if f:IsA("BasePart") and f.Name == "Floor" and f.CFrame.UpVector.Y > 0.99 then
+				local top = f.Position.Y + f.Size.Y / 2
+				for _, e in { { Vector3.xAxis, f.Size.X, f.Size.Z }, { -Vector3.xAxis, f.Size.X, f.Size.Z }, { Vector3.zAxis, f.Size.Z, f.Size.X }, { -Vector3.zAxis, f.Size.Z, f.Size.X } } do
+					local out, half, len = e[1], e[2] / 2, e[3]
+					local along = Vector3.new(math.abs(out.Z), 0, math.abs(out.X))
+					local steps = math.max(1, math.floor(len / 3))
+					local runStart = nil
+					for i = 0, steps do
+						local t = i < steps and (-len / 2 + (i + 0.5) * (len / steps)) or nil
+						local drop = false
+						if t then
+							local edge = Vector3.new(f.Position.X, top, f.Position.Z) + out * half + along * t
+							local below = workspace:Raycast(edge + out * 0.7 + Vector3.new(0, 1, 0), Vector3.new(0, -7, 0), prm) -- narrower (2026-11-11): only a real drop of about 6 studs, not stair treads or floor seams
+							local wall = workspace:Raycast(edge - out * 0.5 + Vector3.new(0, 2, 0), out * 1.4, prm)
+							drop = below == nil and wall == nil
+						end
+						if drop and not runStart then runStart = t - len / steps / 2 end
+						if (not drop) and runStart then
+							local runEnd = (t and t - len / steps / 2) or len / 2
+							local mid = (runStart + runEnd) / 2
+							local r = Instance.new("Part")
+							r.Name, r.Anchored, r.CanCollide, r.CanQuery, r.CanTouch, r.CastShadow = "FloorRim", true, false, false, false, false
+							r.Material, r.Color, r.Transparency = Enum.Material.Neon, RIM, 0.6
+							r.Size = Vector3.new(along.X > 0 and (runEnd - runStart) or 0.6, 0.06, along.Z > 0 and (runEnd - runStart) or 0.6)
+							r.Position = Vector3.new(f.Position.X, top + 0.04, f.Position.Z) + out * (half - 0.31) + along * mid
+							overlap.FilterDescendantsInstances = { rims, f } -- the floor it sits on is not a clash
+							local clash = workspace:GetPartBoundsInBox(CFrame.new(r.Position), r.Size, overlap)
+							if #clash == 0 then r.Parent = rims else r:Destroy() end -- never inside a solid part (a boss leg gave a z-fight pair)
+							if r.Parent then nRim += 1 end
+							runStart = nil
+						end
+					end
+				end
+			end
+		end
+		model:SetAttribute("FloorRims", nRim)
+	end
 	return model
 end
 

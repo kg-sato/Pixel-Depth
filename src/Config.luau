@@ -302,7 +302,8 @@ C.FP_FOV = 80
 
 -- Caves (cave exploration rework; vault Projects/Pixel-_/Briefs/Cave Exploration Rework.md and Cave Rework Reference Board)
 C.CAVES_ON = true -- the lift goes to the shared caves; false brings back the private block mines
-C.TORCH = { time = 300, range = 32, minRange = 8 } -- full light to the dimmest glow in 5 minutes (the user, 2026-11-08); wooden torch radius 18 studs (LGT-02). range 26 to 32 on 2026-11-10 night: the light now hangs 2.5 studs behind the head, and Gemini could not read the far end of the bridge
+C.TORCH = { time = 300, range = 32, minRange = 16 } -- minRange 8 to 16 on 2026-11-11: a Gemini A/B of the burnt-out torch (Overnight/judge/torch_ab.jpg) gave 8 studs readability 3 and mood 7, 16 studs readability 6 and mood 7, 22 studs readability 8 and mood 3.
+-- full light to the dimmest glow in 5 minutes (the user, 2026-11-08); wooden torch radius 18 studs (LGT-02). range 26 to 32 on 2026-11-10 night: the light now hangs 2.5 studs behind the head, and Gemini could not read the far end of the bridge
 -- the minecart escape on the ride up (MinecartEscape): track length (studs), base speed (studs/s), coin bonus range;
 -- the server pays only when the run took at least dist / (speed * 1.6) seconds (every boost stacked the whole way)
 C.ESCAPE = { dist = 1050, speed = 30, top = 1.45, bonus = { 10, 40 } } -- top: the speed wave's peak multiplier (playtest 2 runner redesign); the server's time check uses it
@@ -331,6 +332,16 @@ C.SECRET_GEMS = 10 -- the chest on the secret ledge under the chasm bridge (once
 -- 2026-11-10 night: in a Gemini A/B of the same view the variant scored readability 3, mood 4, style fit 2 and plain Slate
 -- 6, 7, 5 (the blotches read as false edges; Overnight/agy/20261110_222035_floor_ab.md). Set true to get the old look back.
 C.CAVE_ROCK_VARIANT = false
+-- Soul Tree (ServerScriptService.SoulTree, Shared.SoulTreeUI; brief: vault Briefs/Soul Tree (2026-11-11).md): gloomlings
+-- flattened by a flare drop Gloom Shards (at most perHour an hour); at Camp 1's campfire they buy ranks. each = the gain per rank.
+-- on = false since it was built (2026-11-11): the feature adds a saved field (profile.Data.soul). While false, nothing is read,
+-- written or shown. Turn it on only together with the decision to keep that field.
+C.SOUL_TREE = { on = false, perHour = 12, order = { "hide", "flare", "shield" }, nodes = {
+	hide = { name = "Thick Hide", text = "Gloomlings hit 8 softer", max = 3, cost = { 3, 6, 10 }, each = 8, unit = " HP softer" },
+	flare = { name = "Spare Flare", text = "+1 flare each dive", max = 2, cost = { 4, 9 }, each = 1, unit = " more" },
+	shield = { name = "Long Shield", text = "+2 s golden shield", max = 3, cost = { 3, 6, 10 }, each = 2, unit = " s longer" },
+} }
+C.CAVE_FLOOR_RIMS = false -- soft peach rims on floor edges that drop away (CaveBuilder). Built and tested 2026-11-11; Gemini: do not ship as built (too many rims, a wall outline). Set true to see them.
 C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
 C.CAVE2_ORIGIN = Vector3.new(-3000, 0, 1200) -- Camp 2 (Clay Caves), clear of Camp 1's caves (z -56..252); the camp is not built yet
