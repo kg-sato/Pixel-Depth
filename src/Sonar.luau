@@ -32,8 +32,11 @@ function M.start(E)
 		shell.Color = MINT
 		shell.Anchored, shell.CanCollide, shell.CanQuery, shell.CanTouch, shell.CastShadow = true, false, false, false, false
 		shell.Transparency = 0.7
-		shell.Size = Vector3.new(2, 2, 2)
+		shell.Size = Vector3.new(1, 1, 1)
 		shell.Position = origin
+		local mesh = Instance.new("SpecialMesh") -- a negative scale turns the faces inward: a plain Ball is invisible from inside
+		mesh.MeshType, mesh.Scale = Enum.MeshType.Sphere, Vector3.new(-2, -2, -2)
+		mesh.Parent = shell
 		shell.Parent = folder
 		local t0 = os.clock()
 		local conn
@@ -44,9 +47,9 @@ function M.start(E)
 				shell:Destroy()
 				return
 			end
-			local r = 2 + (RANGE + 6) * (1 - (1 - k) ^ 2)
-			shell.Size = Vector3.new(r, r, r)
-			shell.Transparency = 0.45 + 0.55 * k
+			local r = 2 + (RANGE * 2 + 6) * (1 - (1 - k) ^ 2)
+			mesh.Scale = Vector3.new(-r, -r, -r)
+			shell.Transparency = 0.55 + 0.45 * k
 		end)
 	end
 
