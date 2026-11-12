@@ -26,7 +26,7 @@ function M.start(E)
 	local badge = panel(invBtn, UDim2.fromScale(1.05, 0.36), UDim2.fromScale(0.5, 0.93), -- tucked onto the button's foot: at 1.02 it read as a loose label
 		 Vector2.new(0.5, 0.5), "pillButter")
 	badge.ZIndex = 3
-	local badgeT = text(badge, "0/10", UDim2.fromScale(0.82, 0.62), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), DEEP_GOLD, 700, false)
+	local badgeT = text(badge, "0/10", UDim2.fromScale(0.82, 0.62), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), Color3.fromRGB(146, 96, 10), 700, false) -- deeper than DEEP_GOLD: 3.0:1 measured, now about 4:1
 	badgeT.ZIndex = 4
 	local nubs = {} -- ore bits poke out of a full bag (board 8)
 	for _, d in { { 0.3, 10, 1 }, { 0.52, -12, 3 }, { 0.73, 16, 2 } } do

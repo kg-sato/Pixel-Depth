@@ -651,7 +651,7 @@ function M.play(opt)
 			duckY += ((ducking and 1.4 or 0) - duckY) * (1 - math.exp(-dt / 0.06))
 			-- hazards: rocks drop to land as the cart arrives; passing a lane checks the lean
 			local myLane = lean < -0.5 and 1 or (lean > 0.5 and 3 or 2)
-			local warnDir, warnGap = nil, math.max(speed, 1) * 0.9 -- the nearest thing that will hit within 0.9 s says what to do
+			local warnDir, warnGap = nil, math.max(speed, 1) * 1.3 -- the nearest thing that will hit within 1.3 s says what to do (0.9 measured as 0.58 to 0.85 s on screen, mean 0.76: too short to read and lean)
 			for i = #hazards, 1, -1 do
 				local h = hazards[i]
 				local gap = h.at - dist
@@ -701,6 +701,7 @@ function M.play(opt)
 					if struck then
 						if h.kind ~= "orb" then
 							hits += 1
+							hud.hit(now)
 							slowUntil = now + 1.5
 							shakeAmp = calm and 0 or 0.5
 							play("bonk", 1)

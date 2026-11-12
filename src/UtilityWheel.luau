@@ -60,7 +60,7 @@ function M.start(E)
 	for _, rot in { 45, -45 } do -- faint sector lines: where one slot's pull ends and the next begins
 		new("Frame", holder, { Size = UDim2.new(1.02, 0, 0, 2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, Rotation = rot, BackgroundColor3 = INK, BackgroundTransparency = 0.86, BorderSizePixel = 0, ZIndex = 40 })
 	end
-	local OFF, OFF_INK = Color3.fromRGB(226, 220, 234), Color3.fromRGB(150, 135, 170) -- a soft dark plate so the wheel reads over town and cave alike
+	local OFF, OFF_INK = Color3.fromRGB(226, 220, 234), Color3.fromRGB(112, 96, 138) -- a soft dark plate so the wheel reads over town and cave alike
 	for _, s in SLOTS do
 		local d = disc(holder, 0.27, s.x, s.y, CREAM, 0, 41)
 		s.fill = s.tint:Lerp(WHITE, 0.45)
@@ -79,7 +79,7 @@ function M.start(E)
 		end
 		s.label = E.text(d, s.name, UDim2.fromScale(1.5, 0.22), UDim2.fromScale(0.5, 1.13), MID, INK, nil, false) -- outside the disc: the name never covers the icon
 		s.label.ZIndex = 43
-		s.sub = E.text(d, "", UDim2.fromScale(1.7, 0.15), UDim2.fromScale(0.5, 1.31), MID, Color3.fromRGB(150, 135, 170), nil, false) -- why a locked slot is locked
+		s.sub = E.text(d, "", UDim2.fromScale(1.7, 0.15), UDim2.fromScale(0.5, 1.31), MID, Color3.fromRGB(112, 96, 138), nil, false) -- why a locked slot is locked
 		s.sub.ZIndex = 43
 		if s.key then
 			s.cap = E.keyCap(d, s.key, UDim2.fromScale(0.3, 0.3), UDim2.fromScale(0.9, 0.12))
@@ -89,6 +89,7 @@ function M.start(E)
 	local hub = disc(holder, 0.2, 0.5, 0.52, BUTTER, 0, 41)
 	new("UIGradient", hub, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(240, 228, 200)) })
 	new("UIStroke", hub, { Color = INK, Thickness = 3 })
+	local hubScale = new("UIScale", hub, { Scale = 1 })
 	local hubName = E.text(hub, "TAB", UDim2.fromScale(0.86, 0.3), UDim2.fromScale(0.5, 0.4), MID, INK, nil, false)
 	hubName.ZIndex = 43
 	local hubWhy = E.text(hub, "", UDim2.fromScale(0.84, 0.2), UDim2.fromScale(0.5, 0.68), MID, OFF_INK, nil, false)
@@ -98,10 +99,16 @@ function M.start(E)
 
 	local origin, sel, openedAt = Vector2.zero, nil, 0
 	local tools -- the touch-only TOOLS button (made below)
+	local isOpen = false -- root stays visible a moment longer while it shrinks away
 	local function close()
-		if root.Visible then hook.cardUp, hook.wheelOpen = false, false end
-		root.Visible = false
-		sel = nil
+		if not isOpen then return end
+		isOpen, sel = false, nil
+		hook.cardUp, hook.wheelOpen = false, false
+		if calm then root.Visible = false return end
+		-- it shrinks and the scrim clears in a tenth of a second (the recording showed an instant cut)
+		TweenService:Create(pop, TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.85 }):Play()
+		TweenService:Create(root, TweenInfo.new(0.1), { BackgroundTransparency = 1 }):Play()
+		task.delay(0.11, function() if not isOpen then root.Visible = false end end)
 	end
 	local function commit()
 		local s = sel and SLOTS[sel]
@@ -120,7 +127,8 @@ function M.start(E)
 		return false
 	end
 	local function open()
-		if root.Visible or blocked() then return end
+		if isOpen or blocked() then return end
+		isOpen = true
 		origin, sel, openedAt = UIS:GetMouseLocation(), nil, os.clock()
 		root.Visible = true
 		hook.cardUp = true -- world prompts and the location pill step back, as under a loot card
@@ -128,13 +136,16 @@ function M.start(E)
 		pcall(E.sfx, "open", 1.2)
 		if not calm then
 			pop.Scale = 0.8
+			root.BackgroundTransparency = 1
+			TweenService:Create(root, TweenInfo.new(0.15), { BackgroundTransparency = 0.36 }):Play() -- the scrim fades in with the pop
 			TweenService:Create(pop, TweenInfo.new(0.16, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 		end
 	end
 
 	RunService.RenderStepped:Connect(function()
-		if not root.Visible then return end
+		if not isOpen then return end
 		if blocked() then return close() end
+		hubScale.Scale = 1 + (calm and 0 or 0.035 * math.sin(os.clock() * 3.2)) -- the hub breathes: the open wheel is never a still picture
 		local v = UIS:GetMouseLocation() - origin
 		local reach = holder.AbsoluteSize.X * 0.33
 		if v.Magnitude > reach then v = v.Unit * reach end
@@ -174,7 +185,7 @@ function M.start(E)
 	tools = E.button(E.gui, "TOOLS", E.S(76, 76), E.S(20, 400), nil, "lilac", "star", true)
 	E.fit(tools, 1, 1)
 	tools.Name = "ToolsButton"
-	tools.Activated:Connect(function() if root.Visible then close() else open() end end)
+	tools.Activated:Connect(function() if isOpen then close() else open() end end)
 	local function touchOnly() tools.Visible = (UIS.TouchEnabled and not UIS.KeyboardEnabled) or plr:GetAttribute("DevTouch") ~= nil end
 	plr:GetAttributeChangedSignal("DevTouch"):Connect(touchOnly)
 	touchOnly()
@@ -186,10 +197,10 @@ function M.start(E)
 	end)
 	UIS.InputBegan:Connect(function(io, gp)
 		if gp or io.KeyCode ~= Enum.KeyCode.Tab then return end
-		if root.Visible then close() else open() end
+		if isOpen then close() else open() end
 	end)
 	UIS.InputEnded:Connect(function(io)
-		if io.KeyCode ~= Enum.KeyCode.Tab or not root.Visible then return end
+		if io.KeyCode ~= Enum.KeyCode.Tab or not isOpen then return end
 		if sel or os.clock() - openedAt > 0.3 then commit() end -- a quick tap with no choice leaves the wheel open
 	end)
 	plr:GetAttributeChangedSignal("DevWheel"):Connect(function() -- Studio test hook: DevWheel = 1..4 opens the wheel and picks that slot

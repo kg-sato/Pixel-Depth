@@ -96,7 +96,9 @@ function M.start(E)
 		capStroke.Enabled = keys
 		local word = label(cap, keys and KEY[dir] or d[4], UDim2.fromScale(0.86, 0.8), UDim2.fromScale(0.5, 0.5), keys and INK or BUTTER, 6)
 		if not keys then stroke(word, INK, 3) end
-		warns[dir] = { c = c, bars = bars }
+		local sc = Instance.new("UIScale")
+		sc.Parent = c
+		warns[dir] = { c = c, bars = bars, scale = sc }
 	end
 
 	local hud = {}
@@ -104,8 +106,12 @@ function M.start(E)
 		timeText.Text = string.format("%.1f", math.max(t, 0))
 		spin.Rotation = math.max(t, 0) * 360 -- one turn of the hand each second
 	end
+	local gapShown, gapAt = 1, nil
 	function hud.gap(g, now) -- g: 1 = the Gloom is far behind, 0 = it has you
-		g = math.clamp(g, 0, 1)
+		-- the meter chases the true gap instead of jumping when a BONK takes a third of it at once (video judge 2026-11-11)
+		gapShown += (math.clamp(g, 0, 1) - gapShown) * (1 - math.exp(-math.min(now - (gapAt or now), 0.1) * 7))
+		gapAt = now
+		g = gapShown
 		local close = g <= 0.3
 		local x = 0.09 + 0.7 * (1 - g) -- the Gloom walks toward the cart
 		local beat = (close and not calm) and 0.1 * math.abs(math.sin(now * 9)) or 0
@@ -117,7 +123,24 @@ function M.start(E)
 		gapText.Text = "THE GLOOM  " .. math.floor(g * 30 + 0.5) .. " m"
 		gapText.TextColor3 = close and PINK or WHITE
 	end
+	local shown, lastAsk, quietUntil = nil, 0, 0
+	function hud.hit(now) -- a BONK: the plate steps aside for the word
+		quietUntil = now + 0.25
+	end
 	function hud.warn(dir, now)
+		if dir then lastAsk = now end
+		-- a gap of a frame or two between one hazard and the next must not blink the plate off and on
+		local want = dir or ((now - lastAsk < 0.12) and shown or nil)
+		if now < quietUntil then want = nil end
+		if want ~= shown then
+			shown = want
+			if want and not calm then -- it arrives with a small pop
+				local sc = warns[want].scale
+				sc.Scale = 0.7
+				TweenService:Create(sc, TweenInfo.new(0.16, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+			end
+		end
+		dir = shown
 		for name, w in warns do
 			local on = name == dir
 			w.c.Visible = on
@@ -137,7 +160,8 @@ function M.start(E)
 	end
 	function hud.hide()
 		chip.Visible, box.Visible = false, false
-		hud.warn(nil, 0)
+		shown, lastAsk = nil, -1 -- no grace here: a plate that was up when the run ended must not stay on the result screen (Codex review)
+		for _, w in warns do w.c.Visible = false end
 	end
 	return hud
 end
