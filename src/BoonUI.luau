@@ -51,7 +51,7 @@ function M.start(E)
 		local cap = E.keyCap(take, tostring(i), UDim2.fromScale(0.2, 0.74), UDim2.fromScale(0.12, 0.46)) -- the key sits on the button it presses
 		cap.ZIndex = 9
 		local whole = new("TextButton", card, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 6 }) -- the whole card is the target
-		cards[i] = { disc = disc, img = img, name = name, what = what, take = take, tag = tagText, whole = whole }
+		cards[i] = { disc = disc, img = img, name = name, what = what, take = take, tag = tagText, whole = whole, card = card, scale = new("UIScale", card, { Scale = 1 }), home = card.Position }
 	end
 
 	local function shut() if win.Visible then E.closePanel(win) end end
@@ -85,6 +85,27 @@ function M.start(E)
 			if not (E.isBusy and E.isBusy()) then
 				E.openPanel(win)
 				pcall(E.sfx, "sparkle", 0.9)
+				-- the two cards are dealt one after the other (card draw reel, vault Instagram Saved Posts Review 2026-11-12):
+				-- snap squash (in 0.15 s, 120% x 80%, spring back), then an edge glow ring as each one lands
+				local calm = false
+				pcall(function() calm = game:GetService("GuiService").ReducedMotionEnabled end)
+				for i, c in cards do
+					if calm then c.card.Position, c.scale.Scale = c.home, 1 continue end
+					c.card.Position, c.scale.Scale = c.home + UDim2.fromScale(0, 0.9), 0.8
+					task.delay(0.12 + (i - 1) * 0.16, function()
+						if not win.Visible then return end
+						E.tween(c.card, 0.15, { Position = c.home }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+						E.tween(c.scale, 0.15, { Scale = 1.12 }).Completed:Connect(function() E.tween(c.scale, 0.3, { Scale = 1 }, Enum.EasingStyle.Elastic) end)
+						pcall(E.sfx, "tick", 1 + i * 0.12)
+						local ring = new("Frame", c.card, { Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 5 })
+						new("UICorner", ring, { CornerRadius = UDim.new(0.08, 0) })
+						local st = new("UIStroke", ring, { Color = RUNE, Thickness = 4 })
+						task.delay(0.15, function()
+							E.tween(ring, 0.35, { Size = UDim2.new(1, 32, 1, 32) })
+							E.tween(st, 0.35, { Transparency = 1 }).Completed:Connect(function() ring:Destroy() end)
+						end)
+					end)
+				end
 			end
 		elseif kind == "boonTaken" then
 			local def = C.BOON.list[a]

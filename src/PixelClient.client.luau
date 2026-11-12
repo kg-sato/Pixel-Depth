@@ -1517,26 +1517,46 @@ end)()
 		tween(scaler(chest), 0.45, { Scale = 1 }, Enum.EasingStyle.Back)
 		title.Visible = true
 		pop(title, 0.6, 0.35)
-		-- three shakes, each harder and higher in pitch
-		for k = 1, 3 do
-			task.delay(0.55 + (k - 1) * 0.32, function()
-				sfx("swing", 0.8 + k * 0.15)
-				local a = 4 + k * 3
-				tween(scaler(chest), 0.08, { Scale = 1 + k * 0.04 })
-				tween(chest, 0.06, { Rotation = a }).Completed:Connect(function()
-					tween(chest, 0.06, { Rotation = -a }).Completed:Connect(function()
-						tween(chest, 0.1, { Rotation = 0 }, Enum.EasingStyle.Back)
-					end)
-				end)
+		-- wind-up (chest opening in 7 steps, vasilev.yegor reel, vault Instagram Saved Posts Review 2026-11-12):
+		-- 1 the wobble gets faster and harder, then the chest squashes down; 2 it springs up tall
+		local ratio = chest:FindFirstChildOfClass("UIAspectRatioConstraint") -- squash and stretch: width through the ratio, height through the scale
+		ratio.AspectRatio = 1
+		local t0, gap = 0.55, 0.22
+		for k = 1, 7 do
+			task.delay(t0, function()
+				sfx("swing", 0.8 + k * 0.08)
+				local a = 3 + k * 1.6
+				tween(chest, gap * 0.4, { Rotation = (k % 2 == 0) and a or -a }).Completed:Connect(function() tween(chest, gap * 0.4, { Rotation = 0 }) end)
 			end)
+			t0 += gap
+			gap *= 0.8
 		end
+		task.delay(1.4, function()
+			tween(ratio, 0.1, { AspectRatio = 1.32 })
+			tween(scaler(chest), 0.1, { Scale = 0.84 })
+		end)
+		task.delay(1.52, function()
+			tween(ratio, 0.07, { AspectRatio = 0.8 })
+			tween(scaler(chest), 0.07, { Scale = 1.18 }, Enum.EasingStyle.Back)
+		end)
 		-- burst open: a flash, rays and glow, the lid flips (open art), coins and gems fly to the pills
 		task.delay(1.6, function()
 			chest.Image = CHEST.open
 			sfx("upgrade", 1)
 			sfx("sparkle", 1.2)
-			scaler(chest).Scale = 1.25
+			-- 3 slam: the lid flies open, the picture holds for a few frames (hit-stop), then everything lets go
+			scaler(chest).Scale = 1.3
+			task.wait(0.07)
 			tween(scaler(chest), 0.35, { Scale = 1 }, Enum.EasingStyle.Back)
+			tween(ratio, 0.45, { AspectRatio = 1 }, Enum.EasingStyle.Elastic)
+			do -- 5 shockwave: a ring of light rushes out on the slam
+				local ring = new("Frame", layer, { Size = S(80, 80), Position = S(640, 290), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 4 })
+				new("UIAspectRatioConstraint", ring, { AspectRatio = 1.9, DominantAxis = Enum.DominantAxis.Height })
+				new("UICorner", ring, { CornerRadius = UDim.new(0.5, 0) })
+				local rs = new("UIStroke", ring, { Color = Color3.fromRGB(255, 240, 190), Thickness = 7 })
+				tween(ring, 0.4, { Size = S(520, 520) }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+				tween(rs, 0.4, { Transparency = 1, Thickness = 1 }).Completed:Connect(function() ring:Destroy() end)
+			end
 			glow.ImageTransparency, rays.ImageTransparency = 0, 0.2
 			scaler(glow).Scale = 0.4
 			tween(scaler(glow), 0.4, { Scale = 1 }, Enum.EasingStyle.Back)
@@ -1550,17 +1570,26 @@ end)()
 			pop(card, 0.8, 0.3)
 			pop(reward, 0.6, 0.35)
 			shake(0.6)
-			for k = 1, 8 do -- four-point sparkles pop round the open chest
-				local a = k / 8 * math.pi * 2
-				local sp = new("ImageLabel", layer, { Image = SPRITE.sparkle, BackgroundTransparency = 1, Size = S(46, 46), Position = S(640 + math.cos(a) * 150, 262 + math.sin(a) * 120), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5 })
+			for k = 1, 9 do -- 6 stars: they shoot up and out, then pop like bubbles
+				local sp = new("ImageLabel", layer, { Image = ICON.star, BackgroundTransparency = 1, Size = S(54, 54), Position = S(640, 250), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = math.random(-30, 30), ZIndex = 5 })
 				new("UIAspectRatioConstraint", sp, { AspectRatio = 1 })
 				scaler(sp).Scale = 0
-				task.delay(k * 0.04, function()
-					tween(scaler(sp), 0.25, { Scale = 1.2 }, Enum.EasingStyle.Back).Completed:Connect(function()
-						tween(scaler(sp), 0.35, { Scale = 0 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In).Completed:Connect(function() sp:Destroy() end)
+				task.delay(0.2 + k * 0.03, function()
+					tween(scaler(sp), 0.2, { Scale = 0.6 + math.random() * 0.6 }, Enum.EasingStyle.Back)
+					tween(sp, 0.7 + math.random() * 0.4, { Position = S(640 + (k - 5) * 46 + math.random(-20, 20), 250 - 90 - math.random(0, 110)), Rotation = math.random(-60, 60) }, Enum.EasingStyle.Quad, Enum.EasingDirection.Out).Completed:Connect(function()
+						tween(scaler(sp), 0.09, { Scale = 1.5 }).Completed:Connect(function() sp:Destroy() end)
+						tween(sp, 0.09, { ImageTransparency = 1 })
 					end)
 				end)
 			end
+			task.spawn(function() -- 7 magic dust: tiny sparks keep floating up while the chest stands open
+				while layer.Enabled and chest.Image == CHEST.open do
+					local d = new("Frame", layer, { Size = UDim2.fromOffset(5, 5), Position = S(640 + math.random(-80, 80), 262), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 232, 170), BorderSizePixel = 0, ZIndex = 5 })
+					new("UICorner", d, { CornerRadius = UDim.new(0.5, 0) })
+					tween(d, 1.3, { Position = d.Position - UDim2.fromScale(math.random(-20, 20) / 1280, (90 + math.random(0, 80)) / 592), BackgroundTransparency = 1 }, Enum.EasingStyle.Sine, Enum.EasingDirection.Out).Completed:Connect(function() d:Destroy() end)
+					task.wait(0.09)
+				end
+			end)
 		end)
 		-- the streak track fills up to today, today pops
 		task.delay(2.1, function()
