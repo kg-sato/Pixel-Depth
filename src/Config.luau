@@ -343,7 +343,7 @@ C.BOON = { shield = 30, order = { "flare", "shield", "wind" }, list = {
 -- flattened by a flare drop Gloom Shards (at most perHour an hour); at Camp 1's campfire they buy ranks. each = the gain per rank.
 -- on = false since it was built (2026-11-11): the feature adds a saved field (profile.Data.soul). While false, nothing is read,
 -- written or shown. Turn it on only together with the decision to keep that field.
-C.SOUL_TREE = { on = false, perHour = 12, order = { "hide", "flare", "shield" }, nodes = {
+C.SOUL_TREE = { on = true, perHour = 12, order = { "hide", "flare", "shield" }, nodes = {
 	hide = { name = "Thick Hide", text = "Gloomlings hit 8 softer", max = 3, cost = { 3, 6, 10 }, each = 8, unit = " HP softer" },
 	flare = { name = "Spare Flare", text = "+1 flare each dive", max = 2, cost = { 4, 9 }, each = 1, unit = " more" },
 	shield = { name = "Long Shield", text = "+2 s golden shield", max = 3, cost = { 3, 6, 10 }, each = 2, unit = " s longer" },
