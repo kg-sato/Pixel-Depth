@@ -18,6 +18,7 @@ function M.start(E)
 	local soul = { shards = 0, nodes = {} }
 
 	local win = panel(gui, S(760, 430), S(640, 300), MID, "panel")
+	if E.blueprint then E.blueprint(win) end -- a plan on blueprint paper, like the forge
 	fit(win, 760, 430)
 	win.Name, win.Visible = "SoulTree", false
 	if E.addModal then E.addModal(win) end

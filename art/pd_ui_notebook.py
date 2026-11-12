@@ -15,7 +15,8 @@ WOOD, WOOD_D, BROWN = "#8A5A33", "#6B4426", "#3B2416"
 SIZE = {"butter": (160, 100), "card": (176, 136), "dark": (112, 112), "keycap": (72, 76), "keycapDown": (72, 76), "lilac": (160, 100),
         "mint": (160, 100), "off": (160, 100), "panel": (200, 200), "pill": (176, 76), "pillButter": (176, 80), "pillLilac": (176, 80),
         "pillMint": (176, 80), "pillPink": (176, 80), "pink": (160, 100), "ribbonLilac": (352, 104), "ribbonPink": (352, 104),
-        "sky": (160, 100), "slot": (104, 104), "tab": (136, 84), "tabOn": (136, 84)}
+        "sky": (160, 100), "slot": (104, 104), "tab": (136, 84), "tabOn": (136, 84),
+        "close": (96, 100), "grid": (128, 128)}  # close: the panel close block (sprite, not sliced); grid: the blueprint paper tile
 BTN = {"mint": ("#25B5A0", "#167A6C"), "pink": ("#E0486D", "#9C2947"), "lilac": ("#6D8FF0", "#3A56B0"), "butter": ("#F6B93B", "#B9801F"),
        "sky": ("#5FB4E8", "#2F7DB3"), "off": ("#C4BCAE", "#8A8274")}
 SPLAT = {"pillButter": "#F6B93B", "pillPink": "#E0486D", "pillMint": "#25B5A0", "pillLilac": "#4F7FE0", "pill": None}
@@ -70,6 +71,10 @@ def svg(kind):
         s = (f'<path d="M4 84 L4 18 Q4 6 16 6 L120 6 Q132 6 132 18 L132 84 Z" fill="{INK}"/>'
              f'<path d="M12 84 L12 20 Q12 14 18 14 L118 14 Q124 14 124 20 L124 84 Z" fill="{face}"/>'
              f'<rect x="12" y="74" width="112" height="10" fill="{edge}"/>')
+    elif kind == "close":  # a berry block with a cream X
+        s = block(w, h, 4, 0, "#E0486D", "#9C2947") + '<path d="M32 28 L64 60 M64 28 L32 60" stroke="#FFF7E2" stroke-width="11" stroke-linecap="round"/>'
+    elif kind == "grid":  # blueprint paper: one bold line and three faint ones each way, tiled in game
+        s = '<rect width="128" height="128" fill="#2B63C6"/>' + "".join(f'<path d="M{i * 32} 0 V128 M0 {i * 32} H128" stroke="#FFFFFF" stroke-opacity="{0.3 if i == 0 else 0.12}" stroke-width="2"/>' for i in range(4))
     elif kind == "ribbonPink":  # a wooden plank with two brass nails
         s = (f'<rect x="8" y="18" width="336" height="74" rx="8" fill="#140C1C" opacity="0.5"/>'
              f'<rect x="8" y="8" width="336" height="74" rx="8" fill="{BROWN}"/><rect x="15" y="15" width="322" height="60" rx="4" fill="{WOOD}"/>'

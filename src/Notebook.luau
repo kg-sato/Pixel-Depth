@@ -118,7 +118,7 @@ function M.start(E)
 		end
 	end)
 	tick("Darker nights", "dark", function(on) plr:SetAttribute("DevLowLight", on or nil) end) -- the light governor's switch
-	local note = text(left, "Darker nights dims every lantern. Turn it on if the town looks like day.", UDim2.fromScale(0.86, 0.11), UDim2.fromScale(0.07, 0.86), nil, Color3.fromRGB(110, 92, 70), nil, false)
+	local note = text(left, "Turn on if the town looks like day.", UDim2.fromScale(0.86, 0.075), UDim2.fromScale(0.07, 0.885), nil, Color3.fromRGB(110, 92, 70), nil, false)
 	note.TextXAlignment, note.TextWrapped, note.ZIndex = Enum.TextXAlignment.Left, true, 34
 
 	-- right page: the keys on a torn scrap, over a pink splat

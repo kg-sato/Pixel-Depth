@@ -71,7 +71,7 @@ local DEEP = { -- each button colour's deep shade, for its label outline
 }
 local SPRITE = {
 	wisteria = "rbxassetid://133392597906841", sakura = "rbxassetid://113252916003793", sparkle = "rbxassetid://101352828199322",
-	pointer = "rbxassetid://128266643608103", close = "rbxassetid://132260797395561",
+	pointer = "rbxassetid://128266643608103", close = "rbxassetid://72978757064264", -- close: the notebook kit's berry block (art/ui_notebook/close.png; the soft kit's was 132260797395561)
 	star = "rbxassetid://100737048426546", starOff = "rbxassetid://89117534881571",
 }
 local ICON = { -- smooth soft-kit icons (art/icons_soft, ids in art/icons_soft/asset_ids.json; 2026-11-08 replaced the pixel set)
@@ -176,6 +176,13 @@ local function panel(parent, size, pos, anchor, kind)
 	local f = new("Frame", parent, { Size = size, Position = pos, AnchorPoint = anchor or Vector2.zero })
 	skin(f, kind or "panel")
 	return f
+end
+-- Blueprint paper over a panel's page: the forge and the Soul Tree are plans pinned in the notebook (Unrailed; art/ui_notebook/grid.png)
+local function blueprint(o)
+	local g = new("ImageLabel", o, { Name = "Blueprint", Image = "rbxassetid://132351994400997", ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.fromOffset(48, 48), BackgroundColor3 = Color3.fromRGB(43, 99, 198), BorderSizePixel = 0, Size = UDim2.fromScale(0.955, 0.9), Position = UDim2.fromScale(0.5, 0.49), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 1 })
+	new("UICorner", g, { CornerRadius = UDim.new(0.02, 0) })
+	new("UIStroke", g, { Color = Color3.fromRGB(27, 63, 134), Thickness = 3 })
+	return g
 end
 local function icon(parent, name, size, pos, anchor)
 	return new("ImageLabel", parent, {
@@ -363,7 +370,8 @@ local stepCard = panel(gui, S(410, 56), S(1262, 18), Vector2.new(1, 0), "card")
 fit(stepCard, 410, 56)
 local stepIcon = icon(stepCard, "pick", UDim2.fromScale(0.07, 0.6), UDim2.fromScale(0.03, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", stepIcon, { AspectRatio = 1 })
-local stepText = text(stepCard, "", UDim2.fromScale(0.84, 0.6), UDim2.fromScale(0.55, 0.5), Vector2.new(0.5, 0.5), INK, 700, false)
+local stepText = text(stepCard, "", UDim2.fromScale(0.84, 0.8), UDim2.fromScale(0.55, 0.52), Vector2.new(0.5, 0.5), INK, 700, false)
+stepText.TextWrapped = true -- a long step takes two lines instead of shrinking to phone-unreadable size
 stepCard.Name = "StepCard"
 do -- a small wooden plank nailed over the card's corner names it (Field Notebook pass 2026-11-12)
 	local plank = new("Frame", stepCard, { Name = "Plank", Size = UDim2.fromScale(0.3, 0.66), Position = UDim2.fromScale(0.03, -0.06), AnchorPoint = Vector2.new(0, 0.5), Rotation = -2, ZIndex = 3 })
@@ -446,6 +454,7 @@ text(sellPop, "Takes you up to the sell stall", UDim2.fromScale(0.84, 0.08), UDi
 local forge = panel(gui, S(1140, 520), S(640, 304), Vector2.new(0.5, 0.5), "panel")
 fit(forge, 1140, 520)
 forge.Visible, forge.Name = false, "Forge"
+blueprint(forge)
 local forgeUI = { open = function() end, toggle = function() end, refresh = function() end, fx = function() end, modals = {} } -- modals: full-screen panels from the Shared modules (E.addModal)
 
 -- Egg odds (spec 5.4 and 5.12: every random item shows its odds; pity is visible)
@@ -1724,7 +1733,7 @@ end
 		return d
 	end
 	local view = disc(2, 0.55)
-	view.BackgroundColor3 = Color3.fromRGB(22, 19, 46)
+	view.BackgroundColor3 = Color3.fromRGB(36, 25, 24)
 	new("UIGradient", new("UIStroke", view, { Color = Color3.new(1, 1, 1), Thickness = 6 }), { Rotation = 50, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(240, 200, 110)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 106, 34)), ColorSequenceKeypoint.new(1, Color3.fromRGB(228, 182, 86)) }) }) -- a thick brass bezel, like the mining gauge (Field Notebook pass: was a 2.5 px line)
 	for _, r in { 0.34, 0.64 } do -- faint range rings
 		local ring = new("Frame", mapPanel, { Size = UDim2.fromScale(r, r), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 4 })
@@ -2829,7 +2838,7 @@ end)()
 		bagPill = bagPill, goldPill = goldPill, burst = burst, shake = shake, ICON = ICON, fly = function(...) if forgeUI.fly then forgeUI.fly(...) end end,
 		isBusy = function() return cave ~= nil and cave.mgBusy == true end,
 		cave = cave, caveHud = caveHud, hrp = hrp, feed = feed, layerPill = layerPill, icon = icon, keyCap = keyCap, CREAM = CREAM, LILAC = LILAC,
-		addModal = function(f) table.insert(forgeUI.modals, f) end, vmHook = forgeUI, top = top,
+		addModal = function(f) table.insert(forgeUI.modals, f) end, vmHook = forgeUI, top = top, blueprint = blueprint,
 	}
 	do -- sitting in the minecart (playtest 2): the server sets Seated while it holds us in a cart; our own Animator plays the sit pose
 		local SIT = { [Enum.HumanoidRigType.R15] = "rbxassetid://2506281703", [Enum.HumanoidRigType.R6] = "rbxassetid://178130996" }

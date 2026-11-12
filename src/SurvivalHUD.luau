@@ -15,7 +15,7 @@ function M.start(E)
 	local Radial = require(script.Parent:WaitForChild("Radial"))
 	local AMBER, VIOLET, PLUM = Color3.fromRGB(255, 196, 60), Color3.fromRGB(150, 110, 235), Color3.fromRGB(38, 28, 58)
 
-	local root = new("Frame", caveHud, { Name = "Survival", Size = S(118, 118), Position = S(20, 572), AnchorPoint = Vector2.new(0, 1), BackgroundTransparency = 1, ZIndex = 2 })
+	local root = new("Frame", caveHud, { Name = "Survival", Size = S(134, 134), Position = S(20, 574), AnchorPoint = Vector2.new(0, 1), BackgroundTransparency = 1, ZIndex = 2 })
 	new("UIAspectRatioConstraint", root, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 	local function disc(parent, w, h, pos, color, transparency, z)
 		local f = new("Frame", parent, { Size = UDim2.fromScale(w, h), Position = pos, AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = color, BackgroundTransparency = transparency, BorderSizePixel = 0, ZIndex = z })
@@ -23,25 +23,25 @@ function M.start(E)
 		return f
 	end
 	disc(root, 1, 1, UDim2.fromScale(0.5, 0.54), Color3.fromRGB(16, 10, 28), 0.6, 1) -- soft drop shadow
-	local back = disc(root, 0.98, 0.98, UDim2.fromScale(0.5, 0.5), Color3.new(1, 1, 1), 0.5, 2) -- frosted dark-violet glass
-	new("UIGradient", back, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(92, 74, 132), Color3.fromRGB(34, 24, 54)) })
-	new("UIStroke", back, { Color = Color3.fromRGB(150, 112, 62), Thickness = 2 }) -- a thin bronze rim (a wide gold one read as the meter itself)
+	local back = disc(root, 0.98, 0.98, UDim2.fromScale(0.5, 0.5), Color3.new(1, 1, 1), 0, 2) -- a dark leather face in a brass case (Field Notebook pass 2026-11-12; was frosted violet glass)
+	new("UIGradient", back, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(78, 52, 40), Color3.fromRGB(40, 26, 22)) })
+	new("UIGradient", new("UIStroke", back, { Color = Color3.new(1, 1, 1), Thickness = 5 }), { Rotation = 55, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(244, 206, 116)), ColorSequenceKeypoint.new(0.45, Color3.fromRGB(146, 102, 32)), ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 184, 88)) }) }) -- a thin bronze rim (a wide gold one read as the meter itself)
 	local inner = disc(root, 0.92, 0.92, UDim2.fromScale(0.5, 0.5), Color3.new(1, 1, 1), 1, 3)
 	new("UIStroke", inner, { Color = Color3.fromRGB(120, 84, 44), Thickness = 1.5, Transparency = 0.2 }) -- the rim's dark inner edge
 	local sheen = disc(root, 0.5, 0.22, UDim2.fromScale(0.36, 0.25), Color3.new(1, 1, 1), 0.55, 7) -- a specular arc on the glass dome, top left
-	sheen.Rotation = -28
+	sheen.Rotation, sheen.Visible = -28, false -- leather does not shine
 	new("UIGradient", sheen, { Rotation = 90, Transparency = NumberSequence.new(0, 1) })
 	local ringBox = new("Frame", root, { Size = UDim2.fromScale(0.94, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 4 })
 	local ring = Radial.arc(ringBox, { name = "TorchRing", thick = 0.11, color = AMBER, track = Color3.fromRGB(104, 66, 58), trackTransparency = 0.1, z = 4 }) -- a burn meter in a copper channel (a dark one vanished against the cave)
 	for i = 0, 19 do -- dark notches cut the ring into beads, like the reference dial: the burn reads bead by bead
 		local t = new("Frame", ringBox, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Rotation = i * 18 + 9, ZIndex = 5 })
-		new("Frame", t, { Size = UDim2.fromScale(0.026, 0.125), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = Color3.fromRGB(30, 20, 44), BorderSizePixel = 0, ZIndex = 5 })
+		new("Frame", t, { Size = UDim2.fromScale(0.026, 0.125), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = Color3.fromRGB(36, 22, 18), BorderSizePixel = 0, ZIndex = 5 })
 	end
 	local flame = new("ImageLabel", root, { Name = "Flame", Image = C.HUD_ICON.torch, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.36, 0.36), Position = UDim2.fromScale(0.5, 0.04), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 8 })
 	local face = new("ImageLabel", root, { Name = "Face", Image = C.HUD_ICON.calm, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.42, 0.42), Position = UDim2.fromScale(0.5, 0.39), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5 })
-	local tray = new("Frame", root, { Size = UDim2.fromScale(0.64, 0.24), Position = UDim2.fromScale(0.5, 0.74), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(28, 18, 44), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 5 }) -- the hearts' own tray
+	local tray = new("Frame", root, { Size = UDim2.fromScale(0.64, 0.24), Position = UDim2.fromScale(0.5, 0.74), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(96, 62, 44), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 5 }) -- the hearts' own tray: a leather strap with a brass edge
 	new("UICorner", tray, { CornerRadius = UDim.new(0.5, 0) })
-	new("UIStroke", tray, { Color = CREAM, Thickness = 1.5, Transparency = 0.4 })
+	new("UIStroke", tray, { Color = Color3.fromRGB(230, 184, 88), Thickness = 1.5, Transparency = 0.15 })
 	local hearts = {}
 	for i, a in { 215, 180, 145 } do -- three heart crystals in the tray, left to right
 		local r = math.rad(a)
