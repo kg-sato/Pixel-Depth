@@ -29,13 +29,14 @@ function M.start(E)
 		return o
 	end
 	local pg = plr:WaitForChild("PlayerGui")
-	local lock = new("BillboardGui", pg, { Name = "OreLock", Size = UDim2.fromScale(7, 7), AlwaysOnTop = true, LightInfluence = 0, ResetOnSpawn = false, Enabled = false, MaxDistance = 60 })
+	local lock = new("BillboardGui", pg, { Name = "OreLock", Size = UDim2.fromScale(4.4, 4.4), AlwaysOnTop = false, StudsOffset = Vector3.new(0, 0, 3.5), LightInfluence = 0, -- drawn in the world, pulled 3.5 studs toward the eye so the rock does not swallow it (always-on-top world guis do not show in this game's captures)
+		 ResetOnSpawn = false, Enabled = false, MaxDistance = 60 })
 	local frame = new("Frame", lock, { Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1 })
 	local punch = new("UIScale", frame, {})
 	local bars = {}
 	for _, c in { { 0, 0 }, { 1, 0 }, { 0, 1 }, { 1, 1 } } do -- four corners, each an L of two bars with a soft halo
 		for _, horiz in { true, false } do
-			local b = new("Frame", frame, { Size = horiz and UDim2.fromScale(0.2, 0.028) or UDim2.fromScale(0.028, 0.2), Position = UDim2.fromScale(c[1], c[2]), AnchorPoint = Vector2.new(c[1], c[2]), BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0 })
+			local b = new("Frame", frame, { Size = horiz and UDim2.fromScale(0.22, 0.04) or UDim2.fromScale(0.04, 0.22), Position = UDim2.fromScale(c[1], c[2]), AnchorPoint = Vector2.new(c[1], c[2]), BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0 })
 			new("UIStroke", b, { Color = Color3.new(1, 1, 1), Thickness = 3, Transparency = 0.75 })
 			table.insert(bars, b)
 		end
@@ -70,7 +71,7 @@ function M.start(E)
 			if not core then return end
 			dep, kind = d, which
 			local ore = E.C.LAYERS[d:GetAttribute("Layer")][4][d:GetAttribute("Ore")]
-			lockCol = (ore and ore[2] or Color3.fromRGB(120, 232, 255)):Lerp(Color3.new(1, 1, 1), 0.35)
+			lockCol = (ore and ore[2] or Color3.fromRGB(120, 232, 255)):Lerp(Color3.new(1, 1, 1), 0.65)
 			tint(lockCol)
 			lock.Adornee = core
 			lock.Enabled = true

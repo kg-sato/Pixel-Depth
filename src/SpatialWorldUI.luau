@@ -139,7 +139,9 @@ function M.start(E)
 		local scan = acc > 0.2 -- who is near: five times a second is plenty
 		if scan then acc = 0 end
 		if scan and h then
-			local busy = plr:GetAttribute("InCave") == true or E.isBusy()
+			local chest = plr.PlayerGui:FindFirstChild("DailyChest")
+			local hook = E.vmHook
+			local busy = plr:GetAttribute("InCave") == true or E.isBusy() or (chest ~= nil and chest.Enabled) or hook.arOpen == true or (hook.noScrim ~= nil and hook.noScrim()) -- no station card behind a menu or the daily chest
 			for p, kind in stations do
 				local d = (p.Position - h.Position).Magnitude
 				local c = cards[p]

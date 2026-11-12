@@ -71,7 +71,7 @@ function M.start(E)
 		local sg = new("SurfaceGui", pg, { Name = "AR_" .. title, Adornee = part, Face = Enum.NormalId.Front, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = PPS, AlwaysOnTop = false, LightInfluence = 0, Brightness = 1.4, MaxDistance = 1000, ResetOnSpawn = false, Enabled = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
 		local root = new("Frame", sg, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1 })
 		local sc = new("UIScale", root, {})
-		local card = new("Frame", root, { Size = UDim2.fromScale(0.94, 0.74), Position = UDim2.fromScale(0.5, 0.61), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.2, BorderSizePixel = 0, ZIndex = 2 })
+		local card = new("Frame", root, { Size = UDim2.fromScale(0.94, 0.74), Position = UDim2.fromScale(0.5, 0.61), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.07, BorderSizePixel = 0, ZIndex = 2 }) -- nearly solid: the world behind made the labels hard to read
 		new("UICorner", card, { CornerRadius = UDim.new(0.07, 0) })
 		new("UIStroke", card, { Color = tint:Lerp(WHITE, 0.6), Thickness = 3, Transparency = 0.1 })
 		new("UIGradient", card, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(160, 140, 215)) })
@@ -165,7 +165,7 @@ function M.start(E)
 	end
 	arrow("<", 0.05, -1)
 	arrow(">", 0.95, 1)
-	local hintBar = new("Frame", nav, { Size = UDim2.fromScale(0.34, 0.05), Position = UDim2.fromScale(0.5, 0.95), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.3, BorderSizePixel = 0 })
+	local hintBar = new("Frame", nav, { Size = UDim2.fromScale(0.44, 0.07), Position = UDim2.fromScale(0.5, 0.94), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.3, BorderSizePixel = 0 })
 	new("UICorner", hintBar, { CornerRadius = UDim.new(0.5, 0) })
 	label(hintBar, UIS.KeyboardEnabled and "LOOK LEFT AND RIGHT: MOUSE OR A / D      CLOSE: N" or "TAP THE ARROWS TO LOOK ROUND", UDim2.fromScale(0.9, 0.6), UDim2.fromScale(0.5, 0.5), EDGE, E.HEAD)
 
