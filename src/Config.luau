@@ -272,7 +272,7 @@ C.EGG_GEMS = 10 -- one egg roll with gems
 -- Codex imagegen in the soft kit style, ids in art/icons_soft/asset_ids.json)
 C.HUD_ICON = {
 	-- 2026-11-12: Field Notebook set (art/icons_notebook): the face is a miner's lantern whose flame shrinks with fear; the soft-kit ids are in art/icons_soft/asset_ids.json
-	heart = "rbxassetid://120555925180195", torch = "rbxassetid://70853102680947", flare = "rbxassetid://106964438376073",
+	heart = "rbxassetid://120555925180195", torch = "rbxassetid://70853102680947", flare = "rbxassetid://132611183351134",
 	calm = "rbxassetid://111977423235621", uneasy = "rbxassetid://96705805257653", scared = "rbxassetid://72410739293162",
 }
 C.EGG_COINS = 75

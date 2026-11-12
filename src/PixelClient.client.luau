@@ -1735,7 +1735,7 @@ end
 		new("UICorner", d, { CornerRadius = UDim.new(0.5, 0) })
 		return d
 	end
-	local view = disc(2, 0.55)
+	local view = disc(2, 0.2) -- nearly opaque: the see-through face bled into the dark cave
 	view.BackgroundColor3 = Color3.fromRGB(36, 25, 24)
 	new("UIGradient", new("UIStroke", view, { Color = Color3.new(1, 1, 1), Thickness = 6 }), { Rotation = 50, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(240, 200, 110)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 106, 34)), ColorSequenceKeypoint.new(1, Color3.fromRGB(228, 182, 86)) }) }) -- a thick brass bezel, like the mining gauge (Field Notebook pass: was a 2.5 px line)
 	for _, r in { 0.34, 0.64 } do -- faint range rings

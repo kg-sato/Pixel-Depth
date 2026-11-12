@@ -39,13 +39,13 @@ function M.start(E)
 	end
 	local flame = new("ImageLabel", root, { Name = "Flame", Image = C.HUD_ICON.torch, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.36, 0.36), Position = UDim2.fromScale(0.5, 0.04), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 8 })
 	local face = new("ImageLabel", root, { Name = "Face", Image = C.HUD_ICON.calm, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.42, 0.42), Position = UDim2.fromScale(0.5, 0.39), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5 })
-	local tray = new("Frame", root, { Size = UDim2.fromScale(0.64, 0.24), Position = UDim2.fromScale(0.5, 0.74), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(96, 62, 44), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 5 }) -- the hearts' own tray: a leather strap with a brass edge
+	local tray = new("Frame", root, { Size = UDim2.fromScale(0.76, 0.28), Position = UDim2.fromScale(0.5, 0.75), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(96, 62, 44), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 5 }) -- the hearts' own tray: a leather strap with a brass edge
 	new("UICorner", tray, { CornerRadius = UDim.new(0.5, 0) })
 	new("UIStroke", tray, { Color = Color3.fromRGB(230, 184, 88), Thickness = 1.5, Transparency = 0.15 })
 	local hearts = {}
 	for i, a in { 215, 180, 145 } do -- three heart crystals in the tray, left to right
 		local r = math.rad(a)
-		hearts[i] = new("ImageLabel", root, { Name = "Heart" .. i, Image = C.HUD_ICON.heart, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.21, 0.21), Position = UDim2.fromScale(0.5 + math.sin(r) * 0.34, 0.74), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 6 })
+		hearts[i] = new("ImageLabel", root, { Name = "Heart" .. i, Image = C.HUD_ICON.heart, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.26, 0.26), Position = UDim2.fromScale(0.5 + math.sin(r) * 0.42, 0.75), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 6 })
 	end
 
 	-- the flare collar: a small glass slot hooked on the talisman's right shoulder

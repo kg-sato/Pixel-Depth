@@ -180,7 +180,7 @@ function M.start(E)
 			local why = s.why()
 			local off, on = why ~= nil, i == sel
 			s.sub.Text = off and why or "" -- a locked slot keeps its name and says why underneath; its key cap goes (the key would not work either)
-			if s.cap then s.cap.Visible = not off end
+			if s.cap then s.cap.Visible = on and not off end -- the key shows on the picked slot only: eight white caps crowded the dial
 			-- unusable: a flat grey disc with a lock, never see-through (Gemini r1: transparency turned to sludge over the world)
 			s.disc.BackgroundColor3 = off and OFF or (on and s.tint or s.fill)
 			s.rim.Color, s.rim.Thickness = off and OFF_INK or Color3.fromRGB(59, 36, 22), (on and not off) and 5 or 3
