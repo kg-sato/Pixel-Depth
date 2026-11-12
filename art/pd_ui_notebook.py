@@ -34,7 +34,10 @@ def svg(kind):
     w, h = SIZE[kind]
     s = ""
     if kind in BTN:
-        s = block(w, h, 4, 0, *BTN[kind])
+        # round 2 (2026-11-12, the owner's second reference set: MapleStory, Stardew Valley, Bloons, Peak): a wooden block,
+        # the kind's colour is a band of paint across its top (the saturated faces read as candy, most of all in the caves)
+        s = block(w, h, 4, 0, "#A9713F", "#6B4426") + (f'<rect x="12" y="12" width="{w - 24}" height="15" rx="5" fill="{BTN[kind][0]}"/>'
+            f'<rect x="12" y="52" width="{w - 24}" height="3" fill="#6B4426" opacity="0.35"/><rect x="12" y="34" width="{w - 24}" height="2" fill="#6B4426" opacity="0.25"/>')
     elif kind in SPLAT:
         y0, y1 = 14, h - 16  # the paper's straight top and bottom in the stretched middle
         if SPLAT[kind]:
@@ -67,7 +70,7 @@ def svg(kind):
         s = (f'<rect x="4" y="4" width="96" height="96" rx="12" fill="{LINE}"/><rect x="10" y="10" width="84" height="84" rx="7" fill="{PAPER_D}"/>'
              f'<rect x="10" y="10" width="84" height="8" rx="4" fill="#C9B88A"/>')
     elif kind in ("tab", "tabOn"):
-        face, edge = ("#F6B93B", "#B9801F") if kind == "tabOn" else (PAPER, LINE)
+        face, edge = ("#F6B93B", "#B9801F") if kind == "tabOn" else ("#A9713F", "#6B4426")
         s = (f'<path d="M4 84 L4 18 Q4 6 16 6 L120 6 Q132 6 132 18 L132 84 Z" fill="{INK}"/>'
              f'<path d="M12 84 L12 20 Q12 14 18 14 L118 14 Q124 14 124 20 L124 84 Z" fill="{face}"/>'
              f'<rect x="12" y="74" width="112" height="10" fill="{edge}"/>')

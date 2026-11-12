@@ -50,9 +50,9 @@ end
 -- of their own colour, a white rim on top, a darker lip below, soft plum shadows. SLICE is each skin's 9-slice centre in image pixels.
 local SKIN = { -- Field Notebook kit (art/ui_notebook, pd_ui_notebook.py, 2026-11-12; brief: UI Rework Field Notebook): torn paper, block buttons, parchment, leather, wood. Same sizes and slices as the glass kit (art/ui_glass, ids in its asset_ids.json)
 	panel = "rbxassetid://95838412868959", card = "rbxassetid://116990494763664", pill = "rbxassetid://105118556243193", dark = "rbxassetid://116558100037993",
-	mint = "rbxassetid://125718734941034", pink = "rbxassetid://72871112974283", lilac = "rbxassetid://116305925427936", butter = "rbxassetid://101975160139050",
-	sky = "rbxassetid://108993020017880", off = "rbxassetid://76923853438577", keycap = "rbxassetid://121686637636447", keycapDown = "rbxassetid://109937989693693",
-	slot = "rbxassetid://135485337194775", tab = "rbxassetid://111057080125694", tabOn = "rbxassetid://127860743563907", ribbonPink = "rbxassetid://127123029330678",
+	mint = "rbxassetid://132818463303608", pink = "rbxassetid://117911269022835", lilac = "rbxassetid://124095827937203", butter = "rbxassetid://115577813505762",
+	sky = "rbxassetid://75773112475379", off = "rbxassetid://72014731603273", keycap = "rbxassetid://121686637636447", keycapDown = "rbxassetid://109937989693693",
+	slot = "rbxassetid://135485337194775", tab = "rbxassetid://88733012831935", tabOn = "rbxassetid://127860743563907", ribbonPink = "rbxassetid://127123029330678",
 	ribbonLilac = "rbxassetid://116014459402362",
 	pillButter = "rbxassetid://113663991019583", pillLilac = "rbxassetid://110618460106419", pillMint = "rbxassetid://111939519073146", pillPink = "rbxassetid://117222783985327", -- puffy tone-on-tone pills (kit round 4)
 }
@@ -65,8 +65,8 @@ local SLICE = {
 	button = { 42, 40, 118, 52 },
 }
 local DEEP = { -- each button colour's deep shade, for its label outline
-	mint = Color3.fromRGB(16, 92, 80), pink = Color3.fromRGB(128, 30, 56), lilac = Color3.fromRGB(44, 66, 150),
-	butter = Color3.fromRGB(128, 82, 12), sky = Color3.fromRGB(32, 96, 144), off = Color3.fromRGB(96, 90, 78),
+	mint = Color3.fromRGB(59, 36, 22), pink = Color3.fromRGB(59, 36, 22), lilac = Color3.fromRGB(59, 36, 22), -- wooden blocks: one dark bark outline
+	butter = Color3.fromRGB(59, 36, 22), sky = Color3.fromRGB(59, 36, 22), off = Color3.fromRGB(59, 36, 22),
 	ribbonPink = Color3.fromRGB(59, 36, 22), ribbonLilac = Color3.fromRGB(43, 34, 51),
 }
 local SPRITE = {
@@ -228,7 +228,7 @@ local function button(parent, label, size, pos, anchor, kind, iconName, vertical
 	local lab
 	if iconName and vertical then
 		icon(b, iconName, UDim2.fromScale(0.54, 0.44), UDim2.fromScale(0.5, 0.31), Vector2.new(0.5, 0.5))
-		lab = text(b, label, UDim2.fromScale(0.86, 0.25), UDim2.fromScale(0.5, 0.66), Vector2.new(0.5, 0.5), WHITE) -- larger labels (Field Notebook pass)
+		lab = text(b, label, UDim2.fromScale(0.86, 0.25), UDim2.fromScale(0.5, 0.68), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 244, 214)) -- larger cream labels (Field Notebook pass)
 	elseif iconName then
 		local ic = icon(b, iconName, UDim2.fromScale(0.3, 0.62), UDim2.fromScale(0.08, 0.5), Vector2.new(0, 0.5))
 		new("UIAspectRatioConstraint", ic, { AspectRatio = 1 })
