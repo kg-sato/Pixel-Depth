@@ -255,7 +255,10 @@ local function paperTone(dark)
 	local tone = dark and Color3.fromRGB(196, 172, 132) or Color3.new(1, 1, 1)
 	for sk in skinned do
 		local k = sk.Parent and sk.Parent:GetAttribute("Kind")
-		if k and (string.sub(k, 1, 4) == "pill" or k == "card") and sk:IsDescendantOf(gui) then sk.ImageColor3 = tone end
+		if k and sk:IsDescendantOf(gui) then
+			if string.sub(k, 1, 4) == "pill" or k == "card" then sk.ImageColor3 = tone
+			elseif DEEP[k] and sk.Parent.Parent and sk.Parent.Parent.Name == "Buttons" then sk.ImageColor3 = dark and Color3.fromRGB(176, 160, 150) or Color3.new(1, 1, 1) end -- the block buttons lose their daylight brightness too
+		end
 	end
 end
 plr:GetAttributeChangedSignal("InCave"):Connect(function() paperTone(plr:GetAttribute("InCave") == true) end)

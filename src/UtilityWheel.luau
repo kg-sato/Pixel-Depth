@@ -75,12 +75,12 @@ function M.start(E)
 	for _, rot in { 22.5, 67.5, -22.5, -67.5 } do -- faint sector lines: where one slot's pull ends and the next begins
 		new("Frame", holder, { Size = UDim2.new(1.02, 0, 0, 2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, Rotation = rot, BackgroundColor3 = Color3.fromRGB(230, 184, 88), BackgroundTransparency = 0.7, BorderSizePixel = 0, ZIndex = 40 })
 	end
-	local OFF, OFF_INK = Color3.fromRGB(226, 220, 234), Color3.fromRGB(112, 96, 138) -- a soft dark plate so the wheel reads over town and cave alike
+	local OFF, OFF_INK = Color3.fromRGB(150, 132, 108), Color3.fromRGB(78, 58, 44) -- a soft dark plate so the wheel reads over town and cave alike
 	for _, s in SLOTS do
 		local d = disc(holder, 0.225, s.x, s.y, CREAM, 0, 41)
-		s.fill = s.tint:Lerp(WHITE, 0.45)
+		s.fill = Color3.fromRGB(236, 220, 180) -- parchment tokens; the slot's own colour shows only when it is picked (Gemini: pastel candy circles undid the compass)
 		d.Name = s.name
-		new("UIGradient", d, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(226, 220, 236)) }) -- pillowy: lighter on top
+		new("UIGradient", d, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(206, 188, 150)) }) -- lighter on top
 		s.lock = new("ImageLabel", d, { Image = E.ICON.lock, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 44, Visible = false })
 		s.disc, s.rim, s.scale = d, new("UIStroke", d, { Color = INK, Thickness = 3 }), new("UIScale", d, { Scale = 1 })
 		if s.icon then
@@ -183,7 +183,7 @@ function M.start(E)
 			if s.cap then s.cap.Visible = not off end
 			-- unusable: a flat grey disc with a lock, never see-through (Gemini r1: transparency turned to sludge over the world)
 			s.disc.BackgroundColor3 = off and OFF or (on and s.tint or s.fill)
-			s.rim.Color, s.rim.Thickness = off and OFF_INK or INK, (on and not off) and 5 or 3
+			s.rim.Color, s.rim.Thickness = off and OFF_INK or Color3.fromRGB(59, 36, 22), (on and not off) and 5 or 3
 			s.label.TextColor3 = off and OFF_INK or INK
 			s.lock.Visible = off
 			if s.img then s.img.ImageTransparency, s.img.ImageColor3 = off and 0.72 or 0, off and Color3.fromRGB(170, 160, 190) or WHITE end

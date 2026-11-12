@@ -103,7 +103,7 @@ function M.start(E)
 	local function tick(label, key, apply)
 		local f = row(label)
 		local b, t = block(f, "", UDim2.fromScale(0.12, 0.9), UDim2.fromScale(0.92, 0.5), WHITE)
-		t.TextColor3 = BERRY
+		t.TextColor3 = INK -- an ink cross, not a pink one
 		local function show()
 			t.Text = set[key] and "X" or ""
 			apply(set[key])
@@ -139,7 +139,8 @@ function M.start(E)
 		d.TextXAlignment, d.ZIndex = Enum.TextXAlignment.Left, 34
 	end
 
-	local done = block(book, "DONE", UDim2.fromScale(0.13, 0.11), UDim2.fromScale(0.9, 1.0), TEAL)
+	local done, doneT = block(book, "DONE", UDim2.fromScale(0.13, 0.11), UDim2.fromScale(0.9, 1.0), Color3.fromRGB(96, 62, 44)) -- a leather clasp
+	doneT.TextColor3 = Color3.fromRGB(243, 230, 196)
 	done.ZIndex = 36
 
 	local function open()
