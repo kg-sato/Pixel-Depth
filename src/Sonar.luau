@@ -1,5 +1,5 @@
 -- Sonar (ReplicatedStorage.Shared.Sonar), started by PixelClient. Cave utility: press T in the caves and the pickaxe
--- taps the rock. A luminous shell grows out from the player; every ore deposit within 50 studs lights up through the rock
+-- taps the rock. A luminous wave runs out over the floor from the player; every ore deposit within 50 studs lights up through the rock
 -- for 5 seconds (Highlight, AlwaysOnTop). Client only: it reveals what the player can already see on the server, so it
 -- pays nothing and needs no remote. Cooldown 12 s. Q is the minecart lift key in the mine, so the sonar uses T.
 local M = {}
@@ -28,28 +28,30 @@ function M.start(E)
 		local folder = workspace:FindFirstChild("Sonar") or Instance.new("Folder")
 		folder.Name, folder.Parent = "Sonar", workspace
 		local shell = Instance.new("Part")
-		shell.Name, shell.Shape, shell.Material = "Shell", Enum.PartType.Ball, Enum.Material.Neon
+		-- a flat disc at foot height: a ball (also with inward faces) did not draw for a player standing inside it
+		shell.Name, shell.Shape, shell.Material = "Shell", Enum.PartType.Cylinder, Enum.Material.Neon
 		shell.Color = MINT
 		shell.Anchored, shell.CanCollide, shell.CanQuery, shell.CanTouch, shell.CastShadow = true, false, false, false, false
-		shell.Transparency = 0.7
-		shell.Size = Vector3.new(1, 1, 1)
-		shell.Position = origin
-		local mesh = Instance.new("SpecialMesh") -- a negative scale turns the faces inward: a plain Ball is invisible from inside
-		mesh.MeshType, mesh.Scale = Enum.MeshType.Sphere, Vector3.new(-2, -2, -2)
-		mesh.Parent = shell
+		shell.Transparency = 0.86
+		local at = CFrame.new(origin - Vector3.new(0, 2.7, 0)) * CFrame.Angles(0, 0, math.rad(90))
+		shell.Size, shell.CFrame = Vector3.new(0.15, 2, 2), at
+		local light = Instance.new("PointLight")
+		light.Color, light.Shadows, light.Brightness, light.Range = MINT, false, 2, 8
+		light.Parent = shell
 		shell.Parent = folder
-		local t0 = os.clock()
+		local t0, dur = os.clock(), plr:GetAttribute("DevSonarSlow") or 1.4 -- Studio hook: a slow pulse for captures
 		local conn
 		conn = RunService.RenderStepped:Connect(function()
-			local k = (os.clock() - t0) / 1.4
+			local k = (os.clock() - t0) / dur
 			if k >= 1 then
 				conn:Disconnect()
 				shell:Destroy()
 				return
 			end
 			local r = 2 + (RANGE * 2 + 6) * (1 - (1 - k) ^ 2)
-			mesh.Scale = Vector3.new(-r, -r, -r)
-			shell.Transparency = 0.55 + 0.45 * k
+			shell.Size, shell.CFrame = Vector3.new(0.15, r, r), at
+			shell.Transparency = 0.86 + 0.14 * k
+			light.Range, light.Brightness = math.min(60, 8 + r / 2), 2 * (1 - k)
 		end)
 	end
 
