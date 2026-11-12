@@ -98,6 +98,8 @@ function M.start(E)
 		if gp or io.KeyCode ~= Enum.KeyCode.T then return end
 		ping()
 	end)
+	E.vmHook.sonar = ping -- the utility wheel
+	E.vmHook.sonarLeft = function() return math.max(0, readyAt - os.clock()) end
 end
 
 return M

@@ -313,6 +313,7 @@ function M.start(E)
 	end
 	local function shut() if win.Visible then closePanel(win) end end
 	close.Activated:Connect(shut)
+	if E.vmHook then E.vmHook.wardrobe = function() if win.Visible then shut() else open() end end end -- the utility wheel
 	UIS.InputBegan:Connect(function(io, gp)
 		if gp then return end
 		if io.KeyCode == Enum.KeyCode.V then if win.Visible then shut() elseif not plr:GetAttribute("InCave") and not plr:GetAttribute("InMine") then open() end end -- a town thing
