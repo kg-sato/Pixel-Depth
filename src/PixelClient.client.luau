@@ -340,8 +340,8 @@ end
 local marker = new("Frame", strip, { Size = UDim2.new(1.9, 0, 0, 8), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 3 })
 new("UIStroke", marker, { Color = INK, Thickness = 2 })
 
-local stepCard = panel(gui, S(560, 62), S(640, 18), Vector2.new(0.5, 0), "card")
-fit(stepCard, 560, 62)
+local stepCard = panel(gui, S(344, 44), S(1262, 18), Vector2.new(1, 0), "card")
+fit(stepCard, 344, 44)
 local stepIcon = icon(stepCard, "pick", UDim2.fromScale(0.07, 0.6), UDim2.fromScale(0.03, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", stepIcon, { AspectRatio = 1 })
 local stepText = text(stepCard, "", UDim2.fromScale(0.84, 0.6), UDim2.fromScale(0.55, 0.5), Vector2.new(0.5, 0.5), INK, 700, false)
@@ -1275,6 +1275,7 @@ local STEPS = {
 	"Your crew digs with you. Go deeper!",
 }
 local stepShown, stepDoneAt, stepExpired = "", nil, false
+local layerShowUntil = 0
 local stepSince, stepSmall = 0, false
 local function stepMessage()
 	if not state then return "" end
@@ -1664,7 +1665,7 @@ do
 			local flick = math.noise(now * 6, 1.7) * 0.18 + math.noise(now * 17, 4.2) * 0.08
 			lantern.Color = plr:GetAttribute("TorchColor") or Color3.fromRGB(255, 196, 120) -- the lantern cosmetic (Shared.WardrobeUI)
 			lantern.Range = C.TORCH.minRange + (C.TORCH.range - C.TORCH.minRange) * cave.fuel ^ 0.5 + flick * 2 + job.light
-			lantern.Brightness = 0.18 + 0.4 * cave.fuel + flick * 0.25 -- soft: close things blew out white (the floor, then chests and tents; Gemini 2026-11-09)
+			lantern.Brightness = 0.27 + 0.31 * cave.fuel + flick * 0.25 -- soft: close things blew out white (the floor, then chests and tents; Gemini 2026-11-09)
 		end
 		if cave.tick then cave.tick(now, h) end
 	end
@@ -2890,7 +2891,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	end end
 	local promptsOn = not (modal or cave.mgBusy or forgeUI.cardUp or (card and card.Visible)) -- audit 05: no world prompt over a modal or a loot card
 	caveHud.Visible = inCave and not modal -- the cave HUD and its tip ribbon step back behind a modal
-	layerPill.Visible, goldPill.Parent.Parent.Visible = not (modal or cave.mgBusy or forgeUI.cardUp), not (modal or cave.mgBusy) -- so do the location pill and the left column (Gemini r2: they floated over the blur)
+	layerPill.Visible, goldPill.Parent.Parent.Visible = not (modal or cave.mgBusy or forgeUI.cardUp) and os.clock() < layerShowUntil, not (modal or cave.mgBusy) -- so do the location pill and the left column (Gemini r2: they floated over the blur)
 	if PPS.Enabled ~= promptsOn then PPS.Enabled = promptsOn end
 	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and not cave.mgBusy and not (card and card.Visible) and (not inCave or ((forgeUI.questHint ~= nil or (forgeUI.caveUrgent ~= nil and forgeUI.caveUrgent() ~= nil)))) -- prompt bubbles step below the card (see the prompt placement loop)
 	if modal ~= scrim.Visible then
@@ -3009,8 +3010,8 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		stepShown, stepExpired, stepSince = msg, false, now
 		stepText.Text = msg
 		stepCard.Visible = msg ~= ""
-		stepCard.Position = S(640, -40)
-		tween(stepCard, 0.5, { Position = S(640, 18) }, Enum.EasingStyle.Bounce)
+		stepCard.Position = S(1262, -40)
+		tween(stepCard, 0.5, { Position = S(1262, 18) }, Enum.EasingStyle.Bounce)
 		stepDoneAt = (state.step >= 6 and not forgeUI.questHint and not (forgeUI.caveUrgent and forgeUI.caveUrgent())) and now + 6 or nil -- an urgent cave warning never times out (Codex)
 	end
 	if stepDoneAt and now > stepDoneAt then
@@ -3051,6 +3052,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		else
 			layerNum.Text, layerName.Text, layerDepth.Text = "CAMP", "HOLLOW MOUNTAIN", ""
 		end
+		if lastRow then layerShowUntil = os.clock() + 5 end
 		lastRow = row
 		if inMine and atmo then
 			local tintCol = C.LAYERS[L][3]:Lerp(Color3.fromRGB(46, 32, 70), 0.55)
