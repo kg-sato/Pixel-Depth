@@ -310,6 +310,9 @@ function M.play(opt)
 	stroke(pipWord, INK, 2)
 	local big = label(gui, "", UDim2.fromScale(0.5, 0.16), UDim2.fromScale(0.5, 0.42), WHITE, 6)
 	local bigStroke = stroke(big, INK, 5)
+	if C.UI_KIT == "glass" then -- the big words (3, 2, 1, ESCAPE!, BONK!) are jelly glass letters (the user, 2026-11-12)
+		require(script.Parent:WaitForChild("JellyText")).mirror(big, { color = WHITE, glow = true, popOnChange = true, followColor = true })
+	end
 	local touch = UIS.TouchEnabled and not UIS.KeyboardEnabled
 	local hint = label(gui, touch and "HOLD LEFT OR RIGHT TO LEAN, SWIPE UP TO JUMP, DOWN TO DUCK" or "LEAN  A / D    JUMP  SPACE    DUCK  S", UDim2.fromScale(0.6, 0.045), UDim2.fromScale(0.5, 0.83), WHITE, 4)
 	local hintStroke = stroke(hint, INK, 2)

@@ -74,12 +74,13 @@ function M.start(E)
 		new("UIGradient", card, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(170, 150, 220)) })
 		local sheen = new("Frame", card, { Size = UDim2.fromScale(0.16, 1.6), Position = UDim2.fromScale(0.22, 0.5), AnchorPoint = MID, Rotation = 22, BackgroundColor3 = WHITE, BackgroundTransparency = 0.9, BorderSizePixel = 0, ZIndex = 1 })
 		local bar = new("Frame", card, { Size = UDim2.fromScale(1, 0.27), BackgroundColor3 = Color3.fromRGB(86, 62, 160), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 2 })
-		label(bar, TITLE[kind] or string.upper(kind), UDim2.fromScale(0.86, 0.66), UDim2.fromScale(0.5, 0.5), WHITE, E.HEAD)
+		local holder = new("Frame", bar, { Size = UDim2.fromScale(0.9, 0.9), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 3 })
+		local title = require(script.Parent:WaitForChild("JellyText")).new(holder, TITLE[kind] or string.upper(kind), { color = Color3.new(1, 1, 1), z = 3 }) -- jelly glass letters
 		new("Frame", card, { Size = UDim2.new(1, 0, 0, 2), Position = UDim2.fromScale(0, 0.27), BackgroundColor3 = EDGE, BackgroundTransparency = 0.3, BorderSizePixel = 0, ZIndex = 3 })
 		local rows = {}
 		for i = 1, 3 do rows[i] = label(card, "", UDim2.fromScale(0.9, 0.17), UDim2.fromScale(0.5, 0.27 + i * 0.2), WHITE, i == 1 and E.HEAD or E.FONT) end
 		local sc = new("UIScale", card, { Scale = 0.6 })
-		local c = { part = part, kind = kind, board = board, card = card, edge = edge, rows = rows, sc = sc, sheen = sheen, top = top, open = false }
+		local c = { title = title, part = part, kind = kind, board = board, card = card, edge = edge, rows = rows, sc = sc, sheen = sheen, top = top, open = false }
 		function c.fill()
 			local lines, glow = LINES[kind]()
 			local n = #lines
@@ -101,6 +102,7 @@ function M.start(E)
 		c.open = on
 		if on then
 			c.fill()
+			c.title.pop()
 			c.sc.Scale = 0.6
 			TweenService:Create(c.sc, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play() -- the unfurl, with a small overshoot
 			TweenService:Create(c.card, TweenInfo.new(0.18), { GroupTransparency = 0 }):Play()
