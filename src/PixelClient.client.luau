@@ -774,6 +774,7 @@ local function hatchShow(name)
 	tween(vpSc, 0.4, { Scale = 1 }, Enum.EasingStyle.Back) -- the egg and plinth drop in
 	local world = new("WorldModel", vp, {})
 	local vcam = new("Camera", vp, { FieldOfView = 30 })
+	local cine = tier >= #C.RARITIES and forgeUI.hatchCine and forgeUI.hatchCine({ ov = ov, stage = stage, vcam = vcam, buildT = buildT }) or nil -- Secret: Shared.HatchCine
 	vp.CurrentCamera = vcam
 	vcam.CFrame = CFrame.lookAt(Vector3.new(0, 1.2, -9), Vector3.new(0, 0.6, 0))
 	local plinth = new("Part", world, { Anchored = true, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.5, 3.6, 3.6), Color = Color3.fromRGB(96, 76, 128), CFrame = CFrame.new(0, -1.05, 0) * CFrame.Angles(0, 0, math.rad(90)) })
@@ -890,6 +891,7 @@ local function hatchShow(name)
 	end
 
 	-- 3 LIGHT BURST: a short white flash, rays scale in, the ring rolls out, the card flips in behind the pet
+	if cine then cine.burst() end
 	local flash = new("Frame", ov, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = rc:Lerp(WHITE, 0.75), BackgroundTransparency = 0, ZIndex = 30 })
 	tween(flash, 0.12, { BackgroundTransparency = 1 })
 	task.delay(0.25, function() flash:Destroy() end)
@@ -2810,7 +2812,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
