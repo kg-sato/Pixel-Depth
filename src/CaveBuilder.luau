@@ -990,6 +990,17 @@ function Cave.build(parent, origin, seed)
 				part("Shrines", "ShrineStone", Vector3.new(3, 4.4, 0.8), base * CFrame.new(0, 2.2, 0.9), PAL.rock[3], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
 				local rune = part("Shrines", "ShrineRune", Vector3.new(1.2, 1.6, 0.2), base * CFrame.new(0, 2.8, 0.4), PAL.lightViolet, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 				glow(rune, PAL.lightViolet, 10, 0.7)
+				do -- the rune blesses: a boon shrine (ServerScriptService.BoonShrine), once per shrine per dive
+					local at = Instance.new("Attachment")
+					at.Position = Vector3.new(0, 1.5, -0.4) -- above the stone, clear of the chest's own prompt
+					at.Parent = rune
+					local pray = Instance.new("ProximityPrompt")
+					pray.ActionText, pray.ObjectText, pray.KeyboardKeyCode = "Pray", "Shrine rune", Enum.KeyCode.F
+					pray.MaxActivationDistance, pray.RequiresLineOfSight, pray.Style = 8, false, Enum.ProximityPromptStyle.Custom
+					pray.Exclusivity = Enum.ProximityPromptExclusivity.AlwaysShow
+					pray:SetAttribute("BoonShrine", made)
+					pray.Parent = at
+				end
 				part("Shrines", "ShrinePlinth", Vector3.new(3.4, 0.8, 2.2), base * CFrame.new(0, 0.4, -0.4), PAL.rock[2], { Material = ROCK.Material, MaterialVariant = ROCK.MaterialVariant })
 				local chest = part("Shrines", "ShrineChest", Vector3.new(1.8, 1.1, 1.2), base * CFrame.new(0, 1.35, -0.6), PAL.plank)
 				local lid = part("Shrines", "ShrineLid", Vector3.new(1.9, 0.45, 1.3), base * CFrame.new(0, 2.12, -0.6), PAL.barkLt)

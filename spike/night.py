@@ -9,7 +9,7 @@ import ctypes, json, os, pathlib, subprocess, sys, tempfile, time
 game = pathlib.Path(__file__).resolve().parent.parent
 root = game.parent.parent  # the Roblox workspace (tools/)
 out = game / "captures" / "night"; out.mkdir(parents=True, exist_ok=True)
-SSS = {"Shop", "Analytics", "Boss", "HubBuilder", "CaveBuilder", "ZFix", "Gloom", "Glossify", "CaveEvents", "ClayCaves", "SoulTree"}
+SSS = {"Shop", "Analytics", "Boss", "HubBuilder", "CaveBuilder", "ZFix", "Gloom", "Glossify", "CaveEvents", "ClayCaves", "SoulTree", "BoonShrine"}
 SKIP = {"install_pickaxes"}
 
 

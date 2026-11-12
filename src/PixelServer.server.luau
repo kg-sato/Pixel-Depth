@@ -1052,6 +1052,8 @@ CaveEvents.init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, landing =
 	finish = function(s) if s.mg then s.mg.deadline = 0 end end }) -- the main loop pays an expired minigame on its next pass
 require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, sendState = sendState, remote = remote,
 	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, quest = quest })
+require(game:GetService("ServerScriptService"):WaitForChild("BoonShrine")).init({ data = data, fx = FxR, remote = remote, nearPrompt = nearPrompt, analytics = A,
+	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, apply = function(plr, kind) return Gloom.boon(plr, kind) end })
 SoulTree.init({ data = data, fx = FxR, sendState = sendState, remote = remote, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, analytics = A })
 Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, analytics = A, perks = function(s) return PetJobs.perks(crewOf(s)) end,
 	soul = SoulTree.rank, soulEarn = SoulTree.earn,

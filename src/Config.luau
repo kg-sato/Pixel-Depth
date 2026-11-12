@@ -332,6 +332,13 @@ C.SECRET_GEMS = 10 -- the chest on the secret ledge under the chasm bridge (once
 -- 2026-11-10 night: in a Gemini A/B of the same view the variant scored readability 3, mood 4, style fit 2 and plain Slate
 -- 6, 7, 5 (the blotches read as false edges; Overnight/agy/20261110_222035_floor_ab.md). Set true to get the old look back.
 C.CAVE_ROCK_VARIANT = false
+-- Boon shrines (ServerScriptService.BoonShrine, Shared.BoonUI): the rune of a hidden cave shrine offers two of these, once per
+-- shrine per dive; nothing is saved. shield = seconds of golden shield. list: name, the line on the card.
+C.BOON = { shield = 30, order = { "flare", "shield", "wind" }, list = {
+	flare = { "Spare Flare", "One more flare for this dive" },
+	shield = { "Golden Shield", "30 s the Gloom cannot touch you" },
+	wind = { "Second Wind", "Full hearts and a fresh torch" },
+} }
 -- Soul Tree (ServerScriptService.SoulTree, Shared.SoulTreeUI; brief: vault Briefs/Soul Tree (2026-11-11).md): gloomlings
 -- flattened by a flare drop Gloom Shards (at most perHour an hour); at Camp 1's campfire they buy ranks. each = the gain per rank.
 -- on = false since it was built (2026-11-11): the feature adds a saved field (profile.Data.soul). While false, nothing is read,

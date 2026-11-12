@@ -101,6 +101,24 @@ local function caught(plr, s, g)
 	ctx.sendState(s)
 end
 
+function G.boon(plr, kind) -- a shrine blessing (ServerScriptService.BoonShrine draws and checks it); true when applied
+	local s = ctx and ctx.data[plr]
+	if not s then return false end
+	local g = st(s)
+	if kind == "flare" then
+		g.flares += 1
+	elseif kind == "shield" then
+		g.shieldUntil = serverNow() + C.BOON.shield
+	elseif kind == "wind" then
+		g.hp, g.relitAt = C.GLOOM.hp, serverNow()
+		plr:SetAttribute("RelitAt", g.relitAt)
+	else
+		return false
+	end
+	publish(plr, g)
+	return true
+end
+
 function G.init(c)
 	ctx = c
 	folder = Instance.new("Folder")
