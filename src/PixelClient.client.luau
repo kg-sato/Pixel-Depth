@@ -1208,19 +1208,20 @@ PPS.PromptShown:Connect(function(prompt, inputType)
 	local root = new("TextButton", bb, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", AutoButtonColor = false })
 	local sc = new("UIScale", root, { Scale = 0.35 })
 	local bubble = new("Frame", root, { Name = "Bubble", Size = UDim2.fromScale(0.76, 0.78), Position = UDim2.fromScale(1, 0.02), AnchorPoint = Vector2.new(1, 0) })
-	skin(bubble, "card")
-	local action = text(bubble, prompt.ActionText, UDim2.fromScale(0.72, 0.36), UDim2.fromScale(0.57, 0.36), Vector2.new(0.5, 0.5), INK, 700, false)
-	local object = text(bubble, prompt.ObjectText, UDim2.fromScale(0.68, 0.22), UDim2.fromScale(0.57, 0.66), Vector2.new(0.5, 0.5), INK, 700, false) -- full ink: the soft plum was too faint on the butter bubble (Gemini HUD v5 r1)
+	skin(bubble, "ribbonPink") -- a wooden plank, like the quest markers (was a cream capsule)
+	local action = text(bubble, prompt.ActionText, UDim2.fromScale(0.66, 0.36), UDim2.fromScale(0.57, 0.3), Vector2.new(0.5, 0.5), CREAM, 700, false)
+	action.Font = HEAD
+	local object = text(bubble, prompt.ObjectText, UDim2.fromScale(0.64, 0.22), UDim2.fromScale(0.57, 0.58), Vector2.new(0.5, 0.5), CREAM, 700, false)
 	if prompt.ObjectText == "" then
 		object.Visible = false
-		action.Position = UDim2.fromScale(0.57, 0.46)
+		action.Position = UDim2.fromScale(0.57, 0.4)
 	end
 	new("ImageLabel", root, {
 		Name = "Pointer", BackgroundTransparency = 1, Image = SPRITE.pointer, ScaleType = Enum.ScaleType.Fit,
 		Size = UDim2.fromScale(0.12, 0.2), Position = UDim2.fromScale(0.62, 0.74), AnchorPoint = Vector2.new(0.5, 0), ZIndex = 2,
 	})
 	local spark = new("ImageLabel", bubble, {
-		BackgroundTransparency = 1, Image = SPRITE.sparkle, ScaleType = Enum.ScaleType.Fit,
+		BackgroundTransparency = 1, Image = SPRITE.sparkle, ScaleType = Enum.ScaleType.Fit, ImageTransparency = 1,
 		Size = UDim2.fromScale(0.13, 0.34), Position = UDim2.fromScale(0.97, 0.04), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4,
 	})
 	local cap = new("Frame", root, { Name = "Key", Size = UDim2.fromScale(0.2, 0.56), Position = UDim2.fromScale(0.27, 0.41), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })

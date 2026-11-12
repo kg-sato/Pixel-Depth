@@ -146,9 +146,9 @@ function M.start(E)
 	fit(btn, 1, 1)
 	btn.Name = "QuestsButton"
 	btn.Activated:Connect(function() if win.Visible then shut() else open() end end)
-	dot = new("Frame", btn, { Name = "Dot", Size = UDim2.fromScale(0.26, 0.26), Position = UDim2.fromScale(0.9, 0.1), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 96, 120), BorderSizePixel = 0, ZIndex = 5, Visible = false })
+	dot = new("Frame", btn, { Name = "Dot", Size = UDim2.fromScale(0.26, 0.26), Position = UDim2.fromScale(0.9, 0.1), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(216, 69, 107), BorderSizePixel = 0, ZIndex = 5, Visible = false }) -- a berry wax seal with a bark edge (was a pink dot with a white ring)
 	new("UICorner", dot, { CornerRadius = UDim.new(0.5, 0) })
-	new("UIStroke", dot, { Color = WHITE, Thickness = 2 })
+	new("UIStroke", dot, { Color = Color3.fromRGB(59, 36, 22), Thickness = 3 })
 	task.spawn(function()
 		for _ = 1, 50 do
 			if E.addRow then E.addRow(btn, 76) return end

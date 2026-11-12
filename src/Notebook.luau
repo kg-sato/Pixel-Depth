@@ -86,13 +86,13 @@ function M.start(E)
 	local sRow = row("Sound")
 	local pips = {}
 	for i = 1, 10 do
-		pips[i] = new("Frame", sRow, { Size = UDim2.fromScale(0.026, 0.5), Position = UDim2.fromScale(0.45 + i * 0.036, 0.5), AnchorPoint = MID, BorderSizePixel = 0, ZIndex = 34 })
+		pips[i] = new("Frame", sRow, { Size = UDim2.fromScale(0.018, 0.5 + (i % 3) * 0.06), Position = UDim2.fromScale(0.45 + i * 0.036, 0.5), AnchorPoint = MID, Rotation = (i % 2 == 0) and 6 or 10, BorderSizePixel = 0, ZIndex = 34 })
 		new("UICorner", pips[i], { CornerRadius = UDim.new(0.3, 0) })
 	end
 	local minus = block(sRow, "-", UDim2.fromScale(0.1, 0.84), UDim2.fromScale(0.41, 0.5), PAPER)
-	local plus = block(sRow, "+", UDim2.fromScale(0.1, 0.84), UDim2.fromScale(0.93, 0.5), MARI)
+	local plus = block(sRow, "+", UDim2.fromScale(0.1, 0.84), UDim2.fromScale(0.93, 0.5), PAPER)
 	local function showSound()
-		for i, p in pips do p.BackgroundColor3 = i <= set.sound and TEAL or Color3.fromRGB(190, 174, 132) end
+		for i, p in pips do p.BackgroundColor3 = i <= set.sound and INK or Color3.fromRGB(205, 188, 150) end -- pencil strokes, not teal bars
 		local g = group()
 		if g then g.Volume = set.sound / 10 end
 	end
@@ -104,6 +104,7 @@ function M.start(E)
 		local f = row(label)
 		local b, t = block(f, "", UDim2.fromScale(0.12, 0.9), UDim2.fromScale(0.92, 0.5), WHITE)
 		t.TextColor3 = INK -- an ink cross, not a pink one
+		b.Rotation = (nRow % 2 == 0) and 3 or -3 -- drawn by hand, never square to the lines
 		local function show()
 			t.Text = set[key] and "X" or ""
 			apply(set[key])
