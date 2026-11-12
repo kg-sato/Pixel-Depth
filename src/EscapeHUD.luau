@@ -7,7 +7,7 @@ local TweenService = game:GetService("TweenService")
 local M = {}
 
 local WHITE, INK = Color3.new(1, 1, 1), Color3.fromRGB(62, 42, 86)
-local CREAM, BUTTER, PINK, MINT = Color3.fromRGB(255, 250, 243), Color3.fromRGB(255, 217, 112), Color3.fromRGB(255, 157, 176), Color3.fromRGB(127, 220, 180)
+local CREAM, BUTTER, PINK, MINT = Color3.fromRGB(236, 228, 255), Color3.fromRGB(255, 217, 112), Color3.fromRGB(255, 157, 176), Color3.fromRGB(127, 220, 180)
 local GLOOM = Color3.fromRGB(124, 96, 184)
 local MID = Vector2.new(0.5, 0.5)
 
@@ -47,7 +47,8 @@ function M.start(E)
 	-- the stopwatch chip
 	local chip = frame(gui, { Size = UDim2.fromScale(0.078, 0.05), Position = UDim2.fromScale(0.742, 0.06), BackgroundColor3 = CREAM, ZIndex = 3 })
 	round(chip)
-	stroke(chip, INK, 3)
+	chip.BackgroundTransparency = 0.14 -- frosted glass (directive v8), a fine deep edge
+	stroke(chip, INK, 1.5)
 	local dial = square(chip, 0.66, UDim2.fromScale(0.2, 0.5), BUTTER, 4)
 	stroke(dial, INK, 2)
 	local spin = frame(dial, { Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 5 })
@@ -58,7 +59,8 @@ function M.start(E)
 	local box = frame(gui, { Size = UDim2.fromScale(0.24, 0.085), Position = UDim2.fromScale(0.5, 0.925), BackgroundTransparency = 1, ZIndex = 3 })
 	local track = frame(box, { Size = UDim2.fromScale(0.9, 0.34), Position = UDim2.fromScale(0.5, 0.72), BackgroundColor3 = CREAM, ZIndex = 3 })
 	round(track)
-	stroke(track, INK, 3)
+	track.BackgroundTransparency = 0.2
+	stroke(track, INK, 1.5)
 	local fill = frame(track, { AnchorPoint = Vector2.new(0, 0.5), Size = UDim2.fromScale(0.1, 1), Position = UDim2.fromScale(0, 0.5), BackgroundColor3 = GLOOM, ZIndex = 4 })
 	round(fill)
 	local blob = square(box, 0.7, UDim2.fromScale(0.09, 0.68), GLOOM, 6) -- the Gloom: a soot ball with two eyes
@@ -77,9 +79,9 @@ function M.start(E)
 	local warns = {}
 	for dir, d in { right = { 0.76, 0.5, 0, "LEAN" }, left = { 0.24, 0.5, 180, "LEAN" }, up = { 0.5, 0.27, -90, "JUMP" }, down = { 0.5, 0.68, 90, "DUCK" } } do
 		-- one dark plate holds the chevrons and the key, so neither melts into the lanterns behind
-		local c = frame(gui, { Size = UDim2.fromScale(0.19, 0.19), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(d[1], d[2]), BackgroundColor3 = INK, BackgroundTransparency = 0.15, ZIndex = 5, Visible = false })
-		round(c, 0.22)
-		stroke(c, CREAM, 3)
+		local c = frame(gui, { Size = UDim2.fromScale(0.19, 0.19), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(d[1], d[2]), BackgroundColor3 = Color3.fromRGB(24, 16, 46), BackgroundTransparency = 0.22, ZIndex = 5, Visible = false })
+		round(c, 0.18)
+		stroke(c, CREAM, 1.5)
 		local arrow = frame(c, { Size = UDim2.fromScale(0.6, 0.6), Position = UDim2.fromScale(0.5, 0.33), BackgroundTransparency = 1, Rotation = d[3], ZIndex = 5 })
 		local bars = {}
 		for i = 1, 3 do -- three chevrons in a row along the arrow's own axis

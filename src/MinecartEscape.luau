@@ -306,11 +306,16 @@ function M.play(opt)
 		stroke(p, INK, 2)
 		pips[i] = p
 	end
+	local pipWord = label(gui, "BOOST", UDim2.fromScale(0.05, 0.026), UDim2.fromScale(0.5 - 0.085, 0.115), WHITE, 3) -- directive v8: the three circles had no name
+	stroke(pipWord, INK, 2)
 	local big = label(gui, "", UDim2.fromScale(0.5, 0.16), UDim2.fromScale(0.5, 0.42), WHITE, 6)
 	local bigStroke = stroke(big, INK, 5)
 	local touch = UIS.TouchEnabled and not UIS.KeyboardEnabled
 	local hint = label(gui, touch and "HOLD LEFT OR RIGHT TO LEAN, SWIPE UP TO JUMP, DOWN TO DUCK" or "LEAN  A / D    JUMP  SPACE    DUCK  S", UDim2.fromScale(0.6, 0.045), UDim2.fromScale(0.5, 0.83), WHITE, 4)
-	local hintStroke = stroke(hint, INK, 3)
+	local hintStroke = stroke(hint, INK, 2)
+	local hintPlate = frame({ Size = UDim2.fromScale(0.64, 0.066), Position = UDim2.fromScale(0.5, 0.83), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(24, 16, 46), BackgroundTransparency = 0.25, ZIndex = 3 }) -- a smoked-glass plate: the raw white line had nothing behind it (directive v8)
+	round(hintPlate, 0.3)
+	local hintEdge = stroke(hintPlate, Color3.fromRGB(214, 200, 255), 1.5)
 	local flash = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, ZIndex = 8 })
 	local soot = {} -- the Gloom closing in: the screen edges go sooty
 	for i, e in { { UDim2.fromScale(1, 0.3), UDim2.fromScale(0, 0), 90 }, { UDim2.fromScale(1, 0.3), UDim2.fromScale(0, 0.7), -90 }, { UDim2.fromScale(0.25, 1), UDim2.fromScale(0, 0), 0 }, { UDim2.fromScale(0.25, 1), UDim2.fromScale(0.75, 0), 180 } } do
@@ -460,7 +465,9 @@ function M.play(opt)
 		table.insert(hazards, { kind = "rock", lane = lane, at = at, ring = ring, rock = rock, base = r1.CFrame, threat = threat })
 	end
 	local function spawnOrb(lane, at)
-		local orb = part(world, Vector3.new(1.3, 1.3, 1.3), pathCF(at) * CFrame.new(LANES[lane], 2.6, 0), BUTTER, { Shape = Enum.PartType.Ball, Material = Enum.Material.Neon })
+		local orb = part(world, Vector3.new(1.3, 1.3, 1.3), pathCF(at) * CFrame.new(LANES[lane], 2.6, 0), BUTTER, { Shape = Enum.PartType.Ball, Material = Enum.Material.Glass, Transparency = 0.25 }) -- glass with a small light: the Neon ball bloomed into a blinding glare (directive v8)
+		local ol = Instance.new("PointLight")
+		ol.Color, ol.Range, ol.Brightness, ol.Parent = BUTTER, 9, 1.2, orb
 		local e = Instance.new("ParticleEmitter")
 		e.Texture, e.Rate, e.LightEmission, e.Color = SPARK, 8, 1, ColorSequence.new(BUTTER, PINK)
 		e.Size, e.Lifetime, e.Speed = NumberSequence.new(0.4, 0), NumberRange.new(0.4, 0.7), NumberRange.new(1, 2)
@@ -579,6 +586,7 @@ function M.play(opt)
 			bigStroke.Transparency = big.TextTransparency
 			hint.TextTransparency = smooth(4, 5, t)
 			hintStroke.Transparency = hint.TextTransparency
+			hintPlate.BackgroundTransparency, hintEdge.Transparency = 0.25 + 0.75 * hint.TextTransparency, hint.TextTransparency
 			-- speed: base, boosts stack, a bonk halves it
 			local live = 0
 			for i = #boostUntil, 1, -1 do if now < boostUntil[i] then live += 1 else table.remove(boostUntil, i) end end
@@ -766,14 +774,14 @@ function M.play(opt)
 			flash.BackgroundTransparency = 1 - smooth(E.dist - 25, E.dist, dist)
 			-- camera: first person in the cart, leaning
 			local base = pathCF(dist)
-			local bank = calm and 0 or math.clamp(-(YAW[math.floor(dist / PIECE)] or 0) * 2.5, -math.rad(3), math.rad(3)) -- roll only on bends, 3 degrees at most
+			local bank = calm and 0 or math.clamp(-(YAW[math.floor(dist / PIECE)] or 0) * 2.5, -math.rad(3), math.rad(3)) -- the camera rolls only on bends, 3 degrees at most (comfort); the cart body leans four times as far, to 12
 			local tie = math.floor(dist / 2)
 			if tie ~= lastTie then -- the chassis bounces on its springs over each rail tie
 				lastTie = tie
 				if not calm and jumpY == 0 then bounce.kick(0.35 + math.min(speed / 48, 1) * 0.8) end
 			end
 			local by = calm and 0 or bounce.step(dt)
-			local cartCF = base * CFrame.new(laneX(), jumpY + by, 0) * CFrame.Angles(by * 0.25, 0, roll * 0.6 + bank * 0.6)
+			local cartCF = base * CFrame.new(laneX(), jumpY + by, 0) * CFrame.Angles(by * 0.25, 0, roll * 0.6 + bank * 4)
 			cart:PivotTo(cartCF)
 			shakeAmp = math.max(0, shakeAmp - dt * 1.2)
 			local sh = calm and 0 or shakeAmp + math.min(speed / 48, 1) * 0.02
@@ -781,7 +789,7 @@ function M.play(opt)
 			local eye = (base * CFrame.new(laneX() * 0.9, 3.8 + jumpY * 0.85 - duckY, 0.6)).Position
 			local look = (pathCF(dist + 7) * CFrame.new(laneX() * 0.4, 3.0 + jumpY * 0.5 - duckY * 0.5, 0)).Position -- looks into the bend before it arrives
 			cam.CFrame = CFrame.lookAt(eye, look, base.UpVector) * CFrame.Angles(0, 0, roll + bank) * CFrame.Angles((math.random() - 0.5) * sh * 0.06, (math.random() - 0.5) * sh * 0.06, 0)
-			cam.FieldOfView = C.FP_FOV + (calm and 0 or math.min(#boostUntil, 3) * 2)
+			cam.FieldOfView = C.FP_FOV + (calm and 0 or math.min(#boostUntil, 3) * 3 + math.clamp(speed / 48, 0, 1) * 5) -- widens with speed and with each boost
 			air.step(cam.CFrame, speed, calm)
 			speedLines(now, calm and 0 or math.clamp((speed - 30) / 18, 0, 1)) -- streaks at the screen edges as the cart picks up speed
 			if dist >= E.dist then -- out of the tunnel: tell the server, wait for it to move us to town, then burst out of the shaft
@@ -801,7 +809,7 @@ function M.play(opt)
 			if bonus or t - resultAt > 4 then
 				phase = "town"
 				resultAt = t
-				bar.Visible, hint.Visible = false, false
+				bar.Visible, hint.Visible, hintPlate.Visible, pipWord.Visible = false, false, false, false
 				hud.hide()
 				for _, f in soot do f.BackgroundTransparency = 1 end
 				for _, p in pips do p.Visible = false end
