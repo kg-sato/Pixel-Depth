@@ -137,8 +137,9 @@ local function sign(g, text, cf, w, h, fg, plain, postH)
 	end
 	cf = cf * CFrame.Angles(math.rad(cf.LookVector.Z > 0 and 45 or -45), 0, 0) -- the face the camera sees (it sits south: C.CAM_YAW 0, pitch 52) tilts up toward it
 	local WOOD, WOOD_DARK, CARVED = Color3.fromRGB(202, 146, 88), Color3.fromRGB(84, 52, 34), Color3.fromRGB(255, 246, 220) -- 2026-11-11: carved wooden boards (the cream plates with ink pixel letters clashed with the soft HUD)
-	local board = vox(g, "Sign", Vector3.new(w, h, 0.4), cf, plain or WOOD, { CanCollide = false, Material = Enum.Material.Wood })
-	vox(g, "SignFrame", Vector3.new(w + 0.8, h + 0.8, 0.3), cf, WOOD_DARK, { CanCollide = false, Material = Enum.Material.Wood })
+	-- regrade 2026-11-11: cream letters on a dark stained face inside a light timber rim (contrast about 7:1; the light rim keeps the outline against the night ground)
+	local board = vox(g, "Sign", Vector3.new(w, h, 0.4), cf, plain or WOOD_DARK, { CanCollide = false, Material = Enum.Material.Wood })
+	vox(g, "SignFrame", Vector3.new(w + 0.8, h + 0.8, 0.3), cf, WOOD, { CanCollide = false, Material = Enum.Material.Wood })
 	if fg then vox(g, "SignTrim", Vector3.new(w, 0.3, 0.46), cf * CFrame.new(0, -h / 2 + 0.25, 0), fg, { CanCollide = false }) end
 	for _, face in { N.Back, N.Front } do
 		local sg = Instance.new("SurfaceGui")
@@ -147,7 +148,7 @@ local function sign(g, text, cf, w, h, fg, plain, postH)
 		t.Name = "Label"
 		t.Size, t.BackgroundTransparency, t.Text, t.TextScaled = UDim2.fromScale(1, 1), 1, text, true
 		t.Font, t.TextColor3, t.TextStrokeTransparency = Enum.Font.FredokaOne, plain and INK or CARVED, 1
-		t.BackgroundTransparency, t.BackgroundColor3 = 0, plain or WOOD
+		t.BackgroundTransparency, t.BackgroundColor3 = 0, plain or WOOD_DARK
 		local pad = Instance.new("UIPadding")
 		pad.PaddingLeft, pad.PaddingRight, pad.PaddingTop, pad.PaddingBottom = UDim.new(0.06, 0), UDim.new(0.06, 0), UDim.new(0.1, 0), UDim.new(0.1, 0)
 		pad.Parent = t
@@ -155,7 +156,7 @@ local function sign(g, text, cf, w, h, fg, plain, postH)
 		sg.Parent = board
 	end
 	local glow = Instance.new("PointLight")
-	glow.Color, glow.Range, glow.Brightness, glow.Shadows = Color3.fromRGB(255, 200, 130), 9, 0.5, false
+	glow.Color, glow.Range, glow.Brightness, glow.Shadows = Color3.fromRGB(255, 200, 130), 9, 0.5, false -- a warmer face with a stronger light graded readability 4.5 (Gemini round 3): keep the dark face
 	glow.Parent = board
 	return board
 end
