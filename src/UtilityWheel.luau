@@ -56,8 +56,21 @@ function M.start(E)
 			run = function() if hook.ping then hook.ping() end end },
 	}
 
+	-- Cut-glass kit (the user, 2026-11-12: "Rework the Tab wheel with the new 3D view as well as the new jelly text and icons"):
+	-- the wheel stands in the world as a tilted panel (Shared.SpatialPanels takes its holder), its names are jelly letters,
+	-- its icons the jelly set, its body smoked glass. No dark scrim: the world stays visible round it.
+	local G = E.GLASS
+	local JellyText = G and require(script.Parent:WaitForChild("JellyText"))
+	if G then
+		local jelly = { SONAR = "sonar", CHEER = "smile", WARDROBE = "shirt", NOTES = "gear", PING = "pin", BAG = "bag", QUESTS = "star" }
+		for _, s in SLOTS do
+			if jelly[s.name] then s.icon = E.ICON[jelly[s.name]] end
+		end
+	end
+	local SCRIM = G and 1 or 0.36
+	local LABEL = G and WHITE or INK
 	-- a Modal button frees the mouse in first person while the wheel is up
-	local root = new("TextButton", E.gui, { Name = "UtilityWheel", Text = "", AutoButtonColor = false, Modal = true, BackgroundColor3 = INK, BackgroundTransparency = 0.36, BorderSizePixel = 0, Size = UDim2.new(1, 0, 1, 80), Position = UDim2.fromOffset(0, -80), ZIndex = 40, Visible = false }) -- 80 px up: over the top bar inset too -- the scrim keeps torches and signs from shining through (Gemini r1: readability 3 to 5)
+	local root = new("TextButton", E.gui, { Name = "UtilityWheel", Text = "", AutoButtonColor = false, Modal = true, BackgroundColor3 = INK, BackgroundTransparency = SCRIM, BorderSizePixel = 0, Size = UDim2.new(1, 0, 1, 80), Position = UDim2.fromOffset(0, -80), ZIndex = 40, Visible = false }) -- 80 px up: over the top bar inset too -- the scrim keeps torches and signs from shining through (Gemini r1: readability 3 to 5)
 	local holder = new("Frame", root, { Size = E.S(400, 400), Position = UDim2.new(0.5, 0, 0.5, 40), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 40 })
 	E.fit(holder, 1, 1)
 	holder.Name = "Holder"
@@ -67,25 +80,25 @@ function M.start(E)
 		new("UICorner", d, { CornerRadius = UDim.new(0.5, 0) })
 		return d
 	end
-	new("ImageLabel", holder, { Image = "rbxassetid://117032895507459", BackgroundTransparency = 1, Size = UDim2.fromScale(1.32, 1.32), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 40 }) -- the painted brass compass (art/ui_notebook/dial.png)
+	new("ImageLabel", holder, { Image = G and G.ring or "rbxassetid://117032895507459", BackgroundTransparency = 1, Size = UDim2.fromScale(G and 1.2 or 1.32, G and 1.2 or 1.32), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 40 }) -- the painted brass compass (art/ui_notebook/dial.png)
 	local plate = disc(holder, 1.1, 0.5, 0.5, WHITE, 1, 40) -- a brass pocket compass with a dark leather face (Gemini on the first in-game pass: the cream disc was a 'flat pizza' over the dark cave) -- a soft lilac-cream plate with a lilac rim, like the kit's cards
-	new("UIGradient", plate, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(74, 50, 40), Color3.fromRGB(44, 28, 24)) })
-	new("UIGradient", new("UIStroke", plate, { Color = WHITE, Thickness = 12, Transparency = 1 }), { Rotation = 55, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(244, 206, 116)), ColorSequenceKeypoint.new(0.45, Color3.fromRGB(146, 102, 32)), ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 184, 88)) }) })
+	new("UIGradient", plate, { Rotation = 90, Color = G and ColorSequence.new(Color3.fromRGB(52, 38, 100), Color3.fromRGB(24, 16, 50)) or ColorSequence.new(Color3.fromRGB(74, 50, 40), Color3.fromRGB(44, 28, 24)) })
+	new("UIGradient", new("UIStroke", plate, { Color = WHITE, Thickness = 12, Transparency = 1, Enabled = not G }), { Rotation = 55, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(244, 206, 116)), ColorSequenceKeypoint.new(0.45, Color3.fromRGB(146, 102, 32)), ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 184, 88)) }) })
 	local inner = disc(holder, 1.0, 0.5, 0.5, WHITE, 1, 40) -- a stitched ring inside the rim
-	new("UIStroke", inner, { Color = Color3.fromRGB(230, 184, 88), Thickness = 1.5, Transparency = 0.45 })
+	new("UIStroke", inner, { Color = G and Color3.fromRGB(214, 200, 255) or Color3.fromRGB(230, 184, 88), Thickness = 1.5, Transparency = 0.45 })
 	for _, rot in { 22.5, 67.5, -22.5, -67.5 } do -- faint sector lines: where one slot's pull ends and the next begins
-		new("Frame", holder, { Size = UDim2.new(1.02, 0, 0, 2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, Rotation = rot, BackgroundColor3 = Color3.fromRGB(230, 184, 88), BackgroundTransparency = 0.7, BorderSizePixel = 0, ZIndex = 40 })
+		new("Frame", holder, { Size = UDim2.new(1.02, 0, 0, 2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, Rotation = rot, BackgroundColor3 = G and Color3.fromRGB(214, 200, 255) or Color3.fromRGB(230, 184, 88), BackgroundTransparency = 0.7, BorderSizePixel = 0, ZIndex = 40 })
 	end
-	local OFF, OFF_INK = Color3.fromRGB(150, 132, 108), Color3.fromRGB(78, 58, 44) -- a soft dark plate so the wheel reads over town and cave alike
+	local OFF, OFF_INK = G and Color3.fromRGB(58, 50, 80) or Color3.fromRGB(150, 132, 108), G and Color3.fromRGB(150, 140, 172) or Color3.fromRGB(78, 58, 44) -- a soft dark plate so the wheel reads over town and cave alike
 	for _, s in SLOTS do
 		local d = disc(holder, 0.225, s.x, s.y, CREAM, 0, 41)
-		s.fill = Color3.fromRGB(236, 220, 180) -- parchment tokens; the slot's own colour shows only when it is picked (Gemini: pastel candy circles undid the compass)
+		s.fill = G and Color3.fromRGB(96, 74, 170) or Color3.fromRGB(236, 220, 180) -- glass tokens with the kit on; parchment tokens; the slot's own colour shows only when it is picked (Gemini: pastel candy circles undid the compass)
 		d.Name = s.name
-		new("UIGradient", d, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(206, 188, 150)) }) -- lighter on top
+		new("UIGradient", d, { Rotation = 90, Color = ColorSequence.new(WHITE, G and Color3.fromRGB(150, 130, 200) or Color3.fromRGB(206, 188, 150)) }) -- lighter on top
 		s.lock = new("ImageLabel", d, { Image = E.ICON.lock, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 44, Visible = false })
 		s.disc, s.rim, s.scale = d, new("UIStroke", d, { Color = INK, Thickness = 3 }), new("UIScale", d, { Scale = 1 })
 		if s.icon then
-			s.img = new("ImageLabel", d, { Image = s.icon, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.56, 0.56), Position = UDim2.fromScale(0.5, 0.4), AnchorPoint = MID, ZIndex = 42 })
+			s.img = new("ImageLabel", d, { Image = s.icon, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(G and 0.7 or 0.56, G and 0.7 or 0.56), Position = UDim2.fromScale(0.5, G and 0.38 or 0.4), AnchorPoint = MID, ZIndex = 42 })
 		else -- the sonar has no icon in the kit: three mint rings
 			s.rings = {}
 			for i, k in { 0.16, 0.32, 0.48 } do
@@ -96,6 +109,10 @@ function M.start(E)
 		s.label = E.text(d, s.name, UDim2.fromScale(0.8, 0.2), UDim2.fromScale(0.5, 0.8), MID, INK, nil, false)
 		s.label.Font = Enum.Font.Bangers -- inside the disc now: eight slots leave no room underneath; -- outside the disc: the name never covers the icon
 		s.label.ZIndex = 43
+		if G then
+			s.label.Size, s.label.Position, s.label.TextColor3 = UDim2.fromScale(1.05, 0.3), UDim2.fromScale(0.5, 0.86), LABEL
+			JellyText.mirror(s.label, { color = LABEL, followColor = true, sway = false })
+		end
 		s.sub = E.text(d, "", UDim2.fromScale(1.7, 0.15), UDim2.fromScale(0.5, 1.31), MID, Color3.fromRGB(112, 96, 138), nil, false) -- why a locked slot is locked
 		s.sub.ZIndex = 43
 		s.sub.Visible = false -- with eight slots the hub alone says why a slot is locked
@@ -104,13 +121,14 @@ function M.start(E)
 			s.cap.ZIndex = 44
 		end
 	end
-	local hub = disc(holder, 0.2, 0.5, 0.52, BUTTER, 0, 41)
-	new("UIGradient", hub, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(240, 228, 200)) })
-	new("UIStroke", hub, { Color = INK, Thickness = 3 })
+	local hub = disc(holder, G and 0.26 or 0.2, 0.5, 0.52, G and Color3.fromRGB(70, 52, 130) or BUTTER, 0, 41)
+	new("UIGradient", hub, { Rotation = 90, Color = ColorSequence.new(WHITE, G and Color3.fromRGB(150, 130, 200) or Color3.fromRGB(240, 228, 200)) })
+	new("UIStroke", hub, { Color = G and Color3.fromRGB(236, 226, 255) or INK, Thickness = G and 2 or 3 })
 	local hubScale = new("UIScale", hub, { Scale = 1 })
-	local hubName = E.text(hub, "TAB", UDim2.fromScale(0.86, 0.3), UDim2.fromScale(0.5, 0.4), MID, INK, nil, false)
+	local hubName = E.text(hub, "TAB", UDim2.fromScale(0.86, G and 0.36 or 0.3), UDim2.fromScale(0.5, 0.4), MID, LABEL, nil, false)
 	hubName.ZIndex = 43
-	local hubWhy = E.text(hub, "", UDim2.fromScale(0.84, 0.2), UDim2.fromScale(0.5, 0.68), MID, OFF_INK, nil, false)
+	if G then JellyText.mirror(hubName, { color = Color3.fromRGB(255, 226, 130), popOnChange = true, sway = false }) end
+	local hubWhy = E.text(hub, "", UDim2.fromScale(0.84, 0.2), UDim2.fromScale(0.5, 0.7), MID, G and Color3.fromRGB(236, 226, 255) or OFF_INK, nil, false)
 	hubWhy.ZIndex = 43
 	local dot = disc(holder, 0.05, 0.5, 0.5, BUTTER, 0, 45) -- where the mouse has been pushed
 	new("UIStroke", dot, { Color = INK, Thickness = 2 })
@@ -155,7 +173,7 @@ function M.start(E)
 		if not calm then
 			pop.Scale = 0.8
 			root.BackgroundTransparency = 1
-			TweenService:Create(root, TweenInfo.new(0.15), { BackgroundTransparency = 0.36 }):Play() -- the scrim fades in with the pop
+			TweenService:Create(root, TweenInfo.new(0.15), { BackgroundTransparency = SCRIM }):Play() -- the scrim fades in with the pop
 			TweenService:Create(pop, TweenInfo.new(0.16, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 		end
 	end
@@ -184,8 +202,8 @@ function M.start(E)
 			if s.cap then s.cap.Visible = on and not off end -- the key shows on the picked slot only: eight white caps crowded the dial
 			-- unusable: a flat grey disc with a lock, never see-through (Gemini r1: transparency turned to sludge over the world)
 			s.disc.BackgroundColor3 = off and OFF or (on and s.tint or s.fill)
-			s.rim.Color, s.rim.Thickness = off and OFF_INK or Color3.fromRGB(59, 36, 22), (on and not off) and 5 or 3
-			s.label.TextColor3 = off and OFF_INK or INK
+			s.rim.Color, s.rim.Thickness = off and OFF_INK or (G and Color3.fromRGB(236, 226, 255) or Color3.fromRGB(59, 36, 22)), (on and not off) and 5 or (G and 2 or 3)
+			s.label.TextColor3 = off and OFF_INK or LABEL
 			s.lock.Visible = off
 			if s.img then s.img.ImageTransparency, s.img.ImageColor3 = off and 0.72 or 0, off and Color3.fromRGB(170, 160, 190) or WHITE end
 			if s.rings then for _, r in s.rings do r.Transparency = off and 0.6 or 0 end end
@@ -196,7 +214,23 @@ function M.start(E)
 		hubWhy.Text = s and s.why() or (sel and "" or ((tools and tools.Visible) and "tap one" or "push and let go"))
 	end)
 
-	root.Activated:Connect(commit)
+	root.Activated:Connect(function(io)
+		-- with the kit on the wheel stands in the world behind this full-screen catcher, so a tap that lands on a slot is
+		-- read here: the slot that is drawn nearest the tap (Shared.SpatialPanels says where each slot is on the screen)
+		if G and io and hook.spatialPoint and holder.Parent ~= root then
+			local tap = Vector2.new(io.Position.X, io.Position.Y) + game:GetService("GuiService"):GetGuiInset()
+			local best = holder.AbsoluteSize.X * 0.16 -- a tap must land within about a slot's radius
+			for i, s in SLOTS do
+				local d = (hook.spatialPoint(s.disc.AbsolutePosition + s.disc.AbsoluteSize / 2) - tap).Magnitude
+				if d < best then best, sel = d, i end
+			end
+		end
+		commit()
+	end)
+	if G then -- Shared.SpatialPanels carries the holder into the world while the wheel is up, and back
+		hook.spatialExtra = hook.spatialExtra or {}
+		table.insert(hook.spatialExtra, { frame = holder, home = root, on = function() return root.Visible end, quick = true })
+	end
 	for i, s in SLOTS do -- a tap or a click straight on a slot picks it
 		local tap = new("TextButton", s.disc, { Name = "Tap", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", ZIndex = 46 })
 		tap.Activated:Connect(function()

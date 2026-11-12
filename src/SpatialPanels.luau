@@ -42,6 +42,13 @@ function M.start(E)
 		if f.Parent == sg then f.Parent = home end
 	end
 
+	-- where a point of the canvas (pixels) is on the screen right now: for code that must match a tap to something on the panel
+	hook.spatialPoint = function(p)
+		local c = sg.CanvasSize
+		local w = part.CFrame * Vector3.new(-(p.X / c.X - 0.5) * part.Size.X, (0.5 - p.Y / c.Y) * part.Size.Y, -part.Size.Z / 2)
+		local v = workspace.CurrentCamera:WorldToViewportPoint(w)
+		return Vector2.new(v.X, v.Y)
+	end
 	local live = true
 	hook.noScrim = function() -- asked by the client in the frame a menu opens, before this module's own step has run
 		if not live then return false end
@@ -62,6 +69,17 @@ function M.start(E)
 				elseif held[f] and not f.Visible then
 					release(f)
 				end
+			end
+		end
+		for _, e in hook.spatialExtra or {} do -- pieces that are not whole menus (the tool wheel's holder): { frame, home, on(), quick }
+			local f = e.frame
+			if e.on() and not held[f] and f.Parent == e.home then
+				held[f] = e.home
+				count += 1
+				f.Parent = sg
+				if count == 1 then openedAt, swing, swingV, last = os.clock(), e.quick and 0.35 or 1, 0, nil end
+			elseif held[f] and not e.on() then
+				release(f)
 			end
 		end
 		for f in held do if not f.Parent then held[f] = nil count -= 1 end end -- destroyed while open

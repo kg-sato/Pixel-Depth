@@ -12,5 +12,10 @@ hud = f"Players.{name}.PlayerGui.PixelHUD"
 print(click(hud + ".LeftColumn.Buttons.ToolsButton")); time.sleep(1)
 print("wheel open:", C1("return tostring(game.Players.LocalPlayer.PlayerGui.PixelHUD.UtilityWheel.Visible)"))
 print(night.shot("wheel_touch").name)
-print(click(hud + ".UtilityWheel.Holder.WARDROBE.Tap")); time.sleep(1.2)
+# the wheel stands in the world as a tilted panel: work out where the WARDROBE slot is drawn, then click that spot
+xy = C1("local pg=game.Players.LocalPlayer.PlayerGui local sg=pg.SpatialPanels local part=sg.Adornee local d=sg.Holder.WARDROBE local p=d.AbsolutePosition+d.AbsoluteSize/2 local c=sg.CanvasSize "
+        "local w=part.CFrame*Vector3.new(-(p.X/c.X-0.5)*part.Size.X,(0.5-p.Y/c.Y)*part.Size.Y,-part.Size.Z/2) local v=workspace.CurrentCamera:WorldToViewportPoint(w) "
+        "local i=game:GetService('GuiService'):GetGuiInset() return math.floor(v.X)..','..math.floor(v.Y-i.Y)")
+x, y = [int(v) for v in xy.split(",")]
+print("slot drawn at", x, y, night.run("user_mouse_input", {"actions": [{"action": "mouseButtonClick", "mouse_button": "left", "x": x, "y": y}], "datamodel_type": "Client"})[-90:]); time.sleep(1.2)
 print(C1("local h=game.Players.LocalPlayer.PlayerGui.PixelHUD local n=0 for _,g in {h, h.Parent:FindFirstChild('SpatialPanels')} do for _,m in g:GetChildren() do if m.Name=='Wardrobe' and m.Visible then n+=1 end end end return 'wheel '..tostring(h.UtilityWheel.Visible)..', wardrobe panels open '..n"))
