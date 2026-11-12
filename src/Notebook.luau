@@ -8,6 +8,7 @@
 local M = {}
 
 function M.start(E)
+	if E.GLASS then return end -- cut-glass kit: Shared.ARSettings takes key N and the NOTES slot with its look-around panels
 	local UIS, SoundService = game:GetService("UserInputService"), game:GetService("SoundService")
 	local new, S, text, plr, hook = E.new, E.S, E.text, E.plr, E.vmHook
 	local INK, WHITE = E.INK, E.WHITE

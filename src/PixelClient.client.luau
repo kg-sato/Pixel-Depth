@@ -2711,7 +2711,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "TouchControls", "SpatialWorldUI" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
@@ -2798,7 +2798,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and not cave.mgBusy and not (card and card.Visible) and (not inCave or ((forgeUI.questHint ~= nil or (forgeUI.caveUrgent ~= nil and forgeUI.caveUrgent() ~= nil)))) -- prompt bubbles step below the card (see the prompt placement loop)
 	if modal ~= scrim.Visible then
 		scrim.Visible = true
-		tween(scrim, 0.25, { BackgroundTransparency = modal and 0.45 or 1 })
+		tween(scrim, 0.25, { BackgroundTransparency = (modal and not forgeUI.arOpen) and 0.45 or 1 }) -- no dim behind the look-around settings: its panels stand in the world
 		forgeUI.blur = forgeUI.blur or new("BlurEffect", game:GetService("Lighting"), { Name = "ModalBlur", Size = 0 }) -- audit 03: the world falls out of focus
 		tween(forgeUI.blur, 0.25, { Size = (modal and not forge.Visible) and 16 or 0 }) -- the forge brings its own blur
 		if not modal then task.delay(0.2, function() if scrim.BackgroundTransparency > 0.95 then scrim.Visible = false end end) end
