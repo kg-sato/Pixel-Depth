@@ -10,6 +10,7 @@
 local M = {}
 
 function M.start(E)
+	if E.GLASS then return require(script.Parent:WaitForChild("DiegeticHUD")).start(E) end -- cut-glass kit: two liquid orbs and a hex hotbar instead of this disc
 	local C, plr, cave, caveHud, new, S, text, tween = E.C, E.plr, E.cave, E.caveHud, E.new, E.S, E.text, E.tween
 	local INK, CREAM, PINK = E.INK, Color3.fromRGB(255, 247, 236), E.PINK
 	local Radial = require(script.Parent:WaitForChild("Radial"))

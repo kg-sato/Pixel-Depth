@@ -194,12 +194,12 @@ function M.start(E)
 	new("UIAspectRatioConstraint", tip, { AspectRatio = 1 })
 	new("UIStroke", tip, { Color = INK, Thickness = 2 })
 	-- a small wooden plank with cream capitals (Field Notebook pass 2026-11-12; was a white pill)
-	local tag = new("Frame", marker, { Size = UDim2.fromScale(1, 0.6), BackgroundColor3 = Color3.fromRGB(138, 90, 51), BorderSizePixel = 0, ZIndex = 2 })
+	local tag = new("Frame", marker, { Size = UDim2.fromScale(1, 0.6), BackgroundColor3 = E.GLASS and Color3.fromRGB(60, 42, 120) or Color3.fromRGB(138, 90, 51), BackgroundTransparency = E.GLASS and 0.12 or 0, BorderSizePixel = 0, ZIndex = 2 }) -- cut-glass kit: a smoked glass tag with a light edge
 	new("UICorner", tag, { CornerRadius = UDim.new(0.14, 0) })
-	new("UIStroke", tag, { Color = Color3.fromRGB(59, 36, 22), Thickness = 3 })
+	new("UIStroke", tag, { Color = E.GLASS and Color3.fromRGB(236, 226, 255) or Color3.fromRGB(59, 36, 22), Thickness = E.GLASS and 1.5 or 3 })
 	new("UIGradient", tag, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(196, 176, 160)) })
 	local tagText = text(tag, "", UDim2.fromScale(0.84, 0.72), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 247, 226), 700)
-	tagText.Font, tagText.TextStrokeColor3 = Enum.Font.Bangers, Color3.fromRGB(59, 36, 22)
+	tagText.Font, tagText.TextStrokeColor3 = E.HEAD or Enum.Font.Bangers, E.GLASS and Color3.fromRGB(30, 20, 66) or Color3.fromRGB(59, 36, 22)
 	tagText.ZIndex = 3
 	local PLACE = { cart = { "HubCart", "RIDE" }, sell = { "SellStall", "SELL" }, forge = { "Forge", "FORGE" }, egg = { "Incubator", "EGG" }, chest = { "DailyChest", "OPEN" } }
 	local function target() -- the world position and the word, or nil
@@ -257,7 +257,7 @@ function M.start(E)
 		local x, y = v.X, v.Y
 		if v.Z < 0 then x, y = vp.X - x, vp.Y * 0.9 end -- behind you: point along the bottom edge
 		x = math.clamp(x, vp.X * 0.27, vp.X * 0.8) -- stay between the side columns
-		y = math.clamp(y - math.abs(math.sin(now * 3)) * vp.Y * 0.02, vp.Y * 0.24, vp.Y * 0.66) -- under the step card, over the talisman
+		y = math.clamp(y - math.abs(math.sin(now * 3)) * vp.Y * 0.02, vp.Y * 0.28, vp.Y * 0.66) -- under the step card and the currency pills (0.24 touched the gem pill by a pixel), over the talisman
 		marker.Position = UDim2.fromOffset(x, y - (gui.IgnoreGuiInset and 0 or game:GetService("GuiService"):GetGuiInset().Y))
 		local mp, ms = marker.AbsolutePosition, marker.AbsoluteSize
 		local hud = gui:FindFirstChild("CaveHud")

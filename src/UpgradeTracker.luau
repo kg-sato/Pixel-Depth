@@ -131,6 +131,9 @@ function M.start(E)
 	end
 
 	local readyTier -- the tier we already celebrated
+	new("UICorner", pill, { CornerRadius = UDim.new(0.22, 0) })
+	local readyGlow = new("UIStroke", pill, { Name = "ReadyGlow", Color = Color3.fromRGB(255, 206, 84), Thickness = 3, Transparency = 0.1, Enabled = false }) -- pulses while the next pickaxe can be forged
+	game:GetService("TweenService"):Create(readyGlow, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Transparency = 0.8, Thickness = 1.5 }):Play()
 	local seenOnce = false
 	local function chip(image, label, done, inBag)
 		local c = panel(chips, UDim2.fromScale(0.3, 1), UDim2.new(), nil, inBag and "pillButter" or (done and "pillMint" or "pill"))
@@ -174,7 +177,7 @@ function M.start(E)
 		ring.set((oreShare + math.clamp((s.gold or 0) / math.max(nxt.cost, 1), 0, 1)) / 2)
 		if ready then
 			sumT.Text, sumT.TextColor3 = "READY TO FORGE", DEEP_MINT
-			showUntil = os.clock() + 20 -- good news stays a while longer
+			-- directive v8: the big card no longer drops down by itself when ready (it ate a quarter of the upper left); the pill's gold edge pulses instead
 			head.Text, head.TextColor3 = "READY TO FORGE", DEEP_MINT
 			hint.Text, hint.TextColor3 = plr:GetAttribute("InCave") and "Ride up and visit Bolt in town." or "Visit Bolt at the forge.", DEEP_MINT
 			setKind(pill, "pillMint")
@@ -208,10 +211,10 @@ function M.start(E)
 			tween(shine, 0.7, { Position = UDim2.fromScale(1.1, -0.1) }, Enum.EasingStyle.Quad).Completed:Connect(function() shine.Visible = false end)
 			pop(pill, 1.12, 0.35)
 			task.delay(0.4, function() pop(pill, 1.08, 0.35) end)
-			unfold(5)
 			sfx("upgrade", 1.3)
 			toast(nxt.name:upper() .. " IS READY: VISIT BOLT", MINT, true)
 		end
+		readyGlow.Enabled = ready
 		setBeacon(ready and not plr:GetAttribute("InCave"))
 	end)
 
