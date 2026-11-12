@@ -1368,7 +1368,7 @@ end)()
 	gemPill.Name = "GemPill"
 	local gemIc = icon(gemPill, "gem", UDim2.fromScale(0.34, 0.74), UDim2.fromScale(0.06, 0.5), Vector2.new(0, 0.5))
 	new("UIAspectRatioConstraint", gemIc, { AspectRatio = 1 })
-	local gemText = text(gemPill, "0", UDim2.fromScale(0.5, 0.56), UDim2.fromScale(0.44, 0.5), Vector2.new(0, 0.5), DEEP_GEM, 700, false)
+	local gemText = text(gemPill, "0", UDim2.fromScale(0.5, 0.56), UDim2.fromScale(0.44, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(184, 46, 100), 700, false) -- deeper than DEEP_GEM: 2.8:1 on the pink pill measured with spike/hud_contrast.luau, now about 4:1
 	gemText.TextXAlignment = Enum.TextXAlignment.Left
 	eggPill.Position = S(320, 84) -- the egg pill moves under the gem pill's row, right of the bag
 	local shown, goal = nil, 0
@@ -1675,7 +1675,7 @@ do
 			local flick = math.noise(now * 6, 1.7) * 0.18 + math.noise(now * 17, 4.2) * 0.08
 			lantern.Color = plr:GetAttribute("TorchColor") or Color3.fromRGB(255, 196, 120) -- the lantern cosmetic (Shared.WardrobeUI)
 			lantern.Range = C.TORCH.minRange + (C.TORCH.range - C.TORCH.minRange) * cave.fuel ^ 0.5 + flick * 2 + job.light
-			lantern.Brightness = 0.27 + 0.31 * cave.fuel + flick * 0.25 -- soft: close things blew out white (the floor, then chests and tents; Gemini 2026-11-09)
+			lantern.Brightness = (0.27 + 0.31 * cave.fuel + flick * 0.25) * (forgeUI.lightK or 1) -- soft: close things blew out white (the floor, then chests and tents; Gemini 2026-11-09)
 		end
 		if cave.tick then cave.tick(now, h) end
 	end
@@ -1883,7 +1883,7 @@ end
 					g.star.Rotation = now * 12 + ph * 50
 				end
 				if g.light then
-					g.light.Brightness = 0.5 + 0.45 * g.rar + burst * 2.5
+					g.light.Brightness = (0.5 + 0.45 * g.rar + burst * 2.5) * (forgeUI.lightK or 1)
 					g.light.Range = 7 + 2 * g.rar + burst * 7
 				end
 			end
@@ -2828,7 +2828,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
@@ -2854,7 +2854,8 @@ local function collectAnims()
 		elseif d:IsA("BasePart") and (d:GetAttribute("Bob") or d:GetAttribute("Sway")) then
 			table.insert(anims, { obj = d, base = d.CFrame, bob = d:GetAttribute("Bob"), sway = d:GetAttribute("Sway"), seed = math.random() * 6 })
 		elseif d:IsA("PointLight") and d:GetAttribute("Flicker") then
-			table.insert(anims, { obj = d, light = d.Brightness, seed = math.random() * 6 })
+			if d:GetAttribute("B0") == nil then d:SetAttribute("B0", d.Brightness) end -- the built brightness, fixed here before the flicker starts (Shared.LightGovernor reads the same attribute)
+			table.insert(anims, { obj = d, light = d:GetAttribute("B0"), seed = math.random() * 6 })
 		elseif d:IsA("Model") and d:GetAttribute("Flames") then
 			for _, f in d:GetChildren() do table.insert(anims, { obj = f, base = f.CFrame, flame = f.Size, seed = math.random() * 6 }) end
 		end
@@ -3085,7 +3086,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 			local o = a.obj
 			if o.Parent then
 				if a.light then
-					o.Brightness = a.light * (0.85 + math.noise(now * 6, a.seed) * 0.5)
+					o.Brightness = a.light * (forgeUI.lightK or 1) * (0.85 + math.noise(now * 6, a.seed) * 0.5) -- lightK: Shared.LightGovernor (weak devices)
 				elseif a.flame then
 					local k = 1 + math.sin(now * 9 + a.seed * 3) * 0.18
 					o.Size = a.flame * k
