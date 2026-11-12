@@ -74,11 +74,11 @@ local SPRITE = {
 	pointer = "rbxassetid://128266643608103", close = "rbxassetid://72978757064264", -- close: the notebook kit's berry block (art/ui_notebook/close.png; the soft kit's was 132260797395561)
 	star = "rbxassetid://100737048426546", starOff = "rbxassetid://89117534881571",
 }
-local ICON = { -- smooth soft-kit icons (art/icons_soft, ids in art/icons_soft/asset_ids.json; 2026-11-08 replaced the pixel set)
-	coin = "rbxassetid://108767995994321", gem = "rbxassetid://109272506073747", pick = "rbxassetid://82124767195252", bag = "rbxassetid://70678886244636",
-	crew = "rbxassetid://121813663831714", surface = "rbxassetid://113100619996978", egg = "rbxassetid://81100985418912", star = "rbxassetid://98230996667759",
-	dice = "rbxassetid://124755060203655", map = "rbxassetid://109855398030402", camp = "rbxassetid://125775176311436", chisel = "rbxassetid://131827804757525",
-	hammer = "rbxassetid://118028256132989", lock = "rbxassetid://129198159082909",
+local ICON = { -- Field Notebook icons for coin, gem, pick, bag, crew, surface, star, map, hammer, lock (art/icons_notebook, pd_icons_notebook.py, 2026-11-12); the rest are still smooth soft-kit icons (art/icons_soft, ids in art/icons_soft/asset_ids.json; 2026-11-08 replaced the pixel set)
+	coin = "rbxassetid://135744047423201", gem = "rbxassetid://140293939616113", pick = "rbxassetid://108199199186475", bag = "rbxassetid://100845817381634",
+	crew = "rbxassetid://75831676823760", surface = "rbxassetid://98265361472161", egg = "rbxassetid://81100985418912", star = "rbxassetid://70502892170831",
+	dice = "rbxassetid://124755060203655", map = "rbxassetid://80655176858062", camp = "rbxassetid://125775176311436", chisel = "rbxassetid://131827804757525",
+	hammer = "rbxassetid://102044998305426", lock = "rbxassetid://117783992868038",
 }
 local INK, CREAM, WHITE = Color3.fromRGB(43, 34, 51), Color3.fromRGB(255, 247, 238), Color3.new(1, 1, 1)
 local MINT, PINK, LILAC, BUTTER, SKY = Color3.fromRGB(127, 220, 180), Color3.fromRGB(255, 157, 176), Color3.fromRGB(185, 164, 238), Color3.fromRGB(255, 217, 112), Color3.fromRGB(142, 200, 255)
