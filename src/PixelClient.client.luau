@@ -49,12 +49,12 @@ end
 -- Refs: art/ui_soft/refs.md (casual soft GUI kits and three local FLUX sheets): rounded glossy shapes, outlines in a deeper shade
 -- of their own colour, a white rim on top, a darker lip below, soft plum shadows. SLICE is each skin's 9-slice centre in image pixels.
 local SKIN = { -- Field Notebook kit (art/ui_notebook, pd_ui_notebook.py, 2026-11-12; brief: UI Rework Field Notebook): torn paper, block buttons, parchment, leather, wood. Same sizes and slices as the glass kit (art/ui_glass, ids in its asset_ids.json)
-	panel = "rbxassetid://95838412868959", card = "rbxassetid://116990494763664", pill = "rbxassetid://105118556243193", dark = "rbxassetid://116558100037993",
-	mint = "rbxassetid://132818463303608", pink = "rbxassetid://117911269022835", lilac = "rbxassetid://124095827937203", butter = "rbxassetid://115577813505762",
-	sky = "rbxassetid://75773112475379", off = "rbxassetid://72014731603273", keycap = "rbxassetid://121686637636447", keycapDown = "rbxassetid://109937989693693",
-	slot = "rbxassetid://135485337194775", tab = "rbxassetid://88733012831935", tabOn = "rbxassetid://127860743563907", ribbonPink = "rbxassetid://127123029330678",
-	ribbonLilac = "rbxassetid://116014459402362",
-	pillButter = "rbxassetid://113663991019583", pillLilac = "rbxassetid://110618460106419", pillMint = "rbxassetid://111939519073146", pillPink = "rbxassetid://117222783985327", -- puffy tone-on-tone pills (kit round 4)
+	panel = "rbxassetid://72435739592646", card = "rbxassetid://88666168221366", pill = "rbxassetid://127950020987531", dark = "rbxassetid://125542978570467",
+	mint = "rbxassetid://94977204954894", pink = "rbxassetid://118673341175118", lilac = "rbxassetid://134659657721850", butter = "rbxassetid://109772849612990",
+	sky = "rbxassetid://90819957360599", off = "rbxassetid://136690178967005", keycap = "rbxassetid://108724465796563", keycapDown = "rbxassetid://72997051272171",
+	slot = "rbxassetid://79109846656999", tab = "rbxassetid://71469350253636", tabOn = "rbxassetid://83577992947515", ribbonPink = "rbxassetid://106735131557362",
+	ribbonLilac = "rbxassetid://94031359786754",
+	pillButter = "rbxassetid://120065513519161", pillLilac = "rbxassetid://104115517008631", pillMint = "rbxassetid://107201311015656", pillPink = "rbxassetid://140042634571896", -- puffy tone-on-tone pills (kit round 4)
 }
 local SLICE = {
 	panel = { 64, 64, 136, 126 }, card = { 50, 50, 126, 78 }, pill = { 40, 31, 136, 37 }, dark = { 36, 36, 76, 64 },
@@ -71,14 +71,14 @@ local DEEP = { -- each button colour's deep shade, for its label outline
 }
 local SPRITE = {
 	wisteria = "rbxassetid://133392597906841", sakura = "rbxassetid://113252916003793", sparkle = "rbxassetid://101352828199322",
-	pointer = "rbxassetid://128266643608103", close = "rbxassetid://72978757064264", -- close: the notebook kit's berry block (art/ui_notebook/close.png; the soft kit's was 132260797395561)
+	pointer = "rbxassetid://128266643608103", close = "rbxassetid://111915448210522", -- close: the notebook kit's berry block (art/ui_notebook/close.png; the soft kit's was 132260797395561)
 	star = "rbxassetid://100737048426546", starOff = "rbxassetid://89117534881571",
 }
 local ICON = { -- Field Notebook icons for coin, gem, pick, bag, crew, surface, star, map, hammer, lock (art/icons_notebook, pd_icons_notebook.py, 2026-11-12); the rest are still smooth soft-kit icons (art/icons_soft, ids in art/icons_soft/asset_ids.json; 2026-11-08 replaced the pixel set)
-	coin = "rbxassetid://135744047423201", gem = "rbxassetid://140293939616113", pick = "rbxassetid://108199199186475", bag = "rbxassetid://100845817381634",
-	crew = "rbxassetid://75831676823760", surface = "rbxassetid://98265361472161", egg = "rbxassetid://81100985418912", star = "rbxassetid://70502892170831",
-	dice = "rbxassetid://124755060203655", map = "rbxassetid://80655176858062", camp = "rbxassetid://125775176311436", chisel = "rbxassetid://131827804757525",
-	hammer = "rbxassetid://102044998305426", lock = "rbxassetid://117783992868038",
+	coin = "rbxassetid://79826289719218", gem = "rbxassetid://119346512738969", pick = "rbxassetid://107244880161998", bag = "rbxassetid://134634362124760",
+	crew = "rbxassetid://139778048815045", surface = "rbxassetid://118546914823806", egg = "rbxassetid://81100985418912", star = "rbxassetid://74009639170105",
+	dice = "rbxassetid://124755060203655", map = "rbxassetid://95240123140417", camp = "rbxassetid://125775176311436", chisel = "rbxassetid://131827804757525",
+	hammer = "rbxassetid://114460315231995", lock = "rbxassetid://85081881662429",
 }
 local INK, CREAM, WHITE = Color3.fromRGB(43, 34, 51), Color3.fromRGB(255, 247, 238), Color3.new(1, 1, 1)
 local MINT, PINK, LILAC, BUTTER, SKY = Color3.fromRGB(127, 220, 180), Color3.fromRGB(255, 157, 176), Color3.fromRGB(185, 164, 238), Color3.fromRGB(255, 217, 112), Color3.fromRGB(142, 200, 255)
@@ -1736,9 +1736,10 @@ end
 		new("UICorner", d, { CornerRadius = UDim.new(0.5, 0) })
 		return d
 	end
+	new("ImageLabel", mapPanel, { Image = "rbxassetid://117032895507459", BackgroundTransparency = 1, Size = UDim2.fromScale(1.17, 1.17), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 1 }) -- the painted brass case (art/ui_notebook/dial.png)
 	local view = disc(2, 0.2) -- nearly opaque: the see-through face bled into the dark cave
 	view.BackgroundColor3 = Color3.fromRGB(36, 25, 24)
-	new("UIGradient", new("UIStroke", view, { Color = Color3.new(1, 1, 1), Thickness = 6 }), { Rotation = 50, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(240, 200, 110)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 106, 34)), ColorSequenceKeypoint.new(1, Color3.fromRGB(228, 182, 86)) }) }) -- a thick brass bezel, like the mining gauge (Field Notebook pass: was a 2.5 px line)
+	new("UIGradient", new("UIStroke", view, { Color = Color3.new(1, 1, 1), Thickness = 1.5 }), { Rotation = 50, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(240, 200, 110)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 106, 34)), ColorSequenceKeypoint.new(1, Color3.fromRGB(228, 182, 86)) }) }) -- a thick brass bezel, like the mining gauge (Field Notebook pass: was a 2.5 px line)
 	for _, r in { 0.34, 0.64 } do -- faint range rings
 		local ring = new("Frame", mapPanel, { Size = UDim2.fromScale(r, r), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 4 })
 		new("UICorner", ring, { CornerRadius = UDim.new(0.5, 0) })

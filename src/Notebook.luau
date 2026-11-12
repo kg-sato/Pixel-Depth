@@ -58,7 +58,7 @@ function M.start(E)
 	local splat = new("Frame", left, { Size = UDim2.fromScale(0.74, 0.17), Position = UDim2.fromScale(0.42, 0.135), AnchorPoint = MID, BackgroundColor3 = TEAL, BorderSizePixel = 0, Rotation = -4, ZIndex = 32 })
 	new("UICorner", splat, { CornerRadius = UDim.new(0.5, 0) })
 	local head = new("Frame", left, { Size = UDim2.fromScale(0.62, 0.17), Position = UDim2.fromScale(0.36, 0.13), AnchorPoint = MID, BackgroundTransparency = 1, Rotation = -3, ZIndex = 33 })
-	new("ImageLabel", head, { Image = "rbxassetid://116014459402362", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Stretch, ZIndex = 33 }) -- the kit's comic header (ribbonLilac)
+	new("ImageLabel", head, { Image = "rbxassetid://94031359786754", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Stretch, ZIndex = 33 }) -- the kit's comic header (ribbonLilac)
 	local ht = text(head, "SETTINGS", UDim2.fromScale(0.72, 0.56), UDim2.fromScale(0.48, 0.44), MID, INK, 700, false)
 	ht.Font, ht.ZIndex = HEAD, 34
 

@@ -23,9 +23,10 @@ function M.start(E)
 		return f
 	end
 	disc(root, 1, 1, UDim2.fromScale(0.5, 0.54), Color3.fromRGB(16, 10, 28), 0.6, 1) -- soft drop shadow
-	local back = disc(root, 0.98, 0.98, UDim2.fromScale(0.5, 0.5), Color3.new(1, 1, 1), 0, 2) -- a dark leather face in a brass case (Field Notebook pass 2026-11-12; was frosted violet glass)
+	new("ImageLabel", root, { Image = "rbxassetid://117032895507459", BackgroundTransparency = 1, Size = UDim2.fromScale(1.24, 1.24), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 2 }) -- the painted brass case (art/ui_notebook/dial.png)
+	local back = disc(root, 0.98, 0.98, UDim2.fromScale(0.5, 0.5), Color3.new(1, 1, 1), 1, 2) -- a dark leather face in a brass case (Field Notebook pass 2026-11-12; was frosted violet glass)
 	new("UIGradient", back, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(78, 52, 40), Color3.fromRGB(40, 26, 22)) })
-	new("UIGradient", new("UIStroke", back, { Color = Color3.new(1, 1, 1), Thickness = 5 }), { Rotation = 55, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(244, 206, 116)), ColorSequenceKeypoint.new(0.45, Color3.fromRGB(146, 102, 32)), ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 184, 88)) }) }) -- a thin bronze rim (a wide gold one read as the meter itself)
+	new("UIGradient", new("UIStroke", back, { Color = Color3.new(1, 1, 1), Thickness = 5, Transparency = 1 }), { Rotation = 55, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(244, 206, 116)), ColorSequenceKeypoint.new(0.45, Color3.fromRGB(146, 102, 32)), ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 184, 88)) }) }) -- a thin bronze rim (a wide gold one read as the meter itself)
 	local inner = disc(root, 0.92, 0.92, UDim2.fromScale(0.5, 0.5), Color3.new(1, 1, 1), 1, 3)
 	new("UIStroke", inner, { Color = Color3.fromRGB(120, 84, 44), Thickness = 1.5, Transparency = 0.2 }) -- the rim's dark inner edge
 	local sheen = disc(root, 0.5, 0.22, UDim2.fromScale(0.36, 0.25), Color3.new(1, 1, 1), 0.55, 7) -- a specular arc on the glass dome, top left

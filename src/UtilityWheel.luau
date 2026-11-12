@@ -67,9 +67,10 @@ function M.start(E)
 		new("UICorner", d, { CornerRadius = UDim.new(0.5, 0) })
 		return d
 	end
-	local plate = disc(holder, 1.1, 0.5, 0.5, WHITE, 0, 40) -- a brass pocket compass with a dark leather face (Gemini on the first in-game pass: the cream disc was a 'flat pizza' over the dark cave) -- a soft lilac-cream plate with a lilac rim, like the kit's cards
+	new("ImageLabel", holder, { Image = "rbxassetid://117032895507459", BackgroundTransparency = 1, Size = UDim2.fromScale(1.32, 1.32), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 40 }) -- the painted brass compass (art/ui_notebook/dial.png)
+	local plate = disc(holder, 1.1, 0.5, 0.5, WHITE, 1, 40) -- a brass pocket compass with a dark leather face (Gemini on the first in-game pass: the cream disc was a 'flat pizza' over the dark cave) -- a soft lilac-cream plate with a lilac rim, like the kit's cards
 	new("UIGradient", plate, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(74, 50, 40), Color3.fromRGB(44, 28, 24)) })
-	new("UIGradient", new("UIStroke", plate, { Color = WHITE, Thickness = 12 }), { Rotation = 55, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(244, 206, 116)), ColorSequenceKeypoint.new(0.45, Color3.fromRGB(146, 102, 32)), ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 184, 88)) }) })
+	new("UIGradient", new("UIStroke", plate, { Color = WHITE, Thickness = 12, Transparency = 1 }), { Rotation = 55, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(244, 206, 116)), ColorSequenceKeypoint.new(0.45, Color3.fromRGB(146, 102, 32)), ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 184, 88)) }) })
 	local inner = disc(holder, 1.0, 0.5, 0.5, WHITE, 1, 40) -- a stitched ring inside the rim
 	new("UIStroke", inner, { Color = Color3.fromRGB(230, 184, 88), Thickness = 1.5, Transparency = 0.45 })
 	for _, rot in { 22.5, 67.5, -22.5, -67.5 } do -- faint sector lines: where one slot's pull ends and the next begins

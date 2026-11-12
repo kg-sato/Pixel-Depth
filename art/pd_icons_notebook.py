@@ -43,7 +43,15 @@ ICONS = {
 def main():
     names = sorted(ICONS)
     page = out / "_sheet.html"
-    body = "".join(f'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 128 128" style="position:absolute;left:{(i % 4) * 256}px;top:{(i // 4) * 256}px">{ICONS[n]}</svg>' for i, n in enumerate(names))
+    # painted pass: every icon gets a soft cast shadow and a top-left sheen raised from its own shape (was flat fills)
+    defs = ('<svg width="0" height="0" style="position:absolute"><defs><filter id="lit" x="-25%" y="-25%" width="150%" height="150%">'
+            '<feGaussianBlur in="SourceAlpha" stdDeviation="2.2" result="b"/><feOffset in="b" dx="0" dy="5" result="o"/><feFlood flood-color="#140C1C" flood-opacity="0.5"/><feComposite in2="o" operator="in" result="sh"/>'
+            '<feGaussianBlur in="SourceAlpha" stdDeviation="3.5" result="bump"/><feSpecularLighting in="bump" surfaceScale="4" specularConstant="1.1" specularExponent="60" lighting-color="#FFF2D0" result="spec"><feDistantLight azimuth="225" elevation="48"/></feSpecularLighting>'
+            '<feComposite in="spec" in2="SourceAlpha" operator="in" result="specIn"/>'
+            '<feDiffuseLighting in="bump" surfaceScale="3" diffuseConstant="1" lighting-color="#FFFFFF" result="diff"><feDistantLight azimuth="225" elevation="60"/></feDiffuseLighting>'
+            '<feComposite in="SourceGraphic" in2="diff" operator="arithmetic" k1="0.5" k2="0.6" k3="0" k4="0" result="shaded"/><feComposite in="shaded" in2="SourceAlpha" operator="in" result="body"/>'
+            '<feMerge><feMergeNode in="sh"/><feMergeNode in="body"/><feMergeNode in="specIn"/></feMerge></filter></defs></svg>')
+    body = defs + "".join(f'<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 128 128" style="position:absolute;left:{(i % 4) * 256}px;top:{(i // 4) * 256}px"><g filter="url(#lit)" transform="translate(6 3) scale(0.9)">{ICONS[n]}</g></svg>' for i, n in enumerate(names))
     page.write_text('<!doctype html><html><body style="margin:0;background:transparent">' + body + "</body></html>", encoding="utf-8")
     H = ((len(names) + 3) // 4) * 256
     png = out / "_sheet.png"

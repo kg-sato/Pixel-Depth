@@ -272,8 +272,8 @@ C.EGG_GEMS = 10 -- one egg roll with gems
 -- Codex imagegen in the soft kit style, ids in art/icons_soft/asset_ids.json)
 C.HUD_ICON = {
 	-- 2026-11-12: Field Notebook set (art/icons_notebook): the face is a miner's lantern whose flame shrinks with fear; the soft-kit ids are in art/icons_soft/asset_ids.json
-	heart = "rbxassetid://120555925180195", torch = "rbxassetid://70853102680947", flare = "rbxassetid://132611183351134",
-	calm = "rbxassetid://111977423235621", uneasy = "rbxassetid://96705805257653", scared = "rbxassetid://72410739293162",
+	heart = "rbxassetid://107022845042825", torch = "rbxassetid://125552730003959", flare = "rbxassetid://82298098853202",
+	calm = "rbxassetid://80792023358751", uneasy = "rbxassetid://130742072901296", scared = "rbxassetid://133618194231677",
 }
 C.EGG_COINS = 75
 -- the Egg Altar in the caves (playtest 2: "rarer ones should be found in caves ... players will need to roll for them"; board PT2_Eggs).
