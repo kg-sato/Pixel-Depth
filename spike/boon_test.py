@@ -15,6 +15,6 @@ print(night.lua(open(pathlib.Path(__file__).resolve().parent / "hud_overlap.luau
 print("bad picks (3, nil, table):", C1(ATTR + FX + "local b=a() local R=game.ReplicatedStorage.Remotes.Boon R:FireServer('pick',3) task.wait(0.4) R:FireServer('pick') task.wait(0.4) R:FireServer({}, 1) task.wait(0.8) con:Disconnect() return b..' -> '..a()..' fx '..table.concat(fx,',')"))
 print("pick 1:", C1(ATTR + FX + "local b=a() game.ReplicatedStorage.Remotes.Boon:FireServer('pick',1) task.wait(1.2) con:Disconnect() return b..' -> '..a()..' fx '..table.concat(fx,',')"))
 print("pick again (nothing):", C1(ATTR + FX + "local b=a() game.ReplicatedStorage.Remotes.Boon:FireServer('pick',2) task.wait(1.2) con:Disconnect() return b..' -> '..a()..' fx '..table.concat(fx,',')"))
-night.lua("local w=game.Players.LocalPlayer.PlayerGui.PixelHUD.Boon w.Visible=false return 1", "Client")
+night.lua("local w=game.Players.LocalPlayer.PlayerGui:FindFirstChild('Boon',true) w.Visible=false return 1", "Client")
 print("pray again (spent):", trigger("BoonShrine", "1"))
-night.lua("local w=game.Players.LocalPlayer.PlayerGui.PixelHUD.Boon w.Visible=false return 1", "Client")
+night.lua("local w=game.Players.LocalPlayer.PlayerGui:FindFirstChild('Boon',true) w.Visible=false return 1", "Client")

@@ -12,7 +12,7 @@ for n in (5, 5, 5, 5):
     S1(f"local p=game.Players:GetPlayers()[1] p:SetAttribute('DevSoulEarn',nil) p:SetAttribute('DevSoulEarn',{n}) return 1")
     time.sleep(0.6)
 print("shards after earning 5+5+5+5 under a cap of 12:", C1(EARN + "game.ReplicatedStorage.Remotes.Soul:FireServer('sync') task.wait(1) con:Disconnect() return got and got.shards or 'no state'"))
-HIDE = "game.Players.LocalPlayer.PlayerGui.PixelHUD.Boon.Visible=false return 1"
+HIDE = "game.Players.LocalPlayer.PlayerGui:FindFirstChild('Boon',true).Visible=false return 1"
 a = trigger("BoonShrine", "1"); C1(HIDE)
 b = trigger("BoonShrine", "2"); C1(HIDE)
 a2 = trigger("BoonShrine", "1"); C1(HIDE)

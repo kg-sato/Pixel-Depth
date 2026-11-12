@@ -21,7 +21,7 @@ print("buy flare 2 (9):", C1(WATCH + "game.ReplicatedStorage.Remotes.Soul:FireSe
 print("buy flare 3 (full):", C1(WATCH + "game.ReplicatedStorage.Remotes.Soul:FireServer('buy','flare')" + DONE))
 print("buy shield, too poor (4 left, costs 3 then 6):", C1(WATCH + "game.ReplicatedStorage.Remotes.Soul:FireServer('buy','shield') task.wait(0.5) game.ReplicatedStorage.Remotes.Soul:FireServer('buy','shield')" + DONE))
 time.sleep(1); print(night.shot("soul_panel2").name)
-night.lua("local w=game.Players.LocalPlayer.PlayerGui.PixelHUD.SoulTree w.Visible=false return 1", "Client")
+night.lua("local w=game.Players.LocalPlayer.PlayerGui:FindFirstChild('SoulTree',true) w.Visible=false return 1", "Client")
 print("flares at camp now:", S1("task.wait(1.5) return tostring(game.Players:GetPlayers()[1]:GetAttribute('Flares'))"))
 S1(SAFE + "local C=require(game.ReplicatedStorage.Shared.Config) local best for _,d in workspace.Caves.Deposits:GetChildren() do if d:IsA('Model') and d.PrimaryPart then local m=(d.PrimaryPart.Position-C.CAVE_ORIGIN).Magnitude if m>45 and m<95 then best=d break end end end "
    "game.Players:GetPlayers()[1].Character.HumanoidRootPart.CFrame=CFrame.new(safe(best.PrimaryPart.Position)) game.Players:GetPlayers()[1]:SetAttribute('DevSoul',30) return 1"); time.sleep(3)

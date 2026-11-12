@@ -68,7 +68,7 @@ if want("06") or want("08") or want("05"):
     time.sleep(1.25); N.shot("08_ore_icon_card"); time.sleep(2.6)
 if want("03"):
     N.key("B"); time.sleep(1.2); N.shot("03_modal_blur")  # after the strike minigame: the bag holds ore, so the grid is filled
-    C('game.Players.LocalPlayer.PlayerGui.PixelHUD.Inventory.Visible=false return 1'); time.sleep(0.8)
+    C('game.Players.LocalPlayer.PlayerGui:FindFirstChild('Inventory',true).Visible=false return 1'); time.sleep(0.8)
 if want("07"):
     print("rush at", near_deposit("d:GetAttribute('Ore')==3")); time.sleep(1.2); face(); N.key("E"); time.sleep(0.9); N.shot("07a_vein_rush")
     seq = (C("return game.Players.LocalPlayer.PlayerGui.PixelHUD.CaveHud.VeinRush:GetAttribute('Seq') or ''") or [""])[0].strip()
