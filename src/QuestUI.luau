@@ -136,6 +136,7 @@ function M.start(E)
 		end
 	end
 	local function shut() if win.Visible then closePanel(win) end end
+	if E.vmHook then E.vmHook.quests = function() if win.Visible then shut() else open() end end end -- the utility wheel and the notebook's ribbon
 	close.Activated:Connect(shut)
 	UIS.InputBegan:Connect(function(io, gp)
 		if gp then return end
@@ -192,10 +193,13 @@ function M.start(E)
 	local tip = new("Frame", marker, { Size = UDim2.fromScale(0.2, 0.35), Position = UDim2.fromScale(0.5, 0.72), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 45, BackgroundColor3 = GOLD, BorderSizePixel = 0 })
 	new("UIAspectRatioConstraint", tip, { AspectRatio = 1 })
 	new("UIStroke", tip, { Color = INK, Thickness = 2 })
-	local tag = new("Frame", marker, { Size = UDim2.fromScale(1, 0.6), BackgroundColor3 = WHITE, BorderSizePixel = 0, ZIndex = 2 })
-	new("UICorner", tag, { CornerRadius = UDim.new(0.4, 0) })
-	new("UIStroke", tag, { Color = INK, Thickness = 2 })
-	local tagText = text(tag, "", UDim2.fromScale(0.84, 0.66), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), INK, 700, false)
+	-- a small wooden plank with cream capitals (Field Notebook pass 2026-11-12; was a white pill)
+	local tag = new("Frame", marker, { Size = UDim2.fromScale(1, 0.6), BackgroundColor3 = Color3.fromRGB(138, 90, 51), BorderSizePixel = 0, ZIndex = 2 })
+	new("UICorner", tag, { CornerRadius = UDim.new(0.14, 0) })
+	new("UIStroke", tag, { Color = Color3.fromRGB(59, 36, 22), Thickness = 3 })
+	new("UIGradient", tag, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(196, 176, 160)) })
+	local tagText = text(tag, "", UDim2.fromScale(0.84, 0.72), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 247, 226), 700)
+	tagText.Font, tagText.TextStrokeColor3 = Enum.Font.Bangers, Color3.fromRGB(59, 36, 22)
 	tagText.ZIndex = 3
 	local PLACE = { cart = { "HubCart", "RIDE" }, sell = { "SellStall", "SELL" }, forge = { "Forge", "FORGE" }, egg = { "Incubator", "EGG" }, chest = { "DailyChest", "OPEN" } }
 	local function target() -- the world position and the word, or nil

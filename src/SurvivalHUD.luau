@@ -49,9 +49,9 @@ function M.start(E)
 	end
 
 	-- the flare collar: a small glass slot hooked on the talisman's right shoulder
-	local collar = new("TextButton", root, { Name = "Flare", Text = "", AutoButtonColor = false, Size = UDim2.fromScale(0.8, 0.36), Position = UDim2.fromScale(0.92, 0.77), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.fromRGB(29, 18, 43), BackgroundTransparency = 0.1, BorderSizePixel = 0, ZIndex = 3 })
+	local collar = new("TextButton", root, { Name = "Flare", Text = "", AutoButtonColor = false, Size = UDim2.fromScale(0.8, 0.36), Position = UDim2.fromScale(0.92, 0.77), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.fromRGB(90, 58, 42), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 3 }) -- a leather strap (Field Notebook pass; was dark glass)
 	new("UICorner", collar, { CornerRadius = UDim.new(0.5, 0) })
-	new("UIStroke", collar, { Color = Color3.fromRGB(150, 112, 62), Thickness = 2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }) -- the same bronze rim: one piece of hardware
+	new("UIStroke", collar, { Color = Color3.fromRGB(42, 24, 16), Thickness = 3, ApplyStrokeMode = Enum.ApplyStrokeMode.Border }) -- the same bronze rim: one piece of hardware
 	local flareBox = new("Frame", collar, { Size = UDim2.fromScale(0.36, 0.86), Position = UDim2.fromScale(0.2, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 4 })
 	new("UIAspectRatioConstraint", flareBox, { AspectRatio = 1 })
 	new("ImageLabel", flareBox, { Image = C.HUD_ICON.flare, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(1, 1), ZIndex = 4 })

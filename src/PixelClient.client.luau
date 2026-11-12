@@ -48,13 +48,13 @@ end
 -- Soft pastel UI kit v3 (art/ui_soft from art/pd_ui_soft.py, 2026-11-08; the user: the pixel style did not fit the HUD).
 -- Refs: art/ui_soft/refs.md (casual soft GUI kits and three local FLUX sheets): rounded glossy shapes, outlines in a deeper shade
 -- of their own colour, a white rim on top, a darker lip below, soft plum shadows. SLICE is each skin's 9-slice centre in image pixels.
-local SKIN = { -- glass kit (art/ui_glass, pd_ui_glass.py; the glass pass 2026-11-09): same sizes and slices as the soft kit (art/ui_soft)
-	panel = "rbxassetid://112246722719660", card = "rbxassetid://121172097992398", pill = "rbxassetid://77883260428897", dark = "rbxassetid://82969029005096",
-	mint = "rbxassetid://105069733774712", pink = "rbxassetid://96406794528292", lilac = "rbxassetid://74133804390395", butter = "rbxassetid://108023391222559",
-	sky = "rbxassetid://91254126939707", off = "rbxassetid://119079173035833", keycap = "rbxassetid://105067142232301", keycapDown = "rbxassetid://75484431878427",
-	slot = "rbxassetid://84168548618279", tab = "rbxassetid://114912943266935", tabOn = "rbxassetid://131675575371032", ribbonPink = "rbxassetid://108159635175401",
-	ribbonLilac = "rbxassetid://72754184573546",
-	pillButter = "rbxassetid://92322010210225", pillLilac = "rbxassetid://114518839673382", pillMint = "rbxassetid://100114863227337", pillPink = "rbxassetid://121009011634746", -- puffy tone-on-tone pills (kit round 4)
+local SKIN = { -- Field Notebook kit (art/ui_notebook, pd_ui_notebook.py, 2026-11-12; brief: UI Rework Field Notebook): torn paper, block buttons, parchment, leather, wood. Same sizes and slices as the glass kit (art/ui_glass, ids in its asset_ids.json)
+	panel = "rbxassetid://95838412868959", card = "rbxassetid://116990494763664", pill = "rbxassetid://105118556243193", dark = "rbxassetid://116558100037993",
+	mint = "rbxassetid://125718734941034", pink = "rbxassetid://72871112974283", lilac = "rbxassetid://116305925427936", butter = "rbxassetid://101975160139050",
+	sky = "rbxassetid://108993020017880", off = "rbxassetid://76923853438577", keycap = "rbxassetid://121686637636447", keycapDown = "rbxassetid://109937989693693",
+	slot = "rbxassetid://135485337194775", tab = "rbxassetid://111057080125694", tabOn = "rbxassetid://127860743563907", ribbonPink = "rbxassetid://127123029330678",
+	ribbonLilac = "rbxassetid://116014459402362",
+	pillButter = "rbxassetid://113663991019583", pillLilac = "rbxassetid://110618460106419", pillMint = "rbxassetid://111939519073146", pillPink = "rbxassetid://117222783985327", -- puffy tone-on-tone pills (kit round 4)
 }
 local SLICE = {
 	panel = { 64, 64, 136, 126 }, card = { 50, 50, 126, 78 }, pill = { 40, 31, 136, 37 }, dark = { 36, 36, 76, 64 },
@@ -65,9 +65,9 @@ local SLICE = {
 	button = { 42, 40, 118, 52 },
 }
 local DEEP = { -- each button colour's deep shade, for its label outline
-	mint = Color3.fromRGB(63, 156, 124), pink = Color3.fromRGB(194, 86, 116), lilac = Color3.fromRGB(111, 88, 176),
-	butter = Color3.fromRGB(196, 138, 46), sky = Color3.fromRGB(74, 131, 196), off = Color3.fromRGB(124, 111, 147),
-	ribbonPink = Color3.fromRGB(194, 86, 116), ribbonLilac = Color3.fromRGB(111, 88, 176),
+	mint = Color3.fromRGB(16, 92, 80), pink = Color3.fromRGB(128, 30, 56), lilac = Color3.fromRGB(44, 66, 150),
+	butter = Color3.fromRGB(128, 82, 12), sky = Color3.fromRGB(32, 96, 144), off = Color3.fromRGB(96, 90, 78),
+	ribbonPink = Color3.fromRGB(59, 36, 22), ribbonLilac = Color3.fromRGB(43, 34, 51),
 }
 local SPRITE = {
 	wisteria = "rbxassetid://133392597906841", sakura = "rbxassetid://113252916003793", sparkle = "rbxassetid://101352828199322",
@@ -80,10 +80,11 @@ local ICON = { -- smooth soft-kit icons (art/icons_soft, ids in art/icons_soft/a
 	dice = "rbxassetid://124755060203655", map = "rbxassetid://109855398030402", camp = "rbxassetid://125775176311436", chisel = "rbxassetid://131827804757525",
 	hammer = "rbxassetid://118028256132989", lock = "rbxassetid://129198159082909",
 }
-local INK, CREAM, WHITE = Color3.fromRGB(62, 42, 86), Color3.fromRGB(255, 247, 238), Color3.new(1, 1, 1)
+local INK, CREAM, WHITE = Color3.fromRGB(43, 34, 51), Color3.fromRGB(255, 247, 238), Color3.new(1, 1, 1)
 local MINT, PINK, LILAC, BUTTER, SKY = Color3.fromRGB(127, 220, 180), Color3.fromRGB(255, 157, 176), Color3.fromRGB(185, 164, 238), Color3.fromRGB(255, 217, 112), Color3.fromRGB(142, 200, 255)
 local GOLD, PLUM_SOFT = Color3.fromRGB(255, 206, 84), Color3.fromRGB(122, 98, 150)
-local FONT = Enum.Font.FredokaOne -- the rounded game font of the soft kit (was the Pixelify bitmap font)
+local FONT = Enum.Font.PatrickHand -- notebook handwriting for sentences (was FredokaOne with the soft kit)
+local HEAD = Enum.Font.Bangers -- comic capitals for buttons, titles, key caps and numbers
 
 local gui = Instance.new("ScreenGui")
 gui.Name, gui.ResetOnSpawn, gui.ZIndexBehavior = "PixelHUD", false, Enum.ZIndexBehavior.Sibling
@@ -139,7 +140,7 @@ task.spawn(function() -- the camera (and its viewport size) can be replaced or r
 			last = k
 			for sk in skinned do sk.SliceScale = k end
 			for o, name in gridded do gridSize(o, name) end
-			for st in strokes do st.Thickness = math.max(1, k * 4.4) end
+			for st, kind in strokes do st.Thickness = kind == true and math.max(1, k * 4.4) or math.max(0.6, k * 1.3) end
 		end
 		task.wait(0.5)
 	end
@@ -155,13 +156,19 @@ local function text(parent, s, size, pos, anchor, color, weight, stroke)
 		TextStrokeTransparency = stroke == false and 1 or 0, TextStrokeColor3 = INK, ZIndex = 2,
 	})
 	-- a rounded ink outline that follows the label's stroke and text transparency (fades and toggles keep working)
-	local st = new("UIStroke", l, { Color = INK, LineJoinMode = Enum.LineJoinMode.Round, Thickness = math.max(1, pixelScale() * 4.4) })
-	local function sync() st.Transparency = math.max(l.TextStrokeTransparency, l.TextTransparency) end
+	-- without an outline the thin handwriting font gets a hairline in its own colour, so it reads as bold
+	local faux = stroke == false
+	local st = new("UIStroke", l, { Color = faux and l.TextColor3 or INK, LineJoinMode = Enum.LineJoinMode.Round, Thickness = faux and math.max(0.6, pixelScale() * 1.3) or math.max(1, pixelScale() * 4.4) })
+	local function sync()
+		if faux and l.TextStrokeTransparency < 1 then faux = false; st.Color = l.TextStrokeColor3; st.Thickness = math.max(1, pixelScale() * 4.4); strokes[st] = true end -- an outline was switched on later
+		st.Transparency = faux and l.TextTransparency or math.max(l.TextStrokeTransparency, l.TextTransparency)
+	end
+	l:GetPropertyChangedSignal("TextColor3"):Connect(function() if faux then st.Color = l.TextColor3 end end)
 	l:GetPropertyChangedSignal("TextStrokeTransparency"):Connect(sync)
 	l:GetPropertyChangedSignal("TextTransparency"):Connect(sync)
-	l:GetPropertyChangedSignal("TextStrokeColor3"):Connect(function() st.Color = l.TextStrokeColor3 end)
+	l:GetPropertyChangedSignal("TextStrokeColor3"):Connect(function() if not faux then st.Color = l.TextStrokeColor3 end end)
 	sync()
-	strokes[st] = true
+	strokes[st] = not faux or 1.3
 	st.Destroying:Connect(function() strokes[st] = nil end)
 	return l
 end
@@ -213,8 +220,8 @@ local function button(parent, label, size, pos, anchor, kind, iconName, vertical
 	skin(b, kind or "mint")
 	local lab
 	if iconName and vertical then
-		icon(b, iconName, UDim2.fromScale(0.5, 0.42), UDim2.fromScale(0.5, 0.34), Vector2.new(0.5, 0.5))
-		lab = text(b, label, UDim2.fromScale(0.8, 0.19), UDim2.fromScale(0.5, 0.67), Vector2.new(0.5, 0.5), WHITE)
+		icon(b, iconName, UDim2.fromScale(0.54, 0.44), UDim2.fromScale(0.5, 0.31), Vector2.new(0.5, 0.5))
+		lab = text(b, label, UDim2.fromScale(0.86, 0.25), UDim2.fromScale(0.5, 0.66), Vector2.new(0.5, 0.5), WHITE) -- larger labels (Field Notebook pass)
 	elseif iconName then
 		local ic = icon(b, iconName, UDim2.fromScale(0.3, 0.62), UDim2.fromScale(0.08, 0.5), Vector2.new(0, 0.5))
 		new("UIAspectRatioConstraint", ic, { AspectRatio = 1 })
@@ -223,6 +230,7 @@ local function button(parent, label, size, pos, anchor, kind, iconName, vertical
 		lab = text(b, label, UDim2.fromScale(0.84, 0.5), UDim2.fromScale(0.5, 0.47), Vector2.new(0.5, 0.5), WHITE)
 	end
 	lab.Name = "Label"
+	lab.Font = HEAD
 	lab.TextStrokeColor3 = DEEP[kind or "mint"] or INK
 	b:GetPropertyChangedSignal("Text"):Connect(function() lab.Text = b.Text end)
 	local sc = scaler(b)
@@ -235,6 +243,15 @@ local function button(parent, label, size, pos, anchor, kind, iconName, vertical
 	b.MouseButton1Up:Connect(function() tween(sc, 0.45, { Scale = 1 }, Enum.EasingStyle.Elastic) end)
 	return b
 end
+-- in the caves the paper pieces of the HUD are lantern-lit, not daylight white (Gemini: the bright stationery glared in the dark)
+local function paperTone(dark)
+	local tone = dark and Color3.fromRGB(196, 172, 132) or Color3.new(1, 1, 1)
+	for sk in skinned do
+		local k = sk.Parent and sk.Parent:GetAttribute("Kind")
+		if k and (string.sub(k, 1, 4) == "pill" or k == "card") and sk:IsDescendantOf(gui) then sk.ImageColor3 = tone end
+	end
+end
+plr:GetAttributeChangedSignal("InCave"):Connect(function() paperTone(plr:GetAttribute("InCave") == true) end)
 local function setKind(b, kind)
 	if b:GetAttribute("Kind") ~= kind then skin(b, kind) end
 end
@@ -254,6 +271,7 @@ local function ribbonTitle(parent, label, kind, width)
 	skin(r, kind or "ribbonPink")
 	local t = text(r, label, UDim2.fromScale(0.7, 0.46), UDim2.fromScale(0.5, 0.4), Vector2.new(0.5, 0.5), WHITE)
 	t.TextStrokeColor3 = DEEP[kind or "ribbonPink"] or INK
+	t.Font = HEAD
 	t.ZIndex = 4
 	return r, t
 end
@@ -280,6 +298,7 @@ local function keyCap(parent, key, size, pos)
 	skin(k, "keycap")
 	new("UIAspectRatioConstraint", k, { AspectRatio = 16 / 17 })
 	local t = text(k, key, UDim2.fromScale(0.64, 0.5), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), INK, 700, false)
+	t.Font = HEAD
 	t.ZIndex = 5
 	return k, t
 end
@@ -290,7 +309,7 @@ fit(goldPill, 170, 46)
 local coinIcon = icon(goldPill, "coin", UDim2.fromScale(0.2, 0.68), UDim2.fromScale(0.06, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", coinIcon, { AspectRatio = 1 })
 local goldText = text(goldPill, "0", UDim2.fromScale(0.64, 0.56), UDim2.fromScale(0.3, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(122, 78, 12), 700, false)
-goldText.TextXAlignment = Enum.TextXAlignment.Left
+goldText.TextXAlignment, goldText.Font = Enum.TextXAlignment.Left, HEAD
 goldPill.Name = "GoldPill"
 
 local eggPill = panel(gui, S(112, 46), S(200, 18), nil, "pillPink")
@@ -298,7 +317,7 @@ fit(eggPill, 112, 46)
 local eggIc = icon(eggPill, "egg", UDim2.fromScale(0.3, 0.68), UDim2.fromScale(0.08, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", eggIc, { AspectRatio = 1 })
 local eggText = text(eggPill, "0", UDim2.fromScale(0.5, 0.56), UDim2.fromScale(0.44, 0.5), Vector2.new(0, 0.5), PINK)
-eggText.TextXAlignment = Enum.TextXAlignment.Left
+eggText.TextXAlignment, eggText.Font = Enum.TextXAlignment.Left, HEAD
 eggPill.Name, eggPill.Visible = "EggPill", false
 
 local bagPill = panel(gui, S(292, 56), S(20, 74), nil, "pillLilac")
@@ -340,12 +359,18 @@ end
 local marker = new("Frame", strip, { Size = UDim2.new(1.9, 0, 0, 8), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 3 })
 new("UIStroke", marker, { Color = INK, Thickness = 2 })
 
-local stepCard = panel(gui, S(344, 44), S(1262, 18), Vector2.new(1, 0), "card")
-fit(stepCard, 344, 44)
+local stepCard = panel(gui, S(410, 56), S(1262, 18), Vector2.new(1, 0), "card")
+fit(stepCard, 410, 56)
 local stepIcon = icon(stepCard, "pick", UDim2.fromScale(0.07, 0.6), UDim2.fromScale(0.03, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", stepIcon, { AspectRatio = 1 })
 local stepText = text(stepCard, "", UDim2.fromScale(0.84, 0.6), UDim2.fromScale(0.55, 0.5), Vector2.new(0.5, 0.5), INK, 700, false)
 stepCard.Name = "StepCard"
+do -- a small wooden plank nailed over the card's corner names it (Field Notebook pass 2026-11-12)
+	local plank = new("Frame", stepCard, { Name = "Plank", Size = UDim2.fromScale(0.3, 0.66), Position = UDim2.fromScale(0.03, -0.06), AnchorPoint = Vector2.new(0, 0.5), Rotation = -2, ZIndex = 3 })
+	skin(plank, "ribbonPink")
+	local pt = text(plank, "NEXT UP", UDim2.fromScale(0.74, 0.6), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 247, 226), 700)
+	pt.Font, pt.ZIndex, pt.TextStrokeColor3 = HEAD, 4, Color3.fromRGB(59, 36, 22)
+end
 
 local digBtn = button(gui, "DIG", S(220, 82), S(640, 570), Vector2.new(0.5, 1), "mint", "pick")
 fit(digBtn, 220, 82)
@@ -548,7 +573,7 @@ local rainEm = new("ParticleEmitter", rain, {
 
 local shakeAmp, fovKick = 0, 0
 local mgZoom = 0 -- the view eases in a little while a minigame holds you (board 8, minigame lock)
-local function shake(a) shakeAmp = math.max(shakeAmp, a) end
+local function shake(a) if not plr:GetAttribute("NoShake") then shakeAmp = math.max(shakeAmp, a) end end -- NoShake: the notebook's screen shake setting
 
 local function floatText(pos, msg, color)
 	local a = anchor()
@@ -1700,7 +1725,7 @@ end
 	end
 	local view = disc(2, 0.55)
 	view.BackgroundColor3 = Color3.fromRGB(22, 19, 46)
-	new("UIStroke", view, { Color = Color3.fromRGB(176, 132, 74), Thickness = 2.5 }) -- a brass bezel, like the mining gauge
+	new("UIGradient", new("UIStroke", view, { Color = Color3.new(1, 1, 1), Thickness = 6 }), { Rotation = 50, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(240, 200, 110)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 106, 34)), ColorSequenceKeypoint.new(1, Color3.fromRGB(228, 182, 86)) }) }) -- a thick brass bezel, like the mining gauge (Field Notebook pass: was a 2.5 px line)
 	for _, r in { 0.34, 0.64 } do -- faint range rings
 		local ring = new("Frame", mapPanel, { Size = UDim2.fromScale(r, r), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 4 })
 		new("UICorner", ring, { CornerRadius = UDim.new(0.5, 0) })
@@ -2463,7 +2488,7 @@ local function setMode(mine, inCaves)
 	mine = inMine or inCave
 	cross.Visible, digBtn.Visible = inMine, inMine
 	railLift.Text = mine and "SURFACE" or "MINE"
-	setKind(railLift, mine and "sky" or "butter")
+	setKind(railLift, mine and "sky" or "mint")
 	if mine then
 		local h = head()
 		cam.CameraType = Enum.CameraType.Custom
@@ -2828,7 +2853,7 @@ end)()
 		plr:GetAttributeChangedSignal("Seated"):Connect(sync)
 		plr.CharacterAdded:Connect(function() track = nil end)
 	end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
