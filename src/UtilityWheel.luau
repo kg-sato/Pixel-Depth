@@ -20,7 +20,7 @@ function M.start(E)
 
 	local function inCave() return plr:GetAttribute("InCave") == true end
 	local SLOTS = {
-		{ name = "SONAR", key = "T", x = 0.5, y = 0.17, tint = MINT,
+		{ name = "SONAR", key = "T", x = 0.5, y = 0.14, tint = MINT,
 			why = function()
 				if not inCave() then return "Caves only" end
 				local left = hook.sonarLeft and hook.sonarLeft() or 0
@@ -28,24 +28,37 @@ function M.start(E)
 				return nil
 			end,
 			run = function() if hook.sonar then hook.sonar() end end },
-		{ name = "FLARE", key = "R", x = 0.83, y = 0.5, icon = C.HUD_ICON.flare, tint = PINK,
+		{ name = "FLARE", key = "R", x = 0.86, y = 0.5, icon = C.HUD_ICON.flare, tint = PINK,
 			why = function()
 				if not inCave() then return "Caves only" end
 				if (plr:GetAttribute("Flares") or C.GLOOM.flares) <= 0 then return "No flares left" end
 				return nil
 			end,
 			run = function() if E.cave.flare then E.cave.flare() end end },
-		{ name = "CHEER", x = 0.5, y = 0.83, icon = C.HUD_ICON.calm, tint = BUTTER,
+		{ name = "CHEER", x = 0.5, y = 0.86, icon = C.HUD_ICON.calm, tint = BUTTER,
 			why = function() return plr:GetAttribute("Seated") and "Not while riding" or nil end,
 			run = function() if hook.emote then hook.emote("cheer") end end },
-		{ name = "WARDROBE", key = "V", x = 0.17, y = 0.5, icon = E.ICON.crew, tint = E.LILAC,
+		{ name = "WARDROBE", key = "V", x = 0.14, y = 0.5, icon = E.ICON.crew, tint = E.LILAC,
 			why = function() return (inCave() or plr:GetAttribute("InMine")) and "Town only" or nil end,
 			run = function() if hook.wardrobe then hook.wardrobe() end end },
+		-- the diagonals (2026-11-12, the owner: "add more items in there such as the settings menu")
+		{ name = "NOTES", key = "N", x = 0.755, y = 0.245, icon = E.ICON.hammer, tint = BUTTER,
+			why = function() return nil end,
+			run = function() if hook.notebook then hook.notebook() end end },
+		{ name = "BAG", key = "B", x = 0.755, y = 0.755, icon = E.ICON.bag, tint = MINT,
+			why = function() return nil end,
+			run = function() if hook.bag then hook.bag() end end },
+		{ name = "QUESTS", key = "J", x = 0.245, y = 0.755, icon = E.ICON.star, tint = PINK,
+			why = function() return nil end,
+			run = function() if hook.quests then hook.quests() end end },
+		{ name = "PING", key = "Z", x = 0.245, y = 0.245, icon = E.ICON.map, tint = E.LILAC,
+			why = function() return (not inCave()) and "Caves only" or nil end,
+			run = function() if hook.ping then hook.ping() end end },
 	}
 
 	-- a Modal button frees the mouse in first person while the wheel is up
 	local root = new("TextButton", E.gui, { Name = "UtilityWheel", Text = "", AutoButtonColor = false, Modal = true, BackgroundColor3 = INK, BackgroundTransparency = 0.36, BorderSizePixel = 0, Size = UDim2.new(1, 0, 1, 80), Position = UDim2.fromOffset(0, -80), ZIndex = 40, Visible = false }) -- 80 px up: over the top bar inset too -- the scrim keeps torches and signs from shining through (Gemini r1: readability 3 to 5)
-	local holder = new("Frame", root, { Size = E.S(330, 330), Position = UDim2.new(0.5, 0, 0.5, 40), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 40 })
+	local holder = new("Frame", root, { Size = E.S(400, 400), Position = UDim2.new(0.5, 0, 0.5, 40), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 40 })
 	E.fit(holder, 1, 1)
 	holder.Name = "Holder"
 	local pop = new("UIScale", holder, { Scale = 1 })
@@ -54,33 +67,37 @@ function M.start(E)
 		new("UICorner", d, { CornerRadius = UDim.new(0.5, 0) })
 		return d
 	end
-	local plate = disc(holder, 1.1, 0.5, 0.5, WHITE, 0.06, 40) -- a soft lilac-cream plate with a lilac rim, like the kit's cards
-	new("UIGradient", plate, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(252, 247, 255), Color3.fromRGB(226, 214, 242)) })
-	new("UIStroke", plate, { Color = Color3.fromRGB(150, 128, 204), Thickness = 5 })
-	for _, rot in { 45, -45 } do -- faint sector lines: where one slot's pull ends and the next begins
-		new("Frame", holder, { Size = UDim2.new(1.02, 0, 0, 2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, Rotation = rot, BackgroundColor3 = INK, BackgroundTransparency = 0.86, BorderSizePixel = 0, ZIndex = 40 })
+	local plate = disc(holder, 1.1, 0.5, 0.5, WHITE, 0, 40) -- a brass pocket compass with a dark leather face (Gemini on the first in-game pass: the cream disc was a 'flat pizza' over the dark cave) -- a soft lilac-cream plate with a lilac rim, like the kit's cards
+	new("UIGradient", plate, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(74, 50, 40), Color3.fromRGB(44, 28, 24)) })
+	new("UIGradient", new("UIStroke", plate, { Color = WHITE, Thickness = 12 }), { Rotation = 55, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(244, 206, 116)), ColorSequenceKeypoint.new(0.45, Color3.fromRGB(146, 102, 32)), ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 184, 88)) }) })
+	local inner = disc(holder, 1.0, 0.5, 0.5, WHITE, 1, 40) -- a stitched ring inside the rim
+	new("UIStroke", inner, { Color = Color3.fromRGB(230, 184, 88), Thickness = 1.5, Transparency = 0.45 })
+	for _, rot in { 22.5, 67.5, -22.5, -67.5 } do -- faint sector lines: where one slot's pull ends and the next begins
+		new("Frame", holder, { Size = UDim2.new(1.02, 0, 0, 2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, Rotation = rot, BackgroundColor3 = Color3.fromRGB(230, 184, 88), BackgroundTransparency = 0.7, BorderSizePixel = 0, ZIndex = 40 })
 	end
 	local OFF, OFF_INK = Color3.fromRGB(226, 220, 234), Color3.fromRGB(112, 96, 138) -- a soft dark plate so the wheel reads over town and cave alike
 	for _, s in SLOTS do
-		local d = disc(holder, 0.27, s.x, s.y, CREAM, 0, 41)
+		local d = disc(holder, 0.225, s.x, s.y, CREAM, 0, 41)
 		s.fill = s.tint:Lerp(WHITE, 0.45)
 		d.Name = s.name
 		new("UIGradient", d, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(226, 220, 236)) }) -- pillowy: lighter on top
 		s.lock = new("ImageLabel", d, { Image = E.ICON.lock, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 44, Visible = false })
 		s.disc, s.rim, s.scale = d, new("UIStroke", d, { Color = INK, Thickness = 3 }), new("UIScale", d, { Scale = 1 })
 		if s.icon then
-			s.img = new("ImageLabel", d, { Image = s.icon, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.7, 0.7), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 42 })
+			s.img = new("ImageLabel", d, { Image = s.icon, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.56, 0.56), Position = UDim2.fromScale(0.5, 0.4), AnchorPoint = MID, ZIndex = 42 })
 		else -- the sonar has no icon in the kit: three mint rings
 			s.rings = {}
-			for i, k in { 0.2, 0.4, 0.6 } do
-				local r = disc(d, k, 0.5, 0.5, MINT, i == 1 and 0 or 1, 42)
+			for i, k in { 0.16, 0.32, 0.48 } do
+				local r = disc(d, k, 0.5, 0.4, MINT, i == 1 and 0 or 1, 42)
 				table.insert(s.rings, new("UIStroke", r, { Color = i == 1 and INK or Color3.fromRGB(60, 170, 130), Thickness = 2.5 }))
 			end
 		end
-		s.label = E.text(d, s.name, UDim2.fromScale(1.5, 0.22), UDim2.fromScale(0.5, 1.13), MID, INK, nil, false) -- outside the disc: the name never covers the icon
+		s.label = E.text(d, s.name, UDim2.fromScale(0.8, 0.2), UDim2.fromScale(0.5, 0.8), MID, INK, nil, false)
+		s.label.Font = Enum.Font.Bangers -- inside the disc now: eight slots leave no room underneath; -- outside the disc: the name never covers the icon
 		s.label.ZIndex = 43
 		s.sub = E.text(d, "", UDim2.fromScale(1.7, 0.15), UDim2.fromScale(0.5, 1.31), MID, Color3.fromRGB(112, 96, 138), nil, false) -- why a locked slot is locked
 		s.sub.ZIndex = 43
+		s.sub.Visible = false -- with eight slots the hub alone says why a slot is locked
 		if s.key then
 			s.cap = E.keyCap(d, s.key, UDim2.fromScale(0.3, 0.3), UDim2.fromScale(0.9, 0.12))
 			s.cap.ZIndex = 44
@@ -153,7 +170,11 @@ function M.start(E)
 		dot.Visible = v.Magnitude > reach * 0.3 -- at rest it would sit on the hub's words
 		sel = nil
 		if v.Magnitude > reach * 0.3 then
-			sel = math.abs(v.X) > math.abs(v.Y) and (v.X > 0 and 2 or 4) or (v.Y < 0 and 1 or 3)
+			local best = -2 -- the slot whose direction is nearest the push
+			for i, s in SLOTS do
+				local d = Vector2.new(s.x - 0.5, s.y - 0.5).Unit:Dot(v.Unit)
+				if d > best then best, sel = d, i end
+			end
 		end
 		for i, s in SLOTS do
 			local why = s.why()

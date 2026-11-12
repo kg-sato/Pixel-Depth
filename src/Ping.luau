@@ -38,6 +38,7 @@ function M.start(E)
 		local kind = under(hit.Instance, "Deposits") and "ore" or ((hit.Instance:GetAttribute("State") ~= nil or under(hit.Instance, "Gloom")) and "gloom" or "here")
 		PingR:FireServer(hit.Position, kind)
 	end
+	if E.vmHook then E.vmHook.ping = send end -- the utility wheel
 	UIS.InputBegan:Connect(function(io, gp)
 		if gp then return end
 		if io.KeyCode == Enum.KeyCode.Z or io.UserInputType == Enum.UserInputType.MouseButton3 then send() end
