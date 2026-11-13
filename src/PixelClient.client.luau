@@ -235,7 +235,7 @@ local function button(parent, label, size, pos, anchor, kind, iconName, vertical
 	skin(b, kind or "mint")
 	local lab
 	if iconName and vertical then
-		icon(b, iconName, UDim2.fromScale(0.54, 0.44), UDim2.fromScale(0.5, 0.31), Vector2.new(0.5, 0.5))
+		icon(b, iconName, UDim2.fromScale(GLASS and 0.74 or 0.54, GLASS and 0.56 or 0.44), UDim2.fromScale(0.5, GLASS and 0.3 or 0.31), Vector2.new(0.5, 0.5)) -- the jelly icons are drawn with room round them: larger on glass
 		lab = text(b, label, UDim2.fromScale(0.86, 0.25), UDim2.fromScale(0.5, 0.68), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 244, 214)) -- larger cream labels (Field Notebook pass)
 	elseif iconName then
 		local ic = icon(b, iconName, UDim2.fromScale(0.3, 0.62), UDim2.fromScale(0.08, 0.5), Vector2.new(0, 0.5))
