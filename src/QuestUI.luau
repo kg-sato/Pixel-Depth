@@ -39,17 +39,17 @@ function M.start(E)
 		local f = panel(win, UDim2.fromScale(0.9, 0.205), UDim2.fromScale(0.5, 0.27 + (i - 1) * 0.225), Vector2.new(0.5, 0), "card")
 		f.ZIndex = 6
 		local r = { f = f }
-		r.title = text(f, "", UDim2.fromScale(0.6, 0.38), UDim2.fromScale(0.04, 0.26), Vector2.new(0, 0.5), INK, 700, false)
+		r.title = text(f, "", UDim2.fromScale(0.6, 0.38), UDim2.fromScale(0.04, 0.23), Vector2.new(0, 0.5), INK, 700, false)
 		r.title.TextXAlignment, r.title.ZIndex = Enum.TextXAlignment.Left, 7
-		r.reward = text(f, "", UDim2.fromScale(0.3, 0.26), UDim2.fromScale(0.04, 0.57), Vector2.new(0, 0.5), MUTED, 700, false)
+		r.reward = text(f, "", UDim2.fromScale(0.36, 0.32), UDim2.fromScale(0.04, 0.56), Vector2.new(0, 0.5), MUTED, 700, false)
 		r.reward.TextXAlignment, r.reward.ZIndex = Enum.TextXAlignment.Left, 7
-		local bar = new("Frame", f, { Size = UDim2.fromScale(0.6, 0.17), Position = UDim2.fromScale(0.04, 0.81), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = E.GLASS and Color3.fromRGB(186, 170, 232) or Color3.fromRGB(240, 234, 246), -- a pale, outlined, taller track: a filled-in empty bar read as a full one (Gemini UI review, twice)
+		local bar = new("Frame", f, { Size = UDim2.fromScale(0.6, 0.14), Position = UDim2.fromScale(0.04, 0.84), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = E.GLASS and Color3.fromRGB(186, 170, 232) or Color3.fromRGB(240, 234, 246), -- a pale, outlined, taller track: a filled-in empty bar read as a full one (Gemini UI review, twice)
 		 BorderSizePixel = 0, ZIndex = 7 })
 		new("UIStroke", bar, { Color = Color3.fromRGB(190, 176, 214), Thickness = 1.5 })
 		new("UICorner", bar, { CornerRadius = UDim.new(0.5, 0) })
 		r.fill = new("Frame", bar, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = MINT, BorderSizePixel = 0, ZIndex = 8 })
 		new("UICorner", r.fill, { CornerRadius = UDim.new(0.5, 0) })
-		r.count = text(f, "", UDim2.fromScale(0.24, 0.3), UDim2.fromScale(0.82, 0.5), Vector2.new(0.5, 0.5), MUTED, 700, false)
+		r.count = text(f, "", UDim2.fromScale(0.28, 0.44), UDim2.fromScale(0.82, 0.5), Vector2.new(0.5, 0.5), MUTED, 700, false)
 		r.count.ZIndex = 7
 		r.claim = button(f, "CLAIM", UDim2.fromScale(0.24, 0.56), UDim2.fromScale(0.82, 0.5), Vector2.new(0.5, 0.5), "mint")
 		r.claim.ZIndex = 8
