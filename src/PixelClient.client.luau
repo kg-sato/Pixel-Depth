@@ -288,7 +288,7 @@ end
 local function ribbonTitle(parent, label, kind, width)
 	local r = new("Frame", parent, { Name = "Ribbon", Size = UDim2.fromScale(width or 0.6, 0.15), Position = UDim2.fromScale(0.5, 0.01), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
 	skin(r, kind or "ribbonPink")
-	local t = text(r, label, UDim2.fromScale(0.7, 0.46), UDim2.fromScale(0.5, 0.4), Vector2.new(0.5, 0.5), WHITE)
+	local t = text(r, label, UDim2.fromScale(0.74, GLASS and 0.64 or 0.46), UDim2.fromScale(0.5, 0.4), Vector2.new(0.5, 0.5), WHITE) -- jelly titles need more height than plain capitals
 	t.TextStrokeColor3 = DEEP[kind or "ribbonPink"] or INK
 	t.Font = HEAD
 	t.ZIndex = 4
