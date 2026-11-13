@@ -78,6 +78,10 @@ function M.start(E)
 				local img = new("ImageLabel", box, { Name = "Jelly", Image = jelly, BackgroundTransparency = 1, Size = UDim2.fromScale(1.12, 1.12), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ScaleType = Enum.ScaleType.Stretch, ZIndex = 6 }) -- Stretch: the picture itself squashes and stretches with its frame
 				new("UIAspectRatioConstraint", img, { AspectRatio = 1 })
 				new("UIAspectRatioConstraint", halo, { AspectRatio = 1 })
+				-- a plain letter under the picture, shown only if the picture never loads (a slow phone, an asset still in review)
+				local plain = glyph(box, ch, UDim2.new(), Color3.fromRGB(255, 170, 215), 5)
+				plain.Name, plain.Visible, plain.Font = "Plain", false, Enum.Font.FredokaOne
+				new("UIStroke", plain, { Color = Color3.fromRGB(120, 20, 110), Thickness = 2 })
 				if cfg.hot and cfg.hot[ch] then -- the same letter in white, laid over it while it is still hot from landing
 					new("ImageLabel", img, { Name = "Hot", Image = cfg.hot[ch], BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Stretch, ZIndex = 7 })
 				end
@@ -186,6 +190,16 @@ function M.start(E)
 		end)
 		local t = os.clock()
 		while not done and os.clock() - t < 6 do task.wait() end -- never hold the screen for more than six seconds
+		for _, l in letters do -- a picture that did not arrive: the plain letter stands in
+			if l.jelly and not l.jelly.IsLoaded then
+				local plain = l.box:FindFirstChild("Plain")
+				if plain then plain.Visible = true end
+				task.spawn(function() -- and steps back if the picture turns up later
+					while l.jelly.Parent and not l.jelly.IsLoaded do task.wait(0.3) end
+					if plain and plain.Parent then plain.Visible = false end
+				end)
+			end
+		end
 		ready = true
 	end)
 	local slammed = false
