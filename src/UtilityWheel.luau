@@ -82,12 +82,13 @@ function M.start(E)
 	end
 	new("ImageLabel", holder, { Image = G and G.ring or "rbxassetid://117032895507459", BackgroundTransparency = 1, Size = UDim2.fromScale(G and 1.2 or 1.32, G and 1.2 or 1.32), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 40 }) -- the painted brass compass (art/ui_notebook/dial.png)
 	local plate = disc(holder, 1.1, 0.5, 0.5, WHITE, 1, 40) -- a brass pocket compass with a dark leather face (Gemini on the first in-game pass: the cream disc was a 'flat pizza' over the dark cave) -- a soft lilac-cream plate with a lilac rim, like the kit's cards
+	plate.Visible = not G -- the glass ring picture is the whole body
 	new("UIGradient", plate, { Rotation = 90, Color = G and ColorSequence.new(Color3.fromRGB(52, 38, 100), Color3.fromRGB(24, 16, 50)) or ColorSequence.new(Color3.fromRGB(74, 50, 40), Color3.fromRGB(44, 28, 24)) })
 	new("UIGradient", new("UIStroke", plate, { Color = WHITE, Thickness = 12, Transparency = 1, Enabled = not G }), { Rotation = 55, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(244, 206, 116)), ColorSequenceKeypoint.new(0.45, Color3.fromRGB(146, 102, 32)), ColorSequenceKeypoint.new(1, Color3.fromRGB(230, 184, 88)) }) })
 	local inner = disc(holder, 1.0, 0.5, 0.5, WHITE, 1, 40) -- a stitched ring inside the rim
 	new("UIStroke", inner, { Color = G and Color3.fromRGB(214, 200, 255) or Color3.fromRGB(230, 184, 88), Thickness = 1.5, Transparency = 0.45 })
 	for _, rot in { 22.5, 67.5, -22.5, -67.5 } do -- faint sector lines: where one slot's pull ends and the next begins
-		new("Frame", holder, { Size = UDim2.new(1.02, 0, 0, 2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, Rotation = rot, BackgroundColor3 = G and Color3.fromRGB(214, 200, 255) or Color3.fromRGB(230, 184, 88), BackgroundTransparency = 0.7, BorderSizePixel = 0, ZIndex = 40 })
+		new("Frame", holder, { Size = UDim2.new(1.02, 0, 0, 2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, Rotation = rot, BackgroundColor3 = G and Color3.fromRGB(214, 200, 255) or Color3.fromRGB(230, 184, 88), BackgroundTransparency = G and 1 or 0.7, BorderSizePixel = 0, ZIndex = 40 }) -- no sector lines on glass: they made flat pie slices
 	end
 	local OFF, OFF_INK = G and Color3.fromRGB(58, 50, 80) or Color3.fromRGB(150, 132, 108), G and Color3.fromRGB(206, 198, 228) or Color3.fromRGB(78, 58, 44) -- a soft dark plate so the wheel reads over town and cave alike
 	for _, s in SLOTS do

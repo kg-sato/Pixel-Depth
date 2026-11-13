@@ -80,7 +80,7 @@ function M.start(E)
 		local rows = {}
 		for i = 1, 3 do rows[i] = label(card, "", UDim2.fromScale(0.9, 0.17), UDim2.fromScale(0.5, 0.27 + i * 0.2), WHITE, i == 1 and E.HEAD or E.FONT) end
 		local sc = new("UIScale", card, { Scale = 0.6 })
-		local c = { title = title, part = part, kind = kind, board = board, card = card, edge = edge, rows = rows, sc = sc, sheen = sheen, top = top, open = false }
+		local c = { sg = sg, title = title, part = part, kind = kind, board = board, card = card, edge = edge, rows = rows, sc = sc, sheen = sheen, top = top, open = false }
 		function c.fill()
 			local lines, glow = LINES[kind]()
 			local n = #lines
@@ -101,6 +101,7 @@ function M.start(E)
 		if c.open == on then return end
 		c.open = on
 		if on then
+			c.sg.Enabled = true
 			c.fill()
 			c.title.pop()
 			c.sc.Scale = 0.6
@@ -109,6 +110,7 @@ function M.start(E)
 		else
 			TweenService:Create(c.sc, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0.7 }):Play()
 			TweenService:Create(c.card, TweenInfo.new(0.16), { GroupTransparency = 1 }):Play()
+			task.delay(0.18, function() if not c.open then c.sg.Enabled = false end end) -- the fade alone left the card faintly drawn
 		end
 	end
 

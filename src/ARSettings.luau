@@ -112,7 +112,7 @@ function M.start(E)
 		local _, card = panel(0, "SETTINGS", PINK)
 		local function toggle(i, name, key, act)
 			local y = 0.16 + (i - 1) * 0.2
-			label(card, name, UDim2.fromScale(0.52, 0.11), UDim2.fromScale(0.33, y), WHITE, E.HEAD, true)
+			label(card, name, UDim2.fromScale(0.52, 0.13), UDim2.fromScale(0.33, y), WHITE, E.FONT, true) -- the open sentence font: condensed capitals filled in on a phone
 			local b, jt
 			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and MINT or LILAC, UDim2.fromScale(0.26, 0.15), UDim2.fromScale(0.8, y), function()
 				state[key] = not state[key]

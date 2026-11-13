@@ -992,6 +992,10 @@ local function hatchShow(name)
 	local odds = pct >= 5 and "" or ("  -  1 IN " .. commas(math.floor(100 / pct + 0.5)))
 	local sub = text(ov, p[1]:upper() .. "  -  " .. p[2]:upper() .. odds, UDim2.fromScale(0.5, 0.06), UDim2.fromScale(0.5, 0.76), Vector2.new(0.5, 0), rc)
 	sub.ZIndex = 26
+	do -- a smoked pill behind the line: white words washed out on the rays
+		local back = new("Frame", sub, { Size = UDim2.fromScale(1.06, 1.3), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(24, 16, 46), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 25 })
+		new("UICorner", back, { CornerRadius = UDim.new(0.5, 0) })
+	end
 	pop(sub, 0.5, 0.35)
 	task.delay(0.15, function() sfx("sparkle") end)
 	local nConf = 12 + tier * 4

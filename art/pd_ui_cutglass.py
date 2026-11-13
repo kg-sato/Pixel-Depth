@@ -225,27 +225,30 @@ save("orbShell", orb_shell())
 save("orbLiquid", orb_liquid())
 
 
-def ring():  # smoked glass disc with a cut rim: the wheel body and the radar case, 512 px
-    n = 512
-    s = 2
-    im = Image.new("RGBA", (n * s, n * s), CLEAR)
-    c, R = n * s / 2, 246 * s
+def ring():  # smoked glass disc with a smooth bright glass rim: the wheel body and the radar case, 512 px
+    n, s_ = 512, 3
+    im = Image.new("RGBA", (n * s_, n * s_), CLEAR)
+    c, R = n * s_ / 2, 246 * s_
+    sh = Image.new("RGBA", im.size, CLEAR)
+    ImageDraw.Draw(sh).ellipse((c - R, c - R + 5 * s_, c + R, c + R + 5 * s_), fill=(14, 6, 30, 120))
+    im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(5 * s_)))
+    full = Image.new("L", im.size, 0)
+    ImageDraw.Draw(full).ellipse((c - R, c - R, c + R, c + R), fill=255)
+    Ri = R - 20 * s_
+    hole = Image.new("L", im.size, 0)
+    ImageDraw.Draw(hole).ellipse((c - Ri, c - Ri, c + Ri, c + Ri), fill=255)
+    put(im, vgrad(im.size, (44, 32, 86, 222), (22, 14, 48, 232), c - Ri, c + Ri), hole)  # the smoked face
+    put(im, vgrad(im.size, H("#ffffff", 250), H("#8068d8", 245), c - R, c + R), ImageChops.subtract(full, hole))  # the rim: white at the top, violet below
     d = ImageDraw.Draw(im)
-    d.ellipse((c - R, c - R, c + R, c + R), fill=(30, 20, 52, 205))
-    for k in range(48):  # cut facets round the rim, alternating light
-        a0, a1 = k * 7.5, (k + 1) * 7.5
-        col = (236, 226, 255, 235) if k % 2 == 0 else (150, 130, 214, 225)
-        d.pieslice((c - R, c - R, c + R, c + R), a0, a1, fill=col)
-    Ri = R - 16 * s
-    d.ellipse((c - Ri, c - Ri, c + Ri, c + Ri), fill=(34, 24, 60, 214))
+    d.ellipse((c - Ri - 2 * s_, c - Ri - 2 * s_, c + Ri + 2 * s_, c + Ri + 2 * s_), outline=(60, 40, 130, 200), width=int(2 * s_))  # the rim's inner shade
+    d.ellipse((c - R + 5 * s_, c - R + 5 * s_, c + R - 5 * s_, c + R - 5 * s_), outline=(255, 255, 255, 150), width=int(2 * s_))  # a hairline of light along the rim
     g = Image.new("RGBA", im.size, CLEAR)
-    ImageDraw.Draw(g).ellipse((c - Ri * 0.92, c - Ri * 0.98, c + Ri * 0.92, c + Ri * 0.2), fill=(255, 255, 255, 34))
-    m = Image.new("L", im.size, 0)
-    ImageDraw.Draw(m).ellipse((c - Ri, c - Ri, c + Ri, c + Ri), fill=255)
-    im.alpha_composite(Image.composite(g.filter(ImageFilter.GaussianBlur(14 * s)), Image.new("RGBA", im.size, CLEAR), m))
-    d = ImageDraw.Draw(im)
-    d.ellipse((c - Ri, c - Ri, c + Ri, c + Ri), outline=(255, 255, 255, 190), width=int(1.5 * s))
-    d.ellipse((c - R, c - R, c + R, c + R), outline=(24, 12, 50, 245), width=int(2 * s))
+    ImageDraw.Draw(g).ellipse((c - Ri * 0.9, c - Ri * 0.97, c + Ri * 0.9, c + Ri * 0.1), fill=(255, 255, 255, 30))  # a soft sheen on the upper face
+    im.alpha_composite(Image.composite(g.filter(ImageFilter.GaussianBlur(18 * s_)), Image.new("RGBA", im.size, CLEAR), hole))
+    gl = Image.new("RGBA", im.size, CLEAR)
+    ImageDraw.Draw(gl).arc((c - R + 9 * s_, c - R + 9 * s_, c + R - 9 * s_, c + R - 9 * s_), 200, 250, fill=(255, 255, 255, 235), width=int(6 * s_))  # a glint on the rim
+    im.alpha_composite(gl.filter(ImageFilter.GaussianBlur(1.5 * s_)))
+    ImageDraw.Draw(im).ellipse((c - R, c - R, c + R, c + R), outline=(24, 12, 50, 245), width=int(2 * s_))
     return im.resize((n, n), Image.LANCZOS)
 
 

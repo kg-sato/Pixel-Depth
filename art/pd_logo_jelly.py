@@ -151,7 +151,7 @@ def text(ch, extrude, bevel, offset, z, material):
 NAMES = {"!": "bang", "?": "ask", "+": "plus", "%": "pct", ":": "colon", "-": "dash", "/": "slash", ".": "dot", "'": "apos", ",": "comma", "(": "lpar", ")": "rpar", "&": "amp", "<": "lt", ">": "gt", "=": "eq"}
 for ch in CHARS:
     # the small font glyphs are slimmer than the logo letters: fat bevels closed the holes of A, B, R and turned S into 8
-    objs = [text(ch, 0.13, 0.085, 0.0, 0.06, M_JELLY), text(ch, 0.07, 0.06, 0.085, -0.12, M_RIM)] if SIZE >= 512 else [text(ch, 0.12, 0.05, 0.0, 0.06, M_JELLY), text(ch, 0.07, 0.035, 0.055, -0.1, M_RIM)]
+    objs = [text(ch, 0.13, 0.085, 0.0, 0.06, M_JELLY), text(ch, 0.07, 0.06, 0.085, -0.12, M_RIM)] if SIZE >= 512 else [text(ch, 0.12, 0.03, 0.0, 0.06, M_JELLY), text(ch, 0.07, 0.022, 0.036, -0.1, M_RIM)]  # slim: at 0.05 the S read as 8 in small titles
     bpy.context.view_layer.update()
     sc.render.filepath = os.path.join(os.path.abspath(out), NAMES.get(ch, ch) + ".png")
     bpy.ops.render.render(write_still=True)
