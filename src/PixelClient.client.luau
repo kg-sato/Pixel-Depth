@@ -380,7 +380,7 @@ new("UIStroke", marker, { Color = INK, Thickness = 2 })
 
 local stepCard = panel(gui, S(410, 56), S(1262, 18), Vector2.new(1, 0), "card")
 fit(stepCard, 410, 56)
-local stepIcon = icon(stepCard, "pick", UDim2.fromScale(0.07, 0.6), UDim2.fromScale(0.03, 0.5), Vector2.new(0, 0.5))
+local stepIcon = icon(stepCard, "pick", UDim2.fromScale(0.07, 0.6), UDim2.fromScale(0.045, 0.52), Vector2.new(0, 0.5)) -- clear of the card's cut corner
 new("UIAspectRatioConstraint", stepIcon, { AspectRatio = 1 })
 local stepText = text(stepCard, "", UDim2.fromScale(0.84, 0.8), UDim2.fromScale(0.55, 0.52), Vector2.new(0.5, 0.5), INK, 700, false)
 stepText.TextWrapped = true -- a long step takes two lines instead of shrinking to phone-unreadable size
