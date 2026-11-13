@@ -159,7 +159,7 @@ function M.start(E)
 		for _, c in cards do
 			if c.open or c.card.GroupTransparency < 0.99 then
 				local side = cam.CFrame.RightVector * Vector3.new(1, 0, 1)
-				local pos = c.top + side.Unit * (W / 2 + 3.5) + Vector3.new(0, math.sin(now * 1.6 + c.top.X) * 0.12, 0) -- beside the station (its own prompt bubble sits over it), with a slow hover
+				local pos = c.top + side.Unit * (W / 2 + 6.5) + Vector3.new(0, 2.5, 0) + Vector3.new(0, math.sin(now * 1.6 + c.top.X) * 0.12, 0) -- beside the station (its own prompt bubble sits over it), with a slow hover
 				-- face against the camera's view direction (not toward its position: off-centre cards then look twisted), turning about the
 				-- vertical axis and leaning back up to 55 degrees for the town's high camera; the card keeps its perspective
 				local look = cam.CFrame.LookVector

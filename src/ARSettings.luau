@@ -165,8 +165,10 @@ function M.start(E)
 		label(b, sym, UDim2.fromScale(0.6, 0.6), UDim2.fromScale(0.5, 0.48), WHITE, E.HEAD)
 		b.Activated:Connect(function() focus = math.clamp(focus + d, -1, 1) end)
 	end
-	arrow("<", 0.05, -1)
-	arrow(">", 0.95, 1)
+	if UIS.TouchEnabled or plr:GetAttribute("DevTouch") then -- arrows only where there is a finger: with a mouse they sat on top of the side panels
+		arrow("<", 0.05, -1)
+		arrow(">", 0.95, 1)
+	end
 	local hintBar = new("Frame", nav, { Size = UDim2.fromScale(0.44, 0.07), Position = UDim2.fromScale(0.5, 0.94), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.3, BorderSizePixel = 0 })
 	new("UICorner", hintBar, { CornerRadius = UDim.new(0.5, 0) })
 	label(hintBar, UIS.KeyboardEnabled and "LOOK LEFT AND RIGHT: MOUSE OR A / D      CLOSE: N" or "DRAG OR TAP THE ARROWS TO LOOK ROUND", UDim2.fromScale(0.9, 0.6), UDim2.fromScale(0.5, 0.5), EDGE, E.HEAD)
