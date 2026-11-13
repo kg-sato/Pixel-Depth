@@ -189,6 +189,17 @@ function M.start(E)
 		ready = true
 	end)
 	local slammed = false
+	-- sound: a soft pop for each letter, a step higher each time, and a thud with a sparkle when the word shakes (the game's
+	-- own "pop", "land" and "sparkle" sounds; not heard by Claude). Config.LOADING.sound = false turns it off.
+	local function play(id, vol, pitch)
+		if cfg.sound == false then return end
+		local snd = Instance.new("Sound")
+		snd.SoundId, snd.Volume, snd.PlaybackSpeed = "rbxassetid://" .. id, vol, pitch
+		snd.Parent = gui
+		snd:Play()
+		snd.Ended:Once(function() snd:Destroy() end)
+		task.delay(4, function() if snd.Parent then snd:Destroy() end end)
+	end
 	local shownAt = {}
 
 	local t0, shown, done = os.clock(), 0, false
@@ -224,6 +235,8 @@ function M.start(E)
 			slammed = true
 			E.plr:SetAttribute("DevLoadTimes", table.concat(shownAt, " ")) -- read by a test: the letters must be spread out, not together
 			kickX.v, kickY.v, tilt.v, punch.v = 3.8, 7, 46, 1.6
+			play(88699226385252, 0.5, 0.9)
+			play(96727638802500, 0.3, 1.2)
 			for k, l in letters do
 				task.delay((n - k) * 0.018, function() -- the ripple runs back from the last letter to the first
 					l.sy.v -= 3.2 + math.random() * 1.6
@@ -242,6 +255,7 @@ function M.start(E)
 					l.box.Visible = true
 					shownAt[#shownAt + 1] = string.format("%.2f", real) -- wall-clock second each letter appeared, for the timing test
 					for k = 1, 2 do sparkle(l.cell, k) end
+					play(98559989688124, 0.28, 0.9 + i * 0.05)
 					if i == n then task.delay(0.09, function() l.sy.v += 9 end) end -- the last letter's drip
 				end
 				local sy = math.clamp(l.sy.step(dt), 0.45, 2.2)
