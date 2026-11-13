@@ -135,7 +135,7 @@ function M.start(E)
 		local want = cam.CFrame
 			* CFrame.new(viewH * 0.012, -viewH * (inset / 2) / vp.Y * FILL, -DIST)
 			* CFrame.Angles(0, math.pi, 0) -- the front face looks back at the eye
-			* CFrame.Angles(math.rad(PITCH - lean.Y * 1.2), math.rad(-YAW - swing * 62 - lean.X * 2), 0)
+			* CFrame.Angles(math.rad(PITCH - lean.Y * 0.5), math.rad(-YAW - swing * 62 - lean.X * 0.8), 0)
 		-- a short lag behind the view: when the camera turns, the panel trails and catches up
 		last = last and last:Lerp(want, math.min(1, dt * 14)) or want
 		if (last.Position - want.Position).Magnitude > 2 then last = want end

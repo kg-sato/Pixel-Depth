@@ -38,8 +38,10 @@ function M.start(E)
 		return l
 	end
 
-	-- a 1 px Modal button frees the mouse in first person; it also marks the HUD as covered (the client hides widgets and prompts)
-	local flag = new("TextButton", E.gui, { Name = "ARSettings", Text = "", Modal = true, BackgroundTransparency = 1, Size = UDim2.fromOffset(1, 1), Visible = false })
+	-- a 1 px flag frame in the HUD marks the settings as an open menu: the client then frees the mouse in first person and
+	-- hides widgets and prompts. It must not be a Modal button: a Modal button anywhere swallowed every click meant for the
+	-- world panels (found with spike/ar_probe.py, 2026-11-12)
+	local flag = new("Frame", E.gui, { Name = "ARSettings", BackgroundTransparency = 1, Size = UDim2.fromOffset(1, 1), Visible = false })
 	if E.addModal then E.addModal(flag) end
 	local folder = new("Folder", workspace.CurrentCamera, { Name = "ARSettings" })
 	local state = { vol = 8, shake = true, hints = true, dark = false }
@@ -285,7 +287,7 @@ function M.start(E)
 			local nx, ny = (m.X / vp.X - 0.5) * 2, (m.Y / vp.Y - 0.5) * 2
 			local edge = math.sign(nx) * math.clamp((math.abs(nx) - 0.3) / 0.6, 0, 1) -- a calm middle, then it turns faster toward the edge
 			goalYaw = math.clamp(yaw + edge * 90 * dt * 2.2, -SPREAD - 6, SPREAD + 6)
-			goalPitch = -ny * 5
+			goalPitch = 0 -- no nod with the mouse: it moved the buttons away from the cursor as it came near (a click test missed its button)
 			focus = math.clamp(math.floor(goalYaw / SPREAD + 0.5), -1, 1)
 			yaw = goalYaw
 		elseif dragYaw then
