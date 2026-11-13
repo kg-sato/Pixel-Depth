@@ -143,6 +143,17 @@ function M.new(parent, str, opt)
 	return self
 end
 
+-- Can the font spell this string? False when it holds a character with no glyph (a letter of another script, an emoji):
+-- such a string must stay plain text, or the missing letters would show as gaps.
+function M.covers(str)
+	local s = string.upper(str):gsub("%[ ?", "("):gsub(" ?%]", ")")
+	for i = 1, #s do
+		local ch = s:sub(i, i)
+		if ch ~= " " and not G.glyphs[ch] then return false end
+	end
+	return true
+end
+
 -- Pop every jelly word under a root (a menu that has just opened): the biggest word lands letter by letter, the rest together.
 function M.popUnder(root)
 	local big, size
@@ -171,7 +182,7 @@ function M.mirror(label, opt)
 	local function fit()
 		if not label.Parent then return end
 		local h = label.AbsoluteSize.Y
-		local long = (opt.maxLen ~= nil and #label.Text > opt.maxLen) or (h > 0 and h < 17) -- jelly letters under 17 px are mush: such a label stays plain text
+		local long = (opt.maxLen ~= nil and #label.Text > opt.maxLen) or (h > 0 and h < 17) or not M.covers(label.Text) -- jelly letters under 17 px are mush, and a string the font cannot spell would have gaps: such a label stays plain text
 		local ok = ready[(M.pick(t.color))] == true
 		label.MaxVisibleGraphemes = (long or not ok) and -1 or 0
 		t.frame.Visible = not long and ok
