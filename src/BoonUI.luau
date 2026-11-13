@@ -42,6 +42,7 @@ function M.start(E)
 		new("UIGradient", disc, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(226, 220, 236)) })
 		local img = new("ImageLabel", disc, { BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.64, 0.64), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 8 })
 		local name = text(card, "", UDim2.fromScale(0.9, 0.12), UDim2.fromScale(0.5, 0.52), MID, INK, 700, false)
+		if E.HEAD then name.Font = E.HEAD end -- a headline: jelly letters with the glass kit
 		name.ZIndex = 7
 		local what = text(card, "", UDim2.fromScale(0.86, 0.09), UDim2.fromScale(0.5, 0.65), MID, MUTED, 700, false)
 		what.ZIndex = 7
