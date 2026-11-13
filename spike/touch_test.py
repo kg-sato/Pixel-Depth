@@ -27,5 +27,5 @@ r = click(f"Players.{NAME}.PlayerGui.PixelHUD.TouchFlare"); time.sleep(1.5)
 print("flare tap:", r, "|", before, "->", c("return game.Players.LocalPlayer:GetAttribute('Flares')"))
 r = click(f"Players.{NAME}.PlayerGui.PixelHUD.TouchSonar"); time.sleep(0.8)
 print("sonar tap:", r, "| glows", c("local n=0 for _,d in workspace.Caves.Deposits:GetDescendants() do if d.Name=='SonarGlow' then n+=1 end end return n"), "label", c(f"return {HUD}.TouchSonar.Text"))
-print("errors:", c("local n=0 for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then n+=1 end end return n"))
+print("errors:", c("local n,t=0,{} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then n+=1 t[#t+1]=string.sub(m.message,1,300) end end return n..' '..table.concat(t,' || ')"))  # the messages too, not only the count
 night.play(False)

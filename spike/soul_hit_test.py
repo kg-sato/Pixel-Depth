@@ -11,7 +11,7 @@ P = "local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart "
 night.play(True); time.sleep(8); night.key("Q"); time.sleep(33)
 S1("game.Players:GetPlayers()[1]:SetAttribute('DevSoul',20) return 1")
 trigger("SoulTree", "true"); time.sleep(1)
-print("buy hide twice:", C1("local got local con=game.ReplicatedStorage.Remotes.State.OnClientEvent:Connect(function(s) got=s.soul end) local R=game.ReplicatedStorage.Remotes.Soul R:FireServer('buy','hide') task.wait(0.6) R:FireServer('buy','hide') task.wait(1) con:Disconnect() game.Players.LocalPlayer.PlayerGui.PixelHUD.SoulTree.Visible=false return got and ('hide '..tostring(got.nodes.hide)..' shards '..got.shards) or 'no state'"))
+print("buy hide twice:", C1("local got local con=game.ReplicatedStorage.Remotes.State.OnClientEvent:Connect(function(s) got=s.soul end) local R=game.ReplicatedStorage.Remotes.Soul R:FireServer('buy','hide') task.wait(0.6) R:FireServer('buy','hide') task.wait(1) con:Disconnect() game.Players.LocalPlayer.PlayerGui:FindFirstChild('SoulTree',true).Visible=false return got and ('hide '..tostring(got.nodes.hide)..' shards '..got.shards) or 'no state'"))
 print("boon offer:", trigger("BoonShrine", "1")); time.sleep(0.5)
 C1("game.Players.LocalPlayer.PlayerGui:FindFirstChild('Boon',true).Visible=false return 1")
 S1(SAFE + P + "local s=workspace.Caves:FindFirstChild('LostLanternSpot',true) local far for _,d in workspace.Caves.Deposits:GetChildren() do if d:IsA('Model') and d.PrimaryPart and (d.PrimaryPart.Position-h.Position).Magnitude>40 then far=d break end end h.CFrame=CFrame.new(safe(far.PrimaryPart.Position)) return 1"); time.sleep(2)

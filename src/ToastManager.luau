@@ -57,7 +57,7 @@ function M.start(e)
 			if #t.msg <= 26 then
 				l.Size = UDim2.fromScale(math.clamp(0.1 + #t.msg * 0.0125, 0.18, 0.5), t.big and 0.1 or 0.082)
 				words.Size = UDim2.fromScale(0.9, 0.7)
-				local jt = JellyText.mirror(words, { color = t.color:Lerp(Color3.new(1, 1, 1), 0.25), glow = t.big, maxLen = 26 })
+				local jt = JellyText.mirror(words, { color = (t.color or Color3.new(1, 1, 1)):Lerp(Color3.new(1, 1, 1), 0.25), glow = t.big, maxLen = 26 }) -- a toast may come without a colour (that crashed here and the line never showed: found by the touch test, 2026-11-13)
 				if jt then jt.pop(0.025) end
 			end
 		end
