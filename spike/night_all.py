@@ -13,6 +13,7 @@ TESTS = [  # script, [(what, text that must be in the output)]
     ("spatial_click_test.py", [("a click reaches a button on a world-panel menu", "bag still open: false")]),
     ("ar_click_test.py", [("a click flips a toggle in the look-around settings", "NoShake after click: true")]),
     ("touch_test.py", [("thumb buttons show in the caves", "cave: flare true sonar true ping true"), ("no script errors in touch mode", "errors: 0")]),
+    ("opts_test.py", [("settings reach the server", 'kept after a good send: {"shake":false,"vol":3,"hints":true,"dark":true}'), ("bad settings are dropped", "kept after a number: []"), ("saved settings load on join", "loaded on join: NoShake true DevLowLight true volume 3"), ("test hook cleared", "hook cleared: nil")]),
     ("boon_test.py", [("offer arrives", "boonOffer:"), ("bad picks refused", "-> flares 2 hp 100 shield 0 fx\n"), ("a pick lands", "boonTaken:"), ("second prayer is spent", "boonSpent")]),
     ("ping_test.py", [("marker and beam", "marks on screen: 1 beam true"), ("bad pings refused", "(0 expected): 0"), ("rate limit", "(1 expected): 1"), ("no HUD overlap", "0 overlaps, 0 prompt overlaps")]),
     ("verify_night.py", [("wind-up dodge", "after stepping away 100"), ("way home embers", "(PASS over 0), at camp 0 (PASS 0)")]),

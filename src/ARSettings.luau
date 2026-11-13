@@ -8,7 +8,7 @@
 -- camera and back out, and it runs after the game's own camera step (PixelCam) so the two never fight.
 -- Settings are the same as the notebook's and call the same things: master volume (SoundService.PixelMaster), screen shake
 -- (attribute NoShake), key hints (frames named KeyHint), darker nights (attribute DevLowLight).
--- shortcut: the settings last for the session; saving them needs a new saved field (the owner decides).
+-- The settings are saved with the player's profile (field opts, remote Opts; the owner said yes on 2026-11-13).
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UIS = game:GetService("UserInputService")
@@ -45,6 +45,13 @@ function M.start(E)
 	if E.addModal then E.addModal(flag) end
 	local folder = new("Folder", workspace.CurrentCamera, { Name = "ARSettings" })
 	local state = { vol = 8, shake = true, hints = true, dark = false }
+	-- The settings are saved with the player's profile (the owner said yes, 2026-11-13): every change goes to the server
+	-- (remote Opts, which keeps only these four fields), and at the start the panel asks the server for them.
+	local setters = {} -- key -> function(value): put a loaded value on its control and apply it
+	local OptsR = E.R:FindFirstChild("Opts")
+	local function send()
+		if OptsR then OptsR:FireServer({ vol = state.vol, shake = state.shake, hints = state.hints, dark = state.dark }) end
+	end
 	local panels, isOpen, focus = {}, false, 0 -- focus: -1 left, 0 middle, 1 right
 	local shut
 
@@ -102,12 +109,13 @@ function M.start(E)
 			num.set(state.vol == 0 and "OFF" or (state.vol * 10 .. "%"))
 			if pop then num.pop(0.02) end
 		end
-		local _, minus = glassButton(card, "-", LILAC, UDim2.fromScale(0.26, 0.24), UDim2.fromScale(0.3, 0.8), function() state.vol = math.max(0, state.vol - 1) apply(true) end)
+		local _, minus = glassButton(card, "-", LILAC, UDim2.fromScale(0.26, 0.24), UDim2.fromScale(0.3, 0.8), function() state.vol = math.max(0, state.vol - 1) apply(true) send() end)
 		new("UIScale", minus.frame, { Scale = 1.9 }) -- the dash glyph is small in its cell: as heavy as the plus beside it
-		glassButton(card, "+", CYAN, UDim2.fromScale(0.26, 0.24), UDim2.fromScale(0.7, 0.8), function() state.vol = math.min(10, state.vol + 1) apply(true) end)
+		glassButton(card, "+", CYAN, UDim2.fromScale(0.26, 0.24), UDim2.fromScale(0.7, 0.8), function() state.vol = math.min(10, state.vol + 1) apply(true) send() end)
 		local g = SoundService:FindFirstChild("PixelMaster")
 		if g then state.vol = math.clamp(math.floor(g.Volume * 10 + 0.5), 0, 10) end
 		apply(false)
+		setters.vol = function(v) state.vol = v apply(false) end
 	end
 
 	-- SETTINGS (ahead)
@@ -122,7 +130,14 @@ function M.start(E)
 				jt.set(state[key] and "ON" or "OFF")
 				b.BackgroundColor3 = state[key] and MINT or LILAC
 				act(state[key])
+				send()
 			end)
+			setters[key] = function(v)
+				state[key] = v
+				jt.set(v and "ON" or "OFF")
+				b.BackgroundColor3 = v and MINT or LILAC
+				act(v)
+			end
 		end
 		toggle(1, "Screen shake", "shake", function(on) plr:SetAttribute("NoShake", (not on) or nil) end)
 		toggle(2, "Key hints", "hints", function(on)
@@ -154,6 +169,24 @@ function M.start(E)
 			label(cap, k[1], UDim2.fromScale(0.84, 0.7), UDim2.fromScale(0.5, 0.5), BUTTER, E.HEAD)
 			label(card, k[2], UDim2.fromScale(0.33, 0.1), UDim2.fromScale(0.325 + col * 0.5, y), WHITE, E.FONT, true)
 		end
+	end
+
+	if OptsR then -- ask the server for the saved settings (it answers once the profile has loaded)
+		local loaded = false
+		OptsR.OnClientEvent:Connect(function(o)
+			if loaded or type(o) ~= "table" then return end
+			loaded = true
+			for k, v in o do
+				if setters[k] and v ~= state[k] then setters[k](v) end
+			end
+		end)
+		task.spawn(function()
+			for _ = 1, 15 do
+				if loaded then break end
+				OptsR:FireServer("get")
+				task.wait(1)
+			end
+		end)
 	end
 
 	-- jelly arrows for phones (and a hint for everyone)

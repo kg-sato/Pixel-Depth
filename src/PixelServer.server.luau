@@ -43,6 +43,19 @@ local WearR = remote("Wear") -- the wardrobe (Shared.WardrobeUI): cosmetics only
 local Wardrobe = require(RS:WaitForChild("Shared"):WaitForChild("WardrobeUI"))
 local Quests = require(RS:WaitForChild("Shared"):WaitForChild("Quests")) -- story (the tutorial chain) and daily quests; menu: Shared.QuestUI
 local QuestR = remote("Quest")
+-- The player's own settings (Shared.ARSettings; the owner said yes to saving them, 2026-11-13): sound volume 0..10, screen
+-- shake, key hints, darker nights. They only change what that player sees and hears. Only these four fields, of these types,
+-- are kept; anything else a client sends is dropped.
+local function cleanOpts(t)
+	local o = {}
+	if type(t) ~= "table" then return o end
+	if type(t.vol) == "number" and t.vol == t.vol then o.vol = math.clamp(math.floor(t.vol + 0.5), 0, 10) end
+	for _, k in { "shake", "hints", "dark" } do
+		if type(t[k]) == "boolean" then o[k] = t[k] end
+	end
+	return o
+end
+local OptsR = remote("Opts")
 local function quest(s, ev, n) -- count a quest event for this player; the client hears only when something moved
 	if not s or not s.quests then return end
 	if s.quests.day ~= Quests.day() then s.quests = Quests.clean(s.quests, Quests.day()) end
@@ -492,6 +505,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
 	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
 	d.wear, d.quests, d.lanterns = s.wear, s.quests, s.lanterns
+	d.opts = s.opts or {}
 	d.shards, d.fossils, d.geodes = s.shards or 0, s.fossils or {}, s.geodes or 0
 	if C.SOUL_TREE.on then d.soul = s.soul end -- flag off: the field is never written
 	d.cool = {}
@@ -510,7 +524,7 @@ local function sendState(s)
 		gold = s.gold, bag = s.bag, cap = cap(s), pick = s.pick, pack = s.pack, step = s.step, target = target(s),
 		pets = pets, ox = s.ox, oz = s.oz, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs,
 		deepest = s.deepest, goal = s.goal, gems = s.gems, lv = s.lv, equip = s.equip, tips = s.tips,
-		ores = s.ores, bagOres = s.bagOres, wear = s.wear, lanterns = s.lanterns, soul = s.soul,
+		ores = s.ores, bagOres = s.bagOres, wear = s.wear, lanterns = s.lanterns, soul = s.soul, opts = s.opts,
 	})
 end
 
@@ -1404,6 +1418,14 @@ function dress(s)
 		if sp then sp.Color = ColorSequence.new(col) end
 	end
 end
+OptsR.OnServerEvent:Connect(function(plr, t)
+	local s = data[plr]
+	if not s or os.clock() < (s.optsCool or 0) then return end
+	s.optsCool = os.clock() + 0.15
+	if t == "get" then OptsR:FireClient(plr, s.opts or {}) return end -- the settings panel asks once it has started
+	s.opts = cleanOpts(t)
+	save(s)
+end)
 WearR.OnServerEvent:Connect(function(plr, what, a, b)
 	local s = data[plr]
 	if not s or not s.wear or os.clock() < (s.wearCool or 0) then return end
@@ -1717,6 +1739,11 @@ local function onJoin(plr)
 	s.shards = type(d.shards) == "number" and d.shards or 0 -- Clay Caves: relic shards from jars, fossils brushed clean ({ ["1"] = true, ... })
 	s.fossils = {}
 	for k = 1, 3 do if type(d.fossils) == "table" and d.fossils[tostring(k)] == true then s.fossils[tostring(k)] = true end end
+	s.opts = cleanOpts(d.opts)
+	if IS_STUDIO and workspace:GetAttribute("DevOpts") then -- Studio test hook: saved settings as JSON (Studio itself saves nothing), to test the load path
+		local ok, t = pcall(function() return game:GetService("HttpService"):JSONDecode(workspace:GetAttribute("DevOpts")) end)
+		if ok then s.opts = cleanOpts(t) end
+	end
 	s.wear = Wardrobe.clean(d.wear) -- the wardrobe: only known slots and items survive a load
 	s.wear.presets = {}
 	for k = 1, 3 do
