@@ -73,7 +73,7 @@ function M.new(parent, str, opt)
 	local z = opt.z or 3
 	local row = make("Frame", parent, { Name = "Jelly", Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(opt.align == "left" and 0 or (opt.align == "right" and 1 or 0.5), 0.5), AnchorPoint = Vector2.new(opt.align == "left" and 0 or (opt.align == "right" and 1 or 0.5), 0.5), BackgroundTransparency = 1, ZIndex = z })
 	local ratio = make("UIAspectRatioConstraint", row, { AspectRatio = 1 })
-	local self = { frame = row, glyphs = {}, color = opt.color, born = os.clock(), sway = opt.sway ~= false, text = nil }
+	local self = { frame = row, glyphs = {}, color = opt.color, born = os.clock(), sway = opt.sway ~= false, text = nil, glow = opt.glow == true }
 
 	local function build(s)
 		for _, g in self.glyphs do g.img:Destroy() if g.glow then g.glow:Destroy() end end
@@ -197,9 +197,47 @@ function M.mirror(label, opt)
 	return t
 end
 
+-- A four-point star glint that pops on a letter and fades: the shine on glass (words made with glow = true twinkle now and
+-- then; never under Reduced Motion).
+local calm = false
+pcall(function() calm = game:GetService("GuiService").ReducedMotionEnabled end)
+local function shown(o) -- is this word really on screen: every ancestor visible, its gui enabled
+	while o do
+		if o:IsA("GuiObject") and not o.Visible then return false end
+		if o:IsA("LayerCollector") then return o.Enabled end
+		o = o.Parent
+	end
+	return false
+end
+local function glint(t)
+	if not shown(t.frame) then return end
+	local g = t.glyphs[math.random(1, #t.glyphs)]
+	if not g or g.img.ImageTransparency > 0.5 then return end
+	local s = make("Frame", t.frame, { Size = UDim2.fromScale(g.w * 0.5, 0.5), Position = g.pos + UDim2.fromScale((math.random() - 0.5) * g.w * 0.6, -0.12 - math.random() * 0.2), AnchorPoint = MID, BackgroundTransparency = 1, Rotation = math.random(-15, 15), ZIndex = g.img.ZIndex + 2 })
+	make("UIAspectRatioConstraint", s, { AspectRatio = 1 })
+	local sc = make("UIScale", s, { Scale = 0 })
+	for _, d in { { 1, 0.13 }, { 0.13, 1 } } do
+		local arm = make("Frame", s, { Size = UDim2.fromScale(d[1], d[2]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0, ZIndex = s.ZIndex })
+		make("UICorner", arm, { CornerRadius = UDim.new(0.5, 0) })
+		make("UIGradient", arm, { Rotation = d[1] == 1 and 0 or 90, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 1) }) })
+	end
+	local up = TweenService:Create(sc, TweenInfo.new(0.16, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 0.6 + math.random() * 0.6 })
+	up.Completed:Connect(function()
+		local down = TweenService:Create(sc, TweenInfo.new(0.32, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Scale = 0 })
+		down.Completed:Connect(function() s:Destroy() end)
+		down:Play()
+	end)
+	up:Play()
+	TweenService:Create(s, TweenInfo.new(0.48), { Rotation = s.Rotation + 80 }):Play()
+end
+
+local lastStep = os.clock()
 RunService.RenderStepped:Connect(function()
 	local now = os.clock()
+	local dt = math.min(now - lastStep, 0.1)
+	lastStep = now
 	for t in live do
+		if t.glow and not calm and #t.glyphs > 0 and t.frame.Parent and t.frame.Visible and math.random() < dt * 0.9 and t.frame.AbsoluteSize.Y >= 28 then glint(t) end
 		if t.frame.Parent and t.sway then
 			for _, g in t.glyphs do
 				local age = g.born and (now - g.born) or 9
