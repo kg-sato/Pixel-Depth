@@ -102,6 +102,16 @@ function M.start(E)
 			* CFrame.Angles(0.3 - thrust * 0.9 - lift * 0.5, 0.25, -0.32 + (moving and math.sin(now * 5) * 0.04 or 0))
 	end
 	local lastLook
+	-- H: look your pickaxe over (directive v8). For 1.8 s it lifts to the middle of the view, turns once about its handle and
+	-- tips toward you, then settles back. Display only; a swing ends it at once.
+	local inspectAt = -10
+	game:GetService("UserInputService").InputBegan:Connect(function(io, gp)
+		if gp or io.KeyCode ~= Enum.KeyCode.H or E.isBusy() then return end
+		if os.clock() - inspectAt > 1.8 then
+			inspectAt = os.clock()
+			pcall(E.sfx, "swing", 0.7)
+		end
+	end)
 	hook.vmPose = function(dt, t, moving, now, camCF)
 		dt = math.min(dt, 1 / 30)
 		if t < lastT then variant = variant % #SWINGS + 1 end -- a new swing began
@@ -134,8 +144,17 @@ function M.start(E)
 		local roll = moving and math.sin(now * 5) * 0.03 or math.sin(now * 0.85) * 0.02
 		local dip = math.max(ang, 0) * 0.12 -- the head carries the hand forward and down on the strike
 		local step = moving and math.sin(now * 5) * 0.05 or 0 -- the hand swings side to side with each stride
-		return CFrame.new(1.5 + sway.X - dip + step, -2 + bob + sway.Y - dip + landY, -2.4 - dip) * CFrame.Angles(-ang + sway.Y * 0.5, -sway.X * 0.6 + math.max(ang, 0) * 0.25, sw.side * math.max(ang, 0) * 0.5) -- the swing chops forward and in toward the crosshair
-			* CFrame.Angles(-0.5, 0, 0.22 + roll) * CFrame.Angles(0, YAW, 0) -- at rest: leaning forward and a little inward, handle to the bottom right corner
+		local i = os.clock() - inspectAt
+		if t < 0.3 then inspectAt = -10 end -- a swing ends the look
+		local w, turn = 0, 0
+		if i < 1.8 then
+			local up, down = math.clamp(i / 0.3, 0, 1), math.clamp((1.8 - i) / 0.3, 0, 1)
+			w = math.min(up * up * (3 - 2 * up), down * down * (3 - 2 * down))
+			local q = math.clamp((i - 0.2) / 1.3, 0, 1)
+			turn = q * q * (3 - 2 * q) * math.pi * 2
+		end
+		return CFrame.new(1.5 + sway.X - dip + step - 1.15 * w, -2 + bob + sway.Y - dip + landY + 0.95 * w, -2.4 - dip - 0.5 * w) * CFrame.Angles(-ang + sway.Y * 0.5 + 0.35 * w, -sway.X * 0.6 + math.max(ang, 0) * 0.25, sw.side * math.max(ang, 0) * 0.5) -- the swing chops forward and in toward the crosshair
+			* CFrame.Angles(-0.5, 0, 0.22 + roll) * CFrame.Angles(0, YAW + turn, 0) -- at rest: leaning forward and a little inward, handle to the bottom right corner
 	end
 end
 
