@@ -66,6 +66,15 @@ ICONS = {
     "calm": [(circ(64, 64, 52), CREAM), (circ(46, 56, 7), INK), (circ(82, 56, 7), INK), ("M44 78 Q64 96 84 78 Q64 88 44 78 Z", INK), (circ(34, 74, 8), PINK_L), (circ(94, 74, 8), PINK_L)],
     "uneasy": [(circ(64, 64, 52), CREAM), (circ(46, 56, 8), INK), (circ(82, 56, 8), INK), (rrect(46, 82, 36, 8, 4), INK)],
     "scared": [(circ(64, 64, 52), LILAC), (circ(44, 54, 11), WHITE), (circ(84, 54, 11), WHITE), (circ(44, 56, 5), INK), (circ(84, 56, 5), INK), (circ(64, 90, 12), INK)],
+    # pet faces (2026-11-13, plan phase A): eyes and a mouth only, on clear; shown on the front of a pet's head. Every shape gets a rim.
+    "face_calm": [(circ(40, 56, 13), INK), (circ(88, 56, 13), INK), (circ(44, 51, 4.5), WHITE), (circ(92, 51, 4.5), WHITE), ("M52 84 Q64 96 76 84 Q64 90 52 84 Z", INK)],
+    "face_happy": [("M24 62 Q40 38 56 62 L49 62 Q40 50 31 62 Z", INK), ("M72 62 Q88 38 104 62 L97 62 Q88 50 79 62 Z", INK), ("M46 78 Q64 104 82 78 Z", RED)],
+    "face_greedy": [(star(40, 56, 17, 7), GOLD), (star(88, 56, 17, 7), GOLD), ("M44 80 Q64 104 84 80 Q64 90 44 80 Z", INK)],
+    "face_scared": [(circ(40, 54, 16), WHITE), (circ(88, 54, 16), WHITE), (circ(40, 56, 5), INK), (circ(88, 56, 5), INK), (circ(64, 90, 9), INK)],
+    "face_sleepy": [(rrect(26, 54, 28, 7, 3), INK), (rrect(74, 54, 28, 7, 3), INK), (circ(64, 88, 5), INK)],
+    "face_proud": [("M24 52 Q40 76 56 52 L49 52 Q40 64 31 52 Z", INK), ("M72 52 Q88 76 104 52 L97 52 Q88 64 79 52 Z", INK), ("M50 84 Q66 98 82 80 Q66 90 50 84 Z", INK), (star(108, 30, 10, 4, 4), GOLD)],
+    "face_hurt": [(poly((28, 46), (34, 40), (52, 62), (46, 68)), INK), (poly((46, 40), (52, 46), (34, 68), (28, 62)), INK), (poly((76, 46), (82, 40), (100, 62), (94, 68)), INK), (poly((94, 40), (100, 46), (82, 68), (76, 62)), INK), ("M48 96 Q64 78 80 96 Q64 88 48 96 Z", INK)],
+    "face_curious": [(circ(40, 54, 16), INK), (circ(88, 58, 10), INK), (circ(45, 48, 5.5), WHITE), (circ(91, 55, 3.5), WHITE), (circ(66, 90, 6), INK)],
     "chest": [(rrect(14, 52, 100, 62, 10), WOOD), ("M14 60 V46 Q14 18 42 18 H86 Q114 18 114 46 V60 Z", WOOD_D), (rrect(28, 18, 14, 96, 4), GOLD), (rrect(86, 18, 14, 96, 4), GOLD), (rrect(52, 50, 24, 28, 6), GOLD_D)],
 }
 
@@ -196,13 +205,13 @@ for name, shapes in ICONS.items():
     final = []
     for o, i, col in objs:
         o.scale = (o.scale[0] * s, o.scale[1] * s, o.scale[2] * s)
-        o.location = ((o.location.x - cx) * s, (o.location.y - cy) * s, 0.02 + i * 0.07)
+        o.location = ((o.location.x - cx) * s, (o.location.y - cy) * s, 0.02 + i * (0.012 if name.startswith("face_") else 0.07))  # a face is flat: its parts must not slide apart
         cu = o.data
         cu.extrude, cu.bevel_depth = 0.035 / s, 0.03 / s
         cu.materials.clear()
         cu.materials.append(jelly(col))
         final.append(o)
-        if i == 0:  # the darker rim behind the back shape
+        if i == 0 and not name.startswith("face_"):  # the darker rim behind the back shape (faces have none: their parts sit on the pet's own head)
             r = o.copy()
             r.data = cu.copy()
             sc.collection.objects.link(r)
@@ -212,6 +221,7 @@ for name, shapes in ICONS.items():
             r.data.materials.clear()
             r.data.materials.append(rimM)
             final.append(r)
+    cam.location = (0.0, -0.08, 5) if name.startswith("face_") else (0.2, -0.75, 5)  # faces are seen dead on
     bpy.context.view_layer.update()
     sc.render.filepath = os.path.join(out, name + ".png")
     bpy.ops.render.render(write_still=True)

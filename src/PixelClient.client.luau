@@ -748,12 +748,12 @@ local function petModel(name)
 		})
 	end
 	m.PrimaryPart = cube(Vector3.new(1.4, 1.1, 1.2), Vector3.zero, body)
-	cube(Vector3.new(1.5, 1.3, 1.3), Vector3.new(0, 1.05, -0.05), body) -- head about 45% of height
+	cube(Vector3.new(1.5, 1.3, 1.3), Vector3.new(0, 1.05, -0.05), body).Name = "Head" -- head about 45% of height; Shared.PetCompanion puts a face on it
 	cube(Vector3.new(0.3, 0.6, 0.3), Vector3.new(-0.45, 1.95, 0), body)
 	cube(Vector3.new(0.3, 0.6, 0.3), Vector3.new(0.45, 1.95, 0), body)
 	for _, x in { -0.35, 0.35 } do -- 2x2 eyes with a white highlight, facing forward (-Z)
-		cube(Vector3.new(0.3, 0.32, 0.1), Vector3.new(x, 1.1, -0.72), INK)
-		cube(Vector3.new(0.1, 0.1, 0.06), Vector3.new(x + 0.06, 1.18, -0.78), WHITE)
+		cube(Vector3.new(0.3, 0.32, 0.1), Vector3.new(x, 1.1, -0.72), INK).Name = "Eye"
+		cube(Vector3.new(0.1, 0.1, 0.06), Vector3.new(x + 0.06, 1.18, -0.78), WHITE).Name = "Eye"
 	end
 	cube(Vector3.new(0.3, 0.4, 0.3), Vector3.new(-0.4, -0.72, -0.3), body)
 	cube(Vector3.new(0.3, 0.4, 0.3), Vector3.new(0.4, -0.72, -0.3), body)

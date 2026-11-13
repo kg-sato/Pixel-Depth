@@ -36,8 +36,16 @@ function M.start(E)
 			end,
 			run = function() if E.cave.flare then E.cave.flare() end end },
 		{ name = "CHEER", x = 0.5, y = 0.86, icon = C.HUD_ICON.calm, tint = BUTTER,
-			why = function() return plr:GetAttribute("Seated") and "Not while riding" or nil end,
-			run = function() if hook.emote then hook.emote("cheer") end end },
+			-- in the caves this slot is the pet whistle (Shared.PetCompanion, key X); in town it stays the cheer
+			dyn = function() return (inCave() and hook.whistle) and "WHISTLE" or "CHEER" end,
+			why = function()
+				if plr:GetAttribute("Seated") then return "Not while riding" end
+				if inCave() and hook.whistleWhy then return hook.whistleWhy() end
+				return nil
+			end,
+			run = function()
+				if inCave() and hook.whistle then hook.whistle() elseif hook.emote then hook.emote("cheer") end
+			end },
 		{ name = "WARDROBE", key = "V", x = 0.14, y = 0.5, icon = E.ICON.crew, tint = E.LILAC,
 			why = function() return (inCave() or plr:GetAttribute("InMine")) and "Town only" or nil end,
 			run = function() if hook.wardrobe then hook.wardrobe() end end },
@@ -198,6 +206,10 @@ function M.start(E)
 			end
 		end
 		for i, s in SLOTS do
+			if s.dyn then -- a slot whose job depends on where you are
+				local nm = s.dyn()
+				if s.name ~= nm then s.name = nm s.label.Text = nm end
+			end
 			local why = s.why()
 			local off, on = why ~= nil, i == sel
 			s.sub.Text = off and why or "" -- a locked slot keeps its name and says why underneath; its key cap goes (the key would not work either)

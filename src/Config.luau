@@ -290,6 +290,9 @@ C.UI_GLASS = {
 -- Dark smoked glass (the owner, 2026-11-13: "Try dark smoked glass kit"): the kit's surfaces (panel, card, pills, slot, tabs, key
 -- caps) as dark glass (art/ui_smoked, pd_ui_smoked.py); PixelClient then turns dark text pale. false = the milky faces again.
 C.UI_SMOKED = true
+-- Pet faces (plan phase A, 2026-11-13): eight jelly expressions shown on the front of a pet's head (art/icons_jelly/face_*.png, Shared.PetCompanion)
+C.PET_FACE = { calm = "rbxassetid://80743924975214", curious = "rbxassetid://79722727461569", greedy = "rbxassetid://106422452389394", happy = "rbxassetid://94477177000895", hurt = "rbxassetid://113243353108898", proud = "rbxassetid://112309918157706", scared = "rbxassetid://136327735390863", sleepy = "rbxassetid://96201833706333" }
+C.WHISTLE = { reach = 40, show = 8, cool = 30 } -- the pet whistle: studs it looks, seconds the pet marks the deposit, seconds until the next whistle
 C.UI_GLASS.smoked = { card = "rbxassetid://123788880833023", keycap = "rbxassetid://95835076020654", keycapDown = "rbxassetid://89815334963402", panel = "rbxassetid://72244447259148", pill = "rbxassetid://114478649651852", pillButter = "rbxassetid://129725898810075", pillLilac = "rbxassetid://88609351576923", pillMint = "rbxassetid://116432339584212", pillPink = "rbxassetid://122269924739998", slot = "rbxassetid://120185081422888", tab = "rbxassetid://109809759223194", tabOn = "rbxassetid://118797628367631" }
 if C.UI_KIT == "glass" then for k, v in C.UI_GLASS.hud do C.HUD_ICON[k] = v end end
 C.EGG_COINS = 75
