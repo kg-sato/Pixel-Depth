@@ -982,6 +982,11 @@ local function hatchShow(name)
 	tween(vcam, 0.45, { FieldOfView = 30 }, Enum.EasingStyle.Back)
 	title.Text = string.upper(name)
 	title.TextColor3 = rc
+	if GLASS then -- the pet's name in jelly letters of its rarity colour, landing one by one
+		title.Size = UDim2.fromScale(title.Size.X.Scale, title.Size.Y.Scale * 1.45)
+		local jt = require(RS.Shared.JellyText).mirror(title, { color = tier >= #C.RARITIES and GOLD or rc, glow = true, maxLen = 26 })
+		if jt then jt.pop(0.05) end
+	end
 	pop(title, 1.6, 0.45)
 	local pct = C.RARITIES[tier][2]
 	local odds = pct >= 5 and "" or ("  -  1 IN " .. commas(math.floor(100 / pct + 0.5)))
