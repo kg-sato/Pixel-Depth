@@ -96,6 +96,10 @@ function M.start(E)
 		hex("Ping", 3, "Z", E.ICON.map, function() if hook.ping then hook.ping() end end)
 	end
 
+	plr:GetAttributeChangedSignal("DevTouch"):Connect(function() -- a touch test switched on after the start: the thumb buttons take over, the hex slots go
+		local on = plr:GetAttribute("DevTouch") == nil
+		for _, sl in slots do sl.b.Visible = on end
+	end)
 	-- the numbers, on hover or tap, and for a moment when a state changes
 	local tipBox = new("Frame", root, { Name = "Numbers", Size = UDim2.fromScale(X(250), 0.28), Position = UDim2.fromScale(0, -0.06), AnchorPoint = Vector2.new(0, 1), BackgroundColor3 = Color3.fromRGB(24, 16, 46), BackgroundTransparency = 0.15, BorderSizePixel = 0, Visible = false, ZIndex = 7 })
 	new("UICorner", tipBox, { CornerRadius = UDim.new(0.3, 0) })
