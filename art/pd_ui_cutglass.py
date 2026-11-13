@@ -105,7 +105,7 @@ FACE = (H("#fbf9ff", 228), H("#e9e1ff", 216))
 BTN = {"mint": ("#7fe6c6", "#1f8f72"), "pink": ("#ff9fbd", "#c2416f"), "lilac": ("#bfa8ff", "#6a4fc4"),
        "butter": ("#ffd66b", "#b9791c"), "sky": ("#8fd2ff", "#2f78c4"), "off": ("#cfc8dc", "#7f7592")}
 for n, (t, dp) in BTN.items():
-    save(n, cut(160, 100, 16, H(t), H(dp), a_top=226, a_bot=214, bevel=7), (42, 40, 118, 52))
+    save(n, cut(160, 100, 16, H(t), H(dp), a_top=252, a_bot=246, bevel=7), (42, 40, 118, 52))  # buttons are nearly solid: at 226 they went dull tan over a dark cave
 save("pill", cut(176, 76, 14, H("#e6dcff"), H("#6a4fc4"), a_top=206, a_bot=186, bevel=4.5), (40, 31, 136, 37))
 for n, (t, dp) in {"pillButter": ("#ffe39a", "#b9791c"), "pillLilac": ("#d6c8ff", "#6a4fc4"), "pillMint": ("#b4f0dc", "#1f8f72"), "pillPink": ("#ffc8d8", "#c2416f")}.items():
     save(n, cut(176, 80, 15, H(t), H(dp), a_top=210, a_bot=190, bevel=4.5), (40, 33, 136, 41))
