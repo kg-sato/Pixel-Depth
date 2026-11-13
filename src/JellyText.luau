@@ -158,7 +158,8 @@ function M.mirror(label, opt)
 	-- game's to set. A string longer than opt.maxLen is a sentence, not a headline: it goes back to plain text.
 	local function fit()
 		if not label.Parent then return end
-		local long = opt.maxLen ~= nil and #label.Text > opt.maxLen
+		local h = label.AbsoluteSize.Y
+		local long = (opt.maxLen ~= nil and #label.Text > opt.maxLen) or (h > 0 and h < 17) -- jelly letters under 17 px are mush: such a label stays plain text
 		local ok = ready[(M.pick(t.color))] == true
 		label.MaxVisibleGraphemes = (long or not ok) and -1 or 0
 		t.frame.Visible = not long and ok
@@ -166,6 +167,7 @@ function M.mirror(label, opt)
 	if ready[(M.pick(t.color))] ~= true then table.insert(waiting, fit) end -- run again when its atlas finishes loading
 	fit()
 	alpha(label.TextTransparency)
+	label:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)
 	label:GetPropertyChangedSignal("Text"):Connect(function()
 		fit()
 		if not t.frame.Visible then return end
