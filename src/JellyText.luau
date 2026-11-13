@@ -143,6 +143,18 @@ function M.new(parent, str, opt)
 	return self
 end
 
+-- Pop every jelly word under a root (a menu that has just opened): the biggest word lands letter by letter, the rest together.
+function M.popUnder(root)
+	local big, size
+	for t in live do
+		if t.frame.Parent and t.frame.Visible and t.frame:IsDescendantOf(root) then
+			local h = t.frame.AbsoluteSize.Y
+			if not size or h > size then big, size = t, h end
+		end
+	end
+	if big then big.pop(0.045) end
+end
+
 -- Turn an existing TextLabel into jelly: its own text is hidden and a jelly word with the same string sits inside it, follows
 -- its Text and its TextTransparency from then on. opt as in new(), plus popOnChange, followColor (tint from TextColor3) and
 -- maxLen (longer strings stay plain text).

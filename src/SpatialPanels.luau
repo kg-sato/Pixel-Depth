@@ -20,6 +20,7 @@ local SKIP = { ARSettings = true } -- menus that are already in the world
 function M.start(E)
 	if not E.GLASS or E.plr:GetAttribute("DevFlatUI") then return end
 	local hook, gui, plr = E.vmHook, E.gui, E.plr
+	local JellyText = require(script.Parent:WaitForChild("JellyText"))
 	local pg = plr:WaitForChild("PlayerGui")
 	local part = Instance.new("Part")
 	part.Name, part.Anchored, part.CanCollide, part.CanQuery, part.CanTouch, part.CastShadow, part.Transparency = "SpatialPanel", true, false, false, false, false, 1 -- CanQuery is switched on only while a panel is up: a SurfaceGui gets no clicks through a part that cannot be queried (found 2026-11-12: buttons on world panels did nothing)
@@ -68,6 +69,7 @@ function M.start(E)
 					held[f] = gui
 					count += 1
 					f.Parent = sg
+					task.delay(0.12, function() if f.Parent == sg then JellyText.popUnder(f) end end) -- the title lands letter by letter as the panel swings in
 					if count == 1 then openedAt, swing, swingV, last = os.clock(), 1, 0, nil end
 				elseif held[f] and not f.Visible then
 					release(f)
