@@ -16,6 +16,7 @@ TONES = {"gold": ((1.0, 0.42, 0.02), (1.0, 0.72, 0.12), (1.0, 0.93, 0.5), (0.5, 
          "mint": ((0.0, 0.6, 0.42), (0.2, 0.9, 0.62), (0.72, 1.0, 0.86), (0.02, 0.25, 0.2))}
 TONE = TONES.get(args[2]) if len(args) > 2 else None
 SIZE = int(args[3]) if len(args) > 3 else 512
+GLOSS = len(args) > 4 and args[4] == "gloss"  # a glossier jelly: tried 2026-11-13 against reel DfUpUhcuASY, the difference was marginal, not used
 os.makedirs(out, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 sc = bpy.context.scene
@@ -82,6 +83,7 @@ def jelly(nt, b):
     nt.links.new(mp.outputs[0], ramp.inputs[0])
     nt.links.new(ramp.outputs[0], b.inputs["Base Color"])
     setp(b, Roughness=0.05, IOR=1.42, Transmission_Weight=0.3, Subsurface_Weight=0.35, Coat_Weight=1.0, Coat_Roughness=0.02)
+    if GLOSS: setp(b, Roughness=0.02, IOR=1.5, Transmission_Weight=0.55, Subsurface_Weight=0.55, Coat_Weight=1.0, Coat_Roughness=0.0, Specular_IOR_Level=0.9)
     if "Subsurface Radius" in b.inputs: b.inputs["Subsurface Radius"].default_value = (0.3, 0.1, 0.2)
     if "Emission Color" in b.inputs:
         nt.links.new(ramp.outputs[0], b.inputs["Emission Color"])
@@ -118,7 +120,7 @@ def light(name, loc, energy, color, size):
 target = bpy.data.objects.new("Target", None)
 sc.collection.objects.link(target)
 light("key", (-1.6, 2.4, 4.0), 130 if not WHITE else 70, (1, 1, 1), 2.5)       # a broad white key from the upper left: the big soft shine
-light("strip", (0.6, 1.2, 3.0), 60, (1, 1, 1), 0.5)      # a small hard light: the sharp glint
+light("strip", (0.6, 1.2, 3.0), 60 if not GLOSS else 150, (1, 1, 1), 0.5)      # a small hard light: the sharp glint
 light("rimM", (3.0, -1.0, 1.6), 220, (1, 0.1, 0.6) if not (WHITE or TONE) else (1, 1, 1), 2.0)  # magenta from the right
 light("fillC", (-3.0, -2.0, 1.2), 150, (0.3, 0.9, 1) if not (WHITE or TONE) else (0.9, 0.95, 1), 2.5)  # cyan from the lower left
 
