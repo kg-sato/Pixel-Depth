@@ -92,6 +92,14 @@ if GLASS then
 	for k in DEEP do DEEP[k] = Color3.fromRGB(46, 30, 96) end
 	SPRITE.close, FONT, HEAD = GLASS.close, Enum.Font.TitilliumWeb, Enum.Font.Oswald
 end
+-- Dark smoked glass (Config.UI_SMOKED): the surfaces are dark, so every dark text colour is turned pale, keeping its hue.
+-- text() applies it when a label is made and whenever code gives the label a dark colour later.
+local SMOKED = GLASS ~= nil and C.UI_SMOKED == true
+if SMOKED then for k, v in GLASS.smoked do SKIN[k] = v end end
+local function paleInk(c)
+	if c.R * 0.3 + c.G * 0.59 + c.B * 0.11 >= 0.5 then return c end
+	return c:Lerp(Color3.new(1, 1, 1), 0.8)
+end
 
 local gui = Instance.new("ScreenGui")
 gui.Name, gui.ResetOnSpawn, gui.ZIndexBehavior = "PixelHUD", false, Enum.ZIndexBehavior.Sibling
@@ -160,7 +168,7 @@ end
 local function text(parent, s, size, pos, anchor, color, weight, stroke)
 	local l = new("TextLabel", parent, {
 		Size = size or UDim2.fromScale(1, 1), Position = pos or UDim2.new(), AnchorPoint = anchor or Vector2.zero,
-		BackgroundTransparency = 1, Font = FONT, TextScaled = true, Text = s, TextColor3 = color or INK,
+		BackgroundTransparency = 1, Font = FONT, TextScaled = true, Text = s, TextColor3 = SMOKED and paleInk(color or INK) or (color or INK),
 		TextStrokeTransparency = stroke == false and 1 or 0, TextStrokeColor3 = INK, ZIndex = 2,
 	})
 	-- a rounded ink outline that follows the label's stroke and text transparency (fades and toggles keep working)
@@ -171,7 +179,13 @@ local function text(parent, s, size, pos, anchor, color, weight, stroke)
 		if faux and l.TextStrokeTransparency < 1 then faux = false; st.Color = l.TextStrokeColor3; st.Thickness = math.max(1, pixelScale() * 4.4); strokes[st] = true end -- an outline was switched on later
 		st.Transparency = faux and l.TextTransparency or math.max(l.TextStrokeTransparency, l.TextTransparency)
 	end
-	l:GetPropertyChangedSignal("TextColor3"):Connect(function() if faux then st.Color = l.TextColor3 end end)
+	l:GetPropertyChangedSignal("TextColor3"):Connect(function()
+		if SMOKED then
+			local pale = paleInk(l.TextColor3)
+			if pale ~= l.TextColor3 then l.TextColor3 = pale return end -- this fires again with the pale colour
+		end
+		if faux then st.Color = l.TextColor3 end
+	end)
 	l:GetPropertyChangedSignal("TextStrokeTransparency"):Connect(sync)
 	l:GetPropertyChangedSignal("TextTransparency"):Connect(sync)
 	l:GetPropertyChangedSignal("TextStrokeColor3"):Connect(function() if not faux then st.Color = l.TextStrokeColor3 end end)
@@ -1394,7 +1408,7 @@ end)
 
 ;(function() -- the forge (ReplicatedStorage.Shared.ForgeUI; moved out of this script for the 200,000-character limit)
 	require(RS.Shared:WaitForChild("ForgeUI")).start({
-		RS = RS, UIS = UIS, RunService = RunService, C = C, R = R, cam = cam, tween = tween, commas = commas,
+		RS = RS, UIS = UIS, RunService = RunService, C = C, R = R, cam = cam, tween = tween, commas = commas, SMOKED = SMOKED,
 		DEEP = DEEP, SPRITE = SPRITE, ICON = ICON, INK = INK, WHITE = WHITE, MINT = MINT, PINK = PINK, LILAC = LILAC,
 		BUTTER = BUTTER, SKY = SKY, gui = gui, new = new, S = S, fit = fit, text = text, panel = panel,
 		icon = icon, scaler = scaler, pop = pop, openPanel = openPanel, closePanel = closePanel, sfxClick = sfxClick, button = button, setKind = setKind,
@@ -2697,7 +2711,7 @@ end)()
 		bagPill = bagPill, goldPill = goldPill, burst = burst, shake = shake, ICON = ICON, fly = function(...) if forgeUI.fly then forgeUI.fly(...) end end,
 		isBusy = function() return cave ~= nil and cave.mgBusy == true end,
 		cave = cave, caveHud = caveHud, hrp = hrp, feed = feed, layerPill = layerPill, icon = icon, keyCap = keyCap, CREAM = CREAM, LILAC = LILAC,
-		addModal = function(f) table.insert(forgeUI.modals, f) end, vmHook = forgeUI, top = top, blueprint = blueprint, GLASS = GLASS, HEAD = HEAD, FONT = FONT,
+		addModal = function(f) table.insert(forgeUI.modals, f) end, vmHook = forgeUI, top = top, blueprint = blueprint, GLASS = GLASS, HEAD = HEAD, FONT = FONT, SMOKED = SMOKED,
 	}
 	do -- sitting in the minecart (playtest 2): the server sets Seated while it holds us in a cart; our own Animator plays the sit pose
 		local SIT = { [Enum.HumanoidRigType.R15] = "rbxassetid://2506281703", [Enum.HumanoidRigType.R6] = "rbxassetid://178130996" }

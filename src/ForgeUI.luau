@@ -35,7 +35,11 @@ function M.start(E)
 	local DEEP_MINT = Color3.fromRGB(32, 156, 92) -- gains read as bright green
 	local function rarityOf(what, i) return C.RARITIES[what == "pick" and C.PICK_RARITY[i] or math.min(i, #C.RARITIES)] end
 	local PARCH, CHALK = Color3.fromRGB(243, 230, 196), Color3.fromRGB(255, 250, 235) -- blueprint pass 2026-11-12: plans on parchment, chalk-white lines
-	local function tones(col) return col:Lerp(PARCH, 0.8), col:Lerp(INK, 0.18) end -- card fill (a parchment note tinted by rarity), card rim
+	local SMOKE = Color3.fromRGB(40, 30, 76) -- dark smoked glass kit (Config.UI_SMOKED): the cards are smoked glass tinted by rarity, with a bright rarity rim
+	local function tones(col)
+		if E.SMOKED then return SMOKE:Lerp(col, 0.22), col:Lerp(Color3.new(1, 1, 1), 0.25) end
+		return col:Lerp(PARCH, 0.8), col:Lerp(INK, 0.18)
+	end -- card fill (a parchment note tinted by rarity), card rim
 	local function short(name) return (name:gsub(" Pickaxe", "")) end
 	local function shortNum(n) return n >= 1e6 and (string.format("%.1fM", n / 1e6):gsub("%.0M", "M")) or (n >= 1e4 and (math.floor(n / 1e3) .. "K") or commas(n)) end
 	local function lvOf(i) return getState() and getState().lv and getState().lv[tostring(i)] or 1 end
