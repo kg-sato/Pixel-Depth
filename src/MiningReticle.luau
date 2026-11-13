@@ -115,7 +115,7 @@ function M.start(E)
 			lockCol = (ore and ore[2] or Color3.fromRGB(120, 232, 255)):Lerp(Color3.new(1, 1, 1), 0.65)
 			tint(lockCol)
 			lock.Adornee = core
-			lock.Enabled = true
+			lock.Enabled = which == "strike" -- Vein Rush has its own spire and two wide buttons: the brackets ran through them
 			punch.Scale = 1.5 -- the brackets close in on the rock
 			TweenService:Create(punch, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 			if which == "strike" then

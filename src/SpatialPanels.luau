@@ -13,7 +13,7 @@ local UIS = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
 local M = {}
 
-local DIST = 1.1 -- studs from the eye to the panel's middle: close, so no post, wall or rock can stand in front of a menu (it was 4 and a lantern post covered the bag)
+local DIST = 0.7 -- (1.1 still let a crate the player leaned on cover the wheel) studs from the eye to the panel's middle: close, so no post, wall or rock can stand in front of a menu (it was 4 and a lantern post covered the bag)
 local YAW, PITCH, FILL = 7, 2, 0.88 -- degrees turned away, degrees leaned back, share of the view it fills (the user, 2026-11-12: 15 and 4 leaned too far; face the player 5 to 10 degrees more)
 local SKIP = { ARSettings = true } -- menus that are already in the world
 

@@ -143,15 +143,15 @@ function M.start(E)
 	-- CONTROLS (right)
 	do
 		local _, card = panel(1, "CONTROLS", BUTTER)
-		local KEYS = { { "F", "Use, talk, ride" }, { "E", "Mine a deposit" }, { "R", "Throw a flare" }, { "T", "Sonar" }, { "Z", "Ping your crew" }, { "TAB", "Tool wheel" }, { "B", "Bag" }, { "J", "Quests" }, { "N", "This menu" }, { "Q", "Mine cart" } }
+		local KEYS = { { "F", "Use or talk" }, { "E", "Mine ore" }, { "R", "Flare" }, { "T", "Sonar" }, { "Z", "Ping crew" }, { "TAB", "Tool wheel" }, { "B", "Bag" }, { "J", "Quests" }, { "H", "Inspect" }, { "N", "Settings" } }
 		for i, k in KEYS do
 			local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
 			local y = 0.12 + row * 0.185
-			local cap = new("Frame", card, { Size = UDim2.fromScale(0.11, 0.13), Position = UDim2.fromScale(0.09 + col * 0.5, y), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(58, 42, 112), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 4 }) -- a dark cap: pale jelly on a white cap had no contrast
+			local cap = new("Frame", card, { Size = UDim2.fromScale(0.11, 0.13), Position = UDim2.fromScale(0.085 + col * 0.5, y), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(58, 42, 112), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 4 }) -- a dark cap: pale jelly on a white cap had no contrast
 			new("UICorner", cap, { CornerRadius = UDim.new(0.25, 0) })
 			new("UIStroke", cap, { Color = BUTTER, Thickness = 2 })
 			label(cap, k[1], UDim2.fromScale(0.84, 0.7), UDim2.fromScale(0.5, 0.5), BUTTER, E.HEAD)
-			label(card, k[2], UDim2.fromScale(0.31, 0.1), UDim2.fromScale(0.32 + col * 0.5, y), WHITE, E.FONT, true)
+			label(card, k[2], UDim2.fromScale(0.33, 0.1), UDim2.fromScale(0.325 + col * 0.5, y), WHITE, E.FONT, true)
 		end
 	end
 
