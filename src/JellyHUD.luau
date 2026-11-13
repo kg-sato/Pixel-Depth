@@ -40,7 +40,7 @@ function M.start(E)
 		local c = d.TextColor3
 		local dark = c.R * 0.3 + c.G * 0.59 + c.B * 0.11 < 0.42
 		local kind = d.Name == "Label" and d.Parent and d.Parent:GetAttribute("Kind") -- a kit button's own label
-		if kind == "butter" or kind == "off" or kind == "lilac" then dark = true end -- white jelly washed out on the pale buttons (STRIKE! on butter): violet there
+		if kind == "butter" or kind == "off" then dark = true end -- white jelly washed out on the gold and grey buttons (STRIKE! on butter): violet there
 		JellyText.mirror(d, { color = dark and VIOLET or c, followColor = not dark, sway = false, maxLen = 26 })
 	end
 	local function later(d) -- fonts and sizes are often set a moment after a label is made

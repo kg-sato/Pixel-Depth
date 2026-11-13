@@ -47,7 +47,7 @@ def put(im, src, m):
     im.alpha_composite(Image.composite(src, Image.new("RGBA", im.size, CLEAR), m))
 
 
-def cut(w, h, c, tint, deep, a_top=232, a_bot=214, bevel=5.0, shadow=True, inset=False, dark=False, sheen=True, face=None):
+def cut(w, h, c, tint, deep, a_top=232, a_bot=214, bevel=5.0, shadow=True, inset=False, dark=False, sheen=True, face=None, wash=None):
     """One cut-glass piece. c = corner cut, bevel = facet width (image pixels)."""
     W, Hh = w * SS, h * SS
     im = Image.new("RGBA", (W, Hh), CLEAR)
@@ -65,6 +65,8 @@ def cut(w, h, c, tint, deep, a_top=232, a_bot=214, bevel=5.0, shadow=True, inset
     white = H("#ffffff")
     top = mix(tint, white, 0.12 if dark else 0.62)[:3] + (a_top,)
     bot = (deep if dark else mix(tint, white, 0.25))[:3] + (a_bot,)
+    if wash is not None:  # a candy-coloured piece (buttons): little white in the body, a deeper foot
+        top, bot = mix(tint, white, wash)[:3] + (a_top,), mix(tint, deep, 0.22)[:3] + (a_bot,)
     put(im, vgrad(im.size, top, bot, box[1], box[3]), body)
     if face:  # a milkier reading face inside the bevel (panels and cards)
         put(im, vgrad(im.size, face[0], face[1], ibox[1], ibox[3]), mask(im.size, inner))
@@ -105,7 +107,7 @@ FACE = (H("#fbf9ff", 228), H("#e9e1ff", 216))
 BTN = {"mint": ("#7fe6c6", "#1f8f72"), "pink": ("#ff9fbd", "#c2416f"), "lilac": ("#bfa8ff", "#6a4fc4"),
        "butter": ("#ffd66b", "#b9791c"), "sky": ("#8fd2ff", "#2f78c4"), "off": ("#cfc8dc", "#7f7592")}
 for n, (t, dp) in BTN.items():
-    save(n, cut(160, 100, 16, H(t), H(dp), a_top=252, a_bot=246, bevel=7), (42, 40, 118, 52))  # buttons are nearly solid: at 226 they went dull tan over a dark cave
+    save(n, cut(160, 100, 16, H(t), H(dp), a_top=252, a_bot=246, bevel=7, wash=0.22), (42, 40, 118, 52))  # buttons are nearly solid and candy-coloured: pale glass went dull tan over a dark cave
 save("pill", cut(176, 76, 14, H("#e6dcff"), H("#6a4fc4"), a_top=206, a_bot=186, bevel=4.5), (40, 31, 136, 37))
 for n, (t, dp) in {"pillButter": ("#ffe39a", "#b9791c"), "pillLilac": ("#d6c8ff", "#6a4fc4"), "pillMint": ("#b4f0dc", "#1f8f72"), "pillPink": ("#ffc8d8", "#c2416f")}.items():
     save(n, cut(176, 80, 15, H(t), H(dp), a_top=210, a_bot=190, bevel=4.5), (40, 33, 136, 41))
