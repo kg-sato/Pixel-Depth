@@ -145,10 +145,10 @@ function M.start(E)
 		for i, k in KEYS do
 			local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
 			local y = 0.12 + row * 0.185
-			local cap = new("Frame", card, { Size = UDim2.fromScale(0.11, 0.13), Position = UDim2.fromScale(0.09 + col * 0.5, y), AnchorPoint = MID, BackgroundColor3 = WHITE, BackgroundTransparency = 0.1, BorderSizePixel = 0, ZIndex = 4 })
+			local cap = new("Frame", card, { Size = UDim2.fromScale(0.11, 0.13), Position = UDim2.fromScale(0.09 + col * 0.5, y), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(58, 42, 112), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 4 }) -- a dark cap: pale jelly on a white cap had no contrast
 			new("UICorner", cap, { CornerRadius = UDim.new(0.25, 0) })
 			new("UIStroke", cap, { Color = BUTTER, Thickness = 2 })
-			label(cap, k[1], UDim2.fromScale(0.84, 0.66), UDim2.fromScale(0.5, 0.5), SMOKE, E.HEAD)
+			label(cap, k[1], UDim2.fromScale(0.84, 0.7), UDim2.fromScale(0.5, 0.5), BUTTER, E.HEAD)
 			label(card, k[2], UDim2.fromScale(0.31, 0.1), UDim2.fromScale(0.32 + col * 0.5, y), WHITE, E.FONT, true)
 		end
 	end
@@ -167,7 +167,7 @@ function M.start(E)
 	arrow(">", 0.95, 1)
 	local hintBar = new("Frame", nav, { Size = UDim2.fromScale(0.44, 0.07), Position = UDim2.fromScale(0.5, 0.94), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.3, BorderSizePixel = 0 })
 	new("UICorner", hintBar, { CornerRadius = UDim.new(0.5, 0) })
-	label(hintBar, UIS.KeyboardEnabled and "LOOK LEFT AND RIGHT: MOUSE OR A / D      CLOSE: N" or "TAP THE ARROWS TO LOOK ROUND", UDim2.fromScale(0.9, 0.6), UDim2.fromScale(0.5, 0.5), EDGE, E.HEAD)
+	label(hintBar, UIS.KeyboardEnabled and "LOOK LEFT AND RIGHT: MOUSE OR A / D      CLOSE: N" or "DRAG OR TAP THE ARROWS TO LOOK ROUND", UDim2.fromScale(0.9, 0.6), UDim2.fromScale(0.5, 0.5), EDGE, E.HEAD)
 
 	-- the camera
 	local base, yaw, pitch, blend, closing = nil, 0, 0, 0, false
@@ -235,6 +235,20 @@ function M.start(E)
 		elseif isOpen and k == Enum.KeyCode.Escape then shut() end
 	end)
 
+	-- phones: drag a finger sideways to look round (the arrows still step panel by panel)
+	local dragYaw = nil
+	UIS.TouchMoved:Connect(function(touch, gp)
+		if not isOpen or closing then return end
+		local vp = workspace.CurrentCamera.ViewportSize
+		dragYaw = math.clamp((dragYaw or yaw) - touch.Delta.X / vp.X * 150, -SPREAD - 6, SPREAD + 6)
+	end)
+	UIS.TouchEnded:Connect(function()
+		if dragYaw then
+			focus = math.clamp(math.floor(dragYaw / SPREAD + 0.5), -1, 1) -- let go: settle on the nearest panel
+			dragYaw = nil
+		end
+	end)
+
 	RunService:BindToRenderStep("PixelARSettings", Enum.RenderPriority.Camera.Value + 2, function(dt)
 		if not isOpen then return end
 		local cam = workspace.CurrentCamera
@@ -273,6 +287,8 @@ function M.start(E)
 			goalPitch = -ny * 5
 			focus = math.clamp(math.floor(goalYaw / SPREAD + 0.5), -1, 1)
 			yaw = goalYaw
+		elseif dragYaw then
+			yaw = dragYaw
 		else
 			yaw += (goalYaw - yaw) * (1 - math.exp(-dt * 7))
 		end
