@@ -31,15 +31,18 @@ function M.start(E)
 	local zoom = new("UIScale", all, {})
 
 	-- cavern depth fog: three wide soft bands drifting sideways
+	-- the owner, 2026-11-13: "remove the striped lines in the background and only have the text". The fog, the ribbons and the
+	-- shards are made only when Config.LOADING.fx is true.
+	local FX = cfg.fx == true
 	local fog = {}
-	for i = 1, 3 do
+	for i = 1, FX and 3 or 0 do
 		local f = new("Frame", all, { Size = UDim2.fromScale(1.3, 0.34), Position = UDim2.fromScale(0.5, 0.3 + i * 0.16), AnchorPoint = MID, BackgroundColor3 = i == 2 and Color3.fromRGB(70, 30, 120) or Color3.fromRGB(110, 26, 110), BackgroundTransparency = 0.8, BorderSizePixel = 0, ZIndex = 1 })
 		new("UIGradient", f, { Rotation = 90, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(1, 1) }) })
 		fog[i] = f
 	end
 	-- energy ribbons: long thin bands of light crossing behind the title
 	local ribbons = {}
-	for i, d in { { MAGENTA, -9, 0.4 }, { CYAN, 7, 0.47 } } do
+	for i, d in FX and { { MAGENTA, -9, 0.4 }, { CYAN, 7, 0.47 } } or {} do
 		local r = new("Frame", all, { Size = UDim2.fromScale(1.5, 0.012), Position = UDim2.fromScale(0.5, d[3]), AnchorPoint = MID, Rotation = d[2], BackgroundColor3 = d[1], BorderSizePixel = 0, ZIndex = 2 })
 		new("UIGradient", r, { Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.35, 0.35), NumberSequenceKeypoint.new(0.5, 0), NumberSequenceKeypoint.new(0.65, 0.35), NumberSequenceKeypoint.new(1, 1) }) })
 		local halo = new("Frame", r, { Size = UDim2.fromScale(1, 7), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = d[1], BackgroundTransparency = 0.88, BorderSizePixel = 0, ZIndex = 1 })
@@ -49,7 +52,7 @@ function M.start(E)
 	-- crystal shards on a flat orbit behind the title
 	local shards = {}
 	local rng = Random.new(7)
-	for i = 1, 16 do
+	for i = 1, FX and 16 or 0 do
 		local s = new("Frame", all, { Size = UDim2.fromScale(0.012, 0.05), AnchorPoint = MID, BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0, ZIndex = 2 })
 		new("UIGradient", s, { Rotation = 90, Color = ColorSequence.new(i % 2 == 0 and CYAN or MAGENTA, VIOLET), Transparency = NumberSequence.new(0, 0.5) })
 		shards[i] = { f = s, a = i / 16 * math.pi * 2, r = rng:NextNumber(0.3, 0.46), sp = rng:NextNumber(0.25, 0.5), tilt = rng:NextNumber(-40, 40), k = rng:NextNumber(0.6, 1.5) }
@@ -157,9 +160,9 @@ function M.start(E)
 	for k, l in letters do
 		local beat = ({ 0, 0.08, 0.17, 0.27, 0.38 })[(k - 1) % 5 + 1] -- one letter at a time, each a little later than the last: never an even tick
 		l.at = 0.3 + beat + (k > n / 2 and 0.62 or 0) -- the second word waits a beat: the hold in the middle
-		l.sy = spring(1.8, 4.5, 0.3)
+		l.sy = spring(1.9, 4.2, 0.16) -- 2026-11-13 "increase the bounciness": damping 0.3 -> 0.16 here and lower on every spring below
 		l.sy.goal = 1
-		l.rot = spring(-20, 4, 0.35)
+		l.rot = spring(-24, 3.8, 0.18)
 		l.rot.goal = 0
 		l.heat = 1
 		l.slot = l.cell.Position.X.Scale
@@ -167,7 +170,7 @@ function M.start(E)
 		l.sc.Scale = 1
 	end
 	local slamAt = letters[n].at + 0.13
-	local spread, kickX, kickY, tilt, punch = spring(0.55, 4.2, 0.32), spring(0, 4.5, 0.28), spring(0, 5, 0.3), spring(-6, 3.5, 0.35), spring(0, 5, 0.35)
+	local spread, kickX, kickY, tilt, punch = spring(0.55, 4, 0.2), spring(0, 4.2, 0.15), spring(0, 4.6, 0.16), spring(-6, 3.3, 0.18), spring(0, 4.6, 0.18)
 	spread.goal, tilt.goal = 0.84, 0
 	local titleScale = title:FindFirstChildOfClass("UIScale")
 	local spark = new("Frame", title, { Size = UDim2.fromScale(0.012, 0.3), Position = UDim2.fromScale(0.06, -0.5), AnchorPoint = MID, Rotation = 18, BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0, ZIndex = 9 })
@@ -248,12 +251,12 @@ function M.start(E)
 		if not slammed and now >= slamAt then
 			slammed = true
 			E.plr:SetAttribute("DevLoadTimes", table.concat(shownAt, " ")) -- read by a test: the letters must be spread out, not together
-			kickX.v, kickY.v, tilt.v, punch.v = 3.8, 7, 46, 1.6
+			kickX.v, kickY.v, tilt.v, punch.v = 5.2, 11, 74, 2.8
 			play(88699226385252, 0.5, 0.9)
 			play(96727638802500, 0.3, 1.2)
 			for k, l in letters do
 				task.delay((n - k) * 0.018, function() -- the ripple runs back from the last letter to the first
-					l.sy.v -= 3.2 + math.random() * 1.6
+					l.sy.v -= 5.5 + math.random() * 2.5
 					l.rot.v += (math.random() - 0.5) * 160
 					l.heat = math.max(l.heat, 0.55)
 					sparkle(l.cell, 0)
@@ -270,9 +273,10 @@ function M.start(E)
 					shownAt[#shownAt + 1] = string.format("%.2f", real) -- wall-clock second each letter appeared, for the timing test
 					for k = 1, 2 do sparkle(l.cell, k) end
 					play(98559989688124, 0.28, 0.9 + i * 0.05)
-					if i == n then task.delay(0.09, function() l.sy.v += 9 end) end -- the last letter's drip
+					if i == n then task.delay(0.09, function() l.sy.v += 12 end) end -- the last letter's drip
 				end
-				local sy = math.clamp(l.sy.step(dt), 0.45, 2.2)
+				local sy = math.clamp(l.sy.step(dt), 0.4, 2.4)
+				if sy < 1 then sy = 1 - (1 - sy) * 0.55 end -- the squash half of each bounce is softened: at full depth a letter was crushed flat and unreadable
 				local sx = math.clamp(1 / math.sqrt(sy), 0.5, 1.5) -- jelly keeps its volume: taller means thinner
 				local rot = l.rot.step(dt)
 				l.heat *= math.exp(-dt * 4.5)
@@ -296,7 +300,7 @@ function M.start(E)
 			end
 		end
 		now = real
-		local loaded = game:IsLoaded() and E.plr.Character ~= nil and clock > slamAt + 0.9 -- the logo always finishes its landing and shake
+		local loaded = game:IsLoaded() and E.plr.Character ~= nil and clock > slamAt + 1.7 -- the logo always finishes its landing and its bounces
 		local goal = math.min(now / cfg.min, loaded and 1 or 0.9)
 		shown += (goal - shown) * math.min(1, dt * 8)
 		fill.Size = UDim2.fromScale(shown, 1)
