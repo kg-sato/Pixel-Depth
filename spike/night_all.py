@@ -9,6 +9,7 @@ import night
 TESTS = [  # script, [(what, text that must be in the output)]
     ("wheel_test.py", [("sonar through the wheel", "sonar: true"), ("flare through the wheel", "flare: 2 -> 1"), ("wardrobe refused in the caves", "0 open, wheel stayed true"), ("no HUD overlap", "0 overlaps, 0 prompt overlaps")]),
     ("wheel_touch_test.py", [("TOOLS button opens the wheel", "wheel open: true"), ("slot tap opens the wardrobe", "wardrobe panels open 1")]),
+    ("spatial_click_test.py", [("a click reaches a button on a world-panel menu", "bag still open: false")]),
     ("boon_test.py", [("offer arrives", "boonOffer:"), ("bad picks refused", "-> flares 2 hp 100 shield 0 fx\n"), ("a pick lands", "boonTaken:"), ("second prayer is spent", "boonSpent")]),
     ("ping_test.py", [("marker and beam", "marks on screen: 1 beam true"), ("bad pings refused", "(0 expected): 0"), ("rate limit", "(1 expected): 1"), ("no HUD overlap", "0 overlaps, 0 prompt overlaps")]),
     ("verify_night.py", [("wind-up dodge", "after stepping away 100"), ("way home embers", "(PASS over 0), at camp 0 (PASS 0)")]),

@@ -22,7 +22,7 @@ function M.start(E)
 	local hook, gui, plr = E.vmHook, E.gui, E.plr
 	local pg = plr:WaitForChild("PlayerGui")
 	local part = Instance.new("Part")
-	part.Name, part.Anchored, part.CanCollide, part.CanQuery, part.CanTouch, part.CastShadow, part.Transparency = "SpatialPanel", true, false, false, false, false, 1
+	part.Name, part.Anchored, part.CanCollide, part.CanQuery, part.CanTouch, part.CastShadow, part.Transparency = "SpatialPanel", true, false, false, false, false, 1 -- CanQuery is switched on only while a panel is up: a SurfaceGui gets no clicks through a part that cannot be queried (found 2026-11-12: buttons on world panels did nothing)
 	part.Size = Vector3.new(4, 2, 0.02)
 	part.Parent = workspace.CurrentCamera
 	local sg = Instance.new("SurfaceGui")
@@ -89,6 +89,7 @@ function M.start(E)
 		local any = count > 0
 		hook.spatialOpen = any
 		if sg.Enabled ~= any then sg.Enabled = any end
+		if part.CanQuery ~= any then part.CanQuery = any end
 		-- the first-person tools (the torch and pickaxe copies that live under the camera) stood in front of the panel:
 		-- they are hidden from their owner while a panel is up
 		local function tools(hide)
@@ -101,6 +102,8 @@ function M.start(E)
 				end
 			end
 		end
+		local fb = workspace.CurrentCamera:FindFirstChild("ForgeBlur") -- the forge's own blur would blur the forge itself now that it stands in the world
+		if fb then fb.Enabled = not any end
 		if not any then
 			if wasAny then
 				if hook.blur then hook.blur.Enabled = true end
@@ -143,7 +146,7 @@ function M.start(E)
 		if plr:GetAttribute("DevFlatUI") then
 			for f in held do release(f) end
 			RunService:UnbindFromRenderStep("PixelSpatialPanels")
-			sg.Enabled, hook.spatialOpen, live = false, false, false
+			sg.Enabled, hook.spatialOpen, live, part.CanQuery = false, false, false, false
 		end
 	end)
 end

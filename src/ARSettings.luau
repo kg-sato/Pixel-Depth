@@ -210,6 +210,7 @@ function M.start(E)
 		flag.Visible, nav.Enabled = true, true
 		for slot, p in panels do
 			p.sg.Enabled = true
+			p.part.CanQuery = true -- a SurfaceGui gets no clicks through a part that cannot be queried
 			p.sc.Scale = 0.4
 			task.delay(0.12 + math.abs(slot) * 0.1, function() -- the middle panel first, then the sides
 				if not isOpen then return end
@@ -271,7 +272,7 @@ function M.start(E)
 					if d:IsA("BasePart") or d:IsA("Decal") then d.LocalTransparencyModifier = 0 end
 				end
 			end
-			for _, p in panels do p.sg.Enabled = false end
+			for _, p in panels do p.sg.Enabled = false p.part.CanQuery = false end
 			return
 		end
 		-- where to look: the mouse near a screen edge turns the head; keys and arrows step from panel to panel

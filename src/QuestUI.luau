@@ -244,7 +244,7 @@ function M.start(E)
 			if word then tagText.Text = word end
 			if dot and dot.Visible and btn.Visible then pop(dot, 1.35, 0.4) end -- the claim dot keeps beating
 		end
-		local busy = E.isBusy and E.isBusy() or plr:GetAttribute("Seated") == true or hook.wheelOpen == true or hook.arOpen == true -- not in a minigame, a cart ride, or under the wheel or the settings
+		local busy = E.isBusy and E.isBusy() or plr:GetAttribute("Seated") == true or hook.wheelOpen == true or hook.arOpen == true or (hook.noScrim ~= nil and hook.noScrim()) -- not in a minigame, a cart ride, or under the wheel or the settings
 		for _, m in hook.modals or {} do if m.Visible then busy = true end end
 		local h = E.hrp()
 		local far = pos and h and (pos - h.Position).Magnitude or 0

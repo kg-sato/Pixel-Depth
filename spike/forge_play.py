@@ -27,8 +27,13 @@ def shot(name, wait=0.4):
 
 
 def center(path):  # GUI centre of a forge element, from the client
-    r = lua("local o=game.Players.LocalPlayer.PlayerGui.PixelHUD.Forge for s in string.gmatch('" + path + "','[^.]+') do o=o[s] end "
-            "local c=o.AbsolutePosition+o.AbsoluteSize/2 return math.floor(c.X)..','..math.floor(c.Y)", "Client")
+    r = lua("local o=game.Players.LocalPlayer.PlayerGui:FindFirstChild('Forge',true) for s in string.gmatch('" + path + "','[^.]+') do o=o[s] end "
+            "local c=o.AbsolutePosition+o.AbsoluteSize/2 "
+            # the forge stands in the world as a tilted panel (Shared.SpatialPanels): map the canvas point to where it is drawn
+            "local sg=o:FindFirstAncestorWhichIsA('SurfaceGui') if sg then local part=sg.Adornee local cs=sg.CanvasSize "
+            "local w=part.CFrame*Vector3.new(-(c.X/cs.X-0.5)*part.Size.X,(0.5-c.Y/cs.Y)*part.Size.Y,-part.Size.Z/2) local v=workspace.CurrentCamera:WorldToViewportPoint(w) "
+            "local i=game:GetService('GuiService'):GetGuiInset() c=Vector2.new(v.X,v.Y-i.Y) end "
+            "return math.floor(c.X)..','..math.floor(c.Y)", "Client")
     x, y = r.split(",")
     return int(x), int(y)
 
@@ -38,7 +43,7 @@ def click(path):
     run("user_mouse_input", {"actions": [{"action": "moveTo", "x": x, "y": y}, {"action": "mouseButtonClick", "mouse_button": "left"}], "datamodel_type": "Client"})
 
 
-STATE = ("local r=game.Players.LocalPlayer.PlayerGui.PixelHUD.Forge local d=r.Detail "
+STATE = ("local r=game.Players.LocalPlayer.PlayerGui:FindFirstChild('Forge',true) local d=r.Detail "
          "return 'action='..d.Action.Text..' equip='..d.Equip.Text..'('..tostring(d.Equip.Visible)..') name='..d:FindFirstChildWhichIsA('TextLabel').Text")
 
 print("state", run("get_studio_state", {})[0])
