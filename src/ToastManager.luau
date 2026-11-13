@@ -2,6 +2,8 @@
 -- quests, prompts, lore lines and reward toasts wrote over each other). Every toast and lore line goes through this one
 -- queue: one line on screen at a time, in one lane, and none while a minigame, a ride or a full-screen panel is up
 -- (E.hold() is true): those lines wait and show afterwards. A line that is already showing or waiting is not added twice.
+local GLASS = require(script.Parent:WaitForChild("Config")).UI_KIT == "glass"
+local JellyText = GLASS and require(script.Parent:WaitForChild("JellyText"))
 local M = {}
 local LANE, MAX = 0.69, 6 -- the lane sits under the loot card (ends at 0.62) and over the bottom buttons
 local queue, live, E, gap = {}, nil, nil, 0
@@ -47,6 +49,18 @@ function M.start(e)
 		corner.Parent = l
 		local words = E.text(l, t.msg, UDim2.fromScale(0.92, 0.62), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), t.color, 700)
 		words.ZIndex = 21
+		if GLASS then -- cut-glass kit: a smoked glass pill with a light edge; a short line is spelled in jelly letters and lands with a wobble
+			local edge = Instance.new("UIStroke")
+			edge.Color, edge.Thickness, edge.Transparency = Color3.fromRGB(236, 226, 255), 1.5, 0.2
+			edge.Parent = l
+			l.BackgroundColor3, l.BackgroundTransparency = Color3.fromRGB(30, 21, 58), 0.14
+			if #t.msg <= 26 then
+				l.Size = UDim2.fromScale(math.clamp(0.1 + #t.msg * 0.0125, 0.18, 0.5), t.big and 0.1 or 0.082)
+				words.Size = UDim2.fromScale(0.9, 0.7)
+				local jt = JellyText.mirror(words, { color = t.color:Lerp(Color3.new(1, 1, 1), 0.25), glow = t.big, maxLen = 26 })
+				if jt then jt.pop(0.025) end
+			end
+		end
 		l.Parent = E.gui
 		E.tween(l, 0.35, { Position = UDim2.fromScale(0.5, LANE) }, Enum.EasingStyle.Back)
 		E.pop(l, 0.6, 0.35)

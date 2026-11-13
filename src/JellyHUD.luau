@@ -27,6 +27,25 @@ function M.start(E)
 		for _, d in root:GetDescendants() do adopt(d) end
 		root.DescendantAdded:Connect(function(d) task.defer(adopt, d) end)
 	end
+	-- Jelly everywhere (the user, 2026-11-12): every headline label in any of the player's guis becomes jelly by itself. A
+	-- headline is a TextLabel in one of the headline fonts (the kit's HEAD font; Bangers and Fredoka One in the older ride
+	-- and cutscene screens), at least 18 pixels tall, saying at most 26 characters. Dark ink text becomes violet jelly,
+	-- which reads on the milky glass; any other colour is kept. Sentences, tiny captions and key caps stay plain.
+	local HEADS = { [E.HEAD] = true, [Enum.Font.Bangers] = true, [Enum.Font.FredokaOne] = true }
+	local VIOLET = Color3.fromRGB(156, 118, 255)
+	local function auto(d)
+		if not d:IsA("TextLabel") or not HEADS[d.Font] or d:FindFirstChild("Jelly") or d.MaxVisibleGraphemes == 0 then return end
+		if d:FindFirstAncestor("PixelLoading") or d:FindFirstAncestor("KeyHint") then return end
+		if d.AbsoluteSize.Y < 18 or d.AbsoluteSize.X < 18 then return end
+		local c = d.TextColor3
+		local dark = c.R * 0.3 + c.G * 0.59 + c.B * 0.11 < 0.42
+		JellyText.mirror(d, { color = dark and VIOLET or c, followColor = not dark, sway = false, maxLen = 26 })
+	end
+	local function later(d) -- fonts and sizes are often set a moment after a label is made
+		if d:IsA("TextLabel") then task.delay(0.25, function() if d.Parent then auto(d) end end) end
+	end
+	for _, d in pg:GetDescendants() do later(d) end
+	pg.DescendantAdded:Connect(later)
 	local shout = E.caveHud:FindFirstChild("PerfectStrike")
 	for _, d in shout and shout:GetChildren() or {} do
 		if d:IsA("TextLabel") then JellyText.mirror(d, { color = Color3.fromRGB(255, 226, 130), glow = true, popOnChange = true }) end

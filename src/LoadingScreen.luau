@@ -147,8 +147,8 @@ function M.start(E)
 	end
 	local n = #letters
 	for k, l in letters do
-		local beat = ({ 0, 0.05, 0.09, 0.15, 0.23 })[(k - 1) % 5 + 1] -- each word starts fast and slows: never an even tick
-		l.at = 0.3 + beat + (k > n / 2 and 0.4 or 0) -- the second word waits a beat: the hold in the middle
+		local beat = ({ 0, 0.08, 0.17, 0.27, 0.38 })[(k - 1) % 5 + 1] -- one letter at a time, each a little later than the last: never an even tick
+		l.at = 0.3 + beat + (k > n / 2 and 0.62 or 0) -- the second word waits a beat: the hold in the middle
 		l.sy = spring(1.8, 4.5, 0.3)
 		l.sy.goal = 1
 		l.rot = spring(-20, 4, 0.35)
@@ -165,8 +165,25 @@ function M.start(E)
 	local spark = new("Frame", title, { Size = UDim2.fromScale(0.012, 0.3), Position = UDim2.fromScale(0.06, -0.5), AnchorPoint = MID, Rotation = 18, BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0, ZIndex = 9 })
 	new("UICorner", spark, { CornerRadius = UDim.new(0.5, 0) })
 	new("UIStroke", spark, { Color = MAGENTA, Thickness = 3, Transparency = 0.4 })
-	TweenService:Create(spark, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In, 0, false, 0.14), { Position = UDim2.fromScale(0.05, 0.5), Size = UDim2.fromScale(0.02, 0.9) }):Play()
-	task.delay(0.32, function() spark:Destroy() end)
+	spark.Visible = false
+	-- The logo runs on its own clock. It starts only when every letter picture has loaded and a few frames have drawn, and it
+	-- never jumps ahead after a slow frame: on a real join the first second is full of hitches, and with the wall clock all
+	-- ten letters were already "due" by the first frame that drew, so they popped in together (the user, 2026-11-12).
+	local ready, frames, clock, sparked = false, 0, 0, false
+	task.spawn(function()
+		local list = {}
+		for _, set in { cfg.letters or {}, cfg.hot or {} } do
+			for _, id in set do table.insert(list, id) end
+		end
+		local done = false
+		task.spawn(function()
+			pcall(function() game:GetService("ContentProvider"):PreloadAsync(list) end)
+			done = true
+		end)
+		local t = os.clock()
+		while not done and os.clock() - t < 6 do task.wait() end -- never hold the screen for more than six seconds
+		ready = true
+	end)
 	local slammed = false
 
 	local t0, shown, done = os.clock(), 0, false
@@ -187,6 +204,16 @@ function M.start(E)
 			s.f.BackgroundTransparency = 0.35 - 0.3 * depth
 		end
 		-- the word: its spread, the slam and the shake after it
+		frames += 1
+		if ready and frames > 4 then clock += math.min(dt, 1 / 30) end
+		local real = now
+		now = clock -- from here to the end of the letters, time is the logo's own clock
+		if clock > 0 and not sparked then
+			sparked = true
+			spark.Visible = true
+			TweenService:Create(spark, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In, 0, false, 0.14), { Position = UDim2.fromScale(0.05, 0.5), Size = UDim2.fromScale(0.02, 0.9) }):Play()
+			task.delay(0.32, function() spark:Destroy() end)
+		end
 		if not slammed and now >= slamAt - 0.25 then spread.goal = 1 end
 		if not slammed and now >= slamAt then
 			slammed = true
@@ -233,7 +260,8 @@ function M.start(E)
 				end
 			end
 		end
-		local loaded = game:IsLoaded() and E.plr.Character ~= nil
+		now = real
+		local loaded = game:IsLoaded() and E.plr.Character ~= nil and clock > slamAt + 0.9 -- the logo always finishes its landing and shake
 		local goal = math.min(now / cfg.min, loaded and 1 or 0.9)
 		shown += (goal - shown) * math.min(1, dt * 8)
 		fill.Size = UDim2.fromScale(shown, 1)

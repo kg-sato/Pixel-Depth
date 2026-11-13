@@ -99,7 +99,8 @@ function M.new(parent, str, opt)
 end
 
 -- Turn an existing TextLabel into jelly: its own text is hidden and a jelly word with the same string sits inside it, follows
--- its Text and its TextTransparency from then on. opt as in new(), plus popOnChange and followColor (tint from TextColor3).
+-- its Text and its TextTransparency from then on. opt as in new(), plus popOnChange, followColor (tint from TextColor3) and
+-- maxLen (longer strings stay plain text).
 function M.mirror(label, opt)
 	opt = opt or {}
 	if label:FindFirstChild("Jelly") then return end
@@ -108,9 +109,18 @@ function M.mirror(label, opt)
 	local function alpha(a)
 		for _, g in t.glyphs do g.img.ImageTransparency = a if g.glow then g.glow.ImageTransparency = 0.62 + 0.38 * a end end
 	end
-	label.MaxVisibleGraphemes = 0 -- the plain text (and its outline) is never drawn; its transparency and colour stay the game's to set
+	-- the plain text (and its outline) is not drawn while the jelly stands in for it; its transparency and colour stay the
+	-- game's to set. A string longer than opt.maxLen is a sentence, not a headline: it goes back to plain text.
+	local function fit()
+		local long = opt.maxLen ~= nil and #label.Text > opt.maxLen
+		label.MaxVisibleGraphemes = long and -1 or 0
+		t.frame.Visible = not long
+	end
+	fit()
 	alpha(label.TextTransparency)
 	label:GetPropertyChangedSignal("Text"):Connect(function()
+		fit()
+		if not t.frame.Visible then return end
 		t.set(label.Text)
 		alpha(label.TextTransparency)
 		if opt.popOnChange and label.TextTransparency < 1 then t.pop(0.02) end
@@ -133,7 +143,7 @@ RunService.RenderStepped:Connect(function()
 				local age = g.born and (now - g.born) or 9
 				local wob = (age > 0 and age < 1.2) and math.exp(-age * 5) * math.sin(age * 22) * 0.2 or 0 -- squash and stretch that dies away
 				g.img.Size = UDim2.fromScale(g.w * (1 + wob), 1 - wob)
-				g.img.Rotation = math.sin(now * 1.7 + g.i * 0.9) * 2.2
+				g.img.Rotation = math.sin(now * 1.7 + g.i * 0.9) * 1.1
 				g.img.Position = g.pos + UDim2.fromScale(0, math.sin(now * 2.1 + g.i * 0.7) * 0.03)
 			end
 		end

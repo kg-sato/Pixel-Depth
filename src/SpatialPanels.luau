@@ -13,8 +13,8 @@ local UIS = game:GetService("UserInputService")
 local GuiService = game:GetService("GuiService")
 local M = {}
 
-local DIST = 4 -- studs from the eye to the panel's middle
-local YAW, PITCH, FILL = 15, 4, 0.88 -- degrees turned away, degrees leaned back, share of the view it fills
+local DIST = 1.1 -- studs from the eye to the panel's middle: close, so no post, wall or rock can stand in front of a menu (it was 4 and a lantern post covered the bag)
+local YAW, PITCH, FILL = 7, 2, 0.88 -- degrees turned away, degrees leaned back, share of the view it fills (the user, 2026-11-12: 15 and 4 leaned too far; face the player 5 to 10 degrees more)
 local SKIP = { ARSettings = true } -- menus that are already in the world
 
 function M.start(E)
@@ -55,6 +55,9 @@ function M.start(E)
 		for _, f in hook.modals or {} do
 			if not SKIP[f.Name] and f:IsA("GuiObject") and f.Visible then return true end
 		end
+		for _, e in hook.spatialExtra or {} do
+			if e.menu and e.on() then return true end
+		end
 		return false
 	end
 
@@ -86,12 +89,28 @@ function M.start(E)
 		local any = count > 0
 		hook.spatialOpen = any
 		if sg.Enabled ~= any then sg.Enabled = any end
+		-- the first-person tools (the torch and pickaxe copies that live under the camera) stood in front of the panel:
+		-- they are hidden from their owner while a panel is up
+		local function tools(hide)
+			for _, m in workspace.CurrentCamera:GetChildren() do
+				if m ~= part and m.Name ~= "ARSettings" and m.Name ~= "SpatialCard" then
+					for _, d in m:GetDescendants() do
+						if d:IsA("BasePart") then d.LocalTransparencyModifier = hide and 1 or 0 end
+					end
+					if m:IsA("BasePart") then m.LocalTransparencyModifier = hide and 1 or 0 end
+				end
+			end
+		end
 		if not any then
-			if wasAny and hook.blur then hook.blur.Enabled = true end
+			if wasAny then
+				if hook.blur then hook.blur.Enabled = true end
+				tools(false)
+			end
 			wasAny = false
 			return
 		end
 		wasAny = true
+		tools(true)
 		if hook.blur then hook.blur.Enabled = false end -- the world stays sharp behind the panel
 
 		local cam = workspace.CurrentCamera
@@ -113,10 +132,10 @@ function M.start(E)
 		local want = cam.CFrame
 			* CFrame.new(viewH * 0.012, -viewH * (inset / 2) / vp.Y * FILL, -DIST)
 			* CFrame.Angles(0, math.pi, 0) -- the front face looks back at the eye
-			* CFrame.Angles(math.rad(PITCH - lean.Y * 2.5), math.rad(-YAW - swing * 62 - lean.X * 3.5), 0)
+			* CFrame.Angles(math.rad(PITCH - lean.Y * 1.2), math.rad(-YAW - swing * 62 - lean.X * 2), 0)
 		-- a short lag behind the view: when the camera turns, the panel trails and catches up
 		last = last and last:Lerp(want, math.min(1, dt * 14)) or want
-		if (last.Position - want.Position).Magnitude > 6 then last = want end
+		if (last.Position - want.Position).Magnitude > 2 then last = want end
 		part.CFrame = last
 	end)
 
