@@ -29,7 +29,7 @@ function M.start(E)
 		return o
 	end
 	local pg = plr:WaitForChild("PlayerGui")
-	local lock = new("BillboardGui", pg, { Name = "OreLock", Size = UDim2.fromScale(4.4, 4.4), AlwaysOnTop = false, StudsOffset = Vector3.new(0, 0, 3.5), LightInfluence = 0, -- drawn in the world, pulled 3.5 studs toward the eye so the rock does not swallow it (always-on-top world guis do not show in this game's captures)
+	local lock = new("BillboardGui", pg, { Name = "OreLock", Size = UDim2.fromScale(3.4, 3.4), AlwaysOnTop = false, StudsOffset = Vector3.new(0, 0, 2.5), LightInfluence = 0, -- drawn in the world, pulled 3.5 studs toward the eye so the rock does not swallow it (always-on-top world guis do not show in this game's captures)
 		 ResetOnSpawn = false, Enabled = false, MaxDistance = 60 })
 	local frame = new("Frame", lock, { Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1 })
 	local punch = new("UIScale", frame, {})
@@ -48,18 +48,59 @@ function M.start(E)
 		end
 	end
 
-	-- the slim top line that replaces the two bars
-	local bar, hint
-	for _, o in ps:GetChildren() do
-		if o:IsA("Frame") and o:GetAttribute("Kind") == "pill" then bar = o end
-		if o:IsA("Frame") and o:GetAttribute("Kind") == "dark" then hint = o end
+	-- The dial becomes a glass reticle while it rides on the rock (directive v8, audit point 3: "2D minigames blind the
+	-- player"): its case and face turn clear so the ore shows through, leaving a bright ring, the gold arc, the notches and
+	-- the glowing needle. The dark backdrop, the dial's shadow and the two bars are hidden; one jelly line at the top says
+	-- what to do. Everything is put back when the minigame ends.
+	local JellyText = require(script.Parent:WaitForChild("JellyText"))
+	local dressed = {} -- { instance, property, old value }
+	local function set(o, prop, v)
+		table.insert(dressed, { o, prop, o[prop] })
+		o[prop] = v
 	end
+	local ringStroke
+	local function dress()
+		if #dressed > 0 then return end
+		for _, o in ps:GetChildren() do
+			if o:IsA("Frame") and o ~= dial then
+				local k = o:GetAttribute("Kind")
+				if o.Name == "Dim" then set(o, "BackgroundTransparency", 1)
+				elseif k == "pill" or k == "dark" then set(o, "Visible", false)
+				elseif o:FindFirstChildOfClass("UICorner") and o.Size == home.size and o.BackgroundTransparency < 1 and not k then set(o, "Visible", false) end -- the dial's shadow disc
+			end
+		end
+		set(dial, "BackgroundTransparency", 1)
+		for _, o in dial:GetChildren() do
+			if o:IsA("Frame") and o:FindFirstChildOfClass("UICorner") and o.Name == "Frame" then
+				local k = o.Size.X.Scale
+				if k > 0.95 then -- the outer case: a bright ring only
+					set(o, "BackgroundTransparency", 1)
+					ringStroke = ringStroke or new("UIStroke", o, { Color = Color3.new(1, 1, 1), Thickness = 4, Transparency = 0.05 })
+					ringStroke.Enabled = true
+				elseif k > 0.8 and k < 0.87 then set(o, "BackgroundTransparency", 0.8) -- the face: a breath of smoked glass, the rock shows through
+				elseif k > 0.2 then set(o, "BackgroundTransparency", 1) end
+			end
+		end
+	end
+	local function undress()
+		for i = #dressed, 1, -1 do
+			local d = dressed[i]
+			if d[1].Parent then d[1][d[2]] = d[3] end
+		end
+		table.clear(dressed)
+		if ringStroke then ringStroke.Enabled = false end
+	end
+	local say = new("Frame", ps, { Name = "Say", Size = UDim2.fromScale(0.5, 0.11), Position = UDim2.fromScale(0.5, 0.13), AnchorPoint = MID, BackgroundTransparency = 1, Visible = false, ZIndex = 13 })
+	local sayText = JellyText.new(say, "STRIKE ON GOLD!", { color = Color3.fromRGB(255, 226, 130), glow = true, z = 13 })
 
 	local dep, kind, lockCol, at = nil, nil, Color3.new(1, 1, 1), nil
+	local aim = 0
 	local function stop()
 		dep, kind, at = nil, nil, nil
 		dial.Size, dial.Position = home.size, home.pos
 		lock.Enabled = false
+		undress()
+		say.Visible = false
 	end
 
 	local inner = cave.mg
@@ -69,7 +110,7 @@ function M.start(E)
 			local d, which = ...
 			local core = d and d.PrimaryPart
 			if not core then return end
-			dep, kind = d, which
+			dep, kind, aim = d, which, 0
 			local ore = E.C.LAYERS[d:GetAttribute("Layer")][4][d:GetAttribute("Ore")]
 			lockCol = (ore and ore[2] or Color3.fromRGB(120, 232, 255)):Lerp(Color3.new(1, 1, 1), 0.65)
 			tint(lockCol)
@@ -77,8 +118,12 @@ function M.start(E)
 			lock.Enabled = true
 			punch.Scale = 1.5 -- the brackets close in on the rock
 			TweenService:Create(punch, TweenInfo.new(0.28, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
-			if bar and hint and which == "strike" then -- one slim line at the top instead of two bars
-				bar.Position, hint.Position = E.S(640, 64), E.S(640, 104)
+			if which == "strike" then
+				dress()
+				if ringStroke then ringStroke.Color = lockCol end
+				say.Visible = true
+				sayText.set("STRIKE ON GOLD!")
+				sayText.pop()
 			end
 		elseif what == "mgStrike" and dep then -- every swing: a white flash and a punch outward (1 frame white, then back to the ore's colour)
 			tint(Color3.new(1, 1, 1))
@@ -90,15 +135,21 @@ function M.start(E)
 		end
 	end
 
-	RunService.RenderStepped:Connect(function()
+	RunService:BindToRenderStep("PixelMiningReticle", Enum.RenderPriority.Camera.Value + 2, function()
 		if not dep then return end
 		local core = dep.PrimaryPart
 		if not core or not cave.mgBusy then -- the minigame ended some other way (left, died, reset)
 			stop()
 			return
 		end
-		frame.Rotation = math.sin(os.clock() * 2) * 2
+		frame.Rotation = 0
 		if kind ~= "strike" then return end
+		do -- the view turns to the rock and holds it in the middle, so the game is played on the ore itself
+			local cam = workspace.CurrentCamera
+			local want = CFrame.lookAt(cam.CFrame.Position, core.Position)
+			aim = math.min(1, aim + 1 / 60 / 0.35)
+			cam.CFrame = cam.CFrame:Lerp(want, aim * aim * (3 - 2 * aim))
+		end
 		if not ps.Visible then return end
 		-- the dial rides on the rock: its place on screen, held inside the middle of the view, its size from the distance
 		local cam = workspace.CurrentCamera
