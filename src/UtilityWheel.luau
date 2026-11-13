@@ -111,7 +111,7 @@ function M.start(E)
 		s.label.Font = Enum.Font.Bangers -- inside the disc now: eight slots leave no room underneath; -- outside the disc: the name never covers the icon
 		s.label.ZIndex = 43
 		if G then
-			s.label.Size, s.label.Position, s.label.TextColor3 = UDim2.fromScale(1.05, 0.3), UDim2.fromScale(0.5, 0.86), LABEL
+			s.label.Size, s.label.Position, s.label.TextColor3 = UDim2.fromScale(0.98, 0.27), UDim2.fromScale(0.5, 0.84), LABEL -- inside the token: longer names ran over the wheel's rim
 			s.jt = JellyText.mirror(s.label, { color = LABEL, followColor = true, sway = false })
 		end
 		s.sub = E.text(d, "", UDim2.fromScale(1.7, 0.15), UDim2.fromScale(0.5, 1.31), MID, Color3.fromRGB(112, 96, 138), nil, false) -- why a locked slot is locked

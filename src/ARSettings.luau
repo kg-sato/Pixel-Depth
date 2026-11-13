@@ -102,7 +102,8 @@ function M.start(E)
 			num.set(state.vol == 0 and "OFF" or (state.vol * 10 .. "%"))
 			if pop then num.pop(0.02) end
 		end
-		glassButton(card, "-", LILAC, UDim2.fromScale(0.26, 0.24), UDim2.fromScale(0.3, 0.8), function() state.vol = math.max(0, state.vol - 1) apply(true) end)
+		local _, minus = glassButton(card, "-", LILAC, UDim2.fromScale(0.26, 0.24), UDim2.fromScale(0.3, 0.8), function() state.vol = math.max(0, state.vol - 1) apply(true) end)
+		new("UIScale", minus.frame, { Scale = 1.9 }) -- the dash glyph is small in its cell: as heavy as the plus beside it
 		glassButton(card, "+", CYAN, UDim2.fromScale(0.26, 0.24), UDim2.fromScale(0.7, 0.8), function() state.vol = math.min(10, state.vol + 1) apply(true) end)
 		local g = SoundService:FindFirstChild("PixelMaster")
 		if g then state.vol = math.clamp(math.floor(g.Volume * 10 + 0.5), 0, 10) end
