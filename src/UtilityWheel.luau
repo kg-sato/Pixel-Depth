@@ -112,7 +112,7 @@ function M.start(E)
 		s.label.ZIndex = 43
 		if G then
 			s.label.Size, s.label.Position, s.label.TextColor3 = UDim2.fromScale(1.05, 0.3), UDim2.fromScale(0.5, 0.86), LABEL
-			JellyText.mirror(s.label, { color = LABEL, followColor = true, sway = false })
+			s.jt = JellyText.mirror(s.label, { color = LABEL, followColor = true, sway = false })
 		end
 		s.sub = E.text(d, "", UDim2.fromScale(1.7, 0.15), UDim2.fromScale(0.5, 1.31), MID, Color3.fromRGB(112, 96, 138), nil, false) -- why a locked slot is locked
 		s.sub.ZIndex = 43
@@ -135,6 +135,7 @@ function M.start(E)
 	new("UIStroke", dot, { Color = INK, Thickness = 2 })
 
 	local origin, sel, openedAt = Vector2.zero, nil, 0
+	local lastSel = nil
 	local tools -- the touch-only TOOLS button (made below)
 	local isOpen = false -- root stays visible a moment longer while it shrinks away
 	local function close()
@@ -211,6 +212,10 @@ function M.start(E)
 			s.scale.Scale += ((on and 1.14 or 1) - s.scale.Scale) * 0.35
 		end
 		local s = sel and SLOTS[sel]
+		if sel ~= lastSel then -- the newly picked slot's name wobbles like jelly
+			lastSel = sel
+			if s and s.jt and not calm then s.jt.pop(0.012) pcall(E.sfx, "tab", 1.3) end
+		end
 		hubName.Text = s and s.name or ((tools and tools.Visible) and "TOOLS" or "TAB")
 		hubWhy.Text = s and s.why() or (sel and "" or ((tools and tools.Visible) and "tap one" or "move and let go"))
 	end)
