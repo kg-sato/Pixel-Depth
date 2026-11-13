@@ -43,7 +43,7 @@ function M.start(E)
 		r.title.TextXAlignment, r.title.ZIndex = Enum.TextXAlignment.Left, 7
 		r.reward = text(f, "", UDim2.fromScale(0.3, 0.26), UDim2.fromScale(0.04, 0.57), Vector2.new(0, 0.5), MUTED, 700, false)
 		r.reward.TextXAlignment, r.reward.ZIndex = Enum.TextXAlignment.Left, 7
-		local bar = new("Frame", f, { Size = UDim2.fromScale(0.6, 0.17), Position = UDim2.fromScale(0.04, 0.81), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = Color3.fromRGB(240, 234, 246), -- a pale, outlined, taller track: a filled-in empty bar read as a full one (Gemini UI review, twice)
+		local bar = new("Frame", f, { Size = UDim2.fromScale(0.6, 0.17), Position = UDim2.fromScale(0.04, 0.81), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = E.GLASS and Color3.fromRGB(186, 170, 232) or Color3.fromRGB(240, 234, 246), -- a pale, outlined, taller track: a filled-in empty bar read as a full one (Gemini UI review, twice)
 		 BorderSizePixel = 0, ZIndex = 7 })
 		new("UIStroke", bar, { Color = Color3.fromRGB(190, 176, 214), Thickness = 1.5 })
 		new("UICorner", bar, { CornerRadius = UDim.new(0.5, 0) })
@@ -244,7 +244,7 @@ function M.start(E)
 			if word then tagText.Text = word end
 			if dot and dot.Visible and btn.Visible then pop(dot, 1.35, 0.4) end -- the claim dot keeps beating
 		end
-		local busy = E.isBusy and E.isBusy() or plr:GetAttribute("Seated") == true -- not in a minigame or a cart ride
+		local busy = E.isBusy and E.isBusy() or plr:GetAttribute("Seated") == true or hook.wheelOpen == true or hook.arOpen == true -- not in a minigame, a cart ride, or under the wheel or the settings
 		for _, m in hook.modals or {} do if m.Visible then busy = true end end
 		local h = E.hrp()
 		local far = pos and h and (pos - h.Position).Magnitude or 0

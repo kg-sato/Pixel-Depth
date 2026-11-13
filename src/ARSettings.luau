@@ -16,8 +16,8 @@ local SoundService = game:GetService("SoundService")
 local M = {}
 
 local MID = Vector2.new(0.5, 0.5)
-local RADIUS, SPREAD = 7.5, 58 -- studs from the eye to a panel (close, so little of the world can stand in front: always-on-top world panels do not draw in this game); degrees between panels
-local PW, PH, PPS = 6.6, 5.1, 70 -- panel size in studs, pixels per stud
+local RADIUS, SPREAD = 3.4, 58 -- studs from the eye to a panel (close, so little of the world can stand in front: always-on-top world panels do not draw in this game); degrees between panels
+local PW, PH, PPS = 3.0, 2.3, 154 -- panel size in studs, pixels per stud
 local SMOKE, EDGE, WHITE = Color3.fromRGB(30, 21, 58), Color3.fromRGB(236, 226, 255), Color3.new(1, 1, 1)
 local PINK, MINT, BUTTER, CYAN, LILAC = Color3.fromRGB(255, 150, 205), Color3.fromRGB(150, 255, 210), Color3.fromRGB(255, 226, 130), Color3.fromRGB(160, 240, 255), Color3.fromRGB(205, 188, 255) -- bright: a tint multiplies the pale jelly
 
@@ -174,8 +174,8 @@ function M.start(E)
 	local lastMouse, mouseAt = nil, 0
 	local function place()
 		for slot, p in panels do
-			local cf = base * CFrame.Angles(0, -math.rad(slot * SPREAD), 0) * CFrame.new(0, 0.2, -RADIUS)
-			p.part.CFrame = CFrame.lookAt(cf.Position, base.Position + Vector3.new(0, 0.2, 0)) -- every panel faces the eye
+			local cf = base * CFrame.Angles(0, -math.rad(slot * SPREAD), 0) * CFrame.new(0, 0.1, -RADIUS)
+			p.part.CFrame = CFrame.lookAt(cf.Position, base.Position + Vector3.new(0, 0.1, 0)) -- every panel faces the eye
 		end
 	end
 	local function open()
@@ -240,7 +240,7 @@ function M.start(E)
 		local cam = workspace.CurrentCamera
 		local now = os.clock()
 		local h = E.hrp()
-		if not closing and (not h or (h.Position - base.Position).Magnitude > 9 or E.isBusy()) then shut() end -- walked away, or a minigame began
+		if not closing and (not h or (h.Position - base.Position).Magnitude > 7 or E.isBusy()) then shut() end -- walked away, or a minigame began
 		blend = math.clamp(blend + (closing and -dt or dt) / 0.4, 0, 1)
 		if hook.blur then hook.blur.Enabled = false end -- the client blurs the world behind a menu; these panels stand IN the world and must stay sharp
 		local ch = plr.Character
@@ -281,9 +281,9 @@ function M.start(E)
 		local k = blend * blend * (3 - 2 * blend)
 		cam.CFrame = cam.CFrame:Lerp(want, k) -- cam.CFrame here is what the game's own camera step just wrote
 		for slot, p in panels do
-			local bob = math.sin(now * 1.3 + slot * 1.9) * 0.12
-			local cf = base * CFrame.Angles(0, -math.rad(slot * SPREAD), 0) * CFrame.new(0, 0.2 + bob, -RADIUS)
-			p.part.CFrame = CFrame.lookAt(cf.Position, base.Position + Vector3.new(0, 0.2 + bob, 0))
+			local bob = math.sin(now * 1.3 + slot * 1.9) * 0.05
+			local cf = base * CFrame.Angles(0, -math.rad(slot * SPREAD), 0) * CFrame.new(0, 0.1 + bob, -RADIUS)
+			p.part.CFrame = CFrame.lookAt(cf.Position, base.Position + Vector3.new(0, 0.1 + bob, 0))
 			p.sheen.Position = UDim2.fromScale(0.2 + 0.6 * (0.5 + 0.5 * math.sin(now * 0.6 + slot)), 0.5)
 		end
 	end)

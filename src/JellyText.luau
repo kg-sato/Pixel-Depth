@@ -35,17 +35,37 @@ local function watch(image)
 		ready[image] = true
 		holder:Destroy()
 		for _, f in waiting do task.spawn(f) end
-		table.clear(waiting)
+		local all = true
+		for _, ok in ready do all = all and ok end
+		if all then table.clear(waiting) end -- nothing left to wait for
 	end)
 end
-watch(C.JELLY.white)
-watch(C.JELLY.pink)
+for _, id in C.JELLY do watch(id) end
 
 local function make(cls, parent, props)
 	local o = Instance.new(cls)
 	for k, v in props do o[k] = v end
 	o.Parent = parent
 	return o
+end
+
+-- Which atlas draws a colour: one of the true-colour jellies when the colour is near it (they keep their white shine; a tint
+-- on the pale atlas multiplies the shine away and looks like dough), else the pale atlas with a tint. nil = the pink jelly.
+local TONES = { gold = Color3.fromRGB(255, 205, 80), cyan = Color3.fromRGB(110, 215, 255), violet = Color3.fromRGB(160, 120, 255), mint = Color3.fromRGB(120, 235, 180), pink = Color3.fromRGB(255, 120, 190) }
+function M.pick(color)
+	if not color then return C.JELLY.pink, nil end
+	local h, s, v = color:ToHSV()
+	if s < 0.16 then return C.JELLY.white, color end -- white and greys: the pale atlas
+	local best, bd
+	for name, c in TONES do
+		if C.JELLY[name] then
+			local h2 = c:ToHSV()
+			local d = math.min(math.abs(h - h2), 1 - math.abs(h - h2))
+			if not bd or d < bd then best, bd = name, d end
+		end
+	end
+	if best and bd < 0.09 then return C.JELLY[best], v < 0.6 and Color3.fromHSV(0, 0, 0.55 + v * 0.5) or nil end -- a dim colour dims its jelly
+	return C.JELLY.white, color
 end
 
 function M.new(parent, str, opt)
@@ -66,7 +86,7 @@ function M.new(parent, str, opt)
 		end
 		total = math.max(total, 0.2)
 		ratio.AspectRatio = total -- the row is as wide as the word, in letter heights
-		local image = self.color and C.JELLY.white or C.JELLY.pink
+		local image, tint = M.pick(self.color)
 		local x = 0
 		for i = 1, #s do
 			local g = G.glyphs[s:sub(i, i)]
@@ -81,7 +101,7 @@ function M.new(parent, str, opt)
 					glow.ImageColor3 = self.color or Color3.fromRGB(255, 0, 127)
 				end
 				local img = make("ImageLabel", row, props)
-				if self.color then img.ImageColor3 = self.color end
+				if tint then img.ImageColor3 = tint end
 				table.insert(self.glyphs, { img = img, glow = glow, sc = make("UIScale", img, {}), pos = pos, w = 1 / total, i = i })
 				x += g[2]
 			else
@@ -138,11 +158,11 @@ function M.mirror(label, opt)
 	local function fit()
 		if not label.Parent then return end
 		local long = opt.maxLen ~= nil and #label.Text > opt.maxLen
-		local ok = ready[opt.color and C.JELLY.white or C.JELLY.pink] == true
+		local ok = ready[(M.pick(t.color))] == true
 		label.MaxVisibleGraphemes = (long or not ok) and -1 or 0
 		t.frame.Visible = not long and ok
 	end
-	if not (ready[C.JELLY.white] and ready[C.JELLY.pink]) then table.insert(waiting, fit) end
+	if ready[(M.pick(t.color))] ~= true then table.insert(waiting, fit) end -- run again when its atlas finishes loading
 	fit()
 	alpha(label.TextTransparency)
 	label:GetPropertyChangedSignal("Text"):Connect(function()

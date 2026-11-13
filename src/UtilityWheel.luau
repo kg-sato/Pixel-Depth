@@ -89,7 +89,7 @@ function M.start(E)
 	for _, rot in { 22.5, 67.5, -22.5, -67.5 } do -- faint sector lines: where one slot's pull ends and the next begins
 		new("Frame", holder, { Size = UDim2.new(1.02, 0, 0, 2), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, Rotation = rot, BackgroundColor3 = G and Color3.fromRGB(214, 200, 255) or Color3.fromRGB(230, 184, 88), BackgroundTransparency = 0.7, BorderSizePixel = 0, ZIndex = 40 })
 	end
-	local OFF, OFF_INK = G and Color3.fromRGB(58, 50, 80) or Color3.fromRGB(150, 132, 108), G and Color3.fromRGB(150, 140, 172) or Color3.fromRGB(78, 58, 44) -- a soft dark plate so the wheel reads over town and cave alike
+	local OFF, OFF_INK = G and Color3.fromRGB(58, 50, 80) or Color3.fromRGB(150, 132, 108), G and Color3.fromRGB(206, 198, 228) or Color3.fromRGB(78, 58, 44) -- a soft dark plate so the wheel reads over town and cave alike
 	for _, s in SLOTS do
 		local d = disc(holder, 0.225, s.x, s.y, CREAM, 0, 41)
 		s.fill = G and Color3.fromRGB(96, 74, 170) or Color3.fromRGB(236, 220, 180) -- glass tokens with the kit on; parchment tokens; the slot's own colour shows only when it is picked (Gemini: pastel candy circles undid the compass)
@@ -211,7 +211,7 @@ function M.start(E)
 		end
 		local s = sel and SLOTS[sel]
 		hubName.Text = s and s.name or ((tools and tools.Visible) and "TOOLS" or "TAB")
-		hubWhy.Text = s and s.why() or (sel and "" or ((tools and tools.Visible) and "tap one" or "push and let go"))
+		hubWhy.Text = s and s.why() or (sel and "" or ((tools and tools.Visible) and "tap one" or "move and let go"))
 	end)
 
 	root.Activated:Connect(function(io)

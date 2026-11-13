@@ -31,7 +31,8 @@ print("source", src, "crop side", side, crop)
 
 rows = (len(CHARS) + COLS - 1) // COLS
 adv = {}
-for folder, glyphs in (("jelly_pink", pink), ("jelly_white", load("jelly_white"))):
+import os
+for folder, glyphs in [("jelly_pink", pink)] + [(f, load(f)) for f in ("jelly_white", "jelly_gold", "jelly_cyan", "jelly_violet", "jelly_mint") if os.path.isdir(here / f)]:
     atlas = Image.new("RGBA", (COLS * CELL, rows * CELL), (0, 0, 0, 0))
     for i, ch in enumerate(CHARS):
         g = glyphs[ch].crop(crop).resize((CELL, CELL), Image.LANCZOS)

@@ -75,9 +75,9 @@ function M.start(E)
 				local k = o.Size.X.Scale
 				if k > 0.95 then -- the outer case: a bright ring only
 					set(o, "BackgroundTransparency", 1)
-					ringStroke = ringStroke or new("UIStroke", o, { Color = Color3.new(1, 1, 1), Thickness = 4, Transparency = 0.05 })
+					ringStroke = ringStroke or new("UIStroke", o, { Color = Color3.new(1, 1, 1), Thickness = 6, Transparency = 0 })
 					ringStroke.Enabled = true
-				elseif k > 0.8 and k < 0.87 then set(o, "BackgroundTransparency", 0.8) -- the face: a breath of smoked glass, the rock shows through
+				elseif k > 0.8 and k < 0.87 then set(o, "BackgroundTransparency", 0.42) -- the face: smoked glass, so the needle and marks stand out while the rock still shows (0.8 let the rock swallow them)
 				elseif k > 0.2 then set(o, "BackgroundTransparency", 1) end
 			end
 		end

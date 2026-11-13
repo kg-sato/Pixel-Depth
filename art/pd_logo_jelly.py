@@ -9,6 +9,12 @@ args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 out = args[0] if args else "logo_jelly"
 CHARS = args[1] if len(args) > 1 else "".join(sorted(set("PIXELDEPTH")))  # which characters to render
 WHITE = len(args) > 2 and args[2] == "white"  # a pale jelly that the game tints (ImageColor3)
+# a named colour: its own jelly with white highlights (a tint on the pale atlas dulls the shine into dough)
+TONES = {"gold": ((1.0, 0.42, 0.02), (1.0, 0.72, 0.12), (1.0, 0.93, 0.5), (0.5, 0.2, 0.02)),
+         "cyan": ((0.02, 0.4, 1.0), (0.1, 0.75, 1.0), (0.6, 0.97, 1.0), (0.03, 0.12, 0.45)),
+         "violet": ((0.32, 0.1, 1.0), (0.55, 0.36, 1.0), (0.84, 0.74, 1.0), (0.12, 0.04, 0.4)),
+         "mint": ((0.0, 0.6, 0.42), (0.2, 0.9, 0.62), (0.72, 1.0, 0.86), (0.02, 0.25, 0.2))}
+TONE = TONES.get(args[2]) if len(args) > 2 else None
 SIZE = int(args[3]) if len(args) > 3 else 512
 os.makedirs(out, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -64,9 +70,13 @@ def jelly(nt, b):
     mp = nt.nodes.new("ShaderNodeMapRange")
     mp.inputs["From Min"].default_value, mp.inputs["From Max"].default_value = -0.4, 0.4
     ramp.color_ramp.elements[0].color = (1.0, 0.05, 0.42, 1) if not WHITE else (0.62, 0.6, 0.7, 1)  # magenta at the foot
+    if TONE: ramp.color_ramp.elements[0].color = TONE[0] + (1,)
     ramp.color_ramp.elements[1].color = (0.74, 0.5, 1.0, 1) if not WHITE else (0.9, 0.9, 0.94, 1)  # lavender at the head
     mid = ramp.color_ramp.elements.new(0.5)
     mid.color = (1.0, 0.32, 0.72, 1) if not WHITE else (0.86, 0.85, 0.92, 1)
+    if TONE:
+        mid.color = TONE[1] + (1,)
+        ramp.color_ramp.elements[2].color = TONE[2] + (1,)
     nt.links.new(tc.outputs["Object"], sep.inputs[0])
     nt.links.new(sep.outputs["Y"], mp.inputs["Value"])
     nt.links.new(mp.outputs[0], ramp.inputs[0])
@@ -75,11 +85,12 @@ def jelly(nt, b):
     if "Subsurface Radius" in b.inputs: b.inputs["Subsurface Radius"].default_value = (0.3, 0.1, 0.2)
     if "Emission Color" in b.inputs:
         nt.links.new(ramp.outputs[0], b.inputs["Emission Color"])
-        b.inputs["Emission Strength"].default_value = 0.12 if not WHITE else 0.0  # the jelly glows a little from inside
+        b.inputs["Emission Strength"].default_value = (0.3 if TONE else 0.12) if not WHITE else 0.0  # a named colour glows from inside: radiant, not dough  # the jelly glows a little from inside
 
 
 def rim(nt, b):
     b.inputs["Base Color"].default_value = (0.20, 0.05, 0.50, 1) if not WHITE else (0.16, 0.14, 0.24, 1)
+    if TONE: b.inputs["Base Color"].default_value = TONE[3] + (1,)
     setp(b, Roughness=0.12, Metallic=0.75, Coat_Weight=1.0, Coat_Roughness=0.03)
 
 
@@ -108,8 +119,8 @@ target = bpy.data.objects.new("Target", None)
 sc.collection.objects.link(target)
 light("key", (-1.6, 2.4, 4.0), 130 if not WHITE else 70, (1, 1, 1), 2.5)       # a broad white key from the upper left: the big soft shine
 light("strip", (0.6, 1.2, 3.0), 60, (1, 1, 1), 0.5)      # a small hard light: the sharp glint
-light("rimM", (3.0, -1.0, 1.6), 220, (1, 0.1, 0.6) if not WHITE else (1, 1, 1), 2.0)  # magenta from the right
-light("fillC", (-3.0, -2.0, 1.2), 150, (0.3, 0.9, 1) if not WHITE else (0.9, 0.95, 1), 2.5)  # cyan from the lower left
+light("rimM", (3.0, -1.0, 1.6), 220, (1, 0.1, 0.6) if not (WHITE or TONE) else (1, 1, 1), 2.0)  # magenta from the right
+light("fillC", (-3.0, -2.0, 1.2), 150, (0.3, 0.9, 1) if not (WHITE or TONE) else (0.9, 0.95, 1), 2.5)  # cyan from the lower left
 
 cam_d = bpy.data.cameras.new("Cam")
 cam_d.type = "ORTHO"
