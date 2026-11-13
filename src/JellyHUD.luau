@@ -46,6 +46,21 @@ function M.start(E)
 	end
 	for _, d in pg:GetDescendants() do later(d) end
 	pg.DescendantAdded:Connect(later)
+	-- in the world too: the wooden sign boards of the town and the camps (parts named Sign, built by HubBuilder and CaveBuilder)
+	-- carry their words in gold jelly
+	local function sign(d)
+		if d:IsA("TextLabel") and d.Name == "Label" and d.Parent and d.Parent:IsA("SurfaceGui") and d.Parent.Parent and d.Parent.Parent.Name == "Sign" then
+			local t = JellyText.mirror(d, { color = Color3.fromRGB(255, 205, 80), sway = false, maxLen = 20 })
+			if t then -- the board's old pixel letters are pictures inside the label: they go while the jelly shows
+				local function hide(c) if c:IsA("GuiObject") and c ~= t.frame then c.Visible = not t.frame.Visible end end
+				for _, c in d:GetChildren() do hide(c) end
+				d.ChildAdded:Connect(hide)
+				t.frame:GetPropertyChangedSignal("Visible"):Connect(function() for _, c in d:GetChildren() do hide(c) end end)
+			end
+		end
+	end
+	for _, d in workspace:GetDescendants() do sign(d) end
+	workspace.DescendantAdded:Connect(function(d) task.defer(sign, d) end)
 	local shout = E.caveHud:FindFirstChild("PerfectStrike")
 	for _, d in shout and shout:GetChildren() or {} do
 		if d:IsA("TextLabel") then JellyText.mirror(d, { color = Color3.fromRGB(255, 226, 130), glow = true, popOnChange = true }) end
