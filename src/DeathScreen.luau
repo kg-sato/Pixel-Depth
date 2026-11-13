@@ -60,6 +60,10 @@ function M.start(E)
 	local big = text(card, "", UDim2.fromScale(0.8, 0.17), UDim2.fromScale(0.5, 0.63), Vector2.new(0.5, 0.5), PINK, 700, false)
 	local note = text(card, "", UDim2.fromScale(0.84, 0.085), UDim2.fromScale(0.5, 0.78), Vector2.new(0.5, 0.5), E.CREAM, 700, false)
 	title.ZIndex, big.ZIndex, note.ZIndex = 64, 64, 64
+	if E.GLASS then -- cut-glass kit: the big line is jelly, taking each screen's own colour and landing with a pop
+		big.Size = UDim2.fromScale(0.86, 0.22)
+		require(script.Parent:WaitForChild("JellyText")).mirror(big, { color = PINK, followColor = true, popOnChange = true, glow = true, maxLen = 26 })
+	end
 	local track = block(card, UDim2.fromScale(0.7, 0.05), UDim2.fromScale(0.5, 0.9), Color3.fromRGB(84, 64, 112))
 	local fill = new("Frame", track, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = GOLD, BorderSizePixel = 0, ZIndex = 65 })
 	new("UICorner", fill, { CornerRadius = UDim.new(0.5, 0) })

@@ -78,7 +78,8 @@ function M.new(parent, str, opt)
 	local function build(s)
 		for _, g in self.glyphs do g.img:Destroy() if g.glow then g.glow:Destroy() end end
 		table.clear(self.glyphs)
-		s = string.upper(s)
+		self.raw = string.upper(s)
+		s = self.raw:gsub("%[ ?", "("):gsub(" ?%]", ")"):gsub("  +", " ") -- square brackets have no glyph; runs of spaces close up
 		local total = 0
 		for i = 1, #s do
 			local g = G.glyphs[s:sub(i, i)]
@@ -112,7 +113,7 @@ function M.new(parent, str, opt)
 	end
 
 	function self.set(s)
-		if string.upper(s) ~= self.text then build(s) end
+		if string.upper(s) ~= self.raw then build(s) end
 	end
 	function self.tint(c)
 		self.color = c
