@@ -141,7 +141,7 @@ function M.start(E)
 		if scan and h then
 			local chest = plr.PlayerGui:FindFirstChild("DailyChest")
 			local hook = E.vmHook
-			local busy = plr:GetAttribute("InCave") == true or E.isBusy() or (chest ~= nil and chest.Enabled) or hook.arOpen == true or hook.wheelOpen == true or (hook.noScrim ~= nil and hook.noScrim()) -- no station card behind a menu or the daily chest
+			local busy = plr:GetAttribute("InCave") == true or E.isBusy() or plr:GetAttribute("Seated") == true or plr.PlayerGui:FindFirstChild("MinecartEscapeGui") ~= nil or plr.PlayerGui:FindFirstChild("PixelLoading") ~= nil or (chest ~= nil and chest.Enabled) or hook.arOpen == true or hook.wheelOpen == true or (hook.noScrim ~= nil and hook.noScrim()) -- no station card behind a menu or the daily chest
 			for p, kind in stations do
 				local d = (p.Position - h.Position).Magnitude
 				local c = cards[p]
