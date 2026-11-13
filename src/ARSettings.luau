@@ -16,8 +16,8 @@ local SoundService = game:GetService("SoundService")
 local M = {}
 
 local MID = Vector2.new(0.5, 0.5)
-local RADIUS, SPREAD = 3.4, 58 -- studs from the eye to a panel (close, so little of the world can stand in front: always-on-top world panels do not draw in this game); degrees between panels
-local PW, PH, PPS = 3.0, 2.3, 154 -- panel size in studs, pixels per stud
+local RADIUS, SPREAD = 2.3, 58 -- studs from the eye to a panel (close, so little of the world can stand in front: always-on-top world panels do not draw in this game); degrees between panels
+local PW, PH, PPS = 2.03, 1.56, 228 -- panel size in studs, pixels per stud
 local SMOKE, EDGE, WHITE = Color3.fromRGB(30, 21, 58), Color3.fromRGB(236, 226, 255), Color3.new(1, 1, 1)
 local PINK, MINT, BUTTER, CYAN, LILAC = Color3.fromRGB(255, 150, 205), Color3.fromRGB(150, 255, 210), Color3.fromRGB(255, 226, 130), Color3.fromRGB(160, 240, 255), Color3.fromRGB(205, 188, 255) -- bright: a tint multiplies the pale jelly
 
@@ -164,22 +164,21 @@ function M.start(E)
 		new("UIStroke", b, { Color = EDGE, Thickness = 2, Transparency = 0.2 })
 		label(b, sym, UDim2.fromScale(0.6, 0.6), UDim2.fromScale(0.5, 0.48), WHITE, E.HEAD)
 		b.Activated:Connect(function() focus = math.clamp(focus + d, -1, 1) end)
+		return b
 	end
-	if UIS.TouchEnabled or plr:GetAttribute("DevTouch") then -- arrows only where there is a finger: with a mouse they sat on top of the side panels
-		arrow("<", 0.05, -1)
-		arrow(">", 0.95, 1)
-	end
+	local arrows = { arrow("<", 0.05, -1), arrow(">", 0.95, 1) } -- shown only where there is a finger: with a mouse they sat on top of the side panels
 	local hintBar = new("Frame", nav, { Size = UDim2.fromScale(0.44, 0.07), Position = UDim2.fromScale(0.5, 0.94), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.3, BorderSizePixel = 0 })
 	new("UICorner", hintBar, { CornerRadius = UDim.new(0.5, 0) })
-	label(hintBar, UIS.KeyboardEnabled and "LOOK LEFT AND RIGHT: MOUSE OR A / D      CLOSE: N" or "DRAG OR TAP THE ARROWS TO LOOK ROUND", UDim2.fromScale(0.9, 0.6), UDim2.fromScale(0.5, 0.5), EDGE, E.HEAD)
+	local hintText = label(hintBar, "", UDim2.fromScale(0.9, 0.6), UDim2.fromScale(0.5, 0.5), EDGE, E.HEAD)
+	local function touchNow() return (UIS.TouchEnabled and not UIS.KeyboardEnabled) or plr:GetAttribute("DevTouch") ~= nil end
 
 	-- the camera
 	local base, yaw, pitch, blend, closing = nil, 0, 0, 0, false
 	local lastMouse, mouseAt = nil, 0
 	local function place()
 		for slot, p in panels do
-			local cf = base * CFrame.Angles(0, -math.rad(slot * SPREAD), 0) * CFrame.new(0, 0.1, -RADIUS)
-			p.part.CFrame = CFrame.lookAt(cf.Position, base.Position + Vector3.new(0, 0.1, 0)) -- every panel faces the eye
+			local cf = base * CFrame.Angles(0, -math.rad(slot * SPREAD), 0) * CFrame.new(0, 0.06, -RADIUS)
+			p.part.CFrame = CFrame.lookAt(cf.Position, base.Position + Vector3.new(0, 0.06, 0)) -- every panel faces the eye
 		end
 	end
 	local function open()
@@ -197,8 +196,12 @@ function M.start(E)
 		local rp = RaycastParams.new()
 		rp.FilterDescendantsInstances = { plr.Character, folder }
 		local function free(dir)
-			local hit = workspace:Raycast(eye, dir * (RADIUS + 1.5), rp)
-			return hit and hit.Distance or RADIUS + 1.5
+			local best = RADIUS + 1.5
+			for _, dy in { 0.5, 0, -0.9 } do -- the top, the middle and the bottom edge of a panel: a low crate must count too
+				local hit = workspace:Raycast(eye + Vector3.new(0, dy, 0), dir * (RADIUS + 1.5), rp)
+				if hit then best = math.min(best, hit.Distance) end
+			end
+			return best
 		end
 		local best, bestScore
 		for step = 0, 11 do
@@ -212,6 +215,9 @@ function M.start(E)
 		hook.arOpen = true
 		place()
 		flag.Visible, nav.Enabled = true, true
+		local touch = touchNow()
+		for _, a in arrows do a.Visible = touch end
+		hintText.Text = touch and "DRAG OR TAP THE ARROWS TO LOOK ROUND" or "LOOK LEFT AND RIGHT: MOUSE OR A / D      CLOSE: N"
 		for slot, p in panels do
 			p.sg.Enabled = true
 			p.part.CanQuery = true -- a SurfaceGui gets no clicks through a part that cannot be queried
@@ -298,13 +304,20 @@ function M.start(E)
 			yaw += (goalYaw - yaw) * (1 - math.exp(-dt * 7))
 		end
 		pitch += (goalPitch - pitch) * (1 - math.exp(-dt * 6))
+		cam.FieldOfView += (64 - cam.FieldOfView) * (blend * blend * (3 - 2 * blend)) -- one field of view in town and in first person, so the panels are the same size everywhere (the game's own camera step sets it back each frame)
+		for _, m in cam:GetChildren() do -- the first-person torch and pickaxe stood in front of the buttons
+			if m ~= folder and m.Name ~= "SpatialPanel" and m.Name ~= "SpatialCard" then
+				for _, d in m:GetDescendants() do if d:IsA("BasePart") then d.LocalTransparencyModifier = closing and 0 or 1 end end
+				if m:IsA("BasePart") then m.LocalTransparencyModifier = closing and 0 or 1 end
+			end
+		end
 		local want = base * CFrame.Angles(0, -math.rad(yaw), 0) * CFrame.Angles(math.rad(pitch), 0, 0)
 		local k = blend * blend * (3 - 2 * blend)
 		cam.CFrame = cam.CFrame:Lerp(want, k) -- cam.CFrame here is what the game's own camera step just wrote
 		for slot, p in panels do
-			local bob = math.sin(now * 1.3 + slot * 1.9) * 0.05
-			local cf = base * CFrame.Angles(0, -math.rad(slot * SPREAD), 0) * CFrame.new(0, 0.1 + bob, -RADIUS)
-			p.part.CFrame = CFrame.lookAt(cf.Position, base.Position + Vector3.new(0, 0.1 + bob, 0))
+			local bob = math.sin(now * 1.3 + slot * 1.9) * 0.03
+			local cf = base * CFrame.Angles(0, -math.rad(slot * SPREAD), 0) * CFrame.new(0, 0.06 + bob, -RADIUS)
+			p.part.CFrame = CFrame.lookAt(cf.Position, base.Position + Vector3.new(0, 0.06 + bob, 0))
 			p.sheen.Position = UDim2.fromScale(0.2 + 0.6 * (0.5 + 0.5 * math.sin(now * 0.6 + slot)), 0.5)
 		end
 	end)
