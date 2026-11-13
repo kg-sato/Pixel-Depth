@@ -453,6 +453,25 @@ function M.play(opt)
 	local runTime, landed, card = 0, false, nil
 	local lastCount = 4
 	local function laneX() return lean * 1.6 end
+	-- A warning board beside the rail, 30 studs ahead of a hazard: one jelly word on smoked glass, standing in the tunnel
+	-- (directive v8: "rail-side warning signs"). side: -1 left wall, 1 right wall. It is part of the world, so it is cleaned
+	-- up with it. Only with the cut-glass kit.
+	local JellyText = C.UI_KIT == "glass" and require(script.Parent:WaitForChild("JellyText"))
+	local function warnBoard(at, word, color, side)
+		if not JellyText or calm then return end
+		local cf = pathCF(math.max(at - 30, 2)) * CFrame.new(side * 3.0, 3.3, 0)
+		local board = part(world, Vector3.new(3.8, 1.6, 0.12), CFrame.lookAt(cf.Position, pathCF(math.max(at - 48, 0)).Position + Vector3.new(0, 3.3, 0)), Color3.fromRGB(46, 32, 92), { Material = Enum.Material.Glass, Transparency = 0.1 })
+		part(world, Vector3.new(0.16, 3, 0.16), board.CFrame * CFrame.new(0, -2.1, 0.1), Color3.fromRGB(70, 52, 60), {})
+		local sg = Instance.new("SurfaceGui")
+		sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence, sg.Brightness = Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 60, 0, 1.6
+		sg.Parent = board
+		local holder = Instance.new("Frame")
+		holder.Size, holder.Position, holder.AnchorPoint, holder.BackgroundTransparency = UDim2.fromScale(0.9, 0.8), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), 1
+		holder.Parent = sg
+		JellyText.new(holder, word, { color = color, sway = false })
+		local l = Instance.new("PointLight")
+		l.Color, l.Range, l.Brightness, l.Parent = color, 7, 0.8, board
+	end
 	local function spawnRock(lane, at, threat)
 		local x = LANES[lane]
 		local here = pathCF(at)
@@ -495,6 +514,7 @@ function M.play(opt)
 		l.Color, l.Range, l.Brightness = Color3.fromRGB(255, 196, 120), 14, 1.4
 		l.Parent = lamp
 		m.Parent = world
+		warnBoard(at, "DUCK!", Color3.fromRGB(255, 120, 190), 1)
 		table.insert(hazards, { kind = "beam", lane = 0, at = at, model = m, lamp = lamp, lampBase = lamp.CFrame })
 	end
 	local function spawnGap(at, lane) -- buckled rails curling up over a dark crack (one lane, or all three): JUMP
@@ -511,6 +531,7 @@ function M.play(opt)
 			part(m, Vector3.new(1.8, 0.3, 0.5), here * CFrame.new(x, 0.35, 1.4) * CFrame.Angles(0, 0.4, 0.25), BARK_LT) -- a split sleeper
 		end
 		m.Parent = world
+		warnBoard(at, "JUMP!", Color3.fromRGB(110, 215, 255), -1)
 		table.insert(hazards, { kind = "gap", lane = lane, at = at, model = m })
 	end
 	local function spawnCart(at, lane) -- a rusty parked cart with a gloomling peeking out: LEAN (or JUMP it)
@@ -523,6 +544,7 @@ function M.play(opt)
 		part(m, Vector3.new(1.3, 1.1, 1.3), here * CFrame.new(0, 2.5, 0.2), DARK, { Shape = Enum.PartType.Ball })
 		for _, x in { -0.25, 0.25 } do part(m, Vector3.new(0.22, 0.28, 0.1), here * CFrame.new(x, 2.65, -0.42), Color3.fromRGB(255, 240, 200), { Material = Enum.Material.Neon }) end
 		m.Parent = world
+		warnBoard(at, LANES[lane] < 0 and "RIGHT >" or (LANES[lane] > 0 and "< LEFT" or "LEAN!"), Color3.fromRGB(255, 205, 80), LANES[lane] < 0 and 1 or -1) -- the board stands on the side to lean to
 		table.insert(hazards, { kind = "cart", lane = lane, at = at, model = m })
 	end
 	local function cleanup(h)
