@@ -20,7 +20,7 @@ function M.start(E)
 		if not d:IsA("TextLabel") then return end
 		local kind = d.Parent and d.Parent:GetAttribute("Kind")
 		if (kind == "ribbonPink" or kind == "ribbonLilac") and d.AbsoluteSize.Y >= 0 then
-			JellyText.mirror(d, { color = kind == "ribbonPink" and Color3.fromRGB(255, 120, 185) or Color3.fromRGB(176, 140, 255), popOnChange = true }) -- deeper than the pale ribbon glass so the word stands out
+			JellyText.mirror(d, { popOnChange = true }) -- the pink jelly: on the pale lilac ribbon the violet one had too little contrast -- deeper than the pale ribbon glass so the word stands out
 		end
 	end
 	for _, root in { gui, pg:FindFirstChild("DailyChest") } do
