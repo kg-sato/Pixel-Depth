@@ -60,7 +60,7 @@ function M.start(E)
 		end
 	end
 	for _, d in workspace:GetDescendants() do sign(d) end
-	workspace.DescendantAdded:Connect(function(d) task.defer(sign, d) end)
+	workspace.DescendantAdded:Connect(function(d) if d:IsA("TextLabel") then task.defer(sign, d) end end) -- class first: the caves and the rides add thousands of parts
 	local shout = E.caveHud:FindFirstChild("PerfectStrike")
 	for _, d in shout and shout:GetChildren() or {} do
 		if d:IsA("TextLabel") then JellyText.mirror(d, { color = Color3.fromRGB(255, 226, 130), glow = true, popOnChange = true }) end

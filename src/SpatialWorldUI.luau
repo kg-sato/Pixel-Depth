@@ -126,7 +126,7 @@ function M.start(E)
 		end
 	end
 	for _, d in workspace:GetDescendants() do adopt(d) end
-	workspace.DescendantAdded:Connect(function(d) task.defer(adopt, d) end)
+	workspace.DescendantAdded:Connect(function(d) if d:IsA("BasePart") and d:GetAttribute("Station") ~= nil then adopt(d) elseif d:IsA("ProximityPrompt") and d.Parent then task.defer(adopt, d.Parent) end end) -- cheap test first: the caves and the rides add thousands of parts; a station gets its attribute when its prompt arrives
 
 	R.State.OnClientEvent:Connect(function(s)
 		state = s
