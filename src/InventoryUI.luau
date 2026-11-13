@@ -166,6 +166,15 @@ function M.start(E)
 				end
 				seen[k] = src[k]
 			end
+			if ui.tab == "bag" then -- blocks dug in the block mine fill the bag too: without this row the header said 4 / 10 over an "empty" bag
+				local ore = 0
+				for _, v in st.bagOres or {} do ore += v end
+				local blocks = (st.bag or 0) - ore
+				if blocks > 0 then
+					n += 1
+					slot(n, E.ICON and E.ICON.pick, "Mine blocks", "x" .. commas(blocks))
+				end
+			end
 			emptyT.Text = ui.tab == "bag" and "Your bag is empty. Mine a glowing vein!" or "No banked ore yet. Bank at the camp fire."
 		else
 			if (st.eggs or 0) > 0 then n += 1 slot(n, E.ICON and E.ICON.egg, "Eggs", "x" .. st.eggs) end
