@@ -185,6 +185,7 @@ function M.start(E)
 		ready = true
 	end)
 	local slammed = false
+	local shownAt = {}
 
 	local t0, shown, done = os.clock(), 0, false
 	local conn
@@ -217,6 +218,7 @@ function M.start(E)
 		if not slammed and now >= slamAt - 0.25 then spread.goal = 1 end
 		if not slammed and now >= slamAt then
 			slammed = true
+			E.plr:SetAttribute("DevLoadTimes", table.concat(shownAt, " ")) -- read by a test: the letters must be spread out, not together
 			kickX.v, kickY.v, tilt.v, punch.v = 3.8, 7, 46, 1.6
 			for k, l in letters do
 				task.delay((n - k) * 0.018, function() -- the ripple runs back from the last letter to the first
@@ -234,6 +236,7 @@ function M.start(E)
 			if now >= l.at then
 				if not l.box.Visible then
 					l.box.Visible = true
+					shownAt[#shownAt + 1] = string.format("%.2f", real) -- wall-clock second each letter appeared, for the timing test
 					for k = 1, 2 do sparkle(l.cell, k) end
 					if i == n then task.delay(0.09, function() l.sy.v += 9 end) end -- the last letter's drip
 				end

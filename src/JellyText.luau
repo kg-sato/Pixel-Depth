@@ -17,6 +17,30 @@ local MID = Vector2.new(0.5, 0.5)
 local SPACE = 0.34
 local live = {} -- every word on screen, for the one shared animation loop
 
+-- The atlas pictures must really be on screen before any plain text is hidden: a picture that is still loading, or that the
+-- platform has not approved yet, draws nothing, and mirrored labels would be blank. ready[image] turns true once it has loaded.
+local ready, waiting = {}, {}
+local function watch(image)
+	if ready[image] ~= nil then return end
+	ready[image] = false
+	task.spawn(function()
+		local probe = Instance.new("ImageLabel")
+		probe.Image, probe.Size, probe.BackgroundTransparency, probe.ImageTransparency = image, UDim2.fromOffset(2, 2), 1, 0.99
+		local holder = Instance.new("ScreenGui")
+		holder.Name, holder.ResetOnSpawn = "JellyProbe", false
+		probe.Parent = holder
+		holder.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
+		pcall(function() game:GetService("ContentProvider"):PreloadAsync({ probe }) end)
+		while not probe.IsLoaded do task.wait(0.5) end
+		ready[image] = true
+		holder:Destroy()
+		for _, f in waiting do task.spawn(f) end
+		table.clear(waiting)
+	end)
+end
+watch(C.JELLY.white)
+watch(C.JELLY.pink)
+
 local function make(cls, parent, props)
 	local o = Instance.new(cls)
 	for k, v in props do o[k] = v end
@@ -112,10 +136,13 @@ function M.mirror(label, opt)
 	-- the plain text (and its outline) is not drawn while the jelly stands in for it; its transparency and colour stay the
 	-- game's to set. A string longer than opt.maxLen is a sentence, not a headline: it goes back to plain text.
 	local function fit()
+		if not label.Parent then return end
 		local long = opt.maxLen ~= nil and #label.Text > opt.maxLen
-		label.MaxVisibleGraphemes = long and -1 or 0
-		t.frame.Visible = not long
+		local ok = ready[opt.color and C.JELLY.white or C.JELLY.pink] == true
+		label.MaxVisibleGraphemes = (long or not ok) and -1 or 0
+		t.frame.Visible = not long and ok
 	end
+	if not (ready[C.JELLY.white] and ready[C.JELLY.pink]) then table.insert(waiting, fit) end
 	fit()
 	alpha(label.TextTransparency)
 	label:GetPropertyChangedSignal("Text"):Connect(function()

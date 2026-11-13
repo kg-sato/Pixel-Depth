@@ -5,8 +5,8 @@ import pathlib
 from PIL import Image
 
 here = pathlib.Path(__file__).resolve().parent
-CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?+%:-/."
-NAMES = {"!": "bang", "?": "ask", "+": "plus", "%": "pct", ":": "colon", "-": "dash", "/": "slash", ".": "dot"}
+CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?+%:-/.',()&<>="
+NAMES = {"!": "bang", "?": "ask", "+": "plus", "%": "pct", ":": "colon", "-": "dash", "/": "slash", ".": "dot", "'": "apos", ",": "comma", "(": "lpar", ")": "rpar", "&": "amp", "<": "lt", ">": "gt", "=": "eq"}
 CELL, COLS = 128, 8
 
 

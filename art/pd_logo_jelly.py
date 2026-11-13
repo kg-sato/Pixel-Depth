@@ -116,7 +116,8 @@ cam_d.type = "ORTHO"
 cam_d.ortho_scale = 1.3
 cam = bpy.data.objects.new("Cam", cam_d)
 sc.collection.objects.link(cam)
-cam.location = (0.2, -0.75, 5)  # a little below and to the right: the letters show their underside and one flank
+cam.location = (0.05, -0.42, 5) if SIZE >= 512 else (0.0, -0.1, 5)  # the small font glyphs are seen dead on: an off-centre rim made small text look slanted
+# logo letters:  # nearly straight on, a little from below: upright letters that still show their underside (the user, 2026-11-12: the first set leaned too much)
 c = cam.constraints.new("TRACK_TO")
 c.target = target
 c.track_axis, c.up_axis = "TRACK_NEGATIVE_Z", "UP_Y"
@@ -136,7 +137,7 @@ def text(ch, extrude, bevel, offset, z, material):
     return o
 
 
-NAMES = {"!": "bang", "?": "ask", "+": "plus", "%": "pct", ":": "colon", "-": "dash", "/": "slash", ".": "dot"}
+NAMES = {"!": "bang", "?": "ask", "+": "plus", "%": "pct", ":": "colon", "-": "dash", "/": "slash", ".": "dot", "'": "apos", ",": "comma", "(": "lpar", ")": "rpar", "&": "amp", "<": "lt", ">": "gt", "=": "eq"}
 for ch in CHARS:
     # the small font glyphs are slimmer than the logo letters: fat bevels closed the holes of A, B, R and turned S into 8
     objs = [text(ch, 0.13, 0.085, 0.0, 0.06, M_JELLY), text(ch, 0.07, 0.06, 0.085, -0.12, M_RIM)] if SIZE >= 512 else [text(ch, 0.12, 0.05, 0.0, 0.06, M_JELLY), text(ch, 0.07, 0.035, 0.055, -0.1, M_RIM)]
