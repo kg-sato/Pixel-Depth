@@ -9,6 +9,8 @@ local M = {}
 function M.start(E)
 	local plr, hook, sfx = E.plr, E.vmHook, E.sfx
 	local WARM, RED = Color3.fromRGB(255, 196, 120), Color3.fromRGB(255, 84, 104)
+	local GOLD, PINKJ, MINTJ = Color3.fromRGB(255, 205, 80), Color3.fromRGB(255, 120, 190), Color3.fromRGB(120, 235, 180)
+	local JellyText = E.GLASS and require(script.Parent:WaitForChild("JellyText"))
 	local dressed = setmetatable({}, { __mode = "k" }) -- pet model -> { bead, light }
 	local chirped = setmetatable({}, { __mode = "k" }) -- deposits the pet has already pointed out
 	local nextScan, rare, gloomNear, hopAt = 0, nil, false, -10
@@ -34,7 +36,20 @@ function M.start(E)
 			if d:IsA("PointLight") and d ~= light then d.Brightness = 0.25 end
 			if d:IsA("BasePart") and d.Material == Enum.Material.Neon and d ~= bead then d.Color = d.Color:Lerp(Color3.new(0, 0, 0), 0.45) end -- so did its neon back
 		end
-		dressed[model] = { bead = bead, light = light }
+		-- a mood mark over its head in jelly (directive v8: pets that show what they feel): "!" in gold when it scents a rare
+		-- deposit, "!!" in pink when a Gloomling is near, a mint note now and then while all is calm
+		local mood
+		if JellyText then
+			local bb = Instance.new("BillboardGui")
+			bb.Name, bb.Size, bb.StudsOffsetWorldSpace, bb.LightInfluence, bb.AlwaysOnTop, bb.MaxDistance = "Mood", UDim2.fromScale(2.4, 1.5), Vector3.new(0, 2.5, 0), 0, false, 80
+			bb.Adornee, bb.Enabled = root, false
+			bb.Parent = model
+			local holder = Instance.new("Frame")
+			holder.Size, holder.BackgroundTransparency = UDim2.fromScale(1, 1), 1
+			holder.Parent = bb
+			mood = { bb = bb, text = JellyText.new(holder, "!", { color = GOLD, glow = true }), state = "" }
+		end
+		dressed[model] = { bead = bead, light = light, mood = mood }
 		return dressed[model]
 	end
 
@@ -81,7 +96,7 @@ function M.start(E)
 		local bounce = hop < 1 and math.abs(math.sin(hop * math.pi * 3)) * 0.9 * (1 - hop) or 0
 		local moving = h.AssemblyLinearVelocity.Magnitude > 2
 		local bob = moving and math.abs(math.sin(now * 9)) * 0.35 or math.sin(now * 2.2) * 0.12 -- it bounds when you walk, floats when you stand
-		local off = gloomNear and Vector3.new(2.6, -2.5, -4.2) or Vector3.new(-7.4, -0.4 + bob + bounce, -10) -- out in the open, left of and above the torch hand (nearer, it sat in the hand) -- cowering: low, by the pickaxe
+		local off = gloomNear and Vector3.new(-7.4, -1.4, -10) or Vector3.new(-7.4, -0.4 + bob + bounce, -10) -- out in the open, left of and above the torch hand (nearer, it sat in the hand) -- cowering: low, by the pickaxe
 		local goal = cam.CFrame:PointToWorldSpace(off)
 		pet.pos = pet.pos:Lerp(goal, 1 - math.exp(-dt * (gloomNear and 12 or 7)))
 		local face = rare and not gloomNear and rare.PrimaryPart.Position or pet.pos + cam.CFrame.LookVector * 3 + cam.CFrame.RightVector * 8 -- it trots ahead, half turned to you
@@ -91,6 +106,18 @@ function M.start(E)
 		local c = gloomNear and RED:Lerp(WARM, math.noise(now * 14, 5) * 0.5 + 0.5) or WARM
 		d.bead.Color, d.light.Color = c, c
 		d.light.Brightness = gloomNear and 0.2 + math.abs(math.noise(now * 18, 9)) * 0.5 or 0.3
+		if d.mood then
+			local want = gloomNear and "scared" or ((rare and now - hopAt < 2.2) and "found" or ((now % 14 < 1.6) and "calm" or ""))
+			if want ~= d.mood.state then
+				d.mood.state = want
+				d.mood.bb.Enabled = want ~= ""
+				if want ~= "" then
+					d.mood.text.tint(want == "scared" and PINKJ or (want == "found" and GOLD or MINTJ))
+					d.mood.text.set(want == "scared" and "!!" or (want == "found" and "!" or "+"))
+					d.mood.text.pop(0.05)
+				end
+			end
+		end
 		return cf
 	end
 end
