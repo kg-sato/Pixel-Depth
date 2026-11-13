@@ -23,6 +23,7 @@ function M.start(E)
 	fit(quality, 560, 84)
 	quality.ZIndex = 12
 	local qText = text(quality, "VEIN RUSH  FLAWLESS", UDim2.fromScale(0.6, 0.4), UDim2.fromScale(0.07, 0.26), nil, INK, 700, false)
+	if E.HEAD then qText.Font = E.HEAD end -- a headline: Shared.JellyHUD spells it in jelly
 	qText.TextXAlignment = Enum.TextXAlignment.Left
 	local stars = {}
 	for i = 1, 3 do

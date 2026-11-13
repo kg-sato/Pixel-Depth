@@ -105,6 +105,10 @@ function M.start(E)
 	new("UICorner", glow, { CornerRadius = UDim.new(0.5, 0) })
 	local pct = new("TextLabel", all, { Text = "0%", Font = Enum.Font.Arcade, TextScaled = true, TextColor3 = LAV, BackgroundTransparency = 1, Size = UDim2.fromScale(0.2, 0.07), Position = UDim2.fromScale(0.5, 0.915), AnchorPoint = MID, ZIndex = 5 })
 
+	do -- the percentage in cyan jelly digits (the plain arcade digits were the last non-jelly text on this screen)
+		local ok, JellyText = pcall(function() return require(script.Parent:WaitForChild("JellyText")) end)
+		if ok and JellyText then JellyText.mirror(pct, { color = Color3.fromRGB(110, 215, 255), sway = false }) end
+	end
 	-- four-point star glints that pop beside a letter as it lands, and now and then afterwards
 	local function sparkle(cell, k)
 		local s = new("Frame", cell, { Size = UDim2.fromScale(0.34, 0.34), Position = UDim2.fromScale(0.5 + (math.random() - 0.5) * 1.1, 0.5 + (math.random() - 0.5) * 0.9), AnchorPoint = MID, BackgroundTransparency = 1, Rotation = math.random(-20, 20), ZIndex = 9 })

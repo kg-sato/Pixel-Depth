@@ -2003,7 +2003,8 @@ end
 	local swGlow = new("ImageLabel", result, { Image = "rbxassetid://77591933607769", BackgroundTransparency = 1, ImageTransparency = 0.2, Size = UDim2.fromScale(0.42, 1.04), Position = UDim2.fromScale(0.18, 0.55), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 2 })
 	new("UIAspectRatioConstraint", swGlow, { AspectRatio = 1 })
 	local oreIcon = require(RS.Shared:WaitForChild("OreIcon")).make(result, { Size = UDim2.fromScale(0.24, 0.62), Position = UDim2.fromScale(0.06, 0.55), AnchorPoint = Vector2.new(0, 0.5), ZIndex = 3 }) -- audit 08: a live voxel ore, not a flat circle
-	local rOre = text(result, "+6 ORE", UDim2.fromScale(0.6, 0.2), UDim2.fromScale(0.33, 0.2), nil, INK, 700, false)
+	local rOre = text(result, "+6 ORE", UDim2.fromScale(0.6, GLASS and 0.24 or 0.2), UDim2.fromScale(0.33, 0.2), nil, INK, 700, false)
+	rOre.Font = HEAD -- a headline: jelly with the glass kit
 	rOre.TextXAlignment = Enum.TextXAlignment.Left
 	local coinI = icon(result, "coin", UDim2.fromScale(0.06, 0.15), UDim2.fromScale(0.33, 0.43))
 	new("UIAspectRatioConstraint", coinI, { AspectRatio = 1 })
@@ -2044,7 +2045,7 @@ end
 		end
 	end
 	VR = require(RS.Shared:WaitForChild("VeinRushUI")).start({
-		new = new, S = S, fit = fit, text = text, panel = panel, button = button, keyCap = keyCap, tween = tween, sfx = sfx, shake = shake, pop = pop,
+		new = new, S = S, fit = fit, text = text, panel = panel, button = button, keyCap = keyCap, tween = tween, sfx = sfx, shake = shake, pop = pop, HEAD = HEAD,
 		uiBurst = uiBurst, D = D, caveHud = caveHud, plr = plr, SPRITE = SPRITE, gradeOf = gradeOf, INK = INK, WHITE = WHITE, MINT = MINT, PINK = PINK, CREAM = CREAM, LILAC = LILAC,
 		send = function(m) -- every beat chiselled, or the time ran out: the server grades the choices
 			if not m.sent then
