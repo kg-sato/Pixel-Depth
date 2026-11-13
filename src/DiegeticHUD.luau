@@ -23,6 +23,13 @@ function M.start(E)
 	new("UIAspectRatioConstraint", root, { AspectRatio = W / Hh, DominantAxis = Enum.DominantAxis.Height })
 	local function X(px) return px / W end
 
+	-- one smoked glass tray behind the orbs and the slots, so the corner reads as a single piece (Gemini rounds 2 and 3: bubbles,
+	-- hexagons and pills looked like three kits)
+	local tray = new("Frame", root, { Name = "Tray", Size = UDim2.new(1, -Hh * 0.2, 0.62, 0), Position = UDim2.fromScale(0.5, 0.54), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(30, 21, 58), BackgroundTransparency = 0.3, BorderSizePixel = 0, ZIndex = 1 })
+	tray.Size = UDim2.fromScale(1 - X(Hh) * 0.5, 0.62)
+	new("UICorner", tray, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", tray, { Color = Color3.fromRGB(214, 200, 255), Thickness = 1.5, Transparency = 0.35 })
+	new("UIGradient", tray, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(170, 150, 220)) })
 	local function orb(name, cx, tint, iconImage)
 		local o = new("Frame", root, { Name = name, Size = UDim2.fromScale(X(Hh), 1), Position = UDim2.fromScale(X(cx), 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 2 })
 		new("UIAspectRatioConstraint", o, { AspectRatio = 1 })
@@ -61,7 +68,7 @@ function M.start(E)
 	-- the hex hotbar between the orbs (keyboard and gamepad; phones have their own thumb buttons)
 	local slots = {}
 	local function hex(name, i, key, iconImage, act)
-		local b = new("ImageButton", root, { Name = name, Image = G.hex, BackgroundTransparency = 1, AutoButtonColor = false, Size = UDim2.fromScale(X(76), 76 / Hh), Position = UDim2.fromScale(X(Hh + 14 + (i - 1) * 66 + 38), 0.5 + (i % 2 == 0 and 0.08 or -0.08)), AnchorPoint = MID, ZIndex = 3 })
+		local b = new("ImageButton", root, { Name = name, Image = G.hex, BackgroundTransparency = 1, AutoButtonColor = false, Size = UDim2.fromScale(X(76), 76 / Hh), Position = UDim2.fromScale(X(Hh + 8 + (i - 1) * 78 + 40), 0.5), AnchorPoint = MID, ZIndex = 3 }) -- in one row on the tray
 		new("UIAspectRatioConstraint", b, { AspectRatio = 1 })
 		local img
 		if iconImage then
