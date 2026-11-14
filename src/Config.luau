@@ -251,7 +251,7 @@ function C.oreName(key) -- "1.2" -> "Ashcoal"
 	local o = layer and layer[4][tonumber(i)]
 	return o and o[1] or key
 end
-C.SAVE_TEMPLATE = { opts = {}, gift = {}, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
+C.SAVE_TEMPLATE = { opts = {}, gift = {}, refine = 0, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
 
 -- Layer hazards. Layer 2, Titan's Stir: after you dig, the block above may shake loose and drop one row.
 -- Standing under it stuns you briefly and spills part of the bag (no damage, kid friendly).
@@ -296,6 +296,9 @@ C.PET_FACE = { calm = "rbxassetid://80743924975214", curious = "rbxassetid://797
 C.GIFTS = { { 300, "coins", 150 }, { 600, "flares", 2 }, { 1200, "gems", 10 }, { 1800, "coins", 600 }, { 2700, "egg", 1 }, { 3600, "gems", 30 }, { 5400, "gems", 75 } }
 -- Lantern Tether (the friends boost): with a friend in the server ore is worth `value` more; within `reach` studs of a friend in the caves
 -- the torch burns `torch` slower; at most `max` friends count.
+-- The Surface Refinery (ServerScriptService.Retention; directive v9): a furnace in town cracks one geode in the background in `secs`
+-- seconds and pays the gems and coins a geode cracked by hand pays (C.CLAY.geodeGems, geodeGold). One job at a time.
+C.REFINE = { secs = 300 }
 C.TETHER = { value = 0.15, reach = 15, torch = 0.25, max = 5 }
 C.HOME = { hold = 3, cool = 300, still = 8 } -- the hearthstone: seconds to hold, seconds of cooldown, studs you may drift during the hold (ServerScriptService.Travel)
 C.WHISTLE = { reach = 40, show = 8, cool = 30 } -- the pet whistle: studs it looks, seconds the pet marks the deposit, seconds until the next whistle

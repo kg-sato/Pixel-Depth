@@ -48,6 +48,20 @@ RIFT = "local E=require(game.ServerScriptService.CaveEvents) local C=require(gam
 print("rift off:", S1(RIFT))
 S1("workspace:SetAttribute('DevRift',30) return 1"); time.sleep(2.5)
 print("rift on:", S1(RIFT), "| pill:", C1(PILL), "| crystal:", C1("return tostring(workspace:FindFirstChild('CrystalRiftFX')~=nil)"))
+# the Surface Refinery: no geode, then a geode, a second press while it runs, the pay when it is done, a press from far away
+C1("local p=game.Players.LocalPlayer p:SetAttribute('DevRef','') game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,a,b,c) if k=='refine' then p:SetAttribute('DevRef',(p:GetAttribute('DevRef') or '')..' '..tostring(a)) end end) return 1")
+S1(P + "p:SetAttribute('InCave',false) local m=workspace.Hub:FindFirstChild('RefineryMouth') h.CFrame=CFrame.lookAt(m.Position+m.CFrame.LookVector*3.5+Vector3.new(0,2,0),m.Position) return 1"); time.sleep(2.5)
+PRESS = ("local pr=workspace.Hub.RefineryMouth:FindFirstChildOfClass('ProximityPrompt') local cam=workspace.CurrentCamera if %s then pr.Parent.CFrame=cam.CFrame*CFrame.new(0,0,-4) end "
+         "cam.CFrame=CFrame.lookAt(cam.CFrame.Position,pr.Parent.Position) task.wait(0.5) pr:InputHoldBegin() task.wait(0.15) pr:InputHoldEnd() task.wait(1.2) return tostring(game.Players.LocalPlayer:GetAttribute('DevRef'))")
+print("refinery, no geode:", C1(PRESS % "false"))
+S1(P + "p:SetAttribute('DevGeodes',1) return 1"); time.sleep(2.5)
+print("refinery, a geode in, pressed again:", C1(PRESS % "false"), "|", C1(PRESS % "false"))
+S1(P + "p:SetAttribute('DevRefine',0) return 1"); time.sleep(2.5)
+print("refinery, done:", C1(PRESS % "false"), "| sign:", C1("return workspace.Hub.RefinerySign.RefineryGui.Line.Text"))
+print("refinery, empty again:", C1(PRESS % "false"))
+# a geode in hand, the prompt pressed from 40 studs away with the furnace's mouth moved to the player on this client only (as a cheat would)
+S1(P + "p:SetAttribute('DevGeodes',1) local m=workspace.Hub:FindFirstChild('RefineryMouth') h.CFrame=CFrame.new(m.Position+m.CFrame.LookVector*40+Vector3.new(0,3,0)) return 1"); time.sleep(2.5)
+print("refinery, pressed from far away:", C1(PRESS % "true"))
 # the Lantern Tether: ore is worth more with a friend here
 print("friends 0:", S1(P + "return tostring(p:GetAttribute('Friends'))"))
 S1(P + "p:SetAttribute('DevFriends',2) return 1"); time.sleep(2.5)

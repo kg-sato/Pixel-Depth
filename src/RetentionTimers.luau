@@ -50,6 +50,11 @@ function M.start(E)
 				local c = giftP.AbsolutePosition + giftP.AbsoluteSize / 2
 				E.fly("coin", UDim2.fromOffset(c.X, c.Y), E.goldPill, 6, 0.05)
 			end
+		elseif kind == "refine" then -- the Surface Refinery's answers
+			if a == "start" then E.toast("GEODE IN THE REFINERY:  DONE IN " .. clock(b), GOLD, true) E.sfx("open", 0.7)
+			elseif a == "wait" then E.toast("THE REFINERY NEEDS " .. clock(b) .. " MORE", WHITE)
+			elseif a == "paid" then E.toast("REFINED!  +" .. tostring(b) .. " GEMS  +" .. tostring(c) .. " COINS", GOLD, true) E.sfx("upgrade", 1.2)
+			elseif a == "none" then E.toast("NO GEODE TO REFINE.  JARS IN THE CLAY CAVES HOLD THEM", WHITE) end
 		elseif kind == "crystalRift" then -- a tall violet crystal of light stands over the kiln while the rift is open
 			E.toast("CRYSTAL RIFT IN THE CLAY CAVES!  ORE THERE IS WORTH " .. C.EVENTS.riftValue .. "X", Color3.fromRGB(200, 140, 255), true)
 			E.sfx("upgrade", 0.6)
@@ -112,6 +117,14 @@ function M.start(E)
 			if nextAt and nextAt > now and nextAt - now < soon then
 				soon, line = nextAt - now, e[1] .. " IN  " .. clock(nextAt - now)
 			end
+		end
+		local refAt = E.plr:GetAttribute("RefineAt") -- the refinery: its own line when nothing else is on, and on the furnace's sign
+		local sign = workspace:FindFirstChild("Hub") and workspace.Hub:FindFirstChild("RefinerySign")
+		local signT = sign and sign:FindFirstChild("RefineryGui") and sign.RefineryGui:FindFirstChild("Line")
+		if signT then signT.Text = refAt and (refAt <= now and "READY!" or clock(refAt - now)) or "REFINERY" end
+		if refAt and soon ~= -1 then
+			if refAt <= now then line, col = "REFINERY READY!", GOLD
+			elseif refAt - now < soon then line, col = "REFINERY IN  " .. clock(refAt - now), WHITE end
 		end
 		eventP.Visible = line ~= nil
 		if line then eventT.Text, eventT.TextColor3 = line, col end

@@ -508,6 +508,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.wear, d.quests, d.lanterns = s.wear, s.quests, s.lanterns
 	d.opts = s.opts or {}
 	d.gift = s.gift -- the playtime gift ladder of today (ServerScriptService.Retention)
+	d.refine = s.refine or 0 -- when the geode in the refinery is done (0 = empty)
 	d.shards, d.fossils, d.geodes = s.shards or 0, s.fossils or {}, s.geodes or 0
 	if C.SOUL_TREE.on then d.soul = s.soul end -- flag off: the field is never written
 	d.cool = {}
@@ -1088,7 +1089,7 @@ Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose =
 require(game:GetService("ServerScriptService"):WaitForChild("Travel")).init({ data = data, fx = FxR, hrpOf = hrpOf, remote = remote, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, analytics = A,
 	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end,
 	landings = function() local c = workspace:FindFirstChild("Caves") local l2 = c and c:FindFirstChild("ClayLanding", true) return { caveLanding, l2 } end })
-Retention.init({ data = data, fx = FxR, remote = remote, sendState = sendState, hrpOf = hrpOf, analytics = A,
+Retention.init({ data = data, fx = FxR, remote = remote, sendState = sendState, hrpOf = hrpOf, analytics = A, nearPrompt = nearPrompt,
 	flares = function(plr, n) Gloom.addFlares(plr, n) end, slowTorch = function(plr, secs) Gloom.slow(plr, secs) end })
 
 enterMine = function(s, camp2)
@@ -1758,6 +1759,7 @@ local function onJoin(plr)
 	for k = 1, 3 do if type(d.fossils) == "table" and d.fossils[tostring(k)] == true then s.fossils[tostring(k)] = true end end
 	s.opts = cleanOpts(d.opts)
 	s.gift = Retention.cleanGift(d.gift)
+	s.refine = Retention.cleanRefine(d.refine)
 	if IS_STUDIO and workspace:GetAttribute("DevOpts") then -- Studio test hook: saved settings as JSON (Studio itself saves nothing), to test the load path
 		local ok, t = pcall(function() return game:GetService("HttpService"):JSONDecode(workspace:GetAttribute("DevOpts")) end)
 		if ok then s.opts = cleanOpts(t) end

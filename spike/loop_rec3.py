@@ -7,7 +7,7 @@ choice of camp in town; the ride to Camp 2 and the minecart escape. Studio open 
 Shortcuts (say so to a grader): keys pressed by the script, teleports by the server between places, the camera turned by
 script, strikes sent through the remote when the needle crosses the gold, an autopilot that fights the boss (it jumps, steps
 aside and stands in the gaps by moving its own character), Dev attributes (DevPet, DevWheel, DevEquip, DevBoss, DevClay,
-DevSurge), the reward chest closed by script."""
+DevSurge, DevRift, DevGold, DevGiftSecs), the sale shown by firing its effect by hand, the reward chest closed by script."""
 import pathlib, re, subprocess, sys, time
 here = pathlib.Path(__file__).resolve().parent
 game, ws = here.parent, here.parent.parent.parent
@@ -17,7 +17,7 @@ name = sys.argv[1] if len(sys.argv) > 1 else "loop3"
 VENV = r"C:\Users\kgsat\Documents\Roblox\Hunyuan3D\.venv\Scripts\python.exe"
 video = game / "captures" / "loop" / f"{name}.mp4"; video.parent.mkdir(parents=True, exist_ok=True)
 sheets = ws / "Overnight" / "judge" / f"loop_{name}"; sheets.mkdir(parents=True, exist_ok=True)
-SECS = 380
+SECS = 640
 PILOT = re.search(r"PILOT = r'''(.*?)'''", (here / "boss_fight_test.py").read_text(encoding="utf-8"), re.S).group(1)
 
 
@@ -40,6 +40,9 @@ N.run("start_stop_play", {"is_start": True}); time.sleep(10)
 S("game.Players:GetPlayers()[1]:SetAttribute('DevPet','Shinemane') return 1")
 mark("town HUD"); time.sleep(2.5)
 # no daily chest here: a chest closed by script stays "busy" and the boss's reward chest (the same 3D chest) would not open
+S("game.Players:GetPlayers()[1]:SetAttribute('DevGiftSecs',301) return 1"); mark("playtime gift ready: Y claims it"); time.sleep(3); key("Y", 3)
+S(P + "local st for _,d in workspace.Hub:GetDescendants() do if d:IsA('BasePart') and d:GetAttribute('Station')=='sell' then st=d end end h.CFrame=CFrame.new(st.Position+Vector3.new(6,3,6)) task.wait(2) game.ReplicatedStorage.Remotes.Fx:FireClient(p,'sold',120,0,{['1.1']=5,['1.2']=3}) return 1")
+mark("sell fountain"); time.sleep(3.5)
 mark("bag"); key("B", 2.5); key("B", 0.8)
 mark("Tab wheel"); key("Tab", 2.5); key("Tab", 0.8)
 mark("settings: middle, left, right"); key("N", 3); key("A", 2); key("D", 1); key("D", 2); key("N", 1.2)
@@ -55,6 +58,7 @@ C(ZIP + "local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.P
 S(P + ZIP + "h.CFrame=CFrame.new(pr.Parent.Position+Vector3.new(-3,0,0)) return 1"); time.sleep(0.8)
 C(ZIP + "local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.Position,pr.Parent.Position) task.wait(0.4) pr:InputHoldBegin() task.wait(0.1) pr:InputHoldEnd() task.wait(0.3) "
         "local r=pr.Parent.Parent:FindFirstChild('ZipRope') cam.CFrame=CFrame.lookAt(cam.CFrame.Position,r:GetAttribute('ZipB')) return 1"); time.sleep(5)
+S("workspace:SetAttribute('DevGold',70) return 1"); mark("Golden Vein Surge: the gold zone is twice as wide")
 mark("minigames (mg_night.py: strike, then rush)")
 S(P + "h.CFrame=cv:FindFirstChild('LiftLanding',true).CFrame+Vector3.new(0,3,0) return 1"); time.sleep(1.5)
 subprocess.run([sys.executable, str(here / "mg_night.py"), "loop_" + name], capture_output=True, text=True, cwd=here)
@@ -86,8 +90,8 @@ S(P + "h.CFrame=O*CFrame.new(11,3,-64) return 1"); time.sleep(0.8); look("O+Vect
 S(P + "h.CFrame=O*CFrame.new(52,3,-44) return 1"); time.sleep(0.8); look("O+Vector3.new(55,14,-100)"); time.sleep(3.5)
 S(P + "h.CFrame=O*CFrame.new(50,3,-66) return 1"); time.sleep(0.8); look("O+Vector3.new(56,12,-100)"); time.sleep(4.5)
 mark("Kiln Surge")
-S("workspace:SetAttribute('DevSurge',20) return 1"); time.sleep(1)
-S(P + "h.CFrame=O*CFrame.new(30,3,-12) return 1"); time.sleep(0.8); look("O+Vector3.new(38,6,-26)"); time.sleep(5)
+S("workspace:SetAttribute('DevSurge',20) workspace:SetAttribute('DevRift',25) return 1"); time.sleep(1)
+S(P + "h.CFrame=O*CFrame.new(30,3,-12) return 1"); time.sleep(0.8); look("O+Vector3.new(38,6,-26)"); time.sleep(3); look("O+Vector3.new(6,28,-12)"); time.sleep(4)
 mark("back in town: choose your camp")
 S(P + "p:SetAttribute('InCave',false) h.CFrame=workspace.Hub:FindFirstChild('HubCart',true):GetPivot()+Vector3.new(6,5,0) return 1"); time.sleep(3)
 key("Q", 4)
