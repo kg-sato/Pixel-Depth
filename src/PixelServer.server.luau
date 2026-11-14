@@ -554,6 +554,10 @@ local function rollRarity(s) -- the disclosed odds; at the pity limit only Legen
 	return pool[#pool][1]
 end
 
+local function herald(s, name) -- everyone in the server is told of a Mythic or Secret hatch (Shared.Marquee)
+	local rarity = C.PETS[name] and C.PETS[name][1]
+	if rarity == "Mythic" or rarity == "Secret" then FxR:FireAllClients("marquee", s.player.DisplayName, name, rarity) end
+end
 local function hatch(s)
 	local name = C.FIRST_PET
 	if s.hatched > 0 then -- roll the rarity, then a pet of that rarity
@@ -571,6 +575,7 @@ local function hatch(s)
 	if s.step == 5 then s.step = 6 end
 	quest(s, "hatch")
 	FxR:FireClient(s.player, "hatch", name)
+	herald(s, name)
 end
 
 local function hatchFrom(s, minIdx) -- an Egg Altar egg: a rarity from minIdx up (by their own odds), then a pet of that rarity
@@ -590,6 +595,7 @@ local function hatchFrom(s, minIdx) -- an Egg Altar egg: a rarity from minIdx up
 	if #s.pets < C.MAX_PETS then table.insert(s.pets, { name = name, next = os.clock() + C.HATCH_TIME }) end
 	quest(s, "hatch")
 	FxR:FireClient(s.player, "hatch", name)
+	herald(s, name)
 end
 
 local function hrpOf(plr)
@@ -1904,6 +1910,11 @@ while true do
 					s.quests.story, s.quests.sp, s.quests.np = devQuest, 0, 0
 					QuestR:FireClient(plr, s.quests)
 				end
+			end
+			local devMarquee = plr:GetAttribute("DevMarquee") -- a pet name: tell the server of it as if it had just hatched (Shared.Marquee)
+			if devMarquee then
+				plr:SetAttribute("DevMarquee", nil)
+				herald(s, devMarquee)
 			end
 			local devPet = plr:GetAttribute("DevPet") -- a crew pet by name (C.PETS), to test cave jobs
 			if devPet then
