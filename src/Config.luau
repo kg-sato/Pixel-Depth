@@ -355,6 +355,10 @@ C.TORCH = { time = 300, range = 32, minRange = 16 } -- minRange 8 to 16 on 2026-
 -- the minecart escape on the ride up (MinecartEscape): track length (studs), base speed (studs/s), coin bonus range;
 -- the server pays only when the run took at least dist / (speed * 1.6) seconds (every boost stacked the whole way)
 C.ESCAPE = { dist = 1050, speed = 30, top = 1.45, bonus = { 10, 40 } } -- top: the speed wave's peak multiplier (playtest 2 runner redesign); the server's time check uses it
+-- The crew ride (vault Briefs/Group Cart Escape (2026-11-14 plan), step 1): up to `max` players board Camp 1's cart within `wait`
+-- seconds and ride up together; the driver (seat 1) plays the escape, the others watch it from their seats. mult[n]: the bonus
+-- of a crew of n, paid to each rider. seats: x and z of each seat in the cart (studs; the front is -z).
+C.CREW = { wait = 20, max = 4, mult = { 1, 1.25, 1.5, 1.75 }, seats = { { 0, -0.5 }, { -0.75, 0.8 }, { 0.75, 0.8 }, { 0, 1.6 } } }
 -- swimming in the grotto lake (CaveSwim): seconds of air, seconds to refill, swim / rise / sink speeds (studs/s), and the share of
 -- the unbanked ore lost when you pass out (the same rule as a gloomling catch)
 C.SWIM = { air = 14, refill = 2.5, speed = 12, rise = 9, sink = 1.2, loss = 0.25 }

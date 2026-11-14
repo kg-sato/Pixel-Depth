@@ -222,6 +222,30 @@ function M.play(opt)
 		local sat = rider and sitDown(rider)
 		if hrp and hum then riderOff = CFrame.new(0, 1.05 + hrp.Size.Y / 2 + (sat and 0.7 or hum.HipHeight), 0.3) end -- seated: hips just above the cart floor
 	end
+	-- Crew ride (vault Briefs/Group Cart Escape (2026-11-14 plan), step 1). opt.crew = { host, seat, riders = { userId }, send =
+	-- fn(kind, ...), on = fn(handler) -> connection }. The driver (host) plays the run and sends, through the server, where the
+	-- cart is ten times a second, everything that appears on the rail and what happens to each thing as the cart reaches it.
+	-- A passenger (replica) steers nothing: it builds what the driver sends, follows the driver's cart and shows the driver's
+	-- hits and pickups. All of it lives in K (this function is near its limit of locals).
+	local K = { crew = opt.crew, host = opt.crew ~= nil and opt.crew.host == true, replica = opt.crew ~= nil and opt.crew.host ~= true, want = 0, out = {}, hid = 0, next = 0, mates = {}, sx = 0, sz = 0 }
+	K.net = K.host and opt.crew.send or function() end
+	K.dbg = plr:GetAttribute("DevCrew") -- a test asks for the run's state as the player attribute DevCrewState
+	if K.crew then
+		local seats = C.CREW.seats
+		local mine = seats[K.crew.seat] or seats[1]
+		K.sx, K.sz = mine[1], mine[2] - seats[1][2]
+		riderOff = CFrame.new(mine[1], riderOff.Y, mine[2])
+		for i, id in K.crew.riders or {} do
+			local other = Players:GetPlayerByUserId(id)
+			local oc = other and other ~= plr and other.Character
+			local g = oc and seats[i] and ghost(oc)
+			if g then
+				sitDown(g)
+				g.Parent = world
+				table.insert(K.mates, { g, CFrame.new(seats[i][1], riderOff.Y, seats[i][2]) })
+			end
+		end
+	end
 	local hubHidden = {}
 	local lampA = Instance.new("Attachment")
 	lampA.Position = Vector3.new(0, 2.7, -1.9)
@@ -334,7 +358,8 @@ function M.play(opt)
 	local hintEdge = stroke(hintPlate, Color3.fromRGB(214, 200, 255), 1.5)
 	-- Directive v9: the controls as three jelly badges (a key cap and a word each) in place of the raw line of white text
 	local badges
-	if not touch then
+	if K.replica then hint.Text = "PASSENGER:  THE DRIVER STEERS, HOLD ON" end -- no control badges for a passenger
+	if not touch and not K.replica then
 		hint.Text = ""
 		badges = Instance.new("CanvasGroup")
 		badges.Name, badges.Size, badges.Position, badges.AnchorPoint, badges.BackgroundTransparency, badges.ZIndex = "Controls", UDim2.fromScale(0.46, 0.07), UDim2.fromScale(0.5, 0.83), Vector2.new(0.5, 0.5), 1, 4
@@ -468,8 +493,8 @@ function M.play(opt)
 	local JUMP_T, JUMP_H = 0.6, 2.6
 	local taught = {}
 	local dist, speed, t, lean, roll = 0, 0, -3.2, 0, 0
-	local function jump() if t > 0 and os.clock() - jumpT > JUMP_T then jumpT = os.clock() play("whoosh", 1.5) end end
-	local function duck() if t > 0 then duckUntil = os.clock() + 0.7 end end
+	local function jump() if not K.replica and t > 0 and os.clock() - jumpT > JUMP_T then jumpT = os.clock() play("whoosh", 1.5) K.net("j") end end
+	local function duck() if not K.replica and t > 0 then duckUntil = os.clock() + 0.7 K.net("d") end end
 	table.insert(cons, UIS.InputBegan:Connect(function(input)
 		local k = input.KeyCode
 		if k == Enum.KeyCode.Space or k == Enum.KeyCode.ButtonA or k == Enum.KeyCode.W or k == Enum.KeyCode.Up then jump()
@@ -601,6 +626,38 @@ function M.play(opt)
 		warnBoard(at, LANES[lane] < 0 and "RIGHT >" or (LANES[lane] > 0 and "< LEFT" or "LEAN!"), Color3.fromRGB(255, 205, 80), LANES[lane] < 0 and 1 or -1) -- the board stands on the side to lean to
 		table.insert(hazards, { kind = "cart", lane = lane, at = at, model = m })
 	end
+	if K.host then -- the driver tells the crew of everything it puts on the rail
+		local r0, o0, b0, g0, c0 = spawnRock, spawnOrb, spawnBeam, spawnGap, spawnCart
+		spawnRock = function(lane, at, threat) K.net("r", lane, at, threat == true) r0(lane, at, threat) end
+		spawnOrb = function(lane, at) K.net("o", lane, at) o0(lane, at) end
+		spawnBeam = function(at) K.net("b", at) b0(at) end
+		spawnGap = function(at, lane) K.net("g", at, lane) g0(at, lane) end
+		spawnCart = function(at, lane) K.net("c", at, lane) c0(at, lane) end
+	elseif K.replica then -- a passenger builds what the driver sends (the server has checked every value)
+		table.insert(cons, K.crew.on(function(kind, a, b, c, d)
+			local ok, err = pcall(function()
+				if kind == "s" then
+					K.d, K.v, K.want, K.at = a, b, c, os.clock()
+					gloom.gap = d
+				elseif kind == "r" then spawnRock(a, b, c)
+				elseif kind == "o" then spawnOrb(a, b)
+				elseif kind == "b" then spawnBeam(a)
+				elseif kind == "g" then spawnGap(a, b)
+				elseif kind == "c" then spawnCart(a, b)
+				elseif kind == "f" then
+					local post = pathCF(b - 5)
+					part(world, Vector3.new(0.5, 4.6, 0.5), post * CFrame.new(0, 2.3, 0), BARK)
+					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(LANES[a] * 0.6, 4.1, 0), BUTTER, { Material = Enum.Material.Neon })
+					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(-LANES[a] * 0.6, 4.1, 0), MINT, { Material = Enum.Material.Neon })
+				elseif kind == "j" then
+					jumpT = os.clock()
+					play("whoosh", 1.5)
+				elseif kind == "d" then duckUntil = os.clock() + 0.7
+				elseif kind == "p" then K.out[a] = b end
+			end)
+			if not ok then warn("[MinecartEscape crew] " .. tostring(err)) end
+		end))
+	end
 	local function cleanup(h)
 		for _, k in { "ring", "rock", "orb", "model" } do if h[k] then h[k]:Destroy() end end
 	end
@@ -678,11 +735,27 @@ function M.play(opt)
 			dist += speed * dt
 			for i, p in pips do p.BackgroundTransparency = i <= live and 0 or 0.75 end
 			-- lean with a little spring
-			local want = steer()
+			local want = K.replica and K.want or steer()
+			if K.host and now >= K.next then
+				K.next = now + 0.1
+				K.net("s", dist, speed, want, gloom.gap)
+			end
+			if K.replica and K.d then -- follow the driver's cart: where it was, carried on at its speed
+				local pull = 1 - math.exp(-dt / 0.2)
+				dist += (K.d + K.v * (now - K.at) - dist) * pull
+				speed += (K.v - speed) * pull
+			end
+			if K.dbg then plr:SetAttribute("DevCrewState", string.format("%s %d %d %d %d %.2f", tostring(K.replica), dist, K.d and K.d + K.v * (now - K.at) or -1, #hazards, #K.mates, K.sx)) end
+			for _, h in hazards do -- numbered in the order they appeared: the same on the driver's and the passengers' screens
+				if not h.id then
+					K.hid += 1
+					h.id = K.hid
+				end
+			end
 			lean += (want - lean) * (1 - math.exp(-dt / 0.08))
 			roll += ((calm and 0 or -want * 0.052) - roll) * (1 - math.exp(-dt / 0.1))
 			-- spawn ahead: rocks every 1.1-1.6 s (two lanes at once later on), an orb now and then
-			if t > 0 and t >= nextSpawn and dist < E.dist - 80 then
+			if not K.replica and t > 0 and t >= nextSpawn and dist < E.dist - 80 then
 				local p = dist / E.dist
 				local ahead = dist + math.max(speed, E.speed) * 1.8
 				local cur = lean < -0.5 and 1 or (lean > 0.5 and 3 or 2)
@@ -714,6 +787,7 @@ function M.play(opt)
 					forks += 1
 					local gold = rng:NextNumber() < 0.5 and 1 or 3
 					local post = pathCF(ahead - 5)
+					K.net("f", gold, ahead)
 					part(world, Vector3.new(0.5, 4.6, 0.5), post * CFrame.new(0, 2.3, 0), BARK)
 					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(LANES[gold] * 0.6, 4.1, 0), BUTTER, { Material = Enum.Material.Neon })
 					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(-LANES[gold] * 0.6, 4.1, 0), MINT, { Material = Enum.Material.Neon })
@@ -787,8 +861,10 @@ function M.play(opt)
 				elseif h.kind == "gap" then struck = inLane and jumpY < 0.9
 				elseif h.kind == "cart" then struck = inLane and jumpY < 1.5
 				else struck = inLane end
-				if gap < 0.8 and not h.passed then
+				if K.replica then struck = K.out[h.id] end -- a passenger shows what happened to the driver, never its own guess
+				if ((K.replica and struck ~= nil) or (not K.replica and gap < 0.8)) and not h.passed then
 					h.passed = true
+					if K.host and h.id then K.net("p", h.id, struck == true) end
 					if struck then
 						if h.kind ~= "orb" then
 							hits += 1
@@ -834,7 +910,7 @@ function M.play(opt)
 			local near = 1 - gloom.gap
 			for _, f in soot do f.BackgroundTransparency = 1 - near * (0.75 + 0.1 * math.sin(now * 7)) end
 			hud.gap(gloom.gap, now)
-			hud.warn(t > 0 and warnDir or nil, now)
+			hud.warn(t > 0 and not K.replica and warnDir or nil, now) -- a passenger has nothing to press
 			snd.rumble.Volume = 0.15 + near * 0.6
 			local inCav = dist > CAV0 and dist < CAV1
 			if atmo then atmo.Density = inCav and 0.05 or math.min(atmoDensity or 0.14, 0.14) end
@@ -866,10 +942,11 @@ function M.play(opt)
 			local by = calm and 0 or bounce.step(dt)
 			local cartCF = base * CFrame.new(laneX(), jumpY + by, 0) * CFrame.Angles(by * 0.25, 0, roll * 0.6 + bank * 4)
 			cart:PivotTo(cartCF)
+			for _, m in K.mates do m[1]:PivotTo(cartCF * m[2]) end
 			shakeAmp = math.max(0, shakeAmp - dt * 1.2)
 			local sh = calm and 0 or shakeAmp + math.min(speed / 48, 1) * 0.02
 			cam.CameraType = Enum.CameraType.Scriptable
-			local eye = (base * CFrame.new(laneX() * 0.9, 3.8 + jumpY * 0.85 - duckY, 0.6)).Position
+			local eye = (base * CFrame.new(laneX() * 0.9 + K.sx, 3.8 + jumpY * 0.85 - duckY, 0.6 + K.sz)).Position
 			local look = (pathCF(dist + 7) * CFrame.new(laneX() * 0.4, 3.0 + jumpY * 0.5 - duckY * 0.5, 0)).Position -- looks into the bend before it arrives
 			cam.CFrame = CFrame.lookAt(eye, look, base.UpVector) * CFrame.Angles(0, 0, roll + bank) * CFrame.Angles((math.random() - 0.5) * sh * 0.06, (math.random() - 0.5) * sh * 0.06, 0)
 			cam.FieldOfView = C.FP_FOV + (calm and 0 or math.min(#boostUntil, 3) * 3 + math.clamp(speed / 48, 0, 1) * 5) -- widens with speed and with each boost
@@ -910,6 +987,7 @@ function M.play(opt)
 			local cf = from:Lerp(cart0, a) + Vector3.new(0, arc, 0)
 			if u > 0.9 and u < 1.2 then cf *= CFrame.new(0, math.sin((u - 0.9) / 0.3 * math.pi) * 0.4, 0) end
 			cart:PivotTo(cf)
+			for _, m in K.mates do m[1]:PivotTo(cf * m[2]) end
 			if rider then
 				if not rider.Parent then
 					rider.Parent = world

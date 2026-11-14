@@ -2590,15 +2590,16 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		toast("NEW LAYER: " .. C.LAYERS[L][1]:upper(), GOLD, true)
 		toast("Depth reward +" .. commas(bonus) .. " gold", MINT, false, 1.2)
 	elseif kind == "escape" then -- the ride up: the minecart escape minigame (ReplicatedStorage.Shared.MinecartEscape)
-		local seed = ...
+		local seed, cw = ...
+		if type(cw) == "table" then cw.send, cw.on = function(...) R.Crew:FireServer(...) end, function(fn) return R.Crew.OnClientEvent:Connect(fn) end else cw = nil end -- a crew ride
 		local mod = RS.Shared:FindFirstChild("MinecartEscape")
 		local hub = workspace:FindFirstChild("Hub")
 		cave.escapeBonus = nil -- the server's answer arrives as Fx "escapeDone"
 		task.spawn(function()
 			local ok, err = pcall(function()
 				require(mod).play({
-					seed = seed, cart = hub and hub:FindFirstChild("HubCart", true), sfx = sfx,
-					report = function(r) R.Surface:FireServer("escaped", r) end,
+					seed = seed, cart = hub and hub:FindFirstChild("HubCart", true), sfx = sfx, crew = cw,
+					report = (not cw or cw.host) and function(r) R.Surface:FireServer("escaped", r) end or nil,
 					result = function() return cave.escapeBonus end,
 					restore = function() setMode(modeNow()) end,
 				})

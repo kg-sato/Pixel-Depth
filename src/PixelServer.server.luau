@@ -795,18 +795,31 @@ local function endRide(plr, trip) -- trip: only end that ride (a stale timer mus
 end
 -- the minecart escape (ride up from the caves): the server keeps the clock, checks the run was possible and pays the bonus
 local escaping = {}
-local function standIn(plr, cf) -- anchor the character standing in a cart whose rail base is cf
+local function standIn(plr, cf, seat) -- anchor the character in a cart whose rail base is cf; seat: a crew ride's seat number (C.CREW.seats)
 	local hrp = hrpOf(plr)
 	if not hrp then return end
 	local hum = plr.Character:FindFirstChildOfClass("Humanoid")
 	hrp.AssemblyLinearVelocity = Vector3.zero
 	hrp.Anchored = true
-	hrp.CFrame = cf * CFrame.new(0, 1.05 + hrp.Size.Y / 2 + 0.7, 0.3) -- seated (playtest 2: "the player should be sitting down")
+	local so = seat and C.CREW.seats[seat]
+	hrp.CFrame = cf * CFrame.new(so and so[1] or 0, 1.05 + hrp.Size.Y / 2 + 0.7, so and so[2] or 0.3) -- seated (playtest 2: "the player should be sitting down")
 	plr:SetAttribute("Seated", true) -- the client plays the sit pose on its own character (replicates to everyone)
 end
 local function finishEscape(plr, report)
 	local e = escaping[plr]
 	if not e then return end
+	local run = e.crew
+	if run and not e.crewDone then -- a crew run ends for every rider on the driver's report (or its timeout), never on a passenger's
+		if plr ~= run.host then return end
+		local alive = {}
+		for _, m in run.members do
+			if escaping[m] and escaping[m].crew == run then alive[#alive + 1] = m end
+		end
+		for i, m in alive do escaping[m].crewDone, escaping[m].mult, escaping[m].seat = true, C.CREW.mult[#alive] or 1, i end
+		for _, m in alive do
+			if m ~= plr then finishEscape(m, report) end
+		end
+	end
 	escaping[plr] = nil
 	local s = data[plr]
 	local bonus = 0
@@ -817,13 +830,14 @@ local function finishEscape(plr, report)
 		local boosts = math.clamp(math.floor(tonumber(report.boosts) or 0), 0, math.floor(el / 2))
 		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2, C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
 		if report.caught == true then bonus = math.floor(bonus / 2) end -- the Gloom nipped you (playtest 2 pursuer)
+		bonus = math.floor(bonus * (e.mult or 1)) -- a crew's shared bonus (C.CREW.mult)
 		s.gold += bonus
 		A.earn(s, "Coins", bonus, s.gold, "EscapeBonus")
 		A.event(s, "EscapeSeconds", math.floor(el))
 		A.step(s, "Escaped")
 		quest(s, "escape")
 	end
-	if HUB_CART then standIn(plr, HUB_CART:GetPivot()) else local h = hrpOf(plr) if h then h.CFrame = spawnCFrame() end end
+	if HUB_CART then standIn(plr, HUB_CART:GetPivot(), e.seat) else local h = hrpOf(plr) if h then h.CFrame = spawnCFrame() end end
 	plr:SetAttribute("InMine", false)
 	plr:SetAttribute("InCave", false)
 	local trip = {}
@@ -841,6 +855,229 @@ local function startEscape(s)
 	escaping[plr] = e
 	FxR:FireClient(plr, "escape", math.random(1, 1e6))
 	task.delay(150, function() if escaping[plr] == e then finishEscape(plr, nil) end end) -- a client that never reports still gets home (no bonus)
+end
+-- The crew ride, step 1 (vault Briefs/Group Cart Escape (2026-11-14 plan)): a sign over Camp 1's cart with its own prompt.
+-- The first player to press it takes the driver's seat and starts a boarding clock everyone can read on the sign; others
+-- board until it runs out, the cart is full or the driver presses again. One rider alone gets the solo escape. A crew gets
+-- ONE run: the driver's client plays it and sends what happens (where the cart is, what appears on the rail, what it hits)
+-- through the remote Crew; the server checks every message and passes it to the other riders, who watch the same run from
+-- their seats. The driver's report ends the run for everyone and each rider is paid the bonus times C.CREW.mult.
+-- shortcut: the passengers only watch (their jobs are steps 2 and 3), and when the driver leaves the game the others go
+-- home with no bonus (the next seat taking over is a later step).
+-- Studio hook: player attribute DevCrewBot = true rides as a passenger of a driver the server plays itself.
+local crew = { lobby = nil }
+local CrewR = remote("Crew")
+function crew.of(plr)
+	local L = crew.lobby
+	return L and table.find(L.members, plr) or nil
+end
+function crew.body() return workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild("CartBody", true) end
+function crew.show() -- the sign over the cart
+	local body = crew.body()
+	local a = body and body.Parent:FindFirstChild("CrewAnchor")
+	local line = a and a:FindFirstChild("Line", true)
+	local L = crew.lobby
+	if line then
+		line.Text = L and string.format("CREW RIDE  0:%02d   %d OF %d ABOARD", math.max(0, math.ceil(L.ends - os.clock())), #L.members, C.CREW.max) or "CREW RIDE:  PRESS V TO BOARD"
+	end
+end
+function crew.seat() -- everyone aboard sits in seat order
+	local L, body = crew.lobby, crew.body()
+	if not L then return end
+	for i, p in L.members do
+		p:SetAttribute("CrewSeat", i)
+		if body then standIn(p, body.CFrame * CFrame.new(0, -1.65, 0), i) end
+	end
+end
+function crew.launch()
+	local L = crew.lobby
+	if not L then return end
+	crew.lobby = nil
+	local m = {}
+	for _, p in L.members do
+		p:SetAttribute("CrewSeat", nil)
+		if p.Parent and data[p] and hrpOf(p) and p:GetAttribute("InCave") and not escaping[p] and not riding[p] then m[#m + 1] = p end
+	end
+	crew.show()
+	if #m == 0 then return end
+	if #m == 1 then return startEscape(data[m[1]]) end
+	local run = { members = m, host = m[1], sec = 0, n = 0 }
+	local ids = {}
+	for i, p in m do ids[i] = p.UserId end
+	local seed = math.random(1, 1e6)
+	for i, p in m do
+		escaping[p] = { t0 = os.clock(), crew = run }
+		FxR:FireClient(p, "escape", seed, { host = i == 1, seat = i, riders = ids })
+	end
+	task.delay(150, function() -- a driver that never reports: everyone still gets home (no bonus)
+		local e = escaping[run.host]
+		if e and e.crew == run then finishEscape(run.host, nil) end
+	end)
+end
+function crew.board(plr)
+	local s = data[plr]
+	local hrp = hrpOf(plr)
+	if not s or not hrp or not plr:GetAttribute("InCave") or riding[plr] or escaping[plr] then return end
+	local L = crew.lobby
+	local at = L and table.find(L.members, plr)
+	if at == 1 then return crew.launch() end -- the driver presses again: go now
+	if at then -- a passenger presses again: step out, back to where they boarded
+		table.remove(L.members, at)
+		plr:SetAttribute("CrewSeat", nil)
+		plr:SetAttribute("Seated", nil)
+		hrp.Anchored = false
+		if L.from[plr] then hrp.CFrame = L.from[plr] end
+	elseif L then
+		if #L.members >= C.CREW.max then return end
+		L.from[plr] = hrp.CFrame
+		table.insert(L.members, plr)
+	else
+		L = { members = { plr }, ends = os.clock() + C.CREW.wait, from = { [plr] = hrp.CFrame } }
+		crew.lobby = L
+		task.spawn(function()
+			while crew.lobby == L and os.clock() < L.ends do
+				crew.show()
+				task.wait(0.5)
+			end
+			if crew.lobby == L then crew.launch() end
+		end)
+	end
+	crew.seat()
+	crew.show()
+	if #L.members >= C.CREW.max then crew.launch() end
+end
+function crew.drop(plr) -- a player left the game
+	local L = crew.lobby
+	local at = L and table.find(L.members, plr)
+	if at then
+		table.remove(L.members, at)
+		if #L.members == 0 then crew.lobby = nil else crew.seat() end
+		crew.show()
+	end
+	local e = escaping[plr]
+	local run = e and e.crew
+	if run and not e.crewDone and run.host == plr then
+		for _, m in run.members do
+			local em = escaping[m]
+			if m ~= plr and em and em.crew == run then
+				em.crewDone = true
+				finishEscape(m, nil)
+			end
+		end
+	end
+end
+-- what the driver may send, and the bounds of every value; anything else is dropped
+local function crewOk(kind, a, b, c, d)
+	local function num(x, lo, hi) return type(x) == "number" and x == x and x >= lo and x <= hi end
+	local function lane(x, lo) return num(x, lo, 3) and x % 1 == 0 end
+	local far = C.ESCAPE.dist + 400
+	if kind == "s" then return num(a, -10, far) and num(b, 0, 200) and num(c, -1, 1) and num(d, 0, 1), 4 -- distance, speed, lean, the Gloom's gap
+	elseif kind == "r" then return lane(a, 1) and num(b, 0, far) and type(c) == "boolean", 3 -- a rock: lane, where, aimed at the cart
+	elseif kind == "o" then return lane(a, 1) and num(b, 0, far), 2 -- a boost bead: lane, where
+	elseif kind == "b" then return num(a, 0, far), 1 -- a beam: where
+	elseif kind == "g" then return num(a, 0, far) and lane(b, 0), 2 -- buckled rails: where, lane (0 = all)
+	elseif kind == "c" then return num(a, 0, far) and lane(b, 1), 2 -- a parked cart: where, lane
+	elseif kind == "f" then return (a == 1 or a == 3) and num(b, 0, far), 2 -- a fork's signpost: the gold side, where
+	elseif kind == "j" or kind == "d" then return true, 0 -- jump, duck
+	elseif kind == "p" then return num(a, 1, 5000) and a % 1 == 0 and type(b) == "boolean", 2 end -- hazard number, struck
+	return false, 0
+end
+CrewR.OnServerEvent:Connect(function(plr, kind, a, b, c, d)
+	local e = escaping[plr]
+	local run = e and e.crew
+	if not run or run.host ~= plr or e.crewDone or type(kind) ~= "string" then return end
+	local now = math.floor(os.clock())
+	if run.sec ~= now then run.sec, run.n = now, 0 end
+	run.n += 1
+	if run.n > 60 then return end -- ten states a second plus what appears and what is hit
+	local ok, n = crewOk(kind, a, b, c, d)
+	if not ok then return end
+	local args = table.pack(a, b, c, d)
+	for _, m in run.members do
+		if m ~= plr and escaping[m] and escaping[m].crew == run then CrewR:FireClient(m, kind, table.unpack(args, 1, n)) end
+	end
+end)
+task.spawn(function() -- the sign and its prompt over Camp 1's cart
+	local body
+	for _ = 1, 180 do
+		body = crew.body()
+		if body then break end
+		task.wait(1)
+	end
+	if not body or body.Parent:FindFirstChild("CrewAnchor") then return end
+	local a = Instance.new("Part")
+	a.Name, a.Size, a.Transparency, a.Anchored, a.CanCollide, a.CanQuery, a.CanTouch = "CrewAnchor", Vector3.new(1, 1, 1), 1, true, false, false, false
+	a.CFrame = body.CFrame * CFrame.new(0, 7, 0) -- above the cart's own Ride up card
+	local bb = Instance.new("BillboardGui")
+	bb.Name, bb.Size, bb.MaxDistance, bb.LightInfluence = "CrewSign", UDim2.fromScale(10, 1.1), 70, 0
+	local t = Instance.new("TextLabel")
+	t.Name, t.Size, t.BackgroundColor3, t.BackgroundTransparency, t.TextScaled, t.Font = "Line", UDim2.fromScale(1, 1), Color3.fromRGB(36, 17, 56), 0.2, true, Enum.Font.FredokaOne
+	t.TextColor3, t.Text = Color3.fromRGB(255, 214, 107), "CREW RIDE:  PRESS V TO BOARD"
+	local uc = Instance.new("UICorner")
+	uc.CornerRadius = UDim.new(0.4, 0)
+	uc.Parent = t
+	local pad = Instance.new("UIPadding")
+	pad.PaddingLeft, pad.PaddingRight, pad.PaddingTop, pad.PaddingBottom = UDim.new(0.05, 0), UDim.new(0.05, 0), UDim.new(0.18, 0), UDim.new(0.18, 0)
+	pad.Parent = t
+	t.Parent = bb
+	bb.Parent = a
+	local pr = Instance.new("ProximityPrompt")
+	pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.GamepadKeyCode = "Crew ride", "Board together", Enum.KeyCode.V, Enum.KeyCode.ButtonY
+	pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.HoldDuration, pr.Style = 12, false, 0, Enum.ProximityPromptStyle.Custom
+	pr:SetAttribute("CrewRide", true)
+	pr.Parent = a
+	a.Parent = body.Parent
+end)
+if IS_STUDIO then -- DevCrewBot: this player rides as a passenger; the server plays a driver that leans, meets rocks and beads and arrives
+	task.spawn(function()
+		while true do
+			task.wait(1)
+			for _, plr in Players:GetPlayers() do
+				if plr:GetAttribute("DevCrewBot") and data[plr] and not escaping[plr] and not riding[plr] and plr:GetAttribute("InCave") then
+					plr:SetAttribute("DevCrewBot", nil)
+					local run = { members = { plr }, host = "bot", sec = 0, n = 0 }
+					local e = { t0 = os.clock(), crew = run }
+					escaping[plr] = e
+					local body = crew.body()
+					if body then standIn(plr, body.CFrame * CFrame.new(0, -1.65, 0), 2) end
+					FxR:FireClient(plr, "escape", 4242, { host = false, seat = 2, riders = { plr.UserId } })
+					task.spawn(function()
+						task.wait(3.2)
+						local dist, id, nextRock, t0 = 0, 0, 1.5, os.clock()
+						local open = {}
+						while escaping[plr] == e and dist < C.ESCAPE.dist do
+							local dt = task.wait(0.1)
+							local t = os.clock() - t0
+							dist += 32 * dt
+							CrewR:FireClient(plr, "s", dist, 32, math.sin(t * 0.8), 1)
+							if t >= nextRock and dist < C.ESCAPE.dist - 80 then
+								nextRock = t + 1.6
+								id += 1
+								CrewR:FireClient(plr, "r", id % 3 + 1, dist + 58, true)
+								open[#open + 1] = { id, dist + 58, false }
+								if id % 3 == 0 then
+									id += 1
+									CrewR:FireClient(plr, "o", 2, dist + 70)
+									open[#open + 1] = { id, dist + 70, true }
+								end
+							end
+							for i = #open, 1, -1 do
+								if open[i][2] - dist < 0.8 then
+									CrewR:FireClient(plr, "p", open[i][1], open[i][3]) -- rocks are dodged, beads are taken
+									table.remove(open, i)
+								end
+							end
+						end
+						if escaping[plr] == e then
+							e.crewDone, e.mult, e.seat = true, C.CREW.mult[2], 2
+							task.wait(0.5)
+							finishEscape(plr, { dodges = 4, boosts = 2 })
+						end
+					end)
+				end
+			end
+		end
+	end)
 end
 SurfaceR.OnServerEvent:Connect(function(plr, dir, report) -- the rail lift button: "down" into your mine, otherwise up to camp
 	local s = data[plr]
@@ -889,7 +1126,8 @@ end)
 
 game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- Camp 1's parked cart: Ride up
 	local s = data[plr]
-	if s and prompt:GetAttribute("RideUp") and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] then startEscape(s) end
+	if s and prompt:GetAttribute("RideUp") and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] and not crew.of(plr) then startEscape(s) end
+	if s and prompt:GetAttribute("CrewRide") and nearPrompt(plr, prompt) then crew.board(plr) end
 end)
 game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- a cave egg nest: one free egg, once an hour per nest
 	if not prompt:GetAttribute("CaveNest") then return end
@@ -1007,7 +1245,10 @@ do -- kill floor at the chasm bottom (playtest 2): a fall ends the dive like pas
 		end
 	end
 end
-Players.PlayerRemoving:Connect(function(plr) riding[plr], escaping[plr] = nil, nil end)
+Players.PlayerRemoving:Connect(function(plr)
+	crew.drop(plr)
+	riding[plr], escaping[plr] = nil, nil
+end)
 game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- the secret ledge under the chasm bridge: gems, once ever
 	if not prompt:GetAttribute("SecretLedge") then return end
 	local s, hrp = data[plr], hrpOf(plr)
