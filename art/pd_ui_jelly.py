@@ -112,6 +112,47 @@ def hexpts(n, lip):
 save("hex", jelly((128, 128), H("#5a2a8c"), H("#241138"), H("#e0b0ff"), alpha=236, lip=7, pts=hexpts(128, 7)))
 save("hexOn", jelly((128, 128), H("#2aa8e0"), H("#123a8c"), H("#00f0ff"), alpha=244, lip=7, pts=hexpts(128, 7), lit=True))
 
+
+
+def orb_shell(n=160):
+    """The glass ball of a status orb as jelly: a clear middle (the liquid shows through), a bright lavender rim with a soft glow,
+    a white dome crescent over the upper third, a thin light arc low inside, a small glint."""
+    W = n * SS
+    im = Image.new("RGBA", (W, W), CLEAR)
+    c, r = W / 2, (n / 2 - 9) * SS
+    glow = Image.new("L", (W, W), 0)
+    ImageDraw.Draw(glow).ellipse((c - r - 3 * SS, c - r - 3 * SS, c + r + 3 * SS, c + r + 3 * SS), fill=120)
+    hole = Image.new("L", (W, W), 0)
+    ImageDraw.Draw(hole).ellipse((c - r, c - r, c + r, c + r), fill=255)
+    glow = ImageChops.subtract(glow.filter(ImageFilter.GaussianBlur(3 * SS)), hole)
+    im.alpha_composite(Image.merge("RGBA", tuple(Image.new("L", (W, W), v) for v in (224, 176, 255)) + (glow,)))
+    d = ImageDraw.Draw(im)
+    d.ellipse((c - r, c - r, c + r, c + r), outline=(36, 17, 56, 255), width=int(4.5 * SS))  # the dark body of the rim
+    d.ellipse((c - r + 1.2 * SS, c - r + 1.2 * SS, c + r - 1.2 * SS, c + r - 1.2 * SS), outline=(236, 214, 255, 255), width=int(1.6 * SS))  # the lit rim
+    ri = r - 5.5 * SS
+    inner = Image.new("L", (W, W), 0)
+    ImageDraw.Draw(inner).ellipse((c - ri, c - ri, c + ri, c + ri), fill=255)
+    dome = Image.new("L", (W, W), 0)
+    ImageDraw.Draw(dome).ellipse((c - ri * 0.86, c - ri * 0.98, c + ri * 0.86, c - ri * 0.12), fill=255)
+    fade = Image.new("L", (W, W), 0)
+    fd = ImageDraw.Draw(fade)
+    for y in range(int(c - ri), int(c)):
+        t = (y - (c - ri)) / (ri * 0.9)
+        fd.line([(0, y), (W, y)], fill=int(max(0, 0.62 * (1 - t)) * 255))
+    dome = ImageChops.multiply(ImageChops.multiply(dome, inner), fade)
+    im.alpha_composite(Image.merge("RGBA", (Image.new("L", (W, W), 255),) * 3 + (dome,)))
+    low = Image.new("L", (W, W), 0)  # a thin light arc low inside the glass
+    ld = ImageDraw.Draw(low)
+    ld.arc((c - ri * 0.9, c - ri * 0.9, c + ri * 0.9, c + ri * 0.9), 35, 145, fill=110, width=int(2.2 * SS))
+    im.alpha_composite(Image.merge("RGBA", (Image.new("L", (W, W), 255),) * 3 + (low.filter(ImageFilter.GaussianBlur(1.2 * SS)),)))
+    gx, gy, g = c - ri * 0.48, c - ri * 0.56, 4.2 * SS
+    d = ImageDraw.Draw(im)
+    d.polygon([(gx, gy - g), (gx + g * 0.24, gy - g * 0.24), (gx + g, gy), (gx + g * 0.24, gy + g * 0.24), (gx, gy + g), (gx - g * 0.24, gy + g * 0.24), (gx - g, gy), (gx - g * 0.24, gy - g * 0.24)], fill=(255, 255, 255, 245))
+    return im.resize((n, n), Image.LANCZOS)
+
+
+save("orbShell", orb_shell())
+
 sheet = Image.new("RGBA", (1240, 420), (0, 0, 0, 255))
 sheet.alpha_composite(vgrad(sheet.size, H("#1a0f2a"), H("#3a5a4a"), 0, 420))
 x, y, rowh = 20, 20, 0

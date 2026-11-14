@@ -44,11 +44,8 @@ function M.start(E)
 		local glow = new("Frame", level, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 2 }) -- lighter at the surface, deeper below
 		local shade = new("UIGradient", glow, { Rotation = 90, Color = ColorSequence.new(tint:Lerp(Color3.new(1, 1, 1), 0.55), tint:Lerp(Color3.new(0, 0, 0), 0.45)), Transparency = NumberSequence.new(0.85, 0.4) })
 		local surf = new("Frame", level, { Size = UDim2.new(1, 0, 0, 2), BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 3 })
-		local shell = new("ImageLabel", o, { Name = "Shell", Image = G.orbShell, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 4 })
-		-- the jelly dome: a white crescent over the upper third (directive v9: every orb and button reads as glossy jelly)
-		local dome = new("Frame", o, { Name = "Dome", Size = UDim2.fromScale(0.62, 0.3), Position = UDim2.fromScale(0.5, 0.25), AnchorPoint = MID, BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0, ZIndex = 5 })
-		new("UICorner", dome, { CornerRadius = UDim.new(0.5, 0) })
-		new("UIGradient", dome, { Rotation = 90, Transparency = NumberSequence.new(0.45, 1) })
+		local shell = new("ImageLabel", o, { Name = "Shell", Image = (C.UI_JELLY and G.jelly and G.jelly.orbShell) or G.orbShell, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 4 })
+		-- (the jelly shell image has the dome crescent, the lit rim and the glint drawn in: art/pd_ui_jelly.py)
 		local ic = new("ImageLabel", o, { Name = "Icon", Image = iconImage, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.42, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 5 })
 		local self = { root = o, shell = shell, icon = ic, liquid = liquid, fill = 1, shown = 1 }
 		function self.tint(c)

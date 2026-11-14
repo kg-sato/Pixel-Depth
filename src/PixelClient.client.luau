@@ -793,7 +793,7 @@ local function hatchShow(name)
 	local tier = 1
 	for i, t in C.RARITIES do if t[1] == p[1] then tier = i end end
 	local k = (tier - 1) / (#C.RARITIES - 1) -- 0 for Common, 1 for Secret
-	local buildT = 1.1 + k * 1.1
+	local buildT = plr:GetAttribute("FastCine") and 0.5 or (1.1 + k * 1.1) -- the Fast cutscenes setting: a short build-up for every tier
 	local ov = new("TextButton", top, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, Text = "", AutoButtonColor = false, ZIndex = 20 })
 	tween(ov, 0.3, { BackgroundTransparency = 0.12 })
 	local stage = new("Frame", ov, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, ZIndex = 20 }) -- shaken as one piece

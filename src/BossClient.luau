@@ -28,6 +28,12 @@ function M.start(E)
 		new("UIGradient", p, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(200, 150, 110)) }) -- a lit top edge, as on the glass pills
 		pips[k] = p
 	end
+	for _, x in { -0.02, 1.02 } do -- a turquoise crystal spur at each end of the bar, like the ones on the Warden's back (Gemini, 2026-11-13: the bar had nothing of the boss in it)
+		local spur = new("Frame", bar, { Size = UDim2.fromScale(0.07, 0.42), Position = UDim2.fromScale(x, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 45, BackgroundColor3 = Color3.fromRGB(64, 224, 208), BorderSizePixel = 0, ZIndex = 4 })
+		new("UIAspectRatioConstraint", spur, { AspectRatio = 1 })
+		new("UIStroke", spur, { Color = Color3.fromRGB(200, 255, 246), Thickness = 1.5 })
+		new("UIGradient", spur, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(120, 200, 200)) })
+	end
 	-- the name lands big when the boss wakes
 	local banner = text(gui, "ROOT WARDEN", S(760, 120), S(640, 250), Vector2.new(0.5, 0.5), AMBER, 700, false)
 	banner.Name, banner.Visible, banner.Font = "BossBanner", false, Enum.Font.FredokaOne

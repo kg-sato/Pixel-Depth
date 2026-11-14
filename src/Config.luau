@@ -306,7 +306,7 @@ C.UI_GLASS.smoked = { card = "rbxassetid://123788880833023", keycap = "rbxasseti
 -- Jelly and shine pieces (directive v9, 2026-11-13; art/pd_ui_jelly.py): buttons, currency pills and hex slots as glossy jelly with a dome shine.
 -- UI_JELLY = false brings the cut-glass and smoked ones back.
 C.UI_JELLY = true
-C.UI_GLASS.jelly = { butter = "rbxassetid://123494745168312", hex = "rbxassetid://135895041416386", hexOn = "rbxassetid://117031892994184", lilac = "rbxassetid://116724156621634", mint = "rbxassetid://118519140945910", off = "rbxassetid://128489089904980", pill = "rbxassetid://136299262107830", pillButter = "rbxassetid://125012749065717", pillLilac = "rbxassetid://83359289524397", pillMint = "rbxassetid://94286454476473", pillPink = "rbxassetid://135787230316274", pink = "rbxassetid://137602209367349", sky = "rbxassetid://78138903745799" }
+C.UI_GLASS.jelly = { orbShell = "rbxassetid://91481062363506", butter = "rbxassetid://123494745168312", hex = "rbxassetid://135895041416386", hexOn = "rbxassetid://117031892994184", lilac = "rbxassetid://116724156621634", mint = "rbxassetid://118519140945910", off = "rbxassetid://128489089904980", pill = "rbxassetid://136299262107830", pillButter = "rbxassetid://125012749065717", pillLilac = "rbxassetid://83359289524397", pillMint = "rbxassetid://94286454476473", pillPink = "rbxassetid://135787230316274", pink = "rbxassetid://137602209367349", sky = "rbxassetid://78138903745799" }
 if C.UI_KIT == "glass" then for k, v in C.UI_GLASS.hud do C.HUD_ICON[k] = v end end
 C.EGG_COINS = 75
 -- the Egg Altar in the caves (playtest 2: "rarer ones should be found in caves ... players will need to roll for them"; board PT2_Eggs).

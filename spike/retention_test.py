@@ -21,17 +21,19 @@ S1(P + "p:SetAttribute('DevGiftSecs',1300) return 1"); time.sleep(2.5)
 print("two claims at 21 minutes:", C1("local R=game.ReplicatedStorage.Remotes.Gift R:FireServer('claim') task.wait(0.6) R:FireServer('claim') task.wait(0.9) R:FireServer('claim') task.wait(0.9) return tostring(game.Players.LocalPlayer:GetAttribute('DevPaid'))"))
 print("bad messages:", C1("local R=game.ReplicatedStorage.Remotes.Gift R:FireServer(7) R:FireServer({}) R:FireServer('claim', 99) task.wait(0.9) return tostring(game.Players.LocalPlayer:GetAttribute('DevPaid'))"))
 # the Golden Vein Surge: the strike zone the server sends is twice as wide
-N.key("Q"); time.sleep(32)
+N.key("Q"); time.sleep(44)  # the ride down: 30 s, longer in a slow Studio
 ZONE = ("local z local con=game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,dep,kind,t0,arc,zone) if k=='mgStart' and kind=='strike' then z=zone end end) "
         "local h=game.Players.LocalPlayer.Character.HumanoidRootPart local best,bd for _,d in workspace.Caves.Deposits:GetChildren() do local pp=d.PrimaryPart if pp and d:GetAttribute('Game')~='rush' then local m=(pp.Position-h.Position).Magnitude if not bd or m<bd then best,bd=d,m end end end "
         "return 1")
 def zone(tries=4):  # walk to deposits further and further away until one starts a Perfect Strike; return the zone the server sent
     for k in range(tries):
-        S1(P + "local list={} for _,d in workspace.Caves.Deposits:GetChildren() do local pp=d.PrimaryPart local pr=pp and d:FindFirstChildWhichIsA('ProximityPrompt',true) if pr and pr.Enabled and not d:GetAttribute('DevUsed') then list[#list+1]={d,(pp.Position-h.Position).Magnitude} end end "
-               "table.sort(list,function(a,b) return a[2]<b[2] end) local d=list[1][1] d:SetAttribute('DevUsed',true) h.AssemblyLinearVelocity=Vector3.zero h.CFrame=CFrame.new(d.PrimaryPart.Position+Vector3.new(0,3,4)) return 1")
+        # the deposits nearest the camp, one after another (near the camp no Gloomling comes: a test that wandered off lost its character once)
+        S1("local p=game.Players:GetPlayers()[1] local h=p.Character:WaitForChild('HumanoidRootPart',10) local land=workspace.Caves:FindFirstChild('LiftLanding',true) "
+           "local list={} for _,d in workspace.Caves.Deposits:GetChildren() do local pp=d.PrimaryPart local pr=pp and d:FindFirstChildWhichIsA('ProximityPrompt',true) if pr and pr.Enabled and not d:GetAttribute('DevUsed') then list[#list+1]={d,(pp.Position-land.Position).Magnitude} end end "
+               "table.sort(list,function(a,b) return a[2]<b[2] end) local d=list[1][1] d:SetAttribute('DevUsed',true) local c=d.PrimaryPart.Position local rp=RaycastParams.new() rp.FilterDescendantsInstances={d,p.Character} rp.FilterType=Enum.RaycastFilterType.Exclude local spot for _,r in {5,4,6,3} do for k=0,7 do local a=k*math.pi/4 local at=c+Vector3.new(math.cos(a)*r,0,math.sin(a)*r) local wall=workspace:Raycast(c,at-c,rp) local floor=workspace:Raycast(at+Vector3.new(0,4,0),Vector3.new(0,-10,0),rp) local roof=floor and workspace:Raycast(floor.Position+Vector3.new(0,0.5,0),Vector3.new(0,6,0),rp) if floor and not wall and not roof then spot=floor.Position break end end if spot then break end end if not spot then return 'no floor' end h.AssemblyLinearVelocity=Vector3.zero h.CFrame=CFrame.new(spot+Vector3.new(0,3,0)) return 1")  # on open floor beside the deposit (a blind offset once put the character inside rock)
         time.sleep(1.5)
         r = C1("local z,kd local con=game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,dep,kind,t0,arc,zn) if k=='mgStart' then z,kd=zn,kind end end) "
-               "local h=game.Players.LocalPlayer.Character.HumanoidRootPart local best,bd for _,d in workspace.Caves.Deposits:GetDescendants() do if d:IsA('ProximityPrompt') and d.Enabled then local m=(d.Parent.Position-h.Position).Magnitude if not bd or m<bd then best,bd=d,m end end end "
+               "local h=game.Players.LocalPlayer.Character:WaitForChild('HumanoidRootPart',15) local best,bd for _,d in workspace.Caves.Deposits:GetDescendants() do if d:IsA('ProximityPrompt') and d.Enabled then local m=(d.Parent.Position-h.Position).Magnitude if not bd or m<bd then best,bd=d,m end end end "
                "local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.Position,best.Parent.Position) task.wait(0.4) best:InputHoldBegin() task.wait(0.15) best:InputHoldEnd() task.wait(1) con:Disconnect() return tostring(kd)..' '..tostring(z)")
         time.sleep(10)  # let the minigame run out
         if r.startswith("strike"): return r

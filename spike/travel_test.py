@@ -45,7 +45,10 @@ S1(AT % 1); time.sleep(1.5)
 S1(P + "p:SetAttribute('GrabbedUntil',1) return 1")
 print("zip while grabbed:", zip_(1, 1, 1.0), "rides")
 S1(P + "p:SetAttribute('GrabbedUntil',nil) return 1")
-print("zip pressed 3 times at the handle:", zip_(1, 3, 5.0), "rides | studs from the far post:", S1(FAR % (1, "ZipB")))
+z = zip_(1, 3, 5.0)
+if z.endswith(", 0"):  # the prompt was not on screen yet (a slow Studio): stand at the grip and press again
+    S1(AT % 1); time.sleep(2); z = zip_(1, 3, 5.0)
+print("zip pressed 3 times at the handle:", z, "rides | studs from the far post:", S1(FAR % (1, "ZipB")))
 S1(AT % 4); time.sleep(1.5)
 print("grotto zip back (handle 4):", zip_(4, 1, 5.5), "rides | studs from the near post:", S1(FAR % (3, "ZipA")))
 # the glass lift: the Studio hook DevClay opens the gate and travels; pressed twice, held, left alone
