@@ -135,7 +135,9 @@ function M.start(E)
 			end)
 		end
 	end
-	local function show(gold, streak, gems, name) -- name: another chest (a boss reward): its own title, no streak track
+	local noteT = text(card, "", UDim2.fromScale(0.8, 0.15), UDim2.fromScale(0.5, 0.55), Vector2.new(0.5, 0.5), WHITE, 700, false) -- a boss chest has one line where the streak track sits
+	noteT.ZIndex, noteT.Visible = 6, false
+	local function show(gold, streak, gems, name, note) -- name: another chest (a boss reward): its own title, a line of text in place of the streak track
 		if busy then return end
 		busy = true
 		layer.Enabled = true
@@ -232,6 +234,7 @@ function M.start(E)
 		-- the streak track fills up to today, today pops
 		task.delay(2.1, function()
 			track.Visible = not name
+			noteT.Text, noteT.Visible = note or "", name ~= nil
 			tween(barFill, 0.5, { Size = UDim2.fromScale(math.clamp((streak - 1) / 6, 0, 1), 1) }, Enum.EasingStyle.Quad)
 			for d, o in days do
 				local done, today = d < streak, d == streak

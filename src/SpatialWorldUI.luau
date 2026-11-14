@@ -65,11 +65,12 @@ function M.start(E)
 
 	local cards = {} -- station part -> card
 	local function build(part, kind)
-		local top = part.Position + Vector3.new(0, part.Size.Y / 2 + H / 2 + 1.5, 0)
+		local top = part.Position + Vector3.new(0, part.Size.Y / 2 + H / 2 + 4.2, 0) -- well above the station and its prompt (directive v9: at 1.5 it sat beside the prompt in the town view)
 		local board = new("Part", workspace.CurrentCamera, { Name = "SpatialCard", Size = Vector3.new(W, H, 0.05), CFrame = CFrame.new(top), Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Transparency = 1 })
 		local sg = new("SurfaceGui", board, { Face = Enum.NormalId.Front, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = PPS, AlwaysOnTop = false, LightInfluence = 0.15, Brightness = 2, ResetOnSpawn = false })
 		local card = new("CanvasGroup", sg, { Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.16, BorderSizePixel = 0, GroupTransparency = 1 })
-		new("UICorner", card, { CornerRadius = UDim.new(0.1, 0) })
+		new("UICorner", card, { CornerRadius = UDim.new(0.16, 0) })
+		new("UIStroke", card, { Color = Color3.fromRGB(224, 176, 255), Thickness = 3, Transparency = 0.15 }) -- a lit jelly rim
 		local edge = new("UIStroke", card, { Color = EDGE, Thickness = 2, Transparency = 0.1 })
 		new("UIGradient", card, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(170, 150, 220)) })
 		local sheen = new("Frame", card, { Size = UDim2.fromScale(0.16, 1.6), Position = UDim2.fromScale(0.22, 0.5), AnchorPoint = MID, Rotation = 22, BackgroundColor3 = WHITE, BackgroundTransparency = 0.9, BorderSizePixel = 0, ZIndex = 1 })

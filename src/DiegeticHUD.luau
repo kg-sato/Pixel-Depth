@@ -120,10 +120,11 @@ function M.start(E)
 		bar.Visible = plr:GetAttribute("DevTouch") == nil
 	end)
 	-- (the HP and LANTERN numbers box is gone, directive v9: the HP number sits in its orb, the lantern's level is its oil)
-	-- fear: frost creeps in from the four screen edges
+	-- fear: a shadow closes in from the four screen edges. Directive v9: the pale frost washed the whole picture flat pink when
+	-- the lantern was out; now it is a dark violet shadow that stays at the edges
 	local frost = {}
-	for i, d in { { UDim2.fromScale(1, 0.26), UDim2.fromScale(0, 0), 90 }, { UDim2.fromScale(1, 0.26), UDim2.fromScale(0, 0.74), 270 }, { UDim2.fromScale(0.2, 1), UDim2.fromScale(0, 0), 0 }, { UDim2.fromScale(0.2, 1), UDim2.fromScale(0.8, 0), 180 } } do
-		local f = new("Frame", E.top, { Name = "Frost" .. i, Size = d[1], Position = d[2], BackgroundColor3 = Color3.fromRGB(206, 226, 255), BackgroundTransparency = 0, BorderSizePixel = 0, Visible = false, ZIndex = 1 })
+	for i, d in { { UDim2.fromScale(1, 0.2), UDim2.fromScale(0, 0), 90 }, { UDim2.fromScale(1, 0.2), UDim2.fromScale(0, 0.8), 270 }, { UDim2.fromScale(0.13, 1), UDim2.fromScale(0, 0), 0 }, { UDim2.fromScale(0.13, 1), UDim2.fromScale(0.87, 0), 180 } } do
+		local f = new("Frame", E.top, { Name = "Frost" .. i, Size = d[1], Position = d[2], BackgroundColor3 = Color3.fromRGB(18, 8, 34), BackgroundTransparency = 0, BorderSizePixel = 0, Visible = false, ZIndex = 1 })
 		frost[i] = { f = f, g = new("UIGradient", f, { Rotation = d[3], Transparency = NumberSequence.new(1) }) }
 	end
 
@@ -141,7 +142,7 @@ function M.start(E)
 			lastFrost = fa
 			for _, fr in frost do
 				fr.f.Visible = fa > 0
-				fr.g.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1 - fa), NumberSequenceKeypoint.new(0.35, 1 - fa * 0.35), NumberSequenceKeypoint.new(1, 1) })
+				fr.g.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1 - fa * 1.5), NumberSequenceKeypoint.new(0.45, 1 - fa * 0.5), NumberSequenceKeypoint.new(1, 1) })
 			end
 		end
 		if not inCave then return end

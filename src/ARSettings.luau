@@ -16,7 +16,7 @@ local SoundService = game:GetService("SoundService")
 local M = {}
 
 local MID = Vector2.new(0.5, 0.5)
-local RADIUS, SPREAD = 2.3, 58 -- studs from the eye to a panel (close, so little of the world can stand in front: always-on-top world panels do not draw in this game); degrees between panels
+local RADIUS, SPREAD = 2.3, 48 -- studs from the eye to a panel (close, so little of the world can stand in front: always-on-top world panels do not draw in this game); degrees between panels
 local PW, PH, PPS = 2.03, 1.56, 228 -- panel size in studs, pixels per stud
 local SMOKE, EDGE, WHITE = Color3.fromRGB(30, 21, 58), Color3.fromRGB(236, 226, 255), Color3.new(1, 1, 1)
 local PINK, MINT, BUTTER, CYAN, LILAC = Color3.fromRGB(255, 150, 205), Color3.fromRGB(150, 255, 210), Color3.fromRGB(255, 226, 130), Color3.fromRGB(160, 240, 255), Color3.fromRGB(205, 188, 255) -- bright: a tint multiplies the pale jelly

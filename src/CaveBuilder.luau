@@ -278,16 +278,37 @@ function Cave.build(parent, origin, seed)
 				p.Parent = w
 				return p
 			end
-			local body = wp("WardenBody", Vector3.new(7, 5.5, 5), CFrame.new(0, 3.6, 0), ROOT)
+			-- Directive v9 (2026-11-13, reference Instagram De5J8mwAd_1): a dark basalt body with glowing turquoise crystal
+			-- spikes growing out of its back, shoulders and head, in place of the plain brown root blocks. The moss cap stays: it is the ROOT Warden.
+			local BASALT, BASALT_D, TURQ = Color3.fromRGB(52, 46, 70), Color3.fromRGB(34, 30, 48), Color3.fromRGB(64, 224, 208)
+			local STONE = { Material = Enum.Material.Slate }
+			local body = wp("WardenBody", Vector3.new(7, 5.5, 5), CFrame.new(0, 3.6, 0), BASALT, STONE)
 			wp("WardenMoss", Vector3.new(7.4, 1.2, 5.4), CFrame.new(0, 6.6, 0.3), Color3.fromRGB(96, 150, 104), { Material = Enum.Material.Grass })
-			wp("WardenHead", Vector3.new(4.2, 3.4, 3.6), CFrame.new(0, 7.6, -1.4), ROOT_D)
+			wp("WardenHead", Vector3.new(4.2, 3.4, 3.6), CFrame.new(0, 7.6, -1.4), BASALT_D, STONE)
+			wp("WardenBrow", Vector3.new(4.6, 0.7, 0.9), CFrame.new(0, 8.75, -2.9), BASALT, STONE) -- a heavy brow over the eyes
+			wp("WardenJaw", Vector3.new(3.4, 0.9, 0.8), CFrame.new(0, 6.5, -3.1), BASALT, STONE)
+			for i, s in { { -2.6, 7.6, 1.2, 4.6, -0.5, 0.35 }, { 2.4, 7.4, 1.5, 3.8, -0.4, -0.4 }, { -0.4, 7.8, 2, 5.6, -0.7, 0.05 }, { 1.2, 9.4, -0.6, 2.6, -0.25, -0.3 }, { -1.4, 9.3, -0.4, 2.2, -0.2, 0.3 },
+				{ -4.6, 6, -0.4, 3.2, -0.1, 0.75 }, { 4.6, 6, -0.4, 3, -0.1, -0.75 }, { 0.8, 6.9, 2.4, 3, -0.95, -0.2 }, { -1.8, 6.6, 2.5, 2.4, -1, 0.3 } } do
+				local cf = CFrame.new(s[1], s[2], s[3]) * CFrame.Angles(s[5], i, s[6])
+				local sp = wp("WardenCrystal", Vector3.new(0.9 + s[4] * 0.12, s[4], 0.9 + s[4] * 0.12), cf * CFrame.new(0, s[4] / 2 - 0.4, 0), TURQ, { Material = Enum.Material.Glass, Transparency = 0.2, CanCollide = false })
+				wp("WardenCrystalCore", Vector3.new(0.3, s[4] * 0.8, 0.3), cf * CFrame.new(0, s[4] / 2 - 0.4, 0), Color3.fromRGB(190, 255, 246), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+				if i % 3 == 1 then
+					local l = Instance.new("PointLight")
+					l.Color, l.Range, l.Brightness, l.Shadows = TURQ, 16, 1, false
+					l.Parent = sp
+				end
+			end
+			for k = 0, 3 do -- glowing turquoise seams across the chest and arms
+				wp("WardenSeam", Vector3.new(0.22, 1.6 + k * 0.5, 0.12), CFrame.new(-2.9 + k * 1.95, 3 + (k % 2) * 1.2, -2.56) * CFrame.Angles(0, 0, 0.5 - k * 0.3), TURQ, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+			end
 			for _, x in { -0.9, 0.9 } do -- closed eyes (slits); the client lights them when it wakes
 				wp("WardenEye", Vector3.new(0.9, 0.25, 0.1), CFrame.new(x, 7.9, -3.24), Color3.fromRGB(40, 28, 46), DECO)
 			end
 			for _, x in { -1, 1 } do
-				wp("WardenArm", Vector3.new(1.8, 5.2, 1.8), CFrame.new(x * 4.4, 3.2, -0.6) * CFrame.Angles(0, 0, x * 0.18), ROOT_D)
-				wp("WardenFist", Vector3.new(2.4, 1.8, 2.4), CFrame.new(x * 4.9, 0.9, -1.2), ROOT)
-				wp("WardenLeg", Vector3.new(2, 1.6, 2.2), CFrame.new(x * 2, 0.8, 0.6), ROOT_D)
+				wp("WardenArm", Vector3.new(1.8, 5.2, 1.8), CFrame.new(x * 4.4, 3.2, -0.6) * CFrame.Angles(0, 0, x * 0.18), BASALT_D, STONE)
+				wp("WardenFist", Vector3.new(2.4, 1.8, 2.4), CFrame.new(x * 4.9, 0.9, -1.2), BASALT, STONE)
+				wp("WardenKnuckle", Vector3.new(2.5, 0.5, 0.5), CFrame.new(x * 4.9, 1.5, -2.3), TURQ, { Material = Enum.Material.Glass, Transparency = 0.2, CanCollide = false })
+				wp("WardenLeg", Vector3.new(2, 1.6, 2.2), CFrame.new(x * 2, 0.8, 0.6), BASALT_D, STONE)
 			end
 			for k, at in { { -1.8, 4.6 }, { 1.8, 3.4 }, { 0, 2.2 } } do -- the knots: Perfect Strike targets (attributes drive the minigame UI)
 				local km = Instance.new("Model")

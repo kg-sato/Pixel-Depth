@@ -63,7 +63,7 @@ S1(AT); time.sleep(1.5)
 C1("local w=workspace.Caves:FindFirstChild('Warden',true) local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.Position,w.PrimaryPart.Position) return 1")
 C1(PILOT)
 S1(P + "p:SetAttribute('DevBoss',1) return 1"); time.sleep(1.1)
-print("frame at the start:", C1("local g=game.Players.LocalPlayer.PlayerGui local b,n=g:FindFirstChild('BossBar',true),g:FindFirstChild('BossBanner',true) return 'bar '..tostring(b.Visible)..' banner '..tostring(n.Visible)..' '..n.Text"))
+print("frame at the start:", C1("local g=game.Players.LocalPlayer.PlayerGui local b,n=g:FindFirstChild('BossBar',true),g:FindFirstChild('BossBanner',true) return 'bar '..tostring(b.Visible)..' banner '..n.Text"))  # the banner is up for 2.3 s only: a slow Studio call can miss it, so its text is read
 if SHOTS: N.shot("boss_wake")
 if SHOTS: time.sleep(3.2); N.shot("boss_knot")
 for _ in range(40):

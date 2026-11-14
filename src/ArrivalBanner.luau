@@ -15,7 +15,7 @@ function M.start(E)
 	local plr, C, new = E.plr, E.C, E.new
 	local calm = false
 	pcall(function() calm = game:GetService("GuiService").ReducedMotionEnabled end)
-	local root = new("Frame", E.top, { Name = "Arrival", Size = UDim2.fromScale(0.6, 0.2), Position = UDim2.fromScale(0.5, 0.24), AnchorPoint = MID, BackgroundTransparency = 1, Visible = false, ZIndex = 4 })
+	local root = new("Frame", E.top, { Name = "Arrival", Size = UDim2.fromScale(0.46, 0.17), Position = UDim2.fromScale(0.5, 0.33), AnchorPoint = MID, BackgroundTransparency = 1, Visible = false, ZIndex = 4 })
 	local scale = new("UIScale", root, {})
 	local wordBox = new("Frame", root, { Size = UDim2.fromScale(1, 0.66), BackgroundTransparency = 1, ZIndex = 4 })
 	local word = JellyText.new(wordBox, "ROOTHOLM", { glow = true, z = 4 })
@@ -28,7 +28,7 @@ function M.start(E)
 		word.tint(color)
 		word.set(name)
 		sub.Text, sub.TextTransparency = line, 1
-		root.Visible, root.Position, root.Rotation = true, UDim2.fromScale(0.5, 0.24), 0
+		root.Visible, root.Position, root.Rotation = true, UDim2.fromScale(0.5, 0.33), 0 -- under the NEXT UP card (directive v9: the banner lay over it)
 		for _, g in word.glyphs do g.img.ImageTransparency = 0 if g.glow then g.glow.ImageTransparency = 0.62 end end
 		if calm then
 			scale.Scale = 1
@@ -39,9 +39,9 @@ function M.start(E)
 			task.delay(n * 0.07 + 0.1, function() -- the shake as the last letter lands: thrown right, sprung back
 				if my ~= token then return end
 				word.pop(0) -- every letter wobbles together
-				root.Position = UDim2.fromScale(0.535, 0.245)
+				root.Position = UDim2.fromScale(0.53, 0.335)
 				root.Rotation = 2
-				TweenService:Create(root, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Position = UDim2.fromScale(0.5, 0.24), Rotation = 0 }):Play()
+				TweenService:Create(root, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Position = UDim2.fromScale(0.5, 0.33), Rotation = 0 }):Play()
 				scale.Scale = 1.06
 				TweenService:Create(scale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 				pcall(E.sfx, "land", 1.1)
@@ -50,7 +50,7 @@ function M.start(E)
 		TweenService:Create(sub, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0.5), { TextTransparency = 0 }):Play()
 		task.delay(2.6, function()
 			if my ~= token then return end
-			TweenService:Create(root, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Position = UDim2.fromScale(0.5, 0.16) }):Play()
+			TweenService:Create(root, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Position = UDim2.fromScale(0.5, 0.26) }):Play()
 			TweenService:Create(sub, TweenInfo.new(0.3), { TextTransparency = 1 }):Play()
 			for _, g in word.glyphs do
 				TweenService:Create(g.img, TweenInfo.new(0.3), { ImageTransparency = 1 }):Play()

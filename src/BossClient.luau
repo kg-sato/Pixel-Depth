@@ -245,7 +245,7 @@ function M.start(E)
 			toast(won == 2 and "THE KILN GOLEM YIELDS!" or "THE DEEP GATE IS OPEN!", GOLD, true)
 			task.delay(2.2, function() -- the reward: the 3D chest of the daily reward with the boss's name (the server has already paid)
 				local chest = E.vmHook and E.vmHook.rewardChest
-				if chest then chest(a, b, TITLES[won] .. " CHEST") else toast("+" .. a .. " COINS  +" .. b .. " GEMS", GOLD, true) end
+				if chest then chest(a, b, TITLES[won] .. " CHEST", won == 2 and "The Kiln Golem yields its hoard!" or "The Deep Gate is open!") else toast("+" .. a .. " COINS  +" .. b .. " GEMS", GOLD, true) end
 			end)
 			task.delay(4.4, function() toast(won == 2 and "The road past the kiln opens with the next camp." or "LANTERN FOUND! Old Gran's first lost lantern", MINT, true) end)
 		elseif kind == "bossLose" then

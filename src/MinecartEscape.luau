@@ -319,6 +319,33 @@ function M.play(opt)
 	local hintPlate = frame({ Size = UDim2.fromScale(0.64, 0.066), Position = UDim2.fromScale(0.5, 0.83), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(24, 16, 46), BackgroundTransparency = 0.25, ZIndex = 3 }) -- a smoked-glass plate: the raw white line had nothing behind it (directive v8)
 	round(hintPlate, 0.3)
 	local hintEdge = stroke(hintPlate, Color3.fromRGB(214, 200, 255), 1.5)
+	-- Directive v9: the controls as three jelly badges (a key cap and a word each) in place of the raw line of white text
+	local badges
+	if not touch then
+		hint.Text = ""
+		badges = Instance.new("CanvasGroup")
+		badges.Name, badges.Size, badges.Position, badges.AnchorPoint, badges.BackgroundTransparency, badges.ZIndex = "Controls", UDim2.fromScale(0.46, 0.07), UDim2.fromScale(0.5, 0.83), Vector2.new(0.5, 0.5), 1, 4
+		badges.Parent = gui
+		for i, d in { { "A / D", "LEAN", Color3.fromRGB(0, 240, 255) }, { "SPACE", "JUMP", Color3.fromRGB(255, 214, 107) }, { "S", "DUCK", Color3.fromRGB(255, 79, 160) } } do
+			local b = frame({ Parent = badges, Size = UDim2.fromScale(0.3, 0.9), Position = UDim2.fromScale(0.17 + (i - 1) * 0.33, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = WHITE, ZIndex = 4 })
+			round(b, 0.4)
+			stroke(b, d[3], 1.5)
+			local g = Instance.new("UIGradient")
+			g.Rotation, g.Color = 90, ColorSequence.new(Color3.fromRGB(75, 28, 113), Color3.fromRGB(36, 17, 56))
+			g.Parent = b
+			local dome = frame({ Parent = b, Size = UDim2.fromScale(0.92, 0.42), Position = UDim2.fromScale(0.5, 0.06), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = WHITE, ZIndex = 5 })
+			round(dome, 0.5)
+			local dg = Instance.new("UIGradient")
+			dg.Rotation, dg.Transparency = 90, NumberSequence.new(0.55, 1)
+			dg.Parent = dome
+			local cap = frame({ Parent = b, Size = UDim2.fromScale(0.44, 0.66), Position = UDim2.fromScale(0.27, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = d[3], ZIndex = 6 })
+			round(cap, 0.3)
+			local kt = label(cap, d[1], UDim2.fromScale(0.86, 0.7), UDim2.fromScale(0.5, 0.5), Color3.fromRGB(36, 17, 56), 7)
+			kt.Font = Enum.Font.FredokaOne
+			local wt = label(b, d[2], UDim2.fromScale(0.44, 0.6), UDim2.fromScale(0.74, 0.5), WHITE, 6)
+			wt.Font = Enum.Font.FredokaOne
+		end
+	end
 	local flash = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, ZIndex = 8 })
 	local soot = {} -- the Gloom closing in: the screen edges go sooty
 	for i, e in { { UDim2.fromScale(1, 0.3), UDim2.fromScale(0, 0), 90 }, { UDim2.fromScale(1, 0.3), UDim2.fromScale(0, 0.7), -90 }, { UDim2.fromScale(0.25, 1), UDim2.fromScale(0, 0), 0 }, { UDim2.fromScale(0.25, 1), UDim2.fromScale(0.75, 0), 180 } } do
@@ -487,9 +514,23 @@ function M.play(opt)
 		table.insert(hazards, { kind = "rock", lane = lane, at = at, ring = ring, rock = rock, base = r1.CFrame, threat = threat })
 	end
 	local function spawnOrb(lane, at)
-		local orb = part(world, Vector3.new(1.3, 1.3, 1.3), pathCF(at) * CFrame.new(LANES[lane], 2.6, 0), BUTTER, { Shape = Enum.PartType.Ball, Material = Enum.Material.Glass, Transparency = 0.25 }) -- glass with a small light: the Neon ball bloomed into a blinding glare (directive v8)
+		-- a boost pickup. Directive v9: the 1.3 stud butter ball read as a big opaque sphere blocking the rail right before the
+		-- cart. Now a small clear bead inside a thin ring with chevrons, so the rail shows through it.
+		local orb = part(world, Vector3.new(0.7, 0.7, 0.7), pathCF(at) * CFrame.new(LANES[lane], 2.6, 0), BUTTER, { Shape = Enum.PartType.Ball, Material = Enum.Material.Glass, Transparency = 0.55 })
 		local ol = Instance.new("PointLight")
-		ol.Color, ol.Range, ol.Brightness, ol.Parent = BUTTER, 9, 1.2, orb
+		ol.Color, ol.Range, ol.Brightness, ol.Parent = BUTTER, 7, 0.9, orb
+		local bb = Instance.new("BillboardGui")
+		bb.Size, bb.LightInfluence, bb.AlwaysOnTop, bb.MaxDistance = UDim2.fromScale(1.9, 1.9), 0, false, 140
+		local ringF = Instance.new("Frame")
+		ringF.Size, ringF.Position, ringF.AnchorPoint, ringF.BackgroundTransparency = UDim2.fromScale(0.86, 0.86), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), 1
+		round(ringF, 0.5)
+		stroke(ringF, BUTTER, 2.5)
+		ringF.Parent = bb
+		local chev = Instance.new("TextLabel")
+		chev.Size, chev.Position, chev.AnchorPoint, chev.BackgroundTransparency = UDim2.fromScale(0.6, 0.6), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), 1
+		chev.Text, chev.TextScaled, chev.Font, chev.TextColor3, chev.TextStrokeTransparency, chev.TextStrokeColor3 = ">>", true, Enum.Font.FredokaOne, Color3.new(1, 1, 1), 0.2, Color3.fromRGB(150, 90, 10)
+		chev.Parent = bb
+		bb.Parent = orb
 		local e = Instance.new("ParticleEmitter")
 		e.Texture, e.Rate, e.LightEmission, e.Color = SPARK, 8, 1, ColorSequence.new(BUTTER, PINK)
 		e.Size, e.Lifetime, e.Speed = NumberSequence.new(0.4, 0), NumberRange.new(0.4, 0.7), NumberRange.new(1, 2)
@@ -612,6 +653,10 @@ function M.play(opt)
 			hint.TextTransparency = smooth(4, 5, t)
 			hintStroke.Transparency = hint.TextTransparency
 			hintPlate.BackgroundTransparency, hintEdge.Transparency = 0.25 + 0.75 * hint.TextTransparency, hint.TextTransparency
+			if badges then
+				badges.GroupTransparency = hint.TextTransparency
+				hintPlate.BackgroundTransparency, hintEdge.Transparency = 1, 1
+			end
 			-- speed: base, boosts stack, a bonk halves it
 			local live = 0
 			for i = #boostUntil, 1, -1 do if now < boostUntil[i] then live += 1 else table.remove(boostUntil, i) end end

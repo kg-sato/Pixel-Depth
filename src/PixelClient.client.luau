@@ -1464,7 +1464,7 @@ end)()
 	})
 	local show, fly = Daily.show, Daily.fly
 	forgeUI.fly = fly -- shared: selling ore flies coins too
-	forgeUI.rewardChest = function(gold, gems, name) show(gold, 0, gems, name) end -- a boss's reward chest (Shared.BossClient)
+	forgeUI.rewardChest = function(gold, gems, name, note) show(gold, 0, gems, name, note) end -- a boss's reward chest (Shared.BossClient)
 	R.Fx.OnClientEvent:Connect(function(kind, ...)
 		if kind == "dailyChest" then
 			local gold, streak, gems = ...
@@ -2013,9 +2013,9 @@ end
 
 	local VR -- Vein Rush (EXT-02) lives in Shared.VeinRushUI: a crystal spire in the world, started below once its helpers exist
 	-- the result card (both minigames): ore swatch, amount, gold value, grade and stars
-	local resultDim = new("Frame", caveHud, { Name = "ResultDim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 0.5, BorderSizePixel = 0, ZIndex = 14, Visible = false })
-	local result = panel(caveHud, S(470, 190), S(640, 270), Vector2.new(0.5, 0.5), "panel")
-	fit(result, 470, 190)
+	local resultDim = new("Frame", caveHud, { Name = "ResultDim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 14, Visible = false })
+	local result = panel(caveHud, S(350, 142), S(1080, 500), Vector2.new(0.5, 0.5), "panel") -- small and at the lower right (directive v9: it covered the view in the middle)
+	fit(result, 350, 142)
 	result.Name, result.Visible, result.ZIndex = "ExtractResult", false, 15
 	local ribbon = ribbonTitle(result, "ORE EXTRACTED!", "ribbonPink", 0.66)
 	ribbon.Size = UDim2.fromScale(0.66, 0.26)
@@ -2742,7 +2742,7 @@ end)()
 	end
 	forgeUI.spatialExtra = forgeUI.spatialExtra or {} -- the small panels built in this script stand in the world too (Shared.SpatialPanels); the forge keeps its own staged screen
 	for _, f in { night, odds, mapP, forge } do table.insert(forgeUI.spatialExtra, { frame = f, home = gui, menu = true, on = function() return f.Visible end }) end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
