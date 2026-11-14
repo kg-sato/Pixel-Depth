@@ -12,7 +12,7 @@ function M.start(E)
 	local plr = E.plr
 	local dep
 	local flash = Instance.new("Frame")
-	flash.Name, flash.Size, flash.BackgroundColor3, flash.BackgroundTransparency, flash.BorderSizePixel, flash.Visible, flash.ZIndex = "ImpactFlash", UDim2.fromScale(1, 1.2), Color3.new(1, 1, 1), 0.25, 0, false, 60
+	flash.Name, flash.Size, flash.BackgroundColor3, flash.BackgroundTransparency, flash.BorderSizePixel, flash.Visible, flash.ZIndex = "ImpactFlash", UDim2.fromScale(1, 1.2), Color3.new(1, 1, 1), 0.68, 0, false, 60 -- directive v10: never more than a third white (0.25 blinded the view on every PERFECT)
 	flash.Position = UDim2.fromScale(0, -0.1)
 	flash.Parent = E.top or E.gui
 	local folder = Instance.new("Folder")

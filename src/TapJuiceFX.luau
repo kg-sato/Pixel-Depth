@@ -10,7 +10,7 @@ local TweenService = game:GetService("TweenService")
 local M = {}
 
 local MID = Vector2.new(0.5, 0.5)
-local WINDOW = 1.8
+local WINDOW = 3 -- directive v10: a 3 s grace keeps the combo alive from one vein to the next (was 1.8)
 local RAMP = { Color3.fromRGB(255, 255, 255), Color3.fromRGB(255, 226, 130), Color3.fromRGB(255, 160, 70), Color3.fromRGB(255, 110, 180) }
 
 function M.start(E)

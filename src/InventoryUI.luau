@@ -20,7 +20,7 @@ function M.start(E)
 	bagPill.Visible = false -- the BAG bar is now the inventory (the user: "the bag should be another section of the setting / inventory")
 
 	-- the inventory button (left column, where the BAG bar was) with the bag count on a badge
-	local invBtn = button(gui, "BAG", S(70, 70), S(20, 74), nil, "butter", "bag", true)
+	local invBtn = button(gui, "BAG", S(70, 70), S(20, 74), nil, "lilac", "bag", true)
 	fit(invBtn, 1, 1)
 	invBtn.Name = "InventoryButton"
 	local badge = panel(invBtn, UDim2.fromScale(1.05, 0.36), UDim2.fromScale(0.5, 0.93), -- tucked onto the button's foot: at 1.02 it read as a loose label

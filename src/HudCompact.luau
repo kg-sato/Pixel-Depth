@@ -1,0 +1,90 @@
+-- HudCompact (ReplicatedStorage.Shared.HudCompact), started by PixelClient after the HUD's rows exist. Directive v10
+-- (2026-11-14, audit of the 14c video: "6+ disconnected boxes crowd the top and sides"): the row of square buttons (BAG,
+-- MINE / SURFACE, WARDROBE, QUESTS and the touch TOOLS button) folds away behind ONE small MENU button that sits in the
+-- currency strip. A click or tap on MENU drops the row down; it folds again after a button is used, after 8 seconds with
+-- no pointer on it, or on a second click. Every key (B, Q, V, J, Tab) works as before, menu open or shut.
+-- A red dot on MENU says that a button inside wants attention (the quest reward dot).
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local GuiService = game:GetService("GuiService")
+local TweenService = game:GetService("TweenService")
+local M = {}
+
+function M.start(E)
+	local col = E.gui:WaitForChild("LeftColumn", 15)
+	local row, money = col and col:WaitForChild("Buttons", 10), col and col:WaitForChild("Currency", 10)
+	if not row or not money then return end
+	local menu = E.panel(money, UDim2.fromScale(0.07, 1), UDim2.new(), nil, "pillLilac")
+	menu.Name, menu.LayoutOrder = "MenuButton", 9
+	E.new("UIAspectRatioConstraint", menu, { AspectRatio = 1.75, DominantAxis = Enum.DominantAxis.Height })
+	local word = E.text(menu, "MENU", UDim2.fromScale(0.78, 0.46), UDim2.fromScale(0.5, 0.47), Vector2.new(0.5, 0.5), E.WHITE, 700, false)
+	word.Name, word.Font = "Word", E.HEAD or word.Font
+	local hit = E.new("TextButton", menu, { Name = "Hit", Text = "", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 6 })
+	local dot = E.new("Frame", menu, { Name = "Dot", Size = UDim2.fromScale(0.2, 0.2), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(0.97, 0.05), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 0, 127), BorderSizePixel = 0, Visible = false, ZIndex = 7 })
+	E.new("UICorner", dot, { CornerRadius = UDim.new(0.5, 0) })
+	local sc = E.new("UIScale", menu, {})
+	-- the quick way home (directive v10: "a one-click fast-travel pill in the top strip"): in the caves a HOME pill sits beside
+	-- MENU and starts the hearthstone hold (Shared.Hearth; the server decides whether and when it works). While the
+	-- hearthstone cools down the pill shows the time left.
+	local home = E.panel(money, UDim2.fromScale(0.07, 1), UDim2.new(), nil, "pillLilac")
+	home.Name, home.LayoutOrder, home.Visible = "HomeButton", 10, false
+	E.new("UIAspectRatioConstraint", home, { AspectRatio = 1.9, DominantAxis = Enum.DominantAxis.Height })
+	local homeWord = E.text(home, "HOME", UDim2.fromScale(0.8, 0.46), UDim2.fromScale(0.5, 0.47), Vector2.new(0.5, 0.5), E.WHITE, 700, false)
+	homeWord.Name, homeWord.Font = "Word", E.HEAD or homeWord.Font
+	local homeHit = E.new("TextButton", home, { Name = "Hit", Text = "", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 6 })
+	homeHit.Activated:Connect(function()
+		E.sfx("click", 1.1)
+		if E.vmHook.home then E.vmHook.home() end
+	end)
+	local open, openedAt = false, 0
+	local rowScale = row:FindFirstChildOfClass("UIScale") or E.new("UIScale", row, {})
+	local function set(on)
+		if open == on then return end
+		open, openedAt = on, os.clock()
+		E.plr:SetAttribute("MenuOpen", on) -- read by the tests
+		if on then
+			row.Visible = true
+			rowScale.Scale = 0.6
+			TweenService:Create(rowScale, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+		else
+			row.Visible = false
+		end
+	end
+	row.Visible = false
+	E.plr:SetAttribute("MenuOpen", false)
+	hit.Activated:Connect(function()
+		sc.Scale = 0.9
+		TweenService:Create(sc, TweenInfo.new(0.3, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+		E.sfx("click", 1.1)
+		set(not open)
+	end)
+	local function wire(b) -- using a button inside folds the menu again
+		if b:IsA("GuiButton") then b.Activated:Connect(function() task.delay(0.15, function() set(false) end) end) end
+	end
+	for _, b in row:GetChildren() do wire(b) end
+	row.ChildAdded:Connect(wire)
+	local acc = 0
+	RunService.Heartbeat:Connect(function(dt)
+		acc += dt
+		if acc < 0.25 then return end
+		acc = 0
+		local want = false
+		for _, b in row:GetChildren() do
+			local d = b:IsA("GuiObject") and b:FindFirstChild("Dot")
+			if d and d.Visible then want = true end
+		end
+		dot.Visible = want and not open
+		home.Visible = E.plr:GetAttribute("InCave") == true
+		local why = home.Visible and E.vmHook.homeWhy and E.vmHook.homeWhy()
+		homeWord.Text = why or "HOME"
+		if open then
+			local m = UIS:GetMouseLocation() - GuiService:GetGuiInset()
+			local p, s = row.AbsolutePosition, row.AbsoluteSize
+			local over = UIS.MouseEnabled and m.X >= p.X and m.X <= p.X + s.X * 0.3 and m.Y >= p.Y - 80 and m.Y <= p.Y + s.Y
+			if over then openedAt = os.clock() end
+			if os.clock() - openedAt > 8 then set(false) end
+		end
+	end)
+end
+
+return M

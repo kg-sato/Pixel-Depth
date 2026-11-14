@@ -386,7 +386,7 @@ function M.play(opt)
 			wt.Font = Enum.Font.FredokaOne
 		end
 	end
-	local flash = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, ZIndex = 8 })
+	local flash = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(36, 17, 56), BackgroundTransparency = 1, ZIndex = 8 }) -- the cut to town hides behind obsidian, not a white-out (directive v10: no blinding flash)
 	local soot = {} -- the Gloom closing in: the screen edges go sooty
 	for i, e in { { UDim2.fromScale(1, 0.3), UDim2.fromScale(0, 0), 90 }, { UDim2.fromScale(1, 0.3), UDim2.fromScale(0, 0.7), -90 }, { UDim2.fromScale(0.25, 1), UDim2.fromScale(0, 0), 0 }, { UDim2.fromScale(0.25, 1), UDim2.fromScale(0.75, 0), 180 } } do
 		local f = frame({ Size = e[1], Position = e[2], BackgroundColor3 = DARK, BackgroundTransparency = 1, ZIndex = 2 })

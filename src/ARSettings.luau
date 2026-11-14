@@ -88,7 +88,7 @@ function M.start(E)
 		local sheen = new("Frame", card, { Size = UDim2.fromScale(0.14, 1.7), Position = UDim2.fromScale(0.2, 0.5), AnchorPoint = MID, Rotation = 22, BackgroundColor3 = WHITE, BackgroundTransparency = 0.91, BorderSizePixel = 0, ZIndex = 2 })
 		card.ClipsDescendants = true
 		local head = new("Frame", root, { Size = UDim2.fromScale(0.9, 0.24), Position = UDim2.fromScale(0.5, 0.13), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 6 })
-		local jt = JellyText.new(head, title, { color = slot ~= 0 and tint or nil, glow = true, z = 6 })
+		local jt = JellyText.new(head, title, { color = nil, glow = true, z = 6 }) -- one title colour on all three panels (directive v10: three neon headers fought each other)
 		local p = { slot = slot, part = part, sg = sg, root = root, sc = sc, card = card, title = jt, sheen = sheen }
 		panels[slot] = p
 		return p, card
@@ -151,7 +151,7 @@ function M.start(E)
 		-- are replaced by a plain fade (attribute FastCine, read where each scene starts)
 		toggle(4, "Fast cutscenes", "fast", function(on) plr:SetAttribute("FastCine", on or nil) end)
 		local x = 0.2
-		for _, s in { { "BAG", MINT, "bag" }, { "QUESTS", BUTTER, "quests" }, { "DONE", PINK, nil } } do
+		for _, s in { { "BAG", LILAC, "bag" }, { "QUESTS", LILAC, "quests" }, { "DONE", PINK, nil } } do
 			glassButton(card, s[1], s[2], UDim2.fromScale(0.27, 0.15), UDim2.fromScale(x, 0.84), function()
 				shut()
 				if s[3] and hook[s[3]] then task.delay(0.3, hook[s[3]]) end
@@ -225,9 +225,9 @@ function M.start(E)
 	local function fit()
 		local vp = workspace.CurrentCamera.ViewportSize
 		local half = math.deg(math.atan(math.tan(math.rad(32)) * vp.X / math.max(vp.Y, 1))) -- half the view across, at the 64 degree field of view used here
-		local a = math.clamp((half - 2) / 3.1, 9, 20.3) -- half a panel's width in degrees
+		local a = math.clamp((half - 2) / 3.45, 9, 20.3) -- half a panel's width in degrees
 		RADIUS = PW / 2 / math.tan(math.rad(a))
-		SPREAD = math.min(48, a * 2.1)
+		SPREAD = math.min(48, a * 2.4) -- 2.4: a clear gap between panels (at 2.1 their near edges met: directive v10)
 	end
 	local function open()
 		if isOpen or E.isBusy() or plr:GetAttribute("Seated") then return end

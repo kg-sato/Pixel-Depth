@@ -9,6 +9,7 @@ C1 = lambda code: night.lua(code, "Client").splitlines()[-1]
 night.play(True); time.sleep(5)
 name = C1("game.Players.LocalPlayer:SetAttribute('DevTouch',1) return game.Players.LocalPlayer.Name")
 hud = f"Players.{name}.PlayerGui.PixelHUD"
+print(click(hud + ".LeftColumn.Currency.MenuButton.Hit")); time.sleep(0.8)  # the buttons fold behind MENU (Shared.HudCompact)
 print(click(hud + ".LeftColumn.Buttons.ToolsButton")); time.sleep(1)
 print("wheel open:", C1("return tostring(game.Players.LocalPlayer.PlayerGui.PixelHUD.UtilityWheel.Visible)"))
 print(night.shot("wheel_touch").name)

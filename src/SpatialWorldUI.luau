@@ -134,6 +134,20 @@ function M.start(E)
 		for _, c in cards do if c.open then c.fill() end end
 	end)
 
+	-- directive v10: the DAILY CHEST card lay over the cart's "[F] RIDE THE MINECART" prompt. A card now steps back while
+	-- the prompt on screen belongs to something else than its own station.
+	local shown = {}
+	local PPS = game:GetService("ProximityPromptService")
+	PPS.PromptShown:Connect(function(pr) shown[pr] = true end)
+	PPS.PromptHidden:Connect(function(pr) shown[pr] = nil end)
+	local function otherPrompt(p)
+		for pr in shown do
+			local q = pr.Parent
+			if not q or not pr.Parent then shown[pr] = nil
+			elseif q:IsA("BasePart") and q ~= p and (q.Position - p.Position).Magnitude > 6 then return true end
+		end
+		return false
+	end
 	local acc = 0
 	RunService.RenderStepped:Connect(function(dt)
 		local h = E.hrp()
@@ -155,10 +169,10 @@ function M.start(E)
 				local c = cards[p]
 				if c and p ~= nearest then
 					show(c, false)
-				elseif not busy and d < NEAR then
+				elseif not busy and d < NEAR and not otherPrompt(p) then
 					if not c then c = build(p, kind); cards[p] = c end
 					show(c, true)
-				elseif c and (busy or d > FAR) then
+				elseif c and (busy or d > FAR or otherPrompt(p)) then
 					show(c, false)
 				end
 			end

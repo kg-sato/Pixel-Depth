@@ -9,7 +9,7 @@ S1 = lambda code: (N.lua(code, "Server").splitlines() or ["?"])[-1]
 P = "local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart "
 N.play(True); time.sleep(8)
 C1("local p=game.Players.LocalPlayer p:SetAttribute('DevPaid','') game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,a,b,c) if k=='giftPaid' then p:SetAttribute('DevPaid',(p:GetAttribute('DevPaid') or '')..' '..tostring(a)..':'..tostring(b)) end end) return 1")
-PILL = "local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('Timers',true) return g and (g.Gift.Line.Text..' | '..tostring(g.Event.Visible and g.Event.Line.Text)) or 'no pills'"
+PILL = "local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('Timers',true) return g and (g.Drop.Gift.Line.Text..' | '..tostring(g.Drop.Event.Visible and g.Drop.Event.Line.Text)..' || one pill: '..g.Main.Line.Text) or 'no pills'"
 print("pills at the start:", C1(PILL))
 CLAIM = "game.ReplicatedStorage.Remotes.Gift:FireServer('claim') task.wait(0.9) return tostring(game.Players.LocalPlayer:GetAttribute('DevPaid'))"
 print("claim with nothing due:", C1(CLAIM))

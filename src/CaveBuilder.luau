@@ -280,11 +280,14 @@ function Cave.build(parent, origin, seed)
 			end
 			-- Directive v9 (2026-11-13, reference Instagram De5J8mwAd_1): a dark basalt body with glowing turquoise crystal
 			-- spikes growing out of its back, shoulders and head, in place of the plain brown root blocks. The moss cap stays: it is the ROOT Warden.
-			local BASALT, BASALT_D, TURQ = Color3.fromRGB(52, 46, 70), Color3.fromRGB(34, 30, 48), Color3.fromRGB(64, 224, 208)
+			local BASALT, BASALT_D, TURQ = Color3.fromRGB(70, 62, 96), Color3.fromRGB(46, 40, 66), Color3.fromRGB(64, 224, 208) -- directive v10: a step lighter, so its edges read against the dark cave
 			local STONE = { Material = Enum.Material.Slate }
 			local body = wp("WardenBody", Vector3.new(7, 5.5, 5), CFrame.new(0, 3.6, 0), BASALT, STONE)
-			wp("WardenMoss", Vector3.new(7.4, 1.2, 5.4), CFrame.new(0, 6.6, 0.3), Color3.fromRGB(96, 150, 104), { Material = Enum.Material.Grass })
-			wp("WardenHead", Vector3.new(4.2, 3.4, 3.6), CFrame.new(0, 7.6, -1.4), BASALT_D, STONE)
+			wp("WardenMoss", Vector3.new(7.4, 1.2, 5.4), CFrame.new(0, 6.6, 0.3), BASALT_D, STONE) -- directive v10: a basalt shoulder slab (the green moss cube read as a different creature)
+			local whead = wp("WardenHead", Vector3.new(4.2, 3.4, 3.6), CFrame.new(0, 7.6, -1.4), BASALT_D, STONE)
+			local wl = Instance.new("PointLight") -- its own turquoise rim light
+			wl.Color, wl.Range, wl.Brightness, wl.Shadows = TURQ, 20, 1.3, false
+			wl.Parent = whead
 			wp("WardenBrow", Vector3.new(4.6, 0.7, 0.9), CFrame.new(0, 8.75, -2.9), BASALT, STONE) -- a heavy brow over the eyes
 			wp("WardenJaw", Vector3.new(3.4, 0.9, 0.8), CFrame.new(0, 6.5, -3.1), BASALT, STONE)
 			for i, s in { { -2.6, 7.6, 1.2, 4.6, -0.5, 0.35 }, { 2.4, 7.4, 1.5, 3.8, -0.4, -0.4 }, { -0.4, 7.8, 2, 5.6, -0.7, 0.05 }, { 1.2, 9.4, -0.6, 2.6, -0.25, -0.3 }, { -1.4, 9.3, -0.4, 2.2, -0.2, 0.3 },
@@ -302,7 +305,7 @@ function Cave.build(parent, origin, seed)
 				wp("WardenSeam", Vector3.new(0.22, 1.6 + k * 0.5, 0.12), CFrame.new(-2.9 + k * 1.95, 3 + (k % 2) * 1.2, -2.56) * CFrame.Angles(0, 0, 0.5 - k * 0.3), TURQ, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 			end
 			for _, x in { -0.9, 0.9 } do -- closed eyes (slits); the client lights them when it wakes
-				wp("WardenEye", Vector3.new(0.9, 0.25, 0.1), CFrame.new(x, 7.9, -3.24), Color3.fromRGB(40, 28, 46), DECO)
+				wp("WardenEye", Vector3.new(0.9, 0.25, 0.1), CFrame.new(x, 7.9, -3.24), Color3.fromRGB(24, 90, 96), DECO)
 			end
 			for _, x in { -1, 1 } do
 				wp("WardenArm", Vector3.new(1.8, 5.2, 1.8), CFrame.new(x * 4.4, 3.2, -0.6) * CFrame.Angles(0, 0, x * 0.18), BASALT_D, STONE)
@@ -313,8 +316,12 @@ function Cave.build(parent, origin, seed)
 			for k, at in { { -1.8, 4.6 }, { 1.8, 3.4 }, { 0, 2.2 } } do -- the knots: Perfect Strike targets (attributes drive the minigame UI)
 				local km = Instance.new("Model")
 				km.Name = "Knot" .. k
-				local kn = part("Gate", "KnotCore", Vector3.new(1.4, 1.4, 1.4), base * CFrame.new(at[1], at[2], -2.6), AMBER, { Material = Enum.Material.Neon, Shape = Enum.PartType.Ball, CanCollide = false, CastShadow = false })
+				-- directive v10: the knots were three butter-yellow balls. Each is now an amber crystal heart: a small glowing core
+				-- turned on its corner inside a clear amber shell
+				local kcf = base * CFrame.new(at[1], at[2], -2.6) * CFrame.Angles(0.62, 0.78, 0)
+				local kn = part("Gate", "KnotCore", Vector3.new(1, 1, 1), kcf, Color3.fromRGB(255, 150, 50), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 				kn.Parent = km
+				part("Gate", "KnotShell", Vector3.new(1.5, 1.5, 1.5), kcf, Color3.fromRGB(255, 190, 110), { Material = Enum.Material.Glass, Transparency = 0.5, CanCollide = false, CastShadow = false }).Parent = km
 				km.PrimaryPart = kn
 				km:SetAttribute("Layer", 1)
 				km:SetAttribute("Ore", 3)

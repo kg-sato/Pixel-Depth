@@ -319,7 +319,7 @@ function M.start(E)
 		if io.KeyCode == Enum.KeyCode.V then if win.Visible then shut() elseif not plr:GetAttribute("InCave") and not plr:GetAttribute("InMine") then open() end end -- a town thing
 	end)
 	-- the WARDROBE button joins the left column (UpgradeTracker owns it)
-	local btn = button(gui, "WARDROBE", S(76, 76), S(20, 320), nil, "pink", "crew", true)
+	local btn = button(gui, "WARDROBE", S(76, 76), S(20, 320), nil, "lilac", "crew", true)
 	fit(btn, 1, 1)
 	btn.Name = "WardrobeButton"
 	btn.Activated:Connect(function() if win.Visible then shut() else open() end end)

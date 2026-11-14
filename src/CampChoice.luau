@@ -10,7 +10,9 @@ function M.start(E)
 	E.fit(win, 520, 250)
 	win.Name, win.Visible = "CampChoice", false
 	if E.addModal then E.addModal(win) end
-	E.ribbonTitle(win, "RIDE DOWN TO", "ribbonLilac", 0.62)
+	win.ClipsDescendants = true -- directive v10: the ribbon title hung across the panel's top edge; the title now sits inside
+	local title = E.text(win, "RIDE DOWN TO", UDim2.fromScale(0.6, 0.14), UDim2.fromScale(0.5, 0.12), Vector2.new(0.5, 0.5), E.WHITE, 700, false)
+	title.Font, title.ZIndex = E.HEAD or title.Font, 6
 	local close = E.closeButton(win, "CampChoiceClose")
 	local open = false -- the tips of the last state: both gates passed
 	R.State.OnClientEvent:Connect(function(st) open = st ~= nil and st.tips ~= nil and st.tips.gate1 == true and st.tips.clay == true end)
@@ -18,10 +20,10 @@ function M.start(E)
 		E.closePanel(win)
 		R.Surface:FireServer("down", n)
 	end
-	for i, d in { { "CAMP 1", "mint", "Root Caves" }, { "CAMP 2", "butter", "Clay Caves" } } do
-		local b = E.button(win, d[1], UDim2.fromScale(0.4, 0.42), UDim2.fromScale(0.07 + (i - 1) * 0.46, 0.24), nil, d[2])
+	for i, d in { { "CAMP 1", "lilac", "Root Caves" }, { "CAMP 2", "pink", "Clay Caves" } } do
+		local b = E.button(win, d[1], UDim2.fromScale(0.4, 0.42), UDim2.fromScale(0.07 + (i - 1) * 0.46, 0.27), nil, d[2])
 		b.Name, b.ZIndex = "Camp" .. i, 6
-		local sub = E.text(win, d[3], UDim2.fromScale(0.4, 0.11), UDim2.fromScale(0.07 + (i - 1) * 0.46, 0.7), nil, E.WHITE, 700, false)
+		local sub = E.text(win, d[3], UDim2.fromScale(0.4, 0.11), UDim2.fromScale(0.07 + (i - 1) * 0.46, 0.74), nil, E.WHITE, 700, false)
 		sub.ZIndex = 6
 		b.Activated:Connect(function() go(i) end)
 	end

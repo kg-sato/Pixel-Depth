@@ -14,18 +14,30 @@ function M.start(E)
 	local GiftR = R:WaitForChild("Gift", 10)
 	if not GiftR or not C.GIFTS then return end
 	local GOLD, CYAN, WHITE = Color3.fromRGB(255, 214, 107), Color3.fromRGB(0, 240, 255), Color3.new(1, 1, 1)
-	local holder = E.new("Frame", gui, { Name = "Timers", Size = E.S(380, 38), Position = E.S(606, 30), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 3 })
-	local function pill(name, x, kind)
-		local p = E.panel(holder, UDim2.fromScale(0.485, 1), UDim2.fromScale(x, 0.5), Vector2.new(0.5, 0.5), kind)
+	-- Directive v10 (2026-11-14: "merge the top timers into one expandable pill"): ONE pill at the top centre shows the most
+	-- urgent line (a gift to take, an event that is on, a refinery that is done, else whatever comes soonest). Pointing at it
+	-- or clicking it drops down every line: Gift (click it to claim), Event, Refine.
+	local holder = E.new("Frame", gui, { Name = "Timers", Size = E.S(210, 36), Position = E.S(606, 30), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 3 })
+	local function pill(parent, name, size, pos, kind)
+		local p = E.panel(parent, size, pos, Vector2.new(0.5, 0.5), kind)
 		p.Name = name
 		local t = E.text(p, "", UDim2.fromScale(0.86, 0.5), UDim2.fromScale(0.5, 0.46), Vector2.new(0.5, 0.5), WHITE, 700, false)
 		t.Name, t.Font = "Line", E.HEAD or t.Font -- the headline font: Shared.JellyHUD turns it into jelly letters
 		return p, t
 	end
-	local giftP, giftT = pill("Gift", 0.2475, "pillButter")
-	local eventP, eventT = pill("Event", 0.7525, "pillLilac")
+	local mainP, mainT = pill(holder, "Main", UDim2.fromScale(1, 1), UDim2.fromScale(0.5, 0.5), "pillLilac")
+	local mainHit = E.new("TextButton", mainP, { Name = "Open", Text = "", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 5 })
+	local drop = E.new("Frame", holder, { Name = "Drop", Size = UDim2.fromScale(1, 3.3), Position = UDim2.fromScale(0.5, 1.12), AnchorPoint = Vector2.new(0.5, 0), BackgroundTransparency = 1, Visible = false, ZIndex = 8 })
+	local giftP, giftT = pill(drop, "Gift", UDim2.fromScale(1, 0.3), UDim2.fromScale(0.5, 0.16), "pillButter")
+	local eventP, eventT = pill(drop, "Event", UDim2.fromScale(1, 0.3), UDim2.fromScale(0.5, 0.5), "pillLilac")
+	local refP, refT = pill(drop, "Refine", UDim2.fromScale(1, 0.3), UDim2.fromScale(0.5, 0.84), "pillLilac")
+	local pinned = false
+	mainHit.Activated:Connect(function()
+		pinned = not pinned
+		E.sfx("click", 1.1)
+	end)
 	local hit = E.new("TextButton", giftP, { Name = "Claim", Text = "", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 5 })
-	local pulse = E.new("UIScale", giftP, { Name = "Pulse" })
+	local pulse = E.new("UIScale", mainP, { Name = "Pulse" })
 
 	local got, secs0, at0 = 0, 0, os.clock() -- gifts taken, seconds played when the server last said so
 	local function clock(s)
@@ -95,15 +107,24 @@ function M.start(E)
 		local chest = E.plr.PlayerGui:FindFirstChild("DailyChest")
 		holder.Visible = not (boss and boss.Visible) and not (chest and chest.Enabled) and not (E.vmHook and E.vmHook.arOpen) -- a reward chest has the top of the screen to itself
 		if not holder.Visible then return end
+		do -- open while the pointer is on the pill or its list, or while it is pinned by a click
+			local m = game:GetService("UserInputService"):GetMouseLocation() - game:GetService("GuiService"):GetGuiInset()
+			local p, s = holder.AbsolutePosition, holder.AbsoluteSize
+			local over = game:GetService("UserInputService").MouseEnabled and m.X >= p.X and m.X <= p.X + s.X and m.Y >= p.Y and m.Y <= p.Y + s.Y * (drop.Visible and 4.5 or 1)
+			drop.Visible = pinned or over
+		end
 		local g = C.GIFTS[got + 1]
 		local played = secs0 + (os.clock() - at0)
+		local giftIn = math.huge -- seconds to the next gift (0 = one waits)
 		if not g then
 			giftT.Text, giftT.TextColor3, pulse.Scale = "ALL GIFTS TAKEN TODAY", WHITE, 1
 		elseif played >= g[1] then
 			giftT.Text, giftT.TextColor3 = "GIFT READY!  PRESS Y", GOLD
 			pulse.Scale = 1 + math.abs(math.sin(os.clock() * 4)) * 0.06
+			giftIn = 0
 		else
 			giftT.Text, giftT.TextColor3, pulse.Scale = "NEXT GIFT  " .. clock(g[1] - played), WHITE, 1
+			giftIn = g[1] - played
 		end
 		local now = workspace:GetServerTimeNow()
 		local line, col, soon = nil, WHITE, math.huge
@@ -122,12 +143,17 @@ function M.start(E)
 		local sign = workspace:FindFirstChild("Hub") and workspace.Hub:FindFirstChild("RefinerySign")
 		local signT = sign and sign:FindFirstChild("RefineryGui") and sign.RefineryGui:FindFirstChild("Line")
 		if signT then signT.Text = refAt and (refAt <= now and "READY!" or clock(refAt - now)) or "REFINERY" end
-		if refAt and soon ~= -1 then
-			if refAt <= now then line, col = "REFINERY READY!", GOLD
-			elseif refAt - now < soon then line, col = "REFINERY IN  " .. clock(refAt - now), WHITE end
-		end
+		refP.Visible = refAt ~= nil
+		if refAt then refT.Text, refT.TextColor3 = refAt <= now and "REFINERY READY!" or ("REFINERY IN  " .. clock(refAt - now)), refAt <= now and GOLD or WHITE end
 		eventP.Visible = line ~= nil
 		if line then eventT.Text, eventT.TextColor3 = line, col end
+		-- the one pill: what wants the player now, else what comes soonest
+		if giftIn == 0 then mainT.Text, mainT.TextColor3 = giftT.Text, GOLD
+		elseif line and soon == -1 then mainT.Text, mainT.TextColor3 = line, col
+		elseif refAt and refAt <= now then mainT.Text, mainT.TextColor3 = refT.Text, GOLD
+		elseif line and soon < giftIn and not (refAt and refAt - now < soon) then mainT.Text, mainT.TextColor3 = line, col
+		elseif refAt and refAt - now < giftIn then mainT.Text, mainT.TextColor3 = refT.Text, WHITE
+		else mainT.Text, mainT.TextColor3 = giftT.Text, WHITE end
 	end)
 end
 

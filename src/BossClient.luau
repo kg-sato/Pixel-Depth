@@ -64,14 +64,25 @@ function M.start(E)
 		local hit = workspace:Raycast(o, Vector3.new(0, -14, 0), rp)
 		return Vector3.new(o.X, (hit and hit.Position.Y or o.Y - 3.6) + 0.15, o.Z)
 	end
+	local function crew(hide) -- directive v10: the crew pets stand back for the fight (a white pet beside the boss was taken for the boss)
+		local PETS = require(script.Parent.Config).PETS
+		for _, m in workspace:GetDescendants() do
+			if m:IsA("Model") and PETS[m.Name] and not m:FindFirstAncestor("Hub") and not m:FindFirstAncestor("Caves") and not m:FindFirstAncestor("TrophyFX") then
+				for _, p in m:GetDescendants() do
+					if p:IsA("BasePart") then p.LocalTransparencyModifier = hide and 1 or 0 elseif p:IsA("Light") or p:IsA("BillboardGui") then p.Enabled = not hide end
+				end
+			end
+		end
+	end
 	local function eyes(on)
+		crew(on)
 		local w = warden()
 		if not w then return end
 		for _, p in w:GetDescendants() do
 			if p.Name == "WardenEye" then
-				p.Color = on and AMBER or Color3.fromRGB(40, 28, 46)
+				p.Color = on and Color3.fromRGB(120, 255, 240) or Color3.fromRGB(24, 90, 96) -- awake: wide turquoise eyes (directive v10, the crystalline look)
 				p.Material = on and Enum.Material.Neon or Enum.Material.SmoothPlastic
-				p.Size = on and Vector3.new(0.9, 0.7, 0.1) or Vector3.new(0.9, 0.25, 0.1)
+				p.Size = on and Vector3.new(1.1, 0.75, 0.1) or Vector3.new(0.9, 0.25, 0.1)
 			end
 		end
 	end
@@ -156,6 +167,17 @@ function M.start(E)
 					shake(0.8)
 					sfx("breakRock", 0.6)
 					burst(base.Position + Vector3.new(0, 1, 0), Vector3.yAxis, Color3.fromRGB(150, 120, 100), 50)
+					local fl = floorAt(w) -- directive v10 (reference De5J8mwAd_1): crystal spikes erupt round it, one after another
+					for i = 1, 8 do
+						task.delay(i * 0.04, function()
+							local ang = i / 8 * math.pi * 2
+							local sp = new("Part", workspace, { Size = Vector3.new(1.1, 0.4, 1.1), Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Material = Enum.Material.Glass,
+								Color = now == 2 and Color3.fromRGB(255, 150, 60) or Color3.fromRGB(64, 224, 208), Transparency = 0.15,
+								CFrame = CFrame.new(fl + Vector3.new(math.cos(ang) * 7, 0, math.sin(ang) * 7)) * CFrame.Angles(math.cos(ang) * 0.25, ang, math.sin(ang) * 0.25) })
+							tween(sp, 0.16, { Size = Vector3.new(1.1, 5.5, 1.1) }, Enum.EasingStyle.Back)
+							task.delay(0.7, function() tween(sp, 0.35, { Size = Vector3.new(0.2, 0.2, 0.2), Transparency = 1 }).Completed:Connect(function() sp:Destroy() end) end)
+						end)
+					end
 					tween(ring, 0.4, { Transparency = 1 }).Completed:Connect(function() ring:Destroy() end)
 					jump.Visible = false
 				end
