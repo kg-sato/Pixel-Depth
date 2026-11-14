@@ -32,6 +32,10 @@ N.play(False); time.sleep(2)
 # B: a passenger of the server's own driver
 down()
 C1("local p=game.Players.LocalPlayer p:SetAttribute('DevCrew',true) p:SetAttribute('DevCrewPaid',nil) game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,a) if k=='escapeDone' then p:SetAttribute('DevCrewPaid',a) end end) return 1")
+# step 3, crew moments: the server's driver calls two; a watcher armed now answers the first in time and lets the second pass
+C1("local p=game.Players.LocalPlayer local R=game.ReplicatedStorage.Remotes.Crew local n,log=0,'' R.OnClientEvent:Connect(function(k,a) "
+   "if k=='m' then n+=1 log=log..' call:'..tostring(a) if n==1 then task.delay(0.3,function() R:FireServer('a') R:FireServer('a') end) end "
+   "elseif k=='M' then log=log..' verdict:'..tostring(a) end p:SetAttribute('DevCrewMoments',log) end) return 1")
 S1(P + "p:SetAttribute('DevCrewBot',true) return 1")
 print("passenger:", C1("local p=game.Players.LocalPlayer local function st() local r={} for w in string.gmatch(p:GetAttribute('DevCrewState') or '', '%S+') do r[#r+1]=w end return r end "
       "local t=os.clock() while os.clock()-t<10 and not workspace:FindFirstChild('MinecartEscape') do task.wait(0.1) end task.wait(7) "
@@ -49,7 +53,12 @@ print("stoker:", C1(HEAD +
       "waitFor(true) R:FireServer('k') task.wait(0.7) hits=1 waitFor(false) R:FireServer('k') task.wait(0.7) "
       "R:FireServer('k') R:FireServer('k') R:FireServer('k') task.wait(0.8) c:Disconnect() "
       "return 'job '..tostring(st()[10])..' | in the gold: '..tostring(got[1])..' | outside: '..tostring(got[2])..' | three at once judged: '..(#got-2)..' | bar '..tostring(p.PlayerGui:FindFirstChild('Stoke',true)~=nil)"))
-time.sleep(12)
+# step 3, flares (the stoker throws them in a crew of two): one throw is counted, a second at once is not
+print("flares:", C1("local p=game.Players.LocalPlayer local R=game.ReplicatedStorage.Remotes.Crew local got={} local c=R.OnClientEvent:Connect(function(k,a) if k=='t' then got[#got+1]=tostring(a) end end) "
+      "R:FireServer('f') task.wait(0.4) R:FireServer('f') task.wait(0.9) c:Disconnect() local s='' for w in string.gmatch(p:GetAttribute('DevCrewState') or '', '%S+') do s=w end "
+      "return 'thrown '..#got..' left '..tostring(got[1])..' | on screen '..s..' | button '..tostring(p.PlayerGui:FindFirstChild('Flares',true)~=nil)"))
+time.sleep(4)
+print("moments:", C1("local p=game.Players.LocalPlayer local t=os.clock() while os.clock()-t<30 and not string.find(p:GetAttribute('DevCrewMoments') or '', 'verdict.*verdict') do task.wait(0.2) end return tostring(p:GetAttribute('DevCrewMoments'))"))
 print("home:", C1("local p=game.Players.LocalPlayer local t=os.clock() while os.clock()-t<25 and p:GetAttribute('DevCrewPaid')==nil do task.wait(0.2) end task.wait(1) return 'paid '..tostring(p:GetAttribute('DevCrewPaid'))..' in cave '..tostring(p:GetAttribute('InCave'))"))
 # a passenger (or anyone not driving) cannot feed the relay: nothing errors and nothing comes back
 print("messages from a non-driver:", C1("local R=game.ReplicatedStorage.Remotes.Crew local got=0 local c=R.OnClientEvent:Connect(function() got+=1 end) R:FireServer('s',1,1,0,1) R:FireServer('r',9,1e9,true) R:FireServer({}) R:FireServer('p','x') task.wait(1.2) c:Disconnect() return 'echoes '..got"))
@@ -62,8 +71,9 @@ down()
 C1("game.Players.LocalPlayer:SetAttribute('DevCrew',true) return 1")
 S1(P + "p:SetAttribute('DevCrewBot','lookout') return 1")
 print("lookout:", C1(HEAD + "local t=os.clock() while os.clock()-t<10 and not workspace:FindFirstChild('MinecartEscape') do task.wait(0.1) end task.wait(6) "
-      "local a=tonumber(st()[7]) or -1 R:FireServer('j') task.wait(1.2) local b=tonumber(st()[7]) or -1 R:FireServer('k') task.wait(0.8) c:Disconnect() "
-      "return 'job '..tostring(st()[10])..' | jumps the cart made: '..(b-a)..' | stoke replies: '..#got..' | bar '..tostring(p.PlayerGui:FindFirstChild('Stoke',true)~=nil)"))
+      "local fl=0 local c2=R.OnClientEvent:Connect(function(k) if k=='t' then fl+=1 end end) "
+      "local a=tonumber(st()[7]) or -1 R:FireServer('j') task.wait(1.2) local b=tonumber(st()[7]) or -1 R:FireServer('k') R:FireServer('f') task.wait(0.9) c:Disconnect() c2:Disconnect() "
+      "return 'job '..tostring(st()[10])..' | jumps the cart made: '..(b-a)..' | stoke replies: '..#got..' | flares thrown: '..fl..' | bar '..tostring(p.PlayerGui:FindFirstChild('Stoke',true)~=nil)"))
 print("client errors C:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 print("server errors C:", S1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'AssistantCommand') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False)

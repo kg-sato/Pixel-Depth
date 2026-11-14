@@ -367,6 +367,13 @@ C.CREW = { wait = 20, max = 4, mult = { 1, 1.25, 1.5, 1.75 }, seats = { { 0, -0.
 -- press may have, cool = least seconds between two presses.
 C.CREW.jobs = { [2] = { "driver", "stoker" }, [3] = { "driver", "lookout", "stoker" }, [4] = { "driver", "lookout", "stoker", "tail" } }
 C.CREW.stoke = { period = 2, zone = 0.24, late = 0.14, cool = 0.35, hit = 0.25, miss = 0.1, decay = 0.07, slow = 0.9, fast = 1.12 }
+-- Step 3. Flares: the tail seat (the stoker when there is no tail) throws them at the Gloom: `stock` a run, `cool` seconds
+-- apart, each pushes the Gloom back by `push` of the gap (a BONK lets it gain 0.35, so two flares answer one BONK); with a crew
+-- the Gloom falls back by itself at only `slowGloom` of its solo rate. Crew moments: at these shares of the way the driver's
+-- cart calls a move for ALL riders (lean left, lean right or duck); everyone has `window` seconds (+ `late` of lag); all in
+-- time gives `boost` boosts and `coins` more bonus, one late rider only a wobble.
+C.CREW.flare = { stock = 8, cool = 1.5, push = 0.175, slowGloom = 0.5 }
+C.CREW.moment = { at = { 0.35, 0.75 }, window = 1.6, late = 0.25, boost = 2, coins = 3 }
 function C.stokeAt(t0, t) -- where the needle is (0 to 1) at server time t in a run that began at t0
 	local u = ((t - t0) / C.CREW.stoke.period) % 1
 	return u < 0.5 and u * 2 or 2 - u * 2

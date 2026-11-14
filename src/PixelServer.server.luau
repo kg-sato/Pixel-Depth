@@ -828,7 +828,7 @@ local function finishEscape(plr, report)
 		-- shortcut: dodges, boosts and caught are the client's word, bounded by the run time and the 40-coin cap; replay the seed on the server if the bonus ever grows
 		local dodges = math.clamp(math.floor(tonumber(report.dodges) or 0), 0, math.floor(el))
 		local boosts = math.clamp(math.floor(tonumber(report.boosts) or 0), 0, math.floor(el / 2))
-		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2, C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
+		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2 + (run and (run.moHit or 0) * C.CREW.moment.coins or 0), C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
 		if report.caught == true then bonus = math.floor(bonus / 2) end -- the Gloom nipped you (playtest 2 pursuer)
 		bonus = math.floor(bonus * (e.mult or 1)) -- a crew's shared bonus (C.CREW.mult)
 		s.gold += bonus
@@ -909,7 +909,8 @@ function crew.launch()
 	for i, p in m do
 		run.seatOf[p] = i
 		escaping[p] = { t0 = os.clock(), crew = run }
-		FxR:FireClient(p, "escape", seed, { host = i == 1, seat = i, riders = ids, job = jobs[i], seed = seed, t0 = run.t0, stoker = table.find(jobs, "stoker") ~= nil, lookout = table.find(jobs, "lookout") ~= nil })
+		FxR:FireClient(p, "escape", seed, { host = i == 1, seat = i, riders = ids, job = jobs[i], seed = seed, t0 = run.t0, stoker = table.find(jobs, "stoker") ~= nil, lookout = table.find(jobs, "lookout") ~= nil,
+			flare = jobs[i] == "tail" or (jobs[i] == "stoker" and not table.find(jobs, "tail")) })
 	end
 	task.delay(150, function() -- a driver that never reports: everyone still gets home (no bonus)
 		local e = escaping[run.host]
@@ -1003,6 +1004,40 @@ function crew.job(plr, run, kind)
 			run.heat = math.max(0, run.heat - S.miss)
 		end
 		crew.tell(run, "k", ok, run.heat, run.hits)
+	elseif kind == "f" and (job == "tail" or (job == "stoker" and not table.find(run.jobs, "tail"))) then -- step 3: a flare at the Gloom
+		local F = C.CREW.flare
+		if now - (run.lastF or 0) < F.cool or (run.flares or 0) >= F.stock then return end
+		run.lastF, run.flares = now, (run.flares or 0) + 1
+		crew.tell(run, "t", F.stock - run.flares) -- the driver's cart pushes the Gloom back; everyone sees the throw
+	end
+end
+-- Step 3, crew moments: the driver's cart calls a move, the server opens a window, every rider answers, the server says
+-- whether all were in time. shortcut: that a rider pressed the RIGHT key is its client's word; the prize is two boosts and
+-- three coins under the bonus cap.
+function crew.moment(run, side)
+	local Mo = C.CREW.moment
+	if (side ~= "left" and side ~= "right" and side ~= "duck") or run.mo or (run.moN or 0) >= #Mo.at or os.clock() - (run.moAt or 0) < 8 then return end
+	run.moN, run.moAt = (run.moN or 0) + 1, os.clock()
+	local mo = { got = {}, n = 0 }
+	run.mo = mo
+	crew.tell(run, "m", side, Mo.window)
+	task.delay(Mo.window + Mo.late, function()
+		if run.mo ~= mo then return end
+		run.mo = nil
+		local need = 0
+		for _, m in run.members do
+			if escaping[m] and escaping[m].crew == run then need += 1 end
+		end
+		local ok = need > 0 and mo.n >= need
+		if ok then run.moHit = (run.moHit or 0) + 1 end
+		crew.tell(run, "M", ok)
+	end)
+end
+function crew.answer(plr, run)
+	local mo = run.mo
+	if mo and not mo.got[plr] then
+		mo.got[plr] = true
+		mo.n += 1
 	end
 end
 -- what the driver may send, and the bounds of every value; anything else is dropped
@@ -1025,7 +1060,9 @@ CrewR.OnServerEvent:Connect(function(plr, kind, a, b, c, d)
 	local e = escaping[plr]
 	local run = e and e.crew
 	if not run or e.crewDone or type(kind) ~= "string" then return end
+	if kind == "a" then return crew.answer(plr, run) end -- any rider's answer to a crew moment
 	if run.host ~= plr then return crew.job(plr, run, kind) end
+	if kind == "m" then return crew.moment(run, a) end -- the driver's cart calls a crew moment
 	local now = math.floor(os.clock())
 	if run.sec ~= now then run.sec, run.n = now, 0 end
 	run.n += 1
@@ -1082,7 +1119,7 @@ if IS_STUDIO then -- DevCrewBot: this player rides as a passenger; the server pl
 					escaping[plr] = e
 					local body = crew.body()
 					if body then standIn(plr, body.CFrame * CFrame.new(0, -1.65, 0), 2) end
-					FxR:FireClient(plr, "escape", 4242, { host = false, seat = 2, riders = { plr.UserId }, job = jobs[2], seed = 4242, t0 = run.t0, stoker = true, lookout = bot == "lookout" })
+					FxR:FireClient(plr, "escape", 4242, { host = false, seat = 2, riders = { plr.UserId }, job = jobs[2], seed = 4242, t0 = run.t0, stoker = true, lookout = bot == "lookout", flare = jobs[2] == "stoker" })
 					task.spawn(function()
 						task.wait(3.2)
 						local dist, id, nextRock, t0 = 0, 0, 1.5, os.clock()
@@ -1092,6 +1129,13 @@ if IS_STUDIO then -- DevCrewBot: this player rides as a passenger; the server pl
 							local t = os.clock() - t0
 							dist += 32 * dt
 							CrewR:FireClient(plr, "s", dist, 32, math.sin(t * 0.8), 1)
+							if dist > 520 and not run.bot1 then -- two crew moments, as a driver's cart would call them
+								run.bot1 = true
+								crew.moment(run, "left")
+							elseif dist > 840 and not run.bot2 then
+								run.bot2 = true
+								crew.moment(run, "duck")
+							end
 							if t >= nextRock and dist < C.ESCAPE.dist - 80 then
 								nextRock = t + 1.6
 								id += 1

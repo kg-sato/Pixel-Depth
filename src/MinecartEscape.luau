@@ -526,7 +526,8 @@ function M.play(opt)
 	table.insert(cons, UIS.InputBegan:Connect(function(input)
 		local k = input.KeyCode
 		if k == Enum.KeyCode.Space or k == Enum.KeyCode.ButtonA or k == Enum.KeyCode.W or k == Enum.KeyCode.Up then jump()
-		elseif k == Enum.KeyCode.S or k == Enum.KeyCode.Down or k == Enum.KeyCode.C or k == Enum.KeyCode.ButtonB then duck() end
+		elseif k == Enum.KeyCode.S or k == Enum.KeyCode.Down or k == Enum.KeyCode.C or k == Enum.KeyCode.ButtonB then duck()
+		elseif (k == Enum.KeyCode.R or k == Enum.KeyCode.ButtonX) and K.flare then K.flare() end
 	end))
 	local swipe = {}
 	table.insert(cons, UIS.TouchStarted:Connect(function(tch) swipe[tch] = { tch.Position, os.clock() } end))
@@ -662,6 +663,7 @@ function M.play(opt)
 		spawnGap = function(at, lane) K.net("g", at, lane) g0(at, lane) end
 		spawnCart = function(at, lane) K.net("c", at, lane) c0(at, lane) end
 		table.insert(cons, K.crew.on(function(kind, a, b, c) -- step 2: the lookout's calls and the stoker's steam, as the server passes them on
+			if K.said then K.said(kind, a, b) end
 			if kind == "J" and t > 0 and os.clock() - jumpT > JUMP_T then
 				jumpT = os.clock()
 				play("whoosh", 1.5)
@@ -676,6 +678,7 @@ function M.play(opt)
 	elseif K.replica then -- a passenger builds what the driver sends (the server has checked every value)
 		table.insert(cons, K.crew.on(function(kind, a, b, c, d)
 			local ok, err = pcall(function()
+				if K.said then K.said(kind, a, b) end
 				if kind == "s" then
 					K.d, K.v, K.want, K.at = a, b, c, os.clock()
 					gloom.gap = d
@@ -703,6 +706,91 @@ function M.play(opt)
 			end)
 			if not ok then warn("[MinecartEscape crew] " .. tostring(err)) end
 		end))
+	end
+	if K.crew then -- step 3: flares at the Gloom and crew moments, on every rider's screen
+		local F, Mo = C.CREW.flare, C.CREW.moment
+		local call = label(gui, "", UDim2.fromScale(0.6, 0.085), UDim2.fromScale(0.5, 0.3), WHITE, 6)
+		local callStroke = stroke(call, Color3.fromRGB(60, 24, 90), 3)
+		call.TextTransparency = 1
+		if callStroke then callStroke.Transparency = 1 end
+		local function say(text, color, secs)
+			call.Text, call.TextColor3, call.TextTransparency = text, color, 0
+			if callStroke then callStroke.Transparency = 0 end
+			local mine = text
+			task.delay(secs, function()
+				if call.Parent and call.Text == mine then
+					call.TextTransparency = 1
+					if callStroke then callStroke.Transparency = 1 end
+				end
+			end)
+		end
+		K.left, K.moN = F.stock, 0
+		local stock
+		if K.crew.flare then
+			stock = Instance.new("TextButton")
+			stock.Name, stock.Size, stock.Position, stock.AnchorPoint = "Flares", UDim2.fromScale(0.13, 0.06), UDim2.fromScale(0.9, 0.78), Vector2.new(0.5, 0.5)
+			stock.BackgroundColor3, stock.BackgroundTransparency, stock.TextColor3, stock.TextScaled, stock.Font, stock.ZIndex, stock.AutoButtonColor = Color3.fromRGB(36, 17, 56), 0.12, BUTTER, true, Enum.Font.FredokaOne, 4, false
+			stock.Text = (touch and "FLARE  x" or "FLARE (R)  x") .. F.stock
+			stock.Parent = gui
+			round(stock)
+			stroke(stock, Color3.fromRGB(255, 190, 120), 2)
+			local lastThrow = 0
+			K.flare = function()
+				if t <= 0 or K.left <= 0 or os.clock() - lastThrow < F.cool then return end
+				lastThrow = os.clock()
+				K.crew.send("f")
+			end
+			stock.Activated:Connect(function() K.flare() end)
+		end
+		K.said = function(kind, a, b)
+			if kind == "t" and type(a) == "number" then -- a flare was thrown: the driver's cart is the one that moves the Gloom
+				K.left = a
+				if stock then stock.Text = (touch and "FLARE  x" or "FLARE (R)  x") .. a end
+				if K.host then gloom.gap = math.min(1, gloom.gap + F.push) end
+				play("whoosh", 0.8)
+				sfx("sparkle", 0.8)
+				say("FLARE!  THE GLOOM FALLS BACK", BUTTER, 0.9)
+			elseif kind == "m" and type(a) == "string" then -- a crew moment opens
+				K.mo = { side = a, untilT = os.clock() + (tonumber(b) or Mo.window), done = false }
+				local word = a == "duck" and (touch and "ALL DUCK!  TAP" or "ALL DUCK!  S") or (a == "left" and (touch and "ALL LEAN LEFT!" or "ALL LEAN LEFT!  A") or (touch and "ALL LEAN RIGHT!" or "ALL LEAN RIGHT!  D"))
+				say(word, MINT, Mo.window)
+				sfx("click", 1.4)
+			elseif kind == "M" then -- the server's verdict
+				K.mo = nil
+				if a == true then
+					say("CREW MOVE!", BUTTER, 1.1)
+					sfx("upgrade", 1.3)
+					if K.host then
+						for _ = 1, Mo.boost do table.insert(boostUntil, os.clock() + 2.5) end
+						while #boostUntil > 3 do table.remove(boostUntil, 1) end
+					end
+				else
+					say("TOO SLOW!", PINK, 0.9)
+					shakeAmp = calm and 0 or 0.35
+				end
+			end
+		end
+		K.crewStep = function(now)
+			if K.host and K.moN < #Mo.at and dist / E.dist >= Mo.at[K.moN + 1] then -- the driver's cart calls the moment
+				K.moN += 1
+				K.crew.send("m", ({ "left", "right", "duck" })[rng:NextInteger(1, 3)])
+			end
+			local mo = K.mo
+			if mo and not mo.done and now < mo.untilT then -- every rider answers with the move itself
+				local hit
+				if mo.side == "duck" then
+					hit = UIS:IsKeyDown(Enum.KeyCode.S) or UIS:IsKeyDown(Enum.KeyCode.Down) or UIS:IsKeyDown(Enum.KeyCode.C) or UIS:IsGamepadButtonDown(Enum.UserInputType.Gamepad1, Enum.KeyCode.ButtonB) or (touch and next(touches) ~= nil)
+				else
+					hit = steer() == (mo.side == "left" and -1 or 1)
+				end
+				if hit then
+					mo.done = true
+					K.crew.send("a")
+					say("IN TIME!", WHITE, 0.6)
+				end
+			end
+			if stock then stock.Visible = phase == "run" and t > 0 end
+		end
 	end
 	if K.crew and K.crew.stoker then -- the steam gauge, for every rider of a crew with a stoker; and the stoker's own bar
 		local S = C.CREW.stoke
@@ -824,6 +912,7 @@ function M.play(opt)
 				target *= S.slow + (S.fast - S.slow) * math.clamp(K.heat - S.decay * (now - K.heatAt), 0, 1)
 			end
 			if K.steamStep then K.steamStep(now) end
+			if K.crewStep then K.crewStep(now) end
 			speed += (target - speed) * (1 - math.exp(-dt / 0.25))
 			dist += speed * dt
 			for i, p in pips do p.BackgroundTransparency = i <= live and 0 or 0.75 end
@@ -838,7 +927,7 @@ function M.play(opt)
 				dist += (K.d + K.v * (now - K.at) - dist) * pull
 				speed += (K.v - speed) * pull
 			end
-			if K.dbg then plr:SetAttribute("DevCrewState", string.format("%s %d %d %d %d %.2f %d %.2f %d %s", tostring(K.replica), dist, K.d and K.d + K.v * (now - K.at) or -1, #hazards, #K.mates, K.sx, K.jumps, K.heat, K.hits, tostring(K.job))) end
+			if K.dbg then plr:SetAttribute("DevCrewState", string.format("%s %d %d %d %d %.2f %d %.2f %d %s %s", tostring(K.replica), dist, K.d and K.d + K.v * (now - K.at) or -1, #hazards, #K.mates, K.sx, K.jumps, K.heat, K.hits, tostring(K.job), tostring(K.left))) end
 			for _, h in hazards do -- numbered in the order they appeared: the same on the driver's and the passengers' screens
 				if not h.id then
 					K.hid += 1
@@ -990,7 +1079,7 @@ function M.play(opt)
 			end
 			vignette.BackgroundTransparency = math.min(1, vignette.BackgroundTransparency + dt * 1.2)
 			if t > 0 then -- the Gloom: falls back slowly, faster on boosts; at 0 it nips you once
-				gloom.gap = math.min(1, gloom.gap + dt * (live > 0 and 0.1 or 0.045))
+				gloom.gap = math.min(1, gloom.gap + dt * (live > 0 and 0.1 or 0.045) * (K.crew and C.CREW.flare.slowGloom or 1)) -- a crew's Gloom falls back slowly: the flares do that work
 				if gloom.gap <= 0.02 and not gloom.caught then
 					gloom.caught = true
 					big.Text, big.TextTransparency, big.TextColor3 = "THE GLOOM NIPPED YOU!", 0, Color3.fromRGB(190, 150, 240)
