@@ -1463,6 +1463,7 @@ end)()
 	})
 	local show, fly = Daily.show, Daily.fly
 	forgeUI.fly = fly -- shared: selling ore flies coins too
+	forgeUI.rewardChest = function(gold, gems, name) show(gold, 0, gems, name) end -- a boss's reward chest (Shared.BossClient)
 	R.Fx.OnClientEvent:Connect(function(kind, ...)
 		if kind == "dailyChest" then
 			local gold, streak, gems = ...
@@ -2674,7 +2675,7 @@ end)()
 		if not mod then return end
 		local ok, err = pcall(function()
 			require(mod).start({ R = R, plr = plr, gui = gui, new = new, S = S, fit = fit, panel = panel, text = text, toast = toast, sfx = sfx, shake = shake,
-				burst = burst, tween = tween, INK = INK, PINK = PINK, GOLD = GOLD, MINT = MINT, getState = function() return state end })
+				burst = burst, tween = tween, INK = INK, PINK = PINK, GOLD = GOLD, MINT = MINT, getState = function() return state end, vmHook = forgeUI })
 		end)
 		if not ok then warn("[BossClient] " .. tostring(err)) end
 	end)

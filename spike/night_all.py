@@ -23,6 +23,13 @@ TESTS = [  # script, [(what, text that must be in the output)]
         ("grotto zip rides back", "(handle 4): prompt fired 1, 1 rides | studs from the near post: near"), ("camp 2 refused before the gate", "gate shut: in cave true studs from Camp 1 near"), ("lift holds the rider, once", "lift asked twice: 1 ride of 12 s"),
         ("no hearth on the lift", "picture up: true | hearth: 1 no:Not now"), ("lift lets go at Camp 2", "lift, 16 s in: anchored false studs from Camp 2 near"), ("Q offers both camps", "panel true in cave false"),
         ("the pick rides to Camp 2", "picked Camp 2: anchored false studs from Camp 2 near"), ("no client errors", "client errors: 0")]),
+    ("boss_atk_test.py", [("slam hits near", "Warden slam, standing 10 studs away: bossSlam bossHit:slam"), ("slam misses far", "Warden slam, 24 studs away: bossSlam bossDodge"),
+        ("sweep hits in the lane", "Warden sweep, standing in the lane: bossSweep bossHit:sweep"), ("sweep misses beside the lane", "Warden sweep, stepped 7 studs aside: bossSweep bossDodge"),
+        ("ring hits on a band", "Warden rings, standing on the second band (14): bossRings bossHit:rings"), ("ring misses in a gap", "Warden rings, standing in the first gap (10.5): bossRings bossDodge"),
+        ("golem sweep hits and misses", "KilnGolem sweep, stepped 7 studs aside: bossSweep bossDodge"), ("golem rings hit on a band", "KilnGolem rings, standing on the second band (14): bossRings bossHit:rings"),
+        ("golem rings miss in a gap", "KilnGolem rings, standing in the second gap (17.5): bossRings bossDodge"), ("no client errors", "client errors 2: 0")]),
+    ("boss_fight_test.py", [("boss frame shows", "bar true banner true ROOT WARDEN"), ("a whole fight without a hit", "fight summary: won True, hits 0, slam True, sweep True, rings True"),
+        ("reward chest", "chest layer true title ROOT WARDEN CHEST bar false"), ("no client errors", "client errors: 0")]),
     ("verify_night.py", [("wind-up dodge", "after stepping away 100"), ("way home embers", "(PASS over 0), at camp 0 (PASS 0)")]),
 ]
 bad = 0

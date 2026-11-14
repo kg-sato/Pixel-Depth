@@ -135,14 +135,14 @@ function M.start(E)
 			end)
 		end
 	end
-	local function show(gold, streak, gems)
+	local function show(gold, streak, gems, name) -- name: another chest (a boss reward): its own title, no streak track
 		if busy then return end
 		busy = true
 		layer.Enabled = true
 		setLid(false)
 		chest.Rotation = 0
 		rays.ImageTransparency, glow.ImageTransparency, scrim.BackgroundTransparency = 1, 1, 1
-		titleT.Text = "DAY " .. streak .. " CHEST"
+		titleT.Text = name or ("DAY " .. streak .. " CHEST")
 		rGold.Text, rGems.Text = "+" .. commas(gold), "+" .. commas(gems)
 		for _, o in { title, reward, track, collect, card } do o.Visible = false end
 		barFill.Size = UDim2.fromScale(0, 1)
@@ -231,7 +231,7 @@ function M.start(E)
 		end)
 		-- the streak track fills up to today, today pops
 		task.delay(2.1, function()
-			track.Visible = true
+			track.Visible = not name
 			tween(barFill, 0.5, { Size = UDim2.fromScale(math.clamp((streak - 1) / 6, 0, 1), 1) }, Enum.EasingStyle.Quad)
 			for d, o in days do
 				local done, today = d < streak, d == streak

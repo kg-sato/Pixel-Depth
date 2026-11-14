@@ -340,6 +340,9 @@ C.SWIM = { air = 14, refill = 2.5, speed = 12, rise = 9, sink = 1.2, loss = 0.25
 -- reach in studs, HP it costs), how far you may walk off, and the reward
 C.BOSS = { needTier = 6, knots = 3, zone = 13, period = 0.85, perfects = 2, windup = 1.1, slamReach = 22, slamHit = 45, leash = 34, gold = 500, gems = 15 } -- slam and reward as the user's directive of 2026-11-10 set them (were 34 HP, 25 gems)
 -- the Kiln Golem in the Clay Caves hall (boss 2, same fight; needs tier 12, the Titan Hammer)
+-- the bosses' floor attacks (ServerScriptService.Boss): the sweep lane's width, warning time and damage; the rings' radii from the boss, band width,
+-- warning time, seconds between rings and damage. Safe from the rings: closer than 5.5, 8.5 to 12.5, 15.5 to 19.5, beyond 22.5 studs.
+C.BOSS_ATK = { sweepW = 8, sweepWind = 1.5, sweepHit = 30, rings = { 7, 14, 21 }, ringW = 3, ringWind = 1.6, ringGap = 0.7, ringHit = 30 }
 C.BOSS2 = { needTier = 12, knots = 3, zone = 11, period = 0.75, perfects = 2, windup = 1.0, slamReach = 24, slamHit = 45, leash = 40, gold = 1500, gems = 30 }
 C.GLOOM = { clay = { speed = 11, cone = 0.45, see = 80 }, hp = 100, hit = 34, loss = 0.25, shield = 5, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6, grab = 3, warn = 0.8 }
 -- cave events (ServerScriptService.CaveEvents): the roots' warning time, the first spore storm after server start, the gap

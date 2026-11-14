@@ -6,6 +6,11 @@
 -- faster needle and a narrower zone than ore; `perfects` good swings crack it), then the boss winds up and SLAMS the ground:
 -- be in the air (jump) or far away when it lands, or lose `slamHit` HP. Crack all three knots and it steps aside for good, with
 -- coins and gems. Run out of HP and it only pushes you back to try again (no ore lost).
+-- Three attacks since 2026-11-13 (Next Systems Plan, phase C), each drawn on the floor by the client before it lands
+-- (numbers in C.BOSS_ATK): the SLAM (jump, or be far away), the SWEEP (a lane from the boss through where you stood: step out
+-- of it) and the RINGS (three bands round the boss land one after another: stand in a gap). After the first knot comes the
+-- slam, after the second the sweep and then the rings; a knot that holds brings the next attack of the three in turn.
+-- The server picks the attack, keeps its clock and decides the hit; one attack hurts at most once.
 -- Every Fx event carries the boss number last, so Shared.BossClient moves the right model.
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
@@ -44,7 +49,65 @@ local function finish(plr, s, won)
 	ctx.sendState(s)
 end
 
-local round
+local ATK = C.BOSS_ATK
+local round, step
+local function flatFrom(plr, w) -- the player's place seen from the boss, on the floor plane
+	local hrp = ctx.hrpOf(plr)
+	return hrp and w and w.PrimaryPart and (hrp.Position - w.PrimaryPart.Position) * Vector3.new(1, 0, 1)
+end
+local function strike(plr, s, b, dmg, what) -- one hit of an attack; true = the fight ended
+	local hp = ctx.hurt(plr, dmg)
+	ctx.fx:FireClient(plr, "bossHit", hp, b.def.id, what)
+	if hp <= 0 then
+		finish(plr, s, false)
+		return true
+	end
+	return false
+end
+local function sweep(plr, s)
+	local b = s.boss
+	if not b or ctx.data[plr] ~= s then return end
+	local w = modelOf(b.def)
+	local flat = flatFrom(plr, w)
+	if not flat then return step(plr, s) end
+	local dir = flat.Magnitude > 1 and flat.Unit or Vector3.zAxis
+	ctx.fx:FireClient(plr, "bossSweep", workspace:GetServerTimeNow() + ATK.sweepWind, dir, b.def.id)
+	task.delay(ATK.sweepWind, function()
+		if s.boss ~= b or ctx.data[plr] ~= s then return end
+		local rel = flatFrom(plr, w)
+		if rel then
+			local along = rel:Dot(dir)
+			if along > -2 and along < b.def.B.leash and (rel - dir * along).Magnitude < ATK.sweepW / 2 then
+				if strike(plr, s, b, ATK.sweepHit, "sweep") then return end
+			else
+				ctx.fx:FireClient(plr, "bossDodge", b.def.id)
+			end
+		end
+		task.delay(1.2, function() step(plr, s) end)
+	end)
+end
+local function rings(plr, s)
+	local b = s.boss
+	if not b or ctx.data[plr] ~= s then return end
+	local w = modelOf(b.def)
+	ctx.fx:FireClient(plr, "bossRings", workspace:GetServerTimeNow() + ATK.ringWind, b.def.id)
+	local hit = false
+	for k, r in ATK.rings do
+		task.delay(ATK.ringWind + (k - 1) * ATK.ringGap, function()
+			if hit or s.boss ~= b or ctx.data[plr] ~= s then return end
+			local rel = flatFrom(plr, w)
+			if rel and math.abs(rel.Magnitude - r) < ATK.ringW / 2 then
+				hit = true
+				strike(plr, s, b, ATK.ringHit, "rings")
+			end
+		end)
+	end
+	task.delay(ATK.ringWind + (#ATK.rings - 1) * ATK.ringGap + 0.1, function()
+		if s.boss ~= b or ctx.data[plr] ~= s then return end
+		if not hit then ctx.fx:FireClient(plr, "bossDodge", b.def.id) end
+		task.delay(1.2, function() step(plr, s) end)
+	end)
+end
 local function slam(plr, s)
 	local b = s.boss
 	if not b or ctx.data[plr] ~= s then return end
@@ -73,15 +136,21 @@ local function slam(plr, s)
 		if hrp and w and w.PrimaryPart then
 			local flat = (hrp.Position - w.PrimaryPart.Position) * Vector3.new(1, 0, 1)
 			if flat.Magnitude < B.slamReach and not air then
-				local hp = ctx.hurt(plr, B.slamHit)
-				ctx.fx:FireClient(plr, "bossHit", hp, b.def.id)
-				if hp <= 0 then return finish(plr, s, false) end
+				if strike(plr, s, b, B.slamHit, "slam") then return end
 			else
 				ctx.fx:FireClient(plr, "bossDodge", b.def.id)
 			end
 		end
-		task.delay(1.4, function() round(plr, s) end)
+		task.delay(1.4, function() step(plr, s) end)
 	end)
+end
+local ATTACKS = { slam = slam, sweep = sweep, rings = rings }
+local CYCLE = { "slam", "sweep", "rings" }
+step = function(plr, s) -- the next attack waiting, or the next knot
+	local b = s.boss
+	if not b or ctx.data[plr] ~= s then return end
+	local kind = table.remove(b.queue, 1)
+	if kind then ATTACKS[kind](plr, s) else round(plr, s) end
 end
 
 local function knotDone(s, mg)
@@ -100,12 +169,19 @@ local function knotDone(s, mg)
 		task.delay(1.2, function() if s.boss == b then finish(plr, s, true) end end)
 		return
 	end
-	task.delay(1.6, function() slam(plr, s) end)
+	-- knot 1 down: the slam; knot 2 down: the sweep, then the rings; a knot that held: the next of the three in turn
+	if cracked then
+		b.queue = b.knots == b.def.B.knots - 1 and { "slam" } or { "sweep", "rings" }
+	else
+		b.turn = (b.turn or 0) % #CYCLE + 1
+		b.queue = { CYCLE[b.turn] }
+	end
+	task.delay(1.6, function() step(plr, s) end)
 end
 
 round = function(plr, s)
 	local b = s.boss
-	if not b or ctx.data[plr] ~= s or s.mg then return end
+	if not b or ctx.data[plr] ~= s or s.mg or b.test then return end
 	local B = b.def.B
 	local w = modelOf(b.def)
 	if not w then return end
@@ -136,7 +212,7 @@ function M.init(c)
 			ctx.fx:FireClient(plr, "bossLocked", C.PICKS[def.B.needTier].name, def.id)
 			return
 		end
-		s.boss = { knots = def.B.knots, def = def }
+		s.boss = { knots = def.B.knots, def = def, queue = {} }
 		ctx.fx:FireClient(plr, "bossStart", def.B.knots, def.id)
 		task.delay(2.6, function() round(plr, s) end)
 	end
@@ -154,8 +230,22 @@ function M.init(c)
 				end
 			end)
 		end
-		Players.PlayerAdded:Connect(watch)
-		for _, p in Players:GetPlayers() do watch(p) end
+		-- DevBossAtk = "slam", "sweep" or "rings" (the Warden), "sweep2" ... (the Kiln Golem): that one attack now, in a fight
+		-- without knot rounds that lasts until the HP runs out (spike/boss_atk_test.py)
+		local function watchAtk(plr)
+			plr:GetAttributeChangedSignal("DevBossAtk"):Connect(function()
+				local v, s = plr:GetAttribute("DevBossAtk"), ctx.data[plr]
+				if not v then return end
+				plr:SetAttribute("DevBossAtk", nil)
+				local kind, id = string.match(v, "^(%a+)(%d?)$")
+				local def = DEFS[tonumber(id) or 1]
+				if not s or not ATTACKS[kind] or not def or s.mg or (s.boss and not s.boss.test) then return end
+				if not s.boss or s.boss.def ~= def then s.boss = { knots = def.B.knots, def = def, queue = {}, test = true } end
+				ATTACKS[kind](plr, s)
+			end)
+		end
+		Players.PlayerAdded:Connect(function(p) watch(p) watchAtk(p) end)
+		for _, p in Players:GetPlayers() do watch(p) watchAtk(p) end
 	end
 	Players.PlayerRemoving:Connect(function(plr) local s = ctx.data[plr] if s then s.boss = nil end end)
 end
