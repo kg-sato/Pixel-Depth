@@ -355,6 +355,10 @@ C.TORCH = { time = 300, range = 32, minRange = 16 } -- minRange 8 to 16 on 2026-
 -- the minecart escape on the ride up (MinecartEscape): track length (studs), base speed (studs/s), coin bonus range;
 -- the server pays only when the run took at least dist / (speed * 1.6) seconds (every boost stacked the whole way)
 C.ESCAPE = { dist = 1050, speed = 30, top = 1.45, bonus = { 10, 40 } } -- top: the speed wave's peak multiplier (playtest 2 runner redesign); the server's time check uses it
+-- The town's arrival fill (Shared.TownFill): the engine needs seconds to build the lamps' light after a join or a return from
+-- the caves; until then a warm ambient of this colour stands in. joinHold / hold: seconds at full strength after a join / a
+-- return; fade: seconds to fade out.
+C.TOWN_FILL = { color = Color3.fromRGB(210, 158, 110), joinHold = 16, hold = 8, fade = 5 }
 -- Trophy cases at the Trophy House (Shared.Trophies; vault Briefs/Trophy Cases (2026-11-14)): key, the name on the plaque, how
 -- to earn it. The boss keys are the saved tips a boss win already sets (gate1, gate2); a pet key is a Mythic or Secret pet
 -- this player has ever hatched (saved: profile field `rare`, a set of pet names; the owner's yes, 2026-11-14).

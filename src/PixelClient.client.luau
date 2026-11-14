@@ -1531,6 +1531,7 @@ do
 	local Lighting = game:GetService("Lighting")
 	caveLighting = function(on) -- swap the camp look for C.CAVE_LIGHT and back (each property in a pcall: some may be locked)
 		if on and not cave.saved then
+			if forgeUI.townAmbient then Lighting.Ambient = forgeUI.townAmbient end -- never save the arrival fill (Shared.TownFill) as the town's look
 			cave.saved = {}
 			for name, props in C.CAVE_LIGHT do
 				local o = name == "Lighting" and Lighting or Lighting:FindFirstChild(name)
@@ -2759,7 +2760,7 @@ end)()
 	end
 	forgeUI.spatialExtra = forgeUI.spatialExtra or {} -- the small panels built in this script stand in the world too (Shared.SpatialPanels); the forge keeps its own staged screen
 	for _, f in { night, odds, mapP, forge } do table.insert(forgeUI.spatialExtra, { frame = f, home = gui, menu = true, on = function() return f.Visible end }) end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
