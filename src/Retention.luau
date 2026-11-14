@@ -213,10 +213,12 @@ function M.init(c)
 			if fat then break end
 		end
 		fat = fat or cart:GetPivot() * CFrame.new(16, 0.6, 14)
-		local stone, stoneD = Color3.fromRGB(92, 84, 112), Color3.fromRGB(60, 54, 78)
+		local stone, stoneD = Color3.fromRGB(150, 138, 176), Color3.fromRGB(112, 100, 140) -- pale stone: the first, darker one read as a black block from the town camera
 		part("RefineryBase", Vector3.new(4.4, 3.2, 4), fat * CFrame.new(0, 1.6, 0), stone, Enum.Material.Slate)
 		part("RefineryTop", Vector3.new(3.6, 1.4, 3.2), fat * CFrame.new(0, 3.9, 0), stoneD, Enum.Material.Slate)
 		part("RefineryChimney", Vector3.new(1.4, 3, 1.4), fat * CFrame.new(1, 6.1, 0.6), stoneD, Enum.Material.Slate)
+		part("RefineryEmbers", Vector3.new(1.8, 0.2, 1.4), fat * CFrame.new(-0.6, 4.66, -0.2), Color3.fromRGB(255, 150, 60), Enum.Material.Neon) -- a glowing grate on top, seen from above
+		part("RefineryChimneyGlow", Vector3.new(0.9, 0.2, 0.9), fat * CFrame.new(1, 7.66, 0.6), Color3.fromRGB(255, 190, 90), Enum.Material.Neon)
 		local mouth = part("RefineryMouth", Vector3.new(2.2, 1.5, 0.3), fat * CFrame.new(0, 1.5, -2.02), Color3.fromRGB(255, 140, 60), Enum.Material.Neon)
 		local ml = Instance.new("PointLight")
 		ml.Color, ml.Range, ml.Brightness, ml.Shadows = Color3.fromRGB(255, 150, 70), 14, 1, false

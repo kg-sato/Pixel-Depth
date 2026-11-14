@@ -428,7 +428,7 @@ function M.play(opt)
 			local cf = pathCF(s) * CFrame.new(side * rng:NextNumber(18, 34), rng:NextNumber(-26, -8), 0)
 			local col = CRYSTAL[k % #CRYSTAL + 1]
 			for q = 0, 2 do
-				part(world, Vector3.new(2.4, rng:NextNumber(6, 12), 2.4), cf * CFrame.new(q * 2 - 2, 0, (q % 2) * 2) * CFrame.Angles(rng:NextNumber(-0.4, 0.4), q, rng:NextNumber(-0.4, 0.4)), col:Lerp(Color3.new(1, 1, 1), 0.2), { Material = q == 1 and Enum.Material.Neon or Enum.Material.Glass, Transparency = q == 1 and 0 or 0.2 })
+				part(world, Vector3.new(2.4, rng:NextNumber(6, 12), 2.4), cf * CFrame.new(q * 2 - 2, 0, (q % 2) * 2) * CFrame.Angles(rng:NextNumber(-0.4, 0.4), q, rng:NextNumber(-0.4, 0.4)), col:Lerp(Color3.new(1, 1, 1), q == 1 and 0 or 0.2), { Material = Enum.Material.Glass, Transparency = q == 1 and 0.05 or 0.2 }) -- all glass (2026-11-14: the Neon middle crystal blew out to a flat white polygon beside the cart; the light below gives the glow)
 			end
 			local l = Instance.new("PointLight")
 			l.Color, l.Range, l.Brightness = col, 26, 1.3
