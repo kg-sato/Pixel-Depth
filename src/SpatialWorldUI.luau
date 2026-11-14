@@ -145,10 +145,17 @@ function M.start(E)
 			local chest = plr.PlayerGui:FindFirstChild("DailyChest")
 			local hook = E.vmHook
 			local busy = plr:GetAttribute("InCave") == true or E.isBusy() or plr:GetAttribute("Seated") == true or plr.PlayerGui:FindFirstChild("MinecartEscapeGui") ~= nil or plr.PlayerGui:FindFirstChild("PixelLoading") ~= nil or (chest ~= nil and chest.Enabled) or hook.arOpen == true or hook.wheelOpen == true or (hook.noScrim ~= nil and hook.noScrim()) -- no station card behind a menu or the daily chest
+			local nearest, nd = nil, math.huge -- one card at a time: two stations side by side laid their cards over each other (directive v9)
+			for p in stations do
+				local d = (p.Position - h.Position).Magnitude
+				if d < nd then nearest, nd = p, d end
+			end
 			for p, kind in stations do
 				local d = (p.Position - h.Position).Magnitude
 				local c = cards[p]
-				if not busy and d < NEAR then
+				if c and p ~= nearest then
+					show(c, false)
+				elseif not busy and d < NEAR then
 					if not c then c = build(p, kind); cards[p] = c end
 					show(c, true)
 				elseif c and (busy or d > FAR) then
@@ -160,7 +167,7 @@ function M.start(E)
 		for _, c in cards do
 			if c.open or c.card.GroupTransparency < 0.99 then
 				local side = cam.CFrame.RightVector * Vector3.new(1, 0, 1)
-				local pos = c.top + side.Unit * (W / 2 + 6.5) + Vector3.new(0, 2.5, 0) + Vector3.new(0, math.sin(now * 1.6 + c.top.X) * 0.12, 0) -- beside the station (its own prompt bubble sits over it), with a slow hover
+				local pos = c.top + cam.CFrame.UpVector * 5.5 + Vector3.new(0, math.sin(now * 1.6 + c.top.X) * 0.12, 0) -- above the station and its prompt bubble as the camera sees it (directive v9: it was beside it), with a slow hover
 				-- face against the camera's view direction (not toward its position: off-centre cards then look twisted), turning about the
 				-- vertical axis and leaning back up to 55 degrees for the town's high camera; the card keeps its perspective
 				local look = cam.CFrame.LookVector
