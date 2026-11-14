@@ -96,6 +96,7 @@ end
 -- text() applies it when a label is made and whenever code gives the label a dark colour later.
 local SMOKED = GLASS ~= nil and C.UI_SMOKED == true
 if SMOKED then for k, v in GLASS.smoked do SKIN[k] = v end end
+if GLASS and C.UI_JELLY then for k, v in GLASS.jelly do SKIN[k] = v end end -- jelly buttons, pills and hexes (directive v9)
 local function paleInk(c)
 	if c.R * 0.3 + c.G * 0.59 + c.B * 0.11 >= 0.5 then return c end
 	return c:Lerp(Color3.new(1, 1, 1), 0.8)
@@ -1324,7 +1325,7 @@ RunService.RenderStepped:Connect(function()
 			-- a bubble steps sideways off the minimap, the camp pill and the talisman (loop grade 2026-11-10: "Ride up" lay on SAFE AT CAMP)
 			local hud = gui:FindFirstChild("CaveHud")
 			local conv = u.bb.AbsolutePosition - Vector2.new(u.bb.Position.X.Offset, u.bb.Position.Y.Offset) -- from our offset to the bubble's top left corner
-			for _, name in { "Minimap", "CampPill", "Survival", "StepCard" } do
+			for _, name in { "Minimap", "CampPill", "Survival", "Hotbar", "StepCard" } do
 				local r = (hud and hud.Visible and hud:FindFirstChild(name)) or (name == "StepCard" and gui:FindFirstChild(name))
 				if r and r.Visible then
 					local tl, rp, rs = Vector2.new(x, y) + conv, r.AbsolutePosition, r.AbsoluteSize
@@ -1901,7 +1902,7 @@ end
 		end
 		if not on then CAS:UnbindAction("PixelMgLock") end
 		cave.mgBusy = on -- prompts pause (the camera loop owns ProximityPromptService.Enabled)
-		for _, n in { "Survival", "Minimap", "CampPill", "LeftColumn" } do -- Tracker and HeavyPill hide themselves (they are not always on) -- focus: every HUD widget steps back while a minigame is up
+		for _, n in { "Survival", "Hotbar", "Minimap", "CampPill", "LeftColumn" } do -- Tracker and HeavyPill hide themselves (they are not always on) -- focus: every HUD widget steps back while a minigame is up
 			local o = caveHud:FindFirstChild(n) or gui:FindFirstChild(n)
 			if o then o.Visible = not on end
 		end

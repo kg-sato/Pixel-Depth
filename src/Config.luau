@@ -295,6 +295,10 @@ C.PET_FACE = { calm = "rbxassetid://80743924975214", curious = "rbxassetid://797
 C.HOME = { hold = 3, cool = 300, still = 8 } -- the hearthstone: seconds to hold, seconds of cooldown, studs you may drift during the hold (ServerScriptService.Travel)
 C.WHISTLE = { reach = 40, show = 8, cool = 30 } -- the pet whistle: studs it looks, seconds the pet marks the deposit, seconds until the next whistle
 C.UI_GLASS.smoked = { card = "rbxassetid://123788880833023", keycap = "rbxassetid://95835076020654", keycapDown = "rbxassetid://89815334963402", panel = "rbxassetid://72244447259148", pill = "rbxassetid://114478649651852", pillButter = "rbxassetid://129725898810075", pillLilac = "rbxassetid://88609351576923", pillMint = "rbxassetid://116432339584212", pillPink = "rbxassetid://122269924739998", slot = "rbxassetid://120185081422888", tab = "rbxassetid://109809759223194", tabOn = "rbxassetid://118797628367631" }
+-- Jelly and shine pieces (directive v9, 2026-11-13; art/pd_ui_jelly.py): buttons, currency pills and hex slots as glossy jelly with a dome shine.
+-- UI_JELLY = false brings the cut-glass and smoked ones back.
+C.UI_JELLY = true
+C.UI_GLASS.jelly = { butter = "rbxassetid://123494745168312", hex = "rbxassetid://135895041416386", hexOn = "rbxassetid://117031892994184", lilac = "rbxassetid://116724156621634", mint = "rbxassetid://118519140945910", off = "rbxassetid://128489089904980", pill = "rbxassetid://136299262107830", pillButter = "rbxassetid://125012749065717", pillLilac = "rbxassetid://83359289524397", pillMint = "rbxassetid://94286454476473", pillPink = "rbxassetid://135787230316274", pink = "rbxassetid://137602209367349", sky = "rbxassetid://78138903745799" }
 if C.UI_KIT == "glass" then for k, v in C.UI_GLASS.hud do C.HUD_ICON[k] = v end end
 C.EGG_COINS = 75
 -- the Egg Altar in the caves (playtest 2: "rarer ones should be found in caves ... players will need to roll for them"; board PT2_Eggs).

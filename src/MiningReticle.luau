@@ -77,7 +77,7 @@ function M.start(E)
 					set(o, "BackgroundTransparency", 1)
 					ringStroke = ringStroke or new("UIStroke", o, { Color = Color3.new(1, 1, 1), Thickness = 6, Transparency = 0 })
 					ringStroke.Enabled = true
-				elseif k > 0.8 and k < 0.87 then set(o, "BackgroundTransparency", 0.42) -- the face: smoked glass, so the needle and marks stand out while the rock still shows (0.8 let the rock swallow them)
+				elseif k > 0.8 and k < 0.87 then set(o, "BackgroundTransparency", 0.55) -- the face: smoked glass, so the needle and marks stand out while the rock still shows (0.8 let the rock swallow them)
 				elseif k > 0.2 then set(o, "BackgroundTransparency", 1) end
 			end
 		end
@@ -90,7 +90,7 @@ function M.start(E)
 		table.clear(dressed)
 		if ringStroke then ringStroke.Enabled = false end
 	end
-	local say = new("Frame", ps, { Name = "Say", Size = UDim2.fromScale(0.5, 0.11), Position = UDim2.fromScale(0.5, 0.13), AnchorPoint = MID, BackgroundTransparency = 1, Visible = false, ZIndex = 13 })
+	local say = new("Frame", ps, { Name = "Say", Size = UDim2.fromScale(0.34, 0.07), Position = UDim2.fromScale(0.5, 0.2), AnchorPoint = MID, BackgroundTransparency = 1, Visible = false, ZIndex = 13 })
 	local sayText = JellyText.new(say, "STRIKE ON GOLD!", { color = Color3.fromRGB(255, 226, 130), glow = true, z = 13 })
 
 	local dep, kind, lockCol, at = nil, nil, Color3.new(1, 1, 1), nil
@@ -158,8 +158,8 @@ function M.start(E)
 		local inset = game:GetService("GuiService"):GetGuiInset()
 		local x, y = v.X, v.Y
 		if v.Z < 0 then x, y = vp.X / 2, vp.Y / 2 end -- behind the camera: the middle
-		local px = math.clamp(5.4 / (2 * math.max(v.Z, 2) * math.tan(math.rad(cam.FieldOfView / 2))) * vp.Y, vp.Y * 0.3, vp.Y * 0.4)
-		local goal = Vector2.new(math.clamp(x, vp.X * 0.3, vp.X * 0.7), math.clamp(y, vp.Y * 0.42, vp.Y * 0.55))
+		local px = math.clamp(4.2 / (2 * math.max(v.Z, 2) * math.tan(math.rad(cam.FieldOfView / 2))) * vp.Y, vp.Y * 0.17, vp.Y * 0.24) -- directive v9: a reticle on the ore, not a clock over the view (it was 30 to 40% of the height)
+		local goal = Vector2.new(math.clamp(x, vp.X * 0.2, vp.X * 0.8), math.clamp(y, vp.Y * 0.3, vp.Y * 0.62))
 		at = at and at:Lerp(goal, 0.25) or goal
 		local o = ps.AbsolutePosition
 		dial.Size = UDim2.fromOffset(px, px)

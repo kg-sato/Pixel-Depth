@@ -59,8 +59,15 @@ def key(*ks):
 def push():
     if "Edit" not in run("get_studio_state").split("Available")[0]: play(False); time.sleep(1.5)  # scripts are pushed in Edit: a push during Play did nothing
     pushed = 0
+    # only files that changed since the last push are sent (one Studio call each; a slow Studio needs 5 s a call and there are
+    # 80 files). The record is spike/.push_cache.json; "push all" sends and compares every file (use it after a Studio restart).
+    import hashlib
+    cache_f = game / "spike" / ".push_cache.json"
+    cache = {} if "all" in sys.argv else (json.loads(cache_f.read_text()) if cache_f.exists() else {})
     for f in sorted((game / "src").glob("*.luau")):
         if f.name.split(".")[0] in SKIP: continue
+        digest = hashlib.sha1(f.read_bytes()).hexdigest()
+        if cache.get(f.name) == digest: continue
         path, cls = path_of(f)
         src = f.read_text(encoding="utf-8").replace("\r\n", "\n")
         assert len(src) < 199000, f"{f.name} is {len(src)} characters: over the Roblox limit"
@@ -71,9 +78,14 @@ def push():
                 f'if o and o.Source == new then return "same" end\n'
                 f'if not o then o = Instance.new("{cls}") o.Name = "{name}" o.Parent = par end\n'
                 f'o.Source = new\nreturn "PUSHED {path} " .. #o.Source')
-        r = lua(code, "Edit").splitlines()[-1:]
+        for _ in range(4):  # a slow Studio sometimes drops a request (empty answer or "Request timeout"): ask again
+            r = lua(code, "Edit").splitlines()[-1:]
+            if r and ("same" in r[0] or "PUSHED" in r[0]): break
+            time.sleep(3)
         assert r and ("same" in r[0] or "PUSHED" in r[0]), f"push failed for {f.name}: {r}"
         if "same" not in r[0]: print(r[0]); pushed += 1
+        cache[f.name] = digest
+        cache_f.write_text(json.dumps(cache))
     print("push done,", pushed, "changed")
 
 

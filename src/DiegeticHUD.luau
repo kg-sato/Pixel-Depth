@@ -2,7 +2,8 @@
 -- Directive v8 (2026-11-12): the wooden survival disc becomes two liquid glass orbs with a cut-glass hex hotbar between them
 -- (refs: Instagram De32zOxqhxU and DeFJqVLj_wV, dual vitals orbs beside a glass hotbar; DfbjiL-TBuK, radial cooldown sweeps).
 --   * left orb   = Lantern: warm amber oil, its level is the torch fuel; it turns violet and gutters when nearly out
---   * hex slots  = FLARE [R] with its count and recharge sweep, SONAR [T] with its cooldown, PING [Z]
+--   * hex slots  = FLARE [R] with its count and recharge sweep, SONAR [T] with its cooldown, PING [Z]; since directive v9
+--                  (2026-11-13) they are a hotbar of their own at the bottom centre ("Hotbar"), and the corner holds the two orbs only
 --   * right orb  = Vitality: rose crystal light, its level is HP, the number sits in the glass
 --   * fear       = frost creeps in from the screen edges (the old disc showed a face instead)
 -- The liquid is a swirl image turning inside two CanvasGroups (a round one for the ball, a flat one for the level): a rotated
@@ -17,7 +18,10 @@ function M.start(E)
 	local touch = (UIS.TouchEnabled and not UIS.KeyboardEnabled) or plr:GetAttribute("DevTouch") == true
 	local MID = Vector2.new(0.5, 0.5)
 	local AMBER, VIOLET, ROSE, CYAN = Color3.fromRGB(255, 178, 56), Color3.fromRGB(150, 110, 235), Color3.fromRGB(255, 96, 150), Color3.fromRGB(120, 232, 255)
-	local W, Hh = touch and 232 or 460, 112 -- board pixels; on touch the thumb buttons replace the hex slots
+	local W, Hh = 232, 112 -- board pixels: the two orbs (the hex slots moved to the bottom centre, directive v9)
+	local HEX, HEX_ON = (C.UI_JELLY and G.jelly and G.jelly.hex) or G.hex, (C.UI_JELLY and G.jelly and G.jelly.hexOn) or G.hexOn
+	local bar = new("Frame", caveHud, { Name = "Hotbar", Size = S(252, 84), Position = S(640, 526), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 2 })
+	new("UIAspectRatioConstraint", bar, { AspectRatio = 3, DominantAxis = Enum.DominantAxis.Height })
 
 	local root = new("Frame", caveHud, { Name = "Survival", Size = S(W, Hh), Position = S(22, 578), AnchorPoint = Vector2.new(0, 1), BackgroundTransparency = 1, ZIndex = 2 })
 	new("UIAspectRatioConstraint", root, { AspectRatio = W / Hh, DominantAxis = Enum.DominantAxis.Height })
@@ -41,6 +45,10 @@ function M.start(E)
 		local shade = new("UIGradient", glow, { Rotation = 90, Color = ColorSequence.new(tint:Lerp(Color3.new(1, 1, 1), 0.55), tint:Lerp(Color3.new(0, 0, 0), 0.45)), Transparency = NumberSequence.new(0.85, 0.4) })
 		local surf = new("Frame", level, { Size = UDim2.new(1, 0, 0, 2), BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 3 })
 		local shell = new("ImageLabel", o, { Name = "Shell", Image = G.orbShell, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 4 })
+		-- the jelly dome: a white crescent over the upper third (directive v9: every orb and button reads as glossy jelly)
+		local dome = new("Frame", o, { Name = "Dome", Size = UDim2.fromScale(0.62, 0.3), Position = UDim2.fromScale(0.5, 0.25), AnchorPoint = MID, BackgroundColor3 = Color3.new(1, 1, 1), BorderSizePixel = 0, ZIndex = 5 })
+		new("UICorner", dome, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIGradient", dome, { Rotation = 90, Transparency = NumberSequence.new(0.45, 1) })
 		local ic = new("ImageLabel", o, { Name = "Icon", Image = iconImage, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.42, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 5 })
 		local self = { root = o, shell = shell, icon = ic, liquid = liquid, fill = 1, shown = 1 }
 		function self.tint(c)
@@ -68,7 +76,8 @@ function M.start(E)
 	-- the hex hotbar between the orbs (keyboard and gamepad; phones have their own thumb buttons)
 	local slots = {}
 	local function hex(name, i, key, iconImage, act)
-		local b = new("ImageButton", root, { Name = name, Image = G.hex, BackgroundTransparency = 1, AutoButtonColor = false, Size = UDim2.fromScale(X(76), 76 / Hh), Position = UDim2.fromScale(X(Hh + 8 + (i - 1) * 78 + 40), 0.5), AnchorPoint = MID, ZIndex = 3 }) -- in one row on the tray
+		local b = new("ImageButton", bar, { Name = name, Image = HEX, BackgroundTransparency = 1, AutoButtonColor = false, Size = UDim2.fromScale(0.31, 0.93), Position = UDim2.fromScale((i * 2 - 1) / 6, 0.5), AnchorPoint = MID, ZIndex = 3 }) -- three in a row at the bottom centre
+		local press = new("UIScale", b, { Name = "Pop" })
 		new("UIAspectRatioConstraint", b, { AspectRatio = 1 })
 		local img
 		if iconImage then
@@ -88,10 +97,14 @@ function M.start(E)
 		kt.Font, kt.ZIndex = E.HEAD, 6
 		local note = text(b, "", UDim2.fromScale(0.56, 0.36), UDim2.fromScale(0.8, 0.26), MID, Color3.new(1, 1, 1), 700)
 		note.Font, note.ZIndex, note.TextStrokeColor3 = E.HEAD, 6, Color3.fromRGB(46, 30, 96)
-		local veil = new("ImageLabel", b, { Image = G.hex, ImageColor3 = Color3.fromRGB(12, 6, 26), ImageTransparency = 1, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 5 }) -- dims the slot while it recharges
-		b.Activated:Connect(function() if act then act() end end)
-		b.MouseEnter:Connect(function() b.Image = G.hexOn end)
-		b.MouseLeave:Connect(function() b.Image = G.hex end)
+		local veil = new("ImageLabel", b, { Image = HEX, ImageColor3 = Color3.fromRGB(12, 6, 26), ImageTransparency = 1, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 5 }) -- dims the slot while it recharges
+		local function bounce() -- squash and bounce: 0.92, 1.08, 1 (directive v9)
+			press.Scale = 0.92
+			tween(press, 0.12, { Scale = 1.08 }, Enum.EasingStyle.Quad).Completed:Connect(function() tween(press, 0.14, { Scale = 1 }, Enum.EasingStyle.Quad) end)
+		end
+		b.Activated:Connect(function() bounce() if act then act() end end)
+		b.MouseEnter:Connect(function() b.Image = HEX_ON bounce() end)
+		b.MouseLeave:Connect(function() b.Image = HEX end)
 		local s = { b = b, img = img, note = note, veil = veil }
 		slots[name] = s
 		return s
@@ -104,23 +117,9 @@ function M.start(E)
 	end
 
 	plr:GetAttributeChangedSignal("DevTouch"):Connect(function() -- a touch test switched on after the start: the thumb buttons take over, the hex slots go
-		local on = plr:GetAttribute("DevTouch") == nil
-		for _, sl in slots do sl.b.Visible = on end
+		bar.Visible = plr:GetAttribute("DevTouch") == nil
 	end)
-	-- the numbers, on hover or tap, and for a moment when a state changes
-	local tipBox = new("Frame", root, { Name = "Numbers", Size = UDim2.fromScale(X(250), 0.28), Position = UDim2.fromScale(0, -0.06), AnchorPoint = Vector2.new(0, 1), BackgroundColor3 = Color3.fromRGB(24, 16, 46), BackgroundTransparency = 0.15, BorderSizePixel = 0, Visible = false, ZIndex = 7 })
-	new("UICorner", tipBox, { CornerRadius = UDim.new(0.3, 0) })
-	new("UIStroke", tipBox, { Color = Color3.fromRGB(214, 200, 255), Thickness = 1, Transparency = 0.3 })
-	local tipT = text(tipBox, "", UDim2.fromScale(0.9, 0.62), UDim2.fromScale(0.5, 0.5), MID, Color3.new(1, 1, 1), 700, false)
-	tipT.ZIndex = 8
-	local tipUntil = 0
-	for _, o in { lantern, vital } do
-		local hit = new("TextButton", o.root, { Text = "", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 9 })
-		hit.MouseEnter:Connect(function() tipUntil = os.clock() + 60 end)
-		hit.MouseLeave:Connect(function() tipUntil = os.clock() + 0.4 end)
-		hit.Activated:Connect(function() tipUntil = os.clock() + 3 end)
-	end
-
+	-- (the HP and LANTERN numbers box is gone, directive v9: the HP number sits in its orb, the lantern's level is its oil)
 	-- fear: frost creeps in from the four screen edges
 	local frost = {}
 	for i, d in { { UDim2.fromScale(1, 0.26), UDim2.fromScale(0, 0), 90 }, { UDim2.fromScale(1, 0.26), UDim2.fromScale(0, 0.74), 270 }, { UDim2.fromScale(0.2, 1), UDim2.fromScale(0, 0), 0 }, { UDim2.fromScale(0.2, 1), UDim2.fromScale(0.8, 0), 180 } } do
@@ -159,10 +158,11 @@ function M.start(E)
 		vital.step(dt, now, -26)
 		vital.shell.ImageColor3 = hp <= maxHp / 3 and Color3.new(1, 1, 1):Lerp(Color3.fromRGB(255, 70, 90), 0.5 + 0.5 * math.sin(now * 7)) or Color3.new(1, 1, 1)
 		if hp ~= shownHp then
-			if shownHp >= 0 then bump(vital.root, hp < shownHp and 1.3 or 1.15); tipUntil = now + 2 end
+			if shownHp >= 0 then bump(vital.root, hp < shownHp and 1.3 or 1.15) end
 			shownHp = hp
 			hpText.Text = tostring(hp)
 		end
+		bar.Visible = not touch and plr:GetAttribute("DevTouch") == nil and not cave.mgBusy
 		if flare then
 			local fl = plr:GetAttribute("Flares") or C.GLOOM.flares
 			if fl ~= lastFl then
@@ -175,10 +175,6 @@ function M.start(E)
 			local left = hook.sonarLeft and hook.sonarLeft() or 0
 			sonar.veil.ImageTransparency = left > 0 and 0.35 or 1
 			sonar.note.Text = left > 0 and tostring(math.ceil(left)) or ""
-		end
-		tipBox.Visible = now < tipUntil
-		if tipBox.Visible then
-			tipT.Text = "HP " .. hp .. "/" .. maxHp .. "   LANTERN " .. math.floor(fuel * 100 + 0.5) .. "%"
 		end
 	end)
 	return root
