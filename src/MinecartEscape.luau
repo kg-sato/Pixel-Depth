@@ -229,7 +229,9 @@ function M.play(opt)
 	-- hits and pickups. All of it lives in K (this function is near its limit of locals).
 	local K = { crew = opt.crew, host = opt.crew ~= nil and opt.crew.host == true, replica = opt.crew ~= nil and opt.crew.host ~= true, want = 0, out = {}, hid = 0, next = 0, mates = {}, sx = 0, sz = 0 }
 	K.net = K.host and opt.crew.send or function() end
+	K.job, K.heat, K.heatAt, K.hits, K.jumps = opt.crew and opt.crew.job, 0, 0, 0, 0 -- step 2: this rider's job, and the stoker's steam as the server last told it
 	K.dbg = plr:GetAttribute("DevCrew") -- a test asks for the run's state as the player attribute DevCrewState
+	if K.dbg and K.crew then plr:SetAttribute("DevCrewT0", K.crew.t0) end
 	if K.crew then
 		local seats = C.CREW.seats
 		local mine = seats[K.crew.seat] or seats[1]
@@ -358,7 +360,7 @@ function M.play(opt)
 	local hintEdge = stroke(hintPlate, Color3.fromRGB(214, 200, 255), 1.5)
 	-- Directive v9: the controls as three jelly badges (a key cap and a word each) in place of the raw line of white text
 	local badges
-	if K.replica then hint.Text = "PASSENGER:  THE DRIVER STEERS, HOLD ON" end -- no control badges for a passenger
+	if K.replica then hint.Text = K.job == "lookout" and (touch and "LOOKOUT:  SWIPE UP TO JUMP, DOWN TO DUCK" or "LOOKOUT:  JUMP  SPACE    DUCK  S") or (K.job == "stoker" and "" or "PASSENGER:  THE DRIVER STEERS, HOLD ON") end -- no control badges for a passenger
 	if not touch and not K.replica then
 		hint.Text = ""
 		badges = Instance.new("CanvasGroup")
@@ -493,8 +495,34 @@ function M.play(opt)
 	local JUMP_T, JUMP_H = 0.6, 2.6
 	local taught = {}
 	local dist, speed, t, lean, roll = 0, 0, -3.2, 0, 0
-	local function jump() if not K.replica and t > 0 and os.clock() - jumpT > JUMP_T then jumpT = os.clock() play("whoosh", 1.5) K.net("j") end end
-	local function duck() if not K.replica and t > 0 then duckUntil = os.clock() + 0.7 K.net("d") end end
+	-- who may jump and duck: a rider alone, the driver of a crew with no lookout, or the lookout (whose cart moves at once on
+	-- its own screen while the call travels to the driver). A stoker's jump key is the stoke press.
+	local function jump()
+		if K.job == "stoker" then
+			if K.stoke then K.stoke() end
+		elseif K.job == "lookout" then
+			if t > 0 and os.clock() - jumpT > JUMP_T then
+				jumpT = os.clock()
+				play("whoosh", 1.5)
+				K.crew.send("j")
+			end
+		elseif not K.replica and not (K.host and K.crew.lookout) and t > 0 and os.clock() - jumpT > JUMP_T then
+			jumpT = os.clock()
+			play("whoosh", 1.5)
+			K.net("j")
+		end
+	end
+	local function duck()
+		if K.job == "lookout" then
+			if t > 0 then
+				duckUntil = os.clock() + 0.7
+				K.crew.send("d")
+			end
+		elseif not K.replica and not (K.host and K.crew.lookout) and t > 0 then
+			duckUntil = os.clock() + 0.7
+			K.net("d")
+		end
+	end
 	table.insert(cons, UIS.InputBegan:Connect(function(input)
 		local k = input.KeyCode
 		if k == Enum.KeyCode.Space or k == Enum.KeyCode.ButtonA or k == Enum.KeyCode.W or k == Enum.KeyCode.Up then jump()
@@ -633,6 +661,18 @@ function M.play(opt)
 		spawnBeam = function(at) K.net("b", at) b0(at) end
 		spawnGap = function(at, lane) K.net("g", at, lane) g0(at, lane) end
 		spawnCart = function(at, lane) K.net("c", at, lane) c0(at, lane) end
+		table.insert(cons, K.crew.on(function(kind, a, b, c) -- step 2: the lookout's calls and the stoker's steam, as the server passes them on
+			if kind == "J" and t > 0 and os.clock() - jumpT > JUMP_T then
+				jumpT = os.clock()
+				play("whoosh", 1.5)
+				K.net("j")
+			elseif kind == "D" and t > 0 then
+				duckUntil = os.clock() + 0.7
+				K.net("d")
+			elseif kind == "k" and type(b) == "number" then
+				K.heat, K.heatAt, K.hits = b, os.clock(), tonumber(c) or K.hits
+			end
+		end))
 	elseif K.replica then -- a passenger builds what the driver sends (the server has checked every value)
 		table.insert(cons, K.crew.on(function(kind, a, b, c, d)
 			local ok, err = pcall(function()
@@ -650,13 +690,61 @@ function M.play(opt)
 					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(LANES[a] * 0.6, 4.1, 0), BUTTER, { Material = Enum.Material.Neon })
 					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(-LANES[a] * 0.6, 4.1, 0), MINT, { Material = Enum.Material.Neon })
 				elseif kind == "j" then
-					jumpT = os.clock()
-					play("whoosh", 1.5)
+					K.jumps += 1
+					if os.clock() - jumpT > JUMP_T * 0.7 then -- not the echo of this lookout's own call
+						jumpT = os.clock()
+						play("whoosh", 1.5)
+					end
 				elseif kind == "d" then duckUntil = os.clock() + 0.7
+				elseif kind == "k" then
+					K.heat, K.heatAt, K.hits = b, os.clock(), c
+					if K.stokeSaid then K.stokeSaid(a) end
 				elseif kind == "p" then K.out[a] = b end
 			end)
 			if not ok then warn("[MinecartEscape crew] " .. tostring(err)) end
 		end))
+	end
+	if K.crew and K.crew.stoker then -- the steam gauge, for every rider of a crew with a stoker; and the stoker's own bar
+		local S = C.CREW.stoke
+		local gauge = frame({ Name = "Steam", Size = UDim2.fromScale(0.16, 0.022), Position = UDim2.fromScale(0.5, 0.165), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(36, 17, 56), BackgroundTransparency = 0.12, ZIndex = 3 })
+		round(gauge)
+		stroke(gauge, Color3.fromRGB(224, 176, 255), 2)
+		local steam = frame({ Parent = gauge, Size = UDim2.fromScale(0, 1), BackgroundColor3 = Color3.fromRGB(120, 235, 255), ZIndex = 4 })
+		round(steam)
+		label(gauge, "STEAM", UDim2.fromScale(0.5, 0.9), UDim2.fromScale(-0.3, 0.5), WHITE, 4)
+		local bar, zone, needle, word
+		if K.job == "stoker" then
+			bar = frame({ Name = "Stoke", Size = UDim2.fromScale(0.34, 0.05), Position = UDim2.fromScale(0.5, 0.74), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(36, 17, 56), BackgroundTransparency = 0.12, ZIndex = 3 })
+			round(bar)
+			stroke(bar, Color3.fromRGB(224, 176, 255), 2)
+			zone = frame({ Parent = bar, Size = UDim2.fromScale(S.zone, 1), BackgroundColor3 = BUTTER, ZIndex = 4 })
+			round(zone)
+			needle = frame({ Parent = bar, Size = UDim2.fromScale(0.022, 1.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = WHITE, ZIndex = 5 })
+			round(needle)
+			stroke(needle, Color3.fromRGB(60, 24, 90), 2)
+			word = label(gui, touch and "STOKER:  TAP WHEN THE NEEDLE IS IN THE GOLD" or "STOKER:  SPACE WHEN THE NEEDLE IS IN THE GOLD", UDim2.fromScale(0.5, 0.04), UDim2.fromScale(0.5, 0.68), WHITE, 4)
+			local lastPress = 0
+			K.stoke = function()
+				if t <= 0 or os.clock() - lastPress < S.cool then return end
+				lastPress = os.clock()
+				K.crew.send("k")
+			end
+			K.stokeSaid = function(hit) -- the server's verdict on the last press
+				needle.BackgroundColor3 = hit and MINT or PINK
+				sfx(hit and "sparkle" or "click", hit and 1.2 or 0.7)
+				task.delay(0.25, function() if needle.Parent then needle.BackgroundColor3 = WHITE end end)
+			end
+			if touch then table.insert(cons, UIS.TouchStarted:Connect(function() K.stoke() end)) end
+		end
+		K.steamStep = function(now)
+			steam.Size = UDim2.fromScale(math.clamp(K.heat - S.decay * (now - K.heatAt), 0, 1), 1)
+			if needle then
+				needle.Position = UDim2.fromScale(C.stokeAt(K.crew.t0 or 0, workspace:GetServerTimeNow()), 0.5)
+				zone.Position = UDim2.fromScale(C.stokeZone(K.crew.seed or 1, K.hits), 0)
+				bar.Visible, word.Visible = t > 0 and phase == "run", t > 0 and phase == "run"
+			end
+			gauge.Visible = phase == "run"
+		end
 	end
 	local function cleanup(h)
 		for _, k in { "ring", "rock", "orb", "model" } do if h[k] then h[k]:Destroy() end end
@@ -731,6 +819,11 @@ function M.play(opt)
 			local live = 0
 			for i = #boostUntil, 1, -1 do if now < boostUntil[i] then live += 1 else table.remove(boostUntil, i) end end
 			local target = t < 0 and 0 or E.speed * wave(dist / E.dist) * (1 + 0.2 * live) * (now < slowUntil and 0.5 or 1)
+			if K.host and K.crew.stoker then -- a stoker aboard: the cart is slower with no steam and faster with full steam
+				local S = C.CREW.stoke
+				target *= S.slow + (S.fast - S.slow) * math.clamp(K.heat - S.decay * (now - K.heatAt), 0, 1)
+			end
+			if K.steamStep then K.steamStep(now) end
 			speed += (target - speed) * (1 - math.exp(-dt / 0.25))
 			dist += speed * dt
 			for i, p in pips do p.BackgroundTransparency = i <= live and 0 or 0.75 end
@@ -745,7 +838,7 @@ function M.play(opt)
 				dist += (K.d + K.v * (now - K.at) - dist) * pull
 				speed += (K.v - speed) * pull
 			end
-			if K.dbg then plr:SetAttribute("DevCrewState", string.format("%s %d %d %d %d %.2f", tostring(K.replica), dist, K.d and K.d + K.v * (now - K.at) or -1, #hazards, #K.mates, K.sx)) end
+			if K.dbg then plr:SetAttribute("DevCrewState", string.format("%s %d %d %d %d %.2f %d %.2f %d %s", tostring(K.replica), dist, K.d and K.d + K.v * (now - K.at) or -1, #hazards, #K.mates, K.sx, K.jumps, K.heat, K.hits, tostring(K.job))) end
 			for _, h in hazards do -- numbered in the order they appeared: the same on the driver's and the passengers' screens
 				if not h.id then
 					K.hid += 1
@@ -910,7 +1003,7 @@ function M.play(opt)
 			local near = 1 - gloom.gap
 			for _, f in soot do f.BackgroundTransparency = 1 - near * (0.75 + 0.1 * math.sin(now * 7)) end
 			hud.gap(gloom.gap, now)
-			hud.warn(t > 0 and not K.replica and warnDir or nil, now) -- a passenger has nothing to press
+			hud.warn(t > 0 and (not K.replica or (K.job == "lookout" and (warnDir == "up" or warnDir == "down"))) and not (K.host and K.crew.lookout and (warnDir == "up" or warnDir == "down")) and warnDir or nil, now) -- each rider is warned only of what its own job answers
 			snd.rumble.Volume = 0.15 + near * 0.6
 			local inCav = dist > CAV0 and dist < CAV1
 			if atmo then atmo.Density = inCav and 0.05 or math.min(atmoDensity or 0.14, 0.14) end

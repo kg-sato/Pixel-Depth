@@ -824,7 +824,7 @@ local function finishEscape(plr, report)
 	local s = data[plr]
 	local bonus = 0
 	local el = os.clock() - e.t0
-	if s and type(report) == "table" and el >= C.ESCAPE.dist / (C.ESCAPE.speed * (C.ESCAPE.top or 1) * 1.6) then -- the fastest legal run: top of the speed wave with three boosts
+	if s and type(report) == "table" and el >= C.ESCAPE.dist / (C.ESCAPE.speed * (C.ESCAPE.top or 1) * 1.6 * (run and C.CREW.stoke.fast or 1)) then -- the fastest legal run: top of the speed wave with three boosts
 		-- shortcut: dodges, boosts and caught are the client's word, bounded by the run time and the 40-coin cap; replay the seed on the server if the bonus ever grows
 		local dodges = math.clamp(math.floor(tonumber(report.dodges) or 0), 0, math.floor(el))
 		local boosts = math.clamp(math.floor(tonumber(report.boosts) or 0), 0, math.floor(el / 2))
@@ -901,13 +901,15 @@ function crew.launch()
 	crew.show()
 	if #m == 0 then return end
 	if #m == 1 then return startEscape(data[m[1]]) end
-	local run = { members = m, host = m[1], sec = 0, n = 0 }
+	local seed = math.random(1, 1e6)
+	local jobs = C.CREW.jobs[#m] or {}
+	local run = { members = m, host = m[1], sec = 0, n = 0, seed = seed, t0 = workspace:GetServerTimeNow(), jobs = jobs, seatOf = {}, last = {}, heat = 0, heatAt = os.clock(), hits = 0 }
 	local ids = {}
 	for i, p in m do ids[i] = p.UserId end
-	local seed = math.random(1, 1e6)
 	for i, p in m do
+		run.seatOf[p] = i
 		escaping[p] = { t0 = os.clock(), crew = run }
-		FxR:FireClient(p, "escape", seed, { host = i == 1, seat = i, riders = ids })
+		FxR:FireClient(p, "escape", seed, { host = i == 1, seat = i, riders = ids, job = jobs[i], seed = seed, t0 = run.t0, stoker = table.find(jobs, "stoker") ~= nil, lookout = table.find(jobs, "lookout") ~= nil })
 	end
 	task.delay(150, function() -- a driver that never reports: everyone still gets home (no bonus)
 		local e = escaping[run.host]
@@ -966,6 +968,43 @@ function crew.drop(plr) -- a player left the game
 		end
 	end
 end
+function crew.tell(run, ...) -- to every rider of a run
+	for _, m in run.members do
+		if escaping[m] and escaping[m].crew == run then CrewR:FireClient(m, ...) end
+	end
+end
+-- Step 2: what a passenger with a job may send. A lookout's jump and duck go to the driver, whose cart makes the move for
+-- everyone. A stoker's press is judged here, on the server's clock, and the steam it leaves is told to the whole crew.
+function crew.job(plr, run, kind)
+	local job = run.jobs[run.seatOf[plr] or 0]
+	local now = os.clock()
+	if job == "lookout" and (kind == "j" or kind == "d") then
+		if now - (run.last[plr] or 0) < 0.25 then return end
+		run.last[plr] = now
+		if run.host == "bot" then crew.tell(run, kind) else CrewR:FireClient(run.host, string.upper(kind)) end
+	elseif job == "stoker" and kind == "k" then
+		local S = C.CREW.stoke
+		if now - (run.last[plr] or 0) < S.cool then return end
+		run.last[plr] = now
+		run.heat = math.max(0, run.heat - S.decay * (now - run.heatAt))
+		run.heatAt = now
+		local z, ts, ok = C.stokeZone(run.seed, run.hits), workspace:GetServerTimeNow(), false
+		for k = 0, 6 do -- the press may be up to `late` seconds old: anywhere the needle was in that time counts
+			local p = C.stokeAt(run.t0, ts - S.late + k * (S.late + 0.03) / 6)
+			if p >= z and p <= z + S.zone then
+				ok = true
+				break
+			end
+		end
+		if ok then
+			run.hits += 1
+			run.heat = math.min(1, run.heat + S.hit)
+		else
+			run.heat = math.max(0, run.heat - S.miss)
+		end
+		crew.tell(run, "k", ok, run.heat, run.hits)
+	end
+end
 -- what the driver may send, and the bounds of every value; anything else is dropped
 local function crewOk(kind, a, b, c, d)
 	local function num(x, lo, hi) return type(x) == "number" and x == x and x >= lo and x <= hi end
@@ -985,7 +1024,8 @@ end
 CrewR.OnServerEvent:Connect(function(plr, kind, a, b, c, d)
 	local e = escaping[plr]
 	local run = e and e.crew
-	if not run or run.host ~= plr or e.crewDone or type(kind) ~= "string" then return end
+	if not run or e.crewDone or type(kind) ~= "string" then return end
+	if run.host ~= plr then return crew.job(plr, run, kind) end
 	local now = math.floor(os.clock())
 	if run.sec ~= now then run.sec, run.n = now, 0 end
 	run.n += 1
@@ -1033,14 +1073,16 @@ if IS_STUDIO then -- DevCrewBot: this player rides as a passenger; the server pl
 		while true do
 			task.wait(1)
 			for _, plr in Players:GetPlayers() do
-				if plr:GetAttribute("DevCrewBot") and data[plr] and not escaping[plr] and not riding[plr] and plr:GetAttribute("InCave") then
+				local bot = plr:GetAttribute("DevCrewBot") -- true or "stoker": seat 2 of a crew of two; "lookout": seat 2 of three
+				if bot and data[plr] and not escaping[plr] and not riding[plr] and plr:GetAttribute("InCave") then
 					plr:SetAttribute("DevCrewBot", nil)
-					local run = { members = { plr }, host = "bot", sec = 0, n = 0 }
+					local jobs = C.CREW.jobs[bot == "lookout" and 3 or 2]
+					local run = { members = { plr }, host = "bot", sec = 0, n = 0, seed = 4242, t0 = workspace:GetServerTimeNow(), jobs = jobs, seatOf = { [plr] = 2 }, last = {}, heat = 0, heatAt = os.clock(), hits = 0 }
 					local e = { t0 = os.clock(), crew = run }
 					escaping[plr] = e
 					local body = crew.body()
 					if body then standIn(plr, body.CFrame * CFrame.new(0, -1.65, 0), 2) end
-					FxR:FireClient(plr, "escape", 4242, { host = false, seat = 2, riders = { plr.UserId } })
+					FxR:FireClient(plr, "escape", 4242, { host = false, seat = 2, riders = { plr.UserId }, job = jobs[2], seed = 4242, t0 = run.t0, stoker = true, lookout = bot == "lookout" })
 					task.spawn(function()
 						task.wait(3.2)
 						local dist, id, nextRock, t0 = 0, 0, 1.5, os.clock()

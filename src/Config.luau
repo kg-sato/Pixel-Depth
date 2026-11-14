@@ -359,6 +359,21 @@ C.ESCAPE = { dist = 1050, speed = 30, top = 1.45, bonus = { 10, 40 } } -- top: t
 -- seconds and ride up together; the driver (seat 1) plays the escape, the others watch it from their seats. mult[n]: the bonus
 -- of a crew of n, paid to each rider. seats: x and z of each seat in the cart (studs; the front is -z).
 C.CREW = { wait = 20, max = 4, mult = { 1, 1.25, 1.5, 1.75 }, seats = { { 0, -0.5 }, { -0.75, 0.8 }, { 0.75, 0.8 }, { 0, 1.6 } } }
+-- Step 2, jobs by seat for a crew of 2, 3 and 4. The driver leans. A lookout's jump and duck move the whole cart (the driver
+-- then only leans). A stoker presses when a needle that sweeps a bar is inside a gold zone: each hit adds `hit` steam (0 to 1),
+-- a miss takes `miss`, steam leaks `decay` a second, and the cart runs at `slow` of its speed with no steam and `fast` with
+-- full steam. The server judges every press on its own clock (the needle and the zone are the same sums on both sides):
+-- period = seconds for the needle to cross and come back, zone = its width (the bar is 1 wide), late = seconds of lag a
+-- press may have, cool = least seconds between two presses.
+C.CREW.jobs = { [2] = { "driver", "stoker" }, [3] = { "driver", "lookout", "stoker" }, [4] = { "driver", "lookout", "stoker", "tail" } }
+C.CREW.stoke = { period = 2, zone = 0.24, late = 0.14, cool = 0.35, hit = 0.25, miss = 0.1, decay = 0.07, slow = 0.9, fast = 1.12 }
+function C.stokeAt(t0, t) -- where the needle is (0 to 1) at server time t in a run that began at t0
+	local u = ((t - t0) / C.CREW.stoke.period) % 1
+	return u < 0.5 and u * 2 or 2 - u * 2
+end
+function C.stokeZone(seed, hits) -- the left edge of the gold zone after `hits` hits: it moves with every hit
+	return Random.new(seed + hits * 7919):NextNumber(0.05, 0.95 - C.CREW.stoke.zone)
+end
 -- swimming in the grotto lake (CaveSwim): seconds of air, seconds to refill, swim / rise / sink speeds (studs/s), and the share of
 -- the unbanked ore lost when you pass out (the same rule as a gloomling catch)
 C.SWIM = { air = 14, refill = 2.5, speed = 12, rise = 9, sink = 1.2, loss = 0.25 }
