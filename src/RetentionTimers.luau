@@ -50,6 +50,28 @@ function M.start(E)
 				local c = giftP.AbsolutePosition + giftP.AbsoluteSize / 2
 				E.fly("coin", UDim2.fromOffset(c.X, c.Y), E.goldPill, 6, 0.05)
 			end
+		elseif kind == "crystalRift" then -- a tall violet crystal of light stands over the kiln while the rift is open
+			E.toast("CRYSTAL RIFT IN THE CLAY CAVES!  ORE THERE IS WORTH " .. C.EVENTS.riftValue .. "X", Color3.fromRGB(200, 140, 255), true)
+			E.sfx("upgrade", 0.6)
+			local old = workspace:FindFirstChild("CrystalRiftFX")
+			if old then old:Destroy() end
+			local f = Instance.new("Model")
+			f.Name = "CrystalRiftFX"
+			local at = CFrame.new(C.CAVE2_ORIGIN + Vector3.new(6, 30, -12))
+			for i = 1, 3 do
+				local p = Instance.new("Part")
+				p.Size, p.CFrame, p.Anchored = Vector3.new(5 - i, 34 - i * 6, 5 - i), at * CFrame.Angles(0.12 * i, i * 1.1, 0.1 * i), true
+				p.Color, p.Material, p.Transparency = Color3.fromRGB(190, 130, 255), i == 3 and Enum.Material.Neon or Enum.Material.Glass, i == 3 and 0.2 or 0.45
+				p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow = false, false, false, false
+				p.Parent = f
+				if i == 3 then
+					local l = Instance.new("PointLight")
+					l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(200, 140, 255), 60, 1.4, false
+					l.Parent = p
+				end
+			end
+			f.Parent = workspace
+			task.delay(a, function() if f.Parent then f:Destroy() end end)
 		elseif kind == "goldSurge" then
 			E.toast("GOLDEN VEIN SURGE!  THE GOLD ZONE IS TWICE AS WIDE", GOLD, true)
 			E.sfx("upgrade", 0.8)
@@ -57,7 +79,7 @@ function M.start(E)
 	end)
 
 	local EVENTS = { -- name, attribute with the end time while it is on, attribute with its next start
-		{ "GOLD SURGE", "GoldSurge", "GoldSurgeAt" }, { "KILN SURGE", "KilnSurge", "KilnSurgeAt" }, { "SPORE STORM", "SporeStorm", "SporeAt" }, { "ROOTS STIR", nil, "RootsStirAt" },
+		{ "CRYSTAL RIFT", "CrystalRift", "RiftAt" }, { "GOLD SURGE", "GoldSurge", "GoldSurgeAt" }, { "KILN SURGE", "KilnSurge", "KilnSurgeAt" }, { "SPORE STORM", "SporeStorm", "SporeAt" }, { "ROOTS STIR", nil, "RootsStirAt" },
 	}
 	local acc = 1
 	RunService.Heartbeat:Connect(function(dt)
@@ -83,7 +105,7 @@ function M.start(E)
 		for _, e in EVENTS do
 			local ends = e[2] and workspace:GetAttribute(e[2])
 			if ends and ends > now then
-				line, col, soon = e[1] .. " ON  " .. clock(ends - now), e[1] == "GOLD SURGE" and GOLD or CYAN, -1
+				line, col, soon = e[1] .. " ON  " .. clock(ends - now), (e[1] == "GOLD SURGE" and GOLD) or (e[1] == "CRYSTAL RIFT" and Color3.fromRGB(214, 160, 255)) or CYAN, -1
 				break
 			end
 			local nextAt = workspace:GetAttribute(e[3])

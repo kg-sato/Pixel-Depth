@@ -43,6 +43,11 @@ z2 = zone()
 print("strike zone: %s without, %s in a Golden Vein Surge" % (z1, z2))
 try: print("zone doubled:", abs(float(z2.split()[1]) - 2 * float(z1.split()[1])) < 0.01)
 except Exception: print("zone doubled: unknown")
+# the Crystal Rift: the factor the server uses for ore value, in the Clay Caves and in Camp 1, on and off
+RIFT = "local E=require(game.ServerScriptService.CaveEvents) local C=require(game.ReplicatedStorage.Shared.Config) return E.riftMult(C.CAVE2_ORIGIN)..' in the Clay Caves, '..E.riftMult(C.CAVE_ORIGIN)..' in Camp 1'"
+print("rift off:", S1(RIFT))
+S1("workspace:SetAttribute('DevRift',30) return 1"); time.sleep(2.5)
+print("rift on:", S1(RIFT), "| pill:", C1(PILL), "| crystal:", C1("return tostring(workspace:FindFirstChild('CrystalRiftFX')~=nil)"))
 # the Lantern Tether: ore is worth more with a friend here
 print("friends 0:", S1(P + "return tostring(p:GetAttribute('Friends'))"))
 S1(P + "p:SetAttribute('DevFriends',2) return 1"); time.sleep(2.5)

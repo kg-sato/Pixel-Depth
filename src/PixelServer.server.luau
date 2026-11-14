@@ -1160,7 +1160,7 @@ local function finishMinigame(s)
 	end
 	local L, idx = mg.dep:GetAttribute("Layer"), mg.dep:GetAttribute("Ore")
 	local o = C.LAYERS[L][4][idx]
-	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) * Retention.valueMult(s.player) + 0.5) -- worth more with a friend in the server (the Lantern Tether)
+	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) * Retention.valueMult(s.player) * CaveEvents.riftMult(mg.dep:GetPivot().Position) + 0.5) -- worth more with a friend in the server (the Lantern Tether) and in the Clay Caves during a Crystal Rift
 	local job = PetJobs.perks(crewOf(s)) -- Kobold +1 ore, Goldbristle +1 on rare, Ninering doubles every 9th deposit
 	count += job.ore + (idx == 3 and job.rareOre or 0)
 	local flawless = (mg.kind == "strike" and mg.perfects >= D.strikes) or (mg.kind ~= "strike" and grade == D.grades[1][1])

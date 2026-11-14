@@ -356,7 +356,7 @@ C.BOSS2 = { needTier = 12, knots = 3, zone = 11, period = 0.75, perfects = 2, wi
 C.GLOOM = { clay = { speed = 11, cone = 0.45, see = 80 }, hp = 100, hit = 34, loss = 0.25, shield = 5, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6, grab = 3, warn = 0.8 }
 -- cave events (ServerScriptService.CaveEvents): the roots' warning time, the first spore storm after server start, the gap
 -- between storms, a storm's length (all seconds) and what a flawless extraction pays during one
-C.EVENTS = { rootsWarn = 120, sporeFirst = 240, sporeEvery = 600, sporeLen = 180, sporeMult = 1.5, surgeFirst = 420, surgeEvery = 900, surgeLen = 120, goldFirst = 900, goldEvery = 1800, goldLen = 300, goldZone = 2 } -- gold*: the Golden Vein Surge: every 30 minutes for 5, the Perfect Strike zone is twice as wide -- surge*: the Kiln Surge of the Clay Caves (CaveEvents)
+C.EVENTS = { rootsWarn = 120, sporeFirst = 240, sporeEvery = 600, sporeLen = 180, sporeMult = 1.5, surgeFirst = 420, surgeEvery = 900, surgeLen = 120, goldFirst = 900, goldEvery = 1800, goldLen = 300, goldZone = 2, riftFirst = 1200, riftEvery = 1200, riftLen = 600, riftValue = 3 } -- rift*: the Crystal Rift: every 20 minutes for 10, ore mined in the Clay Caves is worth 3 times as much -- gold*: the Golden Vein Surge: every 30 minutes for 5, the Perfect Strike zone is twice as wide -- surge*: the Kiln Surge of the Clay Caves (CaveEvents)
 -- the Clay Caves hall (ServerScriptService.ClayCaves, Shared.ClayClient): the two mesa heights in studs, a jar's cooldown per
 -- player (s), its coins, the odds of a relic shard, the least seconds a fossil takes to brush and its gems (once ever), the
 -- steam launch speed (studs/s; 150 rises about 57 studs) and the glide's fall speed

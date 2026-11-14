@@ -10,6 +10,11 @@ local C = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):Wa
 local M = {}
 local EV = C.EVENTS
 
+function M.riftMult(pos) -- the ore value factor at this place: EV.riftValue in the Clay Caves while a Crystal Rift is open
+	local ends = workspace:GetAttribute("CrystalRift")
+	local on = ends and workspace:GetServerTimeNow() < ends and (pos - C.CAVE2_ORIGIN).Magnitude < 220
+	return on and EV.riftValue or 1
+end
 function M.goldZone() -- the Perfect Strike zone's width factor: wider during a Golden Vein Surge
 	local ends = workspace:GetAttribute("GoldSurge")
 	return (ends and workspace:GetServerTimeNow() < ends) and EV.goldZone or 1
@@ -40,6 +45,8 @@ function M.init(ctx)
 		local rootsAt, sporeAt = nil, workspace:GetServerTimeNow() + EV.sporeFirst
 		local surgeAt = workspace:GetServerTimeNow() + EV.surgeFirst
 		local goldAt = workspace:GetServerTimeNow() + EV.goldFirst
+		local riftAt = workspace:GetServerTimeNow() + EV.riftFirst
+		workspace:SetAttribute("RiftAt", riftAt)
 		workspace:SetAttribute("SporeAt", sporeAt) -- the next start of each event, for the countdown pills (Shared.RetentionTimers)
 		workspace:SetAttribute("KilnSurgeAt", surgeAt)
 		workspace:SetAttribute("GoldSurgeAt", goldAt)
@@ -103,6 +110,18 @@ function M.init(ctx)
 				workspace:SetAttribute("GoldSurge", now + (devG or EV.goldLen))
 				ctx.fx:FireAllClients("goldSurge", devG or EV.goldLen)
 			end
+			-- Crystal Rift (directive v9): every EV.riftEvery seconds for EV.riftLen a rift opens over the kiln of the Clay Caves
+			-- and ore mined in those caves is worth EV.riftValue times as much (PixelServer asks M.riftMult). Studio hook: DevRift = seconds.
+			local devR = workspace:GetAttribute("DevRift")
+			if devR or now >= riftAt then
+				workspace:SetAttribute("DevRift", nil)
+				riftAt = now + EV.riftEvery
+				workspace:SetAttribute("RiftAt", riftAt)
+				workspace:SetAttribute("CrystalRift", now + (devR or EV.riftLen))
+				ctx.fx:FireAllClients("crystalRift", devR or EV.riftLen)
+			end
+			local riftEnds = workspace:GetAttribute("CrystalRift")
+			if riftEnds and now >= riftEnds then workspace:SetAttribute("CrystalRift", nil) end
 			local goldEnds = workspace:GetAttribute("GoldSurge")
 			if goldEnds and now >= goldEnds then workspace:SetAttribute("GoldSurge", nil) end
 			local surgeEnds = workspace:GetAttribute("KilnSurge")
