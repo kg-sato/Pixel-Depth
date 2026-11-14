@@ -186,6 +186,12 @@ function M.mirror(label, opt)
 		local ok = ready[(M.pick(t.color))] == true
 		label.MaxVisibleGraphemes = (long or not ok) and -1 or 0
 		t.frame.Visible = not long and ok
+		-- a text set while the jelly was hidden (atlas still loading, label too small) was never built: build it when the jelly shows
+		-- (2026-11-13: the quest marker's word RIDE was missing in town, its tag was empty)
+		if t.frame.Visible and t.text ~= label.Text then
+			t.set(label.Text)
+			for _, g in t.glyphs do g.img.ImageTransparency = label.TextTransparency end
+		end
 	end
 	if ready[(M.pick(t.color))] ~= true then table.insert(waiting, fit) end -- run again when its atlas finishes loading
 	fit()
