@@ -7,7 +7,7 @@ choice of camp in town; the ride to Camp 2 and the minecart escape. Studio open 
 Shortcuts (say so to a grader): keys pressed by the script, teleports by the server between places, the camera turned by
 script, strikes sent through the remote when the needle crosses the gold, an autopilot that fights the boss (it jumps, steps
 aside and stands in the gaps by moving its own character), Dev attributes (DevPet, DevWheel, DevEquip, DevBoss, DevClay,
-DevSurge, DevRift, DevGold, DevGiftSecs), the sale shown by firing its effect by hand, the reward chest closed by script."""
+DevSurge, DevRift, DevGold, DevGiftSecs, DevGeodes), the sale shown by firing its effect by hand, the reward chest closed by script."""
 import pathlib, re, subprocess, sys, time
 here = pathlib.Path(__file__).resolve().parent
 game, ws = here.parent, here.parent.parent.parent
@@ -17,7 +17,7 @@ name = sys.argv[1] if len(sys.argv) > 1 else "loop3"
 VENV = r"C:\Users\kgsat\Documents\Roblox\Hunyuan3D\.venv\Scripts\python.exe"
 video = game / "captures" / "loop" / f"{name}.mp4"; video.parent.mkdir(parents=True, exist_ok=True)
 sheets = ws / "Overnight" / "judge" / f"loop_{name}"; sheets.mkdir(parents=True, exist_ok=True)
-SECS = 640
+SECS = 660
 PILOT = re.search(r"PILOT = r'''(.*?)'''", (here / "boss_fight_test.py").read_text(encoding="utf-8"), re.S).group(1)
 
 
@@ -43,6 +43,8 @@ mark("town HUD"); time.sleep(2.5)
 S("game.Players:GetPlayers()[1]:SetAttribute('DevGiftSecs',301) return 1"); mark("playtime gift ready: Y claims it"); time.sleep(3); key("Y", 3)
 S(P + "local st for _,d in workspace.Hub:GetDescendants() do if d:IsA('BasePart') and d:GetAttribute('Station')=='sell' then st=d end end h.CFrame=CFrame.new(st.Position+Vector3.new(6,3,6)) task.wait(2) game.ReplicatedStorage.Remotes.Fx:FireClient(p,'sold',120,0,{['1.1']=5,['1.2']=3}) return 1")
 mark("sell fountain"); time.sleep(3.5)
+S(P + "p:SetAttribute('DevGeodes',1) local m=workspace.Hub:FindFirstChild('RefineryMouth') h.CFrame=CFrame.lookAt(m.Position+m.CFrame.LookVector*3.5+Vector3.new(0,2,0),m.Position) return 1"); mark("the refinery: a geode goes in"); time.sleep(2.5)
+C("local pr=workspace.Hub.RefineryMouth:FindFirstChildOfClass('ProximityPrompt') local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.Position,pr.Parent.Position) task.wait(0.5) pr:InputHoldBegin() task.wait(0.15) pr:InputHoldEnd() return 1"); time.sleep(4)
 mark("bag"); key("B", 2.5); key("B", 0.8)
 mark("Tab wheel"); key("Tab", 2.5); key("Tab", 0.8)
 mark("settings: middle, left, right"); key("N", 3); key("A", 2); key("D", 1); key("D", 2); key("N", 1.2)
