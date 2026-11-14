@@ -251,7 +251,7 @@ function C.oreName(key) -- "1.2" -> "Ashcoal"
 	local o = layer and layer[4][tonumber(i)]
 	return o and o[1] or key
 end
-C.SAVE_TEMPLATE = { opts = {}, gift = {}, refine = 0, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
+C.SAVE_TEMPLATE = { opts = {}, gift = {}, refine = 0, crewDay = 0, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
 
 -- Layer hazards. Layer 2, Titan's Stir: after you dig, the block above may shake loose and drop one row.
 -- Standing under it stuns you briefly and spills part of the bag (no damage, kid friendly).
@@ -372,6 +372,9 @@ C.CREW.stoke = { period = 2, zone = 0.24, late = 0.14, cool = 0.35, hit = 0.25, 
 -- the Gloom falls back by itself at only `slowGloom` of its solo rate. Crew moments: at these shares of the way the driver's
 -- cart calls a move for ALL riders (lean left, lean right or duck); everyone has `window` seconds (+ `late` of lag); all in
 -- time gives `boost` boosts and `coins` more bonus, one late rider only a wobble.
+-- Step 4: the first crew ride of a day pays `gem` gems to each rider (saved: profile field crewDay, the day it was last paid;
+-- the owner's yes, 2026-11-14).
+C.CREW.gem = 1
 C.CREW.flare = { stock = 8, cool = 1.5, push = 0.175, slowGloom = 0.5 }
 C.CREW.moment = { at = { 0.35, 0.75 }, window = 1.6, late = 0.25, boost = 2, coins = 3 }
 function C.stokeAt(t0, t) -- where the needle is (0 to 1) at server time t in a run that began at t0

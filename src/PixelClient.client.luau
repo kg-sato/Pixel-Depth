@@ -2599,7 +2599,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 			local ok, err = pcall(function()
 				require(mod).play({
 					seed = seed, cart = hub and hub:FindFirstChild("HubCart", true), sfx = sfx, crew = cw,
-					report = (not cw or cw.host) and function(r) R.Surface:FireServer("escaped", r) end or nil,
+					report = function(r) R.Surface:FireServer("escaped", r) end, crewResult = function() return cave.escapeCrew end,
 					result = function() return cave.escapeBonus end,
 					restore = function() setMode(modeNow()) end,
 				})
@@ -2621,7 +2621,8 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 			toast(lost > 0 and ((why == "fell" and "The deep took " or "The lake took ") .. commas(lost) .. " ore") or "You woke up at camp", PINK, true, 1.2)
 		end
 	elseif kind == "escapeDone" then
-		cave.escapeBonus = (...) or 0
+		local b, cr = ...
+		cave.escapeBonus, cave.escapeCrew = b or 0, cr
 	elseif kind == "ride" then -- the minecart ride down to Camp 1 (ReplicatedStorage.Shared.MinecartRide)
 		local full = ...
 		local mod = RS.Shared:FindFirstChild("MinecartRide")

@@ -31,7 +31,8 @@ N.play(False); time.sleep(2)
 
 # B: a passenger of the server's own driver
 down()
-C1("local p=game.Players.LocalPlayer p:SetAttribute('DevCrew',true) p:SetAttribute('DevCrewPaid',nil) game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,a) if k=='escapeDone' then p:SetAttribute('DevCrewPaid',a) end end) return 1")
+C1("local p=game.Players.LocalPlayer p:SetAttribute('DevCrew',true) p:SetAttribute('DevCrewPaid',nil) game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,a,b) if k=='escapeDone' then "
+   "p:SetAttribute('DevCrewCard', type(b)=='table' and ('gem '..b.gem..' riders '..b.n..' x'..b.mult..' hits '..b.hits..' flares '..b.flares..' moves '..b.moHit..'/'..b.moN) or 'no crew') p:SetAttribute('DevCrewPaid',a) end end) return 1")
 # step 3, crew moments: the server's driver calls two; a watcher armed now answers the first in time and lets the second pass
 C1("local p=game.Players.LocalPlayer local R=game.ReplicatedStorage.Remotes.Crew local n,log=0,'' R.OnClientEvent:Connect(function(k,a) "
    "if k=='m' then n+=1 log=log..' call:'..tostring(a) if n==1 then task.delay(0.3,function() R:FireServer('a') R:FireServer('a') end) end "
@@ -60,6 +61,16 @@ print("flares:", C1("local p=game.Players.LocalPlayer local R=game.ReplicatedSto
 time.sleep(4)
 print("moments:", C1("local p=game.Players.LocalPlayer local t=os.clock() while os.clock()-t<30 and not string.find(p:GetAttribute('DevCrewMoments') or '', 'verdict.*verdict') do task.wait(0.2) end return tostring(p:GetAttribute('DevCrewMoments'))"))
 print("home:", C1("local p=game.Players.LocalPlayer local t=os.clock() while os.clock()-t<25 and p:GetAttribute('DevCrewPaid')==nil do task.wait(0.2) end task.wait(1) return 'paid '..tostring(p:GetAttribute('DevCrewPaid'))..' in cave '..tostring(p:GetAttribute('InCave'))"))
+# step 4: the crew's numbers reach the client and its result card; a second crew ride the same day pays no gem
+print("crew numbers:", C1("return tostring(game.Players.LocalPlayer:GetAttribute('DevCrewCard'))"))
+print("result card:", C1("local g=game.Players.LocalPlayer.PlayerGui local t=os.clock() local out='no card' while os.clock()-t<12 do local e=g:FindFirstChild('MinecartEscapeGui') local r={} "
+      "for _,d in e and e:GetDescendants() or {} do if d:IsA('TextLabel') and (string.find(d.Text,'RIDERS') or string.find(d.Text,'COINS') or string.find(d.Text,' OF ')) then r[#r+1]=d.Text end end "
+      "if #r>=3 then table.sort(r) out=table.concat(r,' | ') break end task.wait(0.2) end return out"))
+time.sleep(12)
+N.key("Q"); time.sleep(32)
+C1("local p=game.Players.LocalPlayer p:SetAttribute('DevCrewPaid',nil) p:SetAttribute('DevCrewCard',nil) return 1")
+S1(P + "if (h.Position-body.Position).Magnitude>9 then h.CFrame=body.CFrame*CFrame.new(0,3,6) end p:SetAttribute('DevCrewBot',true) return tostring(p:GetAttribute('InCave'))")
+print("second crew ride the same day:", C1("local p=game.Players.LocalPlayer local t=os.clock() while os.clock()-t<75 and p:GetAttribute('DevCrewPaid')==nil do task.wait(0.2) end return 'paid '..tostring(p:GetAttribute('DevCrewPaid'))..' | '..tostring(p:GetAttribute('DevCrewCard'))"))
 # a passenger (or anyone not driving) cannot feed the relay: nothing errors and nothing comes back
 print("messages from a non-driver:", C1("local R=game.ReplicatedStorage.Remotes.Crew local got=0 local c=R.OnClientEvent:Connect(function() got+=1 end) R:FireServer('s',1,1,0,1) R:FireServer('r',9,1e9,true) R:FireServer({}) R:FireServer('p','x') task.wait(1.2) c:Disconnect() return 'echoes '..got"))
 print("client errors B:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
@@ -74,6 +85,10 @@ print("lookout:", C1(HEAD + "local t=os.clock() while os.clock()-t<10 and not wo
       "local fl=0 local c2=R.OnClientEvent:Connect(function(k) if k=='t' then fl+=1 end end) "
       "local a=tonumber(st()[7]) or -1 R:FireServer('j') task.wait(1.2) local b=tonumber(st()[7]) or -1 R:FireServer('k') R:FireServer('f') task.wait(0.9) c:Disconnect() c2:Disconnect() "
       "return 'job '..tostring(st()[10])..' | jumps the cart made: '..(b-a)..' | stoke replies: '..#got..' | flares thrown: '..fl..' | bar '..tostring(p.PlayerGui:FindFirstChild('Stoke',true)~=nil)"))
+# step 4: the driver leaves and this rider is next: its screen becomes the run and the cart keeps going
+S1(P + "p:SetAttribute('DevCrewPromote',true) return 1")
+print("the driver left:", C1("local p=game.Players.LocalPlayer local function st() local r={} for w in string.gmatch(p:GetAttribute('DevCrewState') or '', '%S+') do r[#r+1]=w end return r end "
+      "task.wait(2.5) local a=st() task.wait(5) local b=st() return 'replica '..tostring(b[1])..' job '..tostring(b[10])..' still moving '..tostring(tonumber(b[2])-tonumber(a[2])>40)..' in the cave '..tostring(p:GetAttribute('InCave'))"))
 print("client errors C:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 print("server errors C:", S1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'AssistantCommand') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False)

@@ -509,6 +509,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.opts = s.opts or {}
 	d.gift = s.gift -- the playtime gift ladder of today (ServerScriptService.Retention)
 	d.refine = s.refine or 0 -- when the geode in the refinery is done (0 = empty)
+	d.crewDay = s.crewDay or 0 -- the day the first-crew-ride gem was last paid (C.CREW.gem)
 	d.shards, d.fossils, d.geodes = s.shards or 0, s.fossils or {}, s.geodes or 0
 	if C.SOUL_TREE.on then d.soul = s.soul end -- flag off: the field is never written
 	d.cool = {}
@@ -815,14 +816,14 @@ local function finishEscape(plr, report)
 		for _, m in run.members do
 			if escaping[m] and escaping[m].crew == run then alive[#alive + 1] = m end
 		end
-		for i, m in alive do escaping[m].crewDone, escaping[m].mult, escaping[m].seat = true, C.CREW.mult[#alive] or 1, i end
+		for i, m in alive do escaping[m].crewDone, escaping[m].mult, escaping[m].seat, escaping[m].n = true, C.CREW.mult[#alive] or 1, i, #alive end
 		for _, m in alive do
 			if m ~= plr then finishEscape(m, report) end
 		end
 	end
 	escaping[plr] = nil
 	local s = data[plr]
-	local bonus = 0
+	local bonus, gem = 0, 0
 	local el = os.clock() - e.t0
 	if s and type(report) == "table" and el >= C.ESCAPE.dist / (C.ESCAPE.speed * (C.ESCAPE.top or 1) * 1.6 * (run and C.CREW.stoke.fast or 1)) then -- the fastest legal run: top of the speed wave with three boosts
 		-- shortcut: dodges, boosts and caught are the client's word, bounded by the run time and the 40-coin cap; replay the seed on the server if the bonus ever grows
@@ -836,6 +837,12 @@ local function finishEscape(plr, report)
 		A.event(s, "EscapeSeconds", math.floor(el))
 		A.step(s, "Escaped")
 		quest(s, "escape")
+		local day = math.floor(os.time() / 86400)
+		if run and s.crewDay ~= day then -- the first crew ride of the day
+			s.crewDay, gem = day, C.CREW.gem
+			s.gems += gem
+			A.earn(s, "Gems", gem, s.gems, "CrewRide")
+		end
 	end
 	if HUB_CART then standIn(plr, HUB_CART:GetPivot(), e.seat) else local h = hrpOf(plr) if h then h.CFrame = spawnCFrame() end end
 	plr:SetAttribute("InMine", false)
@@ -844,7 +851,7 @@ local function finishEscape(plr, report)
 	riding[plr] = trip -- anchored in the town cart until the client's burst out of the shaft ends ("arrived")
 	task.delay(12, function() endRide(plr, trip) end)
 	if s then sendState(s) end -- the bag pill switches back from the cave's unbanked count
-	FxR:FireClient(plr, "escapeDone", bonus)
+	FxR:FireClient(plr, "escapeDone", bonus, run and { n = e.n or 1, mult = e.mult or 1, hits = run.hits or 0, flares = run.flares or 0, moHit = run.moHit or 0, moN = run.moN or 0, calls = run.calls or 0, gem = gem } or nil) -- the crew's numbers for the result card
 end
 local function startEscape(s)
 	local plr = s.player
@@ -959,13 +966,34 @@ function crew.drop(plr) -- a player left the game
 	end
 	local e = escaping[plr]
 	local run = e and e.crew
-	if run and not e.crewDone and run.host == plr then
+	if run and not e.crewDone then -- step 4: the run goes on without this rider; if it was the driver, the next rider drives
+		escaping[plr] = nil
+		local at2 = table.find(run.members, plr)
+		if at2 then table.remove(run.members, at2) end
+		local alive = {}
 		for _, m in run.members do
-			local em = escaping[m]
-			if m ~= plr and em and em.crew == run then
-				em.crewDone = true
-				finishEscape(m, nil)
-			end
+			if escaping[m] and escaping[m].crew == run then alive[#alive + 1] = m end
+		end
+		if #alive == 0 then return end
+		run.jobs = table.clone(run.jobs)
+		if run.seatOf[plr] then run.jobs[run.seatOf[plr]] = nil end
+		if run.host == plr then
+			run.host = alive[1]
+			run.jobs[run.seatOf[alive[1]]] = "driver"
+		end
+		crew.reseat(run, plr.UserId)
+	end
+end
+function crew.reseat(run, leftId) -- tell every rider who drives now, its own job, which jobs are still aboard and who left
+	local has = {}
+	for _, m in run.members do
+		local j = run.jobs[run.seatOf[m] or 0]
+		if j then has[j] = true end
+	end
+	for _, m in run.members do
+		if escaping[m] and escaping[m].crew == run then
+			local j = run.jobs[run.seatOf[m] or 0]
+			CrewR:FireClient(m, "h", typeof(run.host) == "Instance" and run.host.UserId or 0, j, has.stoker == true, has.lookout == true, j == "tail" or (j == "stoker" and not has.tail), leftId)
 		end
 	end
 end
@@ -982,6 +1010,7 @@ function crew.job(plr, run, kind)
 	if job == "lookout" and (kind == "j" or kind == "d") then
 		if now - (run.last[plr] or 0) < 0.25 then return end
 		run.last[plr] = now
+		run.calls = (run.calls or 0) + 1
 		if run.host == "bot" then crew.tell(run, kind) else CrewR:FireClient(run.host, string.upper(kind)) end
 	elseif job == "stoker" and kind == "k" then
 		local S = C.CREW.stoke
@@ -1124,8 +1153,16 @@ if IS_STUDIO then -- DevCrewBot: this player rides as a passenger; the server pl
 						task.wait(3.2)
 						local dist, id, nextRock, t0 = 0, 0, 1.5, os.clock()
 						local open = {}
-						while escaping[plr] == e and dist < C.ESCAPE.dist do
+						while escaping[plr] == e and dist < C.ESCAPE.dist and run.host == "bot" do
 							local dt = task.wait(0.1)
+							if plr:GetAttribute("DevCrewPromote") then -- the server's driver "leaves": this player drives on
+								plr:SetAttribute("DevCrewPromote", nil)
+								run.host = plr
+								run.jobs = table.clone(run.jobs)
+								run.jobs[1], run.jobs[2] = nil, "driver"
+								crew.reseat(run, 0)
+								break
+							end
 							local t = os.clock() - t0
 							dist += 32 * dt
 							CrewR:FireClient(plr, "s", dist, 32, math.sin(t * 0.8), 1)
@@ -1154,8 +1191,8 @@ if IS_STUDIO then -- DevCrewBot: this player rides as a passenger; the server pl
 								end
 							end
 						end
-						if escaping[plr] == e then
-							e.crewDone, e.mult, e.seat = true, C.CREW.mult[2], 2
+						if escaping[plr] == e and run.host == "bot" then
+							e.crewDone, e.mult, e.seat, e.n = true, C.CREW.mult[2], 2, 2
 							task.wait(0.5)
 							finishEscape(plr, { dodges = 4, boosts = 2 })
 						end
@@ -2094,6 +2131,7 @@ local function onJoin(plr)
 	s.opts = cleanOpts(d.opts)
 	s.gift = Retention.cleanGift(d.gift)
 	s.refine = Retention.cleanRefine(d.refine)
+	s.crewDay = (type(d.crewDay) == "number" and d.crewDay == d.crewDay and d.crewDay > 0) and math.floor(d.crewDay) or 0
 	if IS_STUDIO and workspace:GetAttribute("DevOpts") then -- Studio test hook: saved settings as JSON (Studio itself saves nothing), to test the load path
 		local ok, t = pcall(function() return game:GetService("HttpService"):JSONDecode(workspace:GetAttribute("DevOpts")) end)
 		if ok then s.opts = cleanOpts(t) end

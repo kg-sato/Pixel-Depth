@@ -244,7 +244,7 @@ function M.play(opt)
 			if g then
 				sitDown(g)
 				g.Parent = world
-				table.insert(K.mates, { g, CFrame.new(seats[i][1], riderOff.Y, seats[i][2]) })
+				table.insert(K.mates, { g, CFrame.new(seats[i][1], riderOff.Y, seats[i][2]), id })
 			end
 		end
 	end
@@ -655,15 +655,18 @@ function M.play(opt)
 		warnBoard(at, LANES[lane] < 0 and "RIGHT >" or (LANES[lane] > 0 and "< LEFT" or "LEAN!"), Color3.fromRGB(255, 205, 80), LANES[lane] < 0 and 1 or -1) -- the board stands on the side to lean to
 		table.insert(hazards, { kind = "cart", lane = lane, at = at, model = m })
 	end
-	if K.host then -- the driver tells the crew of everything it puts on the rail
+	K.wrap = function() -- the driver tells the crew of everything it puts on the rail
 		local r0, o0, b0, g0, c0 = spawnRock, spawnOrb, spawnBeam, spawnGap, spawnCart
 		spawnRock = function(lane, at, threat) K.net("r", lane, at, threat == true) r0(lane, at, threat) end
 		spawnOrb = function(lane, at) K.net("o", lane, at) o0(lane, at) end
 		spawnBeam = function(at) K.net("b", at) b0(at) end
 		spawnGap = function(at, lane) K.net("g", at, lane) g0(at, lane) end
 		spawnCart = function(at, lane) K.net("c", at, lane) c0(at, lane) end
-		table.insert(cons, K.crew.on(function(kind, a, b, c) -- step 2: the lookout's calls and the stoker's steam, as the server passes them on
-			if K.said then K.said(kind, a, b) end
+	end
+	if K.host then
+		K.wrap()
+		table.insert(cons, K.crew.on(function(kind, a, b, c, d, e, f) -- step 2: the lookout's calls and the stoker's steam, as the server passes them on
+			if K.said then K.said(kind, a, b, c, d, e, f) end
 			if kind == "J" and t > 0 and os.clock() - jumpT > JUMP_T then
 				jumpT = os.clock()
 				play("whoosh", 1.5)
@@ -676,9 +679,9 @@ function M.play(opt)
 			end
 		end))
 	elseif K.replica then -- a passenger builds what the driver sends (the server has checked every value)
-		table.insert(cons, K.crew.on(function(kind, a, b, c, d)
+		table.insert(cons, K.crew.on(function(kind, a, b, c, d, e, f)
 			local ok, err = pcall(function()
-				if K.said then K.said(kind, a, b) end
+				if K.said then K.said(kind, a, b, c, d, e, f) end
 				if kind == "s" then
 					K.d, K.v, K.want, K.at = a, b, c, os.clock()
 					gloom.gap = d
@@ -702,6 +705,13 @@ function M.play(opt)
 				elseif kind == "k" then
 					K.heat, K.heatAt, K.hits = b, os.clock(), c
 					if K.stokeSaid then K.stokeSaid(a) end
+				elseif K.host and kind == "J" and t > 0 and os.clock() - jumpT > JUMP_T then -- (a passenger that became the driver)
+					jumpT = os.clock()
+					play("whoosh", 1.5)
+					K.net("j")
+				elseif K.host and kind == "D" and t > 0 then
+					duckUntil = os.clock() + 0.7
+					K.net("d")
 				elseif kind == "p" then K.out[a] = b end
 			end)
 			if not ok then warn("[MinecartEscape crew] " .. tostring(err)) end
@@ -736,14 +746,28 @@ function M.play(opt)
 			stroke(stock, Color3.fromRGB(255, 190, 120), 2)
 			local lastThrow = 0
 			K.flare = function()
-				if t <= 0 or K.left <= 0 or os.clock() - lastThrow < F.cool then return end
+				if not K.crew.flare or t <= 0 or K.left <= 0 or os.clock() - lastThrow < F.cool then return end
 				lastThrow = os.clock()
 				K.crew.send("f")
 			end
 			stock.Activated:Connect(function() K.flare() end)
 		end
-		K.said = function(kind, a, b)
-			if kind == "t" and type(a) == "number" then -- a flare was thrown: the driver's cart is the one that moves the Gloom
+		K.said = function(kind, a, b, c, d, e, f)
+			if kind == "h" then -- step 4, a rider left: (the driver's user id, my job, stoker aboard, lookout aboard, may I throw, who left)
+				for i = #K.mates, 1, -1 do
+					if K.mates[i][3] == f then
+						K.mates[i][1]:Destroy()
+						table.remove(K.mates, i)
+					end
+				end
+				K.job, K.crew.job, K.crew.stoker, K.crew.lookout, K.crew.flare = b, b, c == true, d == true, e == true
+				if a == plr.UserId and K.replica then -- the driver left and this rider is next: its screen becomes the run
+					K.host, K.replica, K.net, K.d = true, false, K.crew.send, nil
+					K.wrap()
+					nextSpawn = t + 1.2
+					say(touch and "YOU DRIVE NOW!  HOLD LEFT OR RIGHT" or "YOU DRIVE NOW!  LEAN  A / D", BUTTER, 2.5)
+				end
+			elseif kind == "t" and type(a) == "number" then -- a flare was thrown: the driver's cart is the one that moves the Gloom
 				K.left = a
 				if stock then stock.Text = (touch and "FLARE  x" or "FLARE (R)  x") .. a end
 				if K.host then gloom.gap = math.min(1, gloom.gap + F.push) end
@@ -789,7 +813,7 @@ function M.play(opt)
 					say("IN TIME!", WHITE, 0.6)
 				end
 			end
-			if stock then stock.Visible = phase == "run" and t > 0 end
+			if stock then stock.Visible = phase == "run" and t > 0 and K.crew.flare == true end
 		end
 	end
 	if K.crew and K.crew.stoker then -- the steam gauge, for every rider of a crew with a stoker; and the stoker's own bar
@@ -829,9 +853,10 @@ function M.play(opt)
 			if needle then
 				needle.Position = UDim2.fromScale(C.stokeAt(K.crew.t0 or 0, workspace:GetServerTimeNow()), 0.5)
 				zone.Position = UDim2.fromScale(C.stokeZone(K.crew.seed or 1, K.hits), 0)
-				bar.Visible, word.Visible = t > 0 and phase == "run", t > 0 and phase == "run"
+				local on = t > 0 and phase == "run" and K.job == "stoker"
+				bar.Visible, word.Visible = on, on
 			end
-			gauge.Visible = phase == "run"
+			gauge.Visible = phase == "run" and K.crew.stoker == true
 		end
 	end
 	local function cleanup(h)
@@ -1143,7 +1168,7 @@ function M.play(opt)
 				snd.wind:Stop()
 				for _, h in hazards do cleanup(h) end
 				hazards = {}
-				if opt.report then opt.report({ time = t, dodges = dodges, boosts = boosts, hits = hits, caught = gloom.caught }) end
+				if opt.report and not K.replica then opt.report({ time = t, dodges = dodges, boosts = boosts, hits = hits, caught = gloom.caught }) end
 			end
 		elseif phase == "wait" then
 			flash.BackgroundTransparency = 0
@@ -1214,9 +1239,16 @@ function M.play(opt)
 				go.Parent = card
 				go.Activated:Connect(function() done = true end)
 				local rows = { { "TIME", string.format("%.1f s", runTime) }, { "DODGES", tostring(dodges) }, { gloom.caught and "THE GLOOM" or "BOOSTS", gloom.caught and "NIPPED YOU" or tostring(boosts) }, { "BONUS", "+" .. tostring(bonus or 0) .. " COINS" } }
+				local cr = opt.crewResult and opt.crewResult()
+				if K.crew and type(cr) == "table" then -- step 4, a crew's card: the crew's size and pay, this rider's own job, the crew moves
+					local mine = K.job == "stoker" and { "STEAM HITS", tostring(cr.hits or 0) } or (K.job == "lookout" and { "CALLS", tostring(cr.calls or 0) } or (K.job == "tail" and { "FLARES", tostring(cr.flares or 0) } or { "DODGES", tostring(dodges) }))
+					rows = { rows[1], { "CREW", tostring(cr.n or 1) .. " RIDERS  x" .. tostring(cr.mult or 1) }, mine, { "CREW MOVES", tostring(cr.moHit or 0) .. " OF " .. tostring(cr.moN or 0) },
+						{ "BONUS", "+" .. tostring(bonus or 0) .. " COINS" .. ((cr.gem or 0) > 0 and "  +" .. tostring(cr.gem) .. " GEM" or "") } }
+				end
+				local step, tall = #rows > 4 and 0.083 or 0.104, #rows > 4 and 0.07 or 0.085
 				for i, r in rows do
-					label(card, r[1], UDim2.fromScale(0.4, 0.085), UDim2.fromScale(0.3, 0.30 + i * 0.104), Color3.fromRGB(122, 98, 160), 7)
-					label(card, r[2], UDim2.fromScale(0.45, 0.085), UDim2.fromScale(0.7, 0.30 + i * 0.104), i == 4 and Color3.fromRGB(214, 140, 40) or INK, 7)
+					label(card, r[1], UDim2.fromScale(0.4, tall), UDim2.fromScale(0.3, 0.30 + i * step), Color3.fromRGB(122, 98, 160), 7)
+					label(card, r[2], UDim2.fromScale(0.45, tall), UDim2.fromScale(0.7, 0.30 + i * step), i == #rows and Color3.fromRGB(214, 140, 40) or INK, 7)
 				end
 			end
 			if u > 7 then done = true end -- CONTINUE ends it sooner
