@@ -33,6 +33,9 @@ TESTS = [  # script, [(what, text that must be in the output)]
     ("camp2_test.py", [("openings clear, rooms reachable", "door blocked by 0"), ("every set point reached", "walk test: 0 unreachable"), ("no z-fighting", "z-fight pairs 0"), ("jars and fossils moved", "4 jars in the gallery, 3 fossils in the dig, hammer true"),
         ("jar cooldown holds", "jar 5, again at once: prompt on false, paid 0"), ("surge refills jars", "jar 5, after the surge began: prompt on false, paid 1"), ("surge ends on the server clock", "surge over: true"),
         ("vents never rest in a surge", "never rests in a surge: True"), ("no client errors", "client errors: 0")]),
+    ("retention_test.py", [("gift pill counts down", "pills at the start: NEXT GIFT"), ("no gift before its time", "claim with nothing due: ?"), ("a due gift is paid once", "claim again at once: coins:150"),
+        ("gifts are paid in order", "two claims at 21 minutes: coins:150 flares:2 gems:10"), ("bad messages pay nothing", "bad messages: coins:150 flares:2 gems:10"), ("golden surge doubles the zone", "zone doubled: True"),
+        ("event pill shows the surge", "GOLD SURGE ON"), ("friends are counted", "board: 2/5 FRIENDS HERE / +15% ORE VALUE IS ON"), ("no client errors", "client errors: 0"), ("no server errors", "server errors: 0")]),
     ("verify_night.py", [("wind-up dodge", "after stepping away 100"), ("way home embers", "(PASS over 0), at camp 0 (PASS 0)")]),
 ]
 bad = 0

@@ -251,7 +251,7 @@ function C.oreName(key) -- "1.2" -> "Ashcoal"
 	local o = layer and layer[4][tonumber(i)]
 	return o and o[1] or key
 end
-C.SAVE_TEMPLATE = { opts = {}, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
+C.SAVE_TEMPLATE = { opts = {}, gift = {}, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
 
 -- Layer hazards. Layer 2, Titan's Stir: after you dig, the block above may shake loose and drop one row.
 -- Standing under it stuns you briefly and spills part of the bag (no damage, kid friendly).
@@ -292,6 +292,11 @@ C.UI_GLASS = {
 C.UI_SMOKED = true
 -- Pet faces (plan phase A, 2026-11-13): eight jelly expressions shown on the front of a pet's head (art/icons_jelly/face_*.png, Shared.PetCompanion)
 C.PET_FACE = { calm = "rbxassetid://80743924975214", curious = "rbxassetid://79722727461569", greedy = "rbxassetid://106422452389394", happy = "rbxassetid://94477177000895", hurt = "rbxassetid://113243353108898", proud = "rbxassetid://112309918157706", scared = "rbxassetid://136327735390863", sleepy = "rbxassetid://96201833706333" }
+-- Playtime gifts (ServerScriptService.Retention; directive v9): seconds played today, what, how many. The ladder starts again each day (UTC).
+C.GIFTS = { { 300, "coins", 150 }, { 600, "flares", 2 }, { 1200, "gems", 10 }, { 1800, "coins", 600 }, { 2700, "egg", 1 }, { 3600, "gems", 30 }, { 5400, "gems", 75 } }
+-- Lantern Tether (the friends boost): with a friend in the server ore is worth `value` more; within `reach` studs of a friend in the caves
+-- the torch burns `torch` slower; at most `max` friends count.
+C.TETHER = { value = 0.15, reach = 15, torch = 0.25, max = 5 }
 C.HOME = { hold = 3, cool = 300, still = 8 } -- the hearthstone: seconds to hold, seconds of cooldown, studs you may drift during the hold (ServerScriptService.Travel)
 C.WHISTLE = { reach = 40, show = 8, cool = 30 } -- the pet whistle: studs it looks, seconds the pet marks the deposit, seconds until the next whistle
 C.UI_GLASS.smoked = { card = "rbxassetid://123788880833023", keycap = "rbxassetid://95835076020654", keycapDown = "rbxassetid://89815334963402", panel = "rbxassetid://72244447259148", pill = "rbxassetid://114478649651852", pillButter = "rbxassetid://129725898810075", pillLilac = "rbxassetid://88609351576923", pillMint = "rbxassetid://116432339584212", pillPink = "rbxassetid://122269924739998", slot = "rbxassetid://120185081422888", tab = "rbxassetid://109809759223194", tabOn = "rbxassetid://118797628367631" }
@@ -351,7 +356,7 @@ C.BOSS2 = { needTier = 12, knots = 3, zone = 11, period = 0.75, perfects = 2, wi
 C.GLOOM = { clay = { speed = 11, cone = 0.45, see = 80 }, hp = 100, hit = 34, loss = 0.25, shield = 5, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6, grab = 3, warn = 0.8 }
 -- cave events (ServerScriptService.CaveEvents): the roots' warning time, the first spore storm after server start, the gap
 -- between storms, a storm's length (all seconds) and what a flawless extraction pays during one
-C.EVENTS = { rootsWarn = 120, sporeFirst = 240, sporeEvery = 600, sporeLen = 180, sporeMult = 1.5, surgeFirst = 420, surgeEvery = 900, surgeLen = 120 } -- surge*: the Kiln Surge of the Clay Caves (CaveEvents)
+C.EVENTS = { rootsWarn = 120, sporeFirst = 240, sporeEvery = 600, sporeLen = 180, sporeMult = 1.5, surgeFirst = 420, surgeEvery = 900, surgeLen = 120, goldFirst = 900, goldEvery = 1800, goldLen = 300, goldZone = 2 } -- gold*: the Golden Vein Surge: every 30 minutes for 5, the Perfect Strike zone is twice as wide -- surge*: the Kiln Surge of the Clay Caves (CaveEvents)
 -- the Clay Caves hall (ServerScriptService.ClayCaves, Shared.ClayClient): the two mesa heights in studs, a jar's cooldown per
 -- player (s), its coins, the odds of a relic shard, the least seconds a fossil takes to brush and its gems (once ever), the
 -- steam launch speed (studs/s; 150 rises about 57 studs) and the glide's fall speed

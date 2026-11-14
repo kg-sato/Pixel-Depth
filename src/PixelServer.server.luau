@@ -12,6 +12,7 @@ local C = require(RS:WaitForChild("Shared"):WaitForChild("Config"))
 local ProfileStore = require(game:GetService("ServerScriptService"):WaitForChild("ProfileStore"))
 local HubBuilder = require(game:GetService("ServerScriptService"):WaitForChild("HubBuilder"))
 local CaveBuilder = require(game:GetService("ServerScriptService"):WaitForChild("CaveBuilder"))
+local Retention = require(game:GetService("ServerScriptService"):WaitForChild("Retention")) -- playtime gifts and the Lantern Tether
 local Store = ProfileStore.New(C.SAVE_STORE, C.SAVE_TEMPLATE)
 local SoulTree = require(game:GetService("ServerScriptService"):WaitForChild("SoulTree")) -- behind C.SOUL_TREE.on (false: no saved field, every rank 0)
 
@@ -506,6 +507,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
 	d.wear, d.quests, d.lanterns = s.wear, s.quests, s.lanterns
 	d.opts = s.opts or {}
+	d.gift = s.gift -- the playtime gift ladder of today (ServerScriptService.Retention)
 	d.shards, d.fossils, d.geodes = s.shards or 0, s.fossils or {}, s.geodes or 0
 	if C.SOUL_TREE.on then d.soul = s.soul end -- flag off: the field is never written
 	d.cool = {}
@@ -1086,6 +1088,8 @@ Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose =
 require(game:GetService("ServerScriptService"):WaitForChild("Travel")).init({ data = data, fx = FxR, hrpOf = hrpOf, remote = remote, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, analytics = A,
 	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end,
 	landings = function() local c = workspace:FindFirstChild("Caves") local l2 = c and c:FindFirstChild("ClayLanding", true) return { caveLanding, l2 } end })
+Retention.init({ data = data, fx = FxR, remote = remote, sendState = sendState, hrpOf = hrpOf, analytics = A,
+	flares = function(plr, n) Gloom.addFlares(plr, n) end, slowTorch = function(plr, secs) Gloom.slow(plr, secs) end })
 
 enterMine = function(s, camp2)
 	local hrp = hrpOf(s.player)
@@ -1156,7 +1160,7 @@ local function finishMinigame(s)
 	end
 	local L, idx = mg.dep:GetAttribute("Layer"), mg.dep:GetAttribute("Ore")
 	local o = C.LAYERS[L][4][idx]
-	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) + 0.5)
+	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) * Retention.valueMult(s.player) + 0.5) -- worth more with a friend in the server (the Lantern Tether)
 	local job = PetJobs.perks(crewOf(s)) -- Kobold +1 ore, Goldbristle +1 on rare, Ninering doubles every 9th deposit
 	count += job.ore + (idx == 3 and job.rareOre or 0)
 	local flawless = (mg.kind == "strike" and mg.perfects >= D.strikes) or (mg.kind ~= "strike" and grade == D.grades[1][1])
@@ -1218,7 +1222,7 @@ for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
 		dep:SetAttribute("CoopStarts", table.concat(keep, ";"))
 		if dep:GetAttribute("Ore") < 3 then
 			local period = D.strikePeriod * PetJobs.perks(crewOf(s)).strike -- Kepri Scarab slows the needle
-			s.mg = { kind = "strike", dep = dep, t0 = now, arc = s.rng:NextNumber() * 360, zone = C.strikeArc(s.lv[tostring(s.equip)]), period = period, swings = 0, perfects = 0, last = 0, deadline = now + D.strikes * 4 * period + 2, coop = coop }
+			s.mg = { kind = "strike", dep = dep, t0 = now, arc = s.rng:NextNumber() * 360, zone = C.strikeArc(s.lv[tostring(s.equip)]) * CaveEvents.goldZone(), period = period, swings = 0, perfects = 0, last = 0, deadline = now + D.strikes * 4 * period + 2, coop = coop }
 			FxR:FireClient(plr, "mgStart", dep, "strike", now, s.mg.arc, s.mg.zone, period)
 		else
 			local seq = {} -- the side of the red crack on each beat: 1 left, 2 right; chiseling that side slips
@@ -1753,6 +1757,7 @@ local function onJoin(plr)
 	s.fossils = {}
 	for k = 1, 3 do if type(d.fossils) == "table" and d.fossils[tostring(k)] == true then s.fossils[tostring(k)] = true end end
 	s.opts = cleanOpts(d.opts)
+	s.gift = Retention.cleanGift(d.gift)
 	if IS_STUDIO and workspace:GetAttribute("DevOpts") then -- Studio test hook: saved settings as JSON (Studio itself saves nothing), to test the load path
 		local ok, t = pcall(function() return game:GetService("HttpService"):JSONDecode(workspace:GetAttribute("DevOpts")) end)
 		if ok then s.opts = cleanOpts(t) end

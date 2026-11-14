@@ -167,6 +167,21 @@ function G.init(c)
 	end)
 end
 
+function G.slow(plr, secs) -- the Lantern Tether: beside a friend the torch gets this much of each second back (ServerScriptService.Retention)
+	local s = ctx and ctx.data[plr]
+	if not s then return end
+	local g = st(s)
+	if g.inCamp then return end
+	g.relitAt = math.min(serverNow(), g.relitAt + secs)
+	plr:SetAttribute("RelitAt", g.relitAt)
+end
+function G.addFlares(plr, n) -- a playtime gift: flares over the usual limit are kept until used
+	local s = ctx and ctx.data[plr]
+	if not s then return end
+	local g = st(s)
+	g.flares += n
+	publish(plr, g)
+end
 function G.hurt(plr, amount) -- the Root Warden's slam (ServerScriptService.Boss); returns the HP left
 	local s = ctx.data[plr]
 	if not s then return 0 end

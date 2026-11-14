@@ -10,6 +10,10 @@ local C = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):Wa
 local M = {}
 local EV = C.EVENTS
 
+function M.goldZone() -- the Perfect Strike zone's width factor: wider during a Golden Vein Surge
+	local ends = workspace:GetAttribute("GoldSurge")
+	return (ends and workspace:GetServerTimeNow() < ends) and EV.goldZone or 1
+end
 function M.sporeMult(flawless)
 	local ends = workspace:GetAttribute("SporeStorm")
 	return (flawless and ends and workspace:GetServerTimeNow() < ends) and EV.sporeMult or 1
@@ -35,6 +39,10 @@ function M.init(ctx)
 	task.spawn(function()
 		local rootsAt, sporeAt = nil, workspace:GetServerTimeNow() + EV.sporeFirst
 		local surgeAt = workspace:GetServerTimeNow() + EV.surgeFirst
+		local goldAt = workspace:GetServerTimeNow() + EV.goldFirst
+		workspace:SetAttribute("SporeAt", sporeAt) -- the next start of each event, for the countdown pills (Shared.RetentionTimers)
+		workspace:SetAttribute("KilnSurgeAt", surgeAt)
+		workspace:SetAttribute("GoldSurgeAt", goldAt)
 		while true do
 			task.wait(1)
 			local now = workspace:GetServerTimeNow()
@@ -64,6 +72,7 @@ function M.init(ctx)
 			elseif now >= sporeAt then
 				sporeAt = now + EV.sporeEvery
 				workspace:SetAttribute("SporeStorm", now + EV.sporeLen)
+				workspace:SetAttribute("SporeAt", sporeAt)
 			end
 			local ends = workspace:GetAttribute("SporeStorm")
 			if ends and now >= ends then workspace:SetAttribute("SporeStorm", nil) end
@@ -74,6 +83,7 @@ function M.init(ctx)
 			if devK or now >= surgeAt then
 				workspace:SetAttribute("DevSurge", nil)
 				surgeAt = now + EV.surgeEvery
+				workspace:SetAttribute("KilnSurgeAt", surgeAt)
 				local len = devK or EV.surgeLen
 				workspace:SetAttribute("KilnSurge", now + len)
 				for _, s in ctx.data do
@@ -83,6 +93,18 @@ function M.init(ctx)
 				end
 				ctx.fx:FireAllClients("kilnSurge", len)
 			end
+			-- Golden Vein Surge (directive v9): every EV.goldEvery seconds for EV.goldLen the Perfect Strike zone is EV.goldZone
+			-- times as wide for everyone (PixelServer asks M.goldZone when a strike starts). Studio hook: DevGold = seconds.
+			local devG = workspace:GetAttribute("DevGold")
+			if devG or now >= goldAt then
+				workspace:SetAttribute("DevGold", nil)
+				goldAt = now + EV.goldEvery
+				workspace:SetAttribute("GoldSurgeAt", goldAt)
+				workspace:SetAttribute("GoldSurge", now + (devG or EV.goldLen))
+				ctx.fx:FireAllClients("goldSurge", devG or EV.goldLen)
+			end
+			local goldEnds = workspace:GetAttribute("GoldSurge")
+			if goldEnds and now >= goldEnds then workspace:SetAttribute("GoldSurge", nil) end
 			local surgeEnds = workspace:GetAttribute("KilnSurge")
 			if surgeEnds and now >= surgeEnds then workspace:SetAttribute("KilnSurge", nil) end
 		end
