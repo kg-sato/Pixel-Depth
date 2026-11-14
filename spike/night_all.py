@@ -1,5 +1,12 @@
-"""Run the 2026-11-11 night's Play tests one after another and print PASS / FAIL per check (about 8 minutes; Studio open, Edit mode).
-    python spike/night_all.py
+"""Run the Play tests one after another and print PASS / FAIL per check (Studio open, Edit mode).
+    python spike/night_all.py                  every test (about 25 minutes); run it before a recording and at the end of a night
+    python spike/night_all.py quick [name...]  only what a change can have broken (the owner, 2026-11-14: "regressions take 30 min
+                                               for one simple feature"): a smoke set, every test that covers a file changed since
+                                               the last full pass (COVER below; uncommitted changes count), and the tests named
+                                               (crew, trophy, ...). A change to PixelClient, PixelServer or Config touches
+                                               everything, so name the tests of the feature you changed.
+A failed test is run once more by itself before it counts (two checks are known to fail now and then: a simulated click,
+the pet whistle). A full pass writes spike/.last_full (the commit it ran at) and every run writes spike/.test_times.json.
 Checks the output text of each test script for the lines that prove it; a FAIL prints the script's tail. The Soul Tree tests
 (soul_test.py, soul_hit_test.py, review_fix_test.py) are left out: they need C.SOUL_TREE.on = true pushed first."""
 import subprocess, sys, pathlib
@@ -35,25 +42,70 @@ TESTS = [  # script, [(what, text that must be in the output)]
         ("vents never rest in a surge", "never rests in a surge: True"), ("no client errors", "client errors: 0")]),
     ("crew_test.py", [("crew sign stands over the cart", "sign before: CREW RIDE:  PRESS V TO BOARD"), ("boarding seats the driver and starts the clock", "board: seat 1 | CREW RIDE  0:1"), ("no solo ride while aboard", "solo ride while aboard: seat 1 | CREW RIDE"), ("the driver can go now", "driver presses again: seat nil | CREW RIDE:  PRESS V TO BOARD | seated true | ride true"), ("a passenger follows the driver", "passenger: replica true seat x -0.75 moved true near the driver true things on the rail true"), ("a crew of two with one crew moment is paid 31", "home: paid 31 in cave false"), ("one flare is counted, a second at once is not", "flares: thrown 1 left 7 | on screen 7 | button true"), ("a crew moment answered in time is won, an unanswered one is lost", "moments: call:left verdict:true call:duck verdict:false"), ("only the driver feeds the relay", "echoes 0"), ("the first crew ride of the day pays a gem", "crew numbers: gem 1 riders 2 x1.25 hits 1 flares 1 moves 1/2"), ("the result card shows the crew", "result card: +31 COINS  +1 GEM | 1 OF 2 | 2 RIDERS  x1.25"), ("a second crew ride the same day pays no gem", "second crew ride the same day: paid 27 | gem 0"), ("the next rider drives when the driver leaves", "the driver left: replica false job driver still moving true in the cave true"), ("a stoke in the gold is a hit", "in the gold: true 0.2 1"), ("a stoke outside is a miss", "outside: false"), ("fast presses are judged once", "three at once judged: 1"), ("the stoker has its bar", "job stoker"), ("a lookout's jump moves the cart", "job lookout | jumps the cart made: 1 | stoke replies: 0 | flares thrown: 0 | bar false"), ("no lookout errors", "client errors C: 0"), ("no crew errors on the client", "client errors B: 0"), ("no crew errors on the server", "server errors: 0")]),
     ("trophy_test.py", [("empty cases say how to earn them", "cases at the start: <> gate1=??? / BEAT THE ROOT WARDEN ; gate2=??? / BEAT THE KILN GOLEM ; Ouro=??? / HATCH A MYTHIC PET ; Ninering=??? / HATCH A SECRET PET"), ("a Common hatch fills nothing", "after a Common hatch: <>"), ("a Secret hatch fills its case", "after a Secret hatch: <Ninering>"), ("a beaten boss fills its case", "gate1=ROOT WARDEN [figure]"), ("the server ignores a client that fills its own cases", "| <gate1,Ninering>"), ("no trophy errors", "client errors: 0")]),
-    ("townfill_test.py", [("the town is lit right after a join", "just after the join: fill 100 ambient 210,158,110 | lit: True"), ("the town's own ambient comes back", "25 s later: fill 0 ambient 26,22,48"), ("no fill in the caves", "in the caves: fill 0 ambient 40,32,60"), ("the town is filled on a return", "back in town: fill 100 ambient 210,158,110"), ("the fill ends after a return", "15 s later: fill 0 ambient 26,22,48")]),
+    ("townfill_test.py", [("the town is lit right after a join", "just after the join: fill 100 ambient 210,158,110 | lit: True"), ("the town's own ambient comes back", "25 s later: fill 0 ambient 26,22,48"), ("the caves are filled on arrival", "in the caves: fill 100 ambient 175,180,150"), ("the caves' own ambient comes back", "in the caves, 15 s later: fill 0 ambient 40,32,60"), ("the town is filled on a return", "back in town: fill 100 ambient 210,158,110"), ("the fill ends after a return", "15 s later: fill 0 ambient 26,22,48")]),
     ("marquee_test.py", [("no banner for a Common hatch", "a Common hatch: false"), ("everyone is told of a Secret hatch", "a Secret hatch: true"), ("the banner names the pet", "HATCHED A SECRET  NINERING!"), ("the banner leaves", "gone after its time: visible false"), ("the banner overlaps nothing", "marquee up: 0 overlaps, 0 prompt overlaps")]),
     ("retention_test.py", [("gift pill counts down", "pills at the start: NEXT GIFT"), ("no gift before its time", "claim with nothing due: ?"), ("a due gift is paid once", "claim again at once: coins:150"),
         ("gifts are paid in order", "two claims at 21 minutes: coins:150 flares:2 gems:10"), ("bad messages pay nothing", "bad messages: coins:150 flares:2 gems:10"), ("golden surge doubles the zone", "zone doubled: True"),
         ("event pill shows the surge", "GOLD SURGE ON"), ("friends are counted", "board: 2/5 FRIENDS HERE / +15% ORE VALUE  +20% EGG LUCK"), ("friends luck keeps the odds at 100", "egg odds, 2 friends: 57.00 25.00 12.00 4.80 1.08 0.12 sum 100.00 | none: 60.00 25.00 10.00 4.00 0.90 0.10 | 99 friends: 0.15 0.10 60.00"), ("the odds panel shows the friends luck", "odds panel, 2 friends: 57% 12% 4.8% 1.08% 0.12% / FRIENDS LUCK ON:  EPIC AND BETTER +20%"), ("rift is off by default", "rift off: 1 in the Clay Caves, 1 in Camp 1"), ("rift triples Clay Caves ore only", "rift on: 3 in the Clay Caves, 1 in Camp 1"), ("rift crystal shows", "crystal: true"), ("refinery refuses without a geode", "refinery, no geode: none"), ("refinery starts once", "refinery, a geode in, pressed again: none start | none start wait"), ("refinery pays once", "refinery, done: none start wait paid"), ("refinery is empty after", "refinery, empty again: none start wait paid none"), ("refinery refuses from far away", "refinery, pressed from far away: none start wait paid none" + chr(10)), ("no client errors", "client errors: 0"), ("no server errors", "server errors: 0")]),
     ("verify_night.py", [("wind-up dodge", "after stepping away 100"), ("way home embers", "(PASS over 0), at camp 0 (PASS 0)")]),
 ]
-bad = 0
-for script, checks in TESTS:
+# which source files each test exercises (src names without .luau); the quick mode picks tests by these
+COVER = {
+    "wheel_test.py": ["UtilityWheel", "Sonar", "WardrobeUI", "DiegeticHUD"], "wheel_touch_test.py": ["UtilityWheel", "WardrobeUI"],
+    "load_test.py": ["LoadingScreen", "JellyText"], "spatial_click_test.py": ["SpatialWorldUI", "ForgeUI"], "ar_click_test.py": ["ARSettings"],
+    "touch_test.py": ["TouchControls", "DiegeticHUD", "UtilityWheel"], "opts_test.py": ["ARSettings", "GlassLift"], "pet_test.py": ["PetJobs", "PetCompanion"],
+    "boon_test.py": ["BoonShrine", "BoonUI"], "ping_test.py": ["Ping", "PingRelay"], "travel_test.py": ["Travel", "Hearth", "GlassLift", "CampChoice", "ClayCaves", "ClayClient"],
+    "boss_atk_test.py": ["Boss", "BossClient"], "boss_fight_test.py": ["Boss", "BossClient", "CaveBuilder", "DailyChestUI", "MiningReticle"],
+    "camp2_test.py": ["ClayCaves", "ClayClient"], "crew_test.py": ["MinecartEscape", "EscapeHUD"], "trophy_test.py": ["Trophies", "HubBuilder"],
+    "townfill_test.py": ["TownFill"], "marquee_test.py": ["Marquee"], "retention_test.py": ["Retention", "RetentionTimers", "LanternTether", "CaveEvents", "ClayCaves"],
+    "verify_night.py": ["MiningReticle", "Juice", "VoxelFractureFX", "CaveBuilder"],
+}
+SMOKE = ["load_test.py", "opts_test.py", "marquee_test.py"]  # short, and between them they load every script on both sides
+CORE = {"PixelClient.client", "PixelServer.server", "Config"}  # touch everything: in quick mode they only add the smoke set
+import json, time
+args = sys.argv[1:]
+quick = bool(args) and args[0] == "quick"
+last_file, times_file = here / ".last_full", here / ".test_times.json"
+todo = TESTS
+if quick:
+    def git(*a): return subprocess.run(["git", *a], capture_output=True, text=True, cwd=here.parent).stdout
+    since = last_file.read_text().strip() if last_file.exists() else "HEAD"
+    changed = set()
+    for line in (git("diff", "--name-only", since) + git("status", "--porcelain")).splitlines():
+        name = line.strip().split()[-1] if line.strip() else ""
+        if name.startswith("src/") and name.endswith(".luau"): changed.add(pathlib.Path(name).stem)
+    pick = set(SMOKE)
+    for script, files in COVER.items():
+        if changed & set(files): pick.add(script)
+    for word in args[1:]:
+        pick |= {script for script, _ in TESTS if word in script}
+    uncovered = sorted(c for c in changed - CORE if not any(c in f for f in COVER.values()))
+    todo = [t for t in TESTS if t[0] in pick]
+    print("quick run since", since[:8], "| changed:", " ".join(sorted(changed)) or "nothing", flush=True)
+    if uncovered: print("no test covers:", " ".join(uncovered), "(write one, or name a test)", flush=True)
+    if changed & CORE and len(args) == 1: print("PixelClient, PixelServer or Config changed and no test was named: only the smoke set covers them", flush=True)
+    print("tests:", " ".join(t[0] for t in todo), flush=True)
+times = json.loads(times_file.read_text()) if times_file.exists() else {}
+def run_test(script):
     night.play(False)
+    t = time.time()
     r = subprocess.run([sys.executable, str(here / script)], capture_output=True, text=True, encoding="utf-8", errors="replace")
-    out = (r.stdout or "") + (r.stderr or "")
+    times[script] = round(time.time() - t)
+    return (r.stdout or "") + (r.stderr or "")
+bad = 0
+for script, checks in todo:
+    out = run_test(script)
+    if any(n not in out for _, n in checks):  # once more by itself before it counts
+        print("   retry " + script + " (first tail: " + " | ".join(out.strip().splitlines()[-3:])[:300] + ")", flush=True)
+        out = run_test(script)
     for what, needle in checks:
         ok = needle in out
         bad += 0 if ok else 1
-        print(("PASS  " if ok else "FAIL  ") + script + ": " + what)
+        print(("PASS  " if ok else "FAIL  ") + script + ": " + what, flush=True)
     if any(n not in out for _, n in checks): print("   tail: " + " | ".join(out.strip().splitlines()[-6:])[:900])
+times_file.write_text(json.dumps(times, indent=1))
 night.play(True)
-import time; time.sleep(4)
+time.sleep(4)
 ERR = "local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError then t[string.sub(m.message,1,160)]=true end end local e={} for k in t do if not string.find(k,'Requester does not have permission') then table.insert(e,k) end end return #e..' '..table.concat(e,' ## ')"
 for w in ("Client", "Server"):
     line = night.lua(ERR, w).splitlines()[-1]
@@ -61,4 +113,6 @@ for w in ("Client", "Server"):
     bad += 0 if ok else 1
     print(("PASS  " if ok else "FAIL  ") + f"{w} log has no game errors" + ("" if ok else ": " + line))
 night.play(False)
-print("ALL PASS" if bad == 0 else f"{bad} FAILED")
+if bad == 0 and not quick:
+    last_file.write_text(subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=here.parent).stdout.strip())
+print(("ALL PASS" if bad == 0 else f"{bad} FAILED") + (" (quick: %d of %d tests)" % (len(todo), len(TESTS)) if quick else ""))

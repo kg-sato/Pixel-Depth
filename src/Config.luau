@@ -358,7 +358,7 @@ C.ESCAPE = { dist = 1050, speed = 30, top = 1.45, bonus = { 10, 40 } } -- top: t
 -- The town's arrival fill (Shared.TownFill): the engine needs seconds to build the lamps' light after a join or a return from
 -- the caves; until then a warm ambient of this colour stands in. joinHold / hold: seconds at full strength after a join / a
 -- return; fade: seconds to fade out.
-C.TOWN_FILL = { color = Color3.fromRGB(210, 158, 110), joinHold = 16, hold = 8, fade = 5 }
+C.TOWN_FILL = { color = Color3.fromRGB(210, 158, 110), cave = Color3.fromRGB(175, 180, 150), joinHold = 16, hold = 8, fade = 5 } -- cave: the same for the caves
 -- Trophy cases at the Trophy House (Shared.Trophies; vault Briefs/Trophy Cases (2026-11-14)): key, the name on the plaque, how
 -- to earn it. The boss keys are the saved tips a boss win already sets (gate1, gate2); a pet key is a Mythic or Secret pet
 -- this player has ever hatched (saved: profile field `rare`, a set of pet names; the owner's yes, 2026-11-14).
