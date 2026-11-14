@@ -43,11 +43,12 @@ function M.start(E)
 		local sg = b and b:FindFirstChild("PartyGui")
 		if sg then
 			sg.Line2.Text = n .. "/" .. C.TETHER.max .. " FRIENDS HERE"
-			sg.Line3.Text = n > 0 and ("+" .. math.floor(C.TETHER.value * 100 + 0.5) .. "% ORE VALUE IS ON") or ("+" .. math.floor(C.TETHER.value * 100 + 0.5) .. "% ORE VALUE WITH A FRIEND")
+			local luck = math.floor(C.TETHER.luck * 100 + 0.5) -- friends luck on eggs (Config.eggOdds)
+			sg.Line3.Text = n > 0 and ("+" .. math.floor(C.TETHER.value * 100 + 0.5) .. "% ORE VALUE  +" .. luck * math.min(n, C.TETHER.max) .. "% EGG LUCK") or ("+" .. math.floor(C.TETHER.value * 100 + 0.5) .. "% ORE VALUE, +" .. luck .. "% EGG LUCK PER FRIEND")
 		end
 		if n > 0 and not told then
 			told = true
-			E.toast("LANTERN TETHER:  +" .. math.floor(C.TETHER.value * 100 + 0.5) .. "% ORE VALUE WITH A FRIEND HERE", GOLD, true)
+			E.toast("LANTERN TETHER:  +" .. math.floor(C.TETHER.value * 100 + 0.5) .. "% ORE VALUE AND EGG LUCK WITH A FRIEND HERE", GOLD, true)
 		elseif n == 0 then
 			told = false
 		end

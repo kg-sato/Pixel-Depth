@@ -502,10 +502,25 @@ for i, t in C.RARITIES do
 	new("UIStroke", sw, { Color = INK, Thickness = 2 })
 	local nameT = text(odds, t[1]:upper(), UDim2.fromScale(0.5, 0.065), UDim2.fromScale(0.17, y), nil, t[3], 700)
 	nameT.TextXAlignment = Enum.TextXAlignment.Left
-	local pct = text(odds, (t[2] >= 1 and tostring(t[2]) or string.format("%.1f", t[2])) .. "%", UDim2.fromScale(0.3, 0.065), UDim2.fromScale(0.93, y), Vector2.new(1, 0), INK, 700, false)
-	pct.TextXAlignment = Enum.TextXAlignment.Right
+	local pct = text(odds, "", UDim2.fromScale(0.3, 0.065), UDim2.fromScale(0.93, y), Vector2.new(1, 0), INK, 700, false)
+	pct.TextXAlignment, pct.Name = Enum.TextXAlignment.Right, "Pct" .. i
 end
-local pityText = text(odds, "", UDim2.fromScale(0.86, 0.06), UDim2.fromScale(0.5, 0.82), Vector2.new(0.5, 0), Color3.fromRGB(63, 156, 132), 500, false)
+local pityText = text(odds, "", UDim2.fromScale(0.86, 0.06), UDim2.fromScale(0.5, 0.79), Vector2.new(0.5, 0), Color3.fromRGB(63, 156, 132), 500, false)
+do -- in a block: this script is at its limit of 200 locals
+local luckText = text(odds, "", UDim2.fromScale(0.86, 0.055), UDim2.fromScale(0.5, 0.86), Vector2.new(0.5, 0), GOLD, 600, false)
+luckText.Name = "Luck"
+local function oddsNow() -- the odds the server rolls from, with the friends luck of the friends who are here (Config.eggOdds)
+	local n = plr:GetAttribute("Friends") or 0
+	for i, t in C.eggOdds(n) do
+		local s = string.format(t[2] >= 10 and "%.1f" or "%.2f", t[2]):gsub("0+$", ""):gsub("%.$", "")
+		odds["Pct" .. i].Text = s .. "%"
+	end
+	local per = math.floor(C.TETHER.luck * 100 + 0.5)
+	luckText.Text = n > 0 and ("FRIENDS LUCK ON:  EPIC AND BETTER +" .. per * math.min(n, C.TETHER.max) .. "%") or ("FRIENDS LUCK:  EPIC AND BETTER +" .. per .. "% PER FRIEND HERE")
+end
+plr:GetAttributeChangedSignal("Friends"):Connect(oddsNow)
+oddsNow()
+end
 
 -- Map (seven layers, your deepest point)
 local mapP = panel(gui, S(420, 420), S(640, 300), Vector2.new(0.5, 0.5), "panel")
@@ -1003,7 +1018,7 @@ local function hatchShow(name)
 		if jt then jt.pop(0.05) end
 	end
 	pop(title, 1.6, 0.45)
-	local pct = C.RARITIES[tier][2]
+	local pct = C.eggOdds(plr:GetAttribute("Friends"))[tier][2]
 	local odds = pct >= 5 and "" or ("  -  1 IN " .. commas(math.floor(100 / pct + 0.5)))
 	local sub = text(ov, p[1]:upper() .. "  -  " .. p[2]:upper() .. odds, UDim2.fromScale(0.5, 0.06), UDim2.fromScale(0.5, 0.76), Vector2.new(0.5, 0), rc)
 	sub.ZIndex = 26

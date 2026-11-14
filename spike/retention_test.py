@@ -68,6 +68,11 @@ print("refinery, pressed from far away:", C1(PRESS % "true"))
 print("friends 0:", S1(P + "return tostring(p:GetAttribute('Friends'))"))
 S1(P + "p:SetAttribute('DevFriends',2) return 1"); time.sleep(2.5)
 print("friends with the hook:", S1(P + "return tostring(p:GetAttribute('Friends'))"), "| board:", C1("local b=workspace.Hub:FindFirstChild('PartyBoard') return b and (b.PartyGui.Line2.Text..' / '..b.PartyGui.Line3.Text) or 'no board'"))
+# friends luck on eggs: the table the server rolls from, and the same numbers on the odds panel
+print("egg odds, 2 friends:", S1("local C=require(game.ReplicatedStorage.Shared.Config) local o,t=C.eggOdds(2),0 local r={} for i,v in o do t+=v[2] r[i]=string.format('%.2f',v[2]) end return table.concat(r,' ')..' sum '..string.format('%.2f',t)"),
+      "| none:", S1("local C=require(game.ReplicatedStorage.Shared.Config) local r={} for i,v in C.eggOdds(0) do r[i]=string.format('%.2f',v[2]) end return table.concat(r,' ')"),
+      "| 99 friends:", S1("local C=require(game.ReplicatedStorage.Shared.Config) return string.format('%.2f',C.eggOdds(99)[6][2])..' '..string.format('%.2f',C.eggOdds(-3)[6][2])..' '..string.format('%.2f',C.eggOdds('x')[1][2])"))
+print("odds panel, 2 friends:", C1("local o=game.Players.LocalPlayer.PlayerGui:FindFirstChild('Odds',true) return o.Pct1.Text..' '..o.Pct3.Text..' '..o.Pct4.Text..' '..o.Pct5.Text..' '..o.Pct6.Text..' / '..o.Luck.Text"))
 print("client errors:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 print("server errors:", S1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'AssistantCommand') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False)

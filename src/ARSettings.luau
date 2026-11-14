@@ -16,7 +16,7 @@ local SoundService = game:GetService("SoundService")
 local M = {}
 
 local MID = Vector2.new(0.5, 0.5)
-local RADIUS, SPREAD = 2.3, 48 -- studs from the eye to a panel (close, so little of the world can stand in front: always-on-top world panels do not draw in this game); degrees between panels
+local RADIUS, SPREAD = 2.3, 48 -- the starting values; fit() below sets both from the screen each time the panels open. studs from the eye to a panel (close, so little of the world can stand in front: always-on-top world panels do not draw in this game); degrees between panels
 local PW, PH, PPS = 1.7, 1.31, 272 -- 16% smaller in the world with the same pixels (directive v9 and Gemini 2026-11-13: the side panels and their titles were cut by the screen edge)
 local _ = nil -- panel size in studs, pixels per stud
 local SMOKE, EDGE, WHITE = Color3.fromRGB(30, 21, 58), Color3.fromRGB(236, 226, 255), Color3.new(1, 1, 1)
@@ -219,8 +219,19 @@ function M.start(E)
 			p.part.CFrame = CFrame.lookAt(cf.Position, base.Position + Vector3.new(0, 0.06, 0)) -- every panel faces the eye
 		end
 	end
+	-- 2026-11-14 (the owner: "fix controls"): at 48 degrees apart the side panels stood half outside a 16:9 view (its half angle is
+	-- 48 degrees), so CONTROLS was cut at the right edge. All three now fit the screen that is there: the panels stand further
+	-- away (smaller on screen, same pixels) and closer together.
+	local function fit()
+		local vp = workspace.CurrentCamera.ViewportSize
+		local half = math.deg(math.atan(math.tan(math.rad(32)) * vp.X / math.max(vp.Y, 1))) -- half the view across, at the 64 degree field of view used here
+		local a = math.clamp((half - 2) / 3.1, 9, 20.3) -- half a panel's width in degrees
+		RADIUS = PW / 2 / math.tan(math.rad(a))
+		SPREAD = math.min(48, a * 2.1)
+	end
 	local function open()
 		if isOpen or E.isBusy() or plr:GetAttribute("Seated") then return end
+		fit()
 		local h = E.hrp()
 		if not h then return end
 		isOpen, closing, focus, yaw, pitch, blend = true, false, 0, 0, 0, 0

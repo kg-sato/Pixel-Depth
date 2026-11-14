@@ -299,7 +299,21 @@ C.GIFTS = { { 300, "coins", 150 }, { 600, "flares", 2 }, { 1200, "gems", 10 }, {
 -- The Surface Refinery (ServerScriptService.Retention; directive v9): a furnace in town cracks one geode in the background in `secs`
 -- seconds and pays the gems and coins a geode cracked by hand pays (C.CLAY.geodeGems, geodeGold). One job at a time.
 C.REFINE = { secs = 300 }
-C.TETHER = { value = 0.15, reach = 15, torch = 0.25, max = 5 }
+C.TETHER = { value = 0.15, reach = 15, torch = 0.25, max = 5, luck = 0.1 }
+-- Friends luck on eggs (the owner, 2026-11-14): each friend in the server makes Epic and better `luck` more likely (5 friends at
+-- most); what those tiers gain, Common loses, so the six still add up to 100. The server rolls from this table and the odds
+-- panel shows this same table for the friends who are here, so the odds a player reads are always the odds they get.
+function C.eggOdds(friends)
+	local n = math.clamp(math.floor(tonumber(friends) or 0), 0, C.TETHER.max)
+	local m, out, gain = 1 + C.TETHER.luck * n, {}, 0
+	for i, t in C.RARITIES do
+		local p = i >= 3 and t[2] * m or t[2]
+		gain += p - t[2]
+		out[i] = { t[1], p, t[3] }
+	end
+	out[1][2] -= gain
+	return out
+end
 C.HOME = { hold = 3, cool = 300, still = 8 } -- the hearthstone: seconds to hold, seconds of cooldown, studs you may drift during the hold (ServerScriptService.Travel)
 C.WHISTLE = { reach = 40, show = 8, cool = 30 } -- the pet whistle: studs it looks, seconds the pet marks the deposit, seconds until the next whistle
 C.UI_GLASS.smoked = { card = "rbxassetid://123788880833023", keycap = "rbxassetid://95835076020654", keycapDown = "rbxassetid://89815334963402", panel = "rbxassetid://72244447259148", pill = "rbxassetid://114478649651852", pillButter = "rbxassetid://129725898810075", pillLilac = "rbxassetid://88609351576923", pillMint = "rbxassetid://116432339584212", pillPink = "rbxassetid://122269924739998", slot = "rbxassetid://120185081422888", tab = "rbxassetid://109809759223194", tabOn = "rbxassetid://118797628367631" }

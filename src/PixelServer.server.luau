@@ -542,7 +542,8 @@ end
 
 local HIGH = { Legendary = true, Mythic = true, Secret = true }
 local function rollRarity(s) -- the disclosed odds; at the pity limit only Legendary or better, by their own odds
-	local pool = s.pity >= C.PITY - 1 and { C.RARITIES[4], C.RARITIES[5], C.RARITIES[6] } or C.RARITIES
+	local odds = C.eggOdds(Retention.friendCount(s.player)) -- with the friends luck that the odds panel shows
+	local pool = s.pity >= C.PITY - 1 and { odds[4], odds[5], odds[6] } or odds
 	local total = 0
 	for _, t in pool do total += t[2] end
 	local x, acc = s.rng:NextNumber() * total, 0
@@ -573,8 +574,8 @@ local function hatch(s)
 end
 
 local function hatchFrom(s, minIdx) -- an Egg Altar egg: a rarity from minIdx up (by their own odds), then a pet of that rarity
-	local pool, total = {}, 0
-	for i = minIdx, #C.RARITIES do table.insert(pool, C.RARITIES[i]) total += C.RARITIES[i][2] end
+	local pool, total, odds = {}, 0, C.eggOdds(Retention.friendCount(s.player))
+	for i = minIdx, #odds do table.insert(pool, odds[i]) total += odds[i][2] end
 	local x, acc, rarity = s.rng:NextNumber() * total, 0, pool[#pool][1]
 	for _, t in pool do
 		acc += t[2]

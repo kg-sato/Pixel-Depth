@@ -200,26 +200,100 @@ function M.init(c)
 		local rpm = RaycastParams.new()
 		rpm.FilterType = Enum.RaycastFilterType.Exclude
 		rpm.FilterDescendantsInstances = { cart }
-		for _, r in { 13, 16, 19, 22 } do
-			for _, k in { 1, 4, 7, 10, 2, 5, 8, 11, 0, 3, 6, 9 } do -- the diagonals first: the paths run straight out from the shaft
-				local a = k / 12 * math.pi * 2
-				local at = cart:GetPivot().Position + Vector3.new(math.cos(a) * r, 0, math.sin(a) * r)
-				local hit = workspace:Raycast(at + Vector3.new(0, 12, 0), Vector3.new(0, -24, 0), rpm)
-				if hit and math.abs(hit.Position.Y - cart:GetPivot().Position.Y) < 3 and #workspace:GetPartBoundsInBox(CFrame.new(hit.Position + Vector3.new(0, 4.6, 0)), Vector3.new(8, 8, 8), op) == 0 then
-					fat = CFrame.lookAt(hit.Position, Vector3.new(cart:GetPivot().Position.X, hit.Position.Y, cart:GetPivot().Position.Z)) -- its mouth faces the shaft
-					break
+		-- 2026-11-14 (the owner: "fix the furnace"): it belongs to the smith, so it stands in front of the FORGE on the side of the
+		-- shaft; the ring round the shaft is only the fallback
+		-- flowers and grass tufts do not count as "in the way" (they stood on every free patch): they are looked through here and
+		-- the ones under the furnace are taken away once it has its place
+		local soft = { cart }
+		for _, d in hub:GetDescendants() do
+			if d:IsA("BasePart") and (d.Name == "Flower" or d.Name == "Tuft" or d.Name == "EdgeTuft" or d.Name == "Stem" or d.Name == "Bloom") then soft[#soft + 1] = d end
+		end
+		rpm.FilterDescendantsInstances = soft
+		op.FilterType = Enum.RaycastFilterType.Exclude
+		op.FilterDescendantsInstances = soft
+		local offLane = true -- first try: not on a path
+		local function clearAt(at)
+			local hit = workspace:Raycast(at + Vector3.new(0, 12, 0), Vector3.new(0, -24, 0), rpm)
+			if hit and offLane and hit.Instance.Name == "Lane" then return nil end
+			if hit and offLane then -- flat town ground only: the first try stood it on the lip of a terrace
+				if hit.Position.Y > cart:GetPivot().Position.Y - 0.8 then return nil end
+				for _, o in { Vector3.new(2.6, 0, 2.6), Vector3.new(-2.6, 0, 2.6), Vector3.new(2.6, 0, -2.6), Vector3.new(-2.6, 0, -2.6) } do
+					local h2 = workspace:Raycast(at + o + Vector3.new(0, 12, 0), Vector3.new(0, -24, 0), rpm)
+					if not h2 or math.abs(h2.Position.Y - hit.Position.Y) > 0.35 then return nil end
 				end
 			end
+			if hit and math.abs(hit.Position.Y - cart:GetPivot().Position.Y) < 3 and #workspace:GetPartBoundsInBox(CFrame.new(hit.Position + Vector3.new(0, 4.8, 0)), Vector3.new(9, 8.4, 9), op) == 0 then
+				return CFrame.lookAt(hit.Position, Vector3.new(cart:GetPivot().Position.X, hit.Position.Y, cart:GetPivot().Position.Z)) -- its mouth faces the shaft
+			end
+			return nil
+		end
+		local forge = hub:FindFirstChild("Forge")
+		if forge then
+			local fp = forge:GetPivot().Position
+			local u = (cart:GetPivot().Position - fp) * Vector3.new(1, 0, 1)
+			if u.Magnitude > 1 then
+				u = u.Unit
+				for _, r in { 14, 16, 18, 20, 22, 26 } do
+					for _, deg in { 45, 30, -15, 15, -30, 60, 0, -45, 75, -75 } do
+						fat = clearAt(Vector3.new(fp.X, cart:GetPivot().Position.Y, fp.Z) + CFrame.Angles(0, math.rad(deg), 0):VectorToWorldSpace(u) * r)
+						if fat then break end
+					end
+					if fat then break end
+				end
+			end
+		end
+		offLane = false
+		for _, r in { 13, 16, 19, 22 } do
 			if fat then break end
+			for _, k in { 1, 4, 7, 10, 2, 5, 8, 11, 0, 3, 6, 9 } do -- the diagonals first: the paths run straight out from the shaft
+				local a = k / 12 * math.pi * 2
+				fat = clearAt(cart:GetPivot().Position + Vector3.new(math.cos(a) * r, 0, math.sin(a) * r))
+				if fat then break end
+			end
 		end
 		fat = fat or cart:GetPivot() * CFrame.new(16, 0.6, 14)
-		local stone, stoneD = Color3.fromRGB(150, 138, 176), Color3.fromRGB(112, 100, 140) -- pale stone: the first, darker one read as a black block from the town camera
-		part("RefineryBase", Vector3.new(4.4, 3.2, 4), fat * CFrame.new(0, 1.6, 0), stone, Enum.Material.Slate)
-		part("RefineryTop", Vector3.new(3.6, 1.4, 3.2), fat * CFrame.new(0, 3.9, 0), stoneD, Enum.Material.Slate)
-		part("RefineryChimney", Vector3.new(1.4, 3, 1.4), fat * CFrame.new(1, 6.1, 0.6), stoneD, Enum.Material.Slate)
-		part("RefineryEmbers", Vector3.new(1.8, 0.2, 1.4), fat * CFrame.new(-0.6, 4.66, -0.2), Color3.fromRGB(255, 150, 60), Enum.Material.Neon) -- a glowing grate on top, seen from above
-		part("RefineryChimneyGlow", Vector3.new(0.9, 0.2, 0.9), fat * CFrame.new(1, 7.66, 0.6), Color3.fromRGB(255, 190, 90), Enum.Material.Neon)
-		local mouth = part("RefineryMouth", Vector3.new(2.2, 1.5, 0.3), fat * CFrame.new(0, 1.5, -2.02), Color3.fromRGB(255, 140, 60), Enum.Material.Neon)
+		for _, d in workspace:GetPartBoundsInBox(fat * CFrame.new(0, 2, 0), Vector3.new(9.4, 6, 6.4)) do
+			if table.find(soft, d) and d ~= cart then d:Destroy() end
+		end
+		-- a voxel kiln: plinth, body with a pale band, a stepped hood and a chimney; an iron arch with grate bars round the glowing
+		-- mouth; a crate of geodes on one side and the cut crystals on the other. No two faces share a plane (z-fight scan).
+		local stone, stoneD, stoneL, iron = Color3.fromRGB(150, 138, 176), Color3.fromRGB(112, 100, 140), Color3.fromRGB(190, 180, 212), Color3.fromRGB(52, 44, 72)
+		local SL = Enum.Material.Slate
+		part("RefineryPlinth", Vector3.new(5.4, 0.5, 5), fat * CFrame.new(0, 0.25, 0), stoneD, SL)
+		part("RefineryBase", Vector3.new(4.4, 2.9, 4), fat * CFrame.new(0, 1.95, 0), stone, SL)
+		part("RefineryBand", Vector3.new(4.6, 0.35, 4.2), fat * CFrame.new(0, 3.3, 0), stoneL, SL)
+		part("RefineryTop", Vector3.new(3.8, 0.7, 3.4), fat * CFrame.new(0, 3.825, 0), stoneD, SL)
+		part("RefineryTop2", Vector3.new(3, 0.7, 2.6), fat * CFrame.new(0, 4.525, 0), stone, SL)
+		part("RefineryChimney", Vector3.new(1.4, 2.6, 1.4), fat * CFrame.new(0.5, 6.175, 0.3), stoneD, SL)
+		part("RefineryChimneyRim", Vector3.new(1.8, 0.35, 1.8), fat * CFrame.new(0.5, 7.65, 0.3), stoneL, SL)
+		local glow = part("RefineryChimneyGlow", Vector3.new(0.9, 0.12, 0.9), fat * CFrame.new(0.5, 7.885, 0.3), Color3.fromRGB(255, 190, 90), Enum.Material.Neon)
+		part("RefineryShelf", Vector3.new(3.4, 0.2, 0.9), fat * CFrame.new(0, 0.6, -2.45), stoneL, SL)
+		for _, x in { -1.3, 1.3 } do part("RefineryJamb", Vector3.new(0.4, 1.9, 0.35), fat * CFrame.new(x, 1.65, -2.1), iron, Enum.Material.Metal) end
+		part("RefineryLintel", Vector3.new(3, 0.4, 0.35), fat * CFrame.new(0, 2.8, -2.1), iron, Enum.Material.Metal)
+		for _, x in { -0.55, 0, 0.55 } do part("RefineryBar", Vector3.new(0.12, 1.9, 0.12), fat * CFrame.new(x, 1.65, -2.19), iron, Enum.Material.Metal) end
+		local mouth = part("RefineryMouth", Vector3.new(2.2, 1.9, 0.2), fat * CFrame.new(0, 1.65, -2), Color3.fromRGB(255, 140, 60), Enum.Material.Neon)
+		for _, x in { -2.1, 2.1 } do part("RefinerySignPost", Vector3.new(0.25, 2.9, 0.25), fat * CFrame.new(x, 4.925, -1.7), wood) end
+		-- the geodes that wait (a crate) and the crystals that came out (a stone block)
+		part("RefineryCrate", Vector3.new(1.4, 1, 1.4), fat * CFrame.new(3.5, 0.5, -0.8) * CFrame.Angles(0, math.rad(12), 0), wood)
+		for _, g in { { 3.4, 1.38, -0.9, 0.8, 20, Color3.fromRGB(64, 224, 208) }, { 3.75, 1.28, -0.35, 0.56, 48, Color3.fromRGB(255, 130, 200) } } do
+			local gcf = fat * CFrame.new(g[1], g[2], g[3]) * CFrame.Angles(0, math.rad(g[5]), math.rad(8))
+			part("RefineryGeode", Vector3.new(g[4], g[4], g[4]), gcf, Color3.fromRGB(70, 62, 92), SL)
+			part("RefineryGeodeGem", Vector3.new(g[4] * 0.42, g[4] * 0.8, g[4] * 0.42), gcf * CFrame.new(0.05, g[4] * 0.5, 0) * CFrame.Angles(math.rad(14), 0, math.rad(-10)), g[6], Enum.Material.Glass).Transparency = 0.15
+		end
+		part("RefineryBlock", Vector3.new(1.3, 0.6, 1.3), fat * CFrame.new(-3.5, 0.3, -0.8) * CFrame.Angles(0, math.rad(-14), 0), stoneD, SL)
+		for _, g in { { -3.6, 1.15, -0.9, 1.1, 10, -8 }, { -3.2, 0.95, -0.6, 0.7, -16, 14 }, { -3.75, 0.9, -0.45, 0.6, 20, 18 } } do
+			local c = part("RefineryCrystal", Vector3.new(0.34, g[4], 0.34), fat * CFrame.new(g[1], g[2], g[3]) * CFrame.Angles(math.rad(g[5]), math.rad(30), math.rad(g[6])), Color3.fromRGB(64, 224, 208), Enum.Material.Glass)
+			c.Transparency = 0.2
+		end
+		local smoke = Instance.new("ParticleEmitter")
+		smoke.Texture, smoke.Rate, smoke.Lifetime, smoke.Speed, smoke.SpreadAngle = "rbxasset://textures/particles/smoke_main.dds", 3, NumberRange.new(3, 4), NumberRange.new(1.6, 2.2), Vector2.new(10, 10)
+		smoke.Size, smoke.Transparency = NumberSequence.new(0.8, 2.4), NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.55), NumberSequenceKeypoint.new(1, 1) })
+		smoke.Color, smoke.EmissionDirection, smoke.Acceleration, smoke.LightInfluence = ColorSequence.new(Color3.fromRGB(214, 200, 236)), Enum.NormalId.Top, Vector3.new(0.4, 0.3, 0), 0
+		smoke.Parent = glow
+		local sparks = Instance.new("ParticleEmitter")
+		sparks.Texture, sparks.Rate, sparks.Lifetime, sparks.Speed, sparks.SpreadAngle = "rbxasset://textures/particles/sparkles_main.dds", 5, NumberRange.new(0.7, 1.3), NumberRange.new(1.5, 3), Vector2.new(35, 35)
+		sparks.Size, sparks.Color, sparks.LightEmission, sparks.EmissionDirection, sparks.Acceleration = NumberSequence.new(0.22, 0), ColorSequence.new(Color3.fromRGB(255, 190, 90)), 1, Enum.NormalId.Front, Vector3.new(0, 3, 0)
+		sparks.Parent = mouth
 		local ml = Instance.new("PointLight")
 		ml.Color, ml.Range, ml.Brightness, ml.Shadows = Color3.fromRGB(255, 150, 70), 14, 1, false
 		ml.Parent = mouth
@@ -227,7 +301,8 @@ function M.init(c)
 		local rg = Instance.new("SurfaceGui")
 		rg.Name, rg.Face, rg.SizingMode, rg.PixelsPerStud, rg.LightInfluence = "RefineryGui", Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 50, 0
 		local rt = Instance.new("TextLabel")
-		rt.Name, rt.Size, rt.BackgroundTransparency, rt.Text, rt.TextScaled, rt.Font, rt.TextColor3 = "Line", UDim2.fromScale(1, 1), 1, "REFINERY", true, Enum.Font.FredokaOne, Color3.fromRGB(255, 214, 107)
+		rt.Position, rt.AnchorPoint = UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5) -- inside the board: the first and last letter were cut
+		rt.Name, rt.Size, rt.BackgroundTransparency, rt.Text, rt.TextScaled, rt.Font, rt.TextColor3 = "Line", UDim2.fromScale(0.84, 0.78), 1, "REFINERY", true, Enum.Font.FredokaOne, Color3.fromRGB(255, 214, 107)
 		rt.Parent = rg
 		rg.Parent = sign
 		local rp = Instance.new("ProximityPrompt")
