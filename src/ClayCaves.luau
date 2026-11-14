@@ -55,19 +55,36 @@ function M.build(caves)
 	-- the shell: floor, four walls, roof (the hall is 150 x 110, 70 high; x runs east, the arrival ledge is at the west end)
 	part("Floor", Vector3.new(166, 6, 126), O * CFrame.new(0, -3, 0), Color3.fromRGB(88, 50, 58), ROCK) -- a plum-brown floor under terracotta walls: one colour everywhere read as soup
 	part("Roof", Vector3.new(164, 6, 124), O * CFrame.new(0, 73, 0), PLUM, ROCK)
-	for _, z in { -57, 57 } do part("Wall", Vector3.new(158, 76, 6), O * CFrame.new(0, 35, z), CLAY, ROCK) end
+	part("Wall", Vector3.new(158, 76, 6), O * CFrame.new(0, 35, 57), CLAY, ROCK)
+	-- the north wall has two openings since 2026-11-13 (Next Systems Plan, phase D): a door to the Jar Gallery and a tall
+	-- breach to the Fossil Dig (both rooms are built at the end of this function)
+	local OPEN = { { 6, 16, 14 }, { 45, 60, 34 } } -- x from, x to, height
+	local SOLID = { { -79, 6 }, { 16, 45 }, { 60, 79 } }
+	for _, s in SOLID do part("Wall", Vector3.new(s[2] - s[1], 76, 6), O * CFrame.new((s[1] + s[2]) / 2, 35, -57), CLAY, ROCK) end
+	for _, o in OPEN do part("Wall", Vector3.new(o[2] - o[1], 73 - o[3], 6), O * CFrame.new((o[1] + o[2]) / 2, (73 + o[3]) / 2, -57), CLAY_D, ROCK) end
 	for _, x in { -77, 77 } do part("Wall", Vector3.new(6, 76, 110), O * CFrame.new(x, 35, 0), CLAY, ROCK) end
-	for _, z in { -53.8, 53.8 } do part("Dado", Vector3.new(146, 1.4, 0.5), O * CFrame.new(0, 9, z), CREAM:Lerp(CLAY, 0.35), ROCK) end -- a pale painted band round the hall at head height
+	part("Dado", Vector3.new(146, 1.4, 0.5), O * CFrame.new(0, 9, 53.8), CREAM:Lerp(CLAY, 0.35), ROCK) -- a pale painted band round the hall at head height
+	for _, s in SOLID do
+		local a, b = math.max(s[1] + 0.06, -73), math.min(s[2] - 0.06, 73) -- 0.06 back from an opening's edge: flush with the wall's cut face it z-fights
+		local da, db = a == -73 and a or a + 0.2, b == 73 and b or b - 0.2 -- the band ends a little before the wainscot does: equal ends z-fight
+		part("Dado", Vector3.new(db - da, 1.4, 0.5), O * CFrame.new((da + db) / 2, 9, -53.8), CREAM:Lerp(CLAY, 0.35), ROCK)
+		part("Wainscot", Vector3.new(b - a + (a == -73 and 0.5 or 0) + (b == 73 and 0.5 or 0), 8.7, 0.54), O * CFrame.new((a + b) / 2 + (a == -73 and -0.25 or 0) + (b == 73 and 0.25 or 0), 4.15, -53.93), CREAM:Lerp(CLAY, 0.5), ROCK)
+	end
 	for _, x in { -73.8, 73.8 } do part("Dado", Vector3.new(0.5, 1.4, 106), O * CFrame.new(x, 9, 0), CREAM:Lerp(CLAY, 0.35), ROCK) end
 	-- a pale plastered wainscot below the band: at eye level the walls now part from the floor (the hall graded 4.5 as one-colour soup)
-	for _, z in { -53.93, 53.93 } do part("Wainscot", Vector3.new(147, 8.7, 0.54), O * CFrame.new(0, 4.15, z), CREAM:Lerp(CLAY, 0.5), ROCK) end
+	part("Wainscot", Vector3.new(147, 8.7, 0.54), O * CFrame.new(0, 4.15, 53.93), CREAM:Lerp(CLAY, 0.5), ROCK)
 	for _, x in { -73.93, 73.93 } do part("Wainscot", Vector3.new(0.54, 8.7, 106.6), O * CFrame.new(x, 4.15, 0), CREAM:Lerp(CLAY, 0.5), ROCK) end
 	for i = 1, 26 do -- clay strata: long ledges of a lighter band stepping round the walls, so the box reads as dug rock
 		local side, y = i % 4, 6 + rng:NextNumber() * 52
 		local len, deep = rng:NextNumber(18, 44), rng:NextNumber(1.2, 3)
 		if side < 2 then
 			local z = (side == 0 and -1 or 1) * (54 - deep / 2 + 0.05 + i * 0.05) -- each ledge's hidden back face at its own depth in the wall
-			part("Strata", Vector3.new(len, rng:NextNumber(2, 5), deep), O * CFrame.new(rng:NextNumber(-55, 55), y, z), i % 3 == 0 and CLAY_L or CLAY_D, ROCK)
+			local h, x = rng:NextNumber(2, 5), rng:NextNumber(-55, 55)
+			local clear = true -- no ledge across an opening of the north wall
+			for _, o in OPEN do
+				if side == 0 and x - len / 2 < o[2] + 1 and x + len / 2 > o[1] - 1 and y - h / 2 < o[3] + 1 then clear = false end
+			end
+			if clear then part("Strata", Vector3.new(len, h, deep), O * CFrame.new(x, y, z), i % 3 == 0 and CLAY_L or CLAY_D, ROCK) end
 		else
 			local x = (side == 2 and -1 or 1) * (74 - deep / 2 + 0.05 + i * 0.05)
 			part("Strata", Vector3.new(deep, rng:NextNumber(2, 5), len), O * CFrame.new(x, y, rng:NextNumber(-36, 36)), i % 3 == 0 and CLAY_L or CLAY_D, ROCK)
@@ -231,7 +248,7 @@ function M.build(caves)
 	end
 	-- violet crystal clusters at the wall feet: the cool colour the warm clay needs (deep violet shadows, the user's directive)
 	local VIOLET = Color3.fromRGB(150, 110, 255)
-	for i, c in { { -56, -51 }, { -24, 51 }, { 6, -51 }, { 38, 51 }, { 71, 20 }, { 71, -44 }, { -71, -22 }, { 52, -51 } } do
+	for i, c in { { -56, -51 }, { -24, 51 }, { 30, -51 }, { 38, 51 }, { 71, 20 }, { 71, -44 }, { -71, -22 }, { 40, -51 } } do
 		local base = O * CFrame.new(c[1], 0, c[2])
 		for k = 1, 3 do
 			local h = 2 + rng:NextNumber() * 3.5
@@ -372,9 +389,10 @@ function M.build(caves)
 		prompt(body, "Challenge", "Kiln Golem", "BossGate", 2, 14)
 	end
 	-- clay jars: a body, a neck and a rim; the prompt sits on the body. Shared for everyone; the server pays per player.
-	for i, at in { { -30, 18 }, { -26, 22 }, { 20, 16 }, { 34, -4 }, { -46, -30 }, { 12, 38 }, { 44, 40 }, { -20, -40 } } do
+	-- four in the hall, four in the Jar Gallery on its floor and its three stone steps (x, z, height of the ground there)
+	for i, at in { { -30, 18 }, { -26, 22 }, { 20, 16 }, { 34, -4 }, { 14, -70 }, { 0, -74, 4 }, { 0, -96, 8 }, { 22, -98, 12 } } do
 		local s = 0.9 + (i % 3) * 0.25
-		local cf = O * CFrame.new(at[1], -0.05, at[2]) * CFrame.Angles(0, i, 0)
+		local cf = O * CFrame.new(at[1], (at[3] or 0) - 0.05, at[2]) * CFrame.Angles(0, i, 0)
 		local jar = Instance.new("Model")
 		jar.Name = "ClayJar"
 		local function jp(name, size, c, col)
@@ -392,8 +410,9 @@ function M.build(caves)
 		jars[i] = prompt(b, "Smash", "Clay jar", "ClayJar", i, 7)
 	end
 	-- fossil spots: a slab of pale clay on the wall with the amber shape showing faintly through
-	for i, f in { { -30, 53.4, math.pi }, { 40, -53.4, 0 }, { 73.4, -30, -math.pi / 2 } } do
-		local cf = O * CFrame.new(f[1], 4.5, f[2]) * CFrame.Angles(0, f[3], 0)
+	-- all three are on the walls of the Fossil Dig since 2026-11-13 (x, z, turn, height of the ground there)
+	for i, f in { { 34.6, -72, math.pi / 2, 0 }, { 73.4, -84, -math.pi / 2, 1.4 }, { 42, -109.4, 0, 2.8 } } do
+		local cf = O * CFrame.new(f[1], 4.5 + f[4], f[2]) * CFrame.Angles(0, f[3], 0)
 		local slab = part("FossilSlab", Vector3.new(7, 6, 0.9), cf, CREAM:Lerp(CLAY_L, 0.45), ROCK)
 		for k = 0, 4 do -- a curled amber shape, sunk 0.06 proud of the slab
 			local a = k * 1.1
@@ -427,6 +446,127 @@ function M.build(caves)
 		end
 		back:SetAttribute("Echo", i)
 		echoes[i] = prompt(back, "Tap", "Echo wall", "Echo", i, 10)
+	end
+	-- ------------------------------------------------------------------------------------------------------------------
+	-- The two rooms behind the north wall (phase D, 2026-11-13). Their fronts are the hall's north wall (outer face z = -60).
+	local TEALG = Color3.fromRGB(70, 214, 200)
+	local function glow(pos, color, range, b) -- a light with nothing to see
+		local p = part("Glow", Vector3.new(1, 1, 1), O * CFrame.new(pos), color, { Transparency = 1, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+		local l = Instance.new("PointLight")
+		l.Color, l.Range, l.Brightness, l.Shadows = color, range, b, false
+		l.Parent = p
+	end
+	local function lantern(pos) -- a teal glass lantern on a short chain
+		part("GlassLantern", Vector3.new(1.4, 1.8, 1.4), O * CFrame.new(pos), TEALG, { Material = Enum.Material.Glass, Transparency = 0.25, CanCollide = false, CastShadow = false })
+		part("GlassLanternCore", Vector3.new(0.6, 0.9, 0.6), O * CFrame.new(pos), Color3.fromRGB(200, 255, 244), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+		part("GlassLanternCap", Vector3.new(1.7, 0.3, 1.7), O * CFrame.new(pos + Vector3.new(0, 1.05, 0)), BARK, DECO)
+		part("GlassLanternChain", Vector3.new(0.16, 3, 0.16), O * CFrame.new(pos + Vector3.new(0, 2.7, 0)), PLUM, DECO)
+		glow(pos, TEALG:Lerp(CREAM, 0.35), 44, 0.85)
+	end
+	local function sign(text, cf) -- a wooden board with the room's name
+		local b = part("RoomSign", Vector3.new(11, 2.6, 0.5), cf, BARK, { Material = Enum.Material.Wood, CanCollide = false })
+		local sg = Instance.new("SurfaceGui")
+		sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence = Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 40, 0.2
+		local tl = Instance.new("TextLabel")
+		tl.Size, tl.BackgroundTransparency, tl.Text, tl.TextScaled, tl.Font, tl.TextColor3 = UDim2.fromScale(1, 1), 1, text, true, Enum.Font.FredokaOne, CREAM
+		tl.Parent = sg
+		sg.Parent = b
+	end
+	local function pad(x, y, z, power)
+		part("PadStem", Vector3.new(1.6, 1.4, 1.6), O * CFrame.new(x, y + 0.7, z), CREAM, { CanCollide = false })
+		local cap = part("BouncePad", Vector3.new(5.4, 1.1, 5.4), O * CFrame.new(x, y + 1.95, z), TEAL:Lerp(Color3.new(0, 0, 0), 0.3), { Material = Enum.Material.Neon, CanCollide = false })
+		cap:SetAttribute("BouncePad", power)
+		for k = 0, 3 do part("PadSpot", Vector3.new(0.9, 0.3, 0.9), O * CFrame.new(x + (k % 2 * 2 - 1) * 1.3, y + 2.56, z + (k // 2 * 2 - 1) * 1.3), CREAM, DECO) end
+	end
+
+	-- THE JAR GALLERY: x -6..28, z -104..-60, 22 high. Four jars on the floor and on three stone steps, bounce pads between them.
+	do
+		part("GalleryFloor", Vector3.new(37, 6, 47), O * CFrame.new(9.5, -3, -86.5), Color3.fromRGB(96, 56, 60), ROCK) -- ends where the dig's floor begins (x 28)
+		-- walls stand on the floors (from y 0): a wall that starts lower shares an outer face with its floor and z-fights
+		part("GalleryRoof", Vector3.new(37, 6, 44), O * CFrame.new(9.5, 25, -82), PLUM, ROCK)
+		part("GalleryWall", Vector3.new(6, 22, 44), O * CFrame.new(-9, 11, -82), CLAY, ROCK) -- up to the roof's underside: a top level with the roof's top would z-fight
+		part("GalleryWall", Vector3.new(40, 28, 6), O * CFrame.new(8, 14, -107), CLAY_D, ROCK) -- ends at the dig's west wall (x 28)
+		for k = 0, 2 do part("GalleryBeam", Vector3.new(34, 1.6, 1.6), O * CFrame.new(11, 21.2, -68 - k * 15), BARK, { Material = Enum.Material.Wood, CanCollide = false }) end
+		part("GalleryBand", Vector3.new(0.4, 1.2, 43.6), O * CFrame.new(-5.8, 9, -82), CREAM:Lerp(CLAY, 0.35), ROCK)
+		part("GalleryBand", Vector3.new(33.6, 1.1, 0.4), O * CFrame.new(11, 9, -103.8), CREAM:Lerp(CLAY, 0.35), ROCK)
+		for _, s in { { 0, -74, 8, 4 }, { 0, -96, 8, 8 }, { 22, -98, 10, 12 }, { 22, -72, 8, 5 } } do -- stone steps: x, z, width, height
+			part("GalleryStep", Vector3.new(s[3], s[4], 8), O * CFrame.new(s[1], s[4] / 2, s[2]), s[4] % 8 == 0 and CLAY_L or CLAY, ROCK)
+			part("GalleryStepCap", Vector3.new(s[3] + 0.8, 0.5, 8.8), O * CFrame.new(s[1], s[4] + 0.25, s[2]), CREAM:Lerp(CLAY, 0.3), ROCK)
+		end
+		pad(11, 0, -86, 78) -- from the floor up to any step
+		pad(22, 5.5, -72, 62) -- from the low step on to the tall one
+		for i, sx in { -76, -92 } do -- pot shelves on the west wall
+			for lv = 0, 1 do
+				part("Shelf", Vector3.new(2.2, 0.5, 9), O * CFrame.new(-4.7, 12 + lv * 3.2, sx), BARK, { Material = Enum.Material.Wood, CanCollide = false })
+				for q = 0, 3 do
+					local h = 1 + ((q + lv + i) % 3) * 0.4
+					part("ShelfPot", Vector3.new(1.2, h, 1.2), O * CFrame.new(-4.7, 12.25 + lv * 3.2 + h / 2, sx - 3.2 + q * 2.1), (q + lv) % 2 == 0 and CLAY_L or TEALG:Lerp(CLAY_D, 0.5), DECO)
+				end
+			end
+		end
+		for k = 0, 9 do part("PathTile", Vector3.new(3.2, 0.3, 3.2), O * CFrame.new(11 + math.sin(k) * 1.2, 0.1, -50 - k * 4) * CFrame.Angles(0, k * 0.5, 0), k % 3 == 0 and TEALG:Lerp(CLAY, 0.6) or CREAM:Lerp(CLAY, 0.5), { CanCollide = false }) end
+		lantern(Vector3.new(11, 17.5, -70))
+		lantern(Vector3.new(11, 17.5, -94))
+		for _, x in { 5.2, 16.8 } do part("DoorPost", Vector3.new(1.4, 14.6, 1.4), O * CFrame.new(x, 7.3, -53.2), BARK, { Material = Enum.Material.Wood }) end
+		part("DoorLintel", Vector3.new(14.4, 1.4, 1.6), O * CFrame.new(11, 15.3, -53.2), BARK, { Material = Enum.Material.Wood, CanCollide = false })
+		sign("JAR GALLERY", O * CFrame.new(11, 18, -53.5) * CFrame.Angles(0, math.pi, 0))
+	end
+
+	-- THE FOSSIL DIG: x 34..74, z -110..-60, 46 high. Two dug terraces rise to the back, where a giant hammer head lies half
+	-- buried and lit from below (the landmark the owner asked for; seen from the hall through the breach). The three fossils
+	-- are on its walls.
+	do
+		local IRON, IRON_L = Color3.fromRGB(70, 66, 92), Color3.fromRGB(112, 108, 138)
+		part("DigFloor", Vector3.new(52, 6, 53), O * CFrame.new(54, -3, -89.5), Color3.fromRGB(84, 48, 52), ROCK)
+		part("DigRoof", Vector3.new(52, 6, 56), O * CFrame.new(54, 49, -88), PLUM, ROCK)
+		part("DigWall", Vector3.new(6, 46, 50), O * CFrame.new(31, 23, -85), CLAY, ROCK) -- also the gallery's east wall
+		part("DigWall", Vector3.new(6, 46, 50), O * CFrame.new(77, 23, -85), CLAY, ROCK)
+		part("DigWall", Vector3.new(52, 46, 6), O * CFrame.new(54, 23, -113), CLAY_D, ROCK)
+		part("DigTerrace", Vector3.new(40, 1.4, 32), O * CFrame.new(54, 0.7, -94), CLAY_D:Lerp(CLAY, 0.4), ROCK)
+		part("DigTerrace", Vector3.new(40, 1.4, 20), O * CFrame.new(54, 2.1, -100), CLAY_D, ROCK)
+		for i = 1, 9 do -- strata on the walls
+			local y, len = 8 + i * 3.9, 14 + (i * 7) % 16
+			if i % 3 == 0 then
+				part("Strata", Vector3.new(len, 2 + i % 3, 1.6 + (i % 4) * 0.3), O * CFrame.new(40 + (i * 11) % 26, y, -109.2 + (i % 4) * 0.15), i % 2 == 0 and CLAY_L or CLAY, ROCK)
+			else
+				part("Strata", Vector3.new(1.6 + (i % 4) * 0.3, 2 + i % 3, len), O * CFrame.new(i % 3 == 1 and 34.8 + (i % 4) * 0.15 or 73.2 - (i % 4) * 0.15, y, -70 - (i * 9) % 30), i % 2 == 0 and CLAY_L or CLAY, ROCK)
+			end
+		end
+		-- the hammer: the head lies tilted in the back terrace, a broken handle stands out of it
+		local H = O * CFrame.new(55, 6.2, -100) * CFrame.Angles(math.rad(-16), math.rad(28), math.rad(11))
+		part("HammerHead", Vector3.new(14, 12, 24), H, IRON, { Material = Enum.Material.Slate })
+		for _, z in { -12.4, 12.4 } do part("HammerFace", Vector3.new(15.4, 13.4, 1.6), H * CFrame.new(0, 0, z), IRON_L, { Material = Enum.Material.Slate }) end
+		for _, z in { -5, 5 } do part("HammerBand", Vector3.new(14.5, 12.5, 1.4), H * CFrame.new(0, 0, z), TEALG, { Material = Enum.Material.Glass, Transparency = 0.2 }) end
+		part("HammerCollar", Vector3.new(6.4, 2.2, 6.4), H * CFrame.new(0, 7, 0), IRON_L, { Material = Enum.Material.Slate })
+		local handle = H * CFrame.new(0, 8, 0) * CFrame.Angles(math.rad(8), 0, math.rad(-6))
+		part("HammerHandle", Vector3.new(4.2, 22, 4.2), handle * CFrame.new(0, 11, 0), BARK, { Material = Enum.Material.Wood })
+		part("HammerHandleBreak", Vector3.new(3, 3, 3), handle * CFrame.new(0.5, 23, 0.4) * CFrame.Angles(0.5, 0.4, 0.3), BARK:Lerp(CREAM, 0.25), { Material = Enum.Material.Wood })
+		for k = 1, 4 do part("HammerWrap", Vector3.new(4.5, 0.9, 4.5), handle * CFrame.new(0, 3 + k * 2.6, 0), k % 2 == 0 and TEALG:Lerp(BARK, 0.4) or CREAM:Lerp(BARK, 0.5), { CanCollide = false }) end
+		for k = 0, 5 do -- glowing cracks in the terrace round the head: the light from below
+			local a = k / 6 * math.pi * 2 + 0.4
+			local at = Vector3.new(55 + math.cos(a) * 12, 2.84, -99 + math.sin(a) * 7.5)
+			if at.Z > -109 then
+				part("DigCrack", Vector3.new(5 + k % 3, 0.2, 0.7), O * CFrame.new(at) * CFrame.Angles(0, -a + 0.6 * (k % 2), 0), TEALG, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+				if k % 2 == 0 then glow(at + Vector3.new(0, 1.2, 0), TEALG, 30, 1.3) end
+			end
+		end
+		glow(Vector3.new(55, 20, -92), CREAM:Lerp(TEALG, 0.5), 70, 1.1) -- a soft fill high in the room so the handle reads
+		glow(Vector3.new(52, 11, -82), CREAM, 42, 0.8) -- on the face turned to the breach: the hammer shows from the hall
+		for k = 1, 12 do -- dug earth: mounds on the terraces and at the wall feet
+			local sz = 1.2 + (k * 7 % 5) * 0.5
+			part("DigMound", Vector3.new(sz * 1.6, sz * 0.8, sz * 1.3), O * CFrame.new(37 + (k * 13) % 34, (k % 2 == 0 and 1.4 or 0) + sz * 0.3, -64 - (k * 17) % 28) * CFrame.Angles(0.2 * (k % 3), k, 0.15 * (k % 2)), k % 3 == 0 and CLAY_L or CLAY_D, ROCK)
+		end
+		-- a digger's scaffold by the west wall, a ladder, a crate with brushes
+		for _, z in { -88, -96 } do part("ScaffoldPost", Vector3.new(0.8, 12, 0.8), O * CFrame.new(38, 7.3, z), BARK, { Material = Enum.Material.Wood }) end -- sunk 0.1 into the terrace
+		part("ScaffoldPlank", Vector3.new(4.5, 0.5, 10.5), O * CFrame.new(37.6, 11.2, -92), BARK:Lerp(CREAM, 0.2), { Material = Enum.Material.Wood })
+		part("Ladder", Vector3.new(0.5, 11, 2.6), O * CFrame.new(40.4, 6.6, -84.5) * CFrame.Angles(0, 0, math.rad(-12)), BARK:Lerp(CREAM, 0.15), { Material = Enum.Material.Wood, CanCollide = false })
+		part("DigCrate", Vector3.new(3, 2.4, 3), O * CFrame.new(69, 1.2, -66) * CFrame.Angles(0, 0.4, 0), BARK, { Material = Enum.Material.Wood })
+		for q = 0, 2 do part("DigBrush", Vector3.new(0.3, 1.6, 0.3), O * CFrame.new(68.4 + q * 0.6, 3, -66 + q * 0.4) * CFrame.Angles(0.3 * q, 0, 0.2), q == 1 and TEALG or CREAM, DECO) end
+		lantern(Vector3.new(44, 15, -68))
+		lantern(Vector3.new(66, 15, -78))
+		for _, x in { 44.2, 60.8 } do part("BreachPost", Vector3.new(2, 34.6, 2), O * CFrame.new(x, 17.3, -53), BARK, { Material = Enum.Material.Wood }) end
+		part("BreachLintel", Vector3.new(20.6, 2, 2.2), O * CFrame.new(52.5, 35.6, -53), BARK, { Material = Enum.Material.Wood, CanCollide = false })
+		sign("FOSSIL DIG", O * CFrame.new(52.5, 38.6, -53.4) * CFrame.Angles(0, math.pi, 0))
 	end
 	return folder
 end

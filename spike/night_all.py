@@ -30,6 +30,9 @@ TESTS = [  # script, [(what, text that must be in the output)]
         ("golem rings miss in a gap", "KilnGolem rings, standing in the second gap (17.5): bossRings bossDodge"), ("no client errors", "client errors 2: 0")]),
     ("boss_fight_test.py", [("boss frame shows", "bar true banner true ROOT WARDEN"), ("a whole fight without a hit", "fight summary: won True, hits 0, slam True, sweep True, rings True"),
         ("reward chest", "chest layer true title ROOT WARDEN CHEST bar false"), ("no client errors", "client errors: 0")]),
+    ("camp2_test.py", [("openings clear, rooms reachable", "door blocked by 0"), ("every set point reached", "walk test: 0 unreachable"), ("no z-fighting", "z-fight pairs 0"), ("jars and fossils moved", "4 jars in the gallery, 3 fossils in the dig, hammer true"),
+        ("jar cooldown holds", "jar 5, again at once: prompt on false, paid 0"), ("surge refills jars", "jar 5, after the surge began: prompt on false, paid 1"), ("surge ends on the server clock", "surge over: true"),
+        ("vents never rest in a surge", "never rests in a surge: True"), ("no client errors", "client errors: 0")]),
     ("verify_night.py", [("wind-up dodge", "after stepping away 100"), ("way home embers", "(PASS over 0), at camp 0 (PASS 0)")]),
 ]
 bad = 0

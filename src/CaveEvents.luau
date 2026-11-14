@@ -34,6 +34,7 @@ function M.init(ctx)
 	end
 	task.spawn(function()
 		local rootsAt, sporeAt = nil, workspace:GetServerTimeNow() + EV.sporeFirst
+		local surgeAt = workspace:GetServerTimeNow() + EV.surgeFirst
 		while true do
 			task.wait(1)
 			local now = workspace:GetServerTimeNow()
@@ -66,6 +67,24 @@ function M.init(ctx)
 			end
 			local ends = workspace:GetAttribute("SporeStorm")
 			if ends and now >= ends then workspace:SetAttribute("SporeStorm", nil) end
+			-- Kiln Surge (Camp 2's own event, phase D, 2026-11-13): every EV.surgeEvery seconds for EV.surgeLen seconds the kiln
+			-- roars: every clay jar is whole again for everyone (the saved jar cooldowns are cleared) and the steam vents blow
+			-- without a rest (Shared.ClayClient reads the end time KilnSurge; a higher throw only hit the roof). Studio hook: workspace attribute DevSurge = seconds it lasts.
+			local devK = workspace:GetAttribute("DevSurge")
+			if devK or now >= surgeAt then
+				workspace:SetAttribute("DevSurge", nil)
+				surgeAt = now + EV.surgeEvery
+				local len = devK or EV.surgeLen
+				workspace:SetAttribute("KilnSurge", now + len)
+				for _, s in ctx.data do
+					if s.cool then
+						for k in s.cool do if string.sub(k, 1, 3) == "jar" then s.cool[k] = nil end end
+					end
+				end
+				ctx.fx:FireAllClients("kilnSurge", len)
+			end
+			local surgeEnds = workspace:GetAttribute("KilnSurge")
+			if surgeEnds and now >= surgeEnds then workspace:SetAttribute("KilnSurge", nil) end
 		end
 	end)
 end

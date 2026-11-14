@@ -139,7 +139,7 @@ function M.start(E)
 		if not h or not hum then return end
 		local now, t = os.clock(), workspace:GetServerTimeNow()
 		for _, v in vents do
-			local on = (t + v.i * 3) % 6 < 3.2
+			local on = (workspace:GetAttribute("KilnSurge") or 0) > t or (t + v.i * 3) % 6 < 3.2 -- in a Kiln Surge the vents never rest
 			if on ~= v.on then
 				v.on = on
 				v.em.Rate = on and 90 or 0
@@ -478,6 +478,7 @@ function M.start(E)
 		end)
 	end
 
+	local broken = {} -- [jar number] = the function that mends it
 	E.R.Fx.OnClientEvent:Connect(function(kind, a, b, c, d, ...)
 		if kind == "zip" then return zipRide(a, b) end
 		if kind == "clayTravel" then
@@ -493,6 +494,13 @@ function M.start(E)
 				task.delay(0.72, function() fade.Visible = false end)
 				toast(a == 2 and "THE CLAY CAVES  -  KILN CAMP" or "BACK AT CAMP 1", CREAM, true)
 			end)
+		elseif kind == "kilnSurge" then -- the server cleared every jar's cooldown: mend the broken ones here too
+			for _, mend in table.clone(broken) do mend() end
+			if plr:GetAttribute("InCave") then
+				toast("KILN SURGE!  JARS ARE WHOLE, VENTS NEVER REST", CREAM, true)
+				sfx("upgrade", 0.7)
+				E.shake(0.4)
+			end
 		elseif kind == "jar" then
 			local f = clay()
 			for _, m in f and f:GetChildren() or {} do
@@ -504,10 +512,14 @@ function M.start(E)
 						E.burst(m.PrimaryPart.Position, Vector3.yAxis, CLAY_L, 22)
 						E.burst(m.PrimaryPart.Position, Vector3.yAxis, CREAM, 8)
 					end
-					task.delay(d or K.jarEvery, function() -- the jar is back for this player
+					local function mend() -- the jar is back for this player
+						if broken[a] ~= mend then return end -- already mended by a Kiln Surge (and maybe broken again since)
+						broken[a] = nil
 						for p, col in parts do if p.Parent then p.Transparency, p.CanCollide = 0, col end end
 						if pr and pr.Parent then pr.Enabled = true end
-					end)
+					end
+					broken[a] = mend
+					task.delay(d or K.jarEvery, mend)
 				end
 			end
 			sfx("breakRock", 1.4)
