@@ -599,7 +599,7 @@ function M.start(E)
 		if kind == "upgraded" then -- a = tier, b = new level: a quick anvil scene (ForgeCutscene, opt.quick), then the overlay
 			local function show() celebrate("LEVEL UP!", PICK_ART[a] or ICON.pick, "LV " .. (b - 1) .. "  >  LV " .. b, row("Ore Value", val(a, b - 1), val(a, b)), row("Strike Zone", zone(b - 1), zone(b))) end
 			local fc = RS.Shared:FindFirstChild("ForgeCutscene")
-			if fc and C.PICKS[a] then
+			if fc and C.PICKS[a] and not game:GetService("Players").LocalPlayer:GetAttribute("FastCine") then
 				task.spawn(function()
 					local r = rarityOf("pick", a)
 					local ok, err = pcall(function() require(fc).play({ name = C.PICKS[a].name, model = C.PICKS[a].model, rarity = { "LEVEL " .. b, r[2], r[3] }, sfx = sfx, quick = true }) end)
@@ -616,7 +616,7 @@ function M.start(E)
 			if b == "pick" then -- the forging cutscene first (ReplicatedStorage.Shared.ForgeCutscene), then the overlay
 				local function show() celebrate("NEW PICKAXE!", PICK_ART[i] or ICON.pick, short(a):upper(), row("Ore Value", val(was, lvOf(was)), val(i, 1)), "Equipped and ready to dig") end
 				local fc = RS.Shared:FindFirstChild("ForgeCutscene")
-				if fc and C.PICKS[i] then
+				if fc and C.PICKS[i] and not game:GetService("Players").LocalPlayer:GetAttribute("FastCine") then
 					task.spawn(function()
 						local ok, err = pcall(function() require(fc).play({ name = a, model = C.PICKS[i].model, rarity = rarityOf("pick", i), sfx = sfx }) end)
 						if not ok then warn("[ForgeCutscene] " .. tostring(err)) end

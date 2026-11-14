@@ -486,8 +486,9 @@ function M.start(E)
 			tween(fade, 0.3, { BackgroundTransparency = 0 })
 			sfx("open", 0.6)
 			-- down: the glass lift (Shared.GlassLift, b seconds); back up, or with the view taken: the 2.3 s cart ride through the clay tunnel
-			local lift = a == 2 and not calm and E.vmHook.glassLift and E.vmHook.glassLift(b or 6, function(tr, secs) tween(fade, secs, { BackgroundTransparency = tr }) end)
-			local rode = lift or (not calm and tunnelRide(a == 2))
+			local quick = calm or plr:GetAttribute("FastCine") -- Reduced Motion, or the Fast cutscenes setting: the fade alone
+			local lift = a == 2 and not quick and E.vmHook.glassLift and E.vmHook.glassLift(b or 6, function(tr, secs) tween(fade, secs, { BackgroundTransparency = tr }) end)
+			local rode = lift or (not quick and tunnelRide(a == 2))
 			task.delay(lift and (b or 6) + 0.75 or (rode and 2.75 or 0.8), function()
 				E.R.Surface:FireServer("arrived") -- the server holds the character for the ride: let go now
 				tween(fade, 0.7, { BackgroundTransparency = 1 })

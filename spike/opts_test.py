@@ -12,6 +12,12 @@ C1("local R=game.ReplicatedStorage.Remotes.Opts R:FireServer({vol=1e9,shake='no'
 print("kept after a bad send:", C1(KEPT))
 C1("game.ReplicatedStorage.Remotes.Opts:FireServer(12345) return 1"); time.sleep(0.5)
 print("kept after a number:", C1(KEPT))
+# directive v9: the Fast cutscenes setting is kept too, and the lift obeys it (the picture never comes up)
+C1("game.ReplicatedStorage.Remotes.Opts:FireServer({vol=3,shake=false,hints=true,dark=true,fast=true}) game.Players.LocalPlayer:SetAttribute('FastCine',true) return 1"); time.sleep(0.5)
+print("fast kept:", C1(KEPT))
+S1("local p=game.Players:GetPlayers()[1] p:SetAttribute('InCave',true) p.Character.HumanoidRootPart.CFrame=workspace.Caves:FindFirstChild('LiftLanding',true).CFrame+Vector3.new(0,3,0) task.wait(1) p:SetAttribute('DevClay',2) return 1"); time.sleep(2.5)
+print("lift with fast cutscenes:", C1("local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('GlassLift',true) return 'picture '..tostring(g and g.Visible)"), S1("local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart local l=workspace.Caves:FindFirstChild('ClayLanding',true) return 'anchored '..tostring(h.Anchored)..' at Camp 2 '..tostring((h.Position-l.Position).Magnitude<8)"))
+C1("game.ReplicatedStorage.Remotes.Opts:FireServer({vol=3,shake=false,hints=true,dark=true}) return 1"); time.sleep(0.4)
 N.play(False); time.sleep(4)
 # Studio saves nothing ("Roblox API services unavailable"), so a real rejoin cannot be tested here. The load path is tested with
 # the Studio hook DevOpts (a workspace attribute set in Edit mode): the server reads it as the saved settings.

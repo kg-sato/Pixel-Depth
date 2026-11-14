@@ -837,7 +837,7 @@ local function hatchShow(name)
 	local vcam = new("Camera", vp, { FieldOfView = 30 })
 	vp.CurrentCamera = vcam
 	vcam.CFrame = CFrame.lookAt(Vector3.new(0, 1.2, -9), Vector3.new(0, 0.6, 0))
-	local cine = tier >= #C.RARITIES and forgeUI.hatchCine and forgeUI.hatchCine({ ov = ov, stage = stage, vcam = vcam, buildT = buildT }) or nil -- Secret: Shared.HatchCine (after the camera is placed: it shakes from this pose)
+	local cine = tier >= #C.RARITIES and not plr:GetAttribute("FastCine") and forgeUI.hatchCine and forgeUI.hatchCine({ ov = ov, stage = stage, vcam = vcam, buildT = buildT }) or nil -- Secret: Shared.HatchCine (after the camera is placed: it shakes from this pose)
 	local plinth = new("Part", world, { Anchored = true, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.5, 3.6, 3.6), Color = Color3.fromRGB(96, 76, 128), CFrame = CFrame.new(0, -1.05, 0) * CFrame.Angles(0, 0, math.rad(90)) })
 	local rim = new("Part", world, { Anchored = true, Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.12, 3.9, 3.9), Color = rc, Material = Enum.Material.Neon, Transparency = 0.85, CFrame = CFrame.new(0, -0.78, 0) * CFrame.Angles(0, 0, math.rad(90)) })
 	local egg = new("Part", world, { Anchored = true, Size = Vector3.new(2.2, 2.8, 2.2), Color = C.EGG_COLOR, CFrame = CFrame.new(0, 0.6, 0) })

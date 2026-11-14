@@ -44,13 +44,13 @@ function M.start(E)
 	local flag = new("Frame", E.gui, { Name = "ARSettings", BackgroundTransparency = 1, Size = UDim2.fromOffset(1, 1), Visible = false })
 	if E.addModal then E.addModal(flag) end
 	local folder = new("Folder", workspace.CurrentCamera, { Name = "ARSettings" })
-	local state = { vol = 8, shake = true, hints = true, dark = false }
+	local state = { vol = 8, shake = true, hints = true, dark = false, fast = false }
 	-- The settings are saved with the player's profile (the owner said yes, 2026-11-13): every change goes to the server
 	-- (remote Opts, which keeps only these four fields), and at the start the panel asks the server for them.
 	local setters = {} -- key -> function(value): put a loaded value on its control and apply it
 	local OptsR = E.R:FindFirstChild("Opts")
 	local function send()
-		if OptsR then OptsR:FireServer({ vol = state.vol, shake = state.shake, hints = state.hints, dark = state.dark }) end
+		if OptsR then OptsR:FireServer({ vol = state.vol, shake = state.shake, hints = state.hints, dark = state.dark, fast = state.fast }) end
 	end
 	local panels, isOpen, focus = {}, false, 0 -- focus: -1 left, 0 middle, 1 right
 	local shut
@@ -122,10 +122,10 @@ function M.start(E)
 	do
 		local _, card = panel(0, "SETTINGS", PINK)
 		local function toggle(i, name, key, act)
-			local y = 0.16 + (i - 1) * 0.2
-			label(card, name, UDim2.fromScale(0.52, 0.13), UDim2.fromScale(0.33, y), WHITE, E.FONT, true) -- the open sentence font: condensed capitals filled in on a phone
+			local y = 0.13 + (i - 1) * 0.165 -- four rows since directive v9 (were three, 0.2 apart)
+			label(card, name, UDim2.fromScale(0.52, 0.12), UDim2.fromScale(0.33, y), WHITE, E.FONT, true) -- the open sentence font: condensed capitals filled in on a phone
 			local b, jt
-			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and MINT or LILAC, UDim2.fromScale(0.26, 0.15), UDim2.fromScale(0.8, y), function()
+			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and MINT or LILAC, UDim2.fromScale(0.26, 0.135), UDim2.fromScale(0.8, y), function()
 				state[key] = not state[key]
 				jt.set(state[key] and "ON" or "OFF")
 				b.BackgroundColor3 = state[key] and MINT or LILAC
@@ -146,6 +146,9 @@ function M.start(E)
 			end
 		end)
 		toggle(3, "Darker nights", "dark", function(on) plr:SetAttribute("DevLowLight", on or nil) end)
+		-- directive v9: "Fast-Open / Skip Cutscene": the forge scene, the Secret hatch scene and the glass lift are left out and
+		-- are replaced by a plain fade (attribute FastCine, read where each scene starts)
+		toggle(4, "Fast cutscenes", "fast", function(on) plr:SetAttribute("FastCine", on or nil) end)
 		local x = 0.2
 		for _, s in { { "BAG", MINT, "bag" }, { "QUESTS", BUTTER, "quests" }, { "DONE", PINK, nil } } do
 			glassButton(card, s[1], s[2], UDim2.fromScale(0.27, 0.15), UDim2.fromScale(x, 0.84), function()

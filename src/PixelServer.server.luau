@@ -51,7 +51,7 @@ local function cleanOpts(t)
 	local o = {}
 	if type(t) ~= "table" then return o end
 	if type(t.vol) == "number" and t.vol == t.vol then o.vol = math.clamp(math.floor(t.vol + 0.5), 0, 10) end
-	for _, k in { "shake", "hints", "dark" } do
+	for _, k in { "shake", "hints", "dark", "fast" } do
 		if type(t[k]) == "boolean" then o[k] = t[k] end
 	end
 	return o
