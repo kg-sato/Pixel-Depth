@@ -450,7 +450,10 @@ function M.init(ctx)
 		if to == 2 and not s.tips.gate1 then return end -- the Root Warden still guards the gate
 		local goal = to == 2 and landing.CFrame or (stairs and stairs.CFrame * CFrame.new(0, 1, -4))
 		if not goal then return end
-		ctx.fx:FireClient(plr, "clayTravel", to)
+		local secs = to == 2 and (s.tips.lift and 6 or 12) or 2.75 -- the glass lift down (the first ride is the long one), the tunnel cart back up
+		if to == 2 then s.tips.lift = true end
+		if ctx.hold then ctx.hold(plr, secs + 1.5) end -- anchored and left alone by Gloomlings until the client reports "arrived" (or the time runs out)
+		ctx.fx:FireClient(plr, "clayTravel", to, secs)
 		task.delay(0.35, function() -- under the client's fade
 			if hrp.Parent then
 				hrp.AssemblyLinearVelocity = Vector3.zero
@@ -460,6 +463,7 @@ function M.init(ctx)
 		if to == 2 and ctx.quest then ctx.quest(s, "clay") end
 		if to == 2 and not s.tips.clay then
 			s.tips.clay = true
+			ctx.sendState(s) -- the town cart now offers both camps (Shared.CampChoice reads the tips)
 			if ctx.analytics then ctx.analytics.event(s, "ClayCavesReached") end
 		end
 	end

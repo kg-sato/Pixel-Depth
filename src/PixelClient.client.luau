@@ -1203,7 +1203,10 @@ digBtn.MouseLeave:Connect(function() digHeld = false end)
 railForge.Activated:Connect(function() forgeUI.toggle() end)
 oddsClose.Activated:Connect(function() closePanel(odds) end)
 mapClose.Activated:Connect(function() closePanel(mapP) end)
-railLift.Activated:Connect(function() R.Surface:FireServer((inMine or inCave) and "up" or "down") end)
+local function lift() -- the ride button: up from below; down from town, where a player with both camps open picks one first (Shared.CampChoice)
+	if inMine or inCave then R.Surface:FireServer("up") elseif not (forgeUI.campPick and forgeUI.campPick()) then R.Surface:FireServer("down") end
+end
+railLift.Activated:Connect(lift)
 sellBtn.Activated:Connect(function() R.Sell:FireServer() end)
 
 -- Keyboard: first person locks the mouse, so every rail button also has a key (shown on the button on PC)
@@ -1216,7 +1219,7 @@ UIS.InputBegan:Connect(function(input, gp)
 	if gp or hatchBusy then return end
 	local k = input.KeyCode
 	if k == Enum.KeyCode.Q then
-		R.Surface:FireServer((inMine or inCave) and "up" or "down")
+		lift()
 	elseif k == Enum.KeyCode.G then
 		forgeUI.toggle()
 	elseif k == Enum.KeyCode.Return and sellPop.Visible then
@@ -2737,7 +2740,7 @@ end)()
 	end
 	forgeUI.spatialExtra = forgeUI.spatialExtra or {} -- the small panels built in this script stand in the world too (Shared.SpatialPanels); the forge keeps its own staged screen
 	for _, f in { night, odds, mapP, forge } do table.insert(forgeUI.spatialExtra, { frame = f, home = gui, menu = true, on = function() return f.Visible end }) end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end

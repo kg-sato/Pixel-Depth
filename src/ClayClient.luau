@@ -441,11 +441,12 @@ function M.start(E)
 	E.vmHook.echoTap = function(k) if drums[k] and egame and not egame.busy and remote then egame.busy = true remote:FireServer("echo", egame.i, k) end end
 	-- the zip line: hang under the rope from the pad ledge to the post by the path (server: ClayCaves, Fx "zip")
 	local zipping, zipTip = false, false
-	local function zipRide()
+	local function zipRide(rope, rev) -- rope: one of Camp 1's root ziplines (ServerScriptService.Travel), nil = the Clay Caves line; rev: ride from B to A
 		local f = clay()
-		local rope = f and f:FindFirstChild("ZipRope", true)
+		rope = rope or (f and f:FindFirstChild("ZipRope", true))
 		local h = E.hrp()
 		local A, B = rope and rope:GetAttribute("ZipA"), rope and rope:GetAttribute("ZipB")
+		if rev then A, B = B, A end
 		if zipping or not h or not A or not B then return end
 		zipping = true
 		local dir, len = (B - A).Unit, (B - A).Magnitude
@@ -478,13 +479,16 @@ function M.start(E)
 	end
 
 	E.R.Fx.OnClientEvent:Connect(function(kind, a, b, c, d, ...)
-		if kind == "zip" then return zipRide() end
+		if kind == "zip" then return zipRide(a, b) end
 		if kind == "clayTravel" then
 			fade.Visible = true
 			tween(fade, 0.3, { BackgroundTransparency = 0 })
 			sfx("open", 0.6)
-			local rode = not calm and tunnelRide(a == 2) -- a 2.3 s cart ride through a clay tunnel (down, or back up)
-			task.delay(rode and 2.75 or 0.8, function()
+			-- down: the glass lift (Shared.GlassLift, b seconds); back up, or with the view taken: the 2.3 s cart ride through the clay tunnel
+			local lift = a == 2 and not calm and E.vmHook.glassLift and E.vmHook.glassLift(b or 6, function(tr, secs) tween(fade, secs, { BackgroundTransparency = tr }) end)
+			local rode = lift or (not calm and tunnelRide(a == 2))
+			task.delay(lift and (b or 6) + 0.75 or (rode and 2.75 or 0.8), function()
+				E.R.Surface:FireServer("arrived") -- the server holds the character for the ride: let go now
 				tween(fade, 0.7, { BackgroundTransparency = 1 })
 				task.delay(0.72, function() fade.Visible = false end)
 				toast(a == 2 and "THE CLAY CAVES  -  KILN CAMP" or "BACK AT CAMP 1", CREAM, true)

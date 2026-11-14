@@ -47,8 +47,13 @@ function M.start(E)
 				if inCave() and hook.whistle then hook.whistle() elseif hook.emote then hook.emote("cheer") end
 			end },
 		{ name = "WARDROBE", key = "V", x = 0.14, y = 0.5, icon = E.ICON.crew, tint = E.LILAC,
-			why = function() return (inCave() or plr:GetAttribute("InMine")) and "Town only" or nil end,
-			run = function() if hook.wardrobe then hook.wardrobe() end end },
+			-- in the caves this slot is the hearthstone (Shared.Hearth): hold still for 3 s and wake at your camp
+			dyn = function() return (inCave() and hook.home) and "HOME" or "WARDROBE" end,
+			why = function()
+				if inCave() and hook.home then return plr:GetAttribute("Seated") and "Not while riding" or hook.homeWhy() end
+				return plr:GetAttribute("InMine") and "Town only" or nil
+			end,
+			run = function() if inCave() and hook.home then hook.home() elseif hook.wardrobe then hook.wardrobe() end end },
 		-- the diagonals (2026-11-12, the owner: "add more items in there such as the settings menu")
 		{ name = "NOTES", key = "N", x = 0.755, y = 0.245, icon = E.ICON.hammer, tint = BUTTER,
 			why = function() return nil end,

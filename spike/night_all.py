@@ -7,7 +7,7 @@ here = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(here))
 import night
 TESTS = [  # script, [(what, text that must be in the output)]
-    ("wheel_test.py", [("sonar through the wheel", "sonar: true"), ("flare through the wheel", "flare: 2 -> 1"), ("wardrobe refused in the caves", "0 open, wheel stayed true"), ("no HUD overlap", "0 overlaps, 0 prompt overlaps")]),
+    ("wheel_test.py", [("sonar through the wheel", "sonar: true"), ("flare through the wheel", "flare: 2 -> 1"), ("no wardrobe in the caves", "must stay shut): 0 open"), ("no HUD overlap", "0 overlaps, 0 prompt overlaps")]),
     ("wheel_touch_test.py", [("TOOLS button opens the wheel", "wheel open: true"), ("slot tap opens the wardrobe", "wardrobe panels open 1")]),
     ("load_test.py", [("loading logo letters land one at a time", "one by one: yes")]),
     ("spatial_click_test.py", [("a click reaches a button on a world-panel menu", "bag still open: false")]),
@@ -17,6 +17,12 @@ TESTS = [  # script, [(what, text that must be in the output)]
     ("pet_test.py", [("three pets have faces", "town faces: 3 "), ("three crew pets in the cave view", "in view: 3 pets"), ("whistle marks a deposit", "whistle: mark true glow true"), ("whistle has a cooldown", "1 marks (1 expected)"), ("pets react to a hit", "Shinemane:hurt"), ("no script errors with pets", "errors: 0")]),
     ("boon_test.py", [("offer arrives", "boonOffer:"), ("bad picks refused", "-> flares 2 hp 100 shield 0 fx\n"), ("a pick lands", "boonTaken:"), ("second prayer is spent", "boonSpent")]),
     ("ping_test.py", [("marker and beam", "marks on screen: 1 beam true"), ("bad pings refused", "(0 expected): 0"), ("rate limit", "(1 expected): 1"), ("no HUD overlap", "0 overlaps, 0 prompt overlaps")]),
+    ("travel_test.py", [("hearth refused in town", "hearth in town: 1 no:Caves only"), ("hearth refused while grabbed", "hearth while grabbed: 1 no:Grabbed!"), ("hearth cannot end early", "hearth ended early: 2 go:3 no:Stand still | studs from camp: far"),
+        ("hearth cannot end after walking away", "1 no:Stand still | studs from camp: far"), ("hearth brings you home", "done:300 | studs from camp: near"), ("hearth cooldown", "hearth again at once: 1 no:29"),
+        ("zip refused far from the grip", "grip moved on the client: prompt fired 1, 0 rides"), ("zip refused while grabbed", "zip while grabbed: prompt fired 1, 0 rides"), ("zip rides from the grip", "at the handle: prompt fired 1, 1 rides | studs from the far post: near"),
+        ("grotto zip rides back", "(handle 4): prompt fired 1, 1 rides | studs from the near post: near"), ("camp 2 refused before the gate", "gate shut: in cave true studs from Camp 1 near"), ("lift holds the rider, once", "lift asked twice: 1 ride of 12 s"),
+        ("no hearth on the lift", "picture up: true | hearth: 1 no:Not now"), ("lift lets go at Camp 2", "lift, 16 s in: anchored false studs from Camp 2 near"), ("Q offers both camps", "panel true in cave false"),
+        ("the pick rides to Camp 2", "picked Camp 2: anchored false studs from Camp 2 near"), ("no client errors", "client errors: 0")]),
     ("verify_night.py", [("wind-up dodge", "after stepping away 100"), ("way home embers", "(PASS over 0), at camp 0 (PASS 0)")]),
 ]
 bad = 0

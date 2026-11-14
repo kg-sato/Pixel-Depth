@@ -772,7 +772,7 @@ SellR.OnServerEvent:Connect(function(plr) -- the lift: ride up to the sell stall
 	sell(s)
 end)
 
-local enterMine -- defined below
+local enterMine -- defined below: enterMine(s, camp2)
 local riding = {} -- players on the minecart ride down (MinecartRide on the client): anchored until the client says it arrived
 local function endRide(plr, trip) -- trip: only end that ride (a stale timer must not end a later one)
 	if not riding[plr] or (trip and riding[plr] ~= trip) then return end
@@ -861,7 +861,7 @@ SurfaceR.OnServerEvent:Connect(function(plr, dir, report) -- the rail lift butto
 	end
 	if riding[plr] or escaping[plr] then return end
 	if s and dir == "down" then
-		enterMine(s)
+		enterMine(s, report == 2 and s.tips.gate1 == true and s.tips.clay == true) -- Camp 2 only for a player who has been there (Shared.CampChoice asks)
 		return
 	end
 	if s and plr:GetAttribute("InCave") and caveLanding then -- the ride up is the minecart escape
@@ -1065,7 +1065,16 @@ CaveEvents.init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, landing =
 	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end,
 	finish = function(s) if s.mg then s.mg.deadline = 0 end end }) -- the main loop pays an expired minigame on its next pass
 require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).init({ data = data, fx = FxR, hrpOf = hrpOf, analytics = A, sendState = sendState, remote = remote,
-	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, quest = quest })
+	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, quest = quest,
+	hold = function(plr, secs) -- the glass lift and the tunnel cart: the character waits anchored, as on the minecart ride
+		local hrp = hrpOf(plr)
+		if not hrp or riding[plr] then return end
+		local trip = {}
+		riding[plr] = trip
+		hrp.AssemblyLinearVelocity = Vector3.zero
+		hrp.Anchored = true
+		task.delay(secs, function() endRide(plr, trip) end)
+	end })
 require(game:GetService("ServerScriptService"):WaitForChild("BoonShrine")).init({ data = data, fx = FxR, remote = remote, nearPrompt = nearPrompt, analytics = A,
 	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, apply = function(plr, kind) return Gloom.boon(plr, kind) end })
 require(game:GetService("ServerScriptService"):WaitForChild("PingRelay")).init({ fx = FxR, remote = remote, hrpOf = hrpOf }) -- co-op callouts (Shared.Ping)
@@ -1074,8 +1083,11 @@ Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose =
 	soul = SoulTree.rank, soulEarn = SoulTree.earn,
 	-- gloomlings leave you alone on a ride, in an ore minigame (hands and eyes are busy) and for 2.5 s after it (Gemini loop review, 2026-11-10)
 	busy = function(plr) local s = data[plr] return riding[plr] ~= nil or escaping[plr] ~= nil or (s ~= nil and (s.mg ~= nil or os.clock() < (s.mgSafe or 0))) end })
+require(game:GetService("ServerScriptService"):WaitForChild("Travel")).init({ data = data, fx = FxR, hrpOf = hrpOf, remote = remote, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, analytics = A,
+	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end,
+	landings = function() local c = workspace:FindFirstChild("Caves") local l2 = c and c:FindFirstChild("ClayLanding", true) return { caveLanding, l2 } end })
 
-enterMine = function(s)
+enterMine = function(s, camp2)
 	local hrp = hrpOf(s.player)
 	if not hrp or riding[s.player] or s.player:GetAttribute("InMine") or s.player:GetAttribute("InCave") then return end
 	if caveLanding then -- the minecart ride (feedback batch phase 4): stand in the town cart, the client films the ride, and at the
@@ -1097,7 +1109,8 @@ enterMine = function(s)
 				if riding[plr] == trip then riding[plr] = nil end
 				return
 			end
-			h.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
+			local land2 = camp2 and workspace.Caves:FindFirstChild("ClayLanding", true) -- the ride ends at the Kiln Camp
+			h.CFrame = (land2 or caveLanding).CFrame + Vector3.new(0, 3, 0)
 			plr:SetAttribute("InCave", true)
 			sendState(s) -- the bag pill turns into the unbanked ore count in the caves
 		end)
@@ -1636,7 +1649,7 @@ local STATION = {
 	forge = function(s) FxR:FireClient(s.player, "openForge") end,
 	map = function(s) FxR:FireClient(s.player, "map", s.deepest) end,
 	chest = dailyChest,
-	enter = function(s) enterMine(s) end,
+	enter = function(s) if s.tips.gate1 and s.tips.clay then FxR:FireClient(s.player, "campPick") else enterMine(s) end end, -- both camps open: the client asks which (Shared.CampChoice)
 	buyEgg = function(s) -- Maribel sells starter eggs for coins (playtest 2: cheap eggs in town, rarer ones in cave nests)
 		if os.clock() < (s.buyCool or 0) then return end
 		s.buyCool = os.clock() + 0.6
