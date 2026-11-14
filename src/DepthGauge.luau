@@ -17,7 +17,9 @@ function M.start(E)
 	local jt = JellyText.new(holder, "0 M", { color = Color3.fromRGB(110, 215, 255), sway = false, z = 4 })
 	local shown, last = 0, -1
 	RunService.RenderStepped:Connect(function(dt)
-		if not E.caveHud.Visible then return end
+		local boss = E.gui:FindFirstChild("BossBar", true)
+		pill.Visible = not (E.cave.mgBusy or (boss and boss.Visible))
+		if not E.caveHud.Visible or not pill.Visible then return end
 		local h = E.hrp()
 		if not h then return end
 		local depth = math.max(0, (E.C.CAVE_ORIGIN.Y - h.Position.Y) * 0.28)

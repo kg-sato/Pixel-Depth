@@ -113,7 +113,7 @@ function M.start(E)
 		local g, gp = Quests.guide(q) -- a finished quest keeps leading: the next step, plus where the reward waits
 		if g and st and q.sp >= st.n and gp >= g.n then g = nil end -- the next step is done too: only the claim is left to do
 		local keys = game:GetService("UserInputService").KeyboardEnabled -- a phone has no J key: point at the QUESTS button
-		hook.questHint = st and (q.sp >= st.n and (g and (g.hint .. (keys and " (Reward waiting: J)" or " (Reward waiting in QUESTS)")) or (keys and "Two quests done! Press J to claim your rewards." or "Two quests done! Open QUESTS to claim your rewards.")) or st.hint) or nil
+		hook.questHint = st and (q.sp >= st.n and (g and (g.hint .. (keys and " (Reward waiting, press J)" or " (Reward waiting in QUESTS)")) or (keys and "Two quests done! Press J to claim your rewards." or "Two quests done! Open QUESTS to claim your rewards.")) or st.hint) or nil
 	end
 	for k, b in tabs do
 		b.Activated:Connect(function()

@@ -19,6 +19,11 @@ N.key("X"); time.sleep(1.2)
 print("whistle with no ore near:", C1("return 'marks '..tostring(game.Players.LocalPlayer.PlayerGui:FindFirstChild('WhistleMark')~=nil)"))
 time.sleep(5)  # the short cooldown after an empty whistle
 S1("local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart local best,bd for _,d in workspace.Caves.Deposits:GetChildren() do local c=d.PrimaryPart if c and c.Transparency<1 then local m=(c.Position-h.Position).Magnitude if not bd or m<bd then best,bd=c,m end end end h.CFrame=CFrame.lookAt(best.Position+Vector3.new(14,4,0),best.Position) return 1"); time.sleep(1.5)
+# a watcher on the client counts the marks and looks for the hurt face for the next 45 s: with a slow Studio a second tool call
+# comes too late to see either (the mark lasts 8 s, the face a few seconds)
+C1("local p=game.Players.LocalPlayer p:SetAttribute('DevPetWatch','') task.spawn(function() local most,hurt=0,false local t0=os.clock() while os.clock()-t0<45 do local n=0 for _,g in p.PlayerGui:GetChildren() do if g.Name=='WhistleMark' then n+=1 end end most=math.max(most,n) "
+   "for _,m in workspace:GetDescendants() do local h=m:IsA('Model') and m:FindFirstChild('Head') local g=h and h:FindFirstChild('Face') local im=g and g:FindFirstChildOfClass('ImageLabel') if im and im.Image==require(game.ReplicatedStorage.Shared.Config).PET_FACE.hurt then hurt=true end end "
+   "p:SetAttribute('DevPetWatch','most marks at once: '..most..', hurt face seen: '..tostring(hurt)) task.wait(0.15) end end) return 1")
 N.key("X"); time.sleep(2.5)
 print("whistle:", C1("local pg=game.Players.LocalPlayer.PlayerGui local m=pg:FindFirstChild('WhistleMark') local glow=false for _,d in workspace.Caves.Deposits:GetDescendants() do if d.Name=='WhistleGlow' then glow=true end end return 'mark '..tostring(m~=nil)..' glow '..tostring(glow)"))
 print("whistle faces:", C1(FACES))
@@ -28,6 +33,7 @@ print("second whistle at once:", C1("local n=0 for _,g in game.Players.LocalPlay
 S1("game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1],'grabbed',2) return 1"); time.sleep(0.8)
 print("hurt faces:", C1(FACES))
 time.sleep(9)
+print("watcher:", C1("return tostring(game.Players.LocalPlayer:GetAttribute('DevPetWatch'))"))
 print("mark gone:", C1("return tostring(game.Players.LocalPlayer.PlayerGui:FindFirstChild('WhistleMark')==nil)"))
 print("errors:", C1("local n,t=0,{} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then n+=1 t[#t+1]=string.sub(m.message,1,300) end end return n..' '..table.concat(t,' || ')"))
 N.play(False)

@@ -19,7 +19,7 @@ function M.start(E)
 		local p = E.panel(holder, UDim2.fromScale(0.485, 1), UDim2.fromScale(x, 0.5), Vector2.new(0.5, 0.5), kind)
 		p.Name = name
 		local t = E.text(p, "", UDim2.fromScale(0.86, 0.5), UDim2.fromScale(0.5, 0.46), Vector2.new(0.5, 0.5), WHITE, 700, false)
-		t.Name = "Line"
+		t.Name, t.Font = "Line", E.HEAD or t.Font -- the headline font: Shared.JellyHUD turns it into jelly letters
 		return p, t
 	end
 	local giftP, giftT = pill("Gift", 0.2475, "pillButter")
@@ -65,7 +65,8 @@ function M.start(E)
 		if acc < 0.25 then return end
 		acc = 0
 		local boss = gui:FindFirstChild("BossBar", true)
-		holder.Visible = not (boss and boss.Visible)
+		local chest = E.plr.PlayerGui:FindFirstChild("DailyChest")
+		holder.Visible = not (boss and boss.Visible) and not (chest and chest.Enabled) and not (E.vmHook and E.vmHook.arOpen) -- a reward chest has the top of the screen to itself
 		if not holder.Visible then return end
 		local g = C.GIFTS[got + 1]
 		local played = secs0 + (os.clock() - at0)

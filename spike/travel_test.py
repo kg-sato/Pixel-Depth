@@ -37,7 +37,8 @@ S1(AT % 2)  # the other side of the bridge: 24 studs away
 print("hearth after walking away:", r, home(2.2, "homeEnd"), "| studs from camp:", S1(DIST))
 S1(AT % 1); time.sleep(1.5)
 print("hearth held 3 s:", home("home", 0.1, "home", 3.05, "homeEnd"), "| studs from camp:", S1(DIST))
-print("hearth again at once:", home("home"))
+again = home("home")
+print("hearth again at once:", again, "| cooldown on:", again.split("no:")[-1].strip().isdigit())  # the seconds left: any number (a slow Studio takes a while between two calls)
 print("ziplines built:", S1("local n,p=0,0 for _,d in workspace.Caves.Ziplines:GetChildren() do if d.Name=='ZipRope' then n+=1 end if d.Name=='ZipHandle' then p+=1 end end return n..' ropes '..p..' handles'"))
 print("zip from camp, grip moved on the client:", zip_(1, 1, 1.0, "true"), "rides")
 S1(AT % 1); time.sleep(1.5)
@@ -51,9 +52,13 @@ print("grotto zip back (handle 4):", zip_(4, 1, 5.5), "rides | studs from the ne
 CLAY = P + "local l2=cv:FindFirstChild('ClayLanding',true) local d=(h.Position-l2.Position).Magnitude return 'anchored '..tostring(h.Anchored)..' studs from Camp 2 '..(d<8 and 'near ' or 'far ')..math.floor(d)"
 S1(P + "h.AssemblyLinearVelocity=Vector3.zero h.CFrame=land.CFrame+Vector3.new(0,3,0) return 1"); time.sleep(1.5)
 C1("local p=game.Players.LocalPlayer local n=0 game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,a,b) if k=='clayTravel' then n+=1 p:SetAttribute('DevLiftSeen',n..' ride of '..tostring(b)..' s') end end) return 1")
-S1(P + "p:SetAttribute('DevClay',2) task.wait(0.2) p:SetAttribute('DevClay',2) return 1"); time.sleep(2)
+# everything that must be read 2 s into the ride is read by code armed before it starts (a slow Studio needs longer than the ride for two calls)
+C1("local p=game.Players.LocalPlayer local R=game.ReplicatedStorage.Remotes local armed=true R.Fx.OnClientEvent:Connect(function(k,w,a) if k=='home' and p:GetAttribute('DevLiftProbe')=='wait' then p:SetAttribute('DevLiftProbe2','hearth: '..tostring(w)..':'..tostring(a)) end "
+   "if k=='clayTravel' and armed then armed=false task.delay(2,function() p:SetAttribute('DevLiftProbe','wait') p:SetAttribute('DevLiftPic','picture up: '..tostring(p.PlayerGui:FindFirstChild('GlassLift',true).Visible)) R.Travel:FireServer('home') end) end end) return 1")
+two = S1(P + "local l2=cv:FindFirstChild('ClayLanding',true) p:SetAttribute('DevClay',2) task.wait(0.2) p:SetAttribute('DevClay',2) task.wait(2) local d=(h.Position-l2.Position).Magnitude return 'anchored '..tostring(h.Anchored)..' studs from Camp 2 '..(d<8 and 'near ' or 'far ')..math.floor(d)")
+time.sleep(3)
 print("lift asked twice:", C1("return tostring(game.Players.LocalPlayer:GetAttribute('DevLiftSeen'))"))
-print("lift, 2 s in:", S1(CLAY), "| picture up:", C1("return tostring(game.Players.LocalPlayer.PlayerGui:FindFirstChild('GlassLift',true).Visible)"), "| hearth:", home("home"))
+print("lift, 2 s in:", two, "|", C1("local p=game.Players.LocalPlayer return tostring(p:GetAttribute('DevLiftPic'))..' | '..tostring(p:GetAttribute('DevLiftProbe2'))"))
 time.sleep(13)
 print("lift, 16 s in:", S1(CLAY), "| picture up:", C1("return tostring(game.Players.LocalPlayer.PlayerGui:FindFirstChild('GlassLift',true).Visible)..' hud '..tostring(game.Players.LocalPlayer.PlayerGui.PixelHUD.Enabled)"))
 # choose your camp: back in town (by the server), Q opens the panel, the pick rides to Camp 2

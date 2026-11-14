@@ -34,7 +34,8 @@ def run(boss, num, ang, tests):
     for label, kind, r, step, name in tests:
         at(boss, r, ang); time.sleep(0.6)
         if kind == "sweep" and step:  # the lane aims at where you stand when it starts: start it, then step aside
-            clear(); S1(P + "p:SetAttribute('DevBossAtk','sweep%s') return 1" % sfx); time.sleep(0.4); side(boss, step); time.sleep(3.4)
+            clear()  # start it, wait 0.4 s and step aside in ONE call: with a slow Studio two calls took longer than the 1.5 s warning
+            S1(P + "local w=cv:FindFirstChild('%s',true) local o=w.PrimaryPart.Position p:SetAttribute('DevBossAtk','sweep%s') task.wait(0.4) local d=((h.Position-o)*Vector3.new(1,0,1)).Unit h.CFrame=h.CFrame+d:Cross(Vector3.yAxis)*%s return 1" % (boss, sfx, step)); time.sleep(3.6)
             out = log()
         else:
             out = attack(kind + sfx, 4.4 if kind == "rings" else 3.6, name)

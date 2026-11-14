@@ -290,12 +290,23 @@ function M.play(opt)
 		t.Parent = parent
 		return t
 	end
-	local bar = frame({ Size = UDim2.fromScale(0.36, 0.035), Position = UDim2.fromScale(0.5, 0.06), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, ZIndex = 3 })
+	-- directive v9 and Gemini (2026-11-13): the bar was a flat white strip. Now a smoked glass tube with a lit rim, a gold jelly
+	-- fill and a white shine along the top
+	local bar = frame({ Size = UDim2.fromScale(0.36, 0.044), Position = UDim2.fromScale(0.5, 0.06), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(36, 17, 56), BackgroundTransparency = 0.12, ZIndex = 3 })
 	round(bar)
-	stroke(bar, INK, 3)
-	local fill = frame({ Parent = bar, Size = UDim2.fromScale(0, 1), BackgroundColor3 = BUTTER, ZIndex = 4 })
+	stroke(bar, Color3.fromRGB(224, 176, 255), 2)
+	local fill = frame({ Parent = bar, Size = UDim2.fromScale(0, 1), BackgroundColor3 = WHITE, ZIndex = 4 })
 	round(fill)
-	local barText = label(bar, "ESCAPE", UDim2.fromScale(0.5, 0.8), UDim2.fromScale(0.5, 0.5), INK, 5)
+	local fg = Instance.new("UIGradient")
+	fg.Rotation, fg.Color = 90, ColorSequence.new(Color3.fromRGB(255, 226, 120), Color3.fromRGB(255, 150, 40))
+	fg.Parent = fill
+	local shine = frame({ Parent = bar, Size = UDim2.fromScale(0.96, 0.34), Position = UDim2.fromScale(0.5, 0.1), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = WHITE, ZIndex = 5 })
+	round(shine)
+	local sg = Instance.new("UIGradient")
+	sg.Rotation, sg.Transparency = 90, NumberSequence.new(0.5, 1)
+	sg.Parent = shine
+	local barText = label(bar, "ESCAPE", UDim2.fromScale(0.5, 0.74), UDim2.fromScale(0.5, 0.5), WHITE, 6)
+	stroke(barText, Color3.fromRGB(60, 24, 90), 2)
 	local hud = EscapeHUD.start({ gui = gui, calm = calm, keys = UIS.KeyboardEnabled }) -- the stopwatch chip, the gap meter, the warning chevrons
 	local pips = {}
 	for i = 1, 3 do
@@ -303,7 +314,9 @@ function M.play(opt)
 		local a = Instance.new("UIAspectRatioConstraint")
 		a.Parent = p
 		round(p)
-		stroke(p, INK, 2)
+		stroke(p, Color3.fromRGB(255, 226, 120), 2) -- a lit gold rim: the dark outline vanished against the tunnel
+		local glint = frame({ Parent = p, Size = UDim2.fromScale(0.5, 0.3), Position = UDim2.fromScale(0.5, 0.14), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = WHITE, BackgroundTransparency = 0.45, ZIndex = 4 })
+		round(glint)
 		pips[i] = p
 	end
 	local pipWord = label(gui, "BOOST", UDim2.fromScale(0.05, 0.026), UDim2.fromScale(0.5 - 0.085, 0.115), WHITE, 3) -- directive v8: the three circles had no name
