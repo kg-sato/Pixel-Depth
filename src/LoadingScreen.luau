@@ -219,6 +219,77 @@ function M.start(E)
 	end
 	local shownAt = {}
 
+	-- Mining dressing (the owner, 2026-11-14: "add more mining themes to the loading screen ... only icons that were designed and
+	-- are final"). Nothing is drawn for this screen: it uses the game's own jelly icons (Config.UI_GLASS.icon, art/icons_jelly).
+	--   * six treasures pop in round the word once it has landed, each on its own spring, and float
+	--   * a jelly pickaxe works at the head of the progress line: every strike throws a star glint and knocks a gem or a coin
+	--     out of the line, which arcs away and fades
+	-- Config.LOADING.mine = false turns it off.
+	local mineStep = function(_dt, _real, _shown) end
+	local G = E.C.UI_GLASS
+	if cfg.mine ~= false and G and G.icon and G.hud then
+		local I = G.icon
+		task.spawn(function() pcall(function() game:GetService("ContentProvider"):PreloadAsync({ I.gem, I.coin, I.chest, I.egg, I.surface, I.pick, G.hud.torch }) end) end)
+		local YY = Enum.SizeConstraint.RelativeYY
+		local floats = {}
+		for i, d in { { I.gem, 0.2, 0.2, 0.18, -10 }, { I.chest, 0.2, 0.8, 0.18, 10 }, { G.hud.torch, 0.16, 0.06, 0.6, 8 }, { I.egg, 0.16, 0.94, 0.6, -8 }, { I.coin, 0.13, 0.15, 0.74, -6 }, { I.surface, 0.13, 0.85, 0.74, 6 } } do -- three mirrored pairs on one oval round the word
+			local holder = new("Frame", all, { Name = "Treasure", Size = UDim2.fromScale(d[2], d[2]), SizeConstraint = YY, Position = UDim2.fromScale(d[3], d[4]), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 3 })
+			new("ImageLabel", holder, { Image = d[1], ImageColor3 = MAGENTA, ImageTransparency = 0.8, BackgroundTransparency = 1, Size = UDim2.fromScale(1.3, 1.3), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 3 }) -- a soft glow of its own shape
+			new("ImageLabel", holder, { Image = d[1], BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 4 })
+			local f = { holder = holder, sc = new("UIScale", holder, { Scale = 0 }), x = d[3], y = d[4], rot = d[5], at = slamAt + 0.2 + i * 0.11, sp = spring(0, 3.4, 0.32) }
+			floats[i] = f
+		end
+		local tip = new("Frame", all, { Name = "Vein", Size = UDim2.fromScale(0.07, 0.07), SizeConstraint = YY, AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 8 })
+		local pick = new("ImageLabel", all, { Name = "Pick", Image = I.pick, BackgroundTransparency = 1, Size = UDim2.fromScale(0.2, 0.2), SizeConstraint = YY, AnchorPoint = MID, ZIndex = 8 })
+		local chips, phase, hits, flash = {}, 0, 0, 0
+		mineStep = function(dt, real, shown)
+			for i, f in floats do
+				if clock >= f.at then f.sp.goal = 1 end
+				f.sc.Scale = math.max(f.sp.step(dt), 0)
+				f.holder.Position = UDim2.fromScale(f.x, f.y + math.sin(real * 1.1 + i * 1.7) * 0.012)
+				f.holder.Rotation = f.rot + math.sin(real * 0.8 + i) * 4
+			end
+			local h = gui.AbsoluteSize.Y
+			local tx = 0.3 + 0.4 * shown -- the head of the progress line
+			tip.Position = UDim2.fromScale(tx, 0.84)
+			local before = phase
+			phase = (phase + dt / 0.62) % 1
+			local rot -- lift slowly, come down fast, rest a moment: a swing, not a wobble
+			if phase < 0.55 then rot = 12 - 50 * (1 - (1 - phase / 0.55) ^ 2)
+			elseif phase < 0.7 then rot = -38 + 66 * ((phase - 0.55) / 0.15) ^ 2
+			else rot = 28 - 16 * ((phase - 0.7) / 0.3) end
+			pick.Rotation = rot
+			pick.Position = UDim2.new(tx, -h * 0.07, 0.84, -h * 0.092)
+			if before < 0.7 and phase >= 0.7 then -- the strike lands
+				hits += 1
+				flash = 1
+				sparkle(tip, 0)
+				for k = 1, 3 do -- a spray of three: gems and coins by turns, fanned out
+					local size = 0.06 + math.random() * 0.035
+					local c = new("ImageLabel", all, { Name = "Chip", Image = (hits + k) % 2 == 0 and I.coin or I.gem, BackgroundTransparency = 1, Size = UDim2.fromScale(size, size), SizeConstraint = YY, AnchorPoint = MID, ZIndex = 7 })
+					chips[#chips + 1] = { f = c, x = 0, y = -h * 0.035, vx = (k - 2 + (math.random() - 0.5) * 0.6) * h * 0.2, vy = -h * (0.4 + math.random() * 0.2), t = 0, spin = (math.random() - 0.5) * 500, tx = tx }
+				end
+				for k = 1, 2 do sparkle(tip, k) end
+			end
+			flash *= math.exp(-dt * 9)
+			glow.BackgroundTransparency = 0.8 - 0.4 * flash
+			for i = #chips, 1, -1 do
+				local c = chips[i]
+				c.t += dt
+				c.vy += h * 1.1 * dt -- they rise in an arc and are gone before they fall back through the line
+				c.x += c.vx * dt
+				c.y += c.vy * dt
+				c.f.Position = UDim2.new(c.tx, c.x, 0.84, c.y)
+				c.f.Rotation += c.spin * dt
+				c.f.ImageTransparency = math.clamp((c.t - 0.35) / 0.3, 0, 1)
+				if c.t > 0.65 then
+					c.f:Destroy()
+					table.remove(chips, i)
+				end
+			end
+		end
+	end
+
 	local t0, shown, done = os.clock(), 0, false
 	local conn
 	conn = RunService.RenderStepped:Connect(function(dt)
@@ -305,6 +376,7 @@ function M.start(E)
 		shown += (goal - shown) * math.min(1, dt * 8)
 		fill.Size = UDim2.fromScale(shown, 1)
 		pct.Text = math.floor(shown * 100 + 0.5) .. "%"
+		mineStep(dt, now, shown)
 		if not done and shown > 0.985 and now >= cfg.min then
 			done = true
 			conn:Disconnect()

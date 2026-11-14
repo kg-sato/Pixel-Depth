@@ -257,22 +257,50 @@ function M.init(c)
 		end
 		-- a voxel kiln: plinth, body with a pale band, a stepped hood and a chimney; an iron arch with grate bars round the glowing
 		-- mouth; a crate of geodes on one side and the cut crystals on the other. No two faces share a plane (z-fight scan).
-		local stone, stoneD, stoneL, iron = Color3.fromRGB(150, 138, 176), Color3.fromRGB(112, 100, 140), Color3.fromRGB(190, 180, 212), Color3.fromRGB(52, 44, 72)
-		local SL = Enum.Material.Slate
+		-- the town's own pixel stone brick (HubBuilder "stonebrick", the Forge's walls): Roblox slate was a noisy photo texture
+		-- beside the voxel town (Gemini, 2026-11-14)
+		local stone, stoneD, stoneL, iron = Color3.fromRGB(137, 129, 174), Color3.fromRGB(110, 102, 148), Color3.fromRGB(172, 164, 206), Color3.fromRGB(52, 44, 72)
+		local SL = Enum.Material.SmoothPlastic
+		local plain = part
+		local function part(name, size, cf, color, mat)
+			local p = plain(name, size, cf, color, mat)
+			if mat == SL then
+				for _, face in { Enum.NormalId.Top, Enum.NormalId.Front, Enum.NormalId.Back, Enum.NormalId.Left, Enum.NormalId.Right } do
+					local t = Instance.new("Texture")
+					t.Texture, t.Face, t.StudsPerTileU, t.StudsPerTileV, t.Color3 = "rbxassetid://98964967285250", face, 4, 4, Color3.fromRGB(200, 196, 230)
+					t.Parent = p
+				end
+			end
+			return p
+		end
 		part("RefineryPlinth", Vector3.new(5.4, 0.5, 5), fat * CFrame.new(0, 0.25, 0), stoneD, SL)
 		part("RefineryBase", Vector3.new(4.4, 2.9, 4), fat * CFrame.new(0, 1.95, 0), stone, SL)
-		part("RefineryBand", Vector3.new(4.6, 0.35, 4.2), fat * CFrame.new(0, 3.3, 0), stoneL, SL)
+		local copper = Color3.fromRGB(214, 128, 72)
+		part("RefineryBand", Vector3.new(4.6, 0.35, 4.2), fat * CFrame.new(0, 3.3, 0), copper, Enum.Material.Metal)
+		part("RefineryBandLow", Vector3.new(4.56, 0.22, 4.16), fat * CFrame.new(0, 0.86, 0.02), copper, Enum.Material.Metal)
 		part("RefineryTop", Vector3.new(3.8, 0.7, 3.4), fat * CFrame.new(0, 3.825, 0), stoneD, SL)
 		part("RefineryTop2", Vector3.new(3, 0.7, 2.6), fat * CFrame.new(0, 4.525, 0), stone, SL)
 		part("RefineryChimney", Vector3.new(1.4, 2.6, 1.4), fat * CFrame.new(0.5, 6.175, 0.3), stoneD, SL)
-		part("RefineryChimneyRim", Vector3.new(1.8, 0.35, 1.8), fat * CFrame.new(0.5, 7.65, 0.3), stoneL, SL)
-		local glow = part("RefineryChimneyGlow", Vector3.new(0.9, 0.12, 0.9), fat * CFrame.new(0.5, 7.885, 0.3), Color3.fromRGB(255, 190, 90), Enum.Material.Neon)
+		part("RefineryChimneyRim", Vector3.new(1.8, 0.35, 1.8), fat * CFrame.new(0.5, 7.65, 0.3), copper, Enum.Material.Metal)
+		part("RefineryChimneyTip", Vector3.new(1.1, 0.7, 1.1), fat * CFrame.new(0.5, 8.175, 0.3), stoneD, SL) -- a narrower top: its own outline against the forge's chimney
+		local glow = part("RefineryChimneyGlow", Vector3.new(0.7, 0.12, 0.7), fat * CFrame.new(0.5, 8.585, 0.3), Color3.fromRGB(255, 190, 90), Enum.Material.Neon)
 		part("RefineryShelf", Vector3.new(3.4, 0.2, 0.9), fat * CFrame.new(0, 0.6, -2.45), stoneL, SL)
-		for _, x in { -1.3, 1.3 } do part("RefineryJamb", Vector3.new(0.4, 1.9, 0.35), fat * CFrame.new(x, 1.65, -2.1), iron, Enum.Material.Metal) end
-		part("RefineryLintel", Vector3.new(3, 0.4, 0.35), fat * CFrame.new(0, 2.8, -2.1), iron, Enum.Material.Metal)
-		for _, x in { -0.55, 0, 0.55 } do part("RefineryBar", Vector3.new(0.12, 1.9, 0.12), fat * CFrame.new(x, 1.65, -2.19), iron, Enum.Material.Metal) end
-		local mouth = part("RefineryMouth", Vector3.new(2.2, 1.9, 0.2), fat * CFrame.new(0, 1.65, -2), Color3.fromRGB(255, 140, 60), Enum.Material.Neon)
-		for _, x in { -2.1, 2.1 } do part("RefinerySignPost", Vector3.new(0.25, 2.9, 0.25), fat * CFrame.new(x, 4.925, -1.7), wood) end
+		-- the firebox (Gemini, 2026-11-14: "a flat black box with four yellow stripes"): a deep iron porch, so the fire sits back in
+		-- shadow; a dark red back wall, ember blocks of three heats in front of it, a flame, and two thin bars only
+		for _, x in { -1.3, 1.3 } do part("RefineryJamb", Vector3.new(0.4, 1.9, 0.8), fat * CFrame.new(x, 1.65, -2.33), iron, Enum.Material.Metal) end
+		part("RefineryLintel", Vector3.new(3, 0.4, 0.8), fat * CFrame.new(0, 2.8, -2.33), iron, Enum.Material.Metal)
+		for _, x in { -0.42, 0.42 } do part("RefineryBar", Vector3.new(0.2, 1.9, 0.2), fat * CFrame.new(x, 1.65, -2.58), iron, Enum.Material.Metal) end
+		local mouth = part("RefineryMouth", Vector3.new(2.2, 1.9, 0.2), fat * CFrame.new(0, 1.65, -2), Color3.fromRGB(120, 34, 28), Enum.Material.Slate)
+		for _, e in { { -0.7, 0.5, 0.6, Color3.fromRGB(255, 96, 40), -2.2 }, { -0.1, 0.8, 0.7, Color3.fromRGB(255, 150, 50), -2.26 }, { 0.55, 0.42, 0.62, Color3.fromRGB(255, 208, 90), -2.32 }, { 0.2, 0.3, 0.4, Color3.fromRGB(255, 120, 44), -2.38 } } do
+			part("RefineryEmber", Vector3.new(e[3], e[2], 0.3), fat * CFrame.new(e[1], 0.7 + e[2] / 2, e[5]), e[4], Enum.Material.Neon) -- each at its own depth: no shared planes
+		end
+		local flame = Instance.new("ParticleEmitter")
+		flame.Texture, flame.Rate, flame.Lifetime, flame.Speed, flame.SpreadAngle = "rbxasset://textures/particles/fire_main.dds", 14, NumberRange.new(0.5, 0.9), NumberRange.new(1.2, 2), Vector2.new(12, 12)
+		flame.Size, flame.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.9), NumberSequenceKeypoint.new(1, 0.2) }), NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(1, 1) })
+		flame.Color, flame.LightEmission, flame.EmissionDirection, flame.LockedToPart = ColorSequence.new(Color3.fromRGB(255, 200, 90), Color3.fromRGB(255, 90, 40)), 0.8, Enum.NormalId.Top, true
+		local fire = part("RefineryFire", Vector3.new(1.6, 0.2, 0.2), fat * CFrame.new(0, 0.85, -2.45), Color3.fromRGB(255, 150, 50), Enum.Material.Neon)
+		fire.Transparency, fire.CanCollide = 1, false
+		flame.Parent = fire
 		-- the geodes that wait (a crate) and the crystals that came out (a stone block)
 		part("RefineryCrate", Vector3.new(1.4, 1, 1.4), fat * CFrame.new(3.5, 0.5, -0.8) * CFrame.Angles(0, math.rad(12), 0), wood)
 		for _, g in { { 3.4, 1.38, -0.9, 0.8, 20, Color3.fromRGB(64, 224, 208) }, { 3.75, 1.28, -0.35, 0.56, 48, Color3.fromRGB(255, 130, 200) } } do
@@ -295,9 +323,11 @@ function M.init(c)
 		sparks.Size, sparks.Color, sparks.LightEmission, sparks.EmissionDirection, sparks.Acceleration = NumberSequence.new(0.22, 0), ColorSequence.new(Color3.fromRGB(255, 190, 90)), 1, Enum.NormalId.Front, Vector3.new(0, 3, 0)
 		sparks.Parent = mouth
 		local ml = Instance.new("PointLight")
-		ml.Color, ml.Range, ml.Brightness, ml.Shadows = Color3.fromRGB(255, 150, 70), 14, 1, false
+		ml.Color, ml.Range, ml.Brightness, ml.Shadows = Color3.fromRGB(255, 150, 70), 18, 2.4, false
 		ml.Parent = mouth
-		local sign = part("RefinerySign", Vector3.new(4.6, 1.3, 0.2), fat * CFrame.new(0, 5.4, -1.7), wood)
+		-- the name on an iron plate on the hood, over the firebox (a wooden board on posts cut across the chimney)
+		local sign = part("RefinerySign", Vector3.new(3.5, 0.95, 0.2), fat * CFrame.new(0, 4.02, -1.78) * CFrame.Angles(math.rad(-8), 0, 0), iron, Enum.Material.Metal)
+		part("RefinerySignFrame", Vector3.new(3.86, 1.3, 0.16), fat * CFrame.new(0, 4.02, -1.78) * CFrame.Angles(math.rad(-8), 0, 0) * CFrame.new(0, 0, 0.07), copper, Enum.Material.Metal) -- a copper frame round the plate
 		local rg = Instance.new("SurfaceGui")
 		rg.Name, rg.Face, rg.SizingMode, rg.PixelsPerStud, rg.LightInfluence = "RefineryGui", Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 50, 0
 		local rt = Instance.new("TextLabel")
