@@ -1161,6 +1161,8 @@ function M.play(opt)
 			speedLines(now, calm and 0 or math.clamp((speed - 30) / 18, 0, 1)) -- streaks at the screen edges as the cart picks up speed
 			if dist >= E.dist then -- out of the tunnel: tell the server, wait for it to move us to town, then burst out of the shaft
 				phase = "wait"
+				if K.steamStep then K.steamStep(now) end -- the run is over: the crew's bars and buttons leave the screen
+				if K.crewStep then K.crewStep(now) end
 				resultAt, runTime = t, t
 				Lighting.Ambient, Lighting.OutdoorAmbient = amb.a, amb.o -- the cave look back before the server switches us to town
 				for _, e in sparks do e.Rate = 0 end
