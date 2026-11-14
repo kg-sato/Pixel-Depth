@@ -251,7 +251,7 @@ function C.oreName(key) -- "1.2" -> "Ashcoal"
 	local o = layer and layer[4][tonumber(i)]
 	return o and o[1] or key
 end
-C.SAVE_TEMPLATE = { opts = {}, gift = {}, refine = 0, crewDay = 0, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
+C.SAVE_TEMPLATE = { opts = {}, gift = {}, refine = 0, crewDay = 0, rare = {}, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
 
 -- Layer hazards. Layer 2, Titan's Stir: after you dig, the block above may shake loose and drop one row.
 -- Standing under it stuns you briefly and spills part of the bag (no damage, kid friendly).
@@ -355,6 +355,10 @@ C.TORCH = { time = 300, range = 32, minRange = 16 } -- minRange 8 to 16 on 2026-
 -- the minecart escape on the ride up (MinecartEscape): track length (studs), base speed (studs/s), coin bonus range;
 -- the server pays only when the run took at least dist / (speed * 1.6) seconds (every boost stacked the whole way)
 C.ESCAPE = { dist = 1050, speed = 30, top = 1.45, bonus = { 10, 40 } } -- top: the speed wave's peak multiplier (playtest 2 runner redesign); the server's time check uses it
+-- Trophy cases at the Trophy House (Shared.Trophies; vault Briefs/Trophy Cases (2026-11-14)): key, the name on the plaque, how
+-- to earn it. The boss keys are the saved tips a boss win already sets (gate1, gate2); a pet key is a Mythic or Secret pet
+-- this player has ever hatched (saved: profile field `rare`, a set of pet names; the owner's yes, 2026-11-14).
+C.TROPHIES = { { "gate1", "ROOT WARDEN", "BEAT THE ROOT WARDEN" }, { "gate2", "KILN GOLEM", "BEAT THE KILN GOLEM" }, { "Ouro", "OURO", "HATCH A MYTHIC PET" }, { "Ninering", "NINERING", "HATCH A SECRET PET" } }
 -- The crew ride (vault Briefs/Group Cart Escape (2026-11-14 plan), step 1): up to `max` players board Camp 1's cart within `wait`
 -- seconds and ride up together; the driver (seat 1) plays the escape, the others watch it from their seats. mult[n]: the bonus
 -- of a crew of n, paid to each rider. seats: x and z of each seat in the cart (studs; the front is -z).

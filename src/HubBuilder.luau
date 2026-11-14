@@ -1085,6 +1085,25 @@ function Hub.build(parent, origin)
 			glow(gem, gem.Color, 10, 0.6)
 			gem:SetAttribute("Bob", 0.2)
 		end
+		-- the trophy cases (Next Systems Plan, phase E; Shared.Trophies fills each one on each player's own screen): four stone
+		-- plinths with a glass case in a row with the gem pedestals, two each side of the door (case, gem, case), a plaque on the front of each
+		for k, x in { -11.2, -6.9, 6.9, 11.2 } do
+			local key = ({ "Ouro", "gate1", "gate2", "Ninering" })[k] -- the bosses next to the door, the pets outside them
+			tvox(g, "TrophyPlinth", Vector3.new(1.5, 1.6, 1.4), at(x, 2.2, 4), "stonebrick", 2)
+			vox(g, "TrophyCap", Vector3.new(1.7, 0.25, 1.6), at(x, 3.125, 4), PAL.cream[3])
+			local glass = vox(g, "TrophyGlass", Vector3.new(1.3, 1.7, 1.2), at(x, 4.1, 4), Color3.fromRGB(190, 225, 255), { Material = Enum.Material.Glass, Transparency = 0.78, CanCollide = false, CastShadow = false })
+			glass:SetAttribute("Trophy", key)
+			vox(g, "TrophyLid", Vector3.new(1.5, 0.2, 1.4), at(x, 5.05, 4), GOLD, { Material = Enum.Material.Metal })
+			local plaque = vox(g, "TrophyPlaque", Vector3.new(1.3, 0.8, 0.12), at(x, 2.3, 4.74), Color3.fromRGB(36, 17, 56), { CanCollide = false })
+			plaque:SetAttribute("Trophy", key)
+			local sg = Instance.new("SurfaceGui")
+			sg.Name, sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence = "Gui", N.Back, Enum.SurfaceGuiSizingMode.PixelsPerStud, 90, 0
+			local line = Instance.new("TextLabel")
+			line.Name, line.Size, line.Position, line.AnchorPoint, line.BackgroundTransparency = "Line", UDim2.fromScale(0.9, 0.84), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), 1
+			line.Text, line.TextScaled, line.Font, line.TextColor3 = "???", true, Enum.Font.FredokaOne, Color3.fromRGB(200, 190, 225)
+			line.Parent = sg
+			sg.Parent = plaque
+		end
 		vox(g, "Rug", Vector3.new(3.4, 0.1, 2.2), at(0, 1.45, 1.6), PAL.pink[2])
 		sign(g, "TROPHIES", CFrame.new(at(0, peak + 1.4, -6.5).Position), 7, 1.6, GOLD)
 		-- the Lantern Ring (Lore and Gameplay Plan A8): a timber frame by the hall where the lost Lamplighter lanterns hang. All three

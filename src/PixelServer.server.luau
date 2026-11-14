@@ -509,6 +509,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.opts = s.opts or {}
 	d.gift = s.gift -- the playtime gift ladder of today (ServerScriptService.Retention)
 	d.refine = s.refine or 0 -- when the geode in the refinery is done (0 = empty)
+	d.rare = s.rare or {} -- Mythic and Secret pets ever hatched (the trophy cases)
 	d.crewDay = s.crewDay or 0 -- the day the first-crew-ride gem was last paid (C.CREW.gem)
 	d.shards, d.fossils, d.geodes = s.shards or 0, s.fossils or {}, s.geodes or 0
 	if C.SOUL_TREE.on then d.soul = s.soul end -- flag off: the field is never written
@@ -520,8 +521,17 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.pets = names
 end
 
+local function trophies(s) -- which trophy cases this player has filled (Shared.Trophies reads the attribute)
+	local t = {}
+	for _, d in C.TROPHIES do
+		if s.tips[d[1]] or (s.rare and s.rare[d[1]]) then t[#t + 1] = d[1] end
+	end
+	local str = table.concat(t, ",")
+	if s.player:GetAttribute("Trophies") ~= str then s.player:SetAttribute("Trophies", str) end
+end
 local function sendState(s)
 	save(s)
+	trophies(s)
 	local pets = {}
 	for i, p in s.pets do pets[i] = p.name end
 	StateR:FireClient(s.player, {
@@ -557,7 +567,12 @@ end
 
 local function herald(s, name) -- everyone in the server is told of a Mythic or Secret hatch (Shared.Marquee)
 	local rarity = C.PETS[name] and C.PETS[name][1]
-	if rarity == "Mythic" or rarity == "Secret" then FxR:FireAllClients("marquee", s.player.DisplayName, name, rarity) end
+	if rarity == "Mythic" or rarity == "Secret" then
+		s.rare = s.rare or {}
+		s.rare[name] = true -- kept for good: its trophy case in town (C.TROPHIES)
+		trophies(s)
+		FxR:FireAllClients("marquee", s.player.DisplayName, name, rarity)
+	end
 end
 local function hatch(s)
 	local name = C.FIRST_PET
@@ -2131,6 +2146,11 @@ local function onJoin(plr)
 	s.opts = cleanOpts(d.opts)
 	s.gift = Retention.cleanGift(d.gift)
 	s.refine = Retention.cleanRefine(d.refine)
+	s.rare = {}
+	for name, v in type(d.rare) == "table" and d.rare or {} do
+		local pet = type(name) == "string" and C.PETS[name]
+		if v == true and pet and (pet[1] == "Mythic" or pet[1] == "Secret") then s.rare[name] = true end
+	end
 	s.crewDay = (type(d.crewDay) == "number" and d.crewDay == d.crewDay and d.crewDay > 0) and math.floor(d.crewDay) or 0
 	if IS_STUDIO and workspace:GetAttribute("DevOpts") then -- Studio test hook: saved settings as JSON (Studio itself saves nothing), to test the load path
 		local ok, t = pcall(function() return game:GetService("HttpService"):JSONDecode(workspace:GetAttribute("DevOpts")) end)
@@ -2275,6 +2295,12 @@ while true do
 					s.quests.story, s.quests.sp, s.quests.np = devQuest, 0, 0
 					QuestR:FireClient(plr, s.quests)
 				end
+			end
+			local devTrophy = plr:GetAttribute("DevTrophy") -- "gate1" or "gate2": as if that boss were beaten (it also opens its gate)
+			if devTrophy == "gate1" or devTrophy == "gate2" then
+				plr:SetAttribute("DevTrophy", nil)
+				s.tips[devTrophy] = true
+				sendState(s)
 			end
 			local devMarquee = plr:GetAttribute("DevMarquee") -- a pet name: tell the server of it as if it had just hatched (Shared.Marquee)
 			if devMarquee then
