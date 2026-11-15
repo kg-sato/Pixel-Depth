@@ -290,6 +290,11 @@ C.UI_GLASS = {
 -- Dark smoked glass (the owner, 2026-11-13: "Try dark smoked glass kit"): the kit's surfaces (panel, card, pills, slot, tabs, key
 -- caps) as dark glass (art/ui_smoked, pd_ui_smoked.py); PixelClient then turns dark text pale. false = the milky faces again.
 C.UI_SMOKED = true
+-- Jelly glass panels (directive v10, Gemini: "flat opaque plum slabs"): every big panel lets the blurred world show through
+-- (`alpha` = how clear the panel image is), with a white gloss band on top (`gloss` = its clearness at the top edge) and a
+-- violet glow at the bottom. nil = the solid smoked panels again.
+C.UI_PANEL_GLASS = { alpha = 0.13, gloss = 0.7, card = 0.3, sheet = 0.4, -- card: clearness of cards inside a panel; sheet: of the forge and Soul Tree blueprint sheet
+	 glow = Color3.fromRGB(190, 40, 220), glowAlpha = 0.55, edge = Color3.fromRGB(0, 240, 255) } -- edge: a thin cyan line of light along the bottom
 -- Pet faces (plan phase A, 2026-11-13): eight jelly expressions shown on the front of a pet's head (art/icons_jelly/face_*.png, Shared.PetCompanion)
 C.PET_FACE = { calm = "rbxassetid://80743924975214", curious = "rbxassetid://79722727461569", greedy = "rbxassetid://106422452389394", happy = "rbxassetid://94477177000895", hurt = "rbxassetid://113243353108898", proud = "rbxassetid://112309918157706", scared = "rbxassetid://136327735390863", sleepy = "rbxassetid://96201833706333" }
 -- Playtime gifts (ServerScriptService.Retention; directive v9): seconds played today, what, how many. The ladder starts again each day (UTC).

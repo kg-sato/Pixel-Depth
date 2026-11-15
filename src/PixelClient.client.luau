@@ -139,6 +139,16 @@ local function skin(o, kind)
 		s.Destroying:Connect(function() skinned[s] = nil end)
 	end
 	o:SetAttribute("Kind", kind)
+	local pg = kind == "panel" and C.UI_PANEL_GLASS -- jelly glass panels (Gemini v10: "flat opaque slabs"): the world shows through, a gloss on top, a violet glow below
+	if pg and not o:FindFirstChild("Gloss") then
+		s.ImageTransparency = pg.alpha
+		for _, d in { { "Gloss", 0.035, 0.3, Color3.new(1, 1, 1), pg.gloss, 1 }, { "Glow", 0.69, 0.28, pg.glow, 1, pg.glowAlpha }, { "Edge", 0.958, 0.01, pg.edge, 0.25, 0.25 } } do
+			local f = new("Frame", o, { Name = d[1], Size = UDim2.fromScale(0.95, d[3]), Position = UDim2.fromScale(0.5, d[2]), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = d[4], BorderSizePixel = 0, ZIndex = 0 })
+			new("UICorner", f, { CornerRadius = UDim.new(0.14, 0) })
+			new("UIGradient", f, { Rotation = 90, Transparency = NumberSequence.new(d[5], d[6]) })
+		end
+	end
+	if kind == "card" and C.UI_PANEL_GLASS then s.ImageTransparency = C.UI_PANEL_GLASS.card end -- cards inside a glass panel are frosted insets, not slabs
 	local lab = o:FindFirstChild("Label")
 	if lab and DEEP[kind] then lab.TextStrokeColor3 = DEEP[kind] end
 	return s
@@ -202,7 +212,7 @@ local function panel(parent, size, pos, anchor, kind)
 end
 -- Blueprint paper over a panel's page: the forge and the Soul Tree are plans pinned in the notebook (Unrailed; art/ui_notebook/grid.png)
 local function blueprint(o)
-	local g = new("ImageLabel", o, { Name = "Blueprint", Image = GLASS and GLASS.grid or "rbxassetid://132351994400997", ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.fromOffset(48, 48), BackgroundColor3 = GLASS and Color3.fromRGB(26, 18, 52) or Color3.fromRGB(43, 99, 198), BackgroundTransparency = GLASS and 0.08 or 0, BorderSizePixel = 0, Size = UDim2.fromScale(0.955, 0.9), Position = UDim2.fromScale(0.5, 0.49), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 1 })
+	local g = new("ImageLabel", o, { Name = "Blueprint", Image = GLASS and GLASS.grid or "rbxassetid://132351994400997", ScaleType = Enum.ScaleType.Tile, TileSize = UDim2.fromOffset(48, 48), BackgroundColor3 = GLASS and Color3.fromRGB(26, 18, 52) or Color3.fromRGB(43, 99, 198), BackgroundTransparency = GLASS and (C.UI_PANEL_GLASS and C.UI_PANEL_GLASS.sheet or 0.08) or 0, BorderSizePixel = 0, Size = UDim2.fromScale(0.955, 0.9), Position = UDim2.fromScale(0.5, 0.49), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 1 })
 	new("UICorner", g, { CornerRadius = UDim.new(0.02, 0) })
 	new("UIStroke", g, { Color = GLASS and Color3.fromRGB(150, 232, 255) or Color3.fromRGB(27, 63, 134), Thickness = GLASS and 1.5 or 3 })
 	return g
@@ -450,7 +460,7 @@ local function feedLine(msg, color)
 end
 
 -- A dim scrim behind modal panels so they read over the busy world
-local scrim = new("Frame", gui, { Name = "Scrim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(15, 10, 25), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 3, Visible = false })
+local scrim = new("Frame", gui, { Name = "Scrim", Size = UDim2.new(1, 0, 1, 60), Position = UDim2.fromOffset(0, -60), BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 3, Visible = false })
 
 -- Night Shaft report (spec 5.7)
 local night = panel(gui, S(460, 230), S(640, 296), Vector2.new(0.5, 0.5), "panel")
@@ -2849,7 +2859,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and not cave.mgBusy and not (card and card.Visible) and (not inCave or ((forgeUI.questHint ~= nil or (forgeUI.caveUrgent ~= nil and forgeUI.caveUrgent() ~= nil)))) -- prompt bubbles step below the card (see the prompt placement loop)
 	if modal ~= scrim.Visible then
 		scrim.Visible = true
-		tween(scrim, 0.25, { BackgroundTransparency = (modal and not forgeUI.arOpen and not (forgeUI.noScrim and forgeUI.noScrim())) and 0.45 or 1 }) -- no dim behind the look-around settings: its panels stand in the world
+		tween(scrim, 0.25, { BackgroundTransparency = (modal and not forgeUI.arOpen and not (forgeUI.noScrim and forgeUI.noScrim())) and 0.34 or 1 }) -- no dim behind the look-around settings: its panels stand in the world
 		forgeUI.blur = forgeUI.blur or new("BlurEffect", game:GetService("Lighting"), { Name = "ModalBlur", Size = 0 }) -- audit 03: the world falls out of focus
 		tween(forgeUI.blur, 0.25, { Size = (modal and not forge.Visible) and 16 or 0 }) -- the forge brings its own blur
 		if not modal then task.delay(0.2, function() if scrim.BackgroundTransparency > 0.95 then scrim.Visible = false end end) end

@@ -19,12 +19,15 @@ function M.start(E)
 	title.Font, title.ZIndex = E.HEAD or title.Font, 6
 	local status = E.text(win, "", UDim2.fromScale(0.9, 0.055), UDim2.fromScale(0.5, 0.17), MID, GOLD, 700, false)
 	status.Name, status.ZIndex = "Status", 6
+	local plate = E.new("Frame", win, { Name = "StatusPlate", Size = UDim2.fromScale(0.66, 0.075), Position = UDim2.fromScale(0.5, 0.17), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.15, BorderSizePixel = 0, ZIndex = 5 }) -- a dark pill: the panel is glass now
+	E.new("UICorner", plate, { CornerRadius = UDim.new(0.5, 0) })
+	E.new("UIStroke", plate, { Color = Color3.fromRGB(155, 31, 232), Thickness = 1, Transparency = 0.3 })
 	local close = E.closeButton(win, "CodexClose")
 	local grid = E.new("Frame", win, { Name = "Grid", Size = UDim2.fromScale(0.92, 0.72), Position = UDim2.fromScale(0.5, 0.6), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 5 })
 	E.new("UIGridLayout", grid, { CellSize = UDim2.fromScale(0.1, 0.2), CellPadding = UDim2.fromScale(0.011, 0.03), SortOrder = Enum.SortOrder.LayoutOrder })
 	local cells = {} -- { frame, mark, name, kind ("ore" or "pet"), key, color, label }
 	local function cell(kind, key, color, label, order)
-		local f = E.new("Frame", grid, { Name = key, LayoutOrder = order, BackgroundColor3 = DARK, BorderSizePixel = 0, ZIndex = 5 })
+		local f = E.new("Frame", grid, { Name = key, LayoutOrder = order, BackgroundColor3 = DARK, BackgroundTransparency = 0.4, BorderSizePixel = 0, ZIndex = 5 })
 		E.new("UICorner", f, { CornerRadius = UDim.new(0.18, 0) })
 		E.new("UIStroke", f, { Color = Color3.fromRGB(155, 31, 232), Thickness = 2, Transparency = 0.3 })
 		local mark = E.text(f, "?", UDim2.fromScale(0.6, 0.6), UDim2.fromScale(0.5, 0.42), MID, Color3.fromRGB(150, 130, 190), 700, false)

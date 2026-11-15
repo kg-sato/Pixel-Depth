@@ -368,7 +368,7 @@ function M.start(E)
 		if flip then animate = true end
 		if not getState() then return end
 		coinT.Text, gemT.Text = commas(getState().gold), commas(getState().gems or 0)
-		for key, b in tabBtn do setKind(b, key == tab and "butter" or (key == "charm" and "off" or "lilac")) end
+		for key, b in tabBtn do setKind(b, key == tab and "pink" or (key == "charm" and "off" or "lilac")) end
 		local list = tab == "pick" and C.PICKS or C.PACKS
 		local cur = getState()[tab]
 		local eqI = tab == "pick" and math.clamp(getState().equip or cur, 1, cur) or cur

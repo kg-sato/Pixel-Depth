@@ -82,6 +82,7 @@ function M.start(E)
 	local sellBtn = button(foot, "SELL", UDim2.fromScale(0.32, 1), UDim2.fromScale(1, 0), Vector2.new(1, 0), "butter", "coin")
 	for _, o in { allBtn, clearBtn, sellBtn } do o.ZIndex = 7 end
 	local hintT = text(inv, "", UDim2.fromScale(0.88, 0.058), UDim2.fromScale(0.5, 0.81), Vector2.new(0.5, 0.5), INK, 700, false) -- larger, full ink: too faint to read (Gemini loop review, 2026-11-10)
+	hintT.TextColor3, hintT.TextStrokeColor3, hintT.TextStrokeTransparency = Color3.fromRGB(245, 238, 255), Color3.fromRGB(22, 8, 30), 0.25 -- glass panels: bright with a dark edge, the world shows behind it
 	hintT.ZIndex = 6
 
 	local function price(key) -- coins per ore, the same formula the server uses (layer value x 3 per layer x the held pickaxe)
