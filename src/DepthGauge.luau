@@ -9,12 +9,12 @@ function M.start(E)
 	if not E.GLASS then return end
 	local JellyText = require(script.Parent:WaitForChild("JellyText"))
 	local new = E.new
-	local pill = new("Frame", E.caveHud, { Name = "DepthGauge", Size = E.S(104, 26), Position = E.S(1182, 118), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(30, 21, 58), BackgroundTransparency = 0.2, BorderSizePixel = 0, ZIndex = 3 })
+	local pill = new("Frame", E.caveHud, { Name = "DepthGauge", Size = E.S(104, 26), Position = E.S(1197, 146), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(30, 21, 58), BackgroundTransparency = 0.2, BorderSizePixel = 0, ZIndex = 8 })
 	E.fit(pill, 104, 26)
 	new("UICorner", pill, { CornerRadius = UDim.new(0.5, 0) })
 	new("UIStroke", pill, { Color = Color3.fromRGB(150, 232, 255), Thickness = 1.5, Transparency = 0.25 })
-	local holder = new("Frame", pill, { Size = UDim2.fromScale(0.84, 0.74), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 4 })
-	local jt = JellyText.new(holder, "0 M", { color = Color3.fromRGB(110, 215, 255), sway = false, z = 4 })
+	local holder = new("Frame", pill, { Size = UDim2.fromScale(0.84, 0.74), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 9 })
+	local jt = JellyText.new(holder, "0 M", { color = Color3.fromRGB(110, 215, 255), sway = false, z = 9 })
 	local shown, last = 0, -1
 	RunService.RenderStepped:Connect(function(dt)
 		local boss = E.gui:FindFirstChild("BossBar", true)

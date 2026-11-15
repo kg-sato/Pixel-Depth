@@ -77,6 +77,9 @@ function M.start(E)
 					set(o, "BackgroundTransparency", 1)
 					ringStroke = ringStroke or new("UIStroke", o, { Color = Color3.new(1, 1, 1), Thickness = 6, Transparency = 0 })
 					ringStroke.Enabled = true
+				elseif k > 0.8 and k < 0.87 and pg:FindFirstChild("BossBar", true) and pg:FindFirstChild("BossBar", true).Visible then -- v10 (Gemini: "the dial vibrates over the boss's glowing heart"): a dark plum plate in a boss fight
+					set(o, "BackgroundColor3", Color3.fromRGB(22, 8, 30))
+					set(o, "BackgroundTransparency", 0.3)
 				elseif k > 0.8 and k < 0.87 then set(o, "BackgroundTransparency", 0.72) -- the face: smoked glass, so the needle and marks stand out while the rock still shows (0.8 let the rock swallow them)
 				elseif k > 0.2 then set(o, "BackgroundTransparency", 1) end
 			end
