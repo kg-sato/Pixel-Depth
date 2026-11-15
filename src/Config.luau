@@ -251,7 +251,7 @@ function C.oreName(key) -- "1.2" -> "Ashcoal"
 	local o = layer and layer[4][tonumber(i)]
 	return o and o[1] or key
 end
-C.SAVE_TEMPLATE = { opts = {}, gift = {}, refine = 0, crewDay = 0, rare = {}, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
+C.SAVE_TEMPLATE = { opts = {}, gift = {}, refine = 0, crewDay = 0, rare = {}, codex = { ore = {}, pet = {} }, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
 
 -- Layer hazards. Layer 2, Titan's Stir: after you dig, the block above may shake loose and drop one row.
 -- Standing under it stuns you briefly and spills part of the bag (no damage, kid friendly).
@@ -303,9 +303,26 @@ C.TETHER = { value = 0.15, reach = 15, torch = 0.25, max = 5, luck = 0.1 }
 -- Friends luck on eggs (the owner, 2026-11-14): each friend in the server makes Epic and better `luck` more likely (5 friends at
 -- most); what those tiers gain, Common loses, so the six still add up to 100. The server rolls from this table and the odds
 -- panel shows this same table for the friends who are here, so the odds a player reads are always the odds they get.
-function C.eggOdds(friends)
+-- The Codex (Shared.CodexUI; directive v10): every ore banked and every pet hatched is kept for good (saved: profile field
+-- `codex` = { ore = set of "layer.ore" keys, pet = set of names }; the directive's ask is taken as the owner's yes). Finding
+-- `at` shares of all of them gives `luck` more Epic-and-better egg luck, added to the friends luck in C.eggOdds.
+C.CODEX = { at = { 0.25, 0.5, 1 }, luck = { 0.05, 0.1, 0.2 } }
+function C.codexTotal()
+	local n = 0
+	for _, layer in C.LAYERS do n += #layer[4] end
+	for _ in C.PETS do n += 1 end
+	return n
+end
+function C.codexLuck(found)
+	local share, luck = (tonumber(found) or 0) / C.codexTotal(), 0
+	for i, a in C.CODEX.at do
+		if share >= a then luck = C.CODEX.luck[i] end
+	end
+	return luck
+end
+function C.eggOdds(friends, extra) -- extra: more luck as a share (the Codex)
 	local n = math.clamp(math.floor(tonumber(friends) or 0), 0, C.TETHER.max)
-	local m, out, gain = 1 + C.TETHER.luck * n, {}, 0
+	local m, out, gain = 1 + C.TETHER.luck * n + math.clamp(tonumber(extra) or 0, 0, 1), {}, 0
 	for i, t in C.RARITIES do
 		local p = i >= 3 and t[2] * m or t[2]
 		gain += p - t[2]

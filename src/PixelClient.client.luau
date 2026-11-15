@@ -511,14 +511,16 @@ local luckText = text(odds, "", UDim2.fromScale(0.86, 0.055), UDim2.fromScale(0.
 luckText.Name = "Luck"
 local function oddsNow() -- the odds the server rolls from, with the friends luck of the friends who are here (Config.eggOdds)
 	local n = plr:GetAttribute("Friends") or 0
-	for i, t in C.eggOdds(n) do
+	local cx = (plr:GetAttribute("CodexLuck") or 0) / 100
+	for i, t in C.eggOdds(n, cx) do
 		local s = string.format(t[2] >= 10 and "%.1f" or "%.2f", t[2]):gsub("0+$", ""):gsub("%.$", "")
 		odds["Pct" .. i].Text = s .. "%"
 	end
 	local per = math.floor(C.TETHER.luck * 100 + 0.5)
-	luckText.Text = n > 0 and ("FRIENDS LUCK ON:  EPIC AND BETTER +" .. per * math.min(n, C.TETHER.max) .. "%") or ("FRIENDS LUCK:  EPIC AND BETTER +" .. per .. "% PER FRIEND HERE")
+	luckText.Text = (n > 0 and ("FRIENDS LUCK ON:  EPIC AND BETTER +" .. per * math.min(n, C.TETHER.max) .. "%") or ("FRIENDS LUCK:  EPIC AND BETTER +" .. per .. "% PER FRIEND HERE")) .. (cx > 0 and ("   CODEX +" .. math.floor(cx * 100 + 0.5) .. "%") or "")
 end
 plr:GetAttributeChangedSignal("Friends"):Connect(oddsNow)
+plr:GetAttributeChangedSignal("CodexLuck"):Connect(oddsNow)
 oddsNow()
 end
 
@@ -1018,7 +1020,7 @@ local function hatchShow(name)
 		if jt then jt.pop(0.05) end
 	end
 	pop(title, 1.6, 0.45)
-	local pct = C.eggOdds(plr:GetAttribute("Friends"))[tier][2]
+	local pct = C.eggOdds(plr:GetAttribute("Friends"), (plr:GetAttribute("CodexLuck") or 0) / 100)[tier][2]
 	local odds = pct >= 5 and "" or ("  -  1 IN " .. commas(math.floor(100 / pct + 0.5)))
 	local sub = text(ov, p[1]:upper() .. "  -  " .. p[2]:upper() .. odds, UDim2.fromScale(0.5, 0.06), UDim2.fromScale(0.5, 0.76), Vector2.new(0.5, 0), rc)
 	sub.ZIndex = 26
@@ -2760,7 +2762,7 @@ end)()
 	end
 	forgeUI.spatialExtra = forgeUI.spatialExtra or {} -- the small panels built in this script stand in the world too (Shared.SpatialPanels); the forge keeps its own staged screen
 	for _, f in { night, odds, mapP, forge } do table.insert(forgeUI.spatialExtra, { frame = f, home = gui, menu = true, on = function() return f.Visible end }) end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "HudCompact", "GeodeCrack", "CrystalChimes" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end

@@ -510,6 +510,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.gift = s.gift -- the playtime gift ladder of today (ServerScriptService.Retention)
 	d.refine = s.refine or 0 -- when the geode in the refinery is done (0 = empty)
 	d.rare = s.rare or {} -- Mythic and Secret pets ever hatched (the trophy cases)
+	d.codex = s.codex -- ores and pets ever found (Shared.CodexUI)
 	d.crewDay = s.crewDay or 0 -- the day the first-crew-ride gem was last paid (C.CREW.gem)
 	d.shards, d.fossils, d.geodes = s.shards or 0, s.fossils or {}, s.geodes or 0
 	if C.SOUL_TREE.on then d.soul = s.soul end -- flag off: the field is never written
@@ -521,7 +522,15 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.pets = names
 end
 
+local function codexFound(s) -- how many ores and pets this player has in the Codex
+	local n = 0
+	for _ in s.codex.ore do n += 1 end
+	for _ in s.codex.pet do n += 1 end
+	return n
+end
 local function trophies(s) -- which trophy cases this player has filled (Shared.Trophies reads the attribute)
+	local luck = math.floor(C.codexLuck(codexFound(s)) * 100 + 0.5) -- and the Codex's egg luck, for the odds panel
+	if s.player:GetAttribute("CodexLuck") ~= luck then s.player:SetAttribute("CodexLuck", luck) end
 	local t = {}
 	for _, d in C.TROPHIES do
 		if s.tips[d[1]] or (s.rare and s.rare[d[1]]) then t[#t + 1] = d[1] end
@@ -536,7 +545,7 @@ local function sendState(s)
 	for i, p in s.pets do pets[i] = p.name end
 	StateR:FireClient(s.player, {
 		gold = s.gold, bag = s.bag, cap = cap(s), pick = s.pick, pack = s.pack, step = s.step, target = target(s),
-		pets = pets, ox = s.ox, oz = s.oz, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs,
+		pets = pets, ox = s.ox, oz = s.oz, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs, codex = s.codex,
 		deepest = s.deepest, goal = s.goal, gems = s.gems, lv = s.lv, equip = s.equip, tips = s.tips,
 		ores = s.ores, bagOres = s.bagOres, wear = s.wear, lanterns = s.lanterns, soul = s.soul, opts = s.opts,
 	})
@@ -553,7 +562,7 @@ end
 
 local HIGH = { Legendary = true, Mythic = true, Secret = true }
 local function rollRarity(s) -- the disclosed odds; at the pity limit only Legendary or better, by their own odds
-	local odds = C.eggOdds(Retention.friendCount(s.player)) -- with the friends luck that the odds panel shows
+	local odds = C.eggOdds(Retention.friendCount(s.player), C.codexLuck(codexFound(s))) -- with the friends and Codex luck that the odds panel shows
 	local pool = s.pity >= C.PITY - 1 and { odds[4], odds[5], odds[6] } or odds
 	local total = 0
 	for _, t in pool do total += t[2] end
@@ -567,6 +576,7 @@ end
 
 local function herald(s, name) -- everyone in the server is told of a Mythic or Secret hatch (Shared.Marquee)
 	local rarity = C.PETS[name] and C.PETS[name][1]
+	if rarity then s.codex.pet[name] = true end -- the Codex keeps every pet ever hatched
 	if rarity == "Mythic" or rarity == "Secret" then
 		s.rare = s.rare or {}
 		s.rare[name] = true -- kept for good: its trophy case in town (C.TROPHIES)
@@ -595,7 +605,7 @@ local function hatch(s)
 end
 
 local function hatchFrom(s, minIdx) -- an Egg Altar egg: a rarity from minIdx up (by their own odds), then a pet of that rarity
-	local pool, total, odds = {}, 0, C.eggOdds(Retention.friendCount(s.player))
+	local pool, total, odds = {}, 0, C.eggOdds(Retention.friendCount(s.player), C.codexLuck(codexFound(s)))
 	for i = minIdx, #odds do table.insert(pool, odds[i]) total += odds[i][2] end
 	local x, acc, rarity = s.rng:NextNumber() * total, 0, pool[#pool][1]
 	for _, t in pool do
@@ -769,7 +779,10 @@ end
 local function sell(s)
 	if s.bag <= 0 then return end
 	local moved = s.bagOres
-	for k, n in moved do s.ores[k] = (s.ores[k] or 0) + n end -- banked ore also goes into the ore bank (forging needs it)
+	for k, n in moved do
+		s.ores[k] = (s.ores[k] or 0) + n -- banked ore also goes into the ore bank (forging needs it)
+		s.codex.ore[k] = true -- and into the Codex, for good
+	end
 	s.bagOres = {}
 	-- playtest 2 (the user, 2026-11-09): banking keeps the ore for forging and for selling at Bolt; coins come from selling
 	-- (SellPick below). The old block mines (C.CAVES_ON false) still pay on banking.
@@ -2151,6 +2164,15 @@ local function onJoin(plr)
 	s.opts = cleanOpts(d.opts)
 	s.gift = Retention.cleanGift(d.gift)
 	s.refine = Retention.cleanRefine(d.refine)
+	s.codex = { ore = {}, pet = {} }
+	local dc = type(d.codex) == "table" and d.codex or {}
+	for k, v in type(dc.ore) == "table" and dc.ore or {} do
+		local L, i = string.match(type(k) == "string" and k or "", "^(%d+)%.(%d+)$")
+		if v == true and L and C.LAYERS[tonumber(L)] and C.LAYERS[tonumber(L)][4][tonumber(i)] then s.codex.ore[k] = true end
+	end
+	for name, v in type(dc.pet) == "table" and dc.pet or {} do
+		if v == true and type(name) == "string" and C.PETS[name] then s.codex.pet[name] = true end
+	end
 	s.rare = {}
 	for name, v in type(d.rare) == "table" and d.rare or {} do
 		local pet = type(name) == "string" and C.PETS[name]
@@ -2301,6 +2323,20 @@ while true do
 					QuestR:FireClient(plr, s.quests)
 				end
 			end
+			local devCodex = plr:GetAttribute("DevCodex") -- a number: that many ores count as found (Shared.CodexUI)
+			if type(devCodex) == "number" then
+				plr:SetAttribute("DevCodex", nil)
+				local left = devCodex
+				for L, layer in C.LAYERS do
+					for i in layer[4] do
+						if left > 0 then
+							left -= 1
+							s.codex.ore[L .. "." .. i] = true
+						end
+					end
+				end
+				sendState(s)
+			end
 			local devTrophy = plr:GetAttribute("DevTrophy") -- "gate1" or "gate2": as if that boss were beaten (it also opens its gate)
 			if devTrophy == "gate1" or devTrophy == "gate2" then
 				plr:SetAttribute("DevTrophy", nil)
@@ -2311,6 +2347,7 @@ while true do
 			if devMarquee then
 				plr:SetAttribute("DevMarquee", nil)
 				herald(s, devMarquee)
+				sendState(s)
 			end
 			local devPet = plr:GetAttribute("DevPet") -- a crew pet by name (C.PETS), to test cave jobs
 			if devPet then
