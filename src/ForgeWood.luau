@@ -32,9 +32,10 @@ function M.setup(ctx)
 
 	-- pooled extras: rain streaks, wind leaves, wood shavings
 	local rain = {}
-	for i = 1, 46 do
-		local p = ctx.part(v3(0.07, 1.7, 0.07), CFrame.new(0, -80, 0), hex("#cfe0ff"), { Material = Enum.Material.Neon, Transparency = 0.45 })
-		rain[i] = { p = p, x = (i * 7.31) % 34 - 17, z = (i * 3.77) % 22 - 9, ph = (i * 0.618) % 1 }
+	for i = 1, 44 do
+		local r = ctx.rig("Drop", CFrame.new(0, -80, 0), 1.5 + (i % 3) * 0.4)
+		r:all(function(p) p.Transparency = 0.25 p.CastShadow = false end)
+		rain[i] = { r = r, x = (i * 7.31) % 34 - 17, z = (i * 3.77) % 20 - 8, ph = (i * 0.618) % 1 }
 	end
 	local leaves = {}
 	for i = 1, 10 do leaves[i] = { r = ctx.rig("Leaf", CFrame.new(0, -70, 0), 0.9), ph = (i * 0.37) % 1, y = 2 + (i * 1.9) % 7, z = (i * 2.3) % 9 - 2 } end
@@ -85,7 +86,7 @@ function M.setup(ctx)
 	table.insert(keys, { 5.95, { Head = R(8, 0, 0), Body = R(4, 0, 0), ArmL = R(30, 0, 30), ForeL = R(58, 0, 0) }, "back" })
 	table.insert(keys, { 6.25, { ArmR = R(34, 0, -34), ForeR = R(66, 0, 0), ArmL = R(34, 0, 36), ForeL = R(66, 0, 0), Head = R(12, -10, 6) }, "inout" }) -- tying the ribbon: paws together
 	table.insert(keys, { 6.62, { Head = R(12, -10, 6), Body = R(4, 0, 0) }, "hold" })
-	table.insert(keys, { 6.66, { Head = R(30, 0, 0), Body = R(18, 0, 0), ArmL = R(150, 0, -36), ForeL = R(70, 0, 0), ArmR = R(150, 0, 36), ForeR = R(70, 0, 0) }, "out" }) -- bonk: he flinches, paws over his head
+	table.insert(keys, { 6.66, { Head = R(16, 0, 0), Body = R(10, 0, 0), ArmL = R(150, 0, -36), ForeL = R(70, 0, 0), ArmR = R(150, 0, 36), ForeR = R(70, 0, 0) }, "out" }) -- bonk: he flinches, paws over his head
 	table.insert(keys, { 6.9, { Head = R(-26, 14, 0), Body = R(-6, 0, 0), ArmL = R(120, 0, -20), ForeL = R(40, 0, 0), ArmR = R(30, 0, -26), ForeR = R(60, 0, 0) }, "back" }) -- looks up, catches the acorn in his left paw
 	table.insert(keys, { 7.18, { Head = R(-8, 26, 8), ArmL = R(96, 0, -6), ForeL = R(60, 0, 0) }, "inout" }) -- holds it up and looks at it
 	table.insert(keys, { 7.42, { Head = R(14, 6, -6), Body = R(8, 0, 0), ArmL = R(34, 0, 34), ForeL = R(62, 0, 0) }, "back" }) -- ties it on
@@ -99,6 +100,15 @@ function M.setup(ctx)
 		{ 10.2, { ArmR = R(160, 0, 20), Head = R(-22, -6, 6) }, "inout" },
 	})
 
+	-- In the pose tables a positive first angle on Head and Body means "lean forward, look down". About the X axis that is a
+	-- negative turn for a model that faces -Z, so the sign is flipped here, once, for every pose.
+	local function lean(p)
+		for _, b in { "Head", "Body" } do
+			local cf = p[b]
+			if cf then local x, y, z = cf:ToEulerAnglesXYZ() p[b] = CFrame.Angles(-x, y, z) end
+		end
+		return p
+	end
 	-- lighting looks: storm, fire night, dawn
 	local LOOK = {
 		storm = { Ambient = Color3.fromRGB(100, 96, 136), OutdoorAmbient = Color3.fromRGB(100, 96, 136), Brightness = 1.6, ColorShift_Top = Color3.fromRGB(196, 204, 255), ExposureCompensation = 0 },
@@ -122,6 +132,10 @@ function M.setup(ctx)
 	bolt:show("EyesShut", false)
 	branch.root = W(5.2, 6.4, 3.4) * R(0, 20, -12)
 
+	-- this scene's own sounds (audio/pd_forge_sfx.py, synthesised): ids of the uploaded files in audio/sfx/forge
+	local SND = { thunder = 82890618685891, rain = 71766947362966, fire = 129781180188795, whittle = 96959952635114, bonk = 101020483687867, dawn = 85010698086137 }
+	local rainS = ctx.sound(SND.rain, 0, 1, true)
+	local fireS = ctx.sound(SND.fire, 0, 1, true)
 	local hitT = -1 -- time of the last stroke that landed
 	local stage = 0 -- 0 branch, 1 blank, 2 pickaxe
 	local function workCF() return bolt:joint("Body") * CFrame.new(0, 0.42, -1.1) end -- in front of his chest, over his lap
@@ -150,8 +164,9 @@ function M.setup(ctx)
 		local bolt1 = (t >= 0.95 and t < 1.02) or (t >= 1.32 and t < 1.46)
 		set:show("Lightning", bolt1)
 		ctx.flashAlpha = math.max((t >= 0.95 and t < 1.0) and 0.35 or 0, 0.85 * (1 - lin(1.32, 1.62, t)) * (t >= 1.32 and 1 or 0), (1 - lin(3.0, 3.22, t)) * (t >= 2.94 and 1 or 0) * smooth(2.94, 3.0, t), 0.9 * (1 - lin(8.45, 8.8, t)) * (t >= 8.45 and 1 or 0))
-		ctx.once("thunder1", 0.95, t, function() sfx("breakRock", 0.55) end)
-		ctx.once("thunder2", 1.32, t, function() sfx("breakRock", 0.4) sfx("hit", 0.5) ctx.shake(1.1) ctx.hold(3 / 60) end)
+		ctx.once("thunder1", 0.95, t, function() ctx.sound(SND.thunder, 0.3, 1.25) end)
+		ctx.once("thunder2", 1.32, t, function() ctx.sound(SND.thunder, 0.75, 0.95) sfx("breakRock", 0.5) ctx.shake(1.1) ctx.hold(3 / 60) end)
+		rainS.Volume = 0.4 * storm * smooth(0, 0.4, t)
 
 		-- ===== storm: wind in the canopies, rain, leaves =====
 		local gust = storm * (0.6 + 0.4 * math.sin(t * 2.3))
@@ -161,8 +176,7 @@ function M.setup(ctx)
 		end
 		for i, d in rain do
 			local u = (t * 1.9 + d.ph) % 1
-			d.p.CFrame = W(d.x + u * 5, 21 - u * 22, d.z) * R(0, 0, 13)
-			d.p.Transparency = storm > 0.02 and 0.45 + 0.55 * (1 - storm) or 1
+			d.r.root = storm > 0.02 and W(d.x + u * 5, 21 - u * 22, d.z) * R(0, 0, 13) or W(0, -80, 0)
 		end
 		for _, l in leaves do
 			local u = (t * 0.55 + l.ph) % 1
@@ -179,8 +193,8 @@ function M.setup(ctx)
 			local fall = math.min(u / 0.62, 1)
 			local y = 6.4 - (6.4 - 0.3) * fall * fall
 			local b = u > 0.62 and math.abs(math.sin((u - 0.62) * 9)) * 1.1 * math.exp(-(u - 0.62) * 4.5) or 0
-			branch.root = W(5.2 - 4.4 * fall, y + b, 3.4 - 6.4 * fall) * R(fall * 150 * (1 - fall) , 20 + fall * 60, -12 + fall * 372)
-			branch.scale = 1.5
+			branch.root = W(5.2 - 4.6 * fall, y + b, 3.4 - 6.6 * fall) * R(fall * 150 * (1 - fall) , 20 + fall * 60, -12 + fall * 384)
+			branch.scale = 1.5 - 0.3 * smooth(2.0, 2.3, t)
 			ctx.once("snap", 1.36, t, function() workPart.CFrame = W(5.2, 6.4, 3.4) chips:Emit(24) end)
 			ctx.once("land", 1.36 + 0.62, t, function() sfx("land", 0.8) sfx("swing", 0.7) ctx.kick(3) ctx.hold(2 / 60) end)
 		end
@@ -194,9 +208,11 @@ function M.setup(ctx)
 			set:set(n, R(0, 0, math.sin(ts * 8 + i * 2) * 5))
 		end
 		fireLight.Brightness = 9 * fire * (0.85 + 0.15 * math.sin(ts * 12))
+		if t >= 3.0 and t < 7.6 then ctx.light({ Brightness = 2.4 * (0.9 + 0.1 * math.sin(t * 13) * math.sin(t * 7.1)) }) end
 		fireGlowIm.ImageTransparency = 1 - 0.42 * fire
 		embers.Rate = 9 * fire
 		fireFx.Rate = 16 * fire
+		fireS.Volume = 0.45 * fire
 
 		-- ===== the raccoon =====
 		local breathe = math.sin(ts * 2.6) * 0.012
@@ -206,12 +222,19 @@ function M.setup(ctx)
 		bolt:show("Eyes", not shut) bolt:show("EyesShut", shut)
 		bolt:set("EarL", R(0, 0, math.sin(ts * 3.1) * 4 + ((ts % 1.7) < 0.09 and 16 or 0)))
 		bolt:set("EarR", R(0, 0, -math.sin(ts * 3.1 + 1) * 4 - ((ts % 2.1) < 0.09 and 16 or 0)))
-		if t < 3.0 then
+		if t < 2.25 then
 			bolt.root = W(0, -60, 0)
+		elseif t < 3.0 then -- he heard it fall: up from behind the log, a look, then a hop to the branch
+			local up, hop = smooth(2.25, 2.5, t), smooth(2.62, 2.95, t)
+			local from, to = Vector3.new(-2.6, -2.4 + 2.7 * backOut(up), -0.9), Vector3.new(-0.6, 0, -2.7)
+			bolt.root = W(0, 0, 0) * CFrame.new(from:Lerp(to, hop) + Vector3.new(0, math.sin(hop * math.pi) * 1.5, 0)) * R(0, -22 * (1 - hop) - 34 * hop, 0)
+			bolt:pose(lean({ Head = R(-6 + 26 * hop, -24 + 4 * hop, 8 * (1 - hop)), Body = R(30 * hop, 0, 0), ArmL = R(20 + 36 * hop, 0, 10), ForeL = R(30 - 16 * hop, 0, 0), ArmR = R(20 + 52 * hop, 0, -10), ForeR = R(30 - 20 * hop, 0, 0), LegL = R(-20 * math.sin(hop * math.pi), 0, 0), LegR = R(30 * math.sin(hop * math.pi), 0, 0) }))
+			bolt:set("EarL", R(0, 0, 14 * (1 - hop))) bolt:set("EarR", R(0, 0, -14 * (1 - hop)))
+			ctx.once("peek", 2.3, t, function() sfx("pop", 1.3) end)
 		elseif t < 7.6 then
 			bolt.root = W(-2.5, 0.56, -2.3) * R(0, -18, 0)
 			bolt:pose(SIT)
-			bolt:pose(act(ts))
+			bolt:pose(lean(act(ts)))
 			bolt:set("Tail1", R(-25, 38 + math.sin(ts * 4) * 14, 0)) bolt:set("Tail2", R(-20, 30 + math.sin(ts * 4 - 0.8) * 18, 0))
 			bolt:set("LegL", R(74 + math.sin(ts * 3) * 6, 0, 10)) bolt:set("LegR", R(60 - math.sin(ts * 3) * 8, 0, -16)) -- feet kick while he works
 			local bonk = t >= 6.62 and math.max(0, 1 - (t - 6.62) / 0.3) or 0
@@ -219,7 +242,7 @@ function M.setup(ctx)
 		else
 			local hop = math.sin(math.clamp((t - 8.3) / 0.45, 0, 1) * math.pi) * 1.2 -- a little jump as he lifts it
 			bolt.root = W(-7.0, hop, -5.0) * R(0, -16, 0) -- out from under the birches, the sunrise behind him
-			bolt:pose(named(ts))
+			bolt:pose(lean(named(ts)))
 			bolt:set("Tail1", R(0, math.sin(ts * 9) * 26, 0)) bolt:set("Tail2", R(0, math.sin(ts * 9 - 0.8) * 30, 0))
 			bolt:size("Head", Vector3.one)
 		end
@@ -231,7 +254,7 @@ function M.setup(ctx)
 		for i, at in STROKES do
 			ctx.once("stroke" .. i, at, t, function()
 				hitT = at
-				sfx("swing", 1.0 + i * 0.12) sfx("hit", 1.5 + i * 0.1)
+				ctx.sound(SND.whittle, 0.6, 0.9 + i * 0.07) -- each cut a little higher
 				ctx.hold(2 / 60) ctx.kick(1.6)
 				chips:Emit(10)
 				tossCurl(work.Position, at) tossCurl(work.Position + Vector3.new(0.3, 0, 0), at + 0.03)
@@ -263,7 +286,7 @@ function M.setup(ctx)
 			blank.root = stage == 1 and lap * R(-70, 0, 72) * CFrame.new(0, 0.45, 0) or W(0, -60, 0)
 			if stage == 2 then
 				local pop = backOut(lin(6.25, 6.5, t))
-				placePick(O:ToObjectSpace(lap) * CFrame.new(0.15, -0.2, -0.15) * R(0, 180, 78), 2.9 * (0.6 + 0.4 * pop))
+				placePick(O:ToObjectSpace(lap) * CFrame.new(0.15, -0.2, -0.15) * R(0, 180, 78), 2.9 * (0.6 + 0.4 * pop) * (1 + 0.16 * math.max(0, 1 - math.abs(t - 7.5) / 0.1)))
 			end
 			knife.root = t < 5.9 and bolt:joint("ForeR") * CFrame.new(0.12, -0.62, -0.22) * R(-100, 0, 0) or W(0, -60, 0)
 		elseif t >= 7.6 then
@@ -271,7 +294,7 @@ function M.setup(ctx)
 		end
 
 		-- ===== the acorn: falls, bonks him, hops onto the pickaxe =====
-		if t >= 6.2 and t < 7.25 then
+		if t >= 6.2 and t < 7.46 then
 			local head = bolt:joint("Head").Position + Vector3.new(0, 1.75, 0)
 			local cf
 			if t < 6.62 then
@@ -283,14 +306,14 @@ function M.setup(ctx)
 			else -- caught: it sits in his left paw, then goes onto the pickaxe
 				local paw = (bolt:joint("ForeL") * CFrame.new(-0.11, -0.62, -0.25)).Position
 				local air = head + Vector3.new(0.5, math.sin(math.pi * 0.8) * 2.2, -0.2)
-				local to = paw:Lerp(work.Position, smooth(7.18, 7.25, t))
+				local to = paw:Lerp(work.Position + Vector3.new(0, 0.25, -0.2), smooth(7.22, 7.44, t)) + Vector3.new(0, math.sin(lin(7.22, 7.44, t) * math.pi) * 0.5, 0)
 				cf = CFrame.new(air:Lerp(to, smooth(6.9, 6.98, t))) * R(0, t * 90, 10)
 			end
 			acorn.root = cf
-			ctx.once("bonk", 6.62, t, function() sfx("pop", 0.8) sfx("land", 1.4) ctx.hold(3 / 60) ctx.kick(2.2) ctx.shake(0.35) end)
+			ctx.once("bonk", 6.62, t, function() ctx.sound(SND.bonk, 0.7, 1) ctx.hold(3 / 60) ctx.kick(2.2) ctx.shake(0.35) end)
 		else
 			acorn.root = W(0, -60, 0)
-			ctx.once("charm", 7.25, t, function() sparkle:Emit(12) sfx("coin", 1.3) end)
+			ctx.once("charm", 7.46, t, function() sparkle:Emit(22) sfx("coin", 1.3) sfx("pop", 1.5) ctx.hold(2 / 60) ctx.kick(1.5) end)
 		end
 
 		-- ===== NAMED: the lift and the hero turn =====
@@ -303,7 +326,7 @@ function M.setup(ctx)
 			heroPart.CFrame = W(at.X, at.Y + 0.6, at.Z)
 			raysIm.ImageTransparency = 1 - 0.75 * smooth(8.45, 8.8, t) * (1 - smooth(10.6, 11.1, t))
 			raysIm.Rotation = t * 22
-			ctx.once("reveal", 8.45, t, function() heroSpark:Emit(46) sfx("upgrade", 1) sfx("sparkle", 1.3) ctx.kick(5) ctx.hold(4 / 60) end)
+			ctx.once("reveal", 8.45, t, function() heroSpark:Emit(46) ctx.sound(SND.dawn, 0.6, 1) sfx("sparkle", 1.3) ctx.kick(5) ctx.hold(4 / 60) end)
 			heroSpark.Rate = t >= 8.6 and 10 or 0
 			ctx.name("His first.")
 			ctx.cardAlpha = smooth(9.0, 9.35, t) * (1 - smooth(10.7, 11.0, t))
@@ -318,19 +341,21 @@ function M.setup(ctx)
 		local V = Vector3.new
 		if t < 1.36 then -- close on the branch, high in the birch, while the storm pulls at it
 			shot(V(2.6 - 0.5 * smooth(0, 1.36, t), 5.2, -3.4), V(5.0, 6.5, 3.2), 40)
-		elseif t < 3.0 then -- it snaps: low and wide, the camera follows it down to the grass
+		elseif t < 3.0 then -- it snaps: low and wide, the camera follows it down to the grass, where the raccoon finds it
 			local bp = O:PointToObjectSpace(branch.root.Position)
-			shot(V(-0.8, 0.9, -9.5 + 2.0 * smooth(1.6, 2.8, t)), V(4.6, 6.4, 3.4):Lerp(bp, smooth(1.36, 1.7, t)), 52 - 12 * smooth(1.6, 2.8, t))
+			shot(V(-0.8, 0.9, -9.5 + 1.2 * smooth(1.6, 2.8, t)), V(4.6, 6.4, 3.4):Lerp(bp, smooth(1.36, 1.7, t)):Lerp(V(-0.9, 2.1, -2.4), smooth(2.2, 2.6, t)), 52 - 4 * smooth(1.6, 2.8, t))
 		elseif t < 3.62 then -- the camp: fire on the left, the raccoon on his log
 			shot(V(2.4, 2.4, -11.8 + 0.6 * smooth(3.0, 3.62, t)), V(-0.9, 2.0, -2.6), 44)
 		elseif t < 5.5 then -- close on his paws for the knife work
-			shot(V(-0.6 + 0.3 * smooth(3.62, 5.5, t), 2.7, -7.8), V(-2.75, 2.5, -3.2), 38)
+			shot(V(-0.5 + 0.3 * smooth(3.62, 5.5, t), 2.8, -8.7), V(-2.75, 2.65, -3.2), 38)
 		elseif t < 6.2 then -- front on: he blows the dust off and ties the ribbon
 			shot(V(-1.9, 2.5, -8.6 + 0.5 * smooth(5.5, 6.2, t)), V(-2.7, 2.35, -3.0), 40)
 		elseif t < 6.62 then -- room above his head: something is falling
 			shot(V(-0.4, 1.9, -9.4), V(-2.6, 3.7, -2.6), 46)
-		else -- his face, and the acorn in his paw
-			shot(V(-1.3 - 0.2 * smooth(6.62, 7.6, t), 2.9, -7.2), V(-2.7, 2.85, -2.7), 38 - 3 * smooth(6.62, 7.6, t))
+		elseif t < 7.22 then -- his face, and the acorn in his paw
+			shot(V(-1.3 - 0.2 * smooth(6.62, 7.22, t), 2.9, -7.2), V(-2.7, 2.85, -2.7), 38 - 3 * smooth(6.62, 7.22, t))
+		else -- close on the pickaxe in his lap: the acorn is tied on and becomes the charm
+			shot(V(-1.2, 2.9, -7.6 + 0.3 * smooth(7.22, 7.6, t)), V(-2.75, 2.55, -3.2), 36)
 		end
 		if t >= 7.6 then -- low at his feet, looking up: the pickaxe against the sunrise
 			local up = smooth(8.3, 9.2, t)

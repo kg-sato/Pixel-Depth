@@ -28,3 +28,17 @@ table of `src/PixelClient.client.luau`.
 
 Not heard by Claude: picked by name, length and brightness (measured), all 18 load in Play. Volumes are first guesses.
 The minecart ride and escape loops (rumble, thud) still use Creator Store audio.
+
+## Forge biography sounds (2026-11-15)
+Our own, synthesised by `audio/pd_forge_sfx.py <out folder>` (numpy, no samples), in `audio/sfx/forge/`. Used by `src/ForgeWood.luau`.
+
+| name | asset id | used for |
+|---|---|---|
+| thunder | 82890618685891 | the storm, twice |
+| rain (loop) | 71766947362966 | the storm bed |
+| fire (loop) | 129781180188795 | the campfire bed |
+| whittle | 96959952635114 | each knife stroke, rising in pitch |
+| bonk | 101020483687867 | the acorn on his head |
+| dawn | 85010698086137 | the reveal at sunrise |
+
+Not heard by Claude. All six load in Play with the right lengths. Volumes are first guesses.

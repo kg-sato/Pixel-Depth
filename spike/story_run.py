@@ -1,4 +1,4 @@
-"""Play a forge biography scene in real time three ways (full, fast, skipped) and report the time, errors and clean-up.
+"""Play a forge biography scene in real time two ways (full, fast) and report the time, errors and clean-up.
     python spike/story_run.py WoodPickaxe "Wood Pickaxe" """
 import sys, time, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -9,6 +9,6 @@ RUN = "local S = require(game.ReplicatedStorage.Shared.ForgeStory) local t0 = os
 N.play(False); N.restore(); N.play(True); time.sleep(11)
 print("full:", C(RUN % (name, model, "", "")))
 print("fast:", C(RUN % (name, model, ", fast = true", "")))
-print("skip:", C(RUN % (name, model, "", "task.delay(2, function() game:GetService('VirtualInputManager'):SendKeyEvent(true, Enum.KeyCode.Space, false, game) end)")))
+# Skip is tested with a real key press: N.key("Space") about 1 s after a spawned play (a script cannot send key events).
 print("client errors:", C("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if (m.messageType==Enum.MessageType.MessageError or string.find(m.message,'ForgeStory')) and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,260) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False)

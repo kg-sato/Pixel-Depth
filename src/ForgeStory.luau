@@ -262,6 +262,16 @@ function M.play(opt)
 		e.Parent = parent
 		return e
 	end
+	-- a scene's own sound: ctx.sound(assetId, volume, pitch, looped) -> Sound (a loop is returned playing; set its Volume each frame)
+	local sounds = {}
+	function ctx.sound(id, volume, pitch, looped)
+		local s = Instance.new("Sound")
+		s.SoundId, s.Volume, s.PlaybackSpeed, s.Looped = "rbxassetid://" .. id, volume or 0.5, pitch or 1, looped == true
+		s.Parent = game:GetService("SoundService")
+		s:Play()
+		table.insert(sounds, s)
+		return s
+	end
 	function ctx.light(props) for k, v in props do Lighting[k] = v end end
 	-- the key light: turn the sun so it shines from a stage-space direction (the game sky is hidden, so the hour is free).
 	-- Models need this for their roundness to read; ambient light alone renders them flat.
@@ -290,10 +300,11 @@ function M.play(opt)
 	end
 	function ctx.name(sub) cardSub.Text = sub end
 
-	local update = scene.setup(ctx)
 	local t = opt.fast and scene.named or 0
 	local T_END = scene.length
 	local done, skipped = false, false
+	local okSetup, update = pcall(scene.setup, ctx) -- a scene that fails to build still goes through the clean-up below
+	if not okSetup then warn("[ForgeStory] " .. tostring(update)) done = true update = function() end end
 	local function doSkip()
 		if skipped or t >= scene.named then return end
 		skipped = true
@@ -330,7 +341,7 @@ function M.play(opt)
 		local a = math.clamp(ctx.cardAlpha, 0, 1)
 		card.BackgroundTransparency, cardS.Transparency = 1 - a * 0.96, 1 - a
 		cardName.TextTransparency, cardSub.TextTransparency = 1 - a, 1 - a
-		card.Position = UDim2.fromScale(0.24, 0.73 - 0.02 * a) -- lower third, left: clear of the pickaxe
+		card.Position = UDim2.fromScale(0.24, 0.3 - 0.02 * a) -- upper left: clear of the pickaxe, the maker and the camp
 		-- camera
 		kick *= math.exp(-dt * 9)
 		shake *= math.exp(-dt * 7)
@@ -351,6 +362,7 @@ function M.play(opt)
 	for _, g in hidden do if g.Parent then g.Enabled = true end end
 	for k, v in camSaved do pcall(function() cam[k] = v end) end
 	world:Destroy()
+	for _, s in sounds do s:Destroy() end
 	fade.BackgroundTransparency = 0
 	for _, o in { barT, barB, tag, line, card, skip } do o.Visible = false end
 	local tw = TweenService:Create(fade, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 })

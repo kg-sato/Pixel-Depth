@@ -6,7 +6,7 @@ export const name = "wood";
 const C = {
   fur: "#9c97b6", furDark: "#5b5272", mask: "#3b2d4d", cream: "#f6f0fa", pink: "#f4a9c2", nose: "#2a1f36", eye: "#1d1528", white: "#ffffff",
   red: "#e8525a", redDark: "#c23c4c",
-  grass: "#9edcae", grassLight: "#c4f0c0", grassDark: "#6fbf8e", soil: "#7a566c", soilDark: "#4d3554", soilDeep: "#33223d",
+  grass: "#9edcae", grassLight: "#c4f0c0", grassDark: "#6fbf8e", grassDeep: "#58a67e", soil: "#7a566c", soilDark: "#4d3554", soilDeep: "#33223d",
   birch: "#f7f1e8", birchShade: "#e4d8d2", birchMark: "#4f3f58", leaf: "#a9e3c3", leafLight: "#d5f5cf", butter: "#f7e6a2",
   stone: "#b7aed0", stoneDark: "#8f86ad", wood: "#c99a6b", woodDark: "#9a6d4d", woodEnd: "#f0d7a8",
   flame: "#ff9a3c", flameCore: "#ffd060", ember: "#f2603a",
@@ -29,8 +29,9 @@ export function build(THREE, T) {
     // neckerchief: a soft ring, a knot and a bib point (the bow language of the pickaxes)
     const ring = []; for (let i = 0; i <= 16; i++) { const a = (i / 16) * Math.PI * 2; ring.push([Math.sin(a) * 0.46, 1.93 + Math.cos(a) * 0.03, Math.cos(a) * 0.44]); }
     m.add("Body", tube(ring, 0.13, 8, 32), C.red);
-    m.add("Body", at(puff([[-0.42, 0.05], [0.42, 0.05], [0.0, -0.62]], 0.1, 0.07), [0, 1.9, 0.5], [-18, 0, 0]), C.red);
+    m.add("Body", at(puff([[-0.42, 0.05], [0.42, 0.05], [0.0, -0.62]], 0.16, 0.1), [0, 1.9, 0.52], [-18, 0, 0]), C.red);
     m.add("Body", at(ball(0.13, 0.11, 0.1), [0, 1.9, 0.6]), C.redDark);
+    for (const s of [-1, 1]) m.add("Body", limb([0.07 * s, 1.84, 0.6], [0.2 * s, 1.5, 0.52], 0.045, 0.02, 6), C.redDark); // folds from the knot
 
     // satchel: a strap across the chest, a pouch on his right hip with a butter button and a mint leaf tucked in
     m.add("Body", tube([[0.5, 1.86, 0.2], [0.2, 1.5, 0.6], [-0.3, 1.15, 0.62], [-0.66, 0.98, 0.3]], 0.055, 6, 14), C.wood);
@@ -46,8 +47,8 @@ export function build(THREE, T) {
     m.bone("Head", "Body", [0, 2.02, 0]);
     m.add("Head", at(ball(1.02, 0.88, 0.92, 24), [0, 2.74, 0.05]), C.fur);
     for (const s of [-1, 1]) {
-      m.add("Head", limb([0.66 * s, 2.5, 0.2], [1.2 * s, 2.34, 0.14], 0.3, 0.05, 10), C.fur); // cheek tufts: two soft points
-      m.add("Head", limb([0.7 * s, 2.62, 0.12], [1.16 * s, 2.66, 0.06], 0.26, 0.05, 10), C.fur);
+      m.add("Head", limb([0.66 * s, 2.5, 0.2], [1.08 * s, 2.38, 0.14], 0.3, 0.13, 10), C.fur); // cheek tufts: two soft lobes
+      m.add("Head", limb([0.7 * s, 2.62, 0.12], [1.04 * s, 2.66, 0.06], 0.26, 0.12, 10), C.fur);
       m.add("Head", at(ball(0.37, 0.27, 0.18), [0.4 * s, 2.79, 0.78], [0, 18 * s, 12 * s]), C.mask); // mask patch
       m.add("Head", at(ball(0.3, 0.1, 0.12), [0.4 * s, 3.08, 0.72], [0, 16 * s, 10 * s]), C.cream); // brow
       m.add("Head", at(ball(0.12, 0.1, 0.05), [0.66 * s, 2.5, 0.72], [0, 30 * s, 0]), C.pink); // blush
@@ -56,8 +57,8 @@ export function build(THREE, T) {
     m.add("Head", at(ball(0.12, 0.09, 0.09), [0, 2.57, 1.1]), C.nose);
     m.add("Head", tube([[-0.13, 2.43, 1.07], [-0.06, 2.38, 1.1], [0, 2.41, 1.11], [0.06, 2.38, 1.1], [0.13, 2.43, 1.07]], 0.024, 6, 12), C.nose);
 
-    for (const [x, a, l] of [[-0.16, 14, 0.34], [0.02, -4, 0.44], [0.2, -22, 0.32]]) m.add("Head", limb([x, 3.5, 0.12], [x - Math.sin((a * Math.PI) / 180) * l, 3.5 + l, 0.3], 0.13, 0.03, 8), C.fur); // head tuft
-    for (const s of [-1, 1]) for (const dy of [0.05, -0.07]) m.add("Head", limb([0.3 * s, 2.47 + dy, 0.98], [0.78 * s, 2.5 + dy * 3.2, 0.92], 0.018, 0.008, 5), C.cream); // whiskers
+    for (const [x, a, l] of [[-0.16, 14, 0.34], [0.02, -4, 0.44], [0.2, -22, 0.32]]) m.add("Head", limb([x, 3.5, 0.12], [x - Math.sin((a * Math.PI) / 180) * l * 0.7, 3.5 + l * 0.7, 0.3], 0.14, 0.08, 8), C.fur); // head tuft
+    for (const s of []) for (const dy of [0.05, -0.07]) m.add("Head", limb([0.3 * s, 2.47 + dy, 0.98], [0.78 * s, 2.5 + dy * 3.2, 0.92], 0.018, 0.008, 5), C.cream); // whiskers
     m.bone("Eyes", "Head", [0, 2.8, 0.9]);
     for (const s of [-1, 1]) {
       m.add("Eyes", at(ball(0.17, 0.2, 0.09), [0.4 * s, 2.8, 0.9], [0, 16 * s, 0]), C.cream);
@@ -111,7 +112,7 @@ export function build(THREE, T) {
     for (let i = 0; i < 9; i++) { const a = rnd(i) * 6.283, r = 2.5 + rnd(i + 20) * 8.5; m.add("Deco", at(ball(1.2 + rnd(i + 40) * 1.4, 0.05, 0.9 + rnd(i + 60)), [Math.cos(a) * r, 0, Math.sin(a) * r], [0, rnd(i) * 180, 0]), C.grassLight); }
     for (let i = 0; i < 22; i++) {
       const a = rnd(i + 100) * 6.283, r = 3.2 + rnd(i + 120) * 8.6, x = Math.cos(a) * r, z = Math.sin(a) * r;
-      for (let k = -1; k <= 1; k++) m.add("Deco", limb([x + k * 0.1, 0, z], [x + k * 0.26, 0.42 + rnd(i + k) * 0.2, z + 0.05], 0.07, 0.02, 5), C.grassDark);
+      for (let k = -1; k <= 1; k++) m.add("Deco", limb([x + k * 0.13, 0, z], [x + k * 0.3, 0.36 + rnd(i + k) * 0.18, z + 0.05], 0.13, 0.07, 8), k ? C.grassDark : C.grassDeep);
     }
     for (let i = 0; i < 7; i++) {
       const a = rnd(i + 200) * 6.283, r = 4 + rnd(i + 220) * 7.5, x = Math.cos(a) * r, z = Math.sin(a) * r;
@@ -135,8 +136,13 @@ export function build(THREE, T) {
       const cb = "Canopy" + (ti + 1);
       m.bone(cb, tb, [x, h * 0.78, z]);
       const blobs = [[0, h + 0.5, 0, 2.5], [1.9, h - 0.3, 0.5, 1.9], [-1.8, h + 0.1, -0.2, 1.8], [0.5, h + 1.9, 0.2, 1.7], [-0.6, h - 0.9, 1.1, 1.5]];
-      blobs.forEach(([bx, by, bz, br], bi) => m.add(cb, at(ball(br * s, br * 0.82 * s, br * 0.9 * s, 18), [x + bx * s, by, z + bz * s]), bi === 3 ? C.leafLight : C.leaf));
-      for (let k = 0; k < 46; k++) { // leaf dabs on the blobs: light on top, dark underneath, a few butter ones
+      blobs.forEach(([bx, by, bz, br], bi) => {
+        m.add(cb, at(ball(br * s, br * 0.82 * s, br * 0.9 * s, 22), [x + bx * s, by, z + bz * s]), C.leaf);
+        m.add(cb, at(ball(br * 0.74 * s, br * 0.5 * s, br * 0.68 * s, 18), [x + (bx - 0.25) * s, by + br * 0.42 * s, z + (bz + 0.3) * s]), C.leafLight); // soft top light
+        m.add(cb, at(ball(br * 0.8 * s, br * 0.4 * s, br * 0.74 * s, 18), [x + bx * s, by - br * 0.5 * s, z + bz * s]), C.grassDark); // shaded underside
+      });
+      m.add(cb, at(ball(0.9 * s, 0.5 * s, 0.7 * s, 14), [x + 0.4 * s, h + 2.75, z + 0.5 * s]), C.butter); // one butter cap, like the bow on the pickaxe
+      for (let k = 0; k < 0; k++) { // leaf dabs on the blobs (off: they read as bumps): light on top, dark underneath, a few butter ones
         const [bx, by, bz, br] = blobs[k % blobs.length], th = rnd(ti * 53 + k * 7 + 1) * 6.283, ph = -0.5 + rnd(ti * 29 + k * 3 + 2) * 1.9;
         const d = [Math.cos(th) * Math.cos(ph), Math.sin(ph) * 0.82, Math.sin(th) * Math.cos(ph) * 0.9];
         const col = ph < 0.1 ? C.grassDark : k % 7 === 0 ? C.butter : k % 2 ? C.leafLight : C.grass;
@@ -167,9 +173,9 @@ export function build(THREE, T) {
     m.bone("Fire", "Ground", [-0.6, 0, 3.0]);
     for (let i = 0; i < 8; i++) { const a = (i / 8) * 6.283; m.add("Fire", at(pillow(0.62, 0.42, 0.5, 0.55), [-0.6 + Math.cos(a) * 1.05, 0.18, 3.0 + Math.sin(a) * 1.05], [0, (-a * 180) / Math.PI + 90, 0]), i % 2 ? C.stone : C.stoneDark); }
     for (let i = 0; i < 3; i++) { const a = (i / 3) * 3.14159; m.add("Fire", limb([-0.6 - Math.cos(a) * 0.7, 0.12, 3.0 - Math.sin(a) * 0.7], [-0.6 + Math.cos(a) * 0.7, 0.3, 3.0 + Math.sin(a) * 0.7], 0.14, 0.12, 8), C.woodDark); }
-    const flame = (r, h, lean = 0.25) => { // a lick of fire: a teardrop that bends as it rises
+    const flame = (r, h, lean0 = 0.25) => { const lean = lean0 * 0.6; // a lick of fire: a teardrop that bends as it rises
       const pts = []; for (let k = 0; k <= 8; k++) { const u = k / 8; pts.push([Math.sin(u * 3.4) * lean * h * 0.35, u * h, Math.sin(u * 2.2 + 1) * lean * h * 0.12]); }
-      return tube(pts, (u) => r * Math.sin(Math.PI * Math.pow(Math.min(u + 0.04, 1), 0.5)) * (1 - 0.35 * u) + 0.01, 10, 20);
+      return tube(pts, (u) => r * 1.25 * Math.sin(Math.PI * Math.pow(Math.min(u + 0.04, 1), 0.42)) * (1 - 0.3 * u) + 0.01, 18, 30);
     };
     m.bone("Flame1", "Fire", [-0.6, 0.3, 3.0]); m.add("Flame1", at(flame(0.5, 1.7), [-0.6, 0.3, 3.0]), C.flame);
     m.add("Flame1", at(flame(0.3, 1.15, -0.3), [-0.42, 0.3, 2.9], [0, 60, 0]), C.ember);
@@ -201,7 +207,8 @@ export function build(THREE, T) {
     };
     hill(28.4, 5.4, 1.9, 0.4, C.hill3, C.sky4); hill(26.4, 3.1, 1.6, 2.1, C.hill2, C.hill3); hill(24.2, 0.9, 1.2, 4.4, C.hill1, C.hill2);
     // paper pines on the middle hill
-    for (let i = 0; i < 20; i++) { const x = -78 + i * 8.1 + rnd(i + 500) * 3, h = 2.4 + rnd(i + 520) * 2.2; m.add("Sky", bend(at(puff([[-0.9, 0], [0.9, 0], [0.5, h * 0.4], [0.7, h * 0.4], [0.3, h * 0.72], [0.45, h * 0.72], [0, h], [-0.45, h * 0.72], [-0.3, h * 0.72], [-0.7, h * 0.4], [-0.5, h * 0.4]], 0.2, 0.06, false), [x, 2.6 + Math.sin(x * 0.4) * 0.7, -26.2]), 26.2), C.hill2); }
+    m.bone("Pines", "Sky", [0, 3, -26.2]);
+    for (let i = 0; i < 14; i++) { const x = -76 + i * 11.4 + rnd(i + 500) * 4, h = 2.4 + rnd(i + 520) * 2.2; m.add("Pines", bend(at(puff([[-0.9, 0], [0.9, 0], [0.5, h * 0.4], [0.7, h * 0.4], [0.3, h * 0.72], [0.45, h * 0.72], [0, h], [-0.45, h * 0.72], [-0.3, h * 0.72], [-0.7, h * 0.4], [-0.5, h * 0.4]], 0.2, 0.06, true), [x, 2.6 + Math.sin(x * 0.4) * 0.7, -26.2]), 26.2), C.hill2); }
     m.bone("Stars", "Sky", [0, 16, -29.2], "Neon");
     const star4 = (r) => { const p = []; for (let k = 0; k < 8; k++) { const a = (k / 8) * 6.283, rr = k % 2 ? r * 0.32 : r; p.push([Math.sin(a) * rr, Math.cos(a) * rr]); } return puff(p, 0.06, 0.03, false); };
     for (let i = 0; i < 56; i++) m.add("Stars", bend(at(star4(0.28 + rnd(i + 600) * 0.5), [-80 + rnd(i + 620) * 160, 10 + rnd(i + 640) * 20, -29.2], [0, 0, rnd(i) * 40]), 29.2), C.star);
@@ -256,8 +263,8 @@ export function build(THREE, T) {
     m.bone("Curl", null, [0, 0, 0]);
     const pts = []; for (let k = 0; k <= 18; k++) { const a = (k / 18) * Math.PI * 3.2, r = 0.2 - 0.006 * k; pts.push([Math.cos(a) * r, k * 0.028, Math.sin(a) * r]); }
     const curve = new THREE.CatmullRomCurve3(pts.map((p) => new THREE.Vector3(...p)));
-    const g = new THREE.TubeGeometry(curve, 36, 0.05, 5, false); g.scale(1, 1, 1); g.computeVertexNormals();
-    m.add("Curl", at(g, [0, 0, 0], [0, 0, 0], [1, 1, 0.45]), C.woodEnd);
+    const g = new THREE.TubeGeometry(curve, 36, 0.075, 8, false); g.computeVertexNormals();
+    m.add("Curl", at(g, [0, 0, 0], [0, 0, 0], [1, 1, 0.8]), C.woodEnd);
     out.push(m);
   }
   {
@@ -275,6 +282,13 @@ export function build(THREE, T) {
     m.add("Knife", limb([0, -0.42, 0], [0, 0.0, 0], 0.085, 0.08, 8), C.woodDark);
     m.add("Knife", at(ball(0.12, 0.05, 0.1), [0, 0.02, 0]), C.red);
     m.add("Knife", at(puff([[-0.08, 0], [0.09, 0], [0.11, 0.42], [0.02, 0.72], [-0.08, 0.5]], 0.03, 0.025), [0, 0.04, 0]), C.steel);
+    out.push(m);
+  }
+  {
+    const m = model("Drop");
+    m.bone("Drop", null, [0, 0, 0]);
+    m.add("Drop", lathe([[0.02, -0.16], [0.1, -0.12], [0.13, -0.02], [0.09, 0.14], [0.03, 0.34], [0.01, 0.42]], 10), "#cfe4ff");
+    m.add("Drop", at(ball(0.03, 0.05, 0.02, 6), [-0.05, -0.02, 0.1]), C.white);
     out.push(m);
   }
   {

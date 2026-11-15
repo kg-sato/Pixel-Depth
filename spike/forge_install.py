@@ -11,7 +11,8 @@ scene = sys.argv[1]
 local = "--local" in sys.argv
 out = game / "design3d" / "out"
 r = subprocess.run(["node", str(game / "design3d" / "export.mjs"), scene, str(out)], capture_output=True, text=True, cwd=game)
-print(r.stdout.strip() or r.stderr.strip())
+print(r.stdout.strip())
+if r.returncode: print(r.stderr.strip()[-600:])
 if r.returncode: sys.exit(1)
 rig = json.loads((out / f"{scene}_rig.json").read_text(encoding="utf-8"))
 assets_p = game / "design3d" / "assets.json"
