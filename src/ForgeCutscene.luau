@@ -286,6 +286,31 @@ function M.play(opt)
 	local pickSize = pick and select(2, pick:GetBoundingBox()) or Vector3.one
 	local pickScale0 = pick and pick:GetScale() or 1
 
+	-- the upgrade's anvil sequence (directive v10, opt.quick): the old pickaxe glows and melts into an ingot, then a spectral
+	-- hammer slams it three times with orange sparks and a 2-frame hit-stop; the third slam is the scene's own big slam
+	local ORANGE = Color3.fromRGB(255, 84, 8)
+	local ingot = part(world, Vector3.new(2.4, 0.7, 1.1), CFrame.new(anvilTop + Vector3.new(0, 0.35, 0)), ORANGE, { Material = Enum.Material.Neon, Transparency = 1 })
+	local ingotLight = Instance.new("PointLight")
+	ingotLight.Color, ingotLight.Range, ingotLight.Brightness, ingotLight.Parent = ORANGE, 0, 0, ingot
+	local sparksO = emitter(fountainP, { Texture = SPARK, Color = ColorSequence.new(Color3.fromRGB(255, 225, 130), Color3.fromRGB(255, 105, 20)), Size = ns(0.7, 0.05), Transparency = ns(0, 1), Lifetime = NumberRange.new(0.4, 0.9), Speed = NumberRange.new(16, 34), Drag = 1.5, Acceleration = Vector3.new(0, -45, 0), SpreadAngle = Vector2.new(70, 70), EmissionDirection = Enum.NormalId.Right })
+	local drips = emitter(ingot, { Texture = FIRE, Color = ColorSequence.new(Color3.fromRGB(255, 200, 90), Color3.fromRGB(255, 90, 20)), Size = ns(1.1, 0), Transparency = ns(0.1, 1), Lifetime = NumberRange.new(0.3, 0.7), Speed = NumberRange.new(1, 4), SpreadAngle = Vector2.new(60, 60), EmissionDirection = Enum.NormalId.Top })
+	local glowBB = Instance.new("BillboardGui") -- a soft orange glow round the ingot: the stage lighting barely shows point lights
+	glowBB.Size, glowBB.LightInfluence, glowBB.Adornee, glowBB.Parent = UDim2.fromScale(12, 12), 0, ingot, ingot
+	local glowIm = Instance.new("ImageLabel")
+	glowIm.BackgroundTransparency, glowIm.Image, glowIm.ImageColor3, glowIm.ImageTransparency, glowIm.Size, glowIm.Parent = 1, GLOW, Color3.fromRGB(255, 150, 60), 1, UDim2.fromScale(1, 1), glowBB
+	local CYAN = Color3.fromRGB(0, 240, 255)
+	local hamPivot = CFrame.new(anvilTop + Vector3.new(0, 1.45, 3.4)) -- by the smith's hammer hand: the ghost hammer swings from him onto the ingot
+	local hamHead = part(world, Vector3.new(1.3, 1.7, 1.3), hamPivot, CYAN, { Material = Enum.Material.Neon, Transparency = 1 })
+	local hamGrip = part(world, Vector3.new(0.36, 0.36, 3.2), hamPivot, Color3.fromRGB(190, 250, 255), { Material = Enum.Material.Neon, Transparency = 1 })
+	local hamLight = Instance.new("PointLight")
+	hamLight.Color, hamLight.Range, hamLight.Brightness, hamLight.Parent = CYAN, 16, 0, hamHead
+	local meltGlow
+	if pick then
+		meltGlow = Instance.new("Highlight")
+		meltGlow.FillColor, meltGlow.OutlineColor, meltGlow.FillTransparency, meltGlow.OutlineTransparency = ORANGE, Color3.fromRGB(255, 225, 130), 1, 1
+		meltGlow.DepthMode, meltGlow.Enabled, meltGlow.Parent = Enum.HighlightDepthMode.Occluded, false, pick
+	end
+
 	-- screen layer: the star wipe, letterbox, caption, flash, name card, skip
 	local gui = Instance.new("ScreenGui")
 	gui.Name, gui.IgnoreGuiInset, gui.ResetOnSpawn, gui.DisplayOrder, gui.ZIndexBehavior = "ForgeCutsceneGui", true, false, 30, Enum.ZIndexBehavior.Sibling
@@ -372,7 +397,8 @@ function M.play(opt)
 	-- the clock: t advances with real time except during the hit-stop; Skip jumps to act 5
 	local T_END = 8.0
 	local t, last, holdUntil, fired, done = 0, os.clock(), 0, {}, false
-	local quickJumped = false -- opt.quick (an upgrade): from the swap straight to the drop, slam and reveal
+	local quickJumped = false -- opt.quick (an upgrade): from the swap straight to the anvil sequence, slam and reveal
+	local qOn, q, qHold, hits = false, 0, 0, 0 -- the anvil sequence runs on its own clock q while t is held on the anvil shot
 	local camCF, fov, kick, shake = CFrame.new(), 70, 0, 0
 	local function once(key, at, fn)
 		if t >= at and not fired[key] then
@@ -384,6 +410,7 @@ function M.play(opt)
 		if t < 7.3 then
 			for _, k in { "wipe1", "act2", "rise", "sq1", "sq2", "sq3", "slam", "reveal" } do fired[k] = true end
 			t = 7.3
+			qOn = false
 		end
 	end)
 	local smithY, armA = 0, 0
@@ -391,10 +418,18 @@ function M.play(opt)
 		local now = os.clock()
 		local dt = math.min(now - last, 0.1)
 		last = now
-		if now >= holdUntil then t += dt end
+		if now >= holdUntil then
+			if not qOn then t += dt elseif now >= qHold then q += dt end
+		end
+		if qOn and opt.freeze then q = math.min(q, opt.freeze) end -- test hook (spike/anvil_shots.py): hold the anvil sequence at one moment for a capture
+		if qOn and q >= 1.7 then
+			qOn = false
+			t = 5.75
+		end
 		if opt.quick and not quickJumped and t >= 0.9 then
 			quickJumped = true
-			t = 5.0
+			qOn = true
+			t = 5.62
 			for _, s in streaks do s.hit = true end
 			for i = 1, 3 do fired["sq" .. i] = true end
 		end
@@ -436,6 +471,14 @@ function M.play(opt)
 		local swing = 0
 		if t > 5.45 and t < 5.85 then swing = -2.2 * smooth(5.45, 5.8, t) -- raise
 		elseif t >= 5.85 then swing = -2.2 + 3.0 * smooth(5.85, 5.95, t) - 0.8 * smooth(6.2, 6.8, t) end -- slam, settle
+		-- the spectral hammer's height, 0 on the ingot and 1 raised: two slams on the q clock, the third lands on the big slam at 5.85
+		local hamH = 0
+		if qOn then
+			hamH = math.max(smooth(0.45, 0.8, q) * (1 - smooth(0.8, 0.9, q)), smooth(0.95, 1.25, q) * (1 - smooth(1.25, 1.35, q)), smooth(1.4, 1.7, q))
+		elseif quickJumped and t < 5.85 then
+			hamH = 1 - math.clamp((t - 5.75) / 0.1, 0, 1) ^ 2
+		end
+		if quickJumped then swing = -1.7 * hamH end
 		local reach = rise * 2.4 -- the hammer arm raised up and forward while floating
 		local aside = smooth(6.0, 6.5, t)
 		local base = smithBase * CFrame.new(7 * aside, smithY, -2 * aside) * CFrame.Angles(0, -0.5 * aside, 0)
@@ -497,7 +540,7 @@ function M.play(opt)
 		local coreR = (0.4 + gather * 2.6) * (1 - 0.35 * compact) * (1 - 0.3 * sq)
 		local landed = smooth(5.5, 5.85, t)
 		local cPos = corePos:Lerp(anvilTop + Vector3.new(0, 0.6, 0), landed)
-		local vis = gather > 0.01 and t < 6.05
+		local vis = gather > 0.01 and t < 6.05 and not opt.quick
 		core.Size, coreIn.Size = Vector3.one * coreR * 2, Vector3.one * coreR * 1.2
 		core.CFrame, coreIn.CFrame = CFrame.new(cPos), CFrame.new(cPos)
 		core.Transparency, coreIn.Transparency = vis and 0.15 or 1, vis and 0 or 1
@@ -563,7 +606,43 @@ function M.play(opt)
 			sfx("upgrade", 1)
 			sfx("sparkle", 1.3)
 		end)
-		if pick then
+		-- the anvil sequence: melt, ingot, spectral hammer
+		if quickJumped then
+			local melt = smooth(0.3, 0.75, q)
+			for i, at in { 0.9, 1.35 } do
+				if qOn and q >= at and hits < i then
+					hits = i
+					qHold = os.clock() + 2 / 60
+					sparksO:Emit(55)
+					sfx("clink", 0.85 + i * 0.15)
+					kick, shake = 4, 0.6
+				end
+			end
+			local hot = 1 - smooth(5.95, 6.05, t)
+			local flat = hits * 0.14 + (t >= 5.85 and 0.14 or 0)
+			ingot.Size = Vector3.new(2.4 + flat * 2, 0.7 - flat, 1.1 + flat) * math.max(melt, 0.02)
+			ingot.CFrame = CFrame.new(anvilTop + Vector3.new(0, ingot.Size.Y / 2, 0))
+			ingot.Transparency = (melt > 0.02 and hot > 0) and 1 - hot or 1
+			ingotLight.Range, ingotLight.Brightness = 26 * melt * hot, (6 + (os.clock() < qHold + 0.1 and 8 or 0)) * melt * hot
+			glowIm.ImageTransparency = 1 - (0.5 + (os.clock() < qHold + 0.12 and 0.4 or 0)) * melt * hot
+			drips.Rate = (qOn and q > 0.15 and q < 0.9) and 40 or 0
+			local hamA = (qOn and smooth(0.3, 0.6, q) or 1) * (1 - smooth(5.95, 6.2, t))
+			local hamCF = hamPivot * CFrame.Angles(1.05 * hamH, 0, 0)
+			hamHead.CFrame, hamGrip.CFrame = hamCF * CFrame.new(0, 0, -3.5), hamCF * CFrame.new(0, 0, -1.6)
+			hamLight.Brightness = 4 * hamA
+			hamHead.Transparency, hamGrip.Transparency = 1 - 0.5 * hamA, 1 - 0.4 * hamA
+		end
+		if pick and qOn then
+			local heat, melt = smooth(0, 0.35, q), smooth(0.3, 0.75, q)
+			meltGlow.Enabled = true
+			meltGlow.FillTransparency, meltGlow.OutlineTransparency = 1 - 0.85 * heat, 1 - heat
+			pick:ScaleTo(pickScale0 * (5 / math.max(pickSize.Y, 0.1)) * (1 - 0.92 * melt))
+			pick:PivotTo(CFrame.new(anvilTop + Vector3.new(0, 0.7 - 0.4 * melt, 0)) * CFrame.Angles(0, math.pi, math.rad(-90)))
+			for _, d in pick:GetDescendants() do
+				if d:IsA("BasePart") then d.LocalTransparencyModifier = melt < 0.98 and 0 or 1 end
+			end
+		elseif pick then
+			if meltGlow.Enabled then meltGlow.Enabled = false end
 			local u = math.clamp((t - 6.0) / 0.5, 0, 1)
 			local show = t >= 6.0
 			local s = show and math.max(0.05, backOut(u)) or 0.05
@@ -588,8 +667,10 @@ function M.play(opt)
 		local cf = wide:Lerp(up, smooth(2.2, 3.4, t))
 		cf = cf:Lerp(close, smooth(3.6, 4.0, t))
 		cf = cf:Lerp(anvilCam, smooth(5.4, 5.6, t))
+		if quickJumped then cf = cf:Lerp(CFrame.lookAt(anvilTop + Vector3.new(-4.2, 2.4, -6.8), anvilTop + Vector3.new(0, 1.4, 1.2)), smooth(0, 0.5, q)) end
 		cf = cf:Lerp(hero, smooth(5.95, 6.3, t))
 		fov = 70 - 6 * smooth(0.9, 2.4, t) - 14 * smooth(3.6, 4.0, t) * (1 - smooth(5.4, 5.6, t))
+		if quickJumped then fov -= 8 * smooth(0, 1.7, q) * (1 - smooth(5.95, 6.3, t)) end
 		kick *= math.exp(-dt * 9)
 		shake *= math.exp(-dt * 7)
 		local sx, sy = math.noise(t * 25, 1) * shake, math.noise(t * 25, 2) * shake
