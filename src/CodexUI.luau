@@ -53,7 +53,13 @@ function M.start(E)
 		cell("pet", name, C.PETS[name][5], string.upper(name), n)
 	end
 	local found = { ore = {}, pet = {} }
-	local function paint()
+	local paint
+	for _, c in cells do -- point at a cell: its name on the status line
+		c.f.Active = true
+		c.f.MouseEnter:Connect(function() status.Text = c.got and c.label or (c.kind == "pet" and "A PET YOU HAVE NOT HATCHED YET" or "AN ORE YOU HAVE NOT BANKED YET") end)
+		c.f.MouseLeave:Connect(function() paint() end)
+	end
+	paint = function()
 		local have = 0
 		for _, c in cells do
 			local got = found[c.kind] and found[c.kind][c.key] == true
@@ -61,7 +67,8 @@ function M.start(E)
 			c.f.BackgroundColor3 = got and Color3.fromRGB(52, 26, 82) or DARK
 			c.gem.Visible = got
 			c.mark.Visible = not got
-			c.name.Text = got and c.label or ""
+			c.name.Text = "" -- names are read by pointing at a cell (they were tiny inside it)
+			c.got = got
 		end
 		local luck = C.codexLuck(have)
 		local nextAt

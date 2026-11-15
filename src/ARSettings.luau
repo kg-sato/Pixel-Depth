@@ -107,7 +107,10 @@ function M.start(E)
 		local function apply(pop)
 			local g = SoundService:FindFirstChild("PixelMaster")
 			if g then g.Volume = state.vol / 10 end
-			for i, pip in pips do pip.Image = i <= state.vol and E.GLASS.hexOn or E.GLASS.hex end
+			for i, pip in pips do -- v10: one hex image in two tints (the lit pips were mustard gold, outside the palette)
+				pip.Image = E.GLASS.hex
+				pip.ImageColor3 = i <= state.vol and Color3.fromRGB(120, 245, 255) or Color3.fromRGB(150, 120, 210)
+			end
 			num.set(state.vol == 0 and "OFF" or (state.vol * 10 .. "%"))
 			if pop then num.pop(0.02) end
 		end
