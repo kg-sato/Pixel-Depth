@@ -40,8 +40,8 @@ function M.start(E)
 		o.Size = UDim2.fromScale(o.Size.X.Scale, hShare or 1)
 		o.Parent = r
 	end
-	local money = row("Currency", 58) -- Field Notebook pass 2026-11-12: the owner found the HUD too compact; counters and buttons are a quarter larger
-	new("UIListLayout", money, { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 14), SortOrder = Enum.SortOrder.LayoutOrder })
+	local money = row("Currency", 46) -- Field Notebook pass 2026-11-12: the owner found the HUD too compact; counters and buttons are a quarter larger
+	new("UIListLayout", money, { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder })
 	for i, n in { "GoldPill", "GemPill", "EggPill" } do
 		local o = gui:FindFirstChild(n)
 		if o then
@@ -49,9 +49,9 @@ function M.start(E)
 			o.LayoutOrder = i
 		end
 	end
-	local pillRow = row("Tracker", 46)
-	local cardRow = row("TrackerCard", 118)
-	local btnRow = row("Buttons", 86 * 1.22) -- the square buttons side by side (the bag's count badge hangs under its button)
+	local pillRow = row("Tracker", 40)
+	local cardRow = row("TrackerCard", 102)
+	local btnRow = row("Buttons", 74 * 1.22) -- the square buttons side by side (the bag's count badge hangs under its button)
 	new("UIListLayout", btnRow, { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder })
 	local nBtn = 0
 	E.addRow = function(o) -- a square button joins the row (the wardrobe)

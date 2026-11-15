@@ -88,7 +88,7 @@ function M.start(E)
 			end
 		end
 		for f in held do if not f.Parent then held[f] = nil count -= 1 end end -- destroyed while open
-		local any = count > 0
+		local any = count > 0 and not (pg:FindFirstChild("ForgeStoryGui") or pg:FindFirstChild("ForgeCutsceneGui")) -- a forge cutscene owns the whole view: the panel stood 0.7 studs in front of its camera and covered it (the owner, 2026-11-15)
 		hook.spatialOpen = any
 		if sg.Enabled ~= any then sg.Enabled = any end
 		if part.CanQuery ~= any then part.CanQuery = any end
@@ -139,9 +139,9 @@ function M.start(E)
 			* CFrame.Angles(0, math.pi, 0) -- the front face looks back at the eye
 			* CFrame.Angles(math.rad(PITCH - lean.Y * 0.5), math.rad(-YAW - swing * 62 - lean.X * 0.8), 0)
 		-- a short lag behind the view: when the camera turns, the panel trails and catches up
-		last = last and last:Lerp(want, math.min(1, dt * 14)) or want
-		if (last.Position - want.Position).Magnitude > 2 then last = want end
-		part.CFrame = last
+		-- only the turn trails; the place follows the eye at once (the owner, 2026-11-15: a walking player left the menu behind and had to stop to use it)
+		last = last and last:Lerp(want.Rotation, math.min(1, dt * 14)) or want.Rotation
+		part.CFrame = CFrame.new(want.Position) * last
 	end)
 
 	plr:GetAttributeChangedSignal("DevFlatUI"):Connect(function() -- a test can put every menu back on the flat HUD

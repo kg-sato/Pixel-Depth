@@ -349,10 +349,10 @@ end
 
 -- HUD (board HUD artboard): gold and egg pills, bag pill, left rail, layer pill and depth strip, tutorial card, DIG, crosshair
 local goldPill = panel(gui, S(170, 46), S(20, 18), nil, "pillButter")
-fit(goldPill, 170, 46)
-local coinIcon = icon(goldPill, "coin", UDim2.fromScale(0.2, 0.68), UDim2.fromScale(0.06, 0.5), Vector2.new(0, 0.5))
+fit(goldPill, 116, 46) -- the owner, 2026-11-15: the counters were far wider than their numbers
+local coinIcon = icon(goldPill, "coin", UDim2.fromScale(0.28, 0.66), UDim2.fromScale(0.07, 0.5), Vector2.new(0, 0.5))
 new("UIAspectRatioConstraint", coinIcon, { AspectRatio = 1 })
-local goldText = text(goldPill, "0", UDim2.fromScale(0.62, 0.8), UDim2.fromScale(0.3, 0.5), Vector2.new(0, 0.5), GLASS and INK or Color3.fromRGB(59, 36, 22), 700, false) -- larger and darker: thin gold digits vanished on a phone
+local goldText = text(goldPill, "0", UDim2.fromScale(0.56, 0.8), UDim2.fromScale(0.38, 0.5), Vector2.new(0, 0.5), GLASS and INK or Color3.fromRGB(59, 36, 22), 700, false) -- larger and darker: thin gold digits vanished on a phone
 goldText.TextXAlignment, goldText.Font = Enum.TextXAlignment.Left, HEAD
 goldPill.Name = "GoldPill"
 
@@ -1458,11 +1458,11 @@ end)()
 	local DEEP_GEM = Color3.fromRGB(214, 74, 126)
 	-- the gem pill, right of the gold pill
 	local gemPill = panel(gui, S(128, 46), S(198, 18), nil, "pillPink")
-	fit(gemPill, 128, 46)
+	fit(gemPill, 100, 46)
 	gemPill.Name = "GemPill"
-	local gemIc = icon(gemPill, "gem", UDim2.fromScale(0.34, 0.74), UDim2.fromScale(0.06, 0.5), Vector2.new(0, 0.5))
+	local gemIc = icon(gemPill, "gem", UDim2.fromScale(0.34, 0.7), UDim2.fromScale(0.07, 0.5), Vector2.new(0, 0.5))
 	new("UIAspectRatioConstraint", gemIc, { AspectRatio = 1 })
-	local gemText = text(gemPill, "0", UDim2.fromScale(0.5, 0.8), UDim2.fromScale(0.44, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(140, 30, 62), 700, false) -- deeper than DEEP_GEM: 2.8:1 on the pink pill measured with spike/hud_contrast.luau, now about 4:1
+	local gemText = text(gemPill, "0", UDim2.fromScale(0.48, 0.8), UDim2.fromScale(0.45, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(140, 30, 62), 700, false) -- deeper than DEEP_GEM: 2.8:1 on the pink pill measured with spike/hud_contrast.luau, now about 4:1
 	gemText.Font = HEAD
 	gemText.TextXAlignment = Enum.TextXAlignment.Left
 	eggPill.Position = S(320, 84) -- the egg pill moves under the gem pill's row, right of the bag
@@ -2823,7 +2823,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	fovKick *= math.exp(-dt * 8)
 	if inCave then caveStep(now) end
 	if inMine or inCave then
-		mgZoom += ((cave.mgBusy and -7 or 0) - mgZoom) * (1 - math.exp(-dt * 5))
+		mgZoom += ((cave.mgBusy and -22 or 0) - mgZoom) * (1 - math.exp(-dt * 5))
 		cam.FieldOfView = C.FP_FOV + fovKick + mgZoom
 		local hd = head()
 		if now < lookDownUntil and hd then

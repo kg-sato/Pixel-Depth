@@ -999,9 +999,9 @@ function M.play(opt)
 						l = math.clamp(l + rng:NextInteger(-1, 1), 1, 3)
 					end
 				elseif kind == "rock" then
-					local lane = rng:NextNumber() < 0.6 and cur or rng:NextInteger(1, 3) -- most rocks aim at you
+					local lane = rng:NextNumber() < 0.45 and cur or rng:NextInteger(1, 3) -- under half the rocks aim at you
 					spawnRock(lane, ahead, lane == cur)
-					if p > 0.45 and rng:NextNumber() < 0.35 then
+					if p > 0.7 and rng:NextNumber() < 0.2 then
 						local l2 = lane % 3 + 1
 						spawnRock(l2, ahead, l2 == cur)
 					end
@@ -1025,15 +1025,17 @@ function M.play(opt)
 				end
 				if TEACH[kind] and not taught[kind] then hazards[#hazards].teach = TEACH[kind] end
 				taught[kind] = true
-				if kind ~= "orbs" and rng:NextNumber() < 0.45 then spawnOrb(rng:NextInteger(1, 3), ahead + math.max(speed, E.speed) * 0.6) end
-				local dens = p < 0.15 and 1.15 or (p < 0.6 and 1 - (p - 0.15) * 0.33 or (p < 0.7 and 0.8 or 0.75))
-				nextSpawn = t + rng:NextNumber(1.1, 1.6) * dens
+				if kind ~= "orbs" and rng:NextNumber() < 0.6 then spawnOrb(rng:NextInteger(1, 3), ahead + math.max(speed, E.speed) * 0.6) end
+				local dens = p < 0.15 and 1.15 or (p < 0.6 and 1 - (p - 0.15) * 0.22 or 0.9)
+				nextSpawn = t + rng:NextNumber(2.0, 2.7) * dens -- the owner, 2026-11-15: one thing every 1.1 to 1.6 s was impossible for a child
 			end
 			-- verbs: the jump is a sine hop, the duck drops the eye
 			local ju = (now - jumpT) / JUMP_T
 			jumpY = (ju >= 0 and ju <= 1) and math.sin(ju * math.pi) * JUMP_H or 0
-			local ducking = now < duckUntil
-			duckY += ((ducking and 1.4 or 0) - duckY) * (1 - math.exp(-dt / 0.06))
+			local held = not K.replica and K.job ~= "stoker" and t > 0 and (UIS:IsKeyDown(Enum.KeyCode.S) or UIS:IsKeyDown(Enum.KeyCode.Down) or UIS:IsKeyDown(Enum.KeyCode.C)) -- a held key keeps the head down; letting go brings it up
+			if jumpY > 0.05 then duckUntil = 0 end -- a jump always ends a duck
+			local ducking = jumpY <= 0.05 and (now < duckUntil or held)
+			duckY += ((ducking and 1.15 or 0) - duckY) * (1 - math.exp(-dt / 0.06))
 			-- hazards: rocks drop to land as the cart arrives; passing a lane checks the lean
 			local myLane = lean < -0.5 and 1 or (lean > 0.5 and 3 or 2)
 			if K.fork and dist >= K.fork.at then -- past the fork: which side did the cart take?
@@ -1176,7 +1178,7 @@ function M.play(opt)
 			local sh = calm and 0 or shakeAmp + math.min(speed / 48, 1) * 0.02
 			cam.CameraType = Enum.CameraType.Scriptable
 			local eye = (base * CFrame.new(laneX() * 0.9 + K.sx, 3.8 + jumpY * 0.85 - duckY, 0.6 + K.sz)).Position
-			local look = (pathCF(dist + 7) * CFrame.new(laneX() * 0.4, 3.0 + jumpY * 0.5 - duckY * 0.5, 0)).Position -- looks into the bend before it arrives
+			local look = (pathCF(dist + 12) * CFrame.new(laneX() * 0.4, 3.9 + jumpY * 0.5 - duckY * 0.8, 0)).Position -- looks into the bend before it arrives
 			cam.CFrame = CFrame.lookAt(eye, look, base.UpVector) * CFrame.Angles(0, 0, roll + bank) * CFrame.Angles((math.random() - 0.5) * sh * 0.06, (math.random() - 0.5) * sh * 0.06, 0)
 			cam.FieldOfView = C.FP_FOV + (calm and 0 or math.min(#boostUntil, 3) * 3 + math.clamp(speed / 48, 0, 1) * 5) -- widens with speed and with each boost
 			air.step(cam.CFrame, speed, calm)

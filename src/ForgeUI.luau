@@ -267,6 +267,12 @@ function M.start(E)
 	act.Name = "Action"
 	local eqB = button(det, "EQUIP", UDim2.fromScale(0.33, 0.15), UDim2.fromScale(0.95, 0.975), Vector2.new(1, 1), "butter")
 	eqB.Name = "Equip"
+	local storyB = button(det, "STORY", UDim2.fromScale(0.3, 0.075), UDim2.fromScale(0.96, 0.045), Vector2.new(1, 0.5), "butter") -- replays the forging biography of an owned pickaxe
+	storyB.Name, storyB.Visible = "Story", false
+	local function storyMod()
+		local m = RS.Shared:FindFirstChild("ForgeStory")
+		return m and require(m)
+	end
 	-- two lines on the action button: the verb, then the price with its currency (Gemini r3: one line read cramped)
 	act.Label.Visible = false
 	local actTop = text(act, "", UDim2.fromScale(0.86, 0.4), UDim2.fromScale(0.5, 0.33), Vector2.new(0.5, 0.5), WHITE)
@@ -313,6 +319,8 @@ function M.start(E)
 		chips.Visible = false
 		for _, p in pips do p.frame.Visible = showLv end
 		eqB.Visible = tab == "pick" and own
+		local st = tab == "pick" and own and storyMod()
+		storyB.Visible = st ~= nil and st ~= false and st.has(def.model) == true
 		act.Size = eqB.Visible and UDim2.fromScale(0.58, 0.15) or UDim2.fromScale(0.9, 0.15)
 		local actIcon = act:FindFirstChild("Icon")
 		if tab == "pick" then
@@ -484,6 +492,15 @@ function M.start(E)
 			shake(act)
 		end
 	end)
+	storyB.Activated:Connect(function()
+		local i = selBy[tab]
+		local def, st = tab == "pick" and C.PICKS[i], storyMod()
+		if not def or not st or not st.has(def.model) then return end
+		task.spawn(function()
+			local ok, err = pcall(st.play, { name = def.name, model = def.model, rarity = rarityOf("pick", i), sfx = sfx })
+			if not ok then warn("[ForgeStory] " .. tostring(err)) end
+		end)
+	end)
 	eqB.Activated:Connect(function()
 		local i = selBy[tab]
 		if tab == "pick" and getState() and i <= getState().pick and i ~= getState().equip then R.Buy:FireServer("equip", i) end
@@ -603,7 +620,7 @@ function M.start(E)
 				task.spawn(function()
 					local r = rarityOf("pick", a)
 					local ok, err = pcall(function()
-						local o = { name = C.PICKS[a].name, model = C.PICKS[a].model, rarity = { "LEVEL " .. b, r[2], r[3] }, sfx = sfx, quick = true, fast = true }
+						local o = { name = C.PICKS[a].name, model = C.PICKS[a].model, rarity = { "LEVEL " .. b, r[2], r[3] }, sfx = sfx, quick = true, fast = b ~= 2 } -- the first upgrade tells the whole biography (the Wood Pickaxe is never forged, so this is where its story is first seen); later levels show the last chapter
 						local story = RS.Shared:FindFirstChild("ForgeStory") and require(RS.Shared.ForgeStory) -- a pickaxe with a biography shows its NAMED chapter
 						if not (story and story.has(o.model) and story.play(o)) then require(fc).play(o) end
 					end)

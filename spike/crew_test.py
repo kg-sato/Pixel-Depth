@@ -32,7 +32,11 @@ N.play(False); time.sleep(2)
 # B: a passenger of the server's own driver
 down()
 C1("local p=game.Players.LocalPlayer p:SetAttribute('DevCrew',true) p:SetAttribute('DevCrewPaid',nil) game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,a,b) if k=='escapeDone' then "
-   "p:SetAttribute('DevCrewCard', type(b)=='table' and ('gem '..b.gem..' riders '..b.n..' x'..b.mult..' hits '..b.hits..' flares '..b.flares..' moves '..b.moHit..'/'..b.moN) or 'no crew') p:SetAttribute('DevCrewPaid',a) end end) return 1")
+   "p:SetAttribute('DevCrewCard', type(b)=='table' and ('gem '..b.gem..' riders '..b.n..' x'..b.mult..' hits '..b.hits..' flares '..b.flares..' moves '..b.moHit..'/'..b.moN) or 'no crew') p:SetAttribute('DevCrewPaid',a) "
+   # the card is up for about 6 s: a watcher on the client reads it the moment it shows (reading it with a later call missed it on a slow Studio)
+   "task.spawn(function() local g=p.PlayerGui local t=os.clock() while os.clock()-t<14 do local e=g:FindFirstChild('MinecartEscapeGui') local r={} "
+   "for _,d in e and e:GetDescendants() or {} do if d:IsA('TextLabel') and (string.find(d.Text,'RIDERS') or string.find(d.Text,'COINS') or string.find(d.Text,' OF ')) then r[#r+1]=d.Text end end "
+   "if #r>=3 then table.sort(r) p:SetAttribute('DevCrewCardText',table.concat(r,' | ')) break end task.wait(0.2) end end) end end) return 1")
 # step 3, crew moments: the server's driver calls two; a watcher armed now answers the first in time and lets the second pass
 C1("local p=game.Players.LocalPlayer local R=game.ReplicatedStorage.Remotes.Crew local n,log=0,'' R.OnClientEvent:Connect(function(k,a) "
    "if k=='m' then n+=1 log=log..' call:'..tostring(a) if n==1 then task.delay(0.3,function() R:FireServer('a') R:FireServer('a') end) end "
@@ -63,9 +67,7 @@ print("moments:", C1("local p=game.Players.LocalPlayer local t=os.clock() while 
 print("home:", C1("local p=game.Players.LocalPlayer local t=os.clock() while os.clock()-t<25 and p:GetAttribute('DevCrewPaid')==nil do task.wait(0.2) end task.wait(1) return 'paid '..tostring(p:GetAttribute('DevCrewPaid'))..' in cave '..tostring(p:GetAttribute('InCave'))"))
 # step 4: the crew's numbers reach the client and its result card; a second crew ride the same day pays no gem
 print("crew numbers:", C1("return tostring(game.Players.LocalPlayer:GetAttribute('DevCrewCard'))"))
-print("result card:", C1("local g=game.Players.LocalPlayer.PlayerGui local t=os.clock() local out='no card' while os.clock()-t<12 do local e=g:FindFirstChild('MinecartEscapeGui') local r={} "
-      "for _,d in e and e:GetDescendants() or {} do if d:IsA('TextLabel') and (string.find(d.Text,'RIDERS') or string.find(d.Text,'COINS') or string.find(d.Text,' OF ')) then r[#r+1]=d.Text end end "
-      "if #r>=3 then table.sort(r) out=table.concat(r,' | ') break end task.wait(0.2) end return out"))
+print("result card:", C1("local p=game.Players.LocalPlayer local t=os.clock() while os.clock()-t<14 and not p:GetAttribute('DevCrewCardText') do task.wait(0.2) end return tostring(p:GetAttribute('DevCrewCardText') or 'no card')"))
 time.sleep(12)
 N.key("Q"); time.sleep(32)
 C1("local p=game.Players.LocalPlayer p:SetAttribute('DevCrewPaid',nil) p:SetAttribute('DevCrewCard',nil) return 1")
