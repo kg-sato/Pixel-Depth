@@ -133,7 +133,10 @@ export function makeToy(THREE) {
     const sc = Array.isArray(s) ? s : [s, s, s];
     const m = new THREE.Matrix4().compose(new THREE.Vector3(...p), new THREE.Quaternion().setFromEuler(new THREE.Euler((r[0] * Math.PI) / 180, (r[1] * Math.PI) / 180, (r[2] * Math.PI) / 180, "YXZ")), new THREE.Vector3(...sc));
     g.applyMatrix4(m);
-    if (sc[0] * sc[1] * sc[2] < 0) { const ix = g.index; if (ix) { const arr = ix.array; for (let i = 0; i < arr.length; i += 3) { const t = arr[i]; arr[i] = arr[i + 1]; arr[i + 1] = t; } } }
+    if (sc[0] * sc[1] * sc[2] < 0) {
+      if (!g.index) { const idx = []; for (let k = 0; k < g.getAttribute("position").count; k++) idx.push(k); g.setIndex(idx); }
+      const arr = g.index.array; for (let i = 0; i < arr.length; i += 3) { const t = arr[i]; arr[i] = arr[i + 1]; arr[i + 1] = t; }
+    }
     g.computeBoundingBox();
     return g;
   }
@@ -173,7 +176,14 @@ export function makeToy(THREE) {
     const m = {
       name, palette,
       // bone(name, parent or null, joint [x,y,z] in rest coordinates, material class)
-      bone(bn, parent, joint, mat = "SmoothPlastic") { bones.set(bn, { name: bn, parent, joint, mat, geos: [] }); order.push(bn); return m; },
+      // image: a painted picture for this bone (a PNG path relative to design3d/); its geometry then brings its own UVs (addTex)
+      bone(bn, parent, joint, mat = "SmoothPlastic", image = null) { bones.set(bn, { name: bn, parent, joint, mat, image, geos: [] }); order.push(bn); return m; },
+      addTex(bn, g) {
+        const b = bones.get(bn); if (!b || !b.image) throw new Error(name + ": " + bn + " has no image");
+        if (!g.index) { const idx = []; for (let k = 0; k < g.getAttribute("position").count; k++) idx.push(k); g.setIndex(idx); }
+        if (!g.getAttribute("normal")) g.computeVertexNormals();
+        b.geos.push(g); return m;
+      },
       // add(bone, geometry in rest coordinates, colour)
       add(bn, g, hex) {
         const b = bones.get(bn); if (!b) throw new Error(name + ": no bone " + bn);
@@ -215,7 +225,7 @@ export function makeToy(THREE) {
           const b = bones.get(n), g = m.merged(n), c = new THREE.Vector3(), s = new THREE.Vector3();
           g.boundingBox.getCenter(c); g.boundingBox.getSize(s);
           const r = (x) => Math.round(x * 1000) / 1000;
-          return { name: n, parent: b.parent, joint: b.joint.map(r), center: [r(c.x), r(c.y), r(c.z)], size: [r(s.x), r(s.y), r(s.z)], mat: b.mat, tris: g.index.count / 3 };
+          return { name: n, parent: b.parent, joint: b.joint.map(r), center: [r(c.x), r(c.y), r(c.z)], size: [r(s.x), r(s.y), r(s.z)], mat: b.mat, image: b.image || undefined, tris: g.index.count / 3 };
         });
       },
       // preview: a THREE.Group tree, one Group per bone at its joint, with the mesh inside; nodes[name] turns the limb
@@ -233,5 +243,28 @@ export function makeToy(THREE) {
     };
     return m;
   }
-  return { ball, pillow, capsule, limb, lathe, tube, puff, crease, at, strip, bend, model, TAU };
+  // a height field: rows of heights (nz + 1 rows of nx + 1 values, row 0 at z0), planar UVs (u along x, v = 0 at z1), and an
+  // optional skip(i, j) that leaves a cell out (a hole, for the lake)
+  function field(x0, z0, x1, z1, heights, skip) {
+    const nz = heights.length - 1, nx = heights[0].length - 1, pos = [], uv = [], idx = [];
+    for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) {
+      pos.push(x0 + ((x1 - x0) * i) / nx, heights[j][i], z0 + ((z1 - z0) * j) / nz);
+      uv.push(i / nx, 1 - j / nz);
+    }
+    const row = nx + 1;
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+      if (skip && skip(i, j)) continue;
+      const a = j * row + i, b = a + 1, c = a + row, d = c + 1;
+      idx.push(a, c, b, b, c, d);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2));
+    g.setIndex(idx); g.computeVertexNormals(); g.computeBoundingBox();
+    return g;
+  }
+  // mirror a geometry in the water plane y = level (the reflection drawn under the lake): flips the winding and the normals
+  function mirrorY(g, level) { return at(g.clone(), [0, 2 * level, 0], [0, 0, 0], [1, -1, 1]); }
+  const rnd = (i) => { const x = Math.sin(i * 127.1 + 11.7) * 43758.5453; return x - Math.floor(x); };
+  return { ball, pillow, capsule, limb, lathe, tube, puff, crease, at, strip, bend, field, mirrorY, rnd, model, TAU };
 }

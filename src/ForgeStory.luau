@@ -3,7 +3,8 @@
 -- own models, backdrop, effects, animation and characters. Brief: vault Projects/Pixel-_/Briefs/Forge Biographies (2026-11-15).md.
 -- This module is the only shared part: the clock, skip, chapter cards, camera, lighting save and restore, and the rigs (models
 -- from ReplicatedStorage.ForgeModels, built in design3d/*.mjs; each limb is its own MeshPart on a joint, data in ForgeRigs).
--- A scene is its own module (ForgeWood, ...): { length, named, setup = function(ctx) return function(t, dt) end end }.
+-- A scene is its own module (ForgeWood, ...): { length, named, open, setup = function(ctx) return function(t, dt) end end }.
+-- open = true: the scene builds a whole place of its own under its own sky (ctx.sky, ctx.atmo, ctx.prop), so no shell is put round it.
 -- Client only and cosmetic: the server has already charged and given the pickaxe.
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -139,9 +140,11 @@ function M.play(opt)
 		p.Parent = world
 		return p
 	end
-	wall(Vector3.new(400, 260, 2), CFrame.new(0, 60, 60)) wall(Vector3.new(400, 260, 2), CFrame.new(0, 60, -120))
-	wall(Vector3.new(2, 260, 400), CFrame.new(-110, 60, 0)) wall(Vector3.new(2, 260, 400), CFrame.new(110, 60, 0))
-	wall(Vector3.new(400, 2, 400), CFrame.new(0, 150, 0)) wall(Vector3.new(400, 2, 400), CFrame.new(0, -40, 0))
+	if not scene.open then
+		wall(Vector3.new(400, 260, 2), CFrame.new(0, 60, 60)) wall(Vector3.new(400, 260, 2), CFrame.new(0, 60, -120))
+		wall(Vector3.new(2, 260, 400), CFrame.new(-110, 60, 0)) wall(Vector3.new(2, 260, 400), CFrame.new(110, 60, 0))
+		wall(Vector3.new(400, 2, 400), CFrame.new(0, 150, 0)) wall(Vector3.new(400, 2, 400), CFrame.new(0, -40, 0))
+	end
 
 	-- lighting: save, then let the scene drive it
 	local LKEYS = { "ClockTime", "Brightness", "Ambient", "OutdoorAmbient", "ColorShift_Top", "ColorShift_Bottom", "FogEnd", "FogStart", "FogColor", "ExposureCompensation", "GeographicLatitude", "EnvironmentDiffuseScale", "EnvironmentSpecularScale", "GlobalShadows" }
@@ -160,6 +163,7 @@ function M.play(opt)
 	local dof = Instance.new("DepthOfFieldEffect")
 	dof.Name, dof.FarIntensity, dof.NearIntensity, dof.InFocusRadius, dof.FocusDistance, dof.Parent = "ForgeStoryDoF", 0.25, 0, 30, 20, Lighting
 	Lighting.FogEnd, Lighting.FogStart, Lighting.GlobalShadows = 100000, 100000, true
+	local parked, made = {}, {} -- the game's own sky objects wait outside Lighting while a scene shows its own; made = what the scene added to Lighting
 
 	-- the viewmodel and every other screen layer hide
 	local hiddenVm = {}
@@ -273,6 +277,62 @@ function M.play(opt)
 		return s
 	end
 	function ctx.light(props) for k, v in props do Lighting[k] = v end end
+	-- a thing of the setting that never moves (a tree, a rock, the cabin): placed once, not stepped every frame.
+	-- mirrorY = the water level: the model's Mirror bones are set so the lake shows it upside down; without it they are removed.
+	function ctx.prop(name, cf, scale, mirrorY)
+		local r = newRig(name, world)
+		r.root, r.scale = O * (cf or CFrame.new()), scale or 1
+		for _, b in r.order do
+			if b.name == "Mirror" or b.name == "MirrorGlow" then
+				if mirrorY and b.part then
+					if b.name == "Mirror" then b.local_ = CFrame.new(0, 2 * ((O.Position.Y + mirrorY) - r.root.Position.Y), 0) end
+					b.part.CastShadow = false
+				elseif b.part then
+					b.part:Destroy()
+					b.part = nil
+				end
+			end
+		end
+		r:update()
+		return r
+	end
+	-- the scene's own sky: ctx.sky({ side = id, up = id, dn = id, sun = degrees or 0, stars = n }); a second call swaps the pictures
+	local skyObj
+	function ctx.sky(s)
+		if not skyObj then
+			for _, e in Lighting:GetChildren() do if e:IsA("Sky") then table.insert(parked, e) e.Parent = nil end end
+			skyObj = Instance.new("Sky")
+			skyObj.Name, skyObj.MoonAngularSize = "ForgeStorySky", 0
+			skyObj.Parent = Lighting
+			table.insert(made, skyObj)
+		end
+		local side = "rbxassetid://" .. s.side
+		skyObj.SkyboxBk, skyObj.SkyboxFt, skyObj.SkyboxLf, skyObj.SkyboxRt = side, side, side, side
+		skyObj.SkyboxUp, skyObj.SkyboxDn = "rbxassetid://" .. s.up, "rbxassetid://" .. s.dn
+		skyObj.SunAngularSize, skyObj.StarCount, skyObj.CelestialBodiesShown = s.sun or 0, s.stars or 0, (s.sun or 0) > 0
+	end
+	-- haze between the layers of a deep setting: ctx.atmo({ Density = , Haze = , Color = , Decay = , Glare = , Offset = })
+	local atmoObj
+	function ctx.atmo(props)
+		if not atmoObj then
+			atmoObj = Lighting:FindFirstChildOfClass("Atmosphere")
+			if atmoObj then
+				for _, k in { "Haze", "Color", "Decay", "Glare", "Offset" } do table.insert(off, { atmoObj, k, atmoObj[k] }) end -- Density is already kept above
+			else
+				atmoObj = Instance.new("Atmosphere")
+				atmoObj.Parent = Lighting
+				table.insert(made, atmoObj)
+			end
+		end
+		for k, v in props do atmoObj[k] = v end
+	end
+	function ctx.effect(class, props) -- a post effect of the scene's own (SunRaysEffect ...), removed at the end
+		local e = Instance.new(class)
+		for k, v in props or {} do e[k] = v end
+		e.Parent = Lighting
+		table.insert(made, e)
+		return e
+	end
 	-- the key light: turn the sun so it shines from a stage-space direction (the game sky is hidden, so the hour is free).
 	-- Models need this for their roundness to read; ambient light alone renders them flat.
 	function ctx.key(dir)
@@ -358,6 +418,8 @@ function M.play(opt)
 	for k, v in saved do Lighting[k] = v end
 	for _, o in off do if o[1].Parent then o[1][o[2]] = o[3] end end
 	cc:Destroy() bloom:Destroy() dof:Destroy()
+	for _, e in made do e:Destroy() end
+	for _, e in parked do e.Parent = Lighting end
 	for _, d in hiddenVm do if d.Parent then d.LocalTransparencyModifier = 0 end end
 	for _, g in hidden do if g.Parent then g.Enabled = true end end
 	for k, v in camSaved do pcall(function() cam[k] = v end) end

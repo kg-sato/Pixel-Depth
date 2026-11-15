@@ -18,12 +18,12 @@ for (const m of models) {
   let tris = 0;
   for (const b of man) {
     const g = m.merged(b.name);
-    parts.push({ name: b.name, palette: m.palette, position: Array.from(g.getAttribute("position").array), normal: Array.from(g.getAttribute("normal").array), uv: Array.from(g.getAttribute("uv").array), index: Array.from(g.index.array) });
+    parts.push({ name: b.name, image: b.image ? resolve(here, b.image) : undefined, palette: m.palette, position: Array.from(g.getAttribute("position").array), normal: Array.from(g.getAttribute("normal").array), uv: Array.from(g.getAttribute("uv").array), index: Array.from(g.index.array) });
     tris += b.tris;
     if (b.tris > 20000) throw new Error(`${m.name}.${b.name}: ${b.tris} triangles (rule: under 20,000)`);
     // a Neon bone shows one flat colour in Roblox: the first colour its mesh uses
     const u = g.getAttribute("uv").array[0], v = 1 - g.getAttribute("uv").array[1];
-    b.color = m.palette[Math.floor(v * 8) * 8 + Math.floor(u * 8)];
+    b.color = m.palette[Math.floor(v * 8) * 8 + Math.floor(u * 8)] || "#ffffff";
   }
   const all = m.bones().filter((b) => !man.find((x) => x.name === b.name)).map((b) => ({ name: b.name, parent: b.parent, joint: b.joint, empty: true }));
   rigs[m.name] = { bones: man.concat(all) };

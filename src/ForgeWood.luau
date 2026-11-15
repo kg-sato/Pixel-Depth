@@ -1,10 +1,20 @@
 -- ReplicatedStorage.Shared.ForgeWood (src/ForgeWood.luau): the Wood Pickaxe biography, played by ForgeStory.
 -- BORN: a birch branch, dropped by a spring storm. MADE: whittled by a young raccoon (Bolt as a kit) in one long night; an acorn
 -- falls on his head and becomes the charm. NAMED: sunrise, he holds it up. "His first."
--- Nothing here is shared with another scene: the grove, the storm, the whittling and the sunrise belong to this pickaxe.
--- Models: design3d/wood.mjs (WoodSet, BoltKit, BirchBranch, WoodBlank, Shaving, Acorn, Knife, Leaf). Space: front of a model is -Z,
--- the camera stands at -Z and looks toward the paper backdrop at +Z.
-local M = { length = 11.2, named = 7.6 }
+-- Nothing here is shared with another scene: the lake, the storm, the whittling and the sunrise belong to this pickaxe.
+-- The setting is a place of its own (the owner, 2026-11-15; reference refs/forge/scene_cabin_lake.jpg): a mountain lake at the
+-- edge of a spruce forest, the maker's cabin lit on the far bank, wildflower meadows, two forested slopes crossing behind.
+-- It is built once per play from design3d/wood.mjs and wood_world.py (terrain, pictures, the map of every tree in ForgeWoodMap).
+-- The lake reflects: every tall thing has an upside-down twin under a clear water sheet, and the sky pictures carry the
+-- mirrored sky in their lower half. Space: front of a model is -Z, the camera stands at -Z and looks toward the lake at +Z.
+local M = { length = 11.2, named = 7.6, open = true }
+-- pictures made by design3d/wood_world.py (uploaded 2026-11-15; ids in design3d/assets.json)
+local IMG = {
+	storm = { side = "80840484137760", up = "102725166168479", dn = "88932717958951" },
+	night = { side = "98540000433096", up = "102757336864746", dn = "100178533145001" },
+	dawn = { side = "73285214976026", up = "92565812712365", dn = "75186259090239", sun = 9 },
+	ripple = "rbxassetid://108008922454214", rain = "rbxassetid://80922659043708",
+}
 
 local function hex(h) return Color3.fromHex(h) end
 local function v3(x, y, z) return Vector3.new(x, y, z) end
@@ -15,8 +25,56 @@ function M.setup(ctx)
 	local O, sfx = ctx.O, ctx.sfx
 	local function W(x, y, z) return O * CFrame.new(x, y, z) end -- stage space to world
 
+	local K = NumberSequenceKeypoint.new
+	local rgb = Color3.fromRGB
+	-- the place: ground and mountains, then every tree, flower patch, rock and the cabin from the map
+	local MAP = require(script.Parent:WaitForChild("ForgeWoodMap"))
+	local land = ctx.prop("WoodWorld")
+	land:all(function(p, b) if b.name == "MeadowM" or b.name == "ValleyM" then p.CastShadow = false end end)
+	local cabinCF = CFrame.new(-20, -1.6, 92)
+	local SMALL = { PineClump = true, FlowerPatch = true, GrassTuft = true }
+	for _, it in MAP.items do
+		local cf = CFrame.new(it[2], it[3], it[4]) * CFrame.Angles(0, math.rad(it[5]), 0)
+		local r = ctx.prop(it[1], cf, it[6], it[7] and MAP.lakeY or nil)
+		if it[1] == "Cabin" then cabinCF = cf end
+		local small = SMALL[it[1]]
+		r:all(function(p) -- matte: the kit's smooth plastic shone like vinyl under this place's lighting (Gemini round 8)
+			if p.Material ~= Enum.Material.Neon then p.Material = Enum.Material.Rubber end
+			if small then p.CastShadow = false end
+		end)
+	end
+	land:all(function(p) p.Material = Enum.Material.Rubber end)
+	-- the lake: a clear dark sheet over the mirror world, with slow glints drifting on it
+	local water = ctx.part(v3(170, 0.2, 100), CFrame.new(12, MAP.lakeY - 0.1, 56), hex("#1b3436"), { Transparency = 0.5, Reflectance = 0.1 })
+	local ripple = Instance.new("Texture")
+	ripple.Texture, ripple.Face, ripple.StudsPerTileU, ripple.StudsPerTileV, ripple.Transparency, ripple.Parent = IMG.ripple, Enum.NormalId.Top, 52, 30, 0.8, water
+	for _, w in { { -5.3, 3.1 }, { -2.2, 3.1 }, { 3.2, 3.2 }, { 5.3, 3.7 } } do -- the cabin's windows throw warm light on its porch and bank
+		local lp = ctx.part(v3(0.2, 0.2, 0.2), cabinCF * CFrame.new(-w[1], w[2], -6.2), hex("#ffb44a"), { Transparency = 1 })
+		local l = Instance.new("PointLight")
+		l.Color, l.Range, l.Brightness, l.Shadows, l.Parent = hex("#ffb060"), 22, 2.2, false, lp
+	end
+	local smokePart = ctx.part(v3(0.6, 0.6, 0.6), cabinCF * CFrame.new(-2.2, 12.7, 1.2), hex("#ffffff"), { Transparency = 1 })
+	local smoke = ctx.emitter(smokePart, { Texture = S.SMOKE, Color = ColorSequence.new(hex("#cfc8d6")), Size = NumberSequence.new({ K(0, 1.1), K(1, 6.5) }), Transparency = NumberSequence.new({ K(0, 0.5), K(1, 1) }), Lifetime = NumberRange.new(6, 9), Speed = NumberRange.new(2.4, 3.4), EmissionDirection = Enum.NormalId.Top, SpreadAngle = Vector2.new(7, 7), Acceleration = v3(1.4, 0.3, 0), LightEmission = 0, LightInfluence = 1, Rate = 5 })
+	smoke:Emit(8)
+	local mistPart = ctx.part(v3(120, 1, 56), CFrame.new(12, MAP.lakeY + 1.4, 56), hex("#ffffff"), { Transparency = 1 })
+	local mist = ctx.emitter(mistPart, { Texture = S.SMOKE, Color = ColorSequence.new(hex("#dfe6ee")), Size = NumberSequence.new({ K(0, 9), K(1, 17) }), Transparency = NumberSequence.new({ K(0, 1), K(0.25, 0.88), K(0.75, 0.9), K(1, 1) }), Lifetime = NumberRange.new(6, 9), Speed = NumberRange.new(0.3, 1.1), SpreadAngle = Vector2.new(180, 8), LightEmission = 0.05, LightInfluence = 1 })
+	-- the storm: slanting rain as streaks (the streak picture is drawn upright: turned a quarter so its length lies along the fall), splashes on the grass and rings on the lake
+	local rainPart = ctx.part(v3(96, 1, 76), CFrame.new(0, 36, 8), hex("#ffffff"), { Transparency = 1 })
+	local rainFx = ctx.emitter(rainPart, { Texture = IMG.rain, Color = ColorSequence.new(hex("#cfe0f2")), Size = NumberSequence.new(1.0), Squash = NumberSequence.new(2.8), Transparency = NumberSequence.new(0.22), Lifetime = NumberRange.new(0.44, 0.52), Speed = NumberRange.new(78, 94), EmissionDirection = Enum.NormalId.Bottom, Orientation = Enum.ParticleOrientation.VelocityParallel, Rotation = NumberRange.new(90), Acceleration = v3(24, 0, 0), LightEmission = 0.3, LightInfluence = 0.5, SpreadAngle = Vector2.new(2, 2) })
+	local splashPart = ctx.part(v3(64, 0.2, 46), CFrame.new(0, 0.12, 2), hex("#ffffff"), { Transparency = 1 })
+	local splash = ctx.emitter(splashPart, { Texture = S.GLOW, Color = ColorSequence.new(hex("#e4eef8")), Size = NumberSequence.new({ K(0, 0.08), K(1, 0.46) }), Transparency = NumberSequence.new({ K(0, 0.4), K(1, 1) }), Lifetime = NumberRange.new(0.16, 0.3), Speed = NumberRange.new(1.5, 4.5), SpreadAngle = Vector2.new(55, 55), EmissionDirection = Enum.NormalId.Top, Acceleration = v3(0, -22, 0), LightEmission = 0.4 })
+	local ringPart = ctx.part(v3(110, 0.2, 52), CFrame.new(12, MAP.lakeY + 0.05, 56), hex("#ffffff"), { Transparency = 1 })
+	local rings = ctx.emitter(ringPart, { Texture = S.GLOW, Color = ColorSequence.new(hex("#c8dcec")), Size = NumberSequence.new({ K(0, 0.1), K(1, 1.5) }), Transparency = NumberSequence.new({ K(0, 0.55), K(1, 1) }), Lifetime = NumberRange.new(0.3, 0.5), Speed = NumberRange.new(0, 0.2), Orientation = Enum.ParticleOrientation.VelocityPerpendicular, EmissionDirection = Enum.NormalId.Top, LightEmission = 0.3 })
+	local flyPart = ctx.part(v3(50, 4, 32), CFrame.new(0, 2.8, 8), hex("#ffffff"), { Transparency = 1 })
+	local flies = ctx.emitter(flyPart, { Texture = S.GLOW, Color = ColorSequence.new(hex("#e8ff9c")), Size = NumberSequence.new({ K(0, 0), K(0.2, 0.3), K(0.5, 0.1), K(0.8, 0.32), K(1, 0) }), Transparency = NumberSequence.new(0.05), Lifetime = NumberRange.new(3, 5), Speed = NumberRange.new(0.4, 1.3), SpreadAngle = Vector2.new(180, 180), Drag = 0.4, Brightness = 2.5 })
+	local skyBolt = ctx.rig("Lightning", CFrame.new(50, 200, 330) * R(0, 180, 0), 16)
+	skyBolt:show("Bolt", false)
+	local sunRays = ctx.effect("SunRaysEffect", { Intensity = 0, Spread = 0.9 })
+
 	local set = ctx.rig("WoodSet")
+	set:all(function(p) if p.Material ~= Enum.Material.Neon then p.Material = Enum.Material.Rubber end end)
 	local bolt = ctx.rig("BoltKit", CFrame.new(-2.5, 0.56, -2.3) * R(0, -18, 0))
+	bolt:all(function(p) p.Material = Enum.Material.Rubber end) -- fur, not vinyl
 	local branch = ctx.rig("BirchBranch", CFrame.new(5.2, 6.4, 3.4))
 	local blank = ctx.rig("WoodBlank", CFrame.new(0, -50, 0), 0.42)
 	local knife = ctx.rig("Knife", CFrame.new(0, -50, 0), 1.25)
@@ -30,15 +88,9 @@ function M.setup(ctx)
 		pick:PivotTo(O * cf)
 	end
 
-	-- pooled extras: rain streaks, wind leaves, wood shavings
-	local rain = {}
-	for i = 1, 44 do
-		local r = ctx.rig("Drop", CFrame.new(0, -80, 0), 1.5 + (i % 3) * 0.4)
-		r:all(function(p) p.Transparency = 0.25 p.CastShadow = false end)
-		rain[i] = { r = r, x = (i * 7.31) % 34 - 17, z = (i * 3.77) % 20 - 8, ph = (i * 0.618) % 1 }
-	end
+	-- pooled extras: wind leaves, wood shavings
 	local leaves = {}
-	for i = 1, 10 do leaves[i] = { r = ctx.rig("Leaf", CFrame.new(0, -70, 0), 0.9), ph = (i * 0.37) % 1, y = 2 + (i * 1.9) % 7, z = (i * 2.3) % 9 - 2 } end
+	for i = 1, 18 do leaves[i] = { r = ctx.rig("Leaf", CFrame.new(0, -70, 0), 0.9), ph = (i * 0.37) % 1, y = 2 + (i * 1.9) % 7, z = (i * 2.3) % 9 - 2 } end
 	local curls = {}
 	for i = 1, 12 do curls[i] = { r = ctx.rig("Shaving", CFrame.new(0, -70, 0), 0.7), t0 = -1, from = Vector3.zero, vel = Vector3.zero, spin = 0 } end
 	local curlN = 0
@@ -51,10 +103,11 @@ function M.setup(ctx)
 
 	-- lights and emitters
 	local firePart = ctx.part(v3(0.4, 0.4, 0.4), CFrame.new(0.6, 1.0, -3.0), hex("#ffb14a"), { Transparency = 1 })
+	local fireLightPart = ctx.part(v3(0.4, 0.4, 0.4), CFrame.new(0.4, 2.4, -5.2), hex("#ffb14a"), { Transparency = 1 })
 	local fireLight = Instance.new("PointLight")
-	fireLight.Color, fireLight.Range, fireLight.Brightness, fireLight.Shadows, fireLight.Parent = hex("#ff9c50"), 26, 0, false, firePart
+	fireLight.Color, fireLight.Range, fireLight.Brightness, fireLight.Shadows, fireLight.Parent = hex("#ff9c50"), 24, 0, true, fireLightPart -- a little toward the camera and above the flames, so his face takes the light and the grass by the fire is not burnt white
 	local fireGlow = Instance.new("BillboardGui")
-	fireGlow.Size, fireGlow.LightInfluence, fireGlow.Brightness, fireGlow.Parent = UDim2.fromScale(11, 11), 0, 1, firePart
+	fireGlow.Size, fireGlow.LightInfluence, fireGlow.Brightness, fireGlow.Parent = UDim2.fromScale(7, 7), 0, 1, firePart
 	local fireGlowIm = Instance.new("ImageLabel")
 	fireGlowIm.BackgroundTransparency, fireGlowIm.Image, fireGlowIm.ImageColor3, fireGlowIm.ImageTransparency, fireGlowIm.Size, fireGlowIm.Parent = 1, S.GLOW, hex("#ff9a4a"), 1, UDim2.fromScale(1, 1), fireGlow
 	local embers = ctx.emitter(firePart, { Texture = S.SPARK, Color = ColorSequence.new(hex("#ffe58f"), hex("#ff7d4a")), Size = NumberSequence.new(0.22, 0), Transparency = NumberSequence.new(0, 1), Lifetime = NumberRange.new(1, 2.2), Speed = NumberRange.new(1.5, 3.5), SpreadAngle = Vector2.new(18, 18), Acceleration = v3(0.6, 1.5, 0), EmissionDirection = Enum.NormalId.Top })
@@ -111,10 +164,26 @@ function M.setup(ctx)
 	end
 	-- lighting looks: storm, fire night, dawn
 	local LOOK = {
-		storm = { Ambient = Color3.fromRGB(100, 96, 136), OutdoorAmbient = Color3.fromRGB(100, 96, 136), Brightness = 1.6, ColorShift_Top = Color3.fromRGB(196, 204, 255), ExposureCompensation = 0 },
-		night = { Ambient = Color3.fromRGB(118, 98, 140), OutdoorAmbient = Color3.fromRGB(118, 98, 140), Brightness = 2.4, ColorShift_Top = Color3.fromRGB(255, 160, 96), ExposureCompensation = 0 },
-		dawn = { Ambient = Color3.fromRGB(150, 122, 130), OutdoorAmbient = Color3.fromRGB(150, 122, 130), Brightness = 2.4, ColorShift_Top = Color3.fromRGB(255, 214, 150), ExposureCompensation = 0 },
+		storm = { Ambient = rgb(120, 130, 142), OutdoorAmbient = rgb(128, 138, 150), Brightness = 1.6, ColorShift_Top = rgb(190, 205, 225), ExposureCompensation = 0.15 },
+		night = { Ambient = rgb(92, 110, 150), OutdoorAmbient = rgb(100, 120, 162), Brightness = 2.0, ColorShift_Top = rgb(160, 188, 255), ExposureCompensation = 0.3 },
+		dawn = { Ambient = rgb(168, 140, 140), OutdoorAmbient = rgb(178, 150, 146), Brightness = 2.7, ColorShift_Top = rgb(255, 196, 140), ExposureCompensation = 0 },
 	}
+	-- the air between the layers: thick and grey in the storm, blue at night, gold at sunrise
+	local ATMO = {
+		storm = { Density = 0.4, Haze = 2.6, Color = rgb(150, 162, 170), Decay = rgb(96, 108, 118), Glare = 0, Offset = 0.2 },
+		night = { Density = 0.34, Haze = 2.0, Color = rgb(84, 112, 150), Decay = rgb(40, 58, 90), Glare = 0, Offset = 0.15 },
+		dawn = { Density = 0.23, Haze = 1.7, Color = rgb(255, 206, 160), Decay = rgb(196, 140, 130), Glare = 0.2, Offset = 0.25 },
+	}
+	local function air(a, b, u)
+		local out = {}
+		for k, v in a do
+			local w = b[k]
+			if typeof(v) == "Color3" then out[k] = v:Lerp(w, u) else out[k] = v + (w - v) * u end
+		end
+		ctx.atmo(out)
+	end
+	local skyNow
+	local function sky(name) if skyNow ~= name then skyNow = name ctx.sky(IMG[name]) end end
 	local function look(a, b, u)
 		local out = {}
 		for k, v in a do
@@ -123,12 +192,11 @@ function M.setup(ctx)
 		end
 		ctx.light(out)
 	end
-	-- the key light per chapter: cold from above in the storm, low and warm from the fire side at night, low from behind at dawn
-	local KEYS = { Vector3.new(-0.4, 0.75, -0.5), Vector3.new(0.8, 0.45, 0.45), Vector3.new(0.5, 0.42, -0.7) } -- the night key comes from the fire side and a little behind, so it does not wash the paper sky
+	-- the key light per chapter: flat and high in the storm; the moon over the far bank at night (long shadows toward the
+	-- camera, the fire lights his face); at dawn the sun itself, low in the gap between the two slopes
+	local KEYS = { Vector3.new(-0.3, 0.85, -0.3), Vector3.new(0.5, 0.52, 0.68), Vector3.new(0.14, 0.2, 0.97) }
 	local keyNow = 0
 	local function key(i) if keyNow ~= i then keyNow = i ctx.key(KEYS[i]) end end
-	set:show("Lightning", false)
-	set:show("SunRays", false)
 	bolt:show("EyesShut", false)
 	branch.root = W(5.2, 6.4, 3.4) * R(0, 20, -12)
 
@@ -146,23 +214,22 @@ function M.setup(ctx)
 		local dawn = smooth(7.6, 9.2, t)
 
 		-- ===== lighting and the paper sky =====
-		if t < 3.0 then key(1) look(LOOK.storm, LOOK.night, 0) elseif t < 7.6 then key(2) look(LOOK.night, LOOK.night, 0) else key(3) look(LOOK.night, LOOK.dawn, dawn) end
-		set:alpha("Dawn", 1 - smooth(7.7, 9.6, t))
-		set:show("Dawn", t >= 7.6)
-		ctx.cc.TintColor = Color3.fromRGB(226, 226, 250):Lerp(Color3.fromRGB(255, 240, 225), smooth(2.9, 3.1, t)):Lerp(Color3.fromRGB(255, 244, 232), dawn)
-		ctx.cc.Saturation, ctx.cc.Contrast = 0.12 + 0.1 * dawn, 0.08
-		set:set("Cloud1", CFrame.new(-18 * smooth(2.4, 3.0, t) + 4 * (1 - smooth(0, 1.2, t)) + math.sin(t * 0.9) * 0.3, 0, 0))
-		set:set("Cloud2", CFrame.new(20 * smooth(2.4, 3.0, t) - 5 * (1 - smooth(0, 1.2, t)) + math.sin(t * 0.7 + 1) * 0.3, 0, 0))
-		set:alpha("Cloud1", smooth(2.6, 3.0, t)) set:alpha("Cloud2", smooth(2.6, 3.0, t))
-		set:alpha("Stars", t < 3.0 and 0.75 or math.max(0.05 + 0.25 * (0.5 + 0.5 * math.sin(ts * 9)), dawn))
-		set:set("Stars", CFrame.new(0, 0, 0) * R(0, 0, math.sin(t * 0.2) * 0.6))
-		set:set("Sun", CFrame.new(0, -9 + 12.5 * smooth(7.6, 10.2, t), 0))
-		set:show("SunRays", t >= 7.9)
-		set:alpha("SunRays", 1 - 0.75 * smooth(7.9, 9.4, t))
-		set:set("SunRays", R(0, 0, t * 8))
-		-- lightning: two flickers, the second one breaks the branch
+		if t < 3.0 then key(1) sky("storm") look(LOOK.storm, LOOK.night, 0) air(ATMO.storm, ATMO.night, 0)
+		elseif t < 7.6 then key(2) sky("night") look(LOOK.night, LOOK.night, 0) air(ATMO.night, ATMO.night, 0)
+		else key(3) sky("dawn") look(LOOK.dawn, LOOK.dawn, 0) air(ATMO.dawn, ATMO.dawn, 0) end
+		ctx.cc.TintColor = rgb(226, 232, 244):Lerp(rgb(236, 240, 255), smooth(2.9, 3.1, t)):Lerp(rgb(255, 244, 232), dawn)
+		ctx.cc.Saturation, ctx.cc.Contrast = (t < 3.0 and -0.22 or 0.1) + 0.12 * dawn, 0.1
+		sunRays.Intensity = 0.07 * smooth(7.6, 8.4, t)
+		ripple.OffsetStudsU, ripple.OffsetStudsV = t * 1.6, math.sin(t * 0.4) * 2
+		rainFx.Rate, splash.Rate, rings.Rate = 1500 * storm, 320 * storm, 200 * storm
+		flies.Rate = (t >= 3.0 and t < 7.6) and 7 or 0
+		mist.Rate = t >= 3.0 and 5 or 0
+		ctx.once("mistNight", 3.0, t, function() mist:Emit(14) flies:Emit(10) end)
+		ctx.once("mistDawn", 7.6, t, function() mist:Emit(22) end)
+		-- lightning: two flickers far over the lake, the second one breaks the branch
 		local bolt1 = (t >= 0.95 and t < 1.02) or (t >= 1.32 and t < 1.46)
-		set:show("Lightning", bolt1)
+		skyBolt:show("Bolt", bolt1)
+		if bolt1 then ctx.light({ Brightness = 4, Ambient = rgb(190, 200, 225) }) end
 		ctx.flashAlpha = math.max((t >= 0.95 and t < 1.0) and 0.35 or 0, 0.85 * (1 - lin(1.32, 1.62, t)) * (t >= 1.32 and 1 or 0), (1 - lin(3.0, 3.22, t)) * (t >= 2.94 and 1 or 0) * smooth(2.94, 3.0, t), 0.9 * (1 - lin(8.45, 8.8, t)) * (t >= 8.45 and 1 or 0))
 		ctx.once("thunder1", 0.95, t, function() ctx.sound(SND.thunder, 0.3, 1.25) end)
 		ctx.once("thunder2", 1.32, t, function() ctx.sound(SND.thunder, 0.75, 0.95) sfx("breakRock", 0.5) ctx.shake(1.1) ctx.hold(3 / 60) end)
@@ -173,10 +240,6 @@ function M.setup(ctx)
 		for i = 1, 3 do
 			set:set("Canopy" .. i, R(math.sin(t * 5 + i) * 3 * gust, 0, (6 + math.sin(t * 7.3 + i * 2) * 5) * gust + math.sin(t * 1.3 + i) * 0.8))
 			set:set("Trunk" .. i, R(0, 0, 1.6 * gust))
-		end
-		for i, d in rain do
-			local u = (t * 1.9 + d.ph) % 1
-			d.r.root = storm > 0.02 and W(d.x + u * 5, 21 - u * 22, d.z) * R(0, 0, 13) or W(0, -80, 0)
 		end
 		for _, l in leaves do
 			local u = (t * 0.55 + l.ph) % 1
@@ -207,9 +270,8 @@ function M.setup(ctx)
 			set:show(n, fire > 0.01)
 			set:set(n, R(0, 0, math.sin(ts * 8 + i * 2) * 5))
 		end
-		fireLight.Brightness = 9 * fire * (0.85 + 0.15 * math.sin(ts * 12))
-		if t >= 3.0 and t < 7.6 then ctx.light({ Brightness = 2.4 * (0.9 + 0.1 * math.sin(t * 13) * math.sin(t * 7.1)) }) end
-		fireGlowIm.ImageTransparency = 1 - 0.42 * fire
+		fireLight.Brightness = 2.6 * fire * (0.85 + 0.15 * math.sin(ts * 12))
+		fireGlowIm.ImageTransparency = 1 - 0.25 * fire
 		embers.Rate = 9 * fire
 		fireFx.Rate = 16 * fire
 		fireS.Volume = 0.45 * fire
@@ -295,7 +357,7 @@ function M.setup(ctx)
 
 		-- ===== the acorn: falls, bonks him, hops onto the pickaxe =====
 		if t >= 6.2 and t < 7.46 then
-			local head = bolt:joint("Head").Position + Vector3.new(0, 1.75, 0)
+			local head = bolt:joint("Head").Position + Vector3.new(0, 1.95, 0)
 			local cf
 			if t < 6.62 then
 				local u = (t - 6.2) / 0.42
@@ -339,13 +401,14 @@ function M.setup(ctx)
 		local cf, fov, focus
 		local function shot(from, aim, f) cf, fov, focus = CFrame.lookAt(from, aim), f, (from - aim).Magnitude end
 		local V = Vector3.new
-		if t < 1.36 then -- close on the branch, high in the birch, while the storm pulls at it
-			shot(V(2.6 - 0.5 * smooth(0, 1.36, t), 5.2, -3.4), V(5.0, 6.5, 3.2), 40)
+		if t < 1.36 then -- the place in the storm: the lake and the slopes behind the birch, then in on the branch the wind pulls at
+			local u = smooth(0, 1.3, t)
+			shot(V(-9 + 5.5 * u, 7.0 - 2.4 * u, -22 + 11 * u), V(0.5 + 4.4 * u, 3.0 + 3.4 * u, 14 - 10.7 * u), 52 - 10 * u)
 		elseif t < 3.0 then -- it snaps: low and wide, the camera follows it down to the grass, where the raccoon finds it
 			local bp = O:PointToObjectSpace(branch.root.Position)
 			shot(V(-0.8, 0.9, -9.5 + 1.2 * smooth(1.6, 2.8, t)), V(4.6, 6.4, 3.4):Lerp(bp, smooth(1.36, 1.7, t)):Lerp(V(-0.9, 2.1, -2.4), smooth(2.2, 2.6, t)), 52 - 4 * smooth(1.6, 2.8, t))
-		elseif t < 3.62 then -- the camp: fire on the left, the raccoon on his log
-			shot(V(2.4, 2.4, -11.8 + 0.6 * smooth(3.0, 3.62, t)), V(-0.9, 2.0, -2.6), 44)
+		elseif t < 3.95 then -- the camp at night: the fire, the raccoon on his log, and behind him the lake with the cabin's lights on it
+			shot(V(3.0, 3.4 - 0.4 * smooth(3.0, 3.95, t), -13.4 + 1.2 * smooth(3.0, 3.95, t)), V(-1.5, 3.3, -2.6), 48)
 		elseif t < 5.5 then -- close on his paws for the knife work
 			shot(V(-0.5 + 0.3 * smooth(3.62, 5.5, t), 2.8, -8.7), V(-2.75, 2.65, -3.2), 38)
 		elseif t < 6.2 then -- front on: he blows the dust off and ties the ribbon
@@ -359,12 +422,13 @@ function M.setup(ctx)
 		end
 		if t >= 7.6 then -- low at his feet, looking up: the pickaxe against the sunrise
 			local up = smooth(8.3, 9.2, t)
-			shot(V(-4.4 - 0.3 * smooth(8.4, 10.8, t), 0.7, -15.4 + 0.8 * smooth(8.4, 10.8, t)), V(-7.0, 2.3, -5.0):Lerp(V(-7.0, 3.3, -5.0), up), 47 - 2 * smooth(8.4, 10.8, t))
+			shot(V(-4.6 - 0.3 * smooth(8.4, 10.8, t), 0.8, -13.0 + 0.8 * smooth(8.4, 10.8, t)), V(-7.0, 2.5, -5.0):Lerp(V(-7.0, 3.6, -5.0), up), 47 - 2 * smooth(8.4, 10.8, t))
 		end
 		ctx.cam, ctx.fov = O * cf, fov
 		ctx.dof.FocusDistance = focus
-		ctx.dof.InFocusRadius = (t >= 1.36 and t < 3.0) and 60 or 7
-		ctx.dof.FarIntensity = (t >= 1.36 and t < 3.0) and 0.1 or 0.35
+		local wide = t < 3.95 or t >= 7.6 -- the place itself is the picture: nothing is blurred
+		ctx.dof.InFocusRadius = wide and 400 or 14
+		ctx.dof.FarIntensity = wide and 0 or 0.16
 	end
 end
 

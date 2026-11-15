@@ -41,7 +41,10 @@ import night as N
 py = root / "Hunyuan3D" / ".venv" / "Scripts" / "python.exe"
 for name in rig:
     subprocess.run([sys.executable, str(root / "tools" / "design3d" / "write_glb.py"), str(out / f"{name}.json"), str(out / f"{name}.glb")], capture_output=True, text=True, check=True)
-    h = hashlib.sha1((out / f"{name}.json").read_bytes()).hexdigest()[:12]
+    hh = hashlib.sha1((out / f"{name}.json").read_bytes())
+    for part in json.loads((out / f"{name}.json").read_text(encoding="utf-8"))["parts"]:
+        if part.get("image"): hh.update(pathlib.Path(part["image"]).read_bytes())  # a repainted picture is a changed model
+    h = hh.hexdigest()[:12]
     if assets.get(name, {}).get("hash") != h:
         u = subprocess.run([str(py), "-I", str(root / "tools" / "upload_asset.py"), str(out / f"{name}.glb"), "--user", "872430111", "--name", "PD Forge " + name, "--upload"], capture_output=True, text=True, cwd=root)
         tail = (u.stdout + u.stderr).strip().splitlines()[-1]
