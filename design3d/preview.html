@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forge models preview</title>
+<style>html,body{margin:0;height:100%;background:#16081e;overflow:hidden}canvas{display:block}#t{position:fixed;left:8px;top:6px;color:#fff;font:12px system-ui}</style>
+</head>
+<body>
+<div id="t"></div>
+<script type="module">
+// Local look at the forge models: preview.html?scene=wood&m=BoltKit&yaw=30&pitch=10&dist=9&ty=1.8&anim=1
+import * as THREE from "./vendor/three.module.js";
+import { makeToy } from "./toy.mjs";
+const q = new URLSearchParams(location.search), num = (k, d) => (q.has(k) ? parseFloat(q.get(k)) : d);
+const scene = await import(`./${q.get("scene") || "wood"}.mjs`);
+const T = makeToy(THREE), models = scene.build(THREE, T);
+const r = new THREE.WebGLRenderer({ antialias: true }); r.setPixelRatio(1); r.setSize(innerWidth, innerHeight); r.shadowMap.enabled = true; r.shadowMap.type = THREE.PCFSoftShadowMap;
+r.outputColorSpace = THREE.SRGBColorSpace; document.body.appendChild(r.domElement);
+const S = new THREE.Scene(); S.background = new THREE.Color(q.get("bg") || "#241138");
+S.add(new THREE.HemisphereLight(0xfff0ff, 0x5a4a7a, 1.5));
+const sun = new THREE.DirectionalLight(0xfff4e0, 2.2); sun.position.set(6, 12, 9); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.bias = -0.0015; sun.shadow.normalBias = 0.05;
+Object.assign(sun.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, near: 1, far: 60 }); S.add(sun);
+const rim = new THREE.DirectionalLight(0xc8a0ff, 0.8); rim.position.set(-8, 6, -8); S.add(rim);
+const mats = (m) => {
+  const cv = document.createElement("canvas"); cv.width = cv.height = 64; const c = cv.getContext("2d");
+  m.palette.forEach((h, i) => { c.fillStyle = h; c.fillRect((i % 8) * 8, Math.floor(i / 8) * 8, 8, 8); });
+  const tex = new THREE.CanvasTexture(cv); tex.magFilter = tex.minFilter = THREE.NearestFilter; tex.colorSpace = THREE.SRGBColorSpace;
+  const std = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0 }), neon = new THREE.MeshBasicMaterial({ map: tex }), glass = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.1, transparent: true, opacity: 0.75 });
+  return (k) => (k === "Neon" ? neon : k === "Glass" ? glass : std);
+};
+const want = (q.get("m") || "").split(",").filter(Boolean), rigs = {}; let x = 0, info = [];
+for (const m of models) {
+  if (want.length && !want.includes(m.name)) continue;
+  const p = m.preview(mats(m)); rigs[m.name] = p;
+  const man = m.manifest(), tris = man.reduce((n, b) => n + b.tris, 0); info.push(`${m.name} ${man.length} bones ${tris} tris ${m.palette.length} colours`);
+  if (want.length > 1 && q.get("row") !== "0") { p.root.position.x = x; x += num("gap", 5); }
+  S.add(p.root);
+}
+if (q.get("hide")) for (const h of q.get("hide").split(",")) for (const k in rigs) if (rigs[k].nodes[h]) rigs[k].nodes[h].visible = false;
+if (q.get("joints") === "1") for (const k in rigs) for (const n in rigs[k].nodes) { const d = new THREE.Mesh(new THREE.SphereGeometry(0.07, 8, 6), new THREE.MeshBasicMaterial({ color: 0xff3fa0, depthTest: false })); d.renderOrder = 9; rigs[k].nodes[n].add(d); }
+if (q.get("floor") === "1") { const f = new THREE.Mesh(new THREE.CircleGeometry(30, 48), new THREE.MeshStandardMaterial({ color: 0x3a2452, roughness: 1 })); f.rotation.x = -Math.PI / 2; f.receiveShadow = true; S.add(f); }
+document.getElementById("t").textContent = info.join("  |  ");
+const cam = new THREE.PerspectiveCamera(num("fov", 35), innerWidth / innerHeight, 0.1, 400);
+const yaw = (num("yaw", 25) * Math.PI) / 180, pitch = (num("pitch", 12) * Math.PI) / 180, dist = num("dist", 10), tgt = new THREE.Vector3(num("tx", 0), num("ty", 1.8), num("tz", 0));
+cam.position.set(tgt.x + Math.sin(yaw) * Math.cos(pitch) * dist, tgt.y + Math.sin(pitch) * dist, tgt.z + Math.cos(yaw) * Math.cos(pitch) * dist); cam.lookAt(tgt);
+const anim = q.get("anim") === "1", t0 = performance.now();
+function frame() {
+  const t = anim ? Math.floor(((performance.now() - t0) / 1000) * 12) / 12 : num("t", 0); // stop-motion: 12 poses a second
+  const b = rigs.BoltKit;
+  if (b && (anim || q.has("t"))) { // limb test: wave, nod, tail wag, ear flick, step
+    const n = b.nodes, s = Math.sin, w = t * 5;
+    n.ArmR.rotation.set(0, 0, -2.2 + s(w) * 0.25); n.ForeR.rotation.set(0, 0, -0.5 + s(w * 2) * 0.5);
+    n.ArmL.rotation.set(s(w) * 0.3, 0, 0.2); n.Head.rotation.set(s(w * 0.5) * 0.12, s(w * 0.5) * 0.25, s(w) * 0.08);
+    n.Tail1.rotation.set(0, s(w) * 0.5, 0); n.Tail2.rotation.set(0, s(w - 0.8) * 0.5, 0);
+    n.EarL.rotation.set(0, 0, s(w * 2) * 0.15); n.EarR.rotation.set(0, 0, -s(w * 2) * 0.15);
+    n.LegL.rotation.set(s(w) * 0.5, 0, 0); n.LegR.rotation.set(-s(w) * 0.5, 0, 0); n.Hips.position.y = 0.95 + Math.abs(s(w)) * 0.12;
+    const blink = t % 2.4 < 0.17; n.Eyes.visible = !blink; n.EyesShut.visible = blink;
+  } else if (b) { b.nodes.EyesShut.visible = false; }
+  r.render(S, cam);
+  if (anim) requestAnimationFrame(frame);
+}
+function fit() { const w = innerWidth || 1280, h = innerHeight || 800; r.setSize(w, h); cam.aspect = w / h; cam.updateProjectionMatrix(); if (!anim) frame(); }
+addEventListener("resize", fit); fit(); if (anim) frame(); window.__ready = true; window.__fit = fit;
+</script>
+</body>
+</html>

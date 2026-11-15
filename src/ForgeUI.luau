@@ -602,7 +602,11 @@ function M.start(E)
 			if fc and C.PICKS[a] and not game:GetService("Players").LocalPlayer:GetAttribute("FastCine") then
 				task.spawn(function()
 					local r = rarityOf("pick", a)
-					local ok, err = pcall(function() require(fc).play({ name = C.PICKS[a].name, model = C.PICKS[a].model, rarity = { "LEVEL " .. b, r[2], r[3] }, sfx = sfx, quick = true }) end)
+					local ok, err = pcall(function()
+						local o = { name = C.PICKS[a].name, model = C.PICKS[a].model, rarity = { "LEVEL " .. b, r[2], r[3] }, sfx = sfx, quick = true, fast = true }
+						local story = RS.Shared:FindFirstChild("ForgeStory") and require(RS.Shared.ForgeStory) -- a pickaxe with a biography shows its NAMED chapter
+						if not (story and story.has(o.model) and story.play(o)) then require(fc).play(o) end
+					end)
 					if not ok then warn("[ForgeCutscene] " .. tostring(err)) end
 					show()
 				end)
@@ -618,7 +622,11 @@ function M.start(E)
 				local fc = RS.Shared:FindFirstChild("ForgeCutscene")
 				if fc and C.PICKS[i] and not game:GetService("Players").LocalPlayer:GetAttribute("FastCine") then
 					task.spawn(function()
-						local ok, err = pcall(function() require(fc).play({ name = a, model = C.PICKS[i].model, rarity = rarityOf("pick", i), sfx = sfx }) end)
+						local ok, err = pcall(function()
+							local o = { name = a, model = C.PICKS[i].model, rarity = rarityOf("pick", i), sfx = sfx }
+							local story = RS.Shared:FindFirstChild("ForgeStory") and require(RS.Shared.ForgeStory) -- its own biography scene when it has one
+							if not (story and story.has(o.model) and story.play(o)) then require(fc).play(o) end
+						end)
 						if not ok then warn("[ForgeCutscene] " .. tostring(err)) end
 						show()
 					end)

@@ -50,3 +50,7 @@ spike/.push_cache.json
 spike/.last_full
 spike/.test_times.json
 spike/.last_quick
+
+# three.js copy for the local model preview (pinned in tools/design3d)
+design3d/vendor/
+design3d/out/
