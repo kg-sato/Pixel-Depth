@@ -160,7 +160,7 @@ function M.start(E)
 			shownHp = hp
 			hpText.Text = tostring(hp)
 		end
-		bar.Visible = not touch and plr:GetAttribute("DevTouch") == nil and not cave.mgBusy
+		bar.Visible = not touch and plr:GetAttribute("DevTouch") == nil and not cave.mgBusy and hook.wheelOpen ~= true
 		if flare then
 			local fl = plr:GetAttribute("Flares") or C.GLOOM.flares
 			if fl ~= lastFl then

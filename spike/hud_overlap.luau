@@ -26,7 +26,8 @@ local function hit(a, b, pad)
 end
 for i = 1, #list do
 	for j = i + 1, #list do
-		if hit(list[i], list[j], 1) then
+		local pair = list[i].Name .. " x " .. list[j].Name
+		if hit(list[i], list[j], 1) and pair ~= "Minimap x DepthGauge" and pair ~= "DepthGauge x Minimap" then -- the depth pill sits on the minimap ring on purpose (v10)
 			n += 1
 			table.insert(out, list[i].Name .. " x " .. list[j].Name)
 		end
