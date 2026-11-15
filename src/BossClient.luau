@@ -77,7 +77,7 @@ function M.start(E)
 	-- v10: while the boss bar is up the exploring HUD steps back (coins, the menu, the quest card, the map, the how-to card), so
 	-- the boss and the strike dial own the picture
 	local stepped = {}
-	game:GetService("RunService").Heartbeat:Connect(function()
+	game:GetService("RunService"):BindToRenderStep("BossHudStepBack", Enum.RenderPriority.Last.Value + 20, function() -- last in the frame: the HUD's own code shows these again between two strikes
 		local fight = bar.Visible
 		for _, n in { "LeftColumn", "StepCard", "Minimap", "HowTo", "DepthGauge" } do
 			local o = E.gui:FindFirstChild(n, true)

@@ -24,7 +24,7 @@ name = sys.argv[1] if len(sys.argv) > 1 else "loop3"
 VENV = r"C:\Users\kgsat\Documents\Roblox\Hunyuan3D\.venv\Scripts\python.exe"
 video = game / "captures" / "loop" / f"{name}.mp4"; video.parent.mkdir(parents=True, exist_ok=True)
 sheets = ws / "Overnight" / "judge" / f"loop_{name}"; sheets.mkdir(parents=True, exist_ok=True)
-SECS = 575
+SECS = 505
 PILOT = re.search(r"PILOT = r'''(.*?)'''", (here / "boss_fight_test.py").read_text(encoding="utf-8"), re.S).group(1)
 
 
@@ -99,8 +99,11 @@ time.sleep(2)
 mark("Root Warden: the whole fight by autopilot")
 S(P + "p:SetAttribute('DevEquip',6) local w=cv:FindFirstChild('Warden',true) local o=w.PrimaryPart.Position local t=cv:FindFirstChild('TentSide',true) local away=((o-t.Position)*Vector3.new(1,0,1)).Unit "
       "local rp=RaycastParams.new() rp.FilterDescendantsInstances={w,p.Character} rp.FilterType=Enum.RaycastFilterType.Exclude local best "
-      "for _,deg in {35,-35,60,-60,0,90,-90,135,-135} do local d=CFrame.Angles(0,math.rad(deg),0):VectorToWorldSpace(away) local hit=workspace:Raycast(o+d*10+Vector3.new(0,6,0),Vector3.new(0,-14,0),rp) "
-      "if hit and math.abs(hit.Position.Y-(o.Y-4))<4 then best=hit.Position break end end "
+      "for _,deg in {35,-35,60,-60,0,90,-90,120,-120,150,-150,180} do local d=CFrame.Angles(0,math.rad(deg),0):VectorToWorldSpace(away) local hit=workspace:Raycast(o+d*10+Vector3.new(0,6,0),Vector3.new(0,-14,0),rp) "
+      "if hit and math.abs(hit.Position.Y-(o.Y-4))<4 then local eye=hit.Position+Vector3.new(0,4.5,0) local see=workspace:Raycast(eye,(o-eye),rp) local roof=workspace:Raycast(eye,Vector3.new(0,5,0),rp) "
+      "local back=workspace:Raycast(eye,d*5,rp) local box=#workspace:GetPartBoundsInBox(CFrame.new(hit.Position+Vector3.new(0,3.2,0)),Vector3.new(3,5,3)) "
+      "if not see and not roof and not back and box==0 then best=hit.Position break end end end "  # open floor, a clear line to the boss, head room and nothing behind: the first try stood inside the rock
+      "if not best then local d=Vector3.new(math.cos(math.rad(315)),0,math.sin(math.rad(315))) best=workspace:Raycast(o+d*10+Vector3.new(0,6,0),Vector3.new(0,-14,0),rp).Position end "
       "h.AssemblyLinearVelocity=Vector3.zero h.CFrame=CFrame.lookAt(best+Vector3.new(0,3,0),Vector3.new(o.X,best.Y+3,o.Z)) return 1"); time.sleep(1.5)  # on the side away from the camp tent (it filled a third of the picture)
 look("cv:FindFirstChild('Warden',true).PrimaryPart.Position")
 C(PILOT)
