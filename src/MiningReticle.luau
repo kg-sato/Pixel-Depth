@@ -164,6 +164,11 @@ function M.start(E)
 		local o = ps.AbsolutePosition
 		dial.Size = UDim2.fromOffset(px, px)
 		dial.Position = UDim2.fromOffset(at.X - o.X, at.Y - inset.Y - o.Y)
+		local boss = pg:FindFirstChild("BossBar", true) -- v10 (Gemini: "the UI smothers the boss"): in a boss fight only the dial is drawn, no title and no brackets
+		if boss and boss.Visible then
+			say.Visible = false
+			lock.Enabled = false
+		end
 	end)
 end
 

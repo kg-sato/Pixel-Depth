@@ -56,6 +56,7 @@ function M.start(E)
 	local panels, isOpen, focus = {}, false, 0 -- focus: -1 left, 0 middle, 1 right
 	local shut
 
+	local DEEP = Color3.fromRGB(120, 92, 196) -- v10: the resting colour of every control (the pale lavender read as a second light colour)
 	local function glassButton(parent, word, color, size, pos, act)
 		local b = new("TextButton", parent, { Text = "", AutoButtonColor = false, Size = size, Position = pos, AnchorPoint = MID, BackgroundColor3 = color, BackgroundTransparency = 0.15, BorderSizePixel = 0, ZIndex = 4 })
 		new("UICorner", b, { CornerRadius = UDim.new(0.3, 0) })
@@ -110,7 +111,7 @@ function M.start(E)
 			num.set(state.vol == 0 and "OFF" or (state.vol * 10 .. "%"))
 			if pop then num.pop(0.02) end
 		end
-		local _, minus = glassButton(card, "-", LILAC, UDim2.fromScale(0.26, 0.24), UDim2.fromScale(0.3, 0.8), function() state.vol = math.max(0, state.vol - 1) apply(true) send() end)
+		local _, minus = glassButton(card, "-", DEEP, UDim2.fromScale(0.26, 0.24), UDim2.fromScale(0.3, 0.8), function() state.vol = math.max(0, state.vol - 1) apply(true) send() end)
 		new("UIScale", minus.frame, { Scale = 1.9 }) -- the dash glyph is small in its cell: as heavy as the plus beside it
 		glassButton(card, "+", CYAN, UDim2.fromScale(0.26, 0.24), UDim2.fromScale(0.7, 0.8), function() state.vol = math.min(10, state.vol + 1) apply(true) send() end)
 		local g = SoundService:FindFirstChild("PixelMaster")
@@ -126,17 +127,17 @@ function M.start(E)
 			local y = 0.13 + (i - 1) * 0.165 -- four rows since directive v9 (were three, 0.2 apart)
 			label(card, name, UDim2.fromScale(0.52, 0.12), UDim2.fromScale(0.33, y), WHITE, E.FONT, true) -- the open sentence font: condensed capitals filled in on a phone
 			local b, jt
-			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and CYAN or LILAC, UDim2.fromScale(0.26, 0.135), UDim2.fromScale(0.8, y), function()
+			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and CYAN or DEEP, UDim2.fromScale(0.26, 0.135), UDim2.fromScale(0.8, y), function()
 				state[key] = not state[key]
 				jt.set(state[key] and "ON" or "OFF")
-				b.BackgroundColor3 = state[key] and CYAN or LILAC
+				b.BackgroundColor3 = state[key] and CYAN or DEEP
 				act(state[key])
 				send()
 			end)
 			setters[key] = function(v)
 				state[key] = v
 				jt.set(v and "ON" or "OFF")
-				b.BackgroundColor3 = v and CYAN or LILAC
+				b.BackgroundColor3 = v and CYAN or DEEP
 				act(v)
 			end
 		end
@@ -151,7 +152,7 @@ function M.start(E)
 		-- are replaced by a plain fade (attribute FastCine, read where each scene starts)
 		toggle(4, "Fast cutscenes", "fast", function(on) plr:SetAttribute("FastCine", on or nil) end)
 		local x = 0.2
-		for _, s in { { "BAG", LILAC, "bag" }, { "QUESTS", LILAC, "quests" }, { "DONE", PINK, nil } } do
+		for _, s in { { "BAG", DEEP, "bag" }, { "QUESTS", DEEP, "quests" }, { "DONE", PINK, nil } } do
 			glassButton(card, s[1], s[2], UDim2.fromScale(0.27, 0.15), UDim2.fromScale(x, 0.84), function()
 				shut()
 				if s[3] and hook[s[3]] then task.delay(0.3, hook[s[3]]) end

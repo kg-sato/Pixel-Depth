@@ -36,6 +36,14 @@ function M.start(E)
 		E.sfx("click", 1.1)
 		if E.vmHook.home then E.vmHook.home() end
 	end)
+	task.delay(1, function() -- v10 (Gemini: "a chrome minimap ring from another UI"): the cave minimap's ring, face and rim on the lavender palette
+		local mm = E.caveHud and E.caveHud:FindFirstChild("Minimap")
+		for _, d in mm and mm:GetDescendants() or {} do
+			if d:IsA("ImageLabel") and E.GLASS and d.Image == E.GLASS.ring then d.ImageColor3 = Color3.fromRGB(196, 160, 255)
+			elseif d:IsA("CanvasGroup") and math.abs(d.BackgroundColor3.R - 36 / 255) < 0.01 and math.abs(d.BackgroundColor3.B - 24 / 255) < 0.01 then d.BackgroundColor3 = Color3.fromRGB(26, 12, 40)
+			elseif d:IsA("UIGradient") and d.Parent:IsA("UIStroke") then d.Color = ColorSequence.new(Color3.fromRGB(155, 31, 232), Color3.fromRGB(0, 240, 255)) end
+		end
+	end)
 	local open, openedAt = false, 0
 	local rowScale = row:FindFirstChildOfClass("UIScale") or E.new("UIScale", row, {})
 	local function set(on)
@@ -61,6 +69,19 @@ function M.start(E)
 	local function wire(b) -- using a button inside folds the menu again
 		if b:IsA("GuiButton") then b.Activated:Connect(function() task.delay(0.15, function() set(false) end) end) end
 	end
+	-- v10 (Gemini: "flat milky pastel squares"): every button in the row wears the dark smoked skin, whatever kind it was made as
+	local darkImage
+	local function darken()
+		for _, b in row:GetChildren() do
+			local sk = b:IsA("GuiButton") and b:FindFirstChild("Skin")
+			if sk and (not darkImage or sk.Image ~= darkImage) then
+				E.setKind(b, "dark")
+				darkImage = darkImage or sk.Image
+			end
+		end
+	end
+	local plank = E.gui:FindFirstChild("StepCard") and E.gui.StepCard:FindFirstChild("Plank")
+	if plank then plank.Visible = false end -- and the quest card loses its slanted pink NEXT UP plank: one rounded card
 	for _, b in row:GetChildren() do wire(b) end
 	row.ChildAdded:Connect(wire)
 	local acc = 0
@@ -74,6 +95,7 @@ function M.start(E)
 			if d and d.Visible then want = true end
 		end
 		dot.Visible = want and not open
+		darken()
 		home.Visible = E.plr:GetAttribute("InCave") == true
 		local why = home.Visible and E.vmHook.homeWhy and E.vmHook.homeWhy()
 		homeWord.Text = why or "HOME"

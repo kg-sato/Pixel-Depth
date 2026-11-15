@@ -80,7 +80,7 @@ function M.start(E)
 	game:GetService("RunService").Heartbeat:Connect(function()
 		local fight = bar.Visible
 		for _, n in { "LeftColumn", "StepCard", "Minimap", "HowTo", "DepthGauge" } do
-			local o = E.gui:FindFirstChild(n) or (E.caveHud and E.caveHud:FindFirstChild(n, true))
+			local o = E.gui:FindFirstChild(n, true)
 			if o then
 				if fight then
 					if o.Visible then

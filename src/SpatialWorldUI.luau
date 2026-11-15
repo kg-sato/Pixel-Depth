@@ -115,6 +115,7 @@ function M.start(E)
 		end
 	end
 
+	LINES.chest = nil -- v10 (Gemini: "the DAILY CHEST card stacks over its own [F] OPEN prompt"): the chest keeps only its prompt
 	local stations = {}
 	local function adopt(p)
 		local kind = p:IsA("BasePart") and p:GetAttribute("Station")

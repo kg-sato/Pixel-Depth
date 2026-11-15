@@ -29,9 +29,14 @@ function M.start(E)
 		E.new("UIStroke", f, { Color = Color3.fromRGB(155, 31, 232), Thickness = 2, Transparency = 0.3 })
 		local mark = E.text(f, "?", UDim2.fromScale(0.6, 0.6), UDim2.fromScale(0.5, 0.42), MID, Color3.fromRGB(150, 130, 190), 700, false)
 		mark.ZIndex = 6
+		-- v10 (Gemini: "muddy opaque squares"): a found entry is a cut gem of its colour in a dark glass cell, not a flat tile
+		local gem = E.new("Frame", f, { Name = "Gem", Size = UDim2.fromScale(0.4, 0.4), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(0.5, 0.4), AnchorPoint = MID, Rotation = 45, BackgroundColor3 = color, BorderSizePixel = 0, Visible = false, ZIndex = 6 })
+		E.new("UICorner", gem, { CornerRadius = UDim.new(0.16, 0) })
+		E.new("UIStroke", gem, { Color = Color3.new(1, 1, 1), Thickness = 1.5, Transparency = 0.35 })
+		E.new("UIGradient", gem, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(150, 150, 170)) })
 		local name = E.text(f, "", UDim2.fromScale(0.94, 0.26), UDim2.fromScale(0.5, 0.84), MID, WHITE, 600, false)
 		name.ZIndex = 6
-		table.insert(cells, { f = f, mark = mark, name = name, kind = kind, key = key, color = color, label = label })
+		table.insert(cells, { f = f, mark = mark, name = name, kind = kind, key = key, color = color, label = label, gem = gem })
 	end
 	local n = 0
 	for L, layer in C.LAYERS do
@@ -53,7 +58,8 @@ function M.start(E)
 		for _, c in cells do
 			local got = found[c.kind] and found[c.kind][c.key] == true
 			if got then have += 1 end
-			c.f.BackgroundColor3 = got and c.color or DARK
+			c.f.BackgroundColor3 = got and Color3.fromRGB(52, 26, 82) or DARK
+			c.gem.Visible = got
 			c.mark.Visible = not got
 			c.name.Text = got and c.label or ""
 		end
