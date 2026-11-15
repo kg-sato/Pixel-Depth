@@ -91,7 +91,7 @@ function M.start(E)
 		if ringStroke then ringStroke.Enabled = false end
 	end
 	local say = new("Frame", ps, { Name = "Say", Size = UDim2.fromScale(0.34, 0.07), Position = UDim2.fromScale(0.5, 0.2), AnchorPoint = MID, BackgroundTransparency = 1, Visible = false, ZIndex = 13 })
-	local sayText = JellyText.new(say, "STRIKE ON GOLD!", { color = Color3.fromRGB(255, 226, 130), glow = true, z = 13 })
+	local sayText = JellyText.new(say, "STRIKE ON GOLD!", { color = Color3.fromRGB(236, 224, 255), glow = true, z = 13 })
 
 	local dep, kind, lockCol, at = nil, nil, Color3.new(1, 1, 1), nil
 	local aim = 0

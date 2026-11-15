@@ -359,6 +359,17 @@ C.ESCAPE = { dist = 1050, speed = 30, top = 1.45, bonus = { 10, 40 } } -- top: t
 -- the caves; until then a warm ambient of this colour stands in. joinHold / hold: seconds at full strength after a join / a
 -- return; fade: seconds to fade out.
 C.TOWN_FILL = { color = Color3.fromRGB(210, 158, 110), cave = Color3.fromRGB(175, 180, 150), joinHold = 16, hold = 8, fade = 5 } -- cave: the same for the caves
+-- Crystal Resonance Chimes in the Clay Caves hall (Shared.CrystalChimes, server in ClayCaves; directive v10): strike the three
+-- crystals in the order the server shows within `secs` seconds for `gold` coins; then they are still for `every` seconds
+-- (10 s after a wrong crystal).
+C.CHIMES = { gold = 90, every = 600, secs = 10 }
+-- Geode Timing Crack (Shared.GeodeCrack, server in Retention; directive v10): a geode on Bolt's anvil in town, a ring that
+-- closes in on its seam, one press. The ring waits `open` seconds, then shrinks from the full size to nothing in `shrink`
+-- seconds; the seam is at `seam` of the full size. The server judges the press on its own clock: within `perfect` seconds of
+-- the seam pays the top of a geode's gems plus one, within `good` a geode's usual pay, anything else (or no press in `till`
+-- seconds) one gem and half the coins. `late`: seconds of lag a press may have.
+C.CRACK = { open = 0.5, shrink = 1.4, seam = 0.3, perfect = 0.12, good = 0.3, late = 0.14, till = 3 }
+function C.crackAt(t0) return t0 + C.CRACK.open + C.CRACK.shrink * (1 - C.CRACK.seam) end -- the server time the ring is on the seam
 -- Trophy cases at the Trophy House (Shared.Trophies; vault Briefs/Trophy Cases (2026-11-14)): key, the name on the plaque, how
 -- to earn it. The boss keys are the saved tips a boss win already sets (gate1, gate2); a pet key is a Mythic or Secret pet
 -- this player has ever hatched (saved: profile field `rare`, a set of pet names; the owner's yes, 2026-11-14).

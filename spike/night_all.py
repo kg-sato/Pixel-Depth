@@ -2,7 +2,8 @@
     python spike/night_all.py                  every test (about 25 minutes); run it before a recording and at the end of a night
     python spike/night_all.py quick [name...]  only what a change can have broken (the owner, 2026-11-14: "regressions take 30 min
                                                for one simple feature"): a smoke set, every test that covers a file changed since
-                                               the last full pass (COVER below; uncommitted changes count), and the tests named
+                                               the last full pass or the last quick pass on a clean tree (COVER below; uncommitted changes
+                                               count), and the tests named
                                                (crew, trophy, ...). A change to PixelClient, PixelServer or Config touches
                                                everything, so name the tests of the feature you changed.
 A failed test is run once more by itself before it counts (two checks are known to fail now and then: a simulated click,
@@ -44,10 +45,11 @@ TESTS = [  # script, [(what, text that must be in the output)]
     ("trophy_test.py", [("empty cases say how to earn them", "cases at the start: <> gate1=??? / BEAT THE ROOT WARDEN ; gate2=??? / BEAT THE KILN GOLEM ; Ouro=??? / HATCH A MYTHIC PET ; Ninering=??? / HATCH A SECRET PET"), ("a Common hatch fills nothing", "after a Common hatch: <>"), ("a Secret hatch fills its case", "after a Secret hatch: <Ninering>"), ("a beaten boss fills its case", "gate1=ROOT WARDEN [figure]"), ("the server ignores a client that fills its own cases", "| <gate1,Ninering>"), ("no trophy errors", "client errors: 0")]),
     ("townfill_test.py", [("the town is lit right after a join", "just after the join: fill 100 ambient 210,158,110 | lit: True"), ("the town's own ambient comes back", "25 s later: fill 0 ambient 26,22,48"), ("the caves are filled on arrival", "in the caves: fill 100 ambient 175,180,150"), ("the caves' own ambient comes back", "in the caves, 15 s later: fill 0 ambient 40,32,60"), ("the town is filled on a return", "back in town: fill 100 ambient 210,158,110"), ("the fill ends after a return", "15 s later: fill 0 ambient 26,22,48")]),
     ("menu_test.py", [("the buttons are folded behind MENU and one timer pill shows", "at the start: buttons false attr false | timer boxes showing 1 | list false"), ("MENU opens the buttons", "MENU clicked: buttons true"), ("no overlap with the menu open", "overlaps with the menu open: 0 overlaps, 0 prompt overlaps"), ("using a button folds the menu", "BAG used: buttons false"), ("the timers pill opens its list", "timers pill clicked: buttons false attr false | timer boxes showing 2 | list true"), ("no overlap with the list open", "overlaps at rest: 0 overlaps, 0 prompt overlaps")]),
+    ("chime_test.py", [("the chimes wake with an order of three", "woken: True | three crystals in the order: True"), ("a wrong crystal ends the try", "the second crystal first: miss:"), ("three in order pay 90 coins", "in order: hit hit done:90"), ("the chimes rest after a win", "again at once: cool:10"), ("no chime errors", "server errors: 0")]),
     ("marquee_test.py", [("no banner for a Common hatch", "a Common hatch: false"), ("everyone is told of a Secret hatch", "a Secret hatch: true"), ("the banner names the pet", "HATCHED A SECRET  NINERING!"), ("the banner leaves", "gone after its time: visible false"), ("the banner overlaps nothing", "marquee up: 0 overlaps, 0 prompt overlaps")]),
     ("retention_test.py", [("gift pill counts down", "pills at the start: NEXT GIFT"), ("no gift before its time", "claim with nothing due: ?"), ("a due gift is paid once", "claim again at once: coins:150"),
         ("gifts are paid in order", "two claims at 21 minutes: coins:150 flares:2 gems:10"), ("bad messages pay nothing", "bad messages: coins:150 flares:2 gems:10"), ("golden surge doubles the zone", "zone doubled: True"),
-        ("event pill shows the surge", "GOLD SURGE ON"), ("friends are counted", "board: 2/5 FRIENDS HERE / +15% ORE VALUE  +20% EGG LUCK"), ("friends luck keeps the odds at 100", "egg odds, 2 friends: 57.00 25.00 12.00 4.80 1.08 0.12 sum 100.00 | none: 60.00 25.00 10.00 4.00 0.90 0.10 | 99 friends: 0.15 0.10 60.00"), ("the odds panel shows the friends luck", "odds panel, 2 friends: 57% 12% 4.8% 1.08% 0.12% / FRIENDS LUCK ON:  EPIC AND BETTER +20%"), ("rift is off by default", "rift off: 1 in the Clay Caves, 1 in Camp 1"), ("rift triples Clay Caves ore only", "rift on: 3 in the Clay Caves, 1 in Camp 1"), ("rift crystal shows", "crystal: true"), ("refinery refuses without a geode", "refinery, no geode: none"), ("refinery starts once", "refinery, a geode in, pressed again: none start | none start wait"), ("refinery pays once", "refinery, done: none start wait paid"), ("refinery is empty after", "refinery, empty again: none start wait paid none"), ("refinery refuses from far away", "refinery, pressed from far away: none start wait paid none" + chr(10)), ("no client errors", "client errors: 0"), ("no server errors", "server errors: 0")]),
+        ("event pill shows the surge", "GOLD SURGE ON"), ("friends are counted", "board: 2/5 FRIENDS HERE / +15% ORE VALUE  +20% EGG LUCK"), ("friends luck keeps the odds at 100", "egg odds, 2 friends: 57.00 25.00 12.00 4.80 1.08 0.12 sum 100.00 | none: 60.00 25.00 10.00 4.00 0.90 0.10 | 99 friends: 0.15 0.10 60.00"), ("the odds panel shows the friends luck", "odds panel, 2 friends: 57% 12% 4.8% 1.08% 0.12% / FRIENDS LUCK ON:  EPIC AND BETTER +20%"), ("rift is off by default", "rift off: 1 in the Clay Caves, 1 in Camp 1"), ("rift triples Clay Caves ore only", "rift on: 3 in the Clay Caves, 1 in Camp 1"), ("rift crystal shows", "crystal: true"), ("refinery refuses without a geode", "refinery, no geode: none"), ("refinery starts once", "refinery, a geode in, pressed again: none start | none start wait"), ("refinery pays once", "refinery, done: none start wait paid"), ("a geode cracked on the seam is perfect", "geode crack, on the seam: done perfect 5 30"), ("a geode cracked at once is bad", "geode crack, pressed at once: done bad 1 15"), ("no geode, no crack", "geode crack, no geode: none nil nil nil"), ("refinery is empty after", "refinery, empty again: none start wait paid none"), ("refinery refuses from far away", "refinery, pressed from far away: none start wait paid none" + chr(10)), ("no client errors", "client errors: 0"), ("no server errors", "server errors: 0")]),
     ("verify_night.py", [("wind-up dodge", "after stepping away 100"), ("way home embers", "(PASS over 0), at camp 0 (PASS 0)")]),
 ]
 # which source files each test exercises (src names without .luau); the quick mode picks tests by these
@@ -58,7 +60,7 @@ COVER = {
     "boon_test.py": ["BoonShrine", "BoonUI"], "ping_test.py": ["Ping", "PingRelay"], "travel_test.py": ["Travel", "Hearth", "GlassLift", "CampChoice", "ClayCaves", "ClayClient"],
     "boss_atk_test.py": ["Boss", "BossClient"], "boss_fight_test.py": ["Boss", "BossClient", "CaveBuilder", "DailyChestUI", "MiningReticle"],
     "camp2_test.py": ["ClayCaves", "ClayClient"], "crew_test.py": ["MinecartEscape", "EscapeHUD"], "trophy_test.py": ["Trophies", "HubBuilder"],
-    "townfill_test.py": ["TownFill"], "menu_test.py": ["HudCompact", "RetentionTimers", "UpgradeTracker"], "marquee_test.py": ["Marquee"], "retention_test.py": ["Retention", "RetentionTimers", "LanternTether", "CaveEvents", "ClayCaves"],
+    "townfill_test.py": ["TownFill"], "menu_test.py": ["HudCompact", "RetentionTimers", "UpgradeTracker"], "chime_test.py": ["CrystalChimes", "ClayCaves"], "marquee_test.py": ["Marquee"], "retention_test.py": ["Retention", "RetentionTimers", "LanternTether", "CaveEvents", "ClayCaves", "GeodeCrack"],
     "verify_night.py": ["MiningReticle", "Juice", "VoxelFractureFX", "CaveBuilder"],
 }
 SMOKE = ["load_test.py", "opts_test.py", "marquee_test.py"]  # short, and between them they load every script on both sides
@@ -71,6 +73,10 @@ todo = TESTS
 if quick:
     def git(*a): return subprocess.run(["git", *a], capture_output=True, text=True, cwd=here.parent).stdout
     since = last_file.read_text().strip() if last_file.exists() else "HEAD"
+    quick_file = here / ".last_quick"  # the commit of the last quick run that passed: nothing older needs testing again
+    if quick_file.exists():
+        q = quick_file.read_text().strip()
+        if q and subprocess.run(["git", "merge-base", "--is-ancestor", since, q], cwd=here.parent).returncode == 0: since = q
     changed = set()
     for line in (git("diff", "--name-only", since) + git("status", "--porcelain")).splitlines():
         name = line.strip().split()[-1] if line.strip() else ""
@@ -114,6 +120,8 @@ for w in ("Client", "Server"):
     bad += 0 if ok else 1
     print(("PASS  " if ok else "FAIL  ") + f"{w} log has no game errors" + ("" if ok else ": " + line))
 night.play(False)
+if bad == 0 and quick and not subprocess.run(["git", "status", "--porcelain", "src"], capture_output=True, text=True, cwd=here.parent).stdout.strip():
+    (here / ".last_quick").write_text(subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=here.parent).stdout.strip())  # only a clean tree: uncommitted work was tested, but HEAD does not hold it
 if bad == 0 and not quick:
     last_file.write_text(subprocess.run(["git", "rev-parse", "HEAD"], capture_output=True, text=True, cwd=here.parent).stdout.strip())
 print(("ALL PASS" if bad == 0 else f"{bad} FAILED") + (" (quick: %d of %d tests)" % (len(todo), len(TESTS)) if quick else ""))

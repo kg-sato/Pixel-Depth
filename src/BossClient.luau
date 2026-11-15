@@ -18,18 +18,18 @@ function M.start(E)
 	local bar = panel(gui, S(440, 74), S(640, 70), Vector2.new(0.5, 0.5), "pill") -- over the tip ribbon, which sits under it
 	fit(bar, 440, 74)
 	bar.Name, bar.Visible = "BossBar", false
-	local barTitle = text(bar, "ROOT WARDEN", UDim2.fromScale(0.8, 0.44), UDim2.fromScale(0.5, 0.3), Vector2.new(0.5, 0.5), AMBER, 700, false)
+	local barTitle = text(bar, "ROOT WARDEN", UDim2.fromScale(0.8, 0.44), UDim2.fromScale(0.5, 0.3), Vector2.new(0.5, 0.5), Color3.fromRGB(236, 224, 255), 700, false)
 	barTitle.Font = Enum.Font.FredokaOne -- Shared.JellyHUD turns this font into jelly letters
 	local pips = {}
 	for k = 1, 3 do
-		local p = new("Frame", bar, { Size = UDim2.fromScale(0.27, 0.24), Position = UDim2.fromScale(0.21 + (k - 1) * 0.29, 0.72), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = AMBER, BorderSizePixel = 0, ZIndex = 3 })
+		local p = new("Frame", bar, { Size = UDim2.fromScale(0.27, 0.24), Position = UDim2.fromScale(0.21 + (k - 1) * 0.29, 0.72), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 0, 127), BorderSizePixel = 0, ZIndex = 3 })
 		new("UICorner", p, { CornerRadius = UDim.new(0.4, 0) })
 		new("UIStroke", p, { Color = Color3.fromRGB(255, 236, 190), Thickness = 1.5, Transparency = 0.3 })
 		new("UIGradient", p, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(200, 150, 110)) }) -- a lit top edge, as on the glass pills
 		pips[k] = p
 	end
 	for _, x in { -0.02, 1.02 } do -- a turquoise crystal spur at each end of the bar, like the ones on the Warden's back (Gemini, 2026-11-13: the bar had nothing of the boss in it)
-		local spur = new("Frame", bar, { Size = UDim2.fromScale(0.07, 0.42), Position = UDim2.fromScale(x, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 45, BackgroundColor3 = Color3.fromRGB(64, 224, 208), BorderSizePixel = 0, ZIndex = 4 })
+		local spur = new("Frame", bar, { Size = UDim2.fromScale(0.07, 0.42), Position = UDim2.fromScale(x, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 45, BackgroundColor3 = Color3.fromRGB(155, 31, 232), BorderSizePixel = 0, ZIndex = 4 })
 		new("UIAspectRatioConstraint", spur, { AspectRatio = 1 })
 		new("UIStroke", spur, { Color = Color3.fromRGB(200, 255, 246), Thickness = 1.5 })
 		new("UIGradient", spur, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(120, 200, 200)) })
@@ -74,6 +74,26 @@ function M.start(E)
 			end
 		end
 	end
+	-- v10: while the boss bar is up the exploring HUD steps back (coins, the menu, the quest card, the map, the how-to card), so
+	-- the boss and the strike dial own the picture
+	local stepped = {}
+	game:GetService("RunService").Heartbeat:Connect(function()
+		local fight = bar.Visible
+		for _, n in { "LeftColumn", "StepCard", "Minimap", "HowTo", "DepthGauge" } do
+			local o = E.gui:FindFirstChild(n) or (E.caveHud and E.caveHud:FindFirstChild(n, true))
+			if o then
+				if fight then
+					if o.Visible then
+						stepped[o] = true
+						o.Visible = false
+					end
+				elseif stepped[o] then
+					stepped[o] = nil
+					if n ~= "HowTo" then o.Visible = true end
+				end
+			end
+		end
+	end)
 	local function eyes(on)
 		crew(on)
 		local w = warden()
@@ -114,7 +134,7 @@ function M.start(E)
 			local kn = w:FindFirstChild("Knot" .. k)
 			if kn and kn.PrimaryPart then kn.PrimaryPart.Transparency = 0 end
 		end
-		for _, p in pips do p.BackgroundColor3 = AMBER end
+		for _, p in pips do p.BackgroundColor3 = Color3.fromRGB(255, 0, 127) end
 	end
 
 	local ID_AT = { bossStart = 2, bossKnot = 3, bossSlam = 2, bossWin = 3, bossLose = 1, bossLocked = 2, bossOpen = 1, bossHit = 2, bossDodge = 1, bossHold = 1, bossSweep = 3, bossRings = 2 }

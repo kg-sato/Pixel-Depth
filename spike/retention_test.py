@@ -64,6 +64,15 @@ print("refinery, empty again:", C1(PRESS % "false"))
 # a geode in hand, the prompt pressed from 40 studs away with the furnace's mouth moved to the player on this client only (as a cheat would)
 S1(P + "p:SetAttribute('DevGeodes',1) local m=workspace.Hub:FindFirstChild('RefineryMouth') h.CFrame=CFrame.new(m.Position+m.CFrame.LookVector*40+Vector3.new(0,3,0)) return 1"); time.sleep(2.5)
 print("refinery, pressed from far away:", C1(PRESS % "true"))
+# Geode Timing Crack on Bolt's anvil: a press on the seam is perfect, a press at once is bad, no geode starts nothing
+CR = ("local p=game.Players.LocalPlayer local RS=game.ReplicatedStorage local C=require(RS.Shared.Config) local got,t0 local c=RS.Remotes.Fx.OnClientEvent:Connect(function(k,w,a,b,cc) if k=='crack' then if w=='start' then t0=a else got=tostring(w)..' '..tostring(a)..' '..tostring(b)..' '..tostring(cc) end end end) "
+      "local pr for _,d in workspace.Hub.Forge:GetDescendants() do if d:IsA('ProximityPrompt') and d:GetAttribute('GeodeCrack') then pr=d end end local an=pr.Parent local cam=workspace.CurrentCamera "
+      "cam.CFrame=CFrame.lookAt(cam.CFrame.Position,an.Position) task.wait(0.5) pr:InputHoldBegin() task.wait(0.1) pr:InputHoldEnd() local t=os.clock() while os.clock()-t<2 and not t0 and not got do task.wait() end "
+      "if t0 then %s RS.Remotes.Crack:FireServer() end t=os.clock() while os.clock()-t<4.5 and not got do task.wait() end c:Disconnect() return tostring(got)..' | ring '..tostring(workspace:FindFirstChild('GeodeCrackFX')~=nil)")
+S1(P + "p:SetAttribute('DevGeodes',2) local an=workspace.Hub.Forge:FindFirstChild('Bench',true) local away=((an.Position-workspace.Hub.Forge:FindFirstChild('Anvil',true).Position)*Vector3.new(1,0,1)).Unit h.CFrame=CFrame.lookAt(an.Position+away*3+Vector3.new(0,3,0),an.Position) return 1"); time.sleep(2.5)
+print("geode crack, on the seam:", C1(CR % "while workspace:GetServerTimeNow() < C.crackAt(t0) do task.wait() end"))
+print("geode crack, pressed at once:", C1(CR % ""))
+print("geode crack, no geode:", C1(CR % ""))
 # the Lantern Tether: ore is worth more with a friend here
 print("friends 0:", S1(P + "return tostring(p:GetAttribute('Friends'))"))
 S1(P + "p:SetAttribute('DevFriends',2) return 1"); time.sleep(2.5)

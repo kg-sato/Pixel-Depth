@@ -83,7 +83,7 @@ function M.start(E)
 		local sc = new("UIScale", root, {})
 		local card = new("Frame", root, { Size = UDim2.fromScale(0.94, 0.74), Position = UDim2.fromScale(0.5, 0.61), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.07, BorderSizePixel = 0, ZIndex = 2 }) -- nearly solid: the world behind made the labels hard to read
 		new("UICorner", card, { CornerRadius = UDim.new(0.07, 0) })
-		new("UIStroke", card, { Color = tint:Lerp(WHITE, 0.6), Thickness = 3, Transparency = 0.1 })
+		new("UIStroke", card, { Color = Color3.fromRGB(155, 31, 232):Lerp(WHITE, 0.35), Thickness = 3, Transparency = 0.1 }) -- one violet rim on all three (v10)
 		new("UIGradient", card, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(160, 140, 215)) })
 		local sheen = new("Frame", card, { Size = UDim2.fromScale(0.14, 1.7), Position = UDim2.fromScale(0.2, 0.5), AnchorPoint = MID, Rotation = 22, BackgroundColor3 = WHITE, BackgroundTransparency = 0.91, BorderSizePixel = 0, ZIndex = 2 })
 		card.ClipsDescendants = true
@@ -126,17 +126,17 @@ function M.start(E)
 			local y = 0.13 + (i - 1) * 0.165 -- four rows since directive v9 (were three, 0.2 apart)
 			label(card, name, UDim2.fromScale(0.52, 0.12), UDim2.fromScale(0.33, y), WHITE, E.FONT, true) -- the open sentence font: condensed capitals filled in on a phone
 			local b, jt
-			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and MINT or LILAC, UDim2.fromScale(0.26, 0.135), UDim2.fromScale(0.8, y), function()
+			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and CYAN or LILAC, UDim2.fromScale(0.26, 0.135), UDim2.fromScale(0.8, y), function()
 				state[key] = not state[key]
 				jt.set(state[key] and "ON" or "OFF")
-				b.BackgroundColor3 = state[key] and MINT or LILAC
+				b.BackgroundColor3 = state[key] and CYAN or LILAC
 				act(state[key])
 				send()
 			end)
 			setters[key] = function(v)
 				state[key] = v
 				jt.set(v and "ON" or "OFF")
-				b.BackgroundColor3 = v and MINT or LILAC
+				b.BackgroundColor3 = v and CYAN or LILAC
 				act(v)
 			end
 		end
@@ -162,15 +162,15 @@ function M.start(E)
 
 	-- CONTROLS (right)
 	do
-		local _, card = panel(1, "CONTROLS", BUTTER)
+		local _, card = panel(1, "CONTROLS", LILAC)
 		local KEYS = { { "F", "Use or talk" }, { "E", "Mine ore" }, { "R", "Flare" }, { "T", "Sonar" }, { "Z", "Ping crew" }, { "TAB", "Tool wheel" }, { "B", "Bag" }, { "J", "Quests" }, { "H", "Inspect" }, { "N", "Settings" } }
 		for i, k in KEYS do
 			local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
 			local y = 0.12 + row * 0.185
 			local cap = new("Frame", card, { Size = UDim2.fromScale(0.11, 0.13), Position = UDim2.fromScale(0.085 + col * 0.5, y), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(58, 42, 112), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 4 }) -- a dark cap: pale jelly on a white cap had no contrast
 			new("UICorner", cap, { CornerRadius = UDim.new(0.25, 0) })
-			new("UIStroke", cap, { Color = BUTTER, Thickness = 2 })
-			label(cap, k[1], UDim2.fromScale(0.84, 0.7), UDim2.fromScale(0.5, 0.5), BUTTER, E.HEAD)
+			new("UIStroke", cap, { Color = LILAC, Thickness = 2 })
+			label(cap, k[1], UDim2.fromScale(0.84, 0.7), UDim2.fromScale(0.5, 0.5), LILAC, E.HEAD)
 			label(card, k[2], UDim2.fromScale(0.33, 0.1), UDim2.fromScale(0.325 + col * 0.5, y), WHITE, E.FONT, true)
 		end
 	end

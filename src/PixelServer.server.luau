@@ -838,7 +838,7 @@ local function finishEscape(plr, report)
 	end
 	escaping[plr] = nil
 	local s = data[plr]
-	local bonus, gem = 0, 0
+	local bonus, gem, forkGems = 0, 0, 0
 	local el = os.clock() - e.t0
 	if s and type(report) == "table" and el >= C.ESCAPE.dist / (C.ESCAPE.speed * (C.ESCAPE.top or 1) * 1.6 * (run and C.CREW.stoke.fast or 1)) then -- the fastest legal run: top of the speed wave with three boosts
 		-- shortcut: dodges, boosts and caught are the client's word, bounded by the run time and the 40-coin cap; replay the seed on the server if the bonus ever grows
@@ -847,6 +847,11 @@ local function finishEscape(plr, report)
 		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2 + (run and (run.moHit or 0) * C.CREW.moment.coins or 0), C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
 		if report.caught == true then bonus = math.floor(bonus / 2) end -- the Gloom nipped you (playtest 2 pursuer)
 		bonus = math.floor(bonus * (e.mult or 1)) -- a crew's shared bonus (C.CREW.mult)
+		forkGems = math.clamp(math.floor(tonumber(report.risky) or 0), 0, 2) -- the fork's risky side: a gem each, two forks a run (the cart's word, bounded like the bonus)
+		if forkGems > 0 then
+			s.gems += forkGems
+			A.earn(s, "Gems", forkGems, s.gems, "EscapeFork")
+		end
 		s.gold += bonus
 		A.earn(s, "Coins", bonus, s.gold, "EscapeBonus")
 		A.event(s, "EscapeSeconds", math.floor(el))
@@ -866,7 +871,7 @@ local function finishEscape(plr, report)
 	riding[plr] = trip -- anchored in the town cart until the client's burst out of the shaft ends ("arrived")
 	task.delay(12, function() endRide(plr, trip) end)
 	if s then sendState(s) end -- the bag pill switches back from the cave's unbanked count
-	FxR:FireClient(plr, "escapeDone", bonus, run and { n = e.n or 1, mult = e.mult or 1, hits = run.hits or 0, flares = run.flares or 0, moHit = run.moHit or 0, moN = run.moN or 0, calls = run.calls or 0, gem = gem } or nil) -- the crew's numbers for the result card
+	FxR:FireClient(plr, "escapeDone", bonus, run and { n = e.n or 1, mult = e.mult or 1, hits = run.hits or 0, flares = run.flares or 0, moHit = run.moHit or 0, moN = run.moN or 0, calls = run.calls or 0, gem = gem, gems = forkGems } or (forkGems > 0 and { gems = forkGems } or nil)) -- the crew's numbers and the fork's gems for the result card
 end
 local function startEscape(s)
 	local plr = s.player

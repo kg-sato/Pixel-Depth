@@ -230,6 +230,24 @@ function M.play(opt)
 	local K = { crew = opt.crew, host = opt.crew ~= nil and opt.crew.host == true, replica = opt.crew ~= nil and opt.crew.host ~= true, want = 0, out = {}, hid = 0, next = 0, mates = {}, sx = 0, sz = 0 }
 	K.net = K.host and opt.crew.send or function() end
 	K.job, K.heat, K.heatAt, K.hits, K.jumps = opt.crew and opt.crew.job, 0, 0, 0, 0 -- step 2: this rider's job, and the stoker's steam as the server last told it
+	-- Directive v10, "Minecart Track Fork": the fork's two signs now say what each side is. PINK: the risky side (boost beads,
+	-- then a rock) and a gem at the top if the cart takes it. CYAN: the safe side. The gems (2 a run at most) are the cart's
+	-- word in its report, bounded by the server like the rest of the bonus.
+	K.forkSign = function(post, gold, at)
+		part(world, Vector3.new(0.5, 4.6, 0.5), post * CFrame.new(0, 2.3, 0), BARK)
+		for _, d in { { LANES[gold] * 0.875, Color3.fromRGB(255, 0, 127), "RISKY  +GEM" }, { -LANES[gold] * 0.875, Color3.fromRGB(0, 240, 255), "SAFE" } } do
+			local sign = part(world, Vector3.new(2.6, 1.1, 0.3), post * CFrame.new(d[1], 4.1, 0), d[2], { Material = Enum.Material.Neon })
+			for _, face in { Enum.NormalId.Front, Enum.NormalId.Back } do
+				local sg = Instance.new("SurfaceGui")
+				sg.Face, sg.LightInfluence, sg.SizingMode, sg.PixelsPerStud = face, 0, Enum.SurfaceGuiSizingMode.PixelsPerStud, 60
+				local tl = Instance.new("TextLabel")
+				tl.Size, tl.BackgroundTransparency, tl.Text, tl.TextScaled, tl.Font, tl.TextColor3 = UDim2.fromScale(1, 1), 1, d[3], true, Enum.Font.FredokaOne, Color3.fromRGB(22, 8, 30)
+				tl.Parent = sg
+				sg.Parent = sign
+			end
+		end
+		K.fork = { at = at + 6, gold = gold }
+	end
 	K.dbg = plr:GetAttribute("DevCrew") -- a test asks for the run's state as the player attribute DevCrewState
 	if K.dbg and K.crew then plr:SetAttribute("DevCrewT0", K.crew.t0) end
 	if K.crew then
@@ -691,10 +709,7 @@ function M.play(opt)
 				elseif kind == "g" then spawnGap(a, b)
 				elseif kind == "c" then spawnCart(a, b)
 				elseif kind == "f" then
-					local post = pathCF(b - 5)
-					part(world, Vector3.new(0.5, 4.6, 0.5), post * CFrame.new(0, 2.3, 0), BARK)
-					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(LANES[a] * 0.6, 4.1, 0), BUTTER, { Material = Enum.Material.Neon })
-					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(-LANES[a] * 0.6, 4.1, 0), MINT, { Material = Enum.Material.Neon })
+					K.forkSign(pathCF(b - 5), a, b)
 				elseif kind == "j" then
 					K.jumps += 1
 					if os.clock() - jumpT > JUMP_T * 0.7 then -- not the echo of this lookout's own call
@@ -995,11 +1010,9 @@ function M.play(opt)
 					local gold = rng:NextNumber() < 0.5 and 1 or 3
 					local post = pathCF(ahead - 5)
 					K.net("f", gold, ahead)
-					part(world, Vector3.new(0.5, 4.6, 0.5), post * CFrame.new(0, 2.3, 0), BARK)
-					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(LANES[gold] * 0.6, 4.1, 0), BUTTER, { Material = Enum.Material.Neon })
-					part(world, Vector3.new(2.4, 1.1, 0.3), post * CFrame.new(-LANES[gold] * 0.6, 4.1, 0), MINT, { Material = Enum.Material.Neon })
+					K.forkSign(post, gold, ahead)
 					spawnCart(ahead + 6, 2)
-					if not taught.fork then hazards[#hazards].teach = "FORK!  GOLD SIDE: ORBS, THEN A ROCK.  MINT SIDE: CLEAR" end
+					if not taught.fork then hazards[#hazards].teach = "FORK!  PINK: BOOSTS, A ROCK AND A GEM.  CYAN: SAFE" end
 					taught.fork = true
 					for k = 0, 3 do spawnOrb(gold, ahead + 6 + k * 5) end
 					spawnRock(gold, ahead + 32, false)
@@ -1023,6 +1036,15 @@ function M.play(opt)
 			duckY += ((ducking and 1.4 or 0) - duckY) * (1 - math.exp(-dt / 0.06))
 			-- hazards: rocks drop to land as the cart arrives; passing a lane checks the lean
 			local myLane = lean < -0.5 and 1 or (lean > 0.5 and 3 or 2)
+			if K.fork and dist >= K.fork.at then -- past the fork: which side did the cart take?
+				if myLane == K.fork.gold then
+					K.risky = (K.risky or 0) + 1
+					big.Text, big.TextTransparency, big.TextColor3 = "RISKY SIDE!  A GEM AT THE TOP", 0, Color3.fromRGB(255, 120, 190)
+					bigStroke.Transparency = 0
+					task.delay(1.1, function() big.TextTransparency = 1 bigStroke.Transparency = 1 big.TextColor3 = WHITE end)
+				end
+				K.fork = nil
+			end
 			local warnDir, warnGap = nil, math.max(speed, 1) * 1.3 -- the nearest thing that will hit within 1.3 s says what to do (0.9 measured as 0.58 to 0.85 s on screen, mean 0.76: too short to read and lean)
 			for i = #hazards, 1, -1 do
 				local h = hazards[i]
@@ -1170,7 +1192,7 @@ function M.play(opt)
 				snd.wind:Stop()
 				for _, h in hazards do cleanup(h) end
 				hazards = {}
-				if opt.report and not K.replica then opt.report({ time = t, dodges = dodges, boosts = boosts, hits = hits, caught = gloom.caught }) end
+				if opt.report and not K.replica then opt.report({ risky = K.risky or 0, time = t, dodges = dodges, boosts = boosts, hits = hits, caught = gloom.caught }) end
 			end
 		elseif phase == "wait" then
 			flash.BackgroundTransparency = 0
@@ -1242,10 +1264,11 @@ function M.play(opt)
 				go.Activated:Connect(function() done = true end)
 				local rows = { { "TIME", string.format("%.1f s", runTime) }, { "DODGES", tostring(dodges) }, { gloom.caught and "THE GLOOM" or "BOOSTS", gloom.caught and "NIPPED YOU" or tostring(boosts) }, { "BONUS", "+" .. tostring(bonus or 0) .. " COINS" } }
 				local cr = opt.crewResult and opt.crewResult()
+				if not K.crew and type(cr) == "table" and (cr.gems or 0) > 0 then rows[4][2] = rows[4][2] .. "  +" .. tostring(cr.gems) .. " GEM" end -- the fork's risky side
 				if K.crew and type(cr) == "table" then -- step 4, a crew's card: the crew's size and pay, this rider's own job, the crew moves
 					local mine = K.job == "stoker" and { "STEAM HITS", tostring(cr.hits or 0) } or (K.job == "lookout" and { "CALLS", tostring(cr.calls or 0) } or (K.job == "tail" and { "FLARES", tostring(cr.flares or 0) } or { "DODGES", tostring(dodges) }))
 					rows = { rows[1], { "CREW", tostring(cr.n or 1) .. " RIDERS  x" .. tostring(cr.mult or 1) }, mine, { "CREW MOVES", tostring(cr.moHit or 0) .. " OF " .. tostring(cr.moN or 0) },
-						{ "BONUS", "+" .. tostring(bonus or 0) .. " COINS" .. ((cr.gem or 0) > 0 and "  +" .. tostring(cr.gem) .. " GEM" or "") } }
+						{ "BONUS", "+" .. tostring(bonus or 0) .. " COINS" .. ((cr.gem or 0) + (cr.gems or 0) > 0 and "  +" .. tostring((cr.gem or 0) + (cr.gems or 0)) .. " GEM" or "") } }
 				end
 				local step, tall = #rows > 4 and 0.083 or 0.104, #rows > 4 and 0.07 or 0.085
 				for i, r in rows do

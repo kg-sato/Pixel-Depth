@@ -16,7 +16,7 @@ local K = C.CLAY
 local CLAY, CLAY_D, CLAY_L = Color3.fromRGB(150, 78, 58), Color3.fromRGB(104, 52, 46), Color3.fromRGB(196, 112, 78)
 local PLUM, CREAM, BARK, AMBER = Color3.fromRGB(58, 36, 72), Color3.fromRGB(240, 222, 190), Color3.fromRGB(92, 62, 48), Color3.fromRGB(255, 176, 84)
 local DECO = { CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false }
-local jars, fossils, echoes = {}, {}, {}
+local jars, fossils, echoes, chimes = {}, {}, {}, {}
 
 function M.build(caves)
 	local O = CFrame.new(C.CAVE2_ORIGIN)
@@ -435,6 +435,19 @@ function M.build(caves)
 		local pr = prompt(block, "Crack", "Geode", "GeodeAnvil", true, 9)
 		pr.Parent = hold
 	end
+	-- Crystal Resonance Chimes (directive v10): three tall crystals on stone feet in a row on the hall floor, five studs apart
+	-- so each has its own prompt. The crystals lean a little, so no face shares a plane with its foot.
+	for k, d in { { 12, Color3.fromRGB(0, 240, 255), 2.8 }, { 17, Color3.fromRGB(255, 0, 127), 3.6 }, { 22, Color3.fromRGB(155, 31, 232), 3.2 } } do
+		local at = O * CFrame.new(d[1], 0, 12)
+		part("ChimeFoot", Vector3.new(2.2, 0.5, 2.2), at * CFrame.new(0, 0.25, 0), Color3.fromRGB(92, 84, 112), { Material = Enum.Material.Slate })
+		local cr = part("ChimeCrystal", Vector3.new(1.1, d[3], 1.1), at * CFrame.new(0, 0.45 + d[3] / 2, 0) * CFrame.Angles(0.06, 0.7 * k, 0.05), d[2], { Material = Enum.Material.Glass, Transparency = 0.2, CanCollide = false })
+		cr:SetAttribute("ChimeCrystal", k)
+		part("ChimeCore", Vector3.new(0.3, d[3] * 0.8, 0.3), cr.CFrame, d[2], { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+		local cl = Instance.new("PointLight")
+		cl.Color, cl.Range, cl.Brightness, cl.Shadows = d[2], 10, 0.8, false
+		cl.Parent = cr
+		chimes[k] = prompt(cr, "Strike", "Crystal chime", "Chime", k, 6)
+	end
 	-- echo walls (roadmap i31, the Echo Tap minigame): a ribbed panel of five clay drums on the wall. One is hollow: tap them
 	-- and listen (and watch the ring): the nearer to the hollow one, the deeper the note and the wider the ring.
 	for i, e in { { 2, 53.4, math.pi }, { -73.4, -34, math.pi / 2 }, { 46, 53.4, math.pi } } do
@@ -682,6 +695,45 @@ function M.init(ctx)
 		else
 			ctx.fx:FireClient(plr, "echoTap", drum, off)
 		end
+	end
+	-- Crystal Resonance Chimes: the first strike wakes them (the server picks the order and tells only this player); then
+	-- every strike is checked here. Three right in time: coins, and the chimes rest. A wrong one ends the try.
+	local chime = {} -- [plr] = { order = { which crystal is 1st, 2nd, 3rd }, at, till }
+	Players.PlayerRemoving:Connect(function(plr) chime[plr] = nil end)
+	for k, pr in chimes do
+		pr.Triggered:Connect(function(plr)
+			local s = ctx.data[plr]
+			if not s or s.mg or ctx.busy(plr) or not near(plr, pr.Parent, 12) then return end
+			local H = C.CHIMES
+			local g = chime[plr]
+			if not g or os.clock() > g.till then
+				local wait = ctx.coolLeft(s, "chime")
+				if wait > 0 then ctx.fx:FireClient(plr, "chime", "cool", math.ceil(wait / 60)) return end
+				local order = { 1, 2, 3 }
+				for i = 3, 2, -1 do
+					local j = math.random(1, i)
+					order[i], order[j] = order[j], order[i]
+				end
+				chime[plr] = { order = order, at = 1, till = os.clock() + H.secs }
+				ctx.fx:FireClient(plr, "chime", "start", order, H.secs)
+			elseif g.order[g.at] == k then
+				g.at += 1
+				if g.at > 3 then
+					chime[plr] = nil
+					ctx.coolSet(s, "chime", H.every)
+					s.gold += H.gold
+					if ctx.analytics then ctx.analytics.earn(s, "Coins", H.gold, s.gold, "Chimes") end
+					ctx.fx:FireClient(plr, "chime", "done", H.gold)
+					ctx.sendState(s)
+				else
+					ctx.fx:FireClient(plr, "chime", "hit", k, g.at - 1)
+				end
+			else
+				chime[plr] = nil
+				ctx.coolSet(s, "chime", 10)
+				ctx.fx:FireClient(plr, "chime", "miss", k)
+			end
+		end)
 	end
 	-- Geode Lock: the server makes the order (5 of 6 facets), shows 3, then 4, then 5; every facet the client taps is checked
 	-- here. A wrong tap ends the try and keeps the geode. Three rounds right cracks it: gems and coins.

@@ -1259,7 +1259,7 @@ PPS.PromptShown:Connect(function(prompt, inputType)
 	local root = new("TextButton", bb, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", AutoButtonColor = false })
 	local sc = new("UIScale", root, { Scale = 0.35 })
 	local bubble = new("Frame", root, { Name = "Bubble", Size = UDim2.fromScale(0.76, 0.78), Position = UDim2.fromScale(1, 0.02), AnchorPoint = Vector2.new(1, 0) })
-	skin(bubble, "ribbonPink") -- a wooden plank, like the quest markers (was a cream capsule)
+	skin(bubble, "pillLilac") -- v10: obsidian glass (was a pink ribbon)
 	local action = text(bubble, prompt.ActionText, UDim2.fromScale(0.66, 0.36), UDim2.fromScale(0.57, 0.3), Vector2.new(0.5, 0.5), CREAM, 700, false)
 	action.Font = HEAD
 	local object = text(bubble, prompt.ObjectText, UDim2.fromScale(0.64, 0.22), UDim2.fromScale(0.57, 0.58), Vector2.new(0.5, 0.5), CREAM, 700, false)
@@ -2024,7 +2024,7 @@ end
 			task.delay(0.5, function() r:Destroy() end)
 		end)
 	end
-	local strikeBtn = button(ps, "STRIKE!", S(204, 62), S(640, 540), Vector2.new(0.5, 0.5), "butter", "hammer") -- under the dial (kit round 4)
+	local strikeBtn = button(ps, "STRIKE!", S(204, 62), S(640, 540), Vector2.new(0.5, 0.5), "pink", "hammer") -- under the dial (kit round 4)
 	strikeBtn.ZIndex = 12
 
 	local VR -- Vein Rush (EXT-02) lives in Shared.VeinRushUI: a crystal spire in the world, started below once its helpers exist
@@ -2391,7 +2391,7 @@ local function setMode(mine, inCaves)
 	mine = inMine or inCave
 	cross.Visible, digBtn.Visible = inMine, inMine
 	railLift.Text = mine and "SURFACE" or "MINE"
-	setKind(railLift, mine and "sky" or "pink")
+	setKind(railLift, "lilac")
 	if mine then
 		local h = head()
 		cam.CameraType = Enum.CameraType.Custom
@@ -2760,7 +2760,7 @@ end)()
 	end
 	forgeUI.spatialExtra = forgeUI.spatialExtra or {} -- the small panels built in this script stand in the world too (Shared.SpatialPanels); the forge keeps its own staged screen
 	for _, f in { night, odds, mapP, forge } do table.insert(forgeUI.spatialExtra, { frame = f, home = gui, menu = true, on = function() return f.Visible end }) end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "HudCompact" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "HudCompact", "GeodeCrack", "CrystalChimes" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end

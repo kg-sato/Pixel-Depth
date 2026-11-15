@@ -60,6 +60,42 @@ local function refinery(plr, prompt)
 	ctx.sendState(s)
 end
 
+-- Geode Timing Crack (C.CRACK): the anvil's prompt starts a try, the remote Crack is the one press, settle pays
+local function crackSettle(plr, s, c, tier)
+	if s.crack ~= c then return end
+	s.crack = nil
+	if (s.geodes or 0) < 1 then return end
+	s.geodes -= 1
+	local lo, hi = C.CLAY.geodeGems[1], C.CLAY.geodeGems[2]
+	local gems = tier == "perfect" and hi + 1 or (tier == "good" and math.random(lo, hi) or 1)
+	local gold = tier == "bad" and math.floor(C.CLAY.geodeGold / 2) or C.CLAY.geodeGold
+	s.gems += gems
+	s.gold += gold
+	if ctx.analytics then
+		ctx.analytics.earn(s, "Gems", gems, s.gems, "GeodeCrack")
+		ctx.analytics.earn(s, "Coins", gold, s.gold, "GeodeCrack")
+	end
+	ctx.fx:FireClient(plr, "crack", "done", tier, gems, gold)
+	ctx.sendState(s)
+end
+local function crackStart(plr, prompt)
+	local s = ctx.data[plr]
+	if not s or not ctx.nearPrompt(plr, prompt) or (s.crack and os.clock() < s.crack.till) then return end
+	if (s.geodes or 0) < 1 then return ctx.fx:FireClient(plr, "crack", "none") end
+	local c = { t0 = workspace:GetServerTimeNow(), till = os.clock() + C.CRACK.till }
+	s.crack = c
+	ctx.fx:FireClient(plr, "crack", "start", c.t0)
+	task.delay(C.CRACK.till, function() if ctx.data[plr] == s then crackSettle(plr, s, c, "bad") end end) -- no press at all
+end
+local function crackPress(plr)
+	local s = ctx.data[plr]
+	local c = s and s.crack
+	if not c or c.pressed then return end
+	c.pressed = true
+	local err = math.abs(workspace:GetServerTimeNow() - C.CRACK.late / 2 - C.crackAt(c.t0)) -- a press is on average half the allowed lag old
+	crackSettle(plr, s, c, err <= C.CRACK.perfect + C.CRACK.late / 2 and "perfect" or (err <= C.CRACK.good + C.CRACK.late / 2 and "good" or "bad"))
+end
+
 function M.friendCount(plr)
 	local dev = plr:GetAttribute("DevFriends")
 	if type(dev) == "number" then return math.clamp(dev, 0, C.TETHER.max) end
@@ -72,6 +108,7 @@ function M.valueMult(plr) return M.friendCount(plr) >= 1 and 1 + C.TETHER.value 
 function M.init(c)
 	ctx = c
 	-- ------------------------------------------------------------ playtime gifts
+	ctx.remote("Crack").OnServerEvent:Connect(crackPress)
 	local R = ctx.remote("Gift")
 	R.OnServerEvent:Connect(function(plr, what)
 		local s = ctx.data[plr]
@@ -193,6 +230,15 @@ function M.init(c)
 		pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.Style, pr.HoldDuration = 9, false, Enum.ProximityPromptStyle.Custom, 0
 		pr:SetAttribute("PartyInvite", true)
 		pr.Parent = board
+		local anvil = hub:FindFirstChild("Forge") and hub.Forge:FindFirstChild("Bench", true) -- Geode Timing Crack on Bolt's workbench (the anvil has the forge's own prompt)
+		if anvil then
+			local cp = Instance.new("ProximityPrompt")
+			cp.ActionText, cp.ObjectText, cp.KeyboardKeyCode, cp.GamepadKeyCode = "Crack", "A geode", Enum.KeyCode.F, Enum.KeyCode.ButtonX
+			cp.MaxActivationDistance, cp.RequiresLineOfSight, cp.Style, cp.HoldDuration = 11, false, Enum.ProximityPromptStyle.Custom, 0
+			cp:SetAttribute("GeodeCrack", true)
+			cp.Parent = anvil
+			cp.Triggered:Connect(function(plr) crackStart(plr, cp) end)
+		end
 		-- the refinery: a stone furnace with a glowing mouth on the other side of the shaft
 		-- it stands on the first clear patch of ground round the shaft (2026-11-14: a fixed place put it on the daily chest's spot)
 		local fat

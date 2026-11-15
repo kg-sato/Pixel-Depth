@@ -31,6 +31,8 @@ function M.start(E)
 	local giftP, giftT = pill(drop, "Gift", UDim2.fromScale(1, 0.3), UDim2.fromScale(0.5, 0.16), "pillButter")
 	local eventP, eventT = pill(drop, "Event", UDim2.fromScale(1, 0.3), UDim2.fromScale(0.5, 0.5), "pillLilac")
 	local refP, refT = pill(drop, "Refine", UDim2.fromScale(1, 0.3), UDim2.fromScale(0.5, 0.84), "pillLilac")
+	E.new("UIListLayout", drop, { FillDirection = Enum.FillDirection.Vertical, HorizontalAlignment = Enum.HorizontalAlignment.Center, Padding = UDim.new(0.04, 0), SortOrder = Enum.SortOrder.LayoutOrder })
+	giftP.LayoutOrder, eventP.LayoutOrder, refP.LayoutOrder = 1, 2, 3
 	local pinned = false
 	mainHit.Activated:Connect(function()
 		pinned = not pinned
@@ -154,6 +156,10 @@ function M.start(E)
 		elseif line and soon < giftIn and not (refAt and refAt - now < soon) then mainT.Text, mainT.TextColor3 = line, col
 		elseif refAt and refAt - now < giftIn then mainT.Text, mainT.TextColor3 = refT.Text, WHITE
 		else mainT.Text, mainT.TextColor3 = giftT.Text, WHITE end
+		-- the list shows the OTHER lines: the one on the pill is not said twice (Gemini, 2026-11-14)
+		giftP.Visible = giftT.Text ~= mainT.Text
+		eventP.Visible = line ~= nil and line ~= mainT.Text
+		refP.Visible = refAt ~= nil and refT.Text ~= mainT.Text
 	end)
 end
 
