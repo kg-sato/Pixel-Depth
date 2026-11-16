@@ -16,7 +16,8 @@ from PIL import Image, ImageFilter
 here = pathlib.Path(__file__).resolve().parent
 tex = here / "tex"; tex.mkdir(exist_ok=True)
 LAKE_Y = -2.2
-CABIN = (20.0, -92.0)
+CABIN = (15.0, -97.0)
+CABIN_S = 1.55
 NEAR = (-110.0, -170.0, 110.0, 50.0)   # x0, z0, x1, z1
 FAR = (-1000.0, -1650.0, 1000.0, 150.0)
 N = 96
@@ -72,7 +73,7 @@ def G(x, z):
     h = np.where(d < 0, np.maximum(LAKE_Y - 0.55 + d * 0.3, LAKE_Y - 4.0), h)  # the bed
     back = smooth(-86, -175, z)
     h = h + back * (24 + (fbm(x * 0.02, z * 0.02, 3) - 0.5) * 8) + smooth(62, 115, np.abs(x)) * 9
-    cab = smooth(9, 22, np.hypot(x - CABIN[0], z - CABIN[1]))                  # a level terrace for the cabin
+    cab = smooth(15, 30, np.hypot(x - CABIN[0], z - CABIN[1]))                  # a level terrace for the cabin
     h = mix(LAKE_Y + 1.7, h, cab)
     return h + mountains(x, z)
 
@@ -161,6 +162,10 @@ img = lay(img, "#8fa064", smooth(0.5, 0.8, m2) * 0.4)
 img = lay(img, "#c9a23a", smooth(0.62, 0.8, fbm(X * 0.012, Z * 0.012, 65)) * 0.25 * (h < 60))      # far flower meadows, a yellow cast
 scree = smooth(150, 300, h + (m2 - 0.5) * 120) * 0.85 + smooth(0.75, 1.2, slope) * 0.6
 img = lay(img, mix(rgb("#8a6a5a"), rgb("#7a7672"), m1[..., None]), np.clip(scree, 0, 1) * (0.55 + 0.45 * m3))
+strata = smooth(0.55, 0.9, np.sin(h * 0.19 + m2 * 7.0) * 0.5 + 0.5) * np.clip(scree, 0, 1)
+img = lay(img, "#5a4c48", strata * 0.55)                                                       # darker bands of rock across the scree
+img = lay(img, "#b8b4b0", smooth(0.5, 0.95, np.sin(h * 0.31 + m1 * 9.0) * 0.5 + 0.5) * np.clip(scree, 0, 1) * 0.3)
+img = lay(img, "#eef0f4", smooth(285, 345, h + (m2 - 0.5) * 70) * (0.75 + 0.25 * m3))            # old snow on the tops
 forest = smooth(0.42, 0.54, fbm(X * 0.0055, Z * 0.0055, 66) * 0.7 + fbm(X * 0.022, Z * 0.022, 67) * 0.3 + 0.22 * (1 - np.clip(h / 240, 0, 1)) - 0.25 * smooth(200, 300, h))
 forest = forest * smooth(6, 30, h + m2 * 20)                                                  # none on the valley floor meadows
 edge = (m4 < forest * 1.25).astype(np.float64)                                               # a ragged tree line: single trees at the edge
@@ -221,13 +226,13 @@ save("wood_rain.png", np.dstack([np.ones((256, 32, 3)) * 255, a * 255]), "RGBA")
 items = []
 
 
-def put(model, x, z, yaw=0.0, scale=1.0, lift=0.0, mirror=False):
-    y = float(G(x, z)) + lift
+def put(model, x, z, yaw=0.0, scale=1.0, lift=0.0, mirror=False, y=None):
+    y = float(G(x, z)) + lift if y is None else y
     items.append({"m": model, "p": [round(-x, 2), round(y, 2), round(-z, 2)], "yaw": round(yaw, 1), "s": round(scale, 3), "mir": mirror})  # Roblox stage space: x and z flip
 
 
 def free(x, z):  # not in the action, not in the water, not on the cabin
-    return not (-11 < x < 9 and -8 < z < 20) and lake_sd(x, z) > 2.5 and np.hypot(x - CABIN[0], z - CABIN[1]) > 15
+    return not (-11 < x < 9 and -8 < z < 20) and lake_sd(x, z) > 2.5 and np.hypot(x - CABIN[0], z - CABIN[1]) > 24
 
 
 # the giants that frame the view (the dark spruce at the reference's left edge), then the forest edge behind the cabin
@@ -236,45 +241,48 @@ for (x, z, s, k) in [(-27, -3, 1.3, 1), (-36, -15, 1.12, 2), (-21, -19, 0.78, 3)
 count = 0
 while count < 46:
     x = rng.uniform(-104, 104); z = rng.uniform(-162, -84)
-    if not free(x, z) or abs(x - CABIN[0]) < 20 and z > -104: continue
-    put(f"Spruce{rng.integers(1, 4)}", x, z, rng.random() * 360, rng.uniform(0.75, 1.35), mirror=z > -128)
+    if not free(x, z) or abs(x - CABIN[0]) < 30 and z > -112: continue
+    put(f"Spruce{rng.integers(1, 5)}", x, z, rng.random() * 360, rng.uniform(0.75, 1.35), mirror=z > -128)
     count += 1
 count = 0
 while count < 16:  # the lake's side banks
     side = rng.choice([-1, 1]); x = side * rng.uniform(52, 104); z = rng.uniform(-82, -18)
     if not free(x, z) or lake_sd(x, z) < 6: continue
-    put(f"Spruce{rng.integers(1, 4)}", x, z, rng.random() * 360, rng.uniform(0.7, 1.25), mirror=True)
+    put(f"Spruce{rng.integers(1, 5)}", x, z, rng.random() * 360, rng.uniform(0.7, 1.25), mirror=True)
     count += 1
 # clumps of small spruces on the painted forest of the slopes
 count, tries = 0, 0
-while count < 90 and tries < 20000:
+while count < 210 and tries < 60000:
     tries += 1
-    x = rng.uniform(-940, 940); z = rng.uniform(-1500, -150)
+    z = rng.uniform(-1000, -150); x = rng.uniform(-1, 1) * (abs(z) * 0.95 + 170)
     if NEAR[0] < x < NEAR[2] and z > NEAR[1]: continue
     if forest_at(x, z) < 0.75: continue
     dist = np.hypot(x, z)
     put("PineClump", x, z, rng.random() * 360, float(np.clip(0.9 + dist / 520, 1.0, 3.0)), lift=-1.0)
     count += 1
 # wildflowers, grass and rocks round the camp, thick toward the camera and down the bank
-for model, n, rmax in (("FlowerPatch", 70, 44), ("GrassTuft", 90, 40)):
+for model, n, rmax in (("FlowerPatch", 60, 44), ("FlowerPatch2", 34, 44), ("Fern", 26, 46), ("Bush", 16, 50), ("Mushroom", 10, 30)):
     count = 0
     while count < n:
         a = rng.uniform(0, 2 * np.pi); rr = rng.uniform(4.5, rmax) ** 1.0
         x = np.cos(a) * rr * 1.25; z = np.sin(a) * rr - 4
         if not free(x, z): continue
-        put(model, x, z, rng.random() * 360, rng.uniform(0.8, 1.35) * (0.6 if model == "GrassTuft" else 1.0))
+        put(model, x, z, rng.random() * 360, rng.uniform(0.8, 1.35))
         count += 1
 count = 0
 while count < 22:  # boulders on the near shore and in the meadow
     x = rng.uniform(-70, 60); z = rng.uniform(-34, -8)
     dd = lake_sd(x, z)
     if dd < -1.5 or dd > 7: continue
-    put(f"Rock{rng.integers(1, 3)}", x, z, rng.random() * 360, rng.uniform(0.6, 1.7), lift=-0.25)
+    put(f"Rock{rng.integers(1, 4)}", x, z, rng.random() * 360, rng.uniform(0.5, 1.5), lift=-0.2)
     count += 1
 for (x, z, s) in [(-12, -9, 1.2), (10.5, -9, 0.9), (-15.5, 3, 1.0)]: put("Rock1", x, z, rng.random() * 360, s, lift=-0.2)
 for (x, z) in [(-4.5, -1.5), (6.5, -1.0), (8.5, 3.5), (-3.2, -5.5), (4.6, -5.2), (-8.6, 1.0), (0.5, -6.5), (7.4, -6.6)]: put("FlowerPatch", x, z, rng.random() * 360, 0.9)
-for (x, z) in [(-3.4, 0.6), (5.6, 0.4), (-6.5, -3.0), (2.0, -4.6), (8.0, 0.8), (-1.5, -7.5)]: put("GrassTuft", x, z, rng.random() * 360, 0.55)
-put("Cabin", CABIN[0], CABIN[1], -14, 1.0, lift=0.0, mirror=True)
+put("Cabin", CABIN[0], CABIN[1], -14, CABIN_S, lift=0.0, mirror=True)
+# a small dock with a lantern and a rowboat, on the lake's edge below the cabin
+dz = CABIN[1]
+while lake_sd(CABIN[0] - 16, dz) > 0.5: dz += 0.5
+put("Dock", CABIN[0] - 16, dz - 2.5, 8, 1.3, mirror=True, y=LAKE_Y)
 
 lines = ["-- GENERATED by design3d/wood_world.py. Do not edit by hand.", "-- Where everything of the Wood Pickaxe setting stands, in Roblox stage space (x and z flipped from the authoring space).",
          "return {", f"\tlakeY = {LAKE_Y},", "\titems = {"]

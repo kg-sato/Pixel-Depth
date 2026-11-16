@@ -13,7 +13,7 @@ local Lighting = game:GetService("Lighting")
 local RS = game:GetService("ReplicatedStorage")
 
 local M = {}
-M.SCENES = { WoodPickaxe = "ForgeWood" } -- pickaxe model name -> scene module in Shared
+M.SCENES = { WoodPickaxe = "ForgeWood", __turn = "ForgeTurn" } -- pickaxe model name -> scene module in Shared (__turn: the test stage for grading one model alone)
 
 local WHITE, INK, NIGHT = Color3.new(1, 1, 1), Color3.fromRGB(62, 42, 86), Color3.fromRGB(22, 8, 30)
 local GLOW = "rbxassetid://77591933607769"

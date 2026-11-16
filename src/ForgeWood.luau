@@ -31,12 +31,20 @@ function M.setup(ctx)
 	local MAP = require(script.Parent:WaitForChild("ForgeWoodMap"))
 	local land = ctx.prop("WoodWorld")
 	land:all(function(p, b) if b.name == "MeadowM" or b.name == "ValleyM" then p.CastShadow = false end end)
-	local cabinCF = CFrame.new(-20, -1.6, 92)
-	local SMALL = { PineClump = true, FlowerPatch = true, GrassTuft = true }
+	local cabinCF, cabinS = CFrame.new(-20, -1.6, 92), 1
+	local glints = {} -- the lights of the far bank lying long on the water, toward the camp
+	local SMALL = { PineClump = true, FlowerPatch = true, FlowerPatch2 = true, Fern = true, Mushroom = true }
 	for _, it in MAP.items do
 		local cf = CFrame.new(it[2], it[3], it[4]) * CFrame.Angles(0, math.rad(it[5]), 0)
 		local r = ctx.prop(it[1], cf, it[6], it[7] and MAP.lakeY or nil)
-		if it[1] == "Cabin" then cabinCF = cf end
+		if it[1] == "Cabin" then cabinCF, cabinS = cf, it[6] end
+		if it[1] == "Dock" then
+			local lamp = (cf * CFrame.new(-0.7 * it[6], 3.2 * it[6], -11.2 * it[6])).Position
+			local lp = ctx.part(v3(0.2, 0.2, 0.2), CFrame.new(lamp), hex("#ffb44a"), { Transparency = 1 })
+			local l = Instance.new("PointLight")
+			l.Color, l.Range, l.Brightness, l.Shadows, l.Parent = hex("#ffb060"), 26, 2.4, false, lp
+			table.insert(glints, { lamp, 0.8 })
+		end
 		local small = SMALL[it[1]]
 		r:all(function(p) -- matte: the kit's smooth plastic shone like vinyl under this place's lighting (Gemini round 8)
 			if p.Material ~= Enum.Material.Neon then p.Material = Enum.Material.Rubber end
@@ -44,23 +52,53 @@ function M.setup(ctx)
 		end)
 	end
 	land:all(function(p) p.Material = Enum.Material.Rubber end)
+	-- the grass is fully modelled (the owner, 2026-11-15): about 14,000 clumps baked into 14 meshes that follow the ground
+	-- (design3d/wood_grass.py; 240,000 triangles, measured cost in the vault brief). Ring A is the camp, B and C the meadow and
+	-- the banks. A low graphics level, or a phone, takes fewer rings and the painted ground shows beyond them.
+	local level = 0
+	pcall(function() level = UserSettings():GetService("UserGameSettings").SavedQualityLevel.Value end)
+	local phone = game:GetService("UserInputService").TouchEnabled and not game:GetService("UserInputService").KeyboardEnabled
+	local rings = (level ~= 0 and level <= 3) and { "WoodGrassA" } or ((phone or (level ~= 0 and level <= 6)) and { "WoodGrassA", "WoodGrassB" } or { "WoodGrassA", "WoodGrassB", "WoodGrassC" })
+	if ctx.opt.noGrass then rings = {} end -- test hook: the frame cost is measured with and without it
+	for _, n in rings do
+		local g = ctx.prop(n)
+		g:all(function(p) p.Material, p.CastShadow = Enum.Material.Rubber, false end)
+	end
 	-- the lake: a clear dark sheet over the mirror world, with slow glints drifting on it
 	local water = ctx.part(v3(170, 0.2, 100), CFrame.new(12, MAP.lakeY - 0.1, 56), hex("#1b3436"), { Transparency = 0.5, Reflectance = 0.1 })
 	local ripple = Instance.new("Texture")
 	ripple.Texture, ripple.Face, ripple.StudsPerTileU, ripple.StudsPerTileV, ripple.Transparency, ripple.Parent = IMG.ripple, Enum.NormalId.Top, 52, 30, 0.8, water
-	for _, w in { { -5.3, 3.1 }, { -2.2, 3.1 }, { 3.2, 3.2 }, { 5.3, 3.7 } } do -- the cabin's windows throw warm light on its porch and bank
-		local lp = ctx.part(v3(0.2, 0.2, 0.2), cabinCF * CFrame.new(-w[1], w[2], -6.2), hex("#ffb44a"), { Transparency = 1 })
+	for _, w in { { -2.75, 2.9 }, { 2.75, 2.9 }, { -2.3, 5.9 }, { 2.3, 5.9 }, { 4.5, 3.6 } } do -- the cabin's windows throw warm light on its porch and bank
+		local lp = ctx.part(v3(0.2, 0.2, 0.2), cabinCF * CFrame.new(-w[1] * cabinS, w[2] * cabinS, -5.2 * cabinS), hex("#ffb44a"), { Transparency = 1 })
 		local l = Instance.new("PointLight")
-		l.Color, l.Range, l.Brightness, l.Shadows, l.Parent = hex("#ffb060"), 22, 2.2, false, lp
+		l.Color, l.Range, l.Brightness, l.Shadows, l.Parent = hex("#ffb060"), 44, 4, false, lp
+		table.insert(glints, { lp.Position - O.Position, 1.6 })
 	end
-	local smokePart = ctx.part(v3(0.6, 0.6, 0.6), cabinCF * CFrame.new(-2.2, 12.7, 1.2), hex("#ffffff"), { Transparency = 1 })
+	-- each light draws a broken path of gold across the lake toward the camp (the reference's long reflections)
+	local glintParts = {}
+	for gi, g in glints do
+		local from = Vector3.new(g[1].X, MAP.lakeY + 0.06, g[1].Z)
+		local dir = (Vector3.new(0, from.Y, 0) - from).Unit
+		local right = dir:Cross(Vector3.yAxis)
+		do -- first one long soft bar of light straight under the window, as a still lake gives
+			local at = from + dir * 15
+			local p = ctx.part(v3(g[2] * 1.5, 0.04, 14), CFrame.lookAt(at, at + dir), hex("#ffb850"), { Material = Enum.Material.Neon, Transparency = 0.45 })
+			table.insert(glintParts, { p, gi * 0.7, 0.3 })
+		end
+		for k = 1, 16 do -- many thin strokes, each a little off the line and shorter than the gap: light broken by ripples
+			local at = from + dir * (21 + k * 2.4) + right * math.sin(k * 2.7 + gi * 1.3) * (0.25 + k * 0.03)
+			local p = ctx.part(v3(g[2] * (0.75 - k * 0.025) * (0.7 + 0.5 * math.abs(math.sin(k * 1.9 + gi))), 0.04, 1.2 + 0.9 * math.abs(math.sin(k * 3.3 + gi))), CFrame.lookAt(at, at + dir), hex("#ffb850"), { Material = Enum.Material.Neon, Transparency = 0.6 })
+			table.insert(glintParts, { p, k + gi * 1.7 })
+		end
+	end
+	local smokePart = ctx.part(v3(0.6, 0.6, 0.6), cabinCF * CFrame.new(-2.0 * cabinS, 15.4 * cabinS, 1.4 * cabinS), hex("#ffffff"), { Transparency = 1 })
 	local smoke = ctx.emitter(smokePart, { Texture = S.SMOKE, Color = ColorSequence.new(hex("#cfc8d6")), Size = NumberSequence.new({ K(0, 1.1), K(1, 6.5) }), Transparency = NumberSequence.new({ K(0, 0.5), K(1, 1) }), Lifetime = NumberRange.new(6, 9), Speed = NumberRange.new(2.4, 3.4), EmissionDirection = Enum.NormalId.Top, SpreadAngle = Vector2.new(7, 7), Acceleration = v3(1.4, 0.3, 0), LightEmission = 0, LightInfluence = 1, Rate = 5 })
 	smoke:Emit(8)
 	local mistPart = ctx.part(v3(120, 1, 56), CFrame.new(12, MAP.lakeY + 1.4, 56), hex("#ffffff"), { Transparency = 1 })
 	local mist = ctx.emitter(mistPart, { Texture = S.SMOKE, Color = ColorSequence.new(hex("#dfe6ee")), Size = NumberSequence.new({ K(0, 9), K(1, 17) }), Transparency = NumberSequence.new({ K(0, 1), K(0.25, 0.88), K(0.75, 0.9), K(1, 1) }), Lifetime = NumberRange.new(6, 9), Speed = NumberRange.new(0.3, 1.1), SpreadAngle = Vector2.new(180, 8), LightEmission = 0.05, LightInfluence = 1 })
 	-- the storm: slanting rain as streaks (the streak picture is drawn upright: turned a quarter so its length lies along the fall), splashes on the grass and rings on the lake
 	local rainPart = ctx.part(v3(96, 1, 76), CFrame.new(0, 36, 8), hex("#ffffff"), { Transparency = 1 })
-	local rainFx = ctx.emitter(rainPart, { Texture = IMG.rain, Color = ColorSequence.new(hex("#cfe0f2")), Size = NumberSequence.new(1.0), Squash = NumberSequence.new(2.8), Transparency = NumberSequence.new(0.22), Lifetime = NumberRange.new(0.44, 0.52), Speed = NumberRange.new(78, 94), EmissionDirection = Enum.NormalId.Bottom, Orientation = Enum.ParticleOrientation.VelocityParallel, Rotation = NumberRange.new(90), Acceleration = v3(24, 0, 0), LightEmission = 0.3, LightInfluence = 0.5, SpreadAngle = Vector2.new(2, 2) })
+	local rainFx = ctx.emitter(rainPart, { Texture = IMG.rain, Color = ColorSequence.new(hex("#cfe0f2")), Size = NumberSequence.new(0.6), Squash = NumberSequence.new(3.4), Transparency = NumberSequence.new(0.4), Lifetime = NumberRange.new(0.44, 0.52), Speed = NumberRange.new(78, 94), EmissionDirection = Enum.NormalId.Bottom, Orientation = Enum.ParticleOrientation.VelocityParallel, Rotation = NumberRange.new(90), Acceleration = v3(24, 0, 0), LightEmission = 0.3, LightInfluence = 0.5, SpreadAngle = Vector2.new(2, 2) })
 	local splashPart = ctx.part(v3(64, 0.2, 46), CFrame.new(0, 0.12, 2), hex("#ffffff"), { Transparency = 1 })
 	local splash = ctx.emitter(splashPart, { Texture = S.GLOW, Color = ColorSequence.new(hex("#e4eef8")), Size = NumberSequence.new({ K(0, 0.08), K(1, 0.46) }), Transparency = NumberSequence.new({ K(0, 0.4), K(1, 1) }), Lifetime = NumberRange.new(0.16, 0.3), Speed = NumberRange.new(1.5, 4.5), SpreadAngle = Vector2.new(55, 55), EmissionDirection = Enum.NormalId.Top, Acceleration = v3(0, -22, 0), LightEmission = 0.4 })
 	local ringPart = ctx.part(v3(110, 0.2, 52), CFrame.new(12, MAP.lakeY + 0.05, 56), hex("#ffffff"), { Transparency = 1 })
@@ -72,6 +110,12 @@ function M.setup(ctx)
 	local sunRays = ctx.effect("SunRaysEffect", { Intensity = 0, Spread = 0.9 })
 
 	local set = ctx.rig("WoodSet")
+	-- the camp's three birches (models from the CC0 nature kit, with a white bark painted for them): their crowns are bones, so the storm shakes them
+	local birches = {
+		ctx.rig("KitBirch1", CFrame.new(6.4, 0, 4.2) * R(0, 40, 0)),
+		ctx.rig("KitBirch2", CFrame.new(11.2, 0, 8.6) * R(0, 170, 0)),
+		ctx.rig("KitBirch3", CFrame.new(13.4, 0, 0.6) * R(0, -70, 0)),
+	}
 	set:all(function(p) if p.Material ~= Enum.Material.Neon then p.Material = Enum.Material.Rubber end end)
 	local bolt = ctx.rig("BoltKit", CFrame.new(-2.5, 0.56, -2.3) * R(0, -18, 0))
 	bolt:all(function(p) p.Material = Enum.Material.Rubber end) -- fur, not vinyl
@@ -90,7 +134,7 @@ function M.setup(ctx)
 
 	-- pooled extras: wind leaves, wood shavings
 	local leaves = {}
-	for i = 1, 18 do leaves[i] = { r = ctx.rig("Leaf", CFrame.new(0, -70, 0), 0.9), ph = (i * 0.37) % 1, y = 2 + (i * 1.9) % 7, z = (i * 2.3) % 9 - 2 } end
+	for i = 1, 18 do leaves[i] = { r = ctx.rig("Leaf", CFrame.new(0, -70, 0), 0.5), ph = (i * 0.37) % 1, y = 2 + (i * 1.9) % 7, z = (i * 2.3) % 9 - 2 } end
 	local curls = {}
 	for i = 1, 12 do curls[i] = { r = ctx.rig("Shaving", CFrame.new(0, -70, 0), 0.7), t0 = -1, from = Vector3.zero, vel = Vector3.zero, spin = 0 } end
 	local curlN = 0
@@ -165,14 +209,14 @@ function M.setup(ctx)
 	-- lighting looks: storm, fire night, dawn
 	local LOOK = {
 		storm = { Ambient = rgb(120, 130, 142), OutdoorAmbient = rgb(128, 138, 150), Brightness = 1.6, ColorShift_Top = rgb(190, 205, 225), ExposureCompensation = 0.15 },
-		night = { Ambient = rgb(92, 110, 150), OutdoorAmbient = rgb(100, 120, 162), Brightness = 2.0, ColorShift_Top = rgb(160, 188, 255), ExposureCompensation = 0.3 },
+		night = { Ambient = rgb(58, 72, 104), OutdoorAmbient = rgb(66, 82, 116), Brightness = 2.5, ColorShift_Top = rgb(160, 188, 255), ExposureCompensation = 0.2 },
 		dawn = { Ambient = rgb(168, 140, 140), OutdoorAmbient = rgb(178, 150, 146), Brightness = 2.7, ColorShift_Top = rgb(255, 196, 140), ExposureCompensation = 0 },
 	}
 	-- the air between the layers: thick and grey in the storm, blue at night, gold at sunrise
 	local ATMO = {
 		storm = { Density = 0.4, Haze = 2.6, Color = rgb(150, 162, 170), Decay = rgb(96, 108, 118), Glare = 0, Offset = 0.2 },
-		night = { Density = 0.34, Haze = 2.0, Color = rgb(84, 112, 150), Decay = rgb(40, 58, 90), Glare = 0, Offset = 0.15 },
-		dawn = { Density = 0.23, Haze = 1.7, Color = rgb(255, 206, 160), Decay = rgb(196, 140, 130), Glare = 0.2, Offset = 0.25 },
+		night = { Density = 0.38, Haze = 2.3, Color = rgb(84, 112, 150), Decay = rgb(40, 58, 90), Glare = 0, Offset = 0.15 },
+		dawn = { Density = 0.3, Haze = 2.1, Color = rgb(255, 206, 160), Decay = rgb(196, 140, 130), Glare = 0.2, Offset = 0.25 },
 	}
 	local function air(a, b, u)
 		local out = {}
@@ -221,7 +265,8 @@ function M.setup(ctx)
 		ctx.cc.Saturation, ctx.cc.Contrast = (t < 3.0 and -0.22 or 0.1) + 0.12 * dawn, 0.1
 		sunRays.Intensity = 0.07 * smooth(7.6, 8.4, t)
 		ripple.OffsetStudsU, ripple.OffsetStudsV = t * 1.6, math.sin(t * 0.4) * 2
-		rainFx.Rate, splash.Rate, rings.Rate = 1500 * storm, 320 * storm, 200 * storm
+		for _, g in glintParts do g[1].Transparency = math.min(1, (g[3] or 0.34) + 0.3 * (0.5 + 0.5 * math.sin(t * 5.2 + g[2] * 1.9)) + 0.3 * dawn + 0.3 * storm) end
+		rainFx.Rate, splash.Rate, rings.Rate = 2400 * storm, 420 * storm, 260 * storm
 		flies.Rate = (t >= 3.0 and t < 7.6) and 7 or 0
 		mist.Rate = t >= 3.0 and 5 or 0
 		ctx.once("mistNight", 3.0, t, function() mist:Emit(14) flies:Emit(10) end)
@@ -238,8 +283,8 @@ function M.setup(ctx)
 		-- ===== storm: wind in the canopies, rain, leaves =====
 		local gust = storm * (0.6 + 0.4 * math.sin(t * 2.3))
 		for i = 1, 3 do
-			set:set("Canopy" .. i, R(math.sin(t * 5 + i) * 3 * gust, 0, (6 + math.sin(t * 7.3 + i * 2) * 5) * gust + math.sin(t * 1.3 + i) * 0.8))
-			set:set("Trunk" .. i, R(0, 0, 1.6 * gust))
+			birches[i]:set("Canopy", R(math.sin(t * 5 + i) * 3 * gust, 0, (6 + math.sin(t * 7.3 + i * 2) * 5) * gust + math.sin(t * 1.3 + i) * 0.8))
+			birches[i]:set("Trunk", R(0, 0, 1.6 * gust))
 		end
 		for _, l in leaves do
 			local u = (t * 0.55 + l.ph) % 1
@@ -270,7 +315,7 @@ function M.setup(ctx)
 			set:show(n, fire > 0.01)
 			set:set(n, R(0, 0, math.sin(ts * 8 + i * 2) * 5))
 		end
-		fireLight.Brightness = 2.6 * fire * (0.85 + 0.15 * math.sin(ts * 12))
+		fireLight.Brightness = 2.4 * fire * (0.85 + 0.15 * math.sin(ts * 12))
 		fireGlowIm.ImageTransparency = 1 - 0.25 * fire
 		embers.Rate = 9 * fire
 		fireFx.Rate = 16 * fire
@@ -408,7 +453,7 @@ function M.setup(ctx)
 			local bp = O:PointToObjectSpace(branch.root.Position)
 			shot(V(-0.8, 0.9, -9.5 + 1.2 * smooth(1.6, 2.8, t)), V(4.6, 6.4, 3.4):Lerp(bp, smooth(1.36, 1.7, t)):Lerp(V(-0.9, 2.1, -2.4), smooth(2.2, 2.6, t)), 52 - 4 * smooth(1.6, 2.8, t))
 		elseif t < 3.95 then -- the camp at night: the fire, the raccoon on his log, and behind him the lake with the cabin's lights on it
-			shot(V(3.0, 3.4 - 0.4 * smooth(3.0, 3.95, t), -13.4 + 1.2 * smooth(3.0, 3.95, t)), V(-1.5, 3.3, -2.6), 48)
+			shot(V(4.0, 6.6 - 0.8 * smooth(3.0, 3.95, t), -15.0 + 1.4 * smooth(3.0, 3.95, t)), V(-2.8, 1.9, 4), 48)
 		elseif t < 5.5 then -- close on his paws for the knife work
 			shot(V(-0.5 + 0.3 * smooth(3.62, 5.5, t), 2.8, -8.7), V(-2.75, 2.65, -3.2), 38)
 		elseif t < 6.2 then -- front on: he blows the dust off and ties the ribbon

@@ -9,15 +9,15 @@ import terrain from "./tex/wood_terrain.mjs";
 export const name = "wood";
 
 const C = {
-  fur: "#8f8aa6", furDark: "#5b5272", furLight: "#b9b4cc", mask: "#33283f", cream: "#f6f0fa", pink: "#f4a9c2", nose: "#2a1f36", eye: "#1d1528", white: "#ffffff",
-  red: "#e8525a", redDark: "#c23c4c", cloak: "#2f5d6b", cloakLight: "#4a8090", cloakDark: "#234854", brass: "#e2b65a",
+  fur: "#4f4858", furDark: "#2c2832", furLight: "#6f6779", mask: "#211c27", cream: "#f3e6c8", tan: "#c8a67e", tanDark: "#a98862", pink: "#f4a9c2", nose: "#2a1f36", eye: "#1d1528", white: "#ffffff",
+  red: "#e8525a", redDark: "#c23c4c", vest: "#8a5a3c", cloak: "#1f7f7c", cloakLight: "#3aa39c", cloakDark: "#176260", brass: "#e2b65a",
   grassDark: "#4f7f58", grassDeep: "#3f6a4c", grass: "#6f9a5a", grassLight: "#8fb46a",
   birch: "#f3ede2", birchShade: "#d8cdc6", birchMark: "#3d3344", leaf: "#8fc878", leafLight: "#b7de8c", leafDark: "#5e9a5c", butter: "#f7e6a2",
   stone: "#8d8c92", stoneDark: "#66666e", stoneLight: "#a9a8ac", moss: "#5f8a4c", wood: "#c99a6b", woodDark: "#9a6d4d", woodEnd: "#f0d7a8",
   flame: "#ff7a1c", flameCore: "#ffc24a", ember: "#e8421c", bolt: "#fff7d0",
   steel: "#dfe3f5", acorn: "#c98f5a", acornCap: "#8a5d44",
   sp1: "#1c3733", sp2: "#234539", sp3: "#2c5442", spTip: "#3f6f52", bark: "#4a3a34", barkLight: "#63504a",
-  log: "#5c4434", logLight: "#735640", logEnd: "#a07c58", roof: "#565a62", roofLight: "#6e737c", roofDark: "#3e4148", glow: "#ffb44a", glowHot: "#ffd98a",
+  log: "#5c4434", logLight: "#735640", logEnd: "#a07c58", roof: "#565a62", roofLight: "#6e737c", roofDark: "#3e4148", glow: "#ffae2a", glowHot: "#ffd98a",
   petal: "#f2c230", petalDeep: "#e8a516", petalPale: "#f6e7a0", stem: "#4f7a45",
 };
 
@@ -34,7 +34,9 @@ export function build(THREE, T) {
     m.bone("Hips", null, [0, 0.95, 0]);
     m.bone("Body", "Hips", [0, 0.95, 0]);
     m.add("Body", lathe([[0.02, 0.7], [0.46, 0.73], [0.67, 0.95], [0.7, 1.25], [0.58, 1.65], [0.42, 1.95], [0.02, 2.04]], 20), C.fur);
-    m.add("Body", at(ball(0.47, 0.52, 0.3), [0, 1.28, 0.43]), C.cream);
+    m.add("Body", at(ball(0.47, 0.52, 0.3), [0, 1.28, 0.43]), C.cloak);
+    const hem = []; for (let i = 0; i <= 16; i++) { const a = (i / 16) * Math.PI * 2; hem.push([Math.sin(a) * 0.72, 0.9 + Math.sin(a * 5) * 0.03, Math.cos(a) * 0.6 - 0.1]); }
+    m.add("Body", tube(hem, 0.1, 6, 32), C.cream); // the vest's fur hem
     // chest ruff: five soft points of pale fur under the chin
     for (const [x, l] of [[-0.3, 0.3], [-0.15, 0.4], [0, 0.46], [0.15, 0.4], [0.3, 0.3]]) m.add("Body", limb([x, 1.72, 0.5], [x * 1.25, 1.72 - l * 0.7, 0.6], 0.14, 0.07, 8), C.cream);
     // neckerchief: a soft ring, a knot and a bib point (the bow language of the pickaxes)
@@ -51,6 +53,13 @@ export function build(THREE, T) {
     m.add("Body", at(ball(0.1, 0.1, 0.08, 8), [0, 1.74, 0.68]), C.brass); // its clasp
     m.add("Body", at(ball(0.44, 0.2, 0.26), [0, 2.1, -0.46]), C.cloakDark);
     for (const s of [-1, 1]) m.add("Body", limb([0.5 * s, 1.92, -0.1], [0.36 * s, 1.9, 0.34], 0.1, 0.07, 8), C.cloak); // it is tied over the shoulders
+    // a fur-lined leather vest, open at the front, and a bedroll strapped across his back
+    m.add("Body", at(ball(0.74, 0.6, 0.62, 18), [0, 1.4, -0.12]), C.vest);
+    for (const s of [-1, 1]) m.add("Body", tube([[0.3 * s, 1.86, 0.34], [0.5 * s, 1.5, 0.5], [0.56 * s, 1.1, 0.46], [0.5 * s, 0.86, 0.34]], 0.075, 6, 10), C.cream);
+    for (const [y, x] of [[1.5, 0.6], [1.3, 0.64], [1.1, 0.62]]) m.add("Body", at(ball(0.035, 0.035, 0.03, 6), [-x, y, 0.36]), C.brass);
+    m.add("Body", at(lathe([[0.02, -0.56], [0.2, -0.56], [0.23, -0.44], [0.23, 0.44], [0.2, 0.56], [0.02, 0.56]], 12), [0, 1.62, -0.84], [0, 0, 90]), C.cloakLight);
+    for (const x of [-0.3, 0.3]) m.add("Body", at(lathe([[0.245, -0.05], [0.245, 0.05]], 12), [x, 1.62, -0.84], [0, 0, 90]), C.woodDark);
+    for (const s of [-1, 1]) m.add("Body", at(lathe([[0.02, -0.02], [0.17, -0.02], [0.17, 0.02], [0.02, 0.02]], 10), [0.57 * s, 1.62, -0.84], [0, 0, 90]), C.cloak);
     // belt with a brass buckle; satchel on his right hip with a butter button and a leaf tucked in
     const belt = []; for (let i = 0; i <= 16; i++) { const a = (i / 16) * Math.PI * 2; belt.push([Math.sin(a) * 0.7, 1.16, Math.cos(a) * 0.68]); }
     m.add("Body", tube(belt, 0.07, 6, 32), C.woodDark);
@@ -70,17 +79,22 @@ export function build(THREE, T) {
     m.add("Head", H(at(ball(0.8, 0.5, 0.7, 18), [0, 3.12, -0.05])), C.furLight); // a paler crown
     for (const s of [-1, 1]) {
       // cheek ruffs: four ragged points a side, the lower ones pale (the reference's tufted outline)
-      for (const [y, l, dy, c] of [[2.74, 0.24, 0.02, C.fur], [2.46, 0.22, -0.1, C.furLight]]) m.add("Head", H(limb([0.7 * s, y, 0.12], [(0.84 + l) * s, y + dy, 0.08], 0.34, 0.17, 12)), c); // two soft lobes a side, not spikes
-      m.add("Head", H(at(ball(0.44, 0.31, 0.2), [0.42 * s, 2.74, 0.76], [0, 18 * s, 10 * s])), C.mask); // the mask
-      m.add("Head", H(at(ball(0.3, 0.1, 0.12), [0.4 * s, 3.08, 0.72], [0, 16 * s, 10 * s])), C.cream); // brow
+      const tuft = (len, wid) => puff([[0, wid], [len * 0.5, wid * 0.7], [len * 0.85, wid * 0.2], [len, 0], [len * 0.7, -wid * 0.5], [len * 0.36, -wid * 0.86], [0, -wid]], 0.07, 0.045);
+      for (const [y, a, len, wid, c, zf] of [[2.78, 8, 0.5, 0.2, C.furLight, 0.0], [2.58, -12, 0.62, 0.22, C.tan, 0.04], [2.4, -30, 0.56, 0.2, C.cream, 0.08], [2.26, -50, 0.4, 0.16, C.cream, 0.12]]) { // the cheek ruff: three flat pointed tufts a side, swept back, built on the right and mirrored
+        const g = at(tuft(len, wid), [0.76, y, 0.18 + zf], [0, -22, a]);
+        m.add("Head", H(s > 0 ? g : at(g, [0, 0, 0], [0, 0, 0], [-1, 1, 1])), c);
+      }
+      m.add("Head", H(at(ball(0.3, 0.23, 0.16), [0.4 * s, 2.73, 0.8], [0, 18 * s, 14 * s])), C.mask); // the mask: a patch round each eye
+      m.add("Head", H(tube([[0.1 * s, 2.96, 0.93], [0.42 * s, 3.03, 0.84], [0.78 * s, 2.94, 0.6], [1.0 * s, 2.78, 0.3]], (u) => 0.06 - 0.03 * u, 8, 14)), C.cream); // the brow band
       m.add("Head", H(at(ball(0.13, 0.1, 0.05), [0.7 * s, 2.46, 0.7], [0, 30 * s, 0])), C.pink); // blush
     }
-    m.add("Head", H(at(ball(0.2, 0.14, 0.1), [0, 2.8, 0.9])), C.mask); // the mask joins over the nose
+    m.add("Head", H(at(ball(0.9, 0.5, 0.52, 18), [0, 2.42, 0.44])), C.tan); // the tan lower face
+
     for (const [x, a] of [[-0.22, 12], [0, 0], [0.22, -12]]) m.add("Head", H(at(ball(0.06, 0.2, 0.07, 8), [x, 3.36, 0.6], [-38, 0, a])), C.furDark); // forehead stripes
     m.add("Head", H(at(ball(0.36, 0.26, 0.28), [0, 2.44, 0.84])), C.cream); // muzzle
-    m.add("Head", H(at(ball(0.11, 0.08, 0.08), [0, 2.54, 1.1])), C.nose);
+    m.add("Head", H(at(ball(0.14, 0.1, 0.1), [0, 2.55, 1.1])), C.nose);
     m.add("Head", H(tube([[-0.11, 2.4, 1.07], [-0.05, 2.36, 1.1], [0, 2.39, 1.11], [0.05, 2.36, 1.1], [0.11, 2.4, 1.07]], 0.022, 6, 12)), C.nose);
-    m.add("Head", H(at(ball(0.3, 0.16, 0.2), [0.06, 3.6, 0.2], [0, 0, -12])), C.furLight); // one soft curl of fur on the crown
+    for (const [x, a, l] of [[-0.12, 20, 0.2], [0.04, -2, 0.26], [0.18, -22, 0.18]]) m.add("Head", H(at(puff([[-0.1, 0], [0.1, 0], [0.04, l * 0.7], [0, l], [-0.05, l * 0.6]], 0.12, 0.07), [x, 3.56, 0.12], [-14, 0, a])), C.fur); // a tuft of dark hair on the crown
     m.bone("Eyes", "Head", hj([0, 2.8, 0.9]));
     for (const s of [-1, 1]) { // the reference's eyes: tall dark ovals, wide apart, one big light and one small
       m.add("Eyes", H(at(ball(0.125, 0.19, 0.07), [0.43 * s, 2.72, 0.93], [0, 16 * s, 0])), C.eye);
@@ -91,16 +105,17 @@ export function build(THREE, T) {
     for (const s of [-1, 1]) m.add("EyesShut", H(tube([[0.28 * s, 2.68, 0.93], [0.43 * s, 2.79, 0.99], [0.58 * s, 2.68, 0.9]], 0.035, 6, 10)), C.cream);
 
     m.bone("EarL", "Head", hj([0.6, 3.36, 0]));
-    m.add("EarL", H(at(ball(0.3, 0.36, 0.17), [0.66, 3.56, 0], [0, 0, -14])), C.furDark);
-    m.add("EarL", H(at(ball(0.2, 0.25, 0.1), [0.66, 3.55, 0.1], [0, 0, -14])), C.pink);
-    m.add("EarL", H(limb([0.56, 3.36, 0.14], [0.5, 3.62, 0.2], 0.09, 0.02, 6)), C.cream); // a wisp of pale fur inside
-    m.add("EarL", H(limb([0.72, 3.78, 0.02], [0.78, 3.92, 0.04], 0.1, 0.05, 8)), C.furDark); // tufted tip
+    m.add("EarL", H(at(ball(0.29, 0.33, 0.15), [0.64, 3.5, 0.02], [0, 0, -14])), C.tan);
+    m.add("EarL", H(at(ball(0.28, 0.32, 0.16), [0.64, 3.5, -0.05], [0, 0, -14])), C.furDark);
+    m.add("EarL", H(at(ball(0.18, 0.21, 0.1), [0.64, 3.49, 0.09], [0, 0, -14])), C.pink);
     m.mirror("EarL", "EarR");
 
     m.bone("ArmL", "Body", [0.58, 1.82, 0.05]);
-    m.add("ArmL", limb([0.58, 1.82, 0.05], [0.92, 1.42, 0.12], 0.18, 0.155), C.fur);
+    m.add("ArmL", limb([0.58, 1.82, 0.05], [0.92, 1.42, 0.12], 0.2, 0.18), C.cloak); // the shirt sleeve
+    m.add("ArmL", at(ball(0.2, 0.07, 0.2, 10), [0.9, 1.44, 0.12], [0, 0, 40]), C.cream); // its frayed edge
     m.bone("ForeL", "ArmL", [0.92, 1.42, 0.12]);
     m.add("ForeL", limb([0.92, 1.42, 0.12], [1.02, 1.04, 0.28], 0.155, 0.17), C.fur);
+    m.add("ForeL", at(lathe([[0.19, -0.07], [0.2, 0], [0.19, 0.07]], 12), [1.0, 1.12, 0.25], [20, 0, -14]), C.vest); // a leather cuff
     m.add("ForeL", at(ball(0.21, 0.19, 0.22), [1.03, 0.97, 0.32]), C.furDark);
     for (const dx of [-0.12, 0, 0.12]) m.add("ForeL", at(ball(0.075, 0.09, 0.08, 8), [1.03 + dx, 0.86, 0.44 - Math.abs(dx) * 0.3]), C.furDark);
     m.add("ForeL", at(ball(0.09, 0.05, 0.09, 8), [1.03, 0.84, 0.3]), C.pink);
@@ -130,55 +145,7 @@ export function build(THREE, T) {
   {
     const m = model("WoodSet");
     m.bone("Ground", null, [0, 0, 0]);
-    // birches, planned from the tree itself: a slim white trunk that leans and forks, dark eyes where old branches fell, thin
-    // dark twigs, and the leaves as many small clusters hung on the twig ends (never one ball). They stand left of the camp,
-    // so the lake and the cabin stay in view behind the maker. Canopies are their own bones: the storm shakes them.
-    const trees = [[-6.4, -4.2, 11.5, 1.0, 0.5], [-11.2, -8.6, 14.5, 1.2, -0.7], [-13.4, -0.6, 12.5, 1.05, 0.9]];
-    trees.forEach(([x, z, h, s, bendDir], ti) => {
-      const tb = "Trunk" + (ti + 1), cb = "Canopy" + (ti + 1), R = (k) => rnd(ti * 97 + k);
-      m.bone(tb, "Ground", [x, 0, z]);
-      const sway = (u) => [x + Math.sin(u * 2.4) * 0.5 * bendDir * s, u * h, z + Math.sin(u * 1.7 + 1) * 0.3 * s];
-      const trunkPts = []; for (let k = 0; k <= 8; k++) trunkPts.push(sway((k / 8) * 0.82));
-      m.add(tb, tube(trunkPts, (u) => (0.44 - 0.26 * u) * s, 10, 24), C.birch);
-      m.add(tb, at(lathe([[0.72 * s, 0], [0.56 * s, 0.2], [0.44 * s, 0.7], [0.4 * s, 1.1]], 10), [x, -0.05, z]), C.birchShade); // the dark foot
-      for (let k = 0; k < 4; k++) { const a = (k / 4) * 6.283 + ti; m.add(tb, limb([x + Math.cos(a) * 0.3 * s, 0.25, z + Math.sin(a) * 0.3 * s], [x + Math.cos(a) * 1.0 * s, -0.1, z + Math.sin(a) * 1.0 * s], 0.2 * s, 0.06 * s, 6), C.birchShade); } // roots
-      for (let k = 0; k < 16; k++) { // bark marks: short dark dashes that wrap the trunk, and three larger "eyes"
-        const u = 0.06 + (k / 16) * 0.72, p = sway(u), a = R(k) * 6.283, rr = (0.44 - 0.26 * u) * s * 0.96, eye = k % 6 === 2;
-        m.add(tb, at(lo(eye ? 0.2 * s : (0.12 + R(k + 40) * 0.14) * s, eye ? 0.13 * s : 0.035, 0.05), [p[0] + Math.sin(a) * rr, p[1], p[2] + Math.cos(a) * rr], [0, (a * 180) / Math.PI, 0]), C.birchMark);
-      }
-      // limbs: three forks off the upper trunk, each with two twigs; leaf clusters hang on every end
-      const ends = [], top = sway(0.82);
-      const forks = [[0.5, 0.0, 3.2, 0.5], [0.6, 2.2, 3.0, 0.55], [0.7, 4.3, 2.6, 0.6], [0.82, 1.1, 2.2, 0.9], [0.82, 3.6, 2.0, 0.95], [0.82, 5.4, 1.6, 1.0]];
-      forks.forEach(([u, a0, len, rise], fi) => {
-        const p = sway(u), a = a0 + ti * 1.3, e = [p[0] + Math.cos(a) * len * s, p[1] + len * rise * s, p[2] + Math.sin(a) * len * s * 0.8];
-        const mid = [(p[0] + e[0]) / 2 + Math.cos(a + 1) * 0.3, (p[1] + e[1]) / 2 + 0.35 * s, (p[2] + e[2]) / 2];
-        m.add(tb, tube([p, mid, e], (t) => (0.17 - 0.11 * t) * s * (1.2 - u * 0.5), 6, 8), fi < 3 ? C.birch : C.birchShade);
-        ends.push(e, mid);
-        for (const da of [-0.9, 0.8]) { // twigs
-          const t2 = [e[0] + Math.cos(a + da) * 1.3 * s, e[1] + 0.5 * s, e[2] + Math.sin(a + da) * 1.3 * s * 0.8];
-          m.add(tb, tube([mid, [(mid[0] + t2[0]) / 2, (mid[1] + t2[1]) / 2 + 0.2, (mid[2] + t2[2]) / 2], t2], 0.035 * s, 4, 4), C.birchMark);
-          ends.push(t2);
-        }
-      });
-      ends.push([top[0], top[1] + 1.0 * s, top[2]]);
-      m.bone(cb, tb, [x, h * 0.62, z]);
-      ends.forEach((e, ei) => {
-        const cr = (0.95 + R(ei + 200) * 0.55) * s;
-        m.add(cb, at(lo(cr * 0.98, cr * 0.74, cr * 0.92, 9, 7), e), C.leafDark); // the shaded heart of the cluster
-        m.add(cb, at(lo(cr * 0.8, cr * 0.5, cr * 0.74, 8, 5), [e[0] - cr * 0.1, e[1] + cr * 0.34, e[2]]), C.leaf); // its lit top
-        for (let k = 0; k < 16; k++) { // leaves on its shell: lit ones on top, dark below, a few butter ones
-          const th = R(ei * 31 + k) * 6.283, ph = -0.7 + R(ei * 17 + k + 5) * 2.1, d = [Math.cos(th) * Math.cos(ph), Math.sin(ph), Math.sin(th) * Math.cos(ph)];
-          const col = ph < -0.1 ? C.leafDark : k % 9 === 0 ? C.butter : ph > 0.6 ? C.leafLight : C.leaf;
-          m.add(cb, at(lo(0.34 * s, 0.1 * s, 0.24 * s, 5, 3), [e[0] + d[0] * cr * 0.97, e[1] + d[1] * cr * 0.74, e[2] + d[2] * cr * 0.92], [(-ph * 180) / Math.PI * 0.6, (-th * 180) / Math.PI, 0]), col);
-        }
-        if (ei % 2 === 0) { // a hanging twig with small leaves: the weeping line of a birch
-          const l = (1.4 + R(ei + 300) * 1.4) * s, bx = e[0] + (R(ei + 310) - 0.5) * cr, bz = e[2] + (R(ei + 320) - 0.5) * cr;
-          m.add(cb, tube([[bx, e[1] - cr * 0.3, bz], [bx + 0.08, e[1] - cr * 0.3 - l * 0.5, bz], [bx + 0.16, e[1] - cr * 0.3 - l, bz + 0.05]], 0.02 * s, 3, 4), C.birchMark);
-          for (let k = 1; k <= 5; k++) m.add(cb, at(lo(0.2 * s, 0.05 * s, 0.13 * s, 5, 3), [bx + 0.03 * k + (k % 2 ? 0.14 : -0.14) * s, e[1] - cr * 0.3 - (l * k) / 5, bz], [0, k * 70, k % 2 ? 50 : -50]), k % 2 ? C.leaf : C.leafLight);
-        }
-      });
-    });
-
+    // (the three birches are now models from the CC0 nature kit: design3d/kit_import.py, KitBirch1-3)
     // the log seat and the campfire
     m.bone("Log", "Ground", [2.6, 0.55, 2.2]);
     m.add("Log", at(lathe([[0.02, -1.7], [0.5, -1.7], [0.62, -1.55], [0.64, 1.55], [0.5, 1.7], [0.02, 1.7]], 16), [2.6, 0.6, 2.2], [0, 28, 90]), C.wood);
@@ -240,117 +207,162 @@ export function build(THREE, T) {
     out.push(m);
   }
 
-  // ---------- Cabin: the maker's home across the water (logs, a steep metal roof with a dormer, a stone chimney, a porch) ----------
+  // ---------- Cabin: the maker's home across the water. Remade 2026-11-15 from its reference sheets (refs/forge/sheets/
+  // cabin_views, cabin_materials): every material is its own bone with a tiling picture (design3d/cabin_tex.py): peeled round
+  // logs with end grain, a standing-seam metal roof, fieldstone, deck planks; frames, flowers and brass stay in the palette. ----------
   {
     const m = model("Cabin");
-    m.bone("Walls", null, [0, 0, 0]);
-    const X0 = -7, X1 = 5, Z0 = -4.5, Z1 = 4.5, WALL = 5.4, BASE = 0.7;
-    const box = (w, h, d, p, r = [0, 0, 0], e = 0.16) => at(pillow(w, h, d, e, 4), p, r);
-    // fieldstone footing
-    for (let k = 0; k < 14; k++) { const u = k / 14, front = k % 2 === 0; m.add("Walls", box(1.9, 0.8, 1.0, [X0 + 0.8 + (k >> 1) * 1.72, 0.36, front ? Z1 - 0.1 : Z0 + 0.1], [0, 0, 0], 0.5), [C.stone, C.stoneDark, C.stoneLight][k % 3]); }
-    for (let k = 0; k < 6; k++) for (const xs of [X0 + 0.1, X1 - 0.1]) m.add("Walls", box(1.0, 0.8, 1.7, [xs, 0.36, Z0 + 0.9 + k * 1.5], [0, 0, 0], 0.5), [C.stoneDark, C.stone, C.stoneLight][k % 3]);
-    // log walls: round logs laid in courses, the side walls half a course higher so the ends cross at the corners
-    const courses = Math.round((WALL - BASE) / 0.5);
+    const TAU = Math.PI * 2;
+    m.bone("Logs", null, [0, 0, 0], "SmoothPlastic", "tex/cabin_logs.png");
+    m.bone("Ends", "Logs", [0, 0, 0], "SmoothPlastic", "tex/cabin_ends.png");
+    m.bone("Roof", "Logs", [0, 8, 0], "SmoothPlastic", "tex/cabin_roof.png");
+    m.bone("Stone", "Logs", [0, 0, 0], "SmoothPlastic", "tex/cabin_stone.png");
+    m.bone("Planks", "Logs", [0, 0, 0], "SmoothPlastic", "tex/cabin_planks.png");
+    m.bone("Trim", "Logs", [0, 0, 0]);
+    const uvOf = (g, fn) => { const p = g.getAttribute("position"), n = g.getAttribute("normal"), uv = new Float32Array(p.count * 2); for (let i = 0; i < p.count; i++) { const [u, v] = fn(p.getX(i), p.getY(i), p.getZ(i), n.getX(i), n.getY(i), n.getZ(i)); uv[2 * i] = u; uv[2 * i + 1] = v; } g.setAttribute("uv", new THREE.BufferAttribute(uv, 2)); return g; };
+    // box mapping in the piece's own space, before it is placed: one tile of the picture covers `tile` studs
+    const boxUV = (g, tile) => uvOf(g, (x, y, z, nx, ny, nz) => { const ax = Math.abs(nx), ay = Math.abs(ny), az = Math.abs(nz); return ay >= ax && ay >= az ? [x / tile, z / tile] : ax >= az ? [z / tile, y / tile] : [x / tile, y / tile]; });
+    const slab = (w, h, d, tile, p, r = [0, 0, 0]) => at(boxUV(new THREE.BoxGeometry(w, h, d), tile), p, r); // a flat-faced board or sheet
+    const lump = (w, h, d, tile, p, r = [0, 0, 0], e = 0.45) => at(boxUV(pillow(w, h, d, e, 5), tile), p, r); // a rounded stone
+    const box = (w, h, d, p, r = [0, 0, 0], e = 0.16) => at(pillow(w, h, d, e, 4), p, r); // palette trim
+    // a peeled log from p0 to p1: the picture runs along it, twice round it (dark where it meets the logs above and below)
+    let logN = 0;
+    const log = (p0, p1, r, ends = true, seg = 12) => {
+      const A = new THREE.Vector3(...p0), B = new THREE.Vector3(...p1), ax = B.clone().sub(A), len = ax.length(); ax.normalize();
+      const ref = Math.abs(ax.y) > 0.9 ? new THREE.Vector3(0, 0, 1) : new THREE.Vector3(0, -1, 0);
+      const side = new THREE.Vector3().crossVectors(ax, ref).normalize(), down = new THREE.Vector3().crossVectors(side, ax).normalize();
+      const pos = [], nor = [], uv = [], idx = [], uoff = (logN++ * 0.37) % 1;
+      for (let i = 0; i <= 1; i++) for (let k = 0; k <= seg; k++) {
+        const a = (k / seg) * TAU, n = down.clone().multiplyScalar(Math.cos(a)).add(side.clone().multiplyScalar(Math.sin(a))), c = (i ? B : A).clone().add(n.clone().multiplyScalar(r));
+        pos.push(c.x, c.y, c.z); nor.push(n.x, n.y, n.z); uv.push(uoff + (i * len) / 4, k / seg);
+      }
+      for (let k = 0; k < seg; k++) { const a = k, b = k + 1, c = seg + 1 + k, d = c + 1; idx.push(a, b, c, b, d, c); }
+      const g = new THREE.BufferGeometry();
+      g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute("normal", new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute("uv", new THREE.Float32BufferAttribute(uv, 2)); g.setIndex(idx);
+      // outward faces: turn the triangles if the first one looks inward
+      const pa = new THREE.Vector3(pos[0], pos[1], pos[2]), pb = new THREE.Vector3(pos[3], pos[4], pos[5]), pc = new THREE.Vector3(pos[(seg + 1) * 3], pos[(seg + 1) * 3 + 1], pos[(seg + 1) * 3 + 2]);
+      if (pb.clone().sub(pa).cross(pc.clone().sub(pa)).dot(new THREE.Vector3(nor[0], nor[1], nor[2])) < 0) for (let i = 0; i < idx.length; i += 3) { const t = idx[i]; idx[i] = idx[i + 1]; idx[i + 1] = t; }
+      g.setIndex(idx);
+      m.addTex("Logs", g);
+      if (ends) for (const [P, s] of [[A, -1], [B, 1]]) { // end grain discs
+        const ep = [], en = [], eu = [], ei = [];
+        ep.push(P.x + ax.x * s * 0.01, P.y + ax.y * s * 0.01, P.z + ax.z * s * 0.01); en.push(ax.x * s, ax.y * s, ax.z * s); eu.push(0.5, 0.5);
+        for (let k = 0; k <= seg; k++) { const a = (k / seg) * TAU, n = down.clone().multiplyScalar(Math.cos(a)).add(side.clone().multiplyScalar(Math.sin(a))), c = P.clone().add(n.multiplyScalar(r)).add(ax.clone().multiplyScalar(s * 0.01)); ep.push(c.x, c.y, c.z); en.push(ax.x * s, ax.y * s, ax.z * s); eu.push(0.5 + Math.cos(a) * 0.46, 0.5 + Math.sin(a) * 0.46); }
+        for (let k = 1; k <= seg; k++) ei.push(0, k, k + 1);
+        const p1v = new THREE.Vector3(ep[3], ep[4], ep[5]).sub(P), p2v = new THREE.Vector3(ep[6], ep[7], ep[8]).sub(P);
+        if (p1v.cross(p2v).dot(ax) * s < 0) for (let i = 0; i < ei.length; i += 3) { const t = ei[i + 1]; ei[i + 1] = ei[i + 2]; ei[i + 2] = t; }
+        const eg = new THREE.BufferGeometry();
+        eg.setAttribute("position", new THREE.Float32BufferAttribute(ep, 3)); eg.setAttribute("normal", new THREE.Float32BufferAttribute(en, 3)); eg.setAttribute("uv", new THREE.Float32BufferAttribute(eu, 2)); eg.setIndex(ei);
+        m.addTex("Ends", eg);
+      }
+    };
+    const X0 = -4.2, X1 = 4.2, Z0 = -3.6, Z1 = 3.6, WALL = 7.4, BASE = 0.7, LR = 0.47, CS = 0.84; // compact and two storeys, thick logs, as on the reference sheet
+    // fieldstone footing: large stones under every wall
+    for (let k = 0; k < 10; k++) { const front = k % 2 === 0; m.addTex("Stone", lump(2.0, 0.9, 1.1, 4.5, [X0 + 0.8 + (k >> 1) * 1.7, 0.36, front ? Z1 - 0.1 : Z0 + 0.1], [0, rnd(k + 60) * 10 - 5, 0])); }
+    for (let k = 0; k < 5; k++) for (const xs of [X0 + 0.1, X1 - 0.1]) m.addTex("Stone", lump(1.1, 0.9, 1.8, 4.5, [xs, 0.36, Z0 + 0.8 + k * 1.4], [0, rnd(k + 70) * 10 - 5, 0]));
+    // log walls: courses of peeled logs, the side walls half a course higher so the ends cross at the corners
+    const courses = Math.round((WALL - BASE) / CS);
     for (let k = 0; k < courses; k++) {
-      const y = BASE + 0.25 + k * 0.5, c = k % 3 === 1 ? C.logLight : C.log;
-      for (const z of [Z0, Z1]) m.add("Walls", limb([X0 - 0.5, y, z], [X1 + 0.5, y, z], 0.27, 0.27, 6), c);
-      for (const x of [X0, X1]) m.add("Walls", limb([x, y + 0.25, Z0 - 0.5], [x, y + 0.25, Z1 + 0.5], 0.27, 0.27, 6), c);
-      for (const z of [Z0, Z1]) for (const x of [X0 - 0.52, X1 + 0.52]) m.add("Walls", at(lo(0.05, 0.2, 0.2, 6, 4), [x, y, z]), C.logEnd); // pale cut ends
+      const y = BASE + CS / 2 + k * CS, over = 0.7 + rnd(k + 80) * 0.3;
+      for (const z of [Z0, Z1]) log([X0 - over, y, z], [X1 + over, y, z], LR);
+      for (const x of [X0, X1]) log([x, y + CS / 2, Z0 - over], [x, y + CS / 2, Z1 + over], LR);
     }
-    // gable ends: shorter logs up to the ridge
-    const RIDGE = 10.4, EAVE = WALL + 0.2;
-    for (let k = 0; k < 9; k++) { const y = WALL + 0.25 + k * 0.5, half = (Z1 - Z0) / 2 * (1 - (y - WALL) / (RIDGE - WALL)); if (half > 0.3) for (const x of [X0, X1]) m.add("Walls", limb([x, y, -half], [x, y, half], 0.27, 0.27, 6), k % 2 ? C.log : C.logLight); }
-    // roof: two metal slopes with raised seams, a ridge cap, dark eaves
-    const run = (Z1 - Z0) / 2 + 1.1, rise = RIDGE - EAVE + 0.9, slopeLen = Math.hypot(run, rise), pitch = (Math.atan2(rise, run) * 180) / Math.PI;
+    const RIDGE = 12.2, EAVE = WALL + 0.2;
+    for (let k = 0; k < 6; k++) { const y = WALL + CS / 2 + k * CS, half = ((Z1 - Z0) / 2) * (1 - (y - WALL) / (RIDGE - WALL)); if (half > 0.3) for (const x of [X0, X1]) log([x, y, -half - 0.1], [x, y, half + 0.1], LR, false); }
+    // purlins poke out under the eaves: three round beams along the ridge line
+    for (const [y, z] of [[RIDGE - 0.15, 0], [9.9, -1.8], [9.9, 1.8]]) log([X0 - 1.0, y, z], [X1 + 1.0, y, z], 0.24);
+    // roof: two metal slopes with deep eaves and a dark fascia board, a ridge cap
+    const run = (Z1 - Z0) / 2 + 1.3, rise = RIDGE - EAVE + 1.0, slopeLen = Math.hypot(run, rise), pitch = (Math.atan2(rise, run) * 180) / Math.PI;
     for (const s of [-1, 1]) {
-      const mid = [(X0 + X1) / 2, RIDGE - rise / 2 + 0.2, s * run / 2];
-      m.add("Walls", box(X1 - X0 + 2.2, 0.22, slopeLen, mid, [s * pitch, 0, 0], 0.1), C.roof);
-      for (let k = 0; k <= 9; k++) m.add("Walls", box(0.12, 0.34, slopeLen * 0.98, [X0 - 0.9 + k * ((X1 - X0 + 1.8) / 9), mid[1] + 0.06, mid[2]], [s * pitch, 0, 0], 0.3), k % 2 ? C.roofLight : C.roofDark);
+      const mid = [(X0 + X1) / 2, RIDGE - rise / 2 + 0.25, (s * run) / 2];
+      m.addTex("Roof", slab(X1 - X0 + 2.6, 0.22, slopeLen, 7.5, mid, [s * pitch, 0, 0]));
+      m.addTex("Planks", slab(X1 - X0 + 2.6, 0.3, 0.22, 3, [mid[0], EAVE - 0.72, s * (run - 0.02)], [s * pitch, 0, 0])); // fascia
     }
-    m.add("Walls", limb([X0 - 1.15, RIDGE + 0.42, 0], [X1 + 1.15, RIDGE + 0.42, 0], 0.2, 0.2, 6), C.roofLight);
-    // the dormer over the left windows: a small gable that faces the lake
-    const DX = -3.2, DW = 2.3, DZ = 2.2, DR = 8.9;
-    m.add("Walls", box(DW * 2, 2.4, 2.6, [DX, 6.9, DZ + 0.2], [0, 0, 0], 0.12), C.logLight);
-    for (let k = 0; k < 4; k++) m.add("Walls", limb([DX - DW, 5.95 + k * 0.5, DZ + 1.5], [DX + DW, 5.95 + k * 0.5, DZ + 1.5], 0.22, 0.22, 6), k % 2 ? C.log : C.logLight);
-    for (const s of [-1, 1]) m.add("Walls", box(3.2, 0.2, 3.6, [DX + s * 1.25, DR - 0.55, DZ - 0.1], [0, 0, -s * 38], 0.1), C.roof);
-    m.add("Walls", limb([DX, DR + 0.42, DZ - 1.7], [DX, DR + 0.42, DZ + 1.8], 0.16, 0.16, 6), C.roofLight);
-    // stone chimney, stepped, with a cap
-    for (let k = 0; k < 11; k++) { const y = 0.6 + k * 1.05, w = k < 4 ? 2.2 : 1.6; m.add("Walls", box(w + rnd(k + 900) * 0.14, 1.0, w * 0.8, [2.2 + (rnd(k + 910) - 0.5) * 0.1, y, -1.2], [0, rnd(k + 920) * 6 - 3, 0], 0.4), [C.stone, C.stoneLight, C.stoneDark][k % 3]); }
-    m.add("Walls", box(2.0, 0.3, 1.7, [2.2, 12.2, -1.2], [0, 0, 0], 0.3), C.stoneDark);
-    // the porch on the right: a deck, four posts, a rail, a lean-to roof, two steps
-    const PX0 = X1, PX1 = X1 + 6.2;
-    m.add("Walls", box(PX1 - PX0 + 0.4, 0.3, 6.4, [(PX0 + PX1) / 2, 1.0, 1.6], [0, 0, 0], 0.1), C.logLight);
-    for (let k = 0; k < 8; k++) m.add("Walls", box(0.06, 0.32, 6.3, [PX0 + 0.5 + k * 0.78, 1.01, 1.6], [0, 0, 0], 0.2), C.log); // deck boards
-    for (const px of [PX0 + 0.4, PX0 + 2.3, PX0 + 4.2, PX1 - 0.2]) { m.add("Walls", limb([px, 1.1, 4.5], [px, 4.9, 4.5], 0.17, 0.17, 6), C.log); m.add("Walls", box(0.5, 0.2, 0.5, [px, 4.9, 4.5], [0, 0, 0], 0.3), C.logLight); }
-    m.add("Walls", limb([PX1 - 0.2, 1.1, -1.4], [PX1 - 0.2, 4.9, -1.4], 0.17, 0.17, 6), C.log);
-    m.add("Walls", limb([PX0 + 2.3, 2.3, 4.5], [PX1 - 0.2, 2.3, 4.5], 0.1, 0.1, 6), C.logLight);
-    for (let k = 0; k < 8; k++) m.add("Walls", limb([PX0 + 2.5 + k * 0.48, 1.15, 4.5], [PX0 + 2.5 + k * 0.48, 2.3, 4.5], 0.05, 0.05, 4), C.log); // balusters
-    m.add("Walls", limb([PX1 - 0.2, 2.3, 4.5], [PX1 - 0.2, 2.3, -1.4], 0.1, 0.1, 6), C.logLight);
-    m.add("Walls", box(PX1 - PX0 + 1.2, 0.2, 7.6, [(PX0 + PX1) / 2 + 0.3, 5.5, 1.5], [0, 0, -9], 0.1), C.roof);
-    for (let k = 0; k <= 5; k++) m.add("Walls", box(0.1, 0.3, 7.5, [PX0 + 0.1 + k * 1.3, 5.6 - k * 0.2, 1.5], [0, 0, -9], 0.3), k % 2 ? C.roofLight : C.roofDark);
-    for (let k = 0; k < 2; k++) m.add("Walls", box(2.2, 0.32, 0.8, [PX0 + 1.35, 0.72 - k * 0.36, 5.0 + k * 0.7], [0, 0, 0], 0.2), C.logLight); // steps
-    // window and door frames (the panes are the Glow bone)
-    const wins = [[-5.3, 3.1, 1.5, 1.9], [-2.2, 3.1, 1.5, 1.9], [DX, 7.0, 1.3, 1.4], [3.2, 3.2, 1.1, 1.5]]; // x, y, half width, height
+    m.addTex("Roof", at(boxUV(new THREE.CylinderGeometry(0.22, 0.22, X1 - X0 + 2.7, 8), 4), [(X0 + X1) / 2, RIDGE + 0.5, 0], [0, 0, 90]));
+    // the dormer over the left windows
+    const DX = 0, DW = 1.5, DZ = 1.9, DR = 11.1;
+    for (let k = 0; k < 5; k++) { log([DX - DW, DR - 2.95 + k * 0.5, DZ + 1.5], [DX + DW, DR - 2.95 + k * 0.5, DZ + 1.5], 0.24); for (const s of [-1, 1]) log([DX + s * DW, DR - 2.7 + k * 0.5, DZ - 1.0], [DX + s * DW, DR - 2.7 + k * 0.5, DZ + 1.7], 0.24, k > 2); }
+    for (const s of [-1, 1]) m.addTex("Roof", slab(2.4, 0.14, 3.9, 4, [DX + s * 0.92, DR - 0.42, DZ - 0.1], [0, 0, -s * 38]));
+    m.addTex("Roof", at(boxUV(new THREE.CylinderGeometry(0.16, 0.16, 3.9, 8), 4), [DX, DR + 0.5, DZ - 0.1], [90, 0, 0]));
+    // stone chimney: big stones below, smaller above, a cap, and a clay pot
+    for (let k = 0; k < 14; k++) { const y = 0.6 + k * 1.02, w = k < 5 ? 2.3 : 1.7; for (const dx of [-0.42, 0.42]) m.addTex("Stone", lump(w * 0.56 + rnd(k + 900) * 0.14, 1.04, w * 0.84, 4.5, [2.0 + dx * (w / 1.9) + (k % 2) * 0.1, y, -1.4], [0, rnd(k * 2 + 920 + dx) * 8 - 4, 0])); }
+    m.addTex("Stone", lump(2.2, 0.34, 1.9, 2.4, [2.0, 15.0, -1.4], [0, 0, 0], 0.3));
+    // the porch on the right: deck, posts, rail, lean-to roof, steps
+    const PX0 = X1, PX1 = X1 + 3.9;
+    m.addTex("Planks", slab(PX1 - PX0 + 0.4, 0.22, 6.4, 3, [(PX0 + PX1) / 2, 1.0, 1.6]));
+    for (const px of [PX0 + 0.4, PX0 + 2.0, PX1 - 0.2]) log([px, 0.2, 4.5], [px, 5.0, 4.5], 0.19, false);
+    log([PX1 - 0.2, 0.2, -1.4], [PX1 - 0.2, 5.0, -1.4], 0.19, false);
+    log([PX0 + 0.1, 5.0, 4.5], [PX1 + 0.1, 4.2, 4.5], 0.17); // the porch beam
+    log([PX0 + 2.0, 2.3, 4.5], [PX1 - 0.2, 2.3, 4.5], 0.11, false);
+    for (let k = 0; k < 3; k++) m.addTex("Planks", slab(0.1, 1.2, 0.1, 3, [PX0 + 2.3 + k * 0.48, 1.7, 4.5])); // balusters
+    log([PX1 - 0.2, 2.3, 4.5], [PX1 - 0.2, 2.3, -1.4], 0.11, false);
+    m.addTex("Roof", slab(PX1 - PX0 + 1.4, 0.14, 7.8, 4, [(PX0 + PX1) / 2 + 0.3, 5.5, 1.5], [0, 0, -9]));
+    for (let k = 0; k < 2; k++) m.addTex("Planks", slab(2.2, 0.3, 0.8, 3, [PX0 + 1.35, 0.72 - k * 0.36, 5.0 + k * 0.7]));
+    // a woodshed on the left end with split firewood (end grain out)
+    m.addTex("Roof", slab(3.4, 0.14, 5.2, 4, [X0 - 2.0, 3.9, 0.6], [0, 0, 14]));
+    for (const z of [-1.6, 2.8]) log([X0 - 3.4, 0.2, z], [X0 - 3.4, 3.5, z], 0.17, false);
+    for (let r = 0; r < 4; r++) for (let k = 0; k < 6; k++) log([X0 - 2.6, 0.5 + r * 0.42, -1.2 + k * 0.72 + (r % 2) * 0.2], [X0 - 1.2, 0.5 + r * 0.42, -1.2 + k * 0.72 + (r % 2) * 0.2], 0.2, true, 7);
+    // the door: planks with two iron straps and a brass latch
+    m.addTex("Planks", slab(1.7, 3.3, 0.2, 3, [0, 2.55, Z1 + 0.52]));
+    for (const y of [1.6, 3.4]) m.add("Trim", box(1.6, 0.14, 0.08, [0, y, Z1 + 0.64], [0, 0, 0], 0.3), C.roofDark);
+    m.add("Trim", at(lo(0.1, 0.1, 0.1), [0.6, 2.5, Z1 + 0.68]), C.brass);
+    // windows: frames, mullions, shutters and a flower box (the panes are the Glow bone)
+    const wins = [[-2.75, 2.9, 0.85, 1.6], [2.75, 2.9, 0.85, 1.6], [-2.3, 5.9, 0.8, 1.3], [2.3, 5.9, 0.8, 1.3], [DX, DR - 1.75, 0.8, 1.1]]; // x, y, half width, height
     for (const [x, y, hw, hh] of wins) {
-      const zf = x === DX ? DZ + 1.78 : Z1 + 0.3;
-      for (const s of [-1, 1]) m.add("Walls", box(0.2, hh + 0.3, 0.22, [x + s * hw, y, zf], [0, 0, 0], 0.3), C.logEnd);
-      for (const s of [-1, 1]) m.add("Walls", box(hw * 2 + 0.3, 0.2, 0.26, [x, y + (s * hh) / 2, zf], [0, 0, 0], 0.3), C.logEnd);
-      m.add("Walls", box(0.09, hh, 0.16, [x, y, zf + 0.02], [0, 0, 0], 0.3), C.log); m.add("Walls", box(hw * 2, 0.09, 0.16, [x, y, zf + 0.02], [0, 0, 0], 0.3), C.log); // mullions
+      const zf = x === DX ? DZ + 1.82 : Z1 + 0.6;
+      for (const s of [-1, 1]) m.add("Trim", box(0.22, hh + 0.34, 0.24, [x + s * hw, y, zf], [0, 0, 0], 0.3), C.logEnd);
+      for (const s of [-1, 1]) m.add("Trim", box(hw * 2 + 0.36, 0.22, 0.28, [x, y + (s * hh) / 2, zf], [0, 0, 0], 0.3), C.logEnd);
+      m.add("Trim", box(0.17, hh, 0.2, [x, y, zf + 0.04], [0, 0, 0], 0.3), C.bark); m.add("Trim", box(hw * 2, 0.17, 0.2, [x, y, zf + 0.04], [0, 0, 0], 0.3), C.bark);
+      if (x !== DX) for (const s of [-1, 1]) m.addTex("Planks", slab(0.7, hh + 0.2, 0.1, 3, [x + s * (hw + 0.5), y, zf - 0.04], [0, s * 14, 0])); // shutters, a little open
     }
-    m.add("Walls", box(1.9, 3.4, 0.24, [1.0, 2.6, Z1 + 0.3], [0, 0, 0], 0.12), C.logLight); // the door
-    m.add("Walls", at(lo(0.09, 0.09, 0.09), [1.7, 2.5, Z1 + 0.5]), C.brass);
-    m.add("Walls", limb([PX0 + 0.3, 4.4, 4.3], [PX0 + 0.3, 3.9, 4.3], 0.03, 0.03, 4), C.nose); // the porch lantern's hook
-    m.bone("Glow", "Walls", [0, 3, Z1], "Neon");
-    for (const [x, y, hw, hh] of wins) m.add("Glow", at(pillow(hw * 2, hh, 0.1, 0.15, 6), [x, y, x === DX ? DZ + 1.72 : Z1 + 0.24]), C.glow);
-    m.add("Glow", at(pillow(1.1, 1.0, 0.1, 0.2, 6), [1.0, 3.5, Z1 + 0.42]), C.glow); // the door's glass
-    m.add("Glow", at(lo(0.2, 0.26, 0.2, 8, 6), [PX0 + 0.3, 3.7, 4.3]), C.glow); // the porch lantern
+    for (const x of [-2.75, 2.75]) { m.addTex("Planks", slab(2.3, 0.4, 0.5, 3, [x, 1.75, Z1 + 0.88])); for (let k = 0; k < 6; k++) { m.add("Trim", at(lo(0.2, 0.17, 0.2, 6, 4), [x - 0.9 + k * 0.36, 2.09 + (k % 2) * 0.08, Z1 + 0.9]), [C.petal, C.red, C.petalPale, C.petalDeep, C.red, C.cream][k]); m.add("Trim", at(lo(0.22, 0.1, 0.22, 6, 4), [x - 0.9 + k * 0.36, 1.95, Z1 + 0.9]), C.grassDark); } }
+    m.add("Trim", limb([PX0 + 0.3, 4.4, 4.3], [PX0 + 0.3, 3.9, 4.3], 0.03, 0.03, 4), C.nose); // the porch lantern's hook
+    m.add("Trim", at(lathe([[0.02, 0.26], [0.2, 0.2], [0.24, 0.3], [0.02, 0.5]], 8), [PX0 + 0.3, 3.74, 4.3]), C.roofDark); // and its cap
+    m.bone("Glow", "Logs", [0, 3, Z1], "Neon");
+    for (const [x, y, hw, hh] of wins) m.add("Glow", at(pillow(hw * 2, hh, 0.1, 0.15, 6), [x, y, x === DX ? DZ + 1.76 : Z1 + 0.54]), C.glow);
+    m.add("Glow", at(pillow(0.8, 0.7, 0.1, 0.2, 6), [0, 3.5, Z1 + 0.64]), C.glow); // the door's glass
+    m.add("Glow", at(lo(0.2, 0.26, 0.2, 8, 6), [PX0 + 0.3, 3.56, 4.3]), C.glow); // the porch lantern
     // the reflection: the house upside down from its own footing, and the lights drawn out long, as on still water
     m.bone("Mirror", null, [0, 0, 0]);
     m.add("Mirror", at(pillow(X1 - X0 + 1, WALL, Z1 - Z0 + 1, 0.12, 6), [(X0 + X1) / 2, -WALL / 2, 0]), C.log);
-    for (const s of [-1, 1]) m.add("Mirror", at(pillow(X1 - X0 + 2.2, 0.3, slopeLen, 0.1, 6), [(X0 + X1) / 2, -(RIDGE - rise / 2 + 0.2), s * run / 2], [-s * pitch, 0, 0]), C.roofDark);
-    m.add("Mirror", at(pillow(1.7, 12, 1.4, 0.3, 6), [2.2, -6.2, -1.2]), C.stoneDark);
+    for (const s of [-1, 1]) m.add("Mirror", at(pillow(X1 - X0 + 2.2, 0.3, slopeLen, 0.1, 6), [(X0 + X1) / 2, -(RIDGE - rise / 2 + 0.2), (s * run) / 2], [-s * pitch, 0, 0]), C.roofDark);
+    m.add("Mirror", at(pillow(1.7, 15, 1.4, 0.3, 6), [2.0, -7.6, -1.4]), C.stoneDark);
     m.add("Mirror", at(pillow(PX1 - PX0 + 1.2, 0.3, 7.6, 0.1, 6), [(PX0 + PX1) / 2 + 0.3, -5.5, 1.5], [0, 0, 9]), C.roofDark);
     m.bone("MirrorGlow", "Mirror", [0, -3, Z1], "Neon");
-    for (const [x, y, hw, hh] of wins) m.add("MirrorGlow", at(pillow(hw * 1.9, hh * 7.5, 0.1, 0.6, 6), [x, -y - hh * 3.4, x === DX ? DZ + 1.72 : Z1 + 0.24]), C.glow);
+    for (const [x, y, hw, hh] of wins) m.add("MirrorGlow", at(pillow(hw * 1.9, hh * 7.5, 0.1, 0.6, 6), [x, -y - hh * 3.4, x === DX ? DZ + 1.76 : Z1 + 0.54]), C.glow);
     m.add("MirrorGlow", at(pillow(0.5, 8, 0.1, 0.6, 6), [PX0 + 0.3, -8, 4.3]), C.glow);
     out.push(m);
   }
 
-  // ---------- Spruce1-3: the forest's trees, planned from the reference: a tall narrow spire, boughs in whorls that droop and
-  // lift at the tip, dark blue-green with paler new growth, a bare foot of trunk with dead stubs. Each carries its mirror image. ----------
-  const spruce = (name, h, tiers, seed, lean) => {
-    const m = model(name), R = (k) => rnd(seed * 131 + k), geos = [];
-    const add = (bn, g, c) => { m.add(bn, g, c); geos.push([g, c]); };
-    m.bone("Trunk", null, [0, 0, 0]);
-    const k0 = h / 30, axis = (y) => [Math.sin((y / h) * 1.6) * lean, y, Math.cos((y / h) * 2.1) * lean * 0.4 - lean * 0.4];
-    const tp = []; for (let k = 0; k <= 6; k++) tp.push(axis((k / 6) * h * 0.97));
-    add("Trunk", tube(tp, (u) => (0.95 - 0.86 * u) * k0, 7, 12), C.bark);
-    for (let k = 0; k < 5; k++) { const a = (k / 5) * 6.283 + seed; add("Trunk", limb([Math.cos(a) * 0.5 * k0, 0.5 * k0, Math.sin(a) * 0.5 * k0], [Math.cos(a) * 1.7 * k0, -0.2, Math.sin(a) * 1.7 * k0], 0.42 * k0, 0.1 * k0, 5), C.bark); } // root flares
-    for (let k = 0; k < 5; k++) { const y = h * (0.05 + 0.02 * k), a = R(k + 50) * 6.283, p = axis(y); add("Trunk", limb(p, [p[0] + Math.cos(a) * 1.5 * k0, y - 0.3 * k0, p[2] + Math.sin(a) * 1.5 * k0], 0.1 * k0, 0.03, 4), C.barkLight); } // dead stubs
-    m.bone("Boughs", "Trunk", [0, h * 0.5, 0]);
-    for (let t = 0; t < tiers; t++) {
-      const u = t / (tiers - 1), y = h * (0.13 + 0.83 * u), p = axis(y), reach = h * 0.2 * Math.pow(1 - u, 0.78) + 0.5 * k0, n = Math.max(4, Math.round(8 - 3.5 * u));
-      for (let k = 0; k < n; k++) {
-        const a = (k / n) * 6.283 + t * 0.9 + R(t * 13 + k) * 0.6, len = reach * (0.72 + 0.5 * R(t * 7 + k + 3)), droop = rad(30 + 16 * R(t * 5 + k) - 26 * u);
-        const hx = Math.cos(droop) * len * 0.5, hy = -Math.sin(droop) * len * 0.5;
-        const col = [C.sp1, C.sp2, C.sp1, C.sp3][Math.floor(R(t * 3 + k + 9) * 4)];
-        add("Boughs", at(lo(len * 0.56, len * 0.1 + 0.16 * k0, len * 0.27 + 0.12 * k0), [p[0] + Math.cos(a) * hx, y + hy, p[2] - Math.sin(a) * hx], [0, (a * 180) / Math.PI, (-droop * 180) / Math.PI]), col);
-        if ((t + k) % 2 === 0) { // the tip lifts and is paler: this year's growth
-          const tx = Math.cos(droop) * len * 0.92, ty = -Math.sin(droop) * len * 0.92 + len * 0.06;
-          add("Boughs", at(lo(len * 0.2, len * 0.06 + 0.1 * k0, len * 0.15 + 0.08 * k0, 5, 3), [p[0] + Math.cos(a) * tx, y + ty, p[2] - Math.sin(a) * tx], [0, (a * 180) / Math.PI, 8]), C.spTip);
-        }
-      }
-    }
-    const topP = axis(h * 0.95);
-    add("Boughs", at(lathe([[0.5 * k0, 0], [0.34 * k0, h * 0.03], [0.05, h * 0.075]], 6), topP), C.sp2);
+  // ---------- Dock: a small plank dock on posts with a lantern at its end and a rowboat tied beside it (root at the water line) ----------
+  {
+    const m = model("Dock"), geos = [];
+    const add = (g, c) => { m.add("Dock", g, c); geos.push([g, c]); };
+    m.bone("Dock", null, [0, 0, 0]);
+    const bx = (w, h, d, p, r = [0, 0, 0]) => at(pillow(w, h, d, 0.2, 4), p, r);
+    for (let k = 0; k < 12; k++) add(bx(3.0, 0.16, 0.86, [0, 0.9 + (k % 3) * 0.015, 0.5 + k * 0.92], [0, (k % 2) * 2 - 1, 0]), k % 3 === 1 ? C.logLight : C.log);
+    for (const z of [0.6, 4.2, 7.8, 11.2]) for (const x of [-1.5, 1.5]) add(limb([x, -1.6, z], [x, 1.25, z], 0.17, 0.15, 6), C.bark);
+    for (const x of [-1.5, 1.5]) add(limb([x, 0.72, 0.4], [x, 0.72, 11.4], 0.09, 0.09, 4), C.bark);
+    add(limb([1.5, 1.2, 11.2], [1.5, 3.9, 11.2], 0.11, 0.09, 6), C.bark); // the lantern post and its arm
+    add(limb([1.5, 3.8, 11.2], [0.7, 3.95, 11.2], 0.06, 0.05, 4), C.bark);
+    add(at(lathe([[0.02, 0.26], [0.22, 0.2], [0.26, 0.3], [0.02, 0.5]], 8), [0.7, 3.3, 11.2]), C.roofDark);
+    // the rowboat: a round hull, two thwarts, an oar laid across
+    const hull = []; for (let k = 0; k <= 12; k++) { const u = k / 12, a = u * Math.PI; hull.push([Math.cos(a) * 2.6, -Math.sin(a) * 0.9]); }
+    add(at(puff(hull.map(([x, y]) => [x, y]), 1.5, 0.3), [-3.3, 0.5, 6.4], [0, 90, 0]), C.logLight);
+    add(at(puff(hull.map(([x, y]) => [x * 0.86, y * 0.72]), 1.1, 0.2), [-3.3, 0.62, 6.4], [0, 90, 0]), C.log);
+    for (const z of [5.4, 7.4]) add(bx(1.7, 0.12, 0.4, [-3.3, 0.5, z]), C.logEnd);
+    add(limb([-4.2, 0.62, 4.6], [-2.4, 0.66, 8.2], 0.05, 0.05, 4), C.logEnd);
+    add(tube([[-2.4, 0.5, 5.0], [-1.9, 0.3, 4.9], [-1.5, 0.95, 4.3]], 0.03, 4, 6), C.cream); // its painter, tied to a post
+    m.bone("Lamp", "Dock", [0.7, 3.3, 11.2], "Neon");
+    m.add("Lamp", at(lo(0.2, 0.24, 0.2, 8, 6), [0.7, 3.14, 11.2]), C.glow);
     m.bone("Mirror", null, [0, 0, 0]);
     for (const [g, c] of geos) m.add("Mirror", mirrorY(g, 0), c);
+    m.bone("MirrorGlow", "Mirror", [0.7, -3.3, 11.2], "Neon");
+    m.add("MirrorGlow", at(pillow(0.46, 3.6, 0.3, 0.6, 6), [0.7, -4.6, 11.2]), C.glow);
     out.push(m);
-  };
-  spruce("Spruce1", 40, 17, 1, 0.5);
-  spruce("Spruce2", 32, 15, 2, -0.7);
-  spruce("Spruce3", 25, 13, 3, 0.3);
+  }
 
+  // (the spruces, rocks, flowers, grass, fern and bush come from the CC0 nature kit: design3d/kit_import.py)
   // ---------- PineClump: a stand of small spruces for the far slopes (they stand on the painted forest and give it an edge) ----------
   {
     const m = model("PineClump");
@@ -363,39 +375,6 @@ export function build(THREE, T) {
     out.push(m);
   }
 
-  // ---------- small things of the meadow ----------
-  {
-    const m = model("FlowerPatch"); // arnica-like mountain flowers: a yellow disc of petals, an orange eye, a leaf or two
-    m.bone("Patch", null, [0, 0, 0]);
-    for (let i = 0; i < 13; i++) {
-      const a = rnd(i + 1100) * 6.283, r = Math.sqrt(rnd(i + 1110)) * 1.7, x = Math.cos(a) * r, z = Math.sin(a) * r, h = 0.5 + rnd(i + 1120) * 0.55, lx = (rnd(i + 1130) - 0.5) * 0.3;
-      m.add("Patch", tube([[x, 0, z], [x + lx * 0.6, h * 0.6, z], [x + lx, h, z]], 0.025, 3, 3), C.stem);
-      m.add("Patch", at(lo(0.2, 0.045, 0.2, 7, 3), [x + lx, h, z], [rnd(i + 1140) * 40 - 20, 0, rnd(i + 1150) * 40 - 20]), [C.petal, C.petalDeep, C.petal, C.petalPale][i % 4]);
-      m.add("Patch", at(lo(0.07, 0.06, 0.07, 5, 3), [x + lx, h + 0.04, z]), C.ember);
-      m.add("Patch", at(lo(0.16, 0.02, 0.06, 5, 3), [x + 0.1, h * 0.35, z], [0, i * 50, 30]), C.grass);
-    }
-    for (let i = 0; i < 10; i++) { const a = rnd(i + 1160) * 6.283, r = rnd(i + 1170) * 1.8, x = Math.cos(a) * r, z = Math.sin(a) * r; m.add("Patch", limb([x, 0, z], [x + (rnd(i + 1180) - 0.5) * 0.5, 0.4 + rnd(i + 1190) * 0.4, z + 0.1], 0.05, 0.01, 4), i % 2 ? C.grass : C.grassDark); }
-    out.push(m);
-  }
-  {
-    const m = model("GrassTuft");
-    m.bone("Tuft", null, [0, 0, 0]);
-    for (let i = 0; i < 9; i++) { const a = (i / 9) * 6.283, l = 0.55 + rnd(i + 1200) * 0.6; m.add("Tuft", tube([[Math.cos(a) * 0.12, 0, Math.sin(a) * 0.12], [Math.cos(a) * 0.3, l * 0.6, Math.sin(a) * 0.3], [Math.cos(a) * 0.62, l, Math.sin(a) * 0.62]], (u) => 0.07 - 0.06 * u, 4, 4), [C.grass, C.grassDark, C.grassLight][i % 3]); }
-    out.push(m);
-  }
-  const rock = (name, seed, w, hgt, d) => { // a boulder: a lump with flat, weathered faces, moss on its top
-    const m = model(name);
-    m.bone("Rock", null, [0, 0, 0]);
-    const g = new THREE.SphereGeometry(1, 9, 6), p = g.getAttribute("position");
-    for (let i = 0; i < p.count; i++) { const k = 0.78 + 0.4 * rnd(Math.round(p.getX(i) * 7) * 13 + Math.round(p.getY(i) * 7) * 57 + Math.round(p.getZ(i) * 7) * 91 + seed); p.setXYZ(i, p.getX(i) * w * k, Math.max(p.getY(i) * hgt * k, -hgt * 0.35), p.getZ(i) * d * k); }
-    const flat = g.toNonIndexed(); flat.computeVertexNormals();
-    m.add("Rock", at(flat, [0, hgt * 0.3, 0]), C.stone);
-    const g2 = new THREE.SphereGeometry(1, 7, 5).toNonIndexed(); g2.scale(w * 0.62, hgt * 0.45, d * 0.6); g2.computeVertexNormals();
-    m.add("Rock", at(g2, [w * 0.5, hgt * 0.12, d * 0.3], [0, seed * 40, 12]), C.stoneDark);
-    m.add("Rock", at(lo(w * 0.5, hgt * 0.12, d * 0.45, 7, 4), [-w * 0.1, hgt * 1.02, 0]), C.moss);
-    out.push(m);
-  };
-  rock("Rock1", 1, 1.5, 1.0, 1.1); rock("Rock2", 2, 2.1, 0.8, 1.5);
   {
     const m = model("Lightning");
     m.bone("Bolt", null, [0, 0, 0], "Neon");

@@ -10,7 +10,10 @@ sys.path.insert(0, str(game / "spike"))
 scene = sys.argv[1]
 local = "--local" in sys.argv
 out = game / "design3d" / "out"
-r = subprocess.run(["node", str(game / "design3d" / "export.mjs"), scene, str(out)], capture_output=True, text=True, cwd=game)
+if scene in ("kit", "grass"):  # kit: models taken from the CC0 nature kit and changed for our setting; grass: the modelled grass field
+    r = subprocess.run([sys.executable, str(game / "design3d" / ("kit_import.py" if scene == "kit" else "wood_grass.py")), str(out)], capture_output=True, text=True, cwd=game)
+else:
+    r = subprocess.run(["node", str(game / "design3d" / "export.mjs"), scene, str(out)], capture_output=True, text=True, cwd=game)
 print(r.stdout.strip())
 if r.returncode: print(r.stderr.strip()[-600:])
 if r.returncode: sys.exit(1)
@@ -69,8 +72,15 @@ for _, p in raw:GetDescendants() do
 		p.Material = (b[1] == "Neon" and Enum.Material.Neon) or (b[1] == "Glass" and Enum.Material.Glass) or Enum.Material.SmoothPlastic
 		p.Color = b[1] == "Neon" and Color3.fromHex(b[2]) or Color3.new(1, 1, 1)
 		if b[1] == "Neon" then p.TextureID = "" end
-		p.CastShadow = b[1] ~= "Neon"
+		p.CastShadow = b[1] ~= "Neon" and b[1] ~= "Grass"
+		if b[1] == "Grass" then p.DoubleSided = true end -- flat blades, seen from both sides
 		local sa = p:FindFirstChildOfClass("SurfaceAppearance") if sa then sa:Destroy() end
+		if b[1] == "Leaf" then -- a leaf card: its picture is cut out by its alpha and it shows from both sides
+			p.DoubleSided = true
+			local la = Instance.new("SurfaceAppearance")
+			la.ColorMap, la.AlphaMode = p.TextureID, Enum.AlphaMode.Transparency
+			la.Parent = p
+		end
 		p.Parent = m n += 1
 	end
 end
