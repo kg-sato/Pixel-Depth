@@ -60,9 +60,15 @@ function M.setup(ctx)
 	local phone = game:GetService("UserInputService").TouchEnabled and not game:GetService("UserInputService").KeyboardEnabled
 	local rings = (level ~= 0 and level <= 3) and { "WoodGrassA" } or ((phone or (level ~= 0 and level <= 6)) and { "WoodGrassA", "WoodGrassB" } or { "WoodGrassA", "WoodGrassB", "WoodGrassC" })
 	if ctx.opt.noGrass then rings = {} end -- test hook: the frame cost is measured with and without it
+	local windBones = {} -- { bone, its rest rotation turned back (stage wind to bone space), phase }: four in every grass mesh
 	for _, n in rings do
-		local g = ctx.prop(n)
-		g:all(function(p) p.Material, p.CastShadow = Enum.Material.Rubber, false end)
+		for _, d in ctx.asset(n):GetDescendants() do
+			if d:IsA("MeshPart") then
+				d.Material, d.CastShadow = Enum.Material.Rubber, false
+			elseif d:IsA("Bone") and string.find(d.Name, "_W%d") then
+				table.insert(windBones, { d, d.WorldCFrame.Rotation:Inverse(), #windBones * 1.37 })
+			end
+		end
 	end
 	-- the lake: a clear dark sheet over the mirror world, with slow glints drifting on it
 	local water = ctx.part(v3(170, 0.2, 100), CFrame.new(12, MAP.lakeY - 0.1, 56), hex("#1b3436"), { Transparency = 0.5, Reflectance = 0.1 })
@@ -265,6 +271,15 @@ function M.setup(ctx)
 		ctx.cc.Saturation, ctx.cc.Contrast = (t < 3.0 and -0.22 or 0.1) + 0.12 * dawn, 0.1
 		sunRays.Intensity = 0.07 * smooth(7.6, 8.4, t)
 		ripple.OffsetStudsU, ripple.OffsetStudsV = t * 1.6, math.sin(t * 0.4) * 2
+		-- wind in the grass: every wind bone carries the tips of a share of the blades; gusts roll across the meadow in the
+		-- storm (toward screen left, with the rain), a slow breath at night and at dawn
+		local blow = 0.05 + 0.42 * storm
+		for _, w in windBones do
+			local ph = w[3]
+			local along = (0.55 * storm + math.sin(t * (1.3 + 2.2 * storm) + ph) * 0.6 + math.sin(t * 3.1 + ph * 1.9) * 0.25) * blow
+			local across = math.sin(t * 1.1 + ph * 0.7) * blow * 0.35
+			w[1].Transform = CFrame.new(w[2] * (O.Rotation * Vector3.new(along, 0, across)))
+		end
 		for _, g in glintParts do g[1].Transparency = math.min(1, (g[3] or 0.34) + 0.3 * (0.5 + 0.5 * math.sin(t * 5.2 + g[2] * 1.9)) + 0.3 * dawn + 0.3 * storm) end
 		rainFx.Rate, splash.Rate, rings.Rate = 2400 * storm, 420 * storm, 260 * storm
 		flies.Rate = (t >= 3.0 and t < 7.6) and 7 or 0

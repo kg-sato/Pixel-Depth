@@ -383,22 +383,7 @@ export function build(THREE, T) {
   }
 
   // ---------- props ----------
-  {
-    const m = model("BirchBranch");
-    m.bone("Branch", null, [0, 0, 0]);
-    m.add("Branch", tube([[-1.9, 0.0, 0], [-0.9, 0.12, 0.04], [0.2, 0.05, -0.03], [1.2, 0.2, 0.02], [2.1, 0.12, 0]], (t) => 0.24 - 0.09 * t, 10, 24), C.birch);
-    for (const [x, a] of [[-1.2, 20], [-0.2, 200], [0.7, 110], [1.5, 300]]) m.add("Branch", at(ball(0.16, 0.05, 0.07), [x, 0.06 + Math.cos((a * Math.PI) / 180) * 0.2, Math.sin((a * Math.PI) / 180) * 0.2], [a, 0, 0]), C.birchMark);
-    m.add("Branch", limb([0.5, 0.1, 0], [1.0, 0.75, 0.25], 0.09, 0.05, 6), C.birch);
-    m.add("Branch", limb([-0.6, 0.1, 0], [-0.95, 0.6, -0.3], 0.08, 0.045, 6), C.birch);
-    m.add("Branch", at(ball(0.24, 0.24, 0.05), [-1.92, 0, 0], [0, 90, 0]), C.woodEnd); // the snapped end
-    m.bone("Leaves", "Branch", [1.0, 0.75, 0.25]);
-    const leaf = () => puff([[0, 0], [0.26, 0.2], [0.3, 0.52], [0, 0.9], [-0.3, 0.52], [-0.26, 0.2]], 0.05, 0.04);
-    m.add("Leaves", at(leaf(), [1.0, 0.75, 0.25], [10, 20, -30]), C.leaf);
-    m.add("Leaves", at(leaf(), [1.05, 0.7, 0.25], [-20, -10, -80], 0.85), C.leafLight);
-    m.add("Leaves", at(leaf(), [-0.95, 0.6, -0.3], [0, 40, 40], 0.9), C.leaf);
-    m.add("Leaves", at(leaf(), [2.1, 0.12, 0], [0, 0, -70], 0.8), C.butter);
-    out.push(m);
-  }
+  // (the snapped branch and the flying leaf sprig are built in design3d/kit_import.py, with the same bark and leaves as the birches)
   {
     // WoodBlank: the half-carved pickaxe. Head up along +Y, crescent arms along X; bark still on the lower handle.
     const m = model("WoodBlank");
@@ -438,13 +423,6 @@ export function build(THREE, T) {
     m.add("Knife", limb([0, -0.42, 0], [0, 0.0, 0], 0.085, 0.08, 8), C.woodDark);
     m.add("Knife", at(ball(0.12, 0.05, 0.1), [0, 0.02, 0]), C.red);
     m.add("Knife", at(puff([[-0.08, 0], [0.09, 0], [0.11, 0.42], [0.02, 0.72], [-0.08, 0.5]], 0.03, 0.025), [0, 0.04, 0]), C.steel);
-    out.push(m);
-  }
-  {
-    const m = model("Leaf");
-    m.bone("Leaf", null, [0, 0, 0]);
-    m.add("Leaf", at(puff([[0, 0], [0.24, 0.18], [0.28, 0.48], [0, 0.84], [-0.28, 0.48], [-0.24, 0.18]], 0.05, 0.04), [0, -0.4, 0]), C.leaf);
-    m.add("Leaf", limb([0, -0.62, 0], [0, 0.2, 0.03], 0.03, 0.02, 5), C.grassDark);
     out.push(m);
   }
   return out;

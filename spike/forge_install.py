@@ -63,6 +63,21 @@ if not ok then return "ERR " .. tostring(raw) end
 local f = game.ReplicatedStorage:FindFirstChild("ForgeModels") or Instance.new("Folder")
 f.Name = "ForgeModels" f.Parent = game.ReplicatedStorage
 local old = f:FindFirstChild(name) if old then old:Destroy() end
+local skinned = false
+for _, b in bones do if b[1] == "Grass" then skinned = true end end
+if skinned then -- a skinned model (grass with wind bones) keeps its imported assembly: the RootPart holds the bones, Motor6Ds join the meshes to it
+	local inner = raw:FindFirstChildWhichIsA("Model")
+	inner.Name = name
+	local n = 0
+	for _, p in inner:GetDescendants() do
+		if p:IsA("BasePart") then
+			p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.Massless, p.CastShadow = true, false, false, false, true, false
+			if p:IsA("MeshPart") then p.DoubleSided, p.Material, p.Color = true, Enum.Material.SmoothPlastic, Color3.new(1, 1, 1) n += 1 else p.Transparency = 1 end
+		end
+	end
+	inner.Parent = f raw:Destroy()
+	return name .. " installed whole, " .. n .. " meshes"
+end
 local m = Instance.new("Model") m.Name = name
 local n = 0
 for _, p in raw:GetDescendants() do

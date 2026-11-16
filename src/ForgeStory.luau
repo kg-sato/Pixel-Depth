@@ -296,6 +296,15 @@ function M.play(opt)
 		r:update()
 		return r
 	end
+	-- a model kept whole as it was imported (a skinned one: grass with wind bones); it stands where it was built, moved to the stage
+	function ctx.asset(name)
+		local src = RS:FindFirstChild("ForgeModels") and RS.ForgeModels:FindFirstChild(name)
+		if not src then error("ForgeStory: no model " .. name) end
+		local m = src:Clone()
+		m:PivotTo(O * m:GetPivot())
+		m.Parent = world
+		return m
+	end
 	-- the scene's own sky: ctx.sky({ side = id, up = id, dn = id, sun = degrees or 0, stars = n }); a second call swaps the pictures
 	local skyObj
 	function ctx.sky(s)

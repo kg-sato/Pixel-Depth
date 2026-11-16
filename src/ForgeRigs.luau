@@ -5,8 +5,9 @@ return {
 		{ name = "Acorn", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(0, 0.077, 0), size = Vector3.new(0.682, 0.994, 0.7), mat = "SmoothPlastic", color = "#c98f5a" },
 	},
 	BirchBranch = {
-		{ name = "Branch", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-0.072, 0.28, 0.022), size = Vector3.new(4.082, 1.04, 0.64), mat = "SmoothPlastic", color = "#f3ede2" },
-		{ name = "Leaves", parent = "Branch", joint = Vector3.new(-1, 0.75, -0.25), center = Vector3.new(-0.69, 0.758, -0.024), size = Vector3.new(4.237, 1.629, 0.842), mat = "SmoothPlastic", color = "#8fc878" },
+		{ name = "Branch", parent = nil, joint = Vector3.new(-0.0, 0.0, -0.0), center = Vector3.new(0.225, 0.571, 0.148), size = Vector3.new(4.662, 1.607, 1.44), mat = "Bark", color = "#ffffff" },
+		{ name = "Break", parent = "Branch", joint = Vector3.new(1.9, 0.0, -0.0), center = Vector3.new(2.282, -0.048, 0.011), size = Vector3.new(0.764, 0.505, 0.535), mat = "Bark", color = "#ffffff" },
+		{ name = "Leaves", parent = "Branch", joint = Vector3.new(-1.0, 0.75, -0.25), center = Vector3.new(-0.578, 0.954, 0.097), size = Vector3.new(4.629, 2.564, 2.872), mat = "Leaf", color = "#ffffff" },
 	},
 	BoltKit = {
 		{ name = "Body", parent = "Hips", joint = Vector3.new(0, 0.95, 0), center = Vector3.new(0.017, 1.669, 0.099), size = Vector3.new(1.952, 1.983, 1.972), mat = "SmoothPlastic", color = "#4f4858" },
@@ -46,9 +47,6 @@ return {
 		{ name = "Mirror", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(1.351, -1.115, -5.78), size = Vector3.new(5.997, 5.769, 11.42), mat = "SmoothPlastic", color = "#5c4434" },
 		{ name = "MirrorGlow", parent = "Mirror", joint = Vector3.new(-0.7, -3.3, -11.2), center = Vector3.new(-0.7, -4.6, -11.2), size = Vector3.new(0.46, 3.6, 0.3), mat = "Neon", color = "#ffae2a" },
 	},
-	Drop = {
-		{ name = "Drop", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(0, 0.13, 0), size = Vector3.new(0.247, 0.58, 0.26), mat = "SmoothPlastic", color = "#cfe4ff" },
-	},
 	Fern = {
 		{ name = "Body", parent = nil, joint = Vector3.new(-0.0, 0.0, -0.0), center = Vector3.new(-0.0, 0.504, -0.0), size = Vector3.new(3.392, 1.008, 3.183), mat = "Leaf", color = "#ffffff" },
 	},
@@ -82,7 +80,7 @@ return {
 		{ name = "Knife", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-0.007, 0.143, 0), size = Vector3.new(0.291, 1.295, 0.195), mat = "SmoothPlastic", color = "#9a6d4d" },
 	},
 	Leaf = {
-		{ name = "Leaf", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(0, -0.084, 0), size = Vector3.new(0.664, 1.132, 0.13), mat = "SmoothPlastic", color = "#8fc878" },
+		{ name = "Leaf", parent = nil, joint = Vector3.new(-0.0, 0.0, -0.0), center = Vector3.new(-0.0, -0.005, -0.0), size = Vector3.new(0.883, 0.89, 0.883), mat = "Leaf", color = "#ffffff" },
 	},
 	Lightning = {
 		{ name = "Bolt", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-0.3, -5.307, 0), size = Vector3.new(2.491, 10.694, 0.16), mat = "Neon", color = "#fff7d0" },
@@ -129,24 +127,22 @@ return {
 		{ name = "Blank", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(0, -0.29, 0), size = Vector3.new(4.624, 4.86, 0.64), mat = "SmoothPlastic", color = "#d8cdc6" },
 	},
 	WoodGrassA = {
-		{ name = "Tile1", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(2.658, -0.056, 11.138), size = Vector3.new(39.156, 1.981, 22.914), mat = "Grass", color = "#ffffff" },
-		{ name = "Tile2", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-0.13, 0.467, 8.052), size = Vector3.new(32.625, 1.227, 16.445), mat = "Grass", color = "#ffffff" },
-		{ name = "Tile3", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-0.066, 0.679, 1.494), size = Vector3.new(43.93, 1.506, 28.922), mat = "Grass", color = "#ffffff" },
-		{ name = "Tile4", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-0.094, 0.369, -7.978), size = Vector3.new(32.473, 0.884, 16.396), mat = "Grass", color = "#ffffff" },
-		{ name = "Tile5", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-4.662, 0.614, -9.973), size = Vector3.new(34.304, 1.307, 20.425), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile1", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(11.104, -0.043, 4.817), size = Vector3.new(22.209, 2.065, 35.032), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile2", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(8.096, 0.415, -0.904), size = Vector3.new(16.234, 1.111, 21.4), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile3", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(0.109, 0.311, 1.14), size = Vector3.new(32.236, 1.641, 42.518), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile4", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-7.986, 0.484, -2.939), size = Vector3.new(16.16, 1.048, 21.051), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile5", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-10.958, 0.699, -1.584), size = Vector3.new(21.947, 1.478, 37.022), mat = "Grass", color = "#ffffff" },
 	},
 	WoodGrassB = {
-		{ name = "Tile1", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(3.804, -0.422, 29.024), size = Vector3.new(88.671, 4.336, 27.378), mat = "Grass", color = "#ffffff" },
-		{ name = "Tile2", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(0.947, 0.736, 16.068), size = Vector3.new(98.611, 2.747, 33.203), mat = "Grass", color = "#ffffff" },
-		{ name = "Tile3", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-0.139, 0.807, 0.007), size = Vector3.new(100.762, 2.759, 32.834), mat = "Grass", color = "#ffffff" },
-		{ name = "Tile4", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-1.739, 0.728, -13.114), size = Vector3.new(96.878, 2.639, 27.086), mat = "Grass", color = "#ffffff" },
-		{ name = "Tile5", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-23.402, 0.727, -21.092), size = Vector3.new(46.809, 1.751, 11.072), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile1", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(33.488, -0.521, 1.01), size = Vector3.new(35.065, 4.227, 54.319), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile2", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(0.143, -0.49, 8.165), size = Vector3.new(64.305, 4.294, 69.223), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile3", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-31.877, 0.24, 6.81), size = Vector3.new(32.252, 3.513, 66.414), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile4", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-40.828, 1.042, -6.939), size = Vector3.new(18.565, 2.316, 39.132), mat = "Grass", color = "#ffffff" },
 	},
 	WoodGrassC = {
-		{ name = "Tile1", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(2.974, 1.297, 74.437), size = Vector3.new(166.652, 7.687, 54.051), mat = "Grass", color = "#ffffff" },
-		{ name = "Tile2", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(1.562, 2.768, 38.761), size = Vector3.new(194.919, 10.587, 46.458), mat = "Grass", color = "#ffffff" },
-		{ name = "Tile3", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(0.066, 4.042, 5.885), size = Vector3.new(200.782, 10.195, 45.343), mat = "Grass", color = "#ffffff" },
-		{ name = "Tile4", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-0.702, 4.102, -13.028), size = Vector3.new(198.645, 9.565, 27.404), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile1", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(66.383, 2.908, 34.265), size = Vector3.new(66.979, 11.086, 121.181), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile2", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-15.873, 0.165, 37.191), size = Vector3.new(128.24, 5.591, 126.553), mat = "Grass", color = "#ffffff" },
+		{ name = "Tile3", parent = nil, joint = Vector3.new(0, 0, 0), center = Vector3.new(-81.907, 4.085, 17.68), size = Vector3.new(36.728, 10.017, 88.227), mat = "Grass", color = "#ffffff" },
 	},
 	WoodSet = {
 		{ name = "Log", parent = "Ground", joint = Vector3.new(-2.6, 0.55, -2.2), center = Vector3.new(-2.6, 0.858, -2.207), size = Vector3.new(3.509, 1.874, 2.661), mat = "SmoothPlastic", color = "#c99a6b" },

@@ -192,5 +192,99 @@ prop("GrassShort", "Grass_Common_Short", 0.9)
 prop("Fern", "Fern_1", 1.2)
 prop("Bush", "Bush_Common_Flowers", 1.6)
 prop("Mushroom", "Mushroom_Common", 0.8)
+# ---- the snapped birch branch and the storm's flying leaf sprig: ours, built here so they wear the same bark and leaves as the kit birches ----
+def tube(points, radii, sides, vscale=1.2, bumps=0.0):
+    """A tube along points with a radius at each; -> pos, nrm, uv, idx. Open at both ends."""
+    pts = np.array(points, dtype=np.float64); n = len(pts)
+    tang = np.gradient(pts, axis=0); tang /= np.linalg.norm(tang, axis=1, keepdims=True)
+    ref = np.array([0.0, 1.0, 0.0])
+    pos, nrm, uv, idx = [], [], [], []
+    run = 0.0
+    for i in range(n):
+        if i: run += np.linalg.norm(pts[i] - pts[i - 1])
+        t = tang[i]; a = np.cross(t, ref)
+        if np.linalg.norm(a) < 1e-4: a = np.cross(t, np.array([1.0, 0, 0]))
+        a /= np.linalg.norm(a); b = np.cross(t, a)
+        for k in range(sides + 1):
+            th = 2 * np.pi * k / sides
+            d = np.cos(th) * a + np.sin(th) * b
+            rr = radii[i] * (1 + bumps * np.sin(th * 3 + i * 1.7) * np.sin(i * 2.3))
+            pos.append(pts[i] + d * rr); nrm.append(d); uv.append([k / sides, run / vscale])
+    row = sides + 1
+    for i in range(n - 1):
+        for k in range(sides):
+            a0, b0, c0, d0 = i * row + k, i * row + k + 1, (i + 1) * row + k, (i + 1) * row + k + 1
+            idx += [a0, b0, c0, b0, d0, c0]  # outward faces
+    return np.array(pos), np.array(nrm), np.array(uv), np.array(idx)
+
+
+def curve(p0, p1, sag, n=6):
+    """n points from p0 to p1, bowed by sag (a vector added at the middle)"""
+    p0, p1, sag = np.array(p0, float), np.array(p1, float), np.array(sag, float)
+    return [p0 + (p1 - p0) * u + sag * np.sin(np.pi * u) for u in np.linspace(0, 1, n)]
+
+
+def join(parts):
+    pos, nrm, uv, idx, n = [], [], [], [], 0
+    for p, nn, u, i in parts:
+        pos.append(p); nrm.append(nn); uv.append(u); idx.append(i + n); n += len(p)
+    return np.vstack(pos), np.vstack(nrm), np.vstack(uv), np.concatenate(idx)
+
+
+def card(centre, right, up, size):
+    c, r, u = np.array(centre, float), np.array(right, float), np.array(up, float)
+    r /= np.linalg.norm(r); u /= np.linalg.norm(u); nn = np.cross(r, u)
+    pos = np.array([c - r * size / 2, c + r * size / 2, c - r * size / 2 + u * size, c + r * size / 2 + u * size])
+    return pos, np.tile(nn, (4, 1)), np.array([[0, 1], [1, 1], [0, 0], [1, 0]], float), np.array([0, 1, 2, 1, 3, 2])
+
+
+fibre = np.asarray(Image.fromarray((rng.random((8, 256)) * 255).astype(np.uint8)).resize((256, 256), Image.BICUBIC), dtype=np.float64)[..., None] / 255.0
+Image.fromarray(np.clip(rgb("#e9d2a4")[None, None, :] * (0.82 + 0.3 * fibre), 0, 255).astype(np.uint8), "RGB").save(tex / "wood_pale.png")
+brng = np.random.default_rng(9)
+# the limb: thick at the break (x = -1.9), tapering to its tip (x = 2.1), with a slight kink at every fork
+main_pts = [[-1.9, 0.0, 0.0], [-1.4, 0.07, 0.03], [-0.9, 0.12, 0.04], [-0.3, 0.06, -0.01], [0.2, 0.05, -0.03], [0.7, 0.14, 0.0], [1.2, 0.2, 0.02], [1.7, 0.16, 0.01], [2.1, 0.12, 0.0]]
+main_r = [0.235, 0.22, 0.2, 0.185, 0.165, 0.145, 0.12, 0.095, 0.06]
+bark = [tube(main_pts, main_r, 12, 1.3, bumps=0.06)]
+leaf_at = []
+forks = [(-0.9, [0.1, 0.9, 0.45], 1.25, 0.09), (-0.3, [0.25, 0.5, -0.8], 1.05, 0.085), (0.2, [0.35, 0.95, 0.3], 1.1, 0.08), (0.7, [0.3, 0.3, -0.75], 0.85, 0.07), (1.2, [0.45, 0.8, 0.45], 0.8, 0.06), (1.7, [0.6, 0.4, -0.5], 0.55, 0.045)]
+for fx, d, ln, r0 in forks:
+    base = np.array([fx, np.interp(fx, [p[0] for p in main_pts], [p[1] for p in main_pts]), 0.0]); d = np.array(d) / np.linalg.norm(d)
+    end = base + d * ln
+    pts = curve(base, end, [0, 0.12 * ln, 0], 6)
+    bark.append(tube(pts, list(np.linspace(r0, 0.022, 6)), 7, 1.0))
+    bark.append(tube([base - d * 0.02, base + d * 0.08], [r0 * 1.5, r0 * 1.05], 7, 1.0))            # the swollen collar where it leaves the limb
+    leaf_at += [(pts[5], d), (pts[3], d)]
+    for sgn in (-1, 1):                                                                              # two fine side twigs
+        side = np.cross(d, [0, 1, 0]) * sgn + np.array([0, 0.3, 0])
+        side /= np.linalg.norm(side)
+        s0 = pts[3]; s1 = s0 + (d * 0.5 + side * 0.6) * ln * 0.45
+        bark.append(tube(curve(s0, s1, [0, 0.05, 0], 4), [0.03, 0.024, 0.018, 0.012], 5, 0.8))
+        leaf_at.append((s1, (s1 - s0)))
+leaf_at.append((np.array(main_pts[-1]), np.array([1.0, 0.2, 0.0])))
+# a strip of bark torn back from the break, curling away
+strip = curve([-1.86, 0.2, 0.05], [-2.55, 0.42, 0.22], [0, 0.16, 0.05], 5)
+bark.append(tube(strip, [0.1, 0.085, 0.07, 0.05, 0.02], 5, 0.8))
+bpos, bnrm, buv, bidx = join(bark)
+# the break: a short core of pale wood and a crown of long splinters, as green wood tears
+brk = [tube([[-1.9, 0.0, 0.0], [-2.0, 0.0, 0.0], [-2.12, 0.01, 0.0]], [0.215, 0.17, 0.03], 10, 0.5)]
+for k in range(11):
+    th = 2 * np.pi * k / 11 + brng.uniform(-0.2, 0.2); rr = brng.uniform(0.07, 0.2); ln = brng.uniform(0.25, 0.75)
+    s0 = np.array([-1.92, np.cos(th) * rr, np.sin(th) * rr]); s1 = s0 + np.array([-ln, np.cos(th) * rr * brng.uniform(0.2, 0.9), np.sin(th) * rr * brng.uniform(0.2, 0.9)])
+    brk.append(tube([s0, (s0 + s1) / 2, s1], [0.045, 0.03, 0.004], 4, 0.4))
+kpos, knrm, kuv, kidx = join(brk)
+# leaf sprays: two crossed cards at each twig end, turned to the light, a few hanging
+cards = []
+for p, d in leaf_at:
+    d = np.array(d, float); d /= np.linalg.norm(d)
+    for turn in (0.0, 1.4):
+        right = np.cross(d, [np.sin(turn), np.cos(turn), 0.2]); up = d * 0.75 + np.array([0, 0.5, 0]) * (1 if brng.random() > 0.25 else -0.6)
+        cards.append(card(np.array(p) - d * 0.12, right, up, brng.uniform(0.75, 1.05)))
+lpos, lnrm, luv, lidx = join(cards)
+emit("BirchBranch", [("Branch", None, [0, 0, 0], "Bark", "birch_bark.png", bpos, bnrm, buv, bidx),
+                     ("Break", "Branch", [-1.9, 0, 0], "Bark", "wood_pale.png", kpos, knrm, kuv, kidx),
+                     ("Leaves", "Branch", [1.0, 0.75, 0.25], "Leaf", "birch_leaf.png", lpos, lnrm, luv, lidx)])
+sp = [card([0, -0.45, 0], [1, 0, 0.2], [0, 1, 0.15], 0.9), card([0, -0.45, 0], [0.2, 0, 1], [0.15, 1, 0], 0.9)]
+spos, snrm, suv, sidx = join(sp)
+emit("Leaf", [("Leaf", None, [0, 0, 0], "Leaf", "birch_leaf.png", spos, snrm, suv, sidx)])
 json.dump(rigs, open(out / "kit_rig.json", "w", encoding="utf-8"))
 print("kit models:", len(rigs))
