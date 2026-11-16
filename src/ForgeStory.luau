@@ -3,7 +3,8 @@
 -- own models, backdrop, effects, animation and characters. Brief: vault Projects/Pixel-_/Briefs/Forge Biographies (2026-11-15).md.
 -- This module is the only shared part: the clock, skip, chapter cards, camera, lighting save and restore, and the rigs (models
 -- from ReplicatedStorage.ForgeModels, built in design3d/*.mjs; each limb is its own MeshPart on a joint, data in ForgeRigs).
--- A scene is its own module (ForgeWood, ...): { length, named, open, setup = function(ctx) return function(t, dt) end end }.
+-- A scene is its own module (ForgeWood, ...): { length, named, open, pace, fastPace, setup = function(ctx) return function(t, dt) end end }.
+-- length and named are in story seconds; pace (and fastPace for the short version) is how many story seconds pass in a real one.
 -- open = true: the scene builds a whole place of its own under its own sky (ctx.sky, ctx.atmo, ctx.prop), so no shell is put round it.
 -- Client only and cosmetic: the server has already charged and given the pickaxe.
 local Players = game:GetService("Players")
@@ -13,7 +14,7 @@ local Lighting = game:GetService("Lighting")
 local RS = game:GetService("ReplicatedStorage")
 
 local M = {}
-M.SCENES = { WoodPickaxe = "ForgeWood", __turn = "ForgeTurn" } -- pickaxe model name -> scene module in Shared (__turn: the test stage for grading one model alone)
+M.SCENES = { WoodPickaxe = "ForgeWood", TitanHammerPickaxe = "ForgeTitan", FossilPickaxe = "ForgeFossil", GeodePickaxe = "ForgeGeode", RuneTinPickaxe = "ForgeRuneTin", KilnPickaxe = "ForgeKiln", MossbackPickaxe = "ForgeMossback", CopperPickaxe = "ForgeCopper", RootheartPickaxe = "ForgeRootheart", BogIronPickaxe = "ForgeBog", AshcoalPickaxe = "ForgeAshcoal", StonePickaxe = "ForgeStone", __turn = "ForgeTurn" } -- pickaxe model name -> scene module in Shared (__turn: the test stage for grading one model alone)
 
 local WHITE, INK, NIGHT = Color3.new(1, 1, 1), Color3.fromRGB(62, 42, 86), Color3.fromRGB(22, 8, 30)
 local GLOW = "rbxassetid://77591933607769"
@@ -110,6 +111,19 @@ function Rig:update()
 		end
 	end
 end
+-- Ease every joint toward the pose it was just given (call before update). k is how fast it follows: about 14 is soft, 30 is
+-- crisp. This is what makes the characters move like living things with weight; without it they snap from key to key.
+function Rig:smooth(dt, k)
+	local a = 1 - math.exp(-dt * k)
+	local prev = self.prev
+	if not prev then prev = {} self.prev = prev end
+	for _, b in self.order do
+		local p = prev[b.name]
+		if p then b.local_ = p:Lerp(b.local_, a) end
+		prev[b.name] = b.local_
+	end
+end
+function Rig:snap() self.prev = nil end -- at a cut: the next pose is taken at once
 function Rig:destroy() self.model:Destroy() end
 
 function M.has(model)
@@ -147,7 +161,7 @@ function M.play(opt)
 	end
 
 	-- lighting: save, then let the scene drive it
-	local LKEYS = { "ClockTime", "Brightness", "Ambient", "OutdoorAmbient", "ColorShift_Top", "ColorShift_Bottom", "FogEnd", "FogStart", "FogColor", "ExposureCompensation", "GeographicLatitude", "EnvironmentDiffuseScale", "EnvironmentSpecularScale", "GlobalShadows" }
+	local LKEYS = { "ClockTime", "Brightness", "Ambient", "OutdoorAmbient", "ColorShift_Top", "ColorShift_Bottom", "FogEnd", "FogStart", "FogColor", "ExposureCompensation", "GeographicLatitude", "EnvironmentDiffuseScale", "EnvironmentSpecularScale", "GlobalShadows", "ShadowSoftness" }
 	local saved, off = {}, {}
 	for _, k in LKEYS do saved[k] = Lighting[k] end
 	for _, e in Lighting:GetChildren() do
@@ -159,10 +173,18 @@ function M.play(opt)
 	local cc = Instance.new("ColorCorrectionEffect")
 	cc.Name, cc.Parent = "ForgeStoryCC", Lighting
 	local bloom = Instance.new("BloomEffect")
-	bloom.Name, bloom.Intensity, bloom.Size, bloom.Threshold, bloom.Parent = "ForgeStoryBloom", 0.35, 20, 1.6, Lighting
+	bloom.Name, bloom.Intensity, bloom.Size, bloom.Threshold, bloom.Parent = "ForgeStoryBloom", 0.3, 30, 1.4, Lighting -- wide, soft glow
 	local dof = Instance.new("DepthOfFieldEffect")
 	dof.Name, dof.FarIntensity, dof.NearIntensity, dof.InFocusRadius, dof.FocusDistance, dof.Parent = "ForgeStoryDoF", 0.25, 0, 30, 20, Lighting
 	Lighting.FogEnd, Lighting.FogStart, Lighting.GlobalShadows = 100000, 100000, true
+	Lighting.ShadowSoftness = 0.6 -- soft pastel look: soft-edged shadows
+	-- soft matte look: plain parts the scene builds lose their plastic shine (SmoothPlastic takes no variant, Plastic does)
+	local function soften(p)
+		if p:IsA("BasePart") and not p:IsA("MeshPart") and p.Material == Enum.Material.SmoothPlastic then
+			p.Material, p.MaterialVariant = Enum.Material.Plastic, "PDSoftMatte"
+		end
+	end
+	world.DescendantAdded:Connect(soften)
 	local parked, made = {}, {} -- the game's own sky objects wait outside Lighting while a scene shows its own; made = what the scene added to Lighting
 
 	-- the viewmodel and every other screen layer hide
@@ -243,7 +265,27 @@ function M.play(opt)
 	function ctx.pick() -- the real pickaxe model, for the reveal
 		local art = RS:FindFirstChild("PickaxeArt")
 		local src = art and art:FindFirstChild(opt.model)
-		if not src then return nil end
+		-- no game model yet: a forge-scene pickaxe built from its biography (design3d/picks.mjs), upright, head on top
+		if not src and RS:FindFirstChild("ForgeModels") then src = RS.ForgeModels:FindFirstChild(opt.model) end
+		if not src then
+			-- a pickaxe whose model is not built yet (Camp 2 onward, 2026-11-15): a plain part-built pick in its rarity colour, so
+			-- the reveal is never empty. It stands upright with the head on top, like the real models.
+			local m = Instance.new("Model")
+			local function bit(size, cf, color, mat)
+				local q = Instance.new("Part")
+				q.Anchored, q.CanCollide, q.CanQuery, q.CanTouch, q.CastShadow = true, false, false, false, false
+				q.Size, q.CFrame, q.Color, q.Material = size, cf, color, mat
+				q.Parent = m
+				return q
+			end
+			local tint = opt.rarity and opt.rarity[3] or Color3.fromRGB(190, 196, 206)
+			m.PrimaryPart = bit(Vector3.new(0.3, 3.4, 0.3), CFrame.new(0, 0, 0), Color3.fromRGB(150, 110, 78), Enum.Material.Wood)
+			bit(Vector3.new(1.3, 0.5, 0.42), CFrame.new(0.55, 1.5, 0) * CFrame.Angles(0, 0, math.rad(-14)), tint, Enum.Material.SmoothPlastic)
+			bit(Vector3.new(1.3, 0.5, 0.42), CFrame.new(-0.55, 1.5, 0) * CFrame.Angles(0, 0, math.rad(14)), tint, Enum.Material.SmoothPlastic)
+			bit(Vector3.new(0.5, 0.62, 0.5), CFrame.new(0, 1.55, 0), tint:Lerp(Color3.new(1, 1, 1), 0.3), Enum.Material.SmoothPlastic)
+			m.Parent = world
+			return m
+		end
 		local p = src:Clone()
 		for _, d in p:GetDescendants() do
 			if d:IsA("BasePart") then d.Anchored, d.CanCollide, d.CanQuery, d.CastShadow = true, false, false, false end
@@ -279,7 +321,10 @@ function M.play(opt)
 	function ctx.light(props) for k, v in props do Lighting[k] = v end end
 	-- a thing of the setting that never moves (a tree, a rock, the cabin): placed once, not stepped every frame.
 	-- mirrorY = the water level: the model's Mirror bones are set so the lake shows it upside down; without it they are removed.
+	local built = 0
 	function ctx.prop(name, cf, scale, mirrorY)
+		built += 1 -- a big place (Stone: about 1,100 props) builds over frames behind the closed fade instead of freezing 3 s
+		if built % 120 == 0 and coroutine.isyieldable() then RunService.Heartbeat:Wait() end
 		local r = newRig(name, world)
 		r.root, r.scale = O * (cf or CFrame.new()), scale or 1
 		for _, b in r.order do
@@ -370,10 +415,27 @@ function M.play(opt)
 	function ctx.name(sub) cardSub.Text = sub end
 
 	local t = opt.fast and scene.named or 0
+	local pace = opt.pace or (opt.fast and scene.fastPace or scene.pace) or 1 -- story seconds a real second: under 1 lets a scene breathe
 	local T_END = scene.length
 	local done, skipped = false, false
+	if coroutine.isyieldable() then RunService.RenderStepped:Wait() end -- draw the closed fade before the build starts
 	local okSetup, update = pcall(scene.setup, ctx) -- a scene that fails to build still goes through the clean-up below
 	if not okSetup then warn("[ForgeStory] " .. tostring(update)) done = true update = function() end end
+	for _, d in world:GetDescendants() do soften(d) end
+	-- soft pastel grade on top of each scene's own: lower contrast, lifted warm ambient, a little less saturation.
+	-- base = the value the scene last set, so a value set once in setup is not shifted again every frame
+	local SOFT = { { cc, "Contrast", -0.12 }, { cc, "Saturation", -0.06 }, { cc, "Brightness", 0.03 }, { Lighting, "Ambient", 0.2 }, { Lighting, "OutdoorAmbient", 0.16 } }
+	local PASTEL = Color3.fromRGB(255, 236, 242)
+	local softBase, softOut = {}, {}
+	local function softGrade()
+		for i, s in SOFT do
+			local v = s[1][s[2]]
+			if softOut[i] == nil or v ~= softOut[i] then softBase[i] = v end
+			local o = typeof(v) == "Color3" and softBase[i]:Lerp(PASTEL, s[3]) or softBase[i] + s[3]
+			s[1][s[2]] = o
+			softOut[i] = s[1][s[2]]
+		end
+	end
 	local function doSkip()
 		if skipped or t >= scene.named then return end
 		skipped = true
@@ -391,11 +453,16 @@ function M.play(opt)
 		local now = os.clock()
 		local dt = math.min(now - last, 0.1)
 		last = now
-		if now >= holdUntil then t += dt end
-		if opt.freeze then t = math.min(t, opt.freeze) end
+		if now >= holdUntil then t += dt * pace end
+		if opt.freeze then -- test hook (spike/story_shots.py): stop at a story second and say where the clock is
+			t = math.min(t, opt.freeze)
+			workspace:SetAttribute("ForgeStoryT", t)
+			if workspace:GetAttribute("ForgeStoryEnd") then done = true end
+		end
 		skip.Visible = t >= 0.5 and t < scene.named
 		local ok, err = pcall(update, t, dt)
 		if not ok then warn("[ForgeStory] " .. tostring(err)) done = true return end
+		softGrade()
 		for _, r in rigs do r:update() end
 		-- screen layer
 		local open = M.smooth(0, 0.35, t) * (1 - M.smooth(T_END - 0.35, T_END, t))
@@ -420,7 +487,7 @@ function M.play(opt)
 		if t >= T_END then done = true end
 	end)
 	local started = os.clock()
-	while not done and os.clock() - started < (opt.freeze and (opt.freezeFor or 30) or T_END + 8) do task.wait() end -- never hang the player in the scene
+	while not done and os.clock() - started < (opt.freeze and (opt.freezeFor or 30) or T_END / pace + 8) do task.wait() end -- never hang the player in the scene
 	RunService:UnbindFromRenderStep("ForgeStory")
 	skipConn:Disconnect()
 	-- put everything back: lighting, effects, viewmodel, HUD, camera

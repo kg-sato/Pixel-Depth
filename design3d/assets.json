@@ -1,31 +1,31 @@
 {
  "BoltKit": {
-  "id": "110347219535434",
-  "hash": "4232e7771c38"
+  "id": "88599298168798",
+  "hash": "ea2131486738"
  },
  "WoodSet": {
-  "id": "140488052637693",
-  "hash": "bba2105d7d41"
+  "id": "139775188316425",
+  "hash": "bd5e317bf444"
  },
  "BirchBranch": {
-  "id": "105837114365895",
-  "hash": "946d3d4642b3"
+  "id": "133261681993548",
+  "hash": "6b715142f842"
  },
  "WoodBlank": {
-  "id": "89852852903629",
-  "hash": "b86cc78c576c"
+  "id": "95584678157707",
+  "hash": "d6dd9453d5e0"
  },
  "Shaving": {
-  "id": "94039070851291",
-  "hash": "e39da63af23b"
+  "id": "85593391728024",
+  "hash": "09c4f7765edc"
  },
  "Acorn": {
-  "id": "109951110818105",
-  "hash": "57a1ca09858c"
+  "id": "135961463267924",
+  "hash": "574b327bdc5c"
  },
  "Knife": {
-  "id": "114389008205859",
-  "hash": "a8909e3fd602"
+  "id": "94459833477810",
+  "hash": "db1ade81057d"
  },
  "Leaf": {
   "id": "100234629799801",
@@ -53,8 +53,8 @@
   "hash": "6dd73de24a02"
  },
  "Cabin": {
-  "id": "109275254123645",
-  "hash": "c7286ac9d1b5"
+  "id": "127837824180640",
+  "hash": "ad331bb15fd4"
  },
  "Spruce1": {
   "id": "79459313024050",
@@ -69,8 +69,8 @@
   "hash": "b53bf671a356"
  },
  "PineClump": {
-  "id": "80678027130822",
-  "hash": "7e4015427e30"
+  "id": "116817202857126",
+  "hash": "69a1ba7ef29f"
  },
  "FlowerPatch": {
   "id": "116353711359551",
@@ -89,8 +89,8 @@
   "hash": "441a50e90442"
  },
  "Lightning": {
-  "id": "101973626322577",
-  "hash": "26e2ecca1a83"
+  "id": "101273097692445",
+  "hash": "9e55cb1213ee"
  },
  "Spruce4": {
   "id": "90226532298205",
@@ -133,8 +133,8 @@
   "hash": "b583dfc99046"
  },
  "Dock": {
-  "id": "100454090062384",
-  "hash": "d2b92d0f349e"
+  "id": "76571355104549",
+  "hash": "cc8a7c945134"
  },
  "WoodGrassA": {
   "id": "89149151035709",
@@ -147,5 +147,530 @@
  "WoodGrassC": {
   "id": "92021174773067",
   "hash": "5b88d4918f77"
+ },
+ "Oak1": {
+  "id": "127967137344141",
+  "hash": "5b55205cf878"
+ },
+ "Oak2": {
+  "id": "86994418056486",
+  "hash": "d7e59fda4efa"
+ },
+ "Alder": {
+  "id": "134212588571978",
+  "hash": "8e0ed411551e"
+ },
+ "DeadTree1": {
+  "id": "90657114025072",
+  "hash": "8d463a99d548"
+ },
+ "DeadTree2": {
+  "id": "82644335960714",
+  "hash": "bb466e9c0ca3"
+ },
+ "Pebble1": {
+  "id": "123224256908713",
+  "hash": "9d1369cdf6fb"
+ },
+ "Pebble2": {
+  "id": "134535285028812",
+  "hash": "555eb8a8ac95"
+ },
+ "PebblePath": {
+  "id": "80828654860700",
+  "hash": "e1d77e8b4754"
+ },
+ "Clover": {
+  "id": "84488315052656",
+  "hash": "b66789964b9b"
+ },
+ "Plant1": {
+  "id": "117858619046948",
+  "hash": "c23dc18293ae"
+ },
+ "Plant7": {
+  "id": "127349796041435",
+  "hash": "368a801fadc7"
+ },
+ "ShelfFungus": {
+  "id": "89442936853482",
+  "hash": "e83c6e087263"
+ },
+ "WispyGrass": {
+  "id": "80062163406169",
+  "hash": "c68c5b15d82a"
+ },
+ "stone_sky_summer_side.png": "123739504725049",
+ "stone_sky_summer_up.png": "81181571686796",
+ "stone_sky_summer_dn.png": "95878689619602",
+ "stone_sky_winter_side.png": "76400901434536",
+ "stone_sky_winter_up.png": "101637967336868",
+ "stone_sky_winter_dn.png": "105487614033730",
+ "OtterKit": {
+  "id": "132443207642863",
+  "hash": "bc69926f0b6a"
+ },
+ "StoneWorld": {
+  "id": "138251493116724",
+  "hash": "b204df55682b"
+ },
+ "StonePebble": {
+  "id": "105816147086038",
+  "hash": "e074c11598f6"
+ },
+ "BellyStone": {
+  "id": "113894213109624",
+  "hash": "eed72e6d0b5c"
+ },
+ "StoneShard": {
+  "id": "87168784558023",
+  "hash": "8ffd991dba07"
+ },
+ "StoneHandle": {
+  "id": "124179958589878",
+  "hash": "7a973b6790a8"
+ },
+ "sfx_river.wav": "117253485620174",
+ "sfx_stonetap.wav": "90326072989009",
+ "PaleRock1": {
+  "id": "112522315774737",
+  "hash": "211886abe07e"
+ },
+ "PaleRock2": {
+  "id": "73188302842776",
+  "hash": "bb7099e4eb30"
+ },
+ "PaleRock3": {
+  "id": "120125126332196",
+  "hash": "3452c60d7f14"
+ },
+ "PalePebble1": {
+  "id": "139333788301125",
+  "hash": "d9dcbd187372"
+ },
+ "PalePebble2": {
+  "id": "118169063501373",
+  "hash": "8f33617c05cf"
+ },
+ "PalePebble3": {
+  "id": "132065110813782",
+  "hash": "e474293e16bd"
+ },
+ "PalePebblePath": {
+  "id": "124001976266692",
+  "hash": "bece6a49609d"
+ },
+ "LimeSlabA": {
+  "id": "76094972947594",
+  "hash": "b776df2cb4c5"
+ },
+ "LimeSlabB": {
+  "id": "104018106351904",
+  "hash": "717e4ee8e2db"
+ },
+ "LimeSlabC": {
+  "id": "132797299834014",
+  "hash": "666fa54f28c3"
+ },
+ "BadgerKit": {
+  "id": "88357599638767",
+  "hash": "3aa6fb780849"
+ },
+ "AshcoalSet": {
+  "id": "101716889775536",
+  "hash": "5cd41b0ed2a3"
+ },
+ "AshcoalWorld": {
+  "id": "117320393003826",
+  "hash": "98b29b0f7411"
+ },
+ "SootPuff": {
+  "id": "74191003525186",
+  "hash": "8b5bf590dbcf"
+ },
+ "AshKettle": {
+  "id": "120966708899474",
+  "hash": "20c552b06f85"
+ },
+ "AshCup": {
+  "id": "114220337233195",
+  "hash": "976f9667cb9e"
+ },
+ "AshPoker": {
+  "id": "126192964762777",
+  "hash": "de43a2701c30"
+ },
+ "AshLog": {
+  "id": "73776746233040",
+  "hash": "79d84689c358"
+ },
+ "AshcoalGrassA": {
+  "id": "75282025175794",
+  "hash": "8a05ca79e480"
+ },
+ "AshcoalGrassB": {
+  "id": "111804737606509",
+  "hash": "0419ddfa656e"
+ },
+ "FrogKit": {
+  "id": "98909466301523",
+  "hash": "add7afb70fc0"
+ },
+ "BogSet": {
+  "id": "92593336029577",
+  "hash": "3599f6d7d148"
+ },
+ "BogNet": {
+  "id": "103773657961564",
+  "hash": "9390f3cf91d9"
+ },
+ "BogWorld": {
+  "id": "114661169026026",
+  "hash": "f8ad5c453746"
+ },
+ "BogLily": {
+  "id": "132678245999553",
+  "hash": "2e1a5c60add8"
+ },
+ "CottonGrass": {
+  "id": "79263165110178",
+  "hash": "1c49a50d02b6"
+ },
+ "Pitcher": {
+  "id": "132545054065619",
+  "hash": "d433c41c080e"
+ },
+ "OreNodule": {
+  "id": "122232203776512",
+  "hash": "9f7dc07789e9"
+ },
+ "MushroomCharm": {
+  "id": "112505993426094",
+  "hash": "da8f7551ee21"
+ },
+ "ashcoal_sky_dusk_side.png": "77340433926072",
+ "ashcoal_sky_dawn_dn.png": "99543739469512",
+ "ashcoal_sky_night_side.png": "88827071114631",
+ "ashcoal_sky_dusk_dn.png": "85476807382240",
+ "ashcoal_sky_dusk_up.png": "102317712123581",
+ "ashcoal_sky_night_up.png": "88230532641455",
+ "ashcoal_sky_night_dn.png": "112799260521533",
+ "ashcoal_sky_dawn_side.png": "85534544276704",
+ "ashcoal_sky_dawn_up.png": "128939480822497",
+ "bog_sky_mist_up.png": "89444930502808",
+ "bog_sky_fire_side.png": "98224934611845",
+ "bog_sky_morning_up.png": "86966216231522",
+ "bog_sky_morning_side.png": "82500581528706",
+ "bog_sky_fire_up.png": "128666251386950",
+ "bog_sky_mist_side.png": "71358875792381",
+ "bog_sky_fire_dn.png": "82798387632006",
+ "bog_sky_morning_dn.png": "97760956161507",
+ "bog_sky_mist_dn.png": "121914463396689",
+ "KoboldKit": {
+  "id": "122265118791332",
+  "hash": "44ac42f4ec52"
+ },
+ "CopperMine": {
+  "id": "116600507525593",
+  "hash": "1ace61e05cc6"
+ },
+ "Lantern": {
+  "id": "76996608995838",
+  "hash": "0ac3dabc03a2"
+ },
+ "StumpAnvil": {
+  "id": "105998018740661",
+  "hash": "4281136bd67a"
+ },
+ "CopperLump": {
+  "id": "134098948657976",
+  "hash": "72183cbcadbf"
+ },
+ "Hammer": {
+  "id": "104448398413343",
+  "hash": "686ecbfd6db8"
+ },
+ "MinePick": {
+  "id": "101830269229938",
+  "hash": "d7377cc5449f"
+ },
+ "CratesTable": {
+  "id": "140231499288587",
+  "hash": "447f413f7850"
+ },
+ "BucketLift": {
+  "id": "139582328332099",
+  "hash": "b66ccb81bcee"
+ },
+ "MoleKit": {
+  "id": "85947069314926",
+  "hash": "2af4fbe70c27"
+ },
+ "RootHall": {
+  "id": "114394000386958",
+  "hash": "730ab9cfbe37"
+ },
+ "RootCradle": {
+  "id": "126872047982486",
+  "hash": "aaa454238162"
+ },
+ "SapBead": {
+  "id": "121858566330769",
+  "hash": "7e68218af85d"
+ },
+ "GlowShroom": {
+  "id": "84704813444737",
+  "hash": "c86f42152a03"
+ },
+ "WateringCan": {
+  "id": "121632710803825",
+  "hash": "91ff01353e4c"
+ },
+ "LightShaft": {
+  "id": "75854910507326",
+  "hash": "71392c3aebf6"
+ },
+ "mossback_sky_dust_up.png": "127781181542758",
+ "mossback_sky_morning_side.png": "128776022028146",
+ "mossback_sky_dust_dn.png": "112129912933088",
+ "mossback_sky_morning_dn.png": "103742458121058",
+ "mossback_sky_rain_dn.png": "123525661921145",
+ "mossback_sky_dust_side.png": "135928594349171",
+ "mossback_sky_rain_up.png": "114455606387198",
+ "mossback_sky_rain_side.png": "108912787317698",
+ "mossback_sky_morning_up.png": "83606819437002",
+ "SnailKit": {
+  "id": "89157049748707",
+  "hash": "e34545003147"
+ },
+ "MossBoulder": {
+  "id": "114328888257717",
+  "hash": "bf27d8e346b1"
+ },
+ "MossbackWorld": {
+  "id": "123671198058226",
+  "hash": "271d60480417"
+ },
+ "ClaySlabA": {
+  "id": "76779057901455",
+  "hash": "7f9ba7f280b6"
+ },
+ "ClaySlabB": {
+  "id": "78290367141245",
+  "hash": "6fda35143bf5"
+ },
+ "ClaySlabC": {
+  "id": "81981408825008",
+  "hash": "7a904fc697ef"
+ },
+ "CaveMouth": {
+  "id": "128846210023944",
+  "hash": "8d0cc98a08f6"
+ },
+ "Waterfall": {
+  "id": "107686648044541",
+  "hash": "4f999f564826"
+ },
+ "RopeBridge": {
+  "id": "109586848830255",
+  "hash": "1d865fba48d5"
+ },
+ "Bird": {
+  "id": "128503376988364",
+  "hash": "26440e6ead0e"
+ },
+ "TrailBit": {
+  "id": "70727811344077",
+  "hash": "78e2c5097bad"
+ },
+ "Rainbow": {
+  "id": "109485371635436",
+  "hash": "10e64f88b5b7"
+ },
+ "kiln_sky_afternoon_dn.png": "78721086212999",
+ "kiln_sky_dusk_side.png": "80928397749976",
+ "kiln_sky_dusk_dn.png": "72680942305539",
+ "kiln_sky_dusk_up.png": "136438363041912",
+ "kiln_sky_afternoon_up.png": "86016281586438",
+ "kiln_sky_afternoon_side.png": "81643969019289",
+ "PotterKit": {
+  "id": "103963788867943",
+  "hash": "2814a55efb1c"
+ },
+ "KilnYard": {
+  "id": "135214998819132",
+  "hash": "e71730a03908"
+ },
+ "KickWheel": {
+  "id": "123583696483467",
+  "hash": "d73026f65253"
+ },
+ "ClayHead": {
+  "id": "131998163047341",
+  "hash": "aba62c079bba"
+ },
+ "Teapot": {
+  "id": "85602553069969",
+  "hash": "e93d4a0d5974"
+ },
+ "GlazeJug": {
+  "id": "91015921042365",
+  "hash": "cb2e2b585292"
+ },
+ "TrimTool": {
+  "id": "135645232148982",
+  "hash": "c0f905c9c7ca"
+ },
+ "ClayCurl": {
+  "id": "115943851507135",
+  "hash": "78690a8f331b"
+ },
+ "Swallow": {
+  "id": "93370162748412",
+  "hash": "4068025fa875"
+ },
+ "KilnWorld": {
+  "id": "124195720077818",
+  "hash": "fd377d948859"
+ },
+ "OwlKit": {
+  "id": "119957345176855",
+  "hash": "da0c9d4dd0bf"
+ },
+ "RuneRoom": {
+  "id": "106320447576681",
+  "hash": "f641f920d53b"
+ },
+ "RuneDesk": {
+  "id": "100473078159046",
+  "hash": "40b8b1cdebf3"
+ },
+ "SpireSea": {
+  "id": "124479293126086",
+  "hash": "fa7618fbbd8e"
+ },
+ "RunePick": {
+  "id": "127715377022682",
+  "hash": "6facbea69493"
+ },
+ "EngraveTool": {
+  "id": "94354148866304",
+  "hash": "aa767dcafd2d"
+ },
+ "TinCurl": {
+  "id": "140639617384327",
+  "hash": "d56c2d63e85d"
+ },
+ "Page": {
+  "id": "82598911896559",
+  "hash": "95a6668effcf"
+ },
+ "HedgehogKit": {
+  "id": "75109739274726",
+  "hash": "35406f23b770"
+ },
+ "Stallkeeper": {
+  "id": "85065836769656",
+  "hash": "64b53ba14470"
+ },
+ "GeodeStall": {
+  "id": "128341409388234",
+  "hash": "d9da8bd5c75f"
+ },
+ "RejectBarrel": {
+  "id": "87735272079464",
+  "hash": "f3e839f69757"
+ },
+ "GeodeRock": {
+  "id": "132809737841730",
+  "hash": "9086b3d7ceed"
+ },
+ "ToyHammer": {
+  "id": "136061322999642",
+  "hash": "16aadb76b892"
+ },
+ "HandCart": {
+  "id": "83789610608805",
+  "hash": "6fa2853d9fa1"
+ },
+ "GeodeLand": {
+  "id": "133216381328769",
+  "hash": "c84acc936baf"
+ },
+ "Windmill": {
+  "id": "139965270624874",
+  "hash": "7b80488b52d5"
+ },
+ "MarketBits": {
+  "id": "123657598864222",
+  "hash": "bcc5151341ef"
+ },
+ "MossbackPickaxe": {
+  "id": "116098106318613",
+  "hash": "75aef200badd"
+ },
+ "KilnPickaxe": {
+  "id": "78804766799250",
+  "hash": "80d5b48022ae"
+ },
+ "GeodePickaxe": {
+  "id": "98938408910543",
+  "hash": "a3eec2abfb4a"
+ },
+ "MouseKit": {
+  "id": "85981536054886",
+  "hash": "5c1ada6d2f16"
+ },
+ "FossilTrench": {
+  "id": "139306297105834",
+  "hash": "3ad73c7cadc5"
+ },
+ "DigCamp": {
+  "id": "104211245507415",
+  "hash": "6455d28ad40b"
+ },
+ "Badlands": {
+  "id": "103763022781650",
+  "hash": "e12767be5218"
+ },
+ "Ammonite": {
+  "id": "72548949494592",
+  "hash": "5704b0129793"
+ },
+ "Fish": {
+  "id": "87292483527779",
+  "hash": "98f2324fe295"
+ },
+ "DigBrush": {
+  "id": "120048787608580",
+  "hash": "9164322ba68b"
+ },
+ "FieldBook": {
+  "id": "128485768526046",
+  "hash": "2dea0701e15d"
+ },
+ "FossilPickaxe": {
+  "id": "101694186288211",
+  "hash": "0bc5b342d4d7"
+ },
+ "MarmotKit": {
+  "id": "127086379988728",
+  "hash": "875751e0b93a"
+ },
+ "StoneGiant": {
+  "id": "126303405590098",
+  "hash": "2528750e9cd9"
+ },
+ "GiantCanyon": {
+  "id": "94021741241127",
+  "hash": "54e1a9655bbf"
+ },
+ "Scaffold": {
+  "id": "140568357206167",
+  "hash": "703ab4c70f09"
+ },
+ "TitanHammerPickaxe": {
+  "id": "94136261928112",
+  "hash": "7da6a1e96cac"
  }
 }

@@ -70,8 +70,29 @@ plain("Flowers.png", "flowers.png")
 plain("Leaves.png", "leaves.png", 0.95)
 plain("Grass.png", "grass.png", 0.9, "#d8f0c8")
 plain("Mushrooms.png", "mushrooms.png")
+# more of the kit for the scenes after Wood: gnarled oaks, dead silver trees, path pebbles
+leaf_picture("Leaves_TwistedTree_C.png", "oak_leaf.png", "#2c5632", "#8dbb5a", accent="#c9c070")
+bark_picture("Bark_TwistedTree.png", "oak_bark.png", tint="#6e5444")
+bark_picture("Bark_DeadTree.png", "dead_bark.png", birch=True)
+plain("PathRocks_Diffuse.png", "pathrock.png", 0.95)
+
+
+def pale(src, dst, dark="#a3958a", light="#f8f2e8"):
+    """River-worn limestone for the Stone scene (reference stone_setting_s11.png: every stone is cream-white, none is grey or
+    mossy): the kit picture's light and dark are kept, its colours are replaced by a ramp from warm grey shadow to cream."""
+    im = Image.open(KIT / src).convert("RGBA").resize((1024, 1024), Image.LANCZOS)
+    a = np.asarray(im, dtype=np.float64)
+    lum = a[..., :3] @ np.array([0.3, 0.59, 0.11])
+    lo, hi = np.percentile(lum, 4), np.percentile(lum, 96)
+    u = np.clip((lum - lo) / max(hi - lo, 1), 0, 1) ** 0.75
+    c = rgb(dark) * (1 - u[..., None]) + rgb(light) * u[..., None]
+    Image.fromarray(np.clip(np.dstack([c, a[..., 3]]), 0, 255).astype(np.uint8), "RGBA").save(tex / dst)
+
+
+pale("Rocks_Diffuse.png", "rock_pale.png")
+pale("PathRocks_Diffuse.png", "pathrock_pale.png")
 PICT = {"Leaf_Pine_C.png": "spruce_leaf.png", "Leaves_NormalTree_C.png": "birch_leaf.png", "Leaves_TwistedTree_C.png": "bush_leaf.png", "Bark_NormalTree.png": "spruce_bark.png",
-        "Rocks_Diffuse.png": "rock.png", "Flowers.png": "flowers.png", "Leaves.png": "leaves.png", "Grass.png": "grass.png", "Mushrooms.png": "mushrooms.png"}
+        "Rocks_Diffuse.png": "rock.png", "PathRocks_Diffuse.png": "pathrock.png", "Bark_DeadTree.png": "dead_bark.png", "Bark_TwistedTree.png": "oak_bark.png", "Flowers.png": "flowers.png", "Leaves.png": "leaves.png", "Grass.png": "grass.png", "Mushrooms.png": "mushrooms.png"}
 
 # ---- glTF reading ----
 CT = {5120: ("b", 1), 5121: ("B", 1), 5122: ("h", 2), 5123: ("H", 2), 5125: ("I", 4), 5126: ("f", 4)}
@@ -162,14 +183,15 @@ def tree(model, src, height, bark_pic, leaf_pic, canopy_bone=None, with_mirror=T
     emit(model, bones)
 
 
-def prop(model, src, scale, mat_of=None, bone="Body"):
+def prop(model, src, scale, mat_of=None, bone="Body", swap=None):
     ps = load(src)
     lo = np.vstack([p["pos"] for p in ps]).min(axis=0); hi = np.vstack([p["pos"] for p in ps]).max(axis=0)
     c = np.array([(lo[0] + hi[0]) / 2, lo[1], (lo[2] + hi[2]) / 2])
     bones = []
     for k, p in enumerate(ps):
         pic = PICT[p["image"]]
-        leafy = pic not in ("rock.png", "spruce_bark.png")
+        pic = (swap or {}).get(pic, pic)
+        leafy = pic not in ("rock.png", "pathrock.png", "rock_pale.png", "pathrock_pale.png", "spruce_bark.png", "dead_bark.png", "oak_bark.png")
         bones.append((bone if k == 0 else f"{bone}{k + 1}", None if k == 0 else bone, [0, 0, 0], "Leaf" if leafy else "Bark", pic, (p["pos"] - c) * scale, p["nrm"], p["uv"], p["idx"]))
     emit(model, bones)
 
@@ -192,6 +214,29 @@ prop("GrassShort", "Grass_Common_Short", 0.9)
 prop("Fern", "Fern_1", 1.2)
 prop("Bush", "Bush_Common_Flowers", 1.6)
 prop("Mushroom", "Mushroom_Common", 0.8)
+# for the scenes after Wood (Stone, Ashcoal, Bog-Iron ...): place them by these names from a scene's map
+tree("Oak1", "TwistedTree_1", 30, "oak_bark.png", "oak_leaf.png", canopy_bone="Canopy", with_mirror=False)
+tree("Oak2", "TwistedTree_3", 26, "oak_bark.png", "oak_leaf.png", canopy_bone="Canopy", with_mirror=False)
+tree("Alder", "CommonTree_1", 12, "spruce_bark.png", "bush_leaf.png", canopy_bone="Canopy", with_mirror=False)
+prop("DeadTree1", "DeadTree_1", 16 / 9.5)
+prop("DeadTree2", "DeadTree_3", 20 / 13.3)
+prop("Pebble1", "Pebble_Round_1", 2.6)
+prop("Pebble2", "Pebble_Square_2", 2.8)
+prop("PebblePath", "RockPath_Round_Wide", 2.2)
+prop("Clover", "Clover_1", 0.8)
+prop("Plant1", "Plant_1_Big", 0.6)
+prop("Plant7", "Plant_7_Big", 1.3)
+prop("ShelfFungus", "Mushroom_Laetiporus", 0.9)
+prop("WispyGrass", "Grass_Wispy_Tall", 0.8)
+# the Stone scene's river-worn limestone: the same stones with the pale picture
+PALE = {"rock.png": "rock_pale.png", "pathrock.png": "pathrock_pale.png"}
+prop("PaleRock1", "Rock_Medium_1", 0.9, swap=PALE)
+prop("PaleRock2", "Rock_Medium_2", 0.9, swap=PALE)
+prop("PaleRock3", "Rock_Medium_3", 0.9, swap=PALE)
+prop("PalePebble1", "Pebble_Round_1", 2.6, swap=PALE)
+prop("PalePebble2", "Pebble_Square_2", 2.8, swap=PALE)
+prop("PalePebble3", "Pebble_Round_3", 2.6, swap=PALE)
+prop("PalePebblePath", "RockPath_Round_Wide", 2.2, swap=PALE)
 # ---- the snapped birch branch and the storm's flying leaf sprig: ours, built here so they wear the same bark and leaves as the kit birches ----
 def tube(points, radii, sides, vscale=1.2, bumps=0.0):
     """A tube along points with a radius at each; -> pos, nrm, uv, idx. Open at both ends."""

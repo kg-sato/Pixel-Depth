@@ -2,6 +2,8 @@
     python spike/forge_install.py wood            export, write GLBs, upload changed models, install in ReplicatedStorage.ForgeModels,
                                                   and rewrite src/ForgeRigs.luau (rig data for every installed scene)
     python spike/forge_install.py wood --local    export and rig data only (no upload, no Studio)
+    python spike/forge_install.py kit | grass     the CC0 kit models (design3d/kit_import.py) | the Wood grass field (design3d/wood_grass.py)
+    python spike/forge_install.py py:stone_grass  any Python builder design3d/stone_grass.py that writes <Model>.json and stone_grass_rig.json
 Asset ids are kept in design3d/assets.json (keyed by model, with the GLB hash, so an unchanged model is not uploaded again)."""
 import hashlib, json, pathlib, subprocess, sys
 game = pathlib.Path(__file__).resolve().parent.parent
@@ -10,7 +12,10 @@ sys.path.insert(0, str(game / "spike"))
 scene = sys.argv[1]
 local = "--local" in sys.argv
 out = game / "design3d" / "out"
-if scene in ("kit", "grass"):  # kit: models taken from the CC0 nature kit and changed for our setting; grass: the modelled grass field
+if scene.startswith("py:"):  # any scene's own Python builder: design3d/<name>.py writes <Model>.json files and <name>_rig.json (same form as export.mjs)
+    scene = scene[3:]
+    r = subprocess.run([sys.executable, str(game / "design3d" / (scene + ".py")), str(out)], capture_output=True, text=True, cwd=game)
+elif scene in ("kit", "grass"):  # kit: models taken from the CC0 nature kit and changed for our setting; grass: the modelled grass field
     r = subprocess.run([sys.executable, str(game / "design3d" / ("kit_import.py" if scene == "kit" else "wood_grass.py")), str(out)], capture_output=True, text=True, cwd=game)
 else:
     r = subprocess.run(["node", str(game / "design3d" / "export.mjs"), scene, str(out)], capture_output=True, text=True, cwd=game)
@@ -95,6 +100,10 @@ for _, p in raw:GetDescendants() do
 			local la = Instance.new("SurfaceAppearance")
 			la.ColorMap, la.AlphaMode = p.TextureID, Enum.AlphaMode.Transparency
 			la.Parent = p
+		elseif b[1] ~= "Neon" and b[1] ~= "Glass" and b[1] ~= "Grass" and p.TextureID ~= "" then -- soft matte look: a fully rough map takes the shine off
+			local ma = Instance.new("SurfaceAppearance")
+			ma.ColorMap, ma.RoughnessMap = p.TextureID, "rbxassetid://97273827211586"
+			ma.Parent = p
 		end
 		p.Parent = m n += 1
 	end

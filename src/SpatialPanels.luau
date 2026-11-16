@@ -88,7 +88,8 @@ function M.start(E)
 			end
 		end
 		for f in held do if not f.Parent then held[f] = nil count -= 1 end end -- destroyed while open
-		local any = count > 0 and not (pg:FindFirstChild("ForgeStoryGui") or pg:FindFirstChild("ForgeCutsceneGui")) -- a forge cutscene owns the whole view: the panel stood 0.7 studs in front of its camera and covered it (the owner, 2026-11-15)
+		local cine = pg:FindFirstChild("ForgeStoryGui") or pg:FindFirstChild("ForgeCutsceneGui")
+		local any = count > 0 and not cine -- a forge cutscene owns the whole view: the panel stood 0.7 studs in front of its camera and covered it (the owner, 2026-11-15)
 		hook.spatialOpen = any
 		if sg.Enabled ~= any then sg.Enabled = any end
 		if part.CanQuery ~= any then part.CanQuery = any end
@@ -105,7 +106,11 @@ function M.start(E)
 			end
 		end
 		local fb = workspace.CurrentCamera:FindFirstChild("ForgeBlur") -- the forge's own blur would blur the forge itself now that it stands in the world
-		if fb then fb.Enabled = not any end
+		if fb then fb.Enabled = not any and not cine end
+		if cine then -- and neither blur may come back on over the story (the owner, 2026-11-15: "there is a blur as well?")
+			if hook.blur then hook.blur.Enabled = false end
+			return
+		end
 		if not any then
 			if wasAny then
 				if hook.blur then hook.blur.Enabled = true end

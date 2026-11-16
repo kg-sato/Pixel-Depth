@@ -63,3 +63,18 @@ for i, f in enumerate([523.25, 659.25, 783.99, 1046.5]):
     k = int(i * 0.16 * SR); m = n - k; t = np.arange(m) / SR
     x[k:] += (np.sin(2 * np.pi * f * t) + 0.4 * np.sin(2 * np.pi * 2.01 * f * t) * np.exp(-t / 0.25) + 0.2 * np.sin(2 * np.pi * 3.02 * f * t) * np.exp(-t / 0.1)) * np.exp(-t / 0.7) * np.minimum(t / 0.004, 1)
 save("dawn", x, 0.7)
+
+# ---- Stone scene: river (loop), stonetap ----
+# river: a shallow stream over pebbles: a soft mid hiss that swells, with many small watery plinks (loop)
+n = int(3.25 * SR); noise = rng.standard_normal(n); t = np.arange(n) / SR
+river = hp(lp(noise, 2600), 350) * (0.75 + 0.25 * np.sin(2 * np.pi * 0.31 * t + 1)) + lp(noise, 180) * 1.6
+for k in rng.integers(0, n - 2000, 90):
+    m = int(rng.integers(500, 1800)); u = np.arange(m) / SR; f0 = rng.uniform(500, 1500)
+    river[k:k + m] += np.sin(2 * np.pi * (f0 * u + f0 * 1.6 * u * u)) * np.exp(-u / (m / SR / 4)) * rng.uniform(0.25, 0.7)
+save("river", river, 0.5, loop=True)
+
+# stonetap: two hard pebbles struck together: a very short bright click with a glassy ring
+n = int(0.3 * SR); t = np.arange(n) / SR; noise = rng.standard_normal(n)
+click = hp(noise, 3000) * np.exp(-t / 0.004) * 1.2
+ring = (np.sin(2 * np.pi * 2350 * t) + 0.6 * np.sin(2 * np.pi * 3730 * t) + 0.35 * np.sin(2 * np.pi * 5210 * t)) * np.exp(-t / 0.035)
+save("stonetap", click + ring * 0.8 + np.sin(2 * np.pi * 640 * t) * np.exp(-t / 0.02) * 0.5, 0.8)

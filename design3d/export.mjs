@@ -13,12 +13,21 @@ const scene = await import(pathToFileURL(resolve(here, sceneName + ".mjs")).href
 const models = scene.build(THREE, makeToy(THREE));
 mkdirSync(outDir, { recursive: true });
 const rigs = {};
+// soft pastel look (owner, 2026-11-16): every texture colour is lifted toward white and a little desaturated; very dark
+// colours (pupils, lines) only lift a touch so faces still read. Neon bones keep their own colour (b.color below).
+function pastel(hex) {
+  const c = new THREE.Color(hex), hsl = {};
+  c.getHSL(hsl);
+  const l = hsl.l < 0.12 ? hsl.l + 0.05 : hsl.l + (1 - hsl.l) * 0.26;
+  c.setHSL(hsl.h, hsl.s * 0.78, Math.min(l, 0.95));
+  return "#" + c.getHexString();
+}
 for (const m of models) {
   const man = m.manifest(), parts = [];
   let tris = 0;
   for (const b of man) {
     const g = m.merged(b.name);
-    parts.push({ name: b.name, image: b.image ? resolve(here, b.image) : undefined, palette: m.palette, position: Array.from(g.getAttribute("position").array), normal: Array.from(g.getAttribute("normal").array), uv: Array.from(g.getAttribute("uv").array), index: Array.from(g.index.array) });
+    parts.push({ name: b.name, image: b.image ? resolve(here, b.image) : undefined, palette: m.palette.map(pastel), position: Array.from(g.getAttribute("position").array), normal: Array.from(g.getAttribute("normal").array), uv: Array.from(g.getAttribute("uv").array), index: Array.from(g.index.array) });
     tris += b.tris;
     if (b.tris > 20000) throw new Error(`${m.name}.${b.name}: ${b.tris} triangles (rule: under 20,000)`);
     // a Neon bone shows one flat colour in Roblox: the first colour its mesh uses

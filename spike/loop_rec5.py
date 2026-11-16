@@ -24,7 +24,7 @@ name = sys.argv[1] if len(sys.argv) > 1 else "loop3"
 VENV = r"C:\Users\kgsat\Documents\Roblox\Hunyuan3D\.venv\Scripts\python.exe"
 video = game / "captures" / "loop" / f"{name}.mp4"; video.parent.mkdir(parents=True, exist_ok=True)
 sheets = ws / "Overnight" / "judge" / f"loop_{name}"; sheets.mkdir(parents=True, exist_ok=True)
-SECS = 505
+SECS = 900  # the tour grew to about 880 s (2026-11-16)
 PILOT = re.search(r"PILOT = r'''(.*?)'''", (here / "boss_fight_test.py").read_text(encoding="utf-8"), re.S).group(1)
 
 
@@ -38,7 +38,7 @@ P = "local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart l
 ZIP = "local pr for _,d in workspace.Caves.Ziplines:GetDescendants() do if d:GetAttribute('Zip')==1 then pr=d end end "
 N.play(False); N.restore()
 if video.exists(): video.unlink()
-rec = subprocess.Popen([VENV, "-I", str(ws / "tools" / "record_window.py"), str(video), str(SECS), "20"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+rec = subprocess.Popen([VENV, "-I", str(ws / "tools" / "record_window.py"), str(video), str(SECS), "15"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 t0 = time.time()
 def mark(what): print(f"{time.time() - t0:5.0f} s  {what}", flush=True)
 time.sleep(1.5)

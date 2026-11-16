@@ -7,7 +7,9 @@
 -- It is built once per play from design3d/wood.mjs and wood_world.py (terrain, pictures, the map of every tree in ForgeWoodMap).
 -- The lake reflects: every tall thing has an upside-down twin under a clear water sheet, and the sky pictures carry the
 -- mirrored sky in their lower half. Space: front of a model is -Z, the camera stands at -Z and looks toward the lake at +Z.
-local M = { length = 11.2, named = 7.6, open = true }
+-- Pace (the owner, 2026-11-15: "too fast"): the story's own clock runs at 0.58 of real time, so the whole biography takes
+-- about 19 s and the short level-up version about 5 s. Every time in this file is a story second.
+local M = { length = 11.2, named = 7.6, open = true, pace = 0.58, fastPace = 0.75 }
 -- pictures made by design3d/wood_world.py (uploaded 2026-11-15; ids in design3d/assets.json)
 local IMG = {
 	storm = { side = "80840484137760", up = "102725166168479", dn = "88932717958951" },
@@ -259,7 +261,9 @@ function M.setup(ctx)
 	local function workCF() return bolt:joint("Body") * CFrame.new(0, 0.42, -1.1) end -- in front of his chest, over his lap
 
 	return function(t, dt)
-		local ts = step(t) -- the characters move on twos
+		-- the owner, 2026-11-15: "too cartoonish and not fluid enough". The characters no longer step 12 poses a second: they
+		-- move at the full frame rate and every joint eases into its pose (Rig:smooth below)
+		local ts = t
 		local storm = 1 - smooth(2.7, 3.0, t)
 		local dawn = smooth(7.6, 9.2, t)
 
@@ -342,8 +346,8 @@ function M.setup(ctx)
 		local blink = (ts % 2.3) < 0.1
 		local shut = blink or (t >= 6.62 and t < 6.95) or (t >= 8.45)
 		bolt:show("Eyes", not shut) bolt:show("EyesShut", shut)
-		bolt:set("EarL", R(0, 0, math.sin(ts * 3.1) * 4 + ((ts % 1.7) < 0.09 and 16 or 0)))
-		bolt:set("EarR", R(0, 0, -math.sin(ts * 3.1 + 1) * 4 - ((ts % 2.1) < 0.09 and 16 or 0)))
+		bolt:set("EarL", R(0, 0, math.sin(ts * 3.1) * 4 + ((ts % 1.7) < 0.14 and 9 or 0)))
+		bolt:set("EarR", R(0, 0, -math.sin(ts * 3.1 + 1) * 4 - ((ts % 2.1) < 0.14 and 9 or 0)))
 		if t < 2.25 then
 			bolt.root = W(0, -60, 0)
 		elseif t < 3.0 then -- he heard it fall: up from behind the log, a look, then a hop to the branch
@@ -360,7 +364,7 @@ function M.setup(ctx)
 			bolt:set("Tail1", R(-25, 38 + math.sin(ts * 4) * 14, 0)) bolt:set("Tail2", R(-20, 30 + math.sin(ts * 4 - 0.8) * 18, 0))
 			bolt:set("LegL", R(74 + math.sin(ts * 3) * 6, 0, 10)) bolt:set("LegR", R(60 - math.sin(ts * 3) * 8, 0, -16)) -- feet kick while he works
 			local bonk = t >= 6.62 and math.max(0, 1 - (t - 6.62) / 0.3) or 0
-			bolt:size("Head", Vector3.new(1 + 0.12 * bonk, 1 - 0.2 * bonk, 1 + 0.12 * bonk))
+			bolt:size("Head", Vector3.new(1 + 0.05 * bonk, 1 - 0.09 * bonk, 1 + 0.05 * bonk)) -- a small give, not a rubber squash
 		else
 			local hop = math.sin(math.clamp((t - 8.3) / 0.45, 0, 1) * math.pi) * 1.2 -- a little jump as he lifts it
 			bolt.root = W(-7.0, hop, -5.0) * R(0, -16, 0) -- out from under the birches, the sunrise behind him
@@ -368,6 +372,10 @@ function M.setup(ctx)
 			bolt:set("Tail1", R(0, math.sin(ts * 9) * 26, 0)) bolt:set("Tail2", R(0, math.sin(ts * 9 - 0.8) * 30, 0))
 			bolt:size("Head", Vector3.one)
 		end
+		local phase = t < 2.25 and 0 or (t < 3.0 and 1 or (t < 7.6 and 2 or 3))
+		if phase ~= bolt.phase then bolt.phase = phase bolt:snap() end -- a camera cut: no easing across it
+		local sinceHit = hitT > 0 and t - hitT or 1
+		bolt:smooth(dt, sinceHit < 0.1 and 34 or 13) -- crisp on a knife stroke, soft everywhere else
 		bolt:update()
 
 		-- ===== the work: strokes, shavings, the three states of the wood =====
@@ -486,9 +494,7 @@ function M.setup(ctx)
 		end
 		ctx.cam, ctx.fov = O * cf, fov
 		ctx.dof.FocusDistance = focus
-		local wide = t < 3.95 or t >= 7.6 -- the place itself is the picture: nothing is blurred
-		ctx.dof.InFocusRadius = wide and 400 or 14
-		ctx.dof.FarIntensity = wide and 0 or 0.16
+		ctx.dof.InFocusRadius, ctx.dof.FarIntensity, ctx.dof.NearIntensity = 400, 0, 0 -- no blur anywhere (the owner, 2026-11-15): the place stays sharp behind him
 	end
 end
 
