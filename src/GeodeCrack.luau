@@ -74,7 +74,8 @@ function M.start(E)
 				f.Parent = bb
 				return f, st
 			end
-			ring(K.seam, GOLD, 5) -- the seam: where the closing ring must be
+			local _, seamStroke = ring(K.seam, GOLD, 5) -- the seam: where the closing ring must be
+			local lastTick -- (2026-11-17, Shared.StrikeJuice's recipe: a cue before the hit) ticks rising in pitch as the ring nears the seam, and the seam heats up
 			local closing, stroke = ring(1, Color3.fromRGB(0, 240, 255), 4)
 			local word = Instance.new("TextLabel")
 			word.Size, word.Position, word.AnchorPoint, word.BackgroundTransparency = UDim2.fromScale(1.6, 0.16), UDim2.fromScale(0.5, -0.06), Vector2.new(0.5, 0.5), 1
@@ -91,6 +92,13 @@ function M.start(E)
 				closing.Size = UDim2.fromScale(r, r)
 				stroke.Color = Color3.fromRGB(0, 240, 255):Lerp(PINK, math.clamp(u, 0, 1))
 				closing.Visible = u < 1
+				local gap = r - K.seam -- > 0: the ring is still outside the seam
+				local near = gap > 0 and math.clamp(1 - gap / 0.3, 0, 1) or 0
+				seamStroke.Thickness = 5 + near * 5
+				seamStroke.Color = GOLD:Lerp(WHITE, near * 0.5)
+				local step = (gap > 0 and gap < 0.3) and math.floor(gap / 0.06) or -1
+				if step >= 0 and lastTick and step ~= lastTick and not live.sent then E.sfx("tick", 1 + (4 - step) * 0.12) end
+				lastTick = step
 			end)
 			E.sfx("click", 0.8)
 		elseif what == "done" then
@@ -99,6 +107,9 @@ function M.start(E)
 			local tier, gems, gold = a, tonumber(b) or 0, tonumber(c) or 0
 			if at and E.burst then E.burst(at, Vector3.yAxis, tier == "perfect" and GOLD or Color3.fromRGB(200, 140, 255), tier == "perfect" and 40 or (tier == "good" and 22 or 8)) end
 			E.sfx(tier == "bad" and "click" or "upgrade", tier == "perfect" and 1.4 or 1.1)
+			if tier == "perfect" then E.sfx("ping", 1.2) E.sfx("crack", 1.1) E.sfx("flawless", 1) -- one sound per grade (Shared.StrikeJuice's set)
+			elseif tier == "good" then E.sfx("ping", 1) E.sfx("crack", 0.9)
+			else E.sfx("thud", 0.9) E.sfx("crack", 0.7) end
 			E.toast((tier == "perfect" and "PERFECT CRACK!" or (tier == "good" and "GEODE CRACKED!" or "CRACKED BADLY.")) .. "  +" .. gems .. " GEMS  +" .. gold .. " COINS", tier == "bad" and WHITE or GOLD, tier ~= "bad")
 		end
 	end)
