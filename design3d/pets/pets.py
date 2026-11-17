@@ -62,6 +62,24 @@ class Pet:
                 self.box(nm, role, x, x + w - 1, 0, y1, z, z + w - 1)
                 self.pivots[nm] = (x + (w - 1) / 2, y1 + 0.5, z + (w - 1) / 2)
 
+    def stilts(self, dy):
+        """raise everything but the legs by dy voxels and lengthen the legs to match (a taller, leggier silhouette)"""
+        moved = {}
+        for (x, y, z), (part, role) in self.v.items():
+            if part.startswith("Leg"):
+                moved[(x, y, z)] = (part, role)
+            else:
+                moved[(x, y + dy, z)] = (part, role)
+        legs = {}
+        for (x, y, z), (part, role) in self.v.items():
+            if part.startswith("Leg"):
+                top = max(yy for (xx, yy, zz), (pp, rr) in self.v.items() if pp == part)
+                if y == top:
+                    for k in range(1, dy + 1): legs[(x, y + k, z)] = (part, "Main" if role == "Hoof" else role)
+        moved.update(legs)
+        self.v = moved
+        self.pivots = {k: (v[0], v[1] + dy, v[2]) for k, v in self.pivots.items()}
+
     def data(self):
         parts = {}
         for (x, y, z), (p, r) in self.v.items():
@@ -103,6 +121,7 @@ def tosk():  # square: a stocky boar hauler, tusks and a cargo pack
     p.eyes("Head", 8, 10, dx=2)
     p.pivots["Head"] = (0, 7, 4)
     p.legs(2, [-4, 3], [-5, 2], w=2)
+    p.box("Body", "Main", -5, 5, 4, 7, -4, 2)  # a wide barrel body: the low, heavy hauler
     p.box("Tail", "Dark", 0, 0, 7, 9, -6, -6); p.pivots["Tail"] = (0, 7, -5.5)
     return p
 
@@ -154,7 +173,9 @@ def shinemane():  # round and soft: a pony with a glowing mane
     p.pivots["Head"] = (0, 9, 3)
     p.legs(4, [-3, 2], [-5, 2], w=2, role="Main")
     for k in range(1, 5): p.paint("Hoof", lambda x, y, z: y == 0, part=f"Leg{k}")
-    p.box("Tail", "Accent", -1, 1, 6, 9, -7, -6); p.box("Tail", "Accent", 0, 0, 4, 5, -7, -7); p.pivots["Tail"] = (0, 8, -5.5)
+    p.box("Tail", "Accent", -1, 1, 6, 9, -7, -6); p.box("Tail", "Accent", 0, 0, 2, 5, -7, -7); p.pivots["Tail"] = (0, 8, -5.5)
+    p.box("Head", "Accent", -1, 1, 9, 12, -2, -1)  # the mane runs down the neck
+    p.stilts(3)  # long legs: a pony, not a box (Gemini n17_hatch: the quadrupeds read as one brick)
     return p
 
 
@@ -186,6 +207,7 @@ def pixiu():  # pointed: a jade treasure lion cub, curly mane and one gold horn
     p.eyes("Head", 10, 7, dx=2)
     p.pivots["Head"] = (0, 8, 2)
     p.legs(2, [-3, 2], [-5, 1], w=2, role="Dark")
+    p.box("Head", "Accent", -6, 6, 8, 16, -1, 0)  # a big round ruff: the lion cub
     p.box("Tail", "Accent", 0, 0, 7, 10, -6, -6); p.box("Tail", "Accent", -1, 1, 10, 11, -7, -6); p.pivots["Tail"] = (0, 7, -5.5)
     return p
 
@@ -250,9 +272,9 @@ def fafnir():  # pointed: a stocky little dragon with horns, spines and wings
     p.eyes("Head", 12, 8, dx=2)
     p.pivots["Head"] = (0, 9, 3)
     for s, nm in ((-1, "WingL"), (1, "WingR")):
-        p.box(nm, "Dark", s * 5, s * 8, 9, 13, -3, -1); p.box(nm, "Accent", s * 6, s * 8, 13, 14, -3, -3); p.pivots[nm] = (s * 4.5, 10, -2)
+        p.box(nm, "Dark", s * 5, s * 8, 9, 13, -3, -1); p.box(nm, "Dark", s * 8, s * 11, 11, 16, -3, -2); p.box(nm, "Accent", s * 6, s * 11, 16, 17, -3, -3); p.pivots[nm] = (s * 4.5, 10, -2)  # wide bat wings: the dragon reads from above
     p.legs(2, [-4, 3], [-5, 2], w=2, role="Dark")
-    p.box("Tail", "Main", -1, 1, 4, 6, -8, -6); p.box("Tail", "Accent", 0, 0, 5, 7, -10, -9); p.pivots["Tail"] = (0, 5, -5.5)
+    p.box("Tail", "Main", -1, 1, 4, 6, -8, -6); p.box("Tail", "Main", 0, 0, 5, 6, -12, -9); p.box("Tail", "Accent", -1, 1, 6, 8, -14, -13); p.pivots["Tail"] = (0, 5, -5.5)
     return p
 
 
@@ -269,7 +291,9 @@ def kirin():  # pointed: a scaled fawn with a single horn and a flame mane
     p.pivots["Head"] = (0, 11, 3)
     p.legs(5, [-3, 2], [-5, 2], w=2, role="Main")
     for k in range(1, 5): p.paint("Hoof", lambda x, y, z: y <= 1, part=f"Leg{k}")
-    p.box("Tail", "Accent", -1, 1, 8, 11, -7, -6); p.pivots["Tail"] = (0, 9, -5.5)
+    p.box("Tail", "Accent", -1, 1, 8, 11, -7, -6); p.box("Tail", "Accent", 0, 0, 11, 13, -8, -7); p.pivots["Tail"] = (0, 9, -5.5)
+    p.box("Head", "Horn", 0, 0, 22, 24, 6, 6)
+    p.stilts(2)
     return p
 
 

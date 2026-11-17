@@ -71,7 +71,7 @@ function M.build(name)
 		local part, role = string.match(p.Name, "^(.-)__(.+)$")
 		part, role = part or "Body", role or "Main"
 		c.Name = part == "Head" and role == "Main" and "Head" or (part .. "_" .. role) -- PetCompanion looks for "Head"
-		c.Color = d.palette[role] or Color3.new(1, 1, 1)
+		if role ~= "Tex" then c.Color = d.palette[role] or Color3.new(1, 1, 1) end -- "Tex": a baked texture (colour, voxel occlusion, edge light) covers the part
 		c.Material = GLOW[role] and Enum.Material.Neon or Enum.Material.SmoothPlastic
 		c.Anchored, c.CanCollide, c.CanQuery, c.CanTouch, c.CastShadow = true, false, false, false, false
 		local rest = FLIP * origin:ToObjectSpace(p.CFrame) -- in the pet's own frame: feet at 0, looking -Z
