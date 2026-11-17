@@ -113,6 +113,12 @@ function M.start(E)
 		local copy = dial:Clone()
 		copy.Name, copy.Size, copy.Position, copy.AnchorPoint = "Dial", UDim2.fromScale(1, 300 / 360), UDim2.fromScale(0.5, 1), Vector2.new(0.5, 1)
 		for _, c in copy:GetChildren() do if c:IsA("UIAspectRatioConstraint") or c:IsA("UIScale") then c:Destroy() end end -- the pop scale stuck at 0.6 on the copy (measured 2026-11-16)
+		for _, c in copy:GetChildren() do -- a reticle, not a clock (Gemini v10n_r6: "literally an analog clock face"): the notches, rune marks and rivets go
+			if c:IsA("Frame") and c.Name == "Frame" and c.BackgroundTransparency == 1 and c.Size == UDim2.fromScale(1, 1) then
+				local mark = c:FindFirstChildOfClass("Frame")
+				if mark and mark.Size.X.Scale < 0.05 then c:Destroy() end
+			end
+		end
 		copy.Parent = world
 		local byId, pairs_ = {}, {}
 		for _, c in copy:GetDescendants() do byId[c:GetAttribute("MId") or 0] = c end
@@ -208,7 +214,7 @@ function M.start(E)
 		dial.Position = UDim2.fromOffset(at.X - o.X, at.Y - inset.Y - o.Y)
 		if mirror then
 			local eye = cam.CFrame.Position
-			anchor.Position = eye + (core.Position - eye).Unit * 3.5 + cam.CFrame.UpVector * 0.3 -- a little up: clear of the swing pips under it
+			anchor.Position = eye + (core.Position - eye).Unit * 3.5 -- centred on the rock: the title above it must stay clear of the timers pill
 			world.Size = UDim2.fromOffset(px * 1.35, px * 1.62) -- the owner, 2026-11-15: the game must be big enough to play
 			dial.Position = UDim2.fromOffset(-4 * px, -4 * px) -- parked off screen: the needle still turns for the tests and the autopilot
 			for _, pr in mirror.pairs do
