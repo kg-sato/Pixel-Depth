@@ -19,7 +19,7 @@ local function shine(o, z, w, h, y)
 	f.Name, f.BorderSizePixel, f.BackgroundColor3, f.ClipsDescendants = "DomeShine", 0, Color3.new(1, 1, 1), true
 	f.Size, f.Position, f.AnchorPoint, f.ZIndex = UDim2.fromScale(w or 0.84, h or 0.4), UDim2.fromScale(0.5, y or 0.07), Vector2.new(0.5, 0), z
 	local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0.5, 0) c.Parent = f
-	local g = Instance.new("UIGradient") g.Rotation, g.Transparency = 90, NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.5), NumberSequenceKeypoint.new(0.7, 0.88), NumberSequenceKeypoint.new(1, 1) }) g.Parent = f
+	local g = Instance.new("UIGradient") g.Rotation, g.Transparency = 90, NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(0.7, 0.8), NumberSequenceKeypoint.new(1, 1) }) g.Parent = f
 	f.Parent = o
 end
 
@@ -50,7 +50,15 @@ end
 
 function M.dress(o)
 	local kind = o:GetAttribute("Kind")
-	if typeof(kind) ~= "string" or not o:IsA("GuiObject") or not M.KINDS(kind) then return end
+	if kind == nil and o:IsA("GuiButton") and o.BackgroundTransparency < 0.5 then -- the look-around settings panels' toggles and buttons (no kit kind)
+		local sg = o:FindFirstAncestorWhichIsA("SurfaceGui")
+		if sg and string.sub(sg.Name, 1, 3) == "AR_" then
+			shine(o, o.ZIndex + 1)
+			rim(o, o.BackgroundColor3.R > 0.8 and o.BackgroundColor3.B < 0.7 and "pink" or "lilac")
+		end
+		return
+	end
+	if typeof(kind) ~= "string" or not o:IsA("GuiObject") or not (M.KINDS(kind) or o.Name == "StepCard") then return end
 	local sk = o:FindFirstChild("Skin")
 	shine(o, (sk and sk.ZIndex or 0) + 1)
 	rim(o, kind)
@@ -58,7 +66,7 @@ function M.dress(o)
 end
 
 function M.start(E)
-	local gui = E.gui
+	local gui = E.plr:WaitForChild("PlayerGui") -- the whole PlayerGui: the look-around settings panels are SurfaceGuis there
 	for _, d in gui:GetDescendants() do M.dress(d) end
 	gui.DescendantAdded:Connect(function(d) task.defer(function() if d.Parent then M.dress(d) end end) end)
 	task.delay(4, function() for _, d in gui:GetDescendants() do M.dress(d) end end) -- skins set after their frame was added

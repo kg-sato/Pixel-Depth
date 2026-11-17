@@ -6,6 +6,12 @@ local GLASS = require(script.Parent:WaitForChild("Config")).UI_KIT == "glass"
 local JellyText = GLASS and require(script.Parent:WaitForChild("JellyText"))
 local M = {}
 local LANE, MAX = 0.69, 6 -- the lane sits under the loot card (ends at 0.62) and over the bottom buttons
+local Players = game:GetService("Players")
+local function lane() -- in a boss fight the notices sit under the boss bar, off the fighting floor (Gemini v10n_r9: "floating across the combat space")
+	local pg = Players.LocalPlayer and Players.LocalPlayer:FindFirstChild("PlayerGui")
+	local bar = pg and pg:FindFirstChild("BossBar", true)
+	return (bar and bar:IsA("GuiObject") and bar.Visible) and 0.25 or LANE
+end
 local queue, live, E, gap = {}, nil, nil, 0
 
 function M.show(msg, color, big, delay)
@@ -30,7 +36,7 @@ function M.start(e)
 			if os.clock() < live.t - (#queue > 0 and 1.2 or 0) and live.seen < 4 then return end -- a waiting line shortens the one on screen
 			local l = live.label
 			live = nil
-			E.tween(l, 0.3, { BackgroundTransparency = 1, Position = UDim2.fromScale(0.5, LANE - 0.05) })
+			E.tween(l, 0.3, { BackgroundTransparency = 1, Position = UDim2.fromScale(0.5, lane() - 0.05) })
 			for _, w in l:GetChildren() do if w:IsA("TextLabel") then E.tween(w, 0.3, { TextTransparency = 1, TextStrokeTransparency = 1 }) end end
 			task.delay(0.32, function() l:Destroy() end)
 			gap = os.clock() + 0.34 -- the next line waits until this one is gone
@@ -42,7 +48,7 @@ function M.start(e)
 		-- a dark pill behind the words: bare text lay across the first-person hands (Gemini, 2026-11-10)
 		local l = Instance.new("Frame")
 		l.Name, l.ZIndex, l.AnchorPoint, l.BorderSizePixel = "Toast", 20, Vector2.new(0.5, 0.5), 0
-		l.Size, l.Position = UDim2.fromScale(math.clamp(0.07 + #t.msg * (t.big and 0.0066 or 0.0054), 0.16, 0.5), t.big and 0.07 or 0.058), UDim2.fromScale(0.5, LANE + 0.06) -- as wide as its words need, never a bar across the screen
+		l.Size, l.Position = UDim2.fromScale(math.clamp(0.07 + #t.msg * (t.big and 0.0066 or 0.0054), 0.16, 0.5), t.big and 0.07 or 0.058), UDim2.fromScale(0.5, lane() + 0.06) -- as wide as its words need, never a bar across the screen
 		l.BackgroundColor3, l.BackgroundTransparency = Color3.fromRGB(38, 28, 54), 0.22
 		local corner = Instance.new("UICorner")
 		corner.CornerRadius = UDim.new(0.5, 0)
@@ -62,7 +68,7 @@ function M.start(e)
 			end
 		end
 		l.Parent = E.gui
-		E.tween(l, 0.35, { Position = UDim2.fromScale(0.5, LANE) }, Enum.EasingStyle.Back)
+		E.tween(l, 0.35, { Position = UDim2.fromScale(0.5, lane()) }, Enum.EasingStyle.Back)
 		E.pop(l, 0.6, 0.35)
 		live = { msg = t.msg, label = l, t = os.clock() + 2.5, seen = 0 }
 	end)
