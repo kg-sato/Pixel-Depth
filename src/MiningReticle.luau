@@ -8,8 +8,8 @@
 --   * the title and hint bars shrink to one slim line at the top
 -- The dial is held inside the middle of the view, so it can always be played even when the rock is off screen. Display only: PixelClient
 -- still owns the needle, the input and the server messages; this module only moves and dresses its widgets (E.cave.mg is wrapped).
--- Directive v10.0 re-run (2026-11-16): the dial is now drawn IN the world. A copy of the dial lives in a BillboardGui (StrikeReticle)
--- adorned to the deposit, so it sits on the rock in 3D; the title line rides above the ring inside the same billboard. The 2D
+-- Directive v10.0 re-run (2026-11-16): the dial is now drawn IN the world. A copy of the dial lives in a SurfaceGui (StrikeReticle)
+-- on a plate laid on the rock face (or the boss) where the eye's line meets it, so it sits on the rock in 3D; the title line rides above the ring inside the same billboard. The 2D
 -- original stays in the HUD (CaveHud.PerfectStrike...Needle and Arc) but parked off screen: PixelClient still turns its
 -- needle, the tests and the autopilot still read its Rotation, and every frame the copy takes the original's look.
 local RunService = game:GetService("RunService")
@@ -101,9 +101,9 @@ function M.start(E)
 	local say = new("Frame", ps, { Name = "Say", Size = UDim2.fromScale(0.34, 0.07), Position = UDim2.fromScale(0.5, 0.15), AnchorPoint = MID, BackgroundTransparency = 1, Visible = false, ZIndex = 13 })
 	local sayText = JellyText.new(say, "STRIKE ON GOLD!", { color = Color3.fromRGB(236, 224, 255), glow = true, z = 13 })
 
-	local world = new("BillboardGui", pg, { Name = "StrikeReticle", Size = UDim2.fromOffset(300, 360), AlwaysOnTop = false, LightInfluence = 0, ResetOnSpawn = false, Enabled = false, MaxDistance = 80 }) -- AlwaysOnTop = true did not draw in PlayerGui (measured 2026-11-16), so the billboard hangs on an anchor 3.5 studs before the eye on the line to the rock: nothing (rock, the boss) can stand in front of it
+	local world = new("SurfaceGui", pg, { Name = "StrikeReticle", Face = Enum.NormalId.Front, SizingMode = Enum.SurfaceGuiSizingMode.FixedSize, CanvasSize = Vector2.new(300, 360), AlwaysOnTop = false, LightInfluence = 0, Brightness = 1.3, ResetOnSpawn = false, Enabled = false, MaxDistance = 80 }) -- painted ON the rock: a plate laid on the rock face (Gemini v10n_r8: "a flat clock pasted over the rock")
 	local worldTitle = new("TextLabel", world, { Name = "Title", Text = "STRIKE ON GOLD", Font = Enum.Font.FredokaOne, TextScaled = true, TextColor3 = Color3.fromRGB(236, 224, 255), TextStrokeColor3 = Color3.fromRGB(22, 8, 30), TextStrokeTransparency = 0.2, BackgroundTransparency = 1, Size = UDim2.fromScale(0.8, 0.1), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0) })
-	local anchor = new("Part", nil, { Name = "ReticleAnchor", Size = Vector3.new(0.2, 0.2, 0.2), Transparency = 1, Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+	local anchor = new("Part", nil, { Name = "ReticleAnchor", Size = Vector3.new(3.6, 4.3, 0.05), Transparency = 1, Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
 	local mirror -- { copy = the dial's copy, pairs = { { original, copy } } }
 	local PROPS = { GuiObject = { "Rotation", "Visible", "Size", "Position", "BackgroundColor3", "BackgroundTransparency" }, UIStroke = { "Color", "Transparency", "Enabled", "Thickness" }, UIGradient = { "Rotation", "Offset" } }
 	local function mirrorStart()
@@ -214,8 +214,22 @@ function M.start(E)
 		dial.Position = UDim2.fromOffset(at.X - o.X, at.Y - inset.Y - o.Y)
 		if mirror then
 			local eye = cam.CFrame.Position
-			anchor.Position = eye + (core.Position - eye).Unit * 3.5 -- centred on the rock: the title above it must stay clear of the timers pill
-			world.Size = UDim2.fromOffset(px * 1.35, px * 1.62) -- the owner, 2026-11-15: the game must be big enough to play
+			-- the plate lies on the face of the rock (or of the boss) where the line from the eye meets it, turned toward the eye
+			-- just enough to stay readable (at most about 50 degrees off), and sized from the distance so the game stays big
+			local rp = RaycastParams.new()
+			rp.FilterType, rp.FilterDescendantsInstances = Enum.RaycastFilterType.Exclude, { plr.Character, anchor, workspace.CurrentCamera }
+			local to = core.Position - eye
+			local hit = workspace:Raycast(eye, to * 1.05, rp)
+			local at = hit and hit.Position or core.Position
+			local v = (eye - at).Unit
+			local n = hit and hit.Normal or v
+			for _ = 1, 3 do if n:Dot(v) < 0.65 then n = (n + v).Unit end end
+			local dist = (at - eye).Magnitude
+			local k = math.clamp(dist * 0.36, 2, 4.4) -- studs across the dial: about a third of the view high
+			anchor.Size = Vector3.new(k * 1.2, k * 1.44, 0.05)
+			local up = math.abs(n.Y) > 0.9 and cam.CFrame.UpVector or Vector3.yAxis
+			local pos = at + n * 0.12 + up * (k * 0.05)
+			anchor.CFrame = CFrame.lookAt(pos, pos + n, up)
 			dial.Position = UDim2.fromOffset(-4 * px, -4 * px) -- parked off screen: the needle still turns for the tests and the autopilot
 			for _, pr in mirror.pairs do
 				local a, c = pr[1], pr[2]
