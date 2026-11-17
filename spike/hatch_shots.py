@@ -3,7 +3,7 @@ Holds Shared.HatchScene at fixed moments with its freeze hook (Legendary: arrive
 import sys, time
 import night as N
 pre = sys.argv[1]; pet = sys.argv[2] if len(sys.argv) > 2 else "Fafnir"
-for f in (1.0, 3.5, 4.2, 4.52, 6.2):
+for f in (1.0, 3.5, 4.2, 4.6, 6.2):
     N.lua(f'''local p=game.Players.LocalPlayer p:SetAttribute("DevHatchFreeze",{f}) p:SetAttribute("DevHatch","") p:SetAttribute("DevHatch","{pet}") return "ok"''', "Client")
     time.sleep(f + 1.4)
     N.shot(f"{pre}_{f}")

@@ -22,7 +22,7 @@ def to_blender(x, y, z, s):  # voxel (x, y up, z forward) in studs -> Blender (x
     return (x * s, z * s, y * s)
 
 
-KEEP = {"Eye", "Shine"}  # the eyes stay their own painted parts: they blink by resizing
+KEEP = {"Eye", "Shine"} | set(filter(None, os.environ.get("VOXEL_KEEP", "").split(",")))  # the eyes stay their own painted parts (they blink by resizing); VOXEL_KEEP adds roles the game tints
 
 
 def hexlin(h):
@@ -68,7 +68,7 @@ def bake_parts(pet, stem):
     for part in parts:
         group = [o for o in objs if o.name.split("__")[0] == part and o.name.split("__")[1] not in KEEP]
         if not group: continue
-        size = 256 if part in ("Body", "Head") else 128
+        size = int(os.environ.get("VOXEL_TEX", 0)) or (256 if part in ("Body", "Head") else 128)
         img = bpy.data.images.new(f"{part}_bake", size, size)
         for o in group:
             role = o.name.split("__")[1]
@@ -140,7 +140,7 @@ for pet in pets:
     path = os.path.join(out, pet["name"].replace(" ", "") + ".glb")
     bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_apply=True, export_yup=True)
     report.append(f"{pet['name']}: {len(groups)} objects, {tris} triangles -> {path}")
-    assert tris < 5000, (pet["name"], tris)
+    assert tris < int(os.environ.get("VOXEL_TRI_LIMIT", 5000)), (pet["name"], tris)
     for o in bpy.context.scene.objects: o.select_set(False)
 
 print("\n".join(report))

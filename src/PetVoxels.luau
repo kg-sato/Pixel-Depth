@@ -38,6 +38,25 @@ function M.serverLoad()
 			end
 		end
 	end
+	-- the hatch grotto and egg meshes for Shared.HatchScene (design3d/hatch/out/ids.txt)
+	local art = RS:FindFirstChild("HatchArt") or Instance.new("Folder")
+	art.Name, art.Parent = "HatchArt", RS
+	for name, id in { HatchGrotto = 86530287643343, HatchEgg = 80247258733826 } do
+		if not art:FindFirstChild(name) then
+			local ok, got = pcall(function() return IS:LoadAsset(id) end)
+			if ok and got then
+				local m = got:FindFirstChildWhichIsA("Model") or got
+				m.Name = name
+				for _, p in m:GetDescendants() do
+					if p:IsA("BasePart") then p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow = true, false, false, false, false end
+				end
+				m.Parent = art
+				if got ~= m then got:Destroy() end
+			else
+				warn("PetVoxels: could not load", name, got)
+			end
+		end
+	end
 end
 
 -- client: a fresh, painted model for this pet, or nil while its meshes have not arrived
