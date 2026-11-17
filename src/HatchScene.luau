@@ -150,8 +150,7 @@ function M.play(opt)
 					table.insert(crystals, p)
 					table.insert(glows, { l = light(p, CYAN, 12, 0.9), base = CYAN })
 				elseif role == "Glow" then
-					p.Material, p.Color = Enum.Material.SmoothPlastic, Color3.fromRGB(170, 120, 255) -- Gemini m5: hot pink clashed; Neon read as flat cut-outs (stills m4); lit plastic keeps the voxel steps
-					table.insert(glows, { l = light(p, Color3.fromRGB(170, 120, 255), 8, 0.8), base = Color3.fromRGB(170, 120, 255) })
+					p.Material, p.Color = Enum.Material.SmoothPlastic, Color3.fromRGB(112, 86, 160) -- set dressing that stays back (Gemini m5/m12: bright caps clashed and stole focus); lit plastic keeps the voxel steps
 				end
 			end
 		end
@@ -218,11 +217,16 @@ function M.play(opt)
 	local core = part(egg, Vector3.new(0.2, 0.2, 0.2), CFrame.new(NEST + Vector3.new(0, 1.8, 0)), rc, { Transparency = 1 })
 	local coreL = light(core, rc, 0, 0)
 	local cracks = {}
-	for i = 1, 5 do -- cracks of light down the front of the shell, opening one by one
-		local a = (i - 3) * 0.42
+	local nCr = shell and 8 or 5 -- more seams on the mesh egg (Gemini m8: it read as a dull rock)
+	for i = 1, nCr do -- cracks of light down the front of the shell, opening one by one
+		local a = (i - (nCr + 1) / 2) * (shell and 0.3 or 0.42)
 		local y = 1.2 + (i % 3) * 0.55
-		local cr = shell and 1.36 or 1.25
-		local c = part(egg, shell and Vector3.new(0.15, 0.85, 0.15) or Vector3.new(0.09, 0.55, 0.09), CFrame.new(NEST + Vector3.new(math.sin(a) * cr, y, -math.cos(a) * cr)) * CFrame.Angles(0, -a, (i % 2 == 0 and 1 or -1) * 0.5), rc:Lerp(WHITE, 0.35), { Material = Enum.Material.Neon, Transparency = 1 })
+		local cr = 1.25
+		if shell then -- on the mesh's surface at this height (Gemini m11: seams standing off the shell read as floating sticks)
+			local yy = y / shellSize.Y * 2 - 0.92
+			cr = 1.33 * math.sqrt(math.max(0, 1 - (yy / (yy > 0 and 1.08 or 0.92)) ^ 2)) * (yy > 0 and 0.92 or 1) - 0.02
+		end
+		local c = part(egg, shell and Vector3.new(0.13, 0.75, 0.13) or Vector3.new(0.09, 0.55, 0.09), CFrame.new(NEST + Vector3.new(math.sin(a) * cr, y, -math.cos(a) * cr)) * CFrame.Angles(0, -a, (i % 2 == 0 and 1 or -1) * (shell and 0.35 or 0.5)), rc:Lerp(WHITE, 0.35), { Material = Enum.Material.Neon, Transparency = 1 })
 		cracks[i] = { p = c, rest = CFrame.new(NEST):ToObjectSpace(c.CFrame) }
 	end
 	egg.Parent = world
@@ -300,7 +304,11 @@ function M.play(opt)
 		end
 	end
 	Lighting.ClockTime, Lighting.Brightness, Lighting.ExposureCompensation = 0, 0.5, 0
-	Lighting.Ambient, Lighting.OutdoorAmbient = Color3.fromRGB(46, 30, 62), Color3.fromRGB(56, 36, 76)
+	local AMB, OAMB, DARK = Color3.fromRGB(46, 30, 62), Color3.fromRGB(56, 36, 76), Color3.fromRGB(10, 8, 30) -- dark stays cool violet
+	Lighting.Ambient, Lighting.OutdoorAmbient = AMB, OAMB
+	local dof = Instance.new("DepthOfFieldEffect") -- the cave falls out of focus behind the egg and the pet (Gemini m12: isolate the subject)
+	dof.Name, dof.FarIntensity, dof.NearIntensity, dof.InFocusRadius, dof.FocusDistance = "HatchDOF", 0, 0, 4, 9
+	dof.Parent = Lighting
 	if atmo then atmo.Density, atmo.Color, atmo.Decay, atmo.Haze = 0.42, Color3.fromRGB(40, 24, 56), Color3.fromRGB(24, 12, 34), 1.2 end
 
 	-- THE CLOCK --------------------------------------------------------------------------------------------------------
@@ -355,14 +363,19 @@ function M.play(opt)
 		if t >= A1 and t < A3 then
 			camPos = camPos:Lerp(NEST + Vector3.new(0.5, 2.7, -8.2), smooth(A1, A2, t)) -- the whole egg and its rings stay in frame (stills hs5: the egg was cut off at the top)
 			fov = 46 - ub * 8
-			if t >= A2 then fov = 38 - smooth(A2, A2 + 0.12, t) * 7 end -- a snap in on the hang (Gemini m5: the camera stayed on one flat shot)
+			if t >= A2 then fov = 38 - smooth(A2, A2 + 0.12, t) * 7 end
+			dof.FarIntensity = 0.45 * ub
+			local dim = smooth(A1, A2, t) * 0.85 + smooth(A2, A2 + 0.1, t) * 0.15 -- full black on the hang: the egg alone, a silhouette with its seams (Gemini m11) -- the cave sinks toward black as the egg wakes, so the egg carries the contrast (Gemini m8)
+			Lighting.Ambient, Lighting.OutdoorAmbient = AMB:Lerp(DARK, dim), OAMB:Lerp(DARK, dim)
+			for _, g in glows do g.l.Brightness = 1.6 * lit * (1 - dim) end -- the cave lights die down with it
+			keyL.Range, keyL.Color = 14 - dim * 7, Color3.fromRGB(255, 236, 214):Lerp(Color3.fromRGB(225, 235, 255), dim) -- the key closes in on the egg and cools -- a snap in on the hang (Gemini m5: the camera stayed on one flat shot)
 			-- the climb: one colour step per tier, spread over the build-up
 			local step = math.clamp(math.floor(ub * tier) + 1, 1, tier)
 			if step ~= climbStep then
 				climbStep, climbCol = step, ladder[step]
 				sfx("upgrade", 1.1 + step * 0.12)
 				for _, g in glows do
-					TweenService:Create(g.l, TweenInfo.new(0.25), { Color = g.base:Lerp(climbCol, 0.6), Brightness = (1.6 + step * 0.25) * lit }):Play()
+					TweenService:Create(g.l, TweenInfo.new(0.25), { Color = g.base:Lerp(climbCol, 0.3) }):Play()
 				end
 				for _, c in crystals do TweenService:Create(c, TweenInfo.new(0.3), { Color = c:GetAttribute("Base"):Lerp(climbCol:Lerp(INK, 0.4), 0.85) }):Play() end -- the crystals take the climbing colour too
 				shaft.Color = climbCol:Lerp(WHITE, 0.5)
@@ -386,12 +399,12 @@ function M.play(opt)
 			end
 			for i, c in cracks do
 				c.p.CFrame = wob * c.rest
-				c.p.Transparency = ub > (i - 0.5) / 6 and 0 or 1
+				c.p.Transparency = ub > (i - 0.5) / (#cracks + 1) and 0 or 1
 				c.p.Color = climbCol:Lerp(WHITE, 0.35)
 			end
-			coreL.Range, coreL.Brightness, coreL.Color = 4 + ub * 10, ub * 3, climbCol
+			coreL.Range, coreL.Brightness, coreL.Color = 4 + ub * 4, ub * 3, climbCol -- local: a range of 14 lit the whole cave gold (stills m10)
 			hl.OutlineTransparency = 1 - ub * 0.8
-			if shell then hl.FillColor, hl.FillTransparency = climbCol, 1 - ub * 0.45 end -- the shell itself takes the climbing colour (Gemini m5: the climb was only in the crystals)
+			if shell then hl.FillColor, hl.FillTransparency = climbCol:Lerp(WHITE, 0.3), 1 - ub * 0.3 end -- the shell itself takes the climbing colour (Gemini m5: the climb was only in the crystals)
 			for i, b in beads do -- two rings, tilted, speeding up
 				local ring = i <= 7 and 1 or -1
 				local a = (i % 7) / 7 * math.pi * 2 + (t - A1) * (1.5 + 9 * ub ^ 2) * ring
@@ -453,7 +466,7 @@ function M.play(opt)
 			hl.Enabled = false
 			shock = part(world, Vector3.new(0.12, 1, 1), CFrame.new(NEST + Vector3.new(0, 0.15, 0)) * CFrame.Angles(0, 0, math.pi / 2), rc:Lerp(WHITE, 0.3), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Neon, Transparency = 0.2 })
 			for _, g in glows do -- the grotto floods with the rarity colour
-				TweenService:Create(g.l, TweenInfo.new(0.3), { Color = rc, Brightness = (1.3 + k * 0.6) * lit, Range = 18 }):Play() -- was 2.6 + k * 1.4: a gold flood washed the pet out (stills hs5)
+				TweenService:Create(g.l, TweenInfo.new(0.3), { Color = g.base:Lerp(rc, 0.4), Brightness = (1.0 + k * 0.4) * lit, Range = 18 }):Play() -- was 2.6 + k * 1.4: a gold flood washed the pet out (stills hs5)
 			end
 			keyL.Color, keyL.Brightness = rc:Lerp(WHITE, 0.6), 2
 			shaft.Color, shaft.Transparency = rc:Lerp(WHITE, 0.4), 0.88
@@ -466,7 +479,7 @@ function M.play(opt)
 				pet:ScaleTo(0.2)
 			end
 			petT = t
-			light(part(world, Vector3.new(0.2, 0.2, 0.2), CFrame.new(NEST + Vector3.new(0, 2.4, 2.2)), WHITE, { Transparency = 1 }), rc:Lerp(WHITE, 0.5), 7, 2.2) -- a rim light behind the pet
+			light(part(world, Vector3.new(0.2, 0.2, 0.2), CFrame.new(NEST + Vector3.new(0, 2.4, 2.2)), WHITE, { Transparency = 1 }), CYAN:Lerp(WHITE, 0.3), 8, 3) -- a cool rim light behind the pet against the warm burst (Gemini m11)
 			shake = opt.calm and 0 or 0.35
 			rays = Instance.new("Model")
 			rays.Parent = world
@@ -503,15 +516,17 @@ function M.play(opt)
 			pet:PivotTo(CFrame.new(NEST + Vector3.new(0, 0.92 * s * 1.15 + hop + 0.6 * u + math.sin((t - petT) * 2.2) * 0.12 * u, -0.4 * (1 - u))) * CFrame.Angles(0, turn, 0)) -- it floats clear of the nest rim (Gemini m5: the limbs blended into the nest)
 			if opt.animate then opt.animate(pet, now, dt, false) end
 			local ru = smooth(A3, A3 + 0.9, t)
-			camPos = (NEST + Vector3.new(0.5, 2.7, -8.2)):Lerp(NEST + Vector3.new(-0.6, 3.2, -12.5) + Vector3.new(math.sin((t - A3) * 0.35) * 1.2, 0, 0), ru)
-			look = NEST + Vector3.new(0, 2.5, 0) -- the pet sits low in frame, under its name (stills m6: the floating pet's head was behind the card)
-			fov = 54 - ru * 12 -- a wide pop on the burst that settles in
+			camPos = (NEST + Vector3.new(0.5, 2.7, -8.2)):Lerp(NEST + Vector3.new(-0.6, 2.9, -10.8) + Vector3.new(math.sin((t - A3) * 0.35) * 1.2, 0, 0), ru)
+			look = NEST + Vector3.new(0, 2.75, 0) -- the pet sits low in frame, under its name (stills m6: the floating pet's head was behind the card)
+			fov = 54 - ru * 14
+			dof.FarIntensity, dof.FocusDistance = 0.5, 10.8
+			Lighting.Ambient, Lighting.OutdoorAmbient = DARK:Lerp(AMB, 0.15 + ru * 0.35), DARK:Lerp(OAMB, 0.15 + ru * 0.35) -- the cave comes back only half way -- a wide pop on the burst that settles in
 		end
 		if rays then -- the blades turn slowly in a plane behind the pet, facing the camera
 			local spinA = (t - A3) * 0.35
 			for _, b in rays:GetChildren() do
 				local i = tonumber(b.Name)
-				b.CFrame = CFrame.new(NEST + Vector3.new(0, 1.6, 5)) * CFrame.Angles(0, 0, spinA + i / 12 * math.pi * 2) * CFrame.new(0, 6.2, 0)
+				b.CFrame = CFrame.new(NEST + Vector3.new(0, 2.6, 7)) * CFrame.Angles(0, 0, spinA + i / 12 * math.pi * 2) * CFrame.new(0, 6.2, 0)
 			end
 		end
 		once("name", A3 + 0.35, function()
@@ -596,6 +611,7 @@ function M.play(opt)
 	for _, g in hidden do if g.Parent then g.Enabled = true end end
 	for kk, v in camSaved do pcall(function() cam[kk] = v end) end
 	world:Destroy()
+	if dof then dof:Destroy() end
 	TweenService:Create(veil, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 }):Play()
 	task.delay(0.4, function() gui:Destroy() end)
 end

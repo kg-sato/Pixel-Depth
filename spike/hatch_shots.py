@@ -7,5 +7,5 @@ for f in (1.0, 3.5, 4.2, 4.6, 6.2):
     N.lua(f'''local p=game.Players.LocalPlayer p:SetAttribute("DevHatchFreeze",{f}) p:SetAttribute("DevHatch","") p:SetAttribute("DevHatch","{pet}") return "ok"''', "Client")
     time.sleep(f + 1.4)
     N.shot(f"{pre}_{f}")
-    time.sleep(2.6)
+    time.sleep(4)
 print("done")
