@@ -169,8 +169,8 @@ function M.start(E)
 		toEye = toEye.Magnitude > 0.1 and toEye.Unit or Vector3.xAxis
 		for _ = 1, n do
 			local s = 0.18 + math.random() * 0.22
-			local p = Instance.new("Part")
-			p.Size, p.Color, p.Material = Vector3.one * s, col:Lerp(Color3.fromRGB(60, 44, 70), math.random() * 0.5), Enum.Material.Rock
+			local p = Instance.new("WedgePart") -- a broken wedge of rock, not a cube (Gemini n17_r4: "cardboard boxes")
+			p.Size, p.Color, p.Material = Vector3.new(s, s * 0.7, s * 1.3), col:Lerp(Color3.fromRGB(60, 44, 70), math.random() * 0.5), Enum.Material.Slate
 			p.CanQuery, p.CanTouch, p.CastShadow, p.Massless = false, false, false, true
 			p.CFrame = CFrame.new(core.Position + toEye * 1.2 + Vector3.new(math.random() - 0.5, math.random(), math.random() - 0.5)) * CFrame.Angles(math.random() * 6, math.random() * 6, 0)
 			p.Parent = fx

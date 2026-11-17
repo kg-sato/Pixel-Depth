@@ -22,7 +22,7 @@ local MIX = {
 	chasm = { crystal = 4, roots = 2, rubble = 1 },
 }
 M.MIX = MIX
-M.CHANCE = 0.65 -- of a floor slab getting a prop (when it has a wall near one edge)
+M.CHANCE = 0.85 -- of a floor slab getting a prop (when it has a wall near one edge)
 M.KEEP_OUT = 11 -- studs from deposits, shrines, nests, gates and the camp
 M.MAX_LIGHTS = 24
 -- low-poly meshes (design3d/cave_props.py, ids in design3d/out/props/ids.txt; Gemini n17_r1: the block-built props read as
@@ -264,7 +264,7 @@ function M.build(caves)
 					if hit and (not wallDist or hit.Distance < wallDist) then wallDir, wallDist = d, hit.Distance end
 				end
 				local near = false
-				for _, q in placed do if (q - spot).Magnitude < 9 then near = true break end end
+				for _, q in placed do if (q - spot).Magnitude < 7 then near = true break end end -- 7 studs apart (Gemini n17_r4: the floor round each prop still bare)
 				if wallDir and not near and clear(spot) then
 					local kind = M.pick(mix, rng:NextNumber())
 					local at = spot + wallDir * math.max(wallDist - 2.4, 0) -- against the wall, not in the passage
