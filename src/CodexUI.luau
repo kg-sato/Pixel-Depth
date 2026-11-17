@@ -37,6 +37,9 @@ function M.start(E)
 		E.new("UICorner", gem, { CornerRadius = UDim.new(0.16, 0) })
 		E.new("UIStroke", gem, { Color = Color3.new(1, 1, 1), Thickness = 1.5, Transparency = 0.35 })
 		E.new("UIGradient", gem, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(150, 150, 170)) })
+		local sh = E.new("Frame", f, { Name = "DomeShine", Size = UDim2.fromScale(0.8, 0.3), Position = UDim2.fromScale(0.5, 0.06), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = WHITE, BorderSizePixel = 0, ZIndex = 7, ClipsDescendants = true }) -- the jelly dome shine (directive v10 re-run)
+		E.new("UICorner", sh, { CornerRadius = UDim.new(0.5, 0) })
+		E.new("UIGradient", sh, { Rotation = 90, Transparency = NumberSequence.new(0.6, 1) })
 		local name = E.text(f, "", UDim2.fromScale(0.94, 0.26), UDim2.fromScale(0.5, 0.84), MID, WHITE, 600, false)
 		name.ZIndex = 6
 		table.insert(cells, { f = f, mark = mark, name = name, kind = kind, key = key, color = color, label = label, gem = gem })
@@ -68,7 +71,11 @@ function M.start(E)
 			local got = found[c.kind] and found[c.kind][c.key] == true
 			if got then have += 1 end
 			c.f.BackgroundColor3 = got and Color3.fromRGB(52, 26, 82) or DARK
-			c.gem.Visible = got
+			if got and c.kind == "ore" and not c.icon then -- a found ore is a live 3D voxel ore, not a flat diamond (Gemini v10n_r11: "flat 2D diamond vectors")
+				c.icon = require(script.Parent:WaitForChild("OreIcon")).make(c.f, { Size = UDim2.fromScale(0.78, 0.78), Position = UDim2.fromScale(0.5, 0.42), AnchorPoint = MID, ZIndex = 6 })
+			end
+			if c.icon then c.icon.set(c.color) end
+			c.gem.Visible = got and not c.icon
 			c.mark.Visible = not got
 			c.name.Text = "" -- names are read by pointing at a cell (they were tiny inside it)
 			c.got = got
@@ -88,7 +95,7 @@ function M.start(E)
 	end)
 	paint()
 	local function toggle()
-		if win.Visible then E.closePanel(win) else E.openPanel(win) end
+		if win.Visible then E.closePanel(win) else E.openPanel(win) task.defer(paint) end -- paint again once shown: the 3D ores only turn while their cell is on screen
 	end
 	close.Activated:Connect(function() E.closePanel(win) end)
 	local btn = E.button(E.gui, "CODEX", E.S(76, 76), E.S(20, 400), nil, "lilac", "map", true)
