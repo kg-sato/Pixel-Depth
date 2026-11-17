@@ -139,7 +139,8 @@ function M.start(E)
 		new("UIAspectRatioConstraint", lock, { AspectRatio = 1 })
 		lock.ZIndex = 8
 		local sc = scaler(b)
-		cards[i] = { lip = lip, btn = b, rim = rim, glow = glow, name = nm, art = art, lvBox = lvBox, lv = lv, ok = ok, eq = eq, price = price, priceT = pt, lock = lock, sc = sc }
+		local card3d = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("ModelCard")).attach(art, b, { roll = -28, z = 5 }) -- the pickaxe as a live 3D model that lifts and tilts on hover (2026-11-17)
+		cards[i] = { card3d = card3d, lip = lip, btn = b, rim = rim, glow = glow, name = nm, art = art, lvBox = lvBox, lv = lv, ok = ok, eq = eq, price = price, priceT = pt, lock = lock, sc = sc }
 		b.MouseEnter:Connect(function() if not glow.Visible then tween(sc, 0.12, { Scale = 1.04 }) end end)
 		b.MouseLeave:Connect(function() if not glow.Visible then tween(sc, 0.15, { Scale = 1 }) end end)
 		b.MouseButton1Down:Connect(function() tween(sc, 0.07, { Scale = 0.94 }) if sfxClick then sfxClick() end end)
@@ -300,6 +301,7 @@ function M.start(E)
 	local function val(i, lv) return string.format("x%.1f", C.pickValue(i, lv)) end
 	local function zone(lv) return math.floor(C.strikeArc(lv) + 0.5) .. "°" end
 
+	local bigCard, bigKey = nil, nil
 	local function detail(i, animate)
 		local list = tab == "pick" and C.PICKS or (tab == "charm" and C.CHARMS) or C.PACKS
 		local def = list[i]
@@ -308,6 +310,16 @@ function M.start(E)
 		local fill, rim = tones(r[3])
 		glows[1].ImageColor3, glows[2].ImageColor3, rays.ImageColor3 = r[3]:Lerp(WHITE, 0.35), r[3]:Lerp(WHITE, 0.75), r[3]:Lerp(WHITE, 0.55)
 		big.Image = tab == "pick" and PICK_ART[i] or (tab == "charm" and ICON.star) or ICON.bag
+		do -- the big detail art as a live 3D pickaxe too
+			bigCard = bigCard or require(game:GetService("ReplicatedStorage").Shared:WaitForChild("ModelCard")).attach(big, big.Parent, { roll = -28, z = 4 })
+			local lib = game:GetService("ReplicatedStorage"):FindFirstChild("PickaxeArt")
+			local src = tab == "pick" and lib and def.model and lib:FindFirstChild(def.model)
+			if bigKey ~= (src and def.model or "") then
+				bigKey = src and def.model or ""
+				bigCard.set(src and src:Clone() or nil, r[3])
+			end
+			big.ImageTransparency = src and 1 or 0
+		end
 		dName.Text = def.name
 		rar.BackgroundColor3, rarT.Text = rim, r[1]:upper()
 		local cur = tab == "charm" and 0 or getState()[tab]
@@ -411,6 +423,16 @@ function M.start(E)
 				if tab == "charm" then own, nxt = has[def.id] == true, has[def.id] ~= true end -- charms are not a ladder: each is bought on its own
 				cd.art.ImageColor3 = (own or nxt) and WHITE or rim:Lerp(WHITE, 0.25)
 				cd.art.ImageTransparency = (own or nxt) and 0 or 0.35
+				do -- a live 3D pickaxe when its model is in ReplicatedStorage.PickaxeArt; the flat render stays for the rest
+					local lib = game:GetService("ReplicatedStorage"):FindFirstChild("PickaxeArt")
+					local src = tab == "pick" and lib and def.model and lib:FindFirstChild(def.model)
+					local key = src and (def.model .. tostring(own or nxt)) or ""
+					if cd.card3dKey ~= key then
+						cd.card3dKey = key
+						cd.card3d.set(src and src:Clone() or nil, rim, not (own or nxt))
+					end
+					if src then cd.art.ImageTransparency = 1 end
+				end
 				cd.lvBox.Visible = own
 				cd.lv.Text = tab == "pick" and ("LV " .. lvOf(i)) or (tab == "charm" and "OWNED") or (def.cap .. " ORE")
 				cd.ok.Visible = own and not (tab == "pick" and i == eqI)

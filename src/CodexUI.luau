@@ -75,7 +75,15 @@ function M.start(E)
 				c.icon = require(script.Parent:WaitForChild("OreIcon")).make(c.f, { Size = UDim2.fromScale(0.78, 0.78), Position = UDim2.fromScale(0.5, 0.42), AnchorPoint = MID, ZIndex = 6 })
 			end
 			if c.icon then c.icon.set(c.color) end
-			c.gem.Visible = got and not c.icon
+			if got and c.kind == "pet" and not c.card then -- a hatched pet stands in its cell as its live voxel model (2026-11-17)
+				local PV = require(script.Parent:WaitForChild("PetVoxels"))
+				local m = PV.build(c.key)
+				if m then
+					c.card = require(script.Parent:WaitForChild("ModelCard")).attach(c.f, c.f, { z = 6, animate = PV.animate })
+					c.card.set(m, c.color)
+				end
+			end
+			c.gem.Visible = got and not c.icon and not c.card
 			c.mark.Visible = not got
 			c.name.Text = "" -- names are read by pointing at a cell (they were tiny inside it)
 			c.got = got

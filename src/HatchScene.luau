@@ -92,11 +92,14 @@ function M.play(opt)
 		end
 	end
 	local glows = {} -- every light that floods with the rarity colour on the burst
+	local crystals = {} -- the crystal parts, tinted as the rarity climbs
 	local function crystal(at, n, h, col)
 		for i = 1, n do
 			local tilt = CFrame.Angles(rnd:NextNumber(-0.45, 0.45), rnd:NextNumber(0, 6.28), rnd:NextNumber(-0.45, 0.45))
 			local hh = h * rnd:NextNumber(0.55, 1)
 			local c = part(world, Vector3.new(0.5, hh, 0.5), CFrame.new(at) * tilt * CFrame.new(0, hh / 2, 0), col, { Material = Enum.Material.Neon, Transparency = 0.15 })
+			c:SetAttribute("Base", col)
+			table.insert(crystals, c)
 			part(world, Vector3.new(0.36, 0.5, 0.36), c.CFrame * CFrame.new(0, hh / 2 + 0.2, 0) * CFrame.Angles(0, math.rad(45), 0), col:Lerp(WHITE, 0.4), { Material = Enum.Material.Neon })
 		end
 		local holder = part(world, Vector3.new(0.2, 0.2, 0.2), CFrame.new(at + Vector3.new(0, h * 0.6, 0)), col, { Transparency = 1 })
@@ -120,6 +123,11 @@ function M.play(opt)
 		part(world, Vector3.new(s, 0.7, s), CFrame.new(O + Vector3.new(0, 0.1 + i * 0.6, 0)) * CFrame.Angles(0, i * 0.4, 0), ROCK[i + 1]:Lerp(WHITE, 0.08))
 	end
 	local NEST = O + Vector3.new(0, 2.25, 0) -- the egg's foot
+	local runes = {} -- a ring of rune stones round the pedestal top that light up as the egg wakes (Gemini n17_hatch: the nest read as plain wood)
+	for i = 0, 11 do
+		local a = i / 12 * math.pi * 2
+		table.insert(runes, part(world, Vector3.new(0.5, 0.12, 0.22), CFrame.new(O + Vector3.new(math.cos(a) * 1.9, 2.0, math.sin(a) * 1.9)) * CFrame.Angles(0, -a, 0), Color3.fromRGB(70, 50, 96), { Material = Enum.Material.Neon }))
+	end
 	for a = 0, 359, 20 do
 		local t = math.rad(a)
 		for y = 0, 1 do
@@ -215,7 +223,7 @@ function M.play(opt)
 	local flash = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, ZIndex = 8 })
 	local caption = label("SOMETHING STIRS IN THE NEST...", UDim2.fromScale(0.6, 0.045), UDim2.fromScale(0.5, 0.95), Color3.fromRGB(236, 224, 255), 6)
 	caption.TextTransparency, caption.UIStroke.Transparency = 1, 1
-	local nameL, nameS = label(string.upper(opt.name), UDim2.fromScale(0.62, 0.11), UDim2.fromScale(0.5, 0.17), WHITE, 7, rc:Lerp(INK, 0.45))
+	local nameL, nameS = label(string.upper(opt.name), UDim2.fromScale(0.62, 0.11), UDim2.fromScale(0.5, 0.165), WHITE, 7, rc:Lerp(INK, 0.45))
 	nameL.UIStroke.Thickness = 5
 	local nameGrad = Instance.new("UIGradient")
 	nameGrad.Color, nameGrad.Rotation = ColorSequence.new(WHITE, rc:Lerp(WHITE, 0.35)), 90
@@ -259,7 +267,7 @@ function M.play(opt)
 	local t, last, fired = 0, os.clock(), {}
 	local done, closing, closeAt = false, false, nil
 	local pet, petT = nil, nil
-	local shards, shock = {}, nil
+	local shards, shock, rays = {}, nil, nil
 	local climbStep, climbCol = 1, ladder[1]
 	local shake = 0
 	local function once(key, at, fn)
@@ -309,7 +317,9 @@ function M.play(opt)
 				for _, g in glows do
 					TweenService:Create(g.l, TweenInfo.new(0.25), { Color = g.base:Lerp(climbCol, 0.6), Brightness = 1.6 + step * 0.25 }):Play()
 				end
+				for _, c in crystals do TweenService:Create(c, TweenInfo.new(0.3), { Color = c:GetAttribute("Base"):Lerp(climbCol, 0.55) }):Play() end -- the crystals take the climbing colour too
 				shaft.Color = climbCol:Lerp(WHITE, 0.5)
+				for i, r in runes do r.Color = i <= math.ceil(12 * step / tier) and climbCol or Color3.fromRGB(70, 50, 96) end
 				hl.OutlineColor = climbCol
 			end
 			shake = opt.calm and 0 or ub ^ 3 * (0.08 + k * 0.08)
@@ -341,7 +351,7 @@ function M.play(opt)
 			end
 			if hang then
 				coreL.Brightness = 3 + math.sin(t * 40) * 1.5
-				shake = 0
+				shake = opt.calm and 0 or 0.05 -- a fine tremble under the pressure (Gemini n17_hatch: the hang had no strain)
 			end
 		end
 		once("tick", A1, function()
@@ -364,12 +374,14 @@ function M.play(opt)
 		once("burst", A3, function()
 			sfx("claim", 1.0 + k * 0.2)
 			sfx("sparkle", 1.2)
-			flash.BackgroundTransparency = 0
-			TweenService:Create(flash, TweenInfo.new(0.35 + k * 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 }):Play()
+			flash.BackgroundTransparency = 0 -- faded by the clock below, so a held still shows it
 			for _, c in cells do -- the shell flies apart
 				local out = (c.rest.Position * Vector3.new(1, 0.5, 1)).Unit
 				if out ~= out then out = Vector3.yAxis end
-				table.insert(shards, { p = c.p, v = out * rnd:NextNumber(6, 13) + Vector3.new(0, rnd:NextNumber(4, 9), 0), spin = Vector3.new(rnd:NextNumber(-8, 8), rnd:NextNumber(-8, 8), rnd:NextNumber(-8, 8)) })
+				local toCam = Vector3.new(0, 0, -1) * rnd:NextNumber(0, 6) -- some shrapnel flies at the lens (Gemini n17_hatch: "voxel shrapnel bursting toward the camera")
+				c.p.Size = c.p.Size * 1.6
+				c.p.Color = c.p.Color:Lerp(rc, 0.25)
+				table.insert(shards, { p = c.p, v = out * rnd:NextNumber(7, 15) + toCam + Vector3.new(0, rnd:NextNumber(4, 10), 0), spin = Vector3.new(rnd:NextNumber(-8, 8), rnd:NextNumber(-8, 8), rnd:NextNumber(-8, 8)) })
 			end
 			for _, c in cracks do c.p.Transparency = 1 end
 			for _, b in beads do b.Transparency = 1 end
@@ -390,10 +402,18 @@ function M.play(opt)
 			end
 			petT = t
 			shake = opt.calm and 0 or 0.35
+			rays = Instance.new("Model")
+			rays.Parent = world
+			for i = 1, 12 do -- a slow sunburst of light blades behind the pet (Gemini n17_hatch: "a rotating radial sunburst behind the pet")
+				part(rays, Vector3.new(i % 2 == 0 and 0.3 or 0.16, 11, 0.05), CFrame.new(), i % 2 == 0 and rc or rc:Lerp(WHITE, 0.6), { Material = Enum.Material.Neon, Transparency = i % 2 == 0 and 0.8 or 0.86 }).Name = tostring(i) -- faint and far behind: brighter blades bloomed over the pet (stills hs8)
+			end
 		end)
+		if t >= A3 then flash.BackgroundTransparency = smooth(A3, A3 + 0.35 + k * 0.25, t) end
+		local sdt = opt.freeze and t >= opt.freeze and 0 or dt -- held stills freeze the shrapnel too
 		if #shards > 0 then
 			for i = #shards, 1, -1 do
 				local s = shards[i]
+				local dt = sdt
 				s.v += Vector3.new(0, -30, 0) * dt
 				s.p.CFrame = (s.p.CFrame + s.v * dt) * CFrame.Angles(s.spin.X * dt, s.spin.Y * dt, s.spin.Z * dt)
 				s.p.Size = s.p.Size * (1 - dt * 0.6)
@@ -421,16 +441,64 @@ function M.play(opt)
 			look = NEST + Vector3.new(0, 1.15, 0) -- the pet sits low in frame, under its name
 			fov = 38 + ru * 4
 		end
+		if rays then -- the blades turn slowly in a plane behind the pet, facing the camera
+			local spinA = (t - A3) * 0.35
+			for _, b in rays:GetChildren() do
+				local i = tonumber(b.Name)
+				b.CFrame = CFrame.new(NEST + Vector3.new(0, 1.6, 5)) * CFrame.Angles(0, 0, spinA + i / 12 * math.pi * 2) * CFrame.new(0, 6.2, 0)
+			end
+		end
 		once("name", A3 + 0.35, function()
+			-- the plate: a dot of light that opens into a jelly-glass pill behind the name (Oly's circle-to-pill morph)
+			local plate = frame({ Size = UDim2.fromScale(0.05, 0.08), Position = UDim2.fromScale(0.5, 0.2), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 10, 34), BackgroundTransparency = 0.18, ZIndex = 6 })
+			local pc = Instance.new("UICorner")
+			pc.CornerRadius = UDim.new(0.5, 0)
+			pc.Parent = plate
+			local ps = Instance.new("UIStroke")
+			ps.Color, ps.Thickness, ps.Transparency = rc, 3, 0
+			ps.Parent = plate
+			local pg2 = Instance.new("UIGradient")
+			pg2.Rotation, pg2.Transparency = 90, NumberSequence.new(0, 0.35)
+			pg2.Parent = plate
+			TweenService:Create(plate, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Size = UDim2.fromScale(0.64, 0.2) }):Play()
 			nameL.TextTransparency, nameL.UIStroke.Transparency = 0, 0
 			nameS.Scale = 2.4
 			TweenService:Create(nameS, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+			for i = 1, 2 do -- rack focus (after @creatoroly's clean motion): two soft, larger ghosts of the name shrink into it and fade, so it lands out of focus and sharpens
+				local gh = nameL:Clone()
+				gh.ZIndex = 6
+				gh.TextTransparency, gh.UIStroke.Transparency = 0.55, 1
+				gh.Parent = gui
+				gh.UIScale.Scale = 2.4 + i * 0.25
+				TweenService:Create(gh.UIScale, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Scale = 1.04 + i * 0.03 }):Play()
+				TweenService:Create(gh, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { TextTransparency = 1 }):Play()
+				task.delay(0.55, function() gh:Destroy() end)
+			end
 			sfx("hit", 0.6)
 		end)
 		once("sub", A3 + 0.75, function()
-			subL.TextTransparency, subL.UIStroke.Transparency = 0, 0.1
-			subS.Scale = 0.6
-			TweenService:Create(subS, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+			-- word by word, the rarity word in its colour (Oly's reveals: one keyword lit, the rest calm)
+			local row = frame({ Size = UDim2.fromScale(0.8, 0.05), Position = UDim2.fromScale(0.5, 0.26), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 7 })
+			local lay = Instance.new("UIListLayout")
+			lay.FillDirection, lay.HorizontalAlignment, lay.VerticalAlignment, lay.Padding = Enum.FillDirection.Horizontal, Enum.HorizontalAlignment.Center, Enum.VerticalAlignment.Center, UDim.new(0, 10)
+			lay.Parent = row
+			local px = math.max(14, math.floor(gui.AbsoluteSize.Y * 0.032))
+			local words = { string.upper(opt.rarity or "") }
+			for w in string.gmatch(string.upper(opt.role or ""), "%S+") do table.insert(words, w) end
+			if (opt.odds or "") ~= "" then table.insert(words, "·") for w in string.gmatch(opt.odds, "%S+") do table.insert(words, w) end end
+			for i, w in words do
+				local l = Instance.new("TextLabel")
+				l.BackgroundTransparency, l.Font, l.TextSize, l.Text, l.AutomaticSize, l.Size = 1, Enum.Font.FredokaOne, px, w, Enum.AutomaticSize.XY, UDim2.new()
+				l.TextColor3, l.TextTransparency, l.LayoutOrder, l.ZIndex = i == 1 and rc:Lerp(WHITE, 0.15) or Color3.fromRGB(232, 222, 250), 1, i, 7
+				local st = Instance.new("UIStroke")
+				st.Color, st.Thickness, st.Transparency = INK, 2.5, 1
+				st.Parent = l
+				l.Parent = row
+				task.delay(0.07 * i, function()
+					TweenService:Create(l, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { TextTransparency = 0 }):Play()
+					TweenService:Create(st, TweenInfo.new(0.25), { Transparency = 0.1 }):Play()
+				end)
+			end
 			sfx("sparkle", 1.5)
 			if tier >= 3 then -- confetti cubes in the rarity colours, falling through the light
 				for i = 1, 12 + tier * 6 do

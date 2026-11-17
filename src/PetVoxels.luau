@@ -84,7 +84,7 @@ function M.build(name)
 	for _, g in rig.pieces do
 		if g.role == "Accent" and g.part == "Body" and not rig.light then -- the signature glow lights the pet's feet a little
 			local l = Instance.new("PointLight")
-			l.Color, l.Range, l.Brightness = d.palette.Accent, 6, 0.8
+			l.Color, l.Range, l.Brightness = d.palette.Accent, 4, 0.35 -- soft: brighter lights washed out faces and white coats (Gemini n17_hatch)
 			l.Parent = g.p
 			rig.light = l
 		end
