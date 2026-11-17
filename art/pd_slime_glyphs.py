@@ -162,6 +162,7 @@ NOISE = bpy.data.textures.new("lumps", "CLOUDS"); NOISE.noise_scale = 0.3
 
 
 RAW = False
+DRIPS = []  # the drips of the last letter built: (x, y of the bulb's foot), letter space
 
 
 def slime(ch):
@@ -199,6 +200,7 @@ def slime(ch):
             L = h * rnd.uniform(0.16, 0.3)  # short: the cell has to hold them
             r = (0.07 if BIG else 0.058) * rnd.uniform(0.85, 1.15)  # a fat drop at the end, like the reference
             bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=10, radius=r, matrix=mathutils.Matrix.Translation((x, y - L, 0.04)))
+            DRIPS.append((x, y - L - r))
             neck = bmesh.ops.create_cone(bm, cap_ends=True, segments=12, radius1=r * 0.5, radius2=r * 0.85, depth=L + r, matrix=mathutils.Matrix.Translation((x, y - L / 2 + r * 0.2, 0.04)) @ mathutils.Matrix.Rotation(math.radians(90), 4, "X"))
     bm.to_mesh(me); bm.free()
     if RAW: return me
@@ -248,18 +250,22 @@ if CHARS.startswith("WORD:"):  # one fused wordmark: the letters set tight so th
     word = CHARS[5:]
     RAW = True
     meshes, xs, x = [], [], 0.0
+    alldrips = []
     for ch in word:
+        DRIPS.clear()
         me = slime(ch)
         jr = random.Random(ord(ch) * 13 + len(meshes))  # each letter a little bigger or smaller, higher or lower, tipped: hand-poured, not typeset
         k, dy, rot = jr.uniform(0.92, 1.1), jr.uniform(-0.05, 0.05), math.radians(jr.uniform(-5, 5))
         for v in me.vertices:
             x0, y0 = v.co.x * k, v.co.y * k
             v.co.x, v.co.y, v.co.z = x0 * math.cos(rot) - y0 * math.sin(rot), x0 * math.sin(rot) + y0 * math.cos(rot) + dy, v.co.z * k
+        drips = [(dx * k * math.cos(rot) - dy0 * k * math.sin(rot), dx * k * math.sin(rot) + dy0 * k * math.cos(rot) + dy) for dx, dy0 in DRIPS]
         lo = min(v.co.x for v in me.vertices); hi = max(v.co.x for v in me.vertices)
         if meshes: x += -lo - 0.035  # a little overlap: neighbouring letters fuse where they touch
         else: x = -lo
         for v in me.vertices: v.co.x += x
         xs.append((x + lo, x + hi))
+        alldrips.extend((x + a, b) for a, b in drips)
         x += hi
         meshes.append(me)
     bm = bmesh.new()
@@ -280,7 +286,10 @@ if CHARS.startswith("WORD:"):  # one fused wordmark: the letters set tight so th
     bpy.ops.render.render(write_still=True)
     px = sc.render.resolution_x / (width + margin * 2)
     cols = [((a - xs[0][0] - width / 2 + width / 2 + margin) * px, (b - xs[0][0] + margin) * px) for a, b in xs]
-    json.dump({"word": word, "w": sc.render.resolution_x, "h": sc.render.resolution_y, "letters": cols}, open(os.path.join(os.path.abspath(out), word + ".json"), "w"))
+    # drip feet in picture pixels: the camera looks at y = 0 from y = -0.42 below, at the picture's middle
+    cy = sc.render.resolution_y / 2
+    dpx = [((a - xs[0][0] + margin) * px, cy - (b + 0.06 * 0) * px) for a, b in alldrips]
+    json.dump({"word": word, "w": sc.render.resolution_x, "h": sc.render.resolution_y, "letters": cols, "drips": dpx}, open(os.path.join(os.path.abspath(out), word + ".json"), "w"))
     print("word", word, sc.render.resolution_x, sc.render.resolution_y)
     CHARS = ""
 

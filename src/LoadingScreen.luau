@@ -87,7 +87,10 @@ function M.start(E)
 			for c = 1, #wd.cuts - 1 do
 				k += 1
 				local a, b = wd.cuts[c], wd.cuts[c + 1]
-				lay[k] = { x = (x0 + (a + b) / 2 / wd.h * H) / total, w = (b - a) / wd.h * H / total, image = wd.image, hot = wd.hot, rect = Vector2.new(a, 0), size = Vector2.new(b - a, wd.h) }
+				lay[k] = { x = (x0 + (a + b) / 2 / wd.h * H) / total, w = (b - a) / wd.h * H / total, image = wd.image, hot = wd.hot, rect = Vector2.new(a, 0), size = Vector2.new(b - a, wd.h), drips = {} }
+				for _, d in wd.drips or {} do -- this column's drip tips, as shares of the column
+					if d[1] >= a and d[1] < b then table.insert(lay[k].drips, { (d[1] - a) / (b - a), d[2] / wd.h }) end
+				end
 			end
 			x0 += units[j] + gapU
 		end
@@ -143,7 +146,7 @@ function M.start(E)
 			new("UIGradient", face, { Rotation = 90, Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)), ColorSequenceKeypoint.new(0.55, Color3.new(1, 1, 1)), ColorSequenceKeypoint.new(1, LAV) }) })
 			new("UIStroke", face, { Color = Color3.fromRGB(60, 8, 110), Thickness = 1.5 })
 			end
-			table.insert(letters, { box = box, sc = sc, halo = halo, cell = cell, jelly = box:FindFirstChild("Jelly") })
+			table.insert(letters, { box = box, sc = sc, halo = halo, cell = cell, jelly = box:FindFirstChild("Jelly"), drips = L and L.drips })
 		end
 	end
 
@@ -264,7 +267,7 @@ function M.start(E)
 		end
 		ready = true
 	end)
-	local slammed, waveAt = false, nil
+	local slammed, waveAt, dropAt = false, nil, nil
 	-- sound: a soft pop for each letter, a step higher each time, and a thud with a sparkle when the word shakes (the game's
 	-- own "pop", "land" and "sparkle" sounds; not heard by Claude). Config.LOADING.sound = false turns it off.
 	local function play(id, vol, pitch)
@@ -405,6 +408,26 @@ function M.start(E)
 				end
 			end
 			waveAt = now + 2.4 + math.random() * 1.6
+		end
+		if slammed and now > (dropAt or 0) then -- living slime: now and then a drop swells at a drip's tip, stretches, lets go and falls
+			if dropAt then
+				local pick = {}
+				for _, l in letters do if l.drips and #l.drips > 0 and l.jelly then table.insert(pick, l) end end
+				local l = pick[math.random(1, math.max(#pick, 1))]
+				local d = l and l.drips[math.random(1, #l.drips)]
+				local G = d and E.C.JELLY and E.C.JELLY.pink and require(script.Parent:WaitForChild("JellyGlyphs"))
+				local g = G and G.glyphs["."]
+				if g then
+					local drop = new("ImageLabel", l.jelly, { Name = "Drop", Image = E.C.JELLY.pink, ImageRectOffset = Vector2.new((g[1] % G.cols) * G.cell, math.floor(g[1] / G.cols) * G.cell), ImageRectSize = Vector2.new(G.cell, G.cell), BackgroundTransparency = 1, AnchorPoint = Vector2.new(0.5, 0.35), Position = UDim2.fromScale(d[1], d[2] - 0.04), Size = UDim2.fromScale(0.05, 0.02), ZIndex = 5 })
+					local w = 0.32 * (l.box.AbsoluteSize.Y / math.max(l.box.AbsoluteSize.X, 1)) * 0.27 -- the drop's width as a share of the column, the same size on every letter
+					TweenService:Create(drop, TweenInfo.new(0.75, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut), { Size = UDim2.fromScale(w, 0.16), Position = UDim2.fromScale(d[1], d[2] + 0.01) }):Play() -- swells and sags
+					task.delay(0.8, function()
+						TweenService:Create(drop, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Position = UDim2.fromScale(d[1], d[2] + 0.75), Size = UDim2.fromScale(w * 0.8, 0.19), ImageTransparency = 1 }):Play() -- lets go and falls
+						task.delay(0.55, function() drop:Destroy() end)
+					end)
+				end
+			end
+			dropAt = now + 0.9 + math.random() * 1.4
 		end
 		local sp, kx, ky = spread.step(dt), kickX.step(dt), kickY.step(dt)
 		title.Rotation = tilt.step(dt)
