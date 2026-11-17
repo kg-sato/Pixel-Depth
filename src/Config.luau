@@ -180,6 +180,16 @@ C.CRIT_LATE = 0.1
 C.CRIT_GAP = 0.3
 C.CRIT_MULT = 2
 
+-- Charms (2026-11-17 night, directive v10 "auto-sell and magnet upgrades"): one-off gold buys in the forge's CHARMS tab, kept
+-- for good (saved field "charms"). Costs are first guesses against the packs (Rucksack 300, Ore Cart 2000). CHARMS_ON = false
+-- puts the tab back to "coming soon" and the server ignores any charm.
+C.CHARMS_ON = true
+C.CHARMS = {
+	{ id = "magnet", name = "Ore Magnet", cost = 800, effect = "Mine twice as far", detail = "Start a deposit from 2x the distance" },
+	{ id = "courier", name = "Ore Courier", cost = 2500, effect = "Banks a full bag", detail = "A full bag in the caves goes to the bank (10% fee)" },
+}
+C.COURIER_FEE = 0.1
+
 C.PACKS = {
 	{ name = "Pouch", cap = 10, cost = 0 },
 	{ name = "Satchel", cap = 25, cost = 40 },

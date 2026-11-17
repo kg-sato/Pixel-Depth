@@ -86,7 +86,7 @@ function M.start(E)
 		local b = button(forge, t[2], UDim2.fromScale(0.175, 0.15), UDim2.fromScale(0.025, 0.2 + (i - 1) * 0.18), nil, "lilac", t[3])
 		b.Name = "Tab" .. t[2]
 		tabBtn[t[1]] = b
-		if t[1] == "charm" then
+		if t[1] == "charm" and not C.CHARMS_ON then
 			local l = icon(b, "lock", UDim2.fromScale(0.2, 0.46), UDim2.fromScale(0.95, 0.12), Vector2.new(0.5, 0.5))
 			new("UIAspectRatioConstraint", l, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 			l.ZIndex = 4
@@ -301,18 +301,19 @@ function M.start(E)
 	local function zone(lv) return math.floor(C.strikeArc(lv) + 0.5) .. "°" end
 
 	local function detail(i, animate)
-		local list = tab == "pick" and C.PICKS or C.PACKS
+		local list = tab == "pick" and C.PICKS or (tab == "charm" and C.CHARMS) or C.PACKS
 		local def = list[i]
 		if not def or not getState() then return end
 		local r = rarityOf(tab, i)
 		local fill, rim = tones(r[3])
 		glows[1].ImageColor3, glows[2].ImageColor3, rays.ImageColor3 = r[3]:Lerp(WHITE, 0.35), r[3]:Lerp(WHITE, 0.75), r[3]:Lerp(WHITE, 0.55)
-		big.Image = tab == "pick" and PICK_ART[i] or ICON.bag
+		big.Image = tab == "pick" and PICK_ART[i] or (tab == "charm" and ICON.star) or ICON.bag
 		dName.Text = def.name
 		rar.BackgroundColor3, rarT.Text = rim, r[1]:upper()
-		local cur = getState()[tab]
+		local cur = tab == "charm" and 0 or getState()[tab]
 		local own, nxt = i <= cur, i == cur + 1
-		local eqI = math.clamp(getState().equip or cur, 1, cur)
+		if tab == "charm" then own = (getState().charms or {})[def.id] == true nxt = not own end
+		local eqI = math.clamp(getState().equip or cur, 1, math.max(cur, 1))
 		local showLv = tab == "pick" and own
 		lvLabel.Visible = showLv
 		oreNeed.Visible = false
@@ -352,6 +353,13 @@ function M.start(E)
 				oreNeed.Text, oreNeed.Visible = line or "", line ~= nil
 				if nxt then drawChips(i) end
 			end
+		elseif tab == "charm" then
+			setRow(1, "Effect", "star", def.effect)
+			setRow(2, "How", "bag", def.detail)
+			mode = nxt and { kind = "buy", cost = def.cost } or { kind = "none" }
+			act.Text = own and "OWNED" or ("BUY  " .. shortNum(def.cost))
+			setKind(act, nxt and (getState().gold >= def.cost and "mint" or "off") or "off")
+			if actIcon then actIcon.Image, actIcon.Visible = ICON.coin, nxt end
 		else
 			setRow(1, "Bag Space", "bag", tostring(list[cur].cap), not own and tostring(def.cap) or nil)
 			setRow(2, "In the caves", "star", "no limit")
@@ -376,11 +384,12 @@ function M.start(E)
 		if flip then animate = true end
 		if not getState() then return end
 		coinT.Text, gemT.Text = commas(getState().gold), commas(getState().gems or 0)
-		for key, b in tabBtn do setKind(b, key == tab and "pink" or (key == "charm" and "off" or "lilac")) end
-		local list = tab == "pick" and C.PICKS or C.PACKS
-		local cur = getState()[tab]
+		for key, b in tabBtn do setKind(b, key == tab and "pink" or (key == "charm" and not C.CHARMS_ON and "off" or "lilac")) end
+		local list = tab == "pick" and C.PICKS or (tab == "charm" and C.CHARMS) or C.PACKS
+		local cur = tab == "charm" and 0 or getState()[tab]
+		local has = getState().charms or {}
 		local eqI = tab == "pick" and math.clamp(getState().equip or cur, 1, cur) or cur
-		local sel = math.min(selBy[tab] or eqI, #list)
+		local sel = math.max(1, math.min(selBy[tab] or eqI, #list)) -- the charms list starts at 1 (nothing "equipped")
 		selBy[tab] = sel
 		local pages = math.max(1, math.ceil(#list / 12))
 		if (animate and not flip) or not pageBy[tab] then pageBy[tab] = math.ceil(sel / 12) end -- open on the page of the selected tier
@@ -397,12 +406,13 @@ function M.start(E)
 				local fill, rim = tones(rarityOf(tab, i)[3])
 				cd.face.BackgroundColor3, cd.rim.Color, cd.lip.BackgroundColor3 = fill, rim, rim
 				cd.name.Text = short(def.name) -- mixed case: capitals crowded the tile edges (Gemini UI review, 2026-11-10)
-				cd.art.Image = tab == "pick" and (CARD_ART[i] or PICK_ART[i]) or ICON.bag
+				cd.art.Image = tab == "pick" and (CARD_ART[i] or PICK_ART[i]) or (tab == "charm" and ICON.star) or ICON.bag
 				local own, nxt = i <= cur, i == cur + 1
+				if tab == "charm" then own, nxt = has[def.id] == true, has[def.id] ~= true end -- charms are not a ladder: each is bought on its own
 				cd.art.ImageColor3 = (own or nxt) and WHITE or rim:Lerp(WHITE, 0.25)
 				cd.art.ImageTransparency = (own or nxt) and 0 or 0.35
 				cd.lvBox.Visible = own
-				cd.lv.Text = tab == "pick" and ("LV " .. lvOf(i)) or (def.cap .. " ORE")
+				cd.lv.Text = tab == "pick" and ("LV " .. lvOf(i)) or (tab == "charm" and "OWNED") or (def.cap .. " ORE")
 				cd.ok.Visible = own and not (tab == "pick" and i == eqI)
 				cd.eq.Visible = tab == "pick" and own and i == eqI
 				if cd.eq.Visible then cd.rim.Color = Color3.fromRGB(63, 186, 140) end
@@ -429,7 +439,7 @@ function M.start(E)
 	workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function() blur.Parent = workspace.CurrentCamera end)
 	local spin
 	local function open()
-		tab = tab == "charm" and "pick" or tab
+		tab = (tab == "charm" and not C.CHARMS_ON) and "pick" or tab
 		refresh(true)
 		openPanel(forge)
 		det.Position = UDim2.fromScale(0.7, 0.17)
@@ -454,7 +464,7 @@ function M.start(E)
 
 	for key, b in tabBtn do
 		b.Activated:Connect(function()
-			if key == "charm" then
+			if key == "charm" and not C.CHARMS_ON then
 				shake(b)
 				toast("CHARMS ARE COMING SOON", LILAC)
 				return
@@ -481,7 +491,7 @@ function M.start(E)
 		local i = selBy[tab]
 		if mode.kind == "buy" then
 			if getState().gold < mode.cost then shake(act) pop(coinP, 1.2) toast("NOT ENOUGH COINS", PINK) return end
-			R.Buy:FireServer(tab)
+			if tab == "charm" then R.Buy:FireServer("charm", i) else R.Buy:FireServer(tab) end
 		elseif mode.kind == "needOre" then
 			shake(act)
 			toast("MINE MORE ORE FIRST: BANK IT AT CAMP", PINK)
@@ -631,7 +641,7 @@ function M.start(E)
 				show()
 			end
 		elseif kind == "bought" then -- a = name, b = "pick" or "pack"; the Fx arrives before the new state
-			local list, i = b == "pick" and C.PICKS or C.PACKS, 1
+			local list, i = b == "pick" and C.PICKS or (b == "charm" and C.CHARMS) or C.PACKS, 1
 			for k, d in list do if d.name == a then i = k end end
 			local was = math.max(i - 1, 1)
 			if b == "pick" then -- the forging cutscene first (ReplicatedStorage.Shared.ForgeCutscene), then the overlay
@@ -650,6 +660,8 @@ function M.start(E)
 				else
 					show()
 				end
+			elseif b == "charm" then
+				celebrate("NEW CHARM!", ICON.star, a:upper(), list[i].effect, list[i].detail)
 			else
 				celebrate("NEW BACKPACK!", ICON.bag, a:upper(), row("Bag Space", tostring(list[was].cap), tostring(list[i].cap)), nil)
 			end

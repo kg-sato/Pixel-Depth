@@ -512,6 +512,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.refine = s.refine or 0 -- when the geode in the refinery is done (0 = empty)
 	d.rare = s.rare or {} -- Mythic and Secret pets ever hatched (the trophy cases)
 	d.codex = s.codex -- ores and pets ever found (Shared.CodexUI)
+	d.charms = s.charms -- the forge's charms bought (C.CHARMS ids)
 	d.crewDay = s.crewDay or 0 -- the day the first-crew-ride gem was last paid (C.CREW.gem)
 	d.shards, d.fossils, d.geodes = s.shards or 0, s.fossils or {}, s.geodes or 0
 	if C.SOUL_TREE.on then d.soul = s.soul end -- flag off: the field is never written
@@ -548,7 +549,7 @@ local function sendState(s)
 		gold = s.gold, bag = s.bag, cap = cap(s), pick = s.pick, pack = s.pack, step = s.step, target = target(s),
 		pets = pets, ox = s.ox, oz = s.oz, folder = s.folder.Name, best = s.best, pity = s.pity, eggs = s.eggs, codex = s.codex,
 		deepest = s.deepest, goal = s.goal, gems = s.gems, lv = s.lv, equip = s.equip, tips = s.tips,
-		ores = s.ores, bagOres = s.bagOres, wear = s.wear, lanterns = s.lanterns, soul = s.soul, opts = s.opts,
+		ores = s.ores, bagOres = s.bagOres, wear = s.wear, lanterns = s.lanterns, soul = s.soul, opts = s.opts, charms = s.charms,
 	})
 end
 
@@ -1592,6 +1593,15 @@ local function finishMinigame(s)
 	s.bagV += count * v
 	local key = L .. "." .. idx
 	s.bagOres[key] = (s.bagOres[key] or 0) + count
+	if C.CHARMS_ON and s.charms.courier and s.bag >= cap(s) then -- the Ore Courier charm: a full bag goes to the bank for a fee
+		task.delay(1.5, function() -- after the ore card
+			if data[s.player] ~= s or s.bag < cap(s) then return end
+			local lost = loseShare(s, C.COURIER_FEE)
+			FxR:FireClient(s.player, "courier", lost)
+			sell(s)
+			sendState(s)
+		end)
+	end
 	s.claimed[mg.dep] = os.clock() + D.regrow -- grows back for this player after D.regrow seconds
 	quest(s, "extract")
 	if grade == D.strikes or grade == D.grades[1][1] then quest(s, "perfect") end
@@ -1614,7 +1624,7 @@ for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
 	pr.Triggered:Connect(function(plr)
 		local s, hrp = data[plr], hrpOf(plr)
 		if not s or not hrp or s.mg or (s.claimed[dep] and os.clock() < s.claimed[dep]) or not plr:GetAttribute("InCave") then return end
-		if (hrp.Position - core.Position).Magnitude > D.reach + 4 then return end
+		if (hrp.Position - core.Position).Magnitude > D.reach * (C.CHARMS_ON and s.charms.magnet and 2 or 1) + 4 then return end -- the Ore Magnet charm doubles the reach
 		local now = workspace:GetServerTimeNow()
 		local starts = dep:GetAttribute("CoopStarts") or "" -- recent starts on this deposit, "userId:time;..." (co-op bonus)
 		local coop, keep = false, {}
@@ -1873,6 +1883,17 @@ end)
 
 BuyR.OnServerEvent:Connect(function(plr, what, arg)
 	local s = data[plr]
+	if s and what == "charm" then -- a charm from the forge: once, for gold, in town
+		local def = C.CHARMS_ON and type(arg) == "number" and C.CHARMS[arg]
+		if not def or s.charms[def.id] or plr:GetAttribute("InCave") or s.gold < def.cost then return end
+		s.gold -= def.cost
+		A.spend(s, "Coins", def.cost, s.gold, "Charm_" .. def.id)
+		s.charms[def.id] = true
+		plr:SetAttribute("Charm_" .. def.id, true)
+		FxR:FireClient(plr, "bought", def.name, "charm")
+		sendState(s)
+		return
+	end
 	if s and (what == "upgrade" or what == "equip") then -- forge v2: level an owned pickaxe with gems, or hold another owned one
 		if type(arg) ~= "number" or arg ~= arg or arg % 1 ~= 0 or arg < 1 or arg > s.pick then return end
 		if what == "equip" then
@@ -2165,6 +2186,9 @@ local function onJoin(plr)
 	s.opts = cleanOpts(d.opts)
 	s.gift = Retention.cleanGift(d.gift)
 	s.refine = Retention.cleanRefine(d.refine)
+	s.charms = {}
+	for _, ch in C.CHARMS do if type(d.charms) == "table" and d.charms[ch.id] == true then s.charms[ch.id] = true end end
+	for _, ch in C.CHARMS do plr:SetAttribute("Charm_" .. ch.id, C.CHARMS_ON and s.charms[ch.id] == true or nil) end -- the client widens prompts from this
 	s.codex = { ore = {}, pet = {} }
 	local dc = type(d.codex) == "table" and d.codex or {}
 	for k, v in type(dc.ore) == "table" and dc.ore or {} do
