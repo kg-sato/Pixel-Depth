@@ -70,6 +70,7 @@ local hub = HubBuilder.build(workspace, Vector3.zero)
 local HUB_SPAWN = hub:FindFirstChild("SpawnPoint").CFrame
 local HUB_SELL = hub:FindFirstChild("SellPoint", true)
 local PetJobs = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("PetJobs")) -- crew pets' cave jobs (phase 7)
+task.spawn(function() require(RS.Shared:WaitForChild("PetVoxels")).serverLoad() end) -- the voxel pet meshes into ReplicatedStorage.PetMeshes (2026-11-17)
 local Shop = require(game:GetService("ServerScriptService"):WaitForChild("Shop")) -- gems for Robux, receipts, paid random items
 local A = require(game:GetService("ServerScriptService"):WaitForChild("Analytics")) -- funnel, economy and custom events (phase 11)
 local function crewOf(s) local n = {} for i, p in s.pets do n[i] = p.name end return n end

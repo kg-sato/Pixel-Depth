@@ -766,6 +766,8 @@ end
 
 -- Crew followers (voxel chibis from parts)
 local function petModel(name)
+	local vox = require(RS.Shared:WaitForChild("PetVoxels")).build(name) -- the voxel pets (2026-11-17); the cube pet below stays as the fallback while the meshes load (inline require: the script is at Luau's 200-local limit)
+	if vox then return vox end
 	local p = C.PETS[name]
 	local body, acc = p[5], p[6]
 	local m = Instance.new("Model")
@@ -793,6 +795,10 @@ end
 
 local ripples = {} -- water surface textures that drift
 local petObjs, petKey = {}, ""
+task.spawn(function() -- the voxel meshes arrive from the server a little after the join: rebuild the crew as each lands
+	local f = RS:WaitForChild("PetMeshes", 120)
+	if f then f.ChildAdded:Connect(function() petKey = "" end) end
+end)
 local function syncPets()
 	local names = state and state.pets or {}
 	local key = table.concat(names, ",")
@@ -816,6 +822,29 @@ end
 -- longer build-up, more shake, a bigger glow and more confetti, so the player feels the tier before they see it.
 local function hatchShow(name)
 	hatchBusy = true
+	do -- v3 (2026-11-17): the hatch as a cutscene in a built grotto, Shared.HatchScene; the 2D show below stays as the fallback
+		local okHS, HS = pcall(require, RS.Shared:FindFirstChild("HatchScene"))
+		if okHS and HS then
+			local p = C.PETS[name]
+			local tier, ladder = 1, {}
+			for i, t in C.RARITIES do
+				ladder[i] = rarityColor(t[1])
+				if t[1] == p[1] then tier = i end
+			end
+			local pct = C.eggOdds(plr:GetAttribute("Friends"), (plr:GetAttribute("CodexLuck") or 0) / 100)[tier][2]
+			local calm = false
+			pcall(function() calm = game:GetService("GuiService").ReducedMotionEnabled end)
+			local ok, err = pcall(HS.play, {
+				name = name, rarity = p[1], role = p[2], odds = pct >= 5 and "" or ("1 IN " .. commas(math.floor(100 / pct + 0.5))), tier = tier, ladder = ladder,
+				build = petModel, animate = function(...) require(RS.Shared.PetVoxels).animate(...) end, sfx = sfx, fast = plr:GetAttribute("FastCine") == true, calm = calm,
+				freeze = RunService:IsStudio() and plr:GetAttribute("DevHatchFreeze") or nil, freezeFor = 2.5, -- test hook for stills (spike/hatch_shots.py)
+			})
+			if not ok then warn("[HatchScene] " .. tostring(err)) end
+			hatchBusy = false
+			syncPets()
+			return
+		end
+	end
 	local p = C.PETS[name]
 	local rc = rarityColor(p[1])
 	local tier = 1
@@ -1090,6 +1119,13 @@ local function hatchShow(name)
 	end
 	task.delay(0.6, function() ov.Activated:Connect(close) end)
 	task.delay(4.5, close)
+end
+
+if RunService:IsStudio() then -- test hook (spike/hatch_shots.py): the client attribute DevHatch = a pet name plays its hatch
+	plr:GetAttributeChangedSignal("DevHatch"):Connect(function()
+		local n = plr:GetAttribute("DevHatch")
+		if n and n ~= "" and C.PETS[n] and not hatchBusy then task.spawn(hatchShow, n) end
+	end)
 end
 
 -- First-person pickaxe (a local copy of the held pickaxe in front of the camera) with a wind-up, strike and recover swing
@@ -3009,12 +3045,13 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	local right = h.CFrame.RightVector
 	for i, pet in petObjs do
 		local lead = forgeUI.petPose and forgeUI.petPose(i, pet, h, now, dt) -- in a cave the lead pet keeps to the edge of the view (Shared.PetCompanion)
-		if lead then pet.model:PivotTo(lead) continue end
+		if lead then pet.model:PivotTo(lead) require(RS.Shared.PetVoxels).animate(pet.model, now, dt) continue end
 		local side = (i % 2 == 0) and 1 or -1
 		local goalP = h.Position - look * (3 + math.floor((i - 1) / 2) * 2) + right * side * 2.2 + Vector3.new(0, -1.2 + math.sin(now * 5 + i) * 0.25, 0)
 		if now < pet.digUntil then goalP = pet.digPos + Vector3.new(0, math.abs(math.sin((now - pet.hop) * 18)) * 0.6, 0) end
 		pet.pos = pet.pos:Lerp(goalP, 1 - math.exp(-dt * 10))
 		pet.model:PivotTo(CFrame.lookAt(pet.pos, pet.pos + Vector3.new(look.X, 0, look.Z)))
+		require(RS.Shared.PetVoxels).animate(pet.model, now, dt)
 	end
 
 	-- depth label

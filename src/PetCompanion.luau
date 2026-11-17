@@ -57,7 +57,7 @@ function M.start(E)
 		if d then return d end
 		d = { face = "", seed = math.random() * 4 }
 		recs[model] = d
-		local head = FACE and model:FindFirstChild("Head")
+		local head = FACE and not model:GetAttribute("Voxel") and model:FindFirstChild("Head") -- voxel pets have their own eyes and blink (Shared.PetVoxels)
 		if head then
 			for _, p in model:GetChildren() do -- the two block eyes make way for the face
 				if p.Name == "Eye" then p.Transparency = 1 end

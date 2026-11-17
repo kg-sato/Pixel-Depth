@@ -1,0 +1,469 @@
+-- HatchScene (ReplicatedStorage.Shared.HatchScene): the egg hatch as a cutscene in its own built place (2026-11-17, brief:
+-- vault Projects/Pixel-_/Briefs/Egg Hatching v3 (2026-11-17).md; research: Research/Game Design/Craft Videos for Weak Grades).
+-- Made the way Shared.ForgeCutscene is: a private stage far from the world, one clock for every part, camera and effect,
+-- the HUD hidden and the lighting restored after. The place is a small glowing grotto (voxel rock, cyan crystals, magenta
+-- glow mushrooms, a light shaft from a hole in the roof) with a mossy nest on a rock pedestal. Beats, after the hatch
+-- videos (Pet Simulator X, BGSI, ten years of gacha pulls, Dragon Ball Legends summons):
+--   1 ARRIVE   a fade into the grotto, the camera drifts down the light shaft to the nest
+--   2 BUILD    the egg rocks harder and harder, cracks of light open one by one, two rings of light orbit it faster and faster;
+--              the rarity CLIMBS in steps: the rings, the crystals and the shaft change colour up the rarity ladder, one
+--              step and one rising chime per tier, so a rarer egg climbs further (the tell is in stages, not just longer)
+--   3 HANG     it squashes down and holds still a beat, the light pulsing
+--   4 BURST    a white cut, the shell flies apart in voxel chunks, a shockwave ring rolls over the floor, the whole grotto
+--              floods with the rarity colour
+--   5 REVEAL   the pet pops out toward the camera with overshoot and lands in the nest; its name slams in, then its rarity,
+--              role and odds; confetti for Epic and up; tap to continue (or 6 s)
+-- Display only: the server has already chosen the pet. Fast cutscenes (player attribute FastCine) shortens 1 and 2; Reduced
+-- Motion drops the shake.
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+
+local M = {}
+local WHITE, INK = Color3.new(1, 1, 1), Color3.fromRGB(28, 16, 40)
+local SPARK = "rbxasset://textures/particles/sparkles_main.dds"
+local ROCK = { Color3.fromRGB(58, 38, 72), Color3.fromRGB(70, 46, 86), Color3.fromRGB(48, 32, 62), Color3.fromRGB(82, 56, 98) }
+local CYAN, MAGENTA = Color3.fromRGB(80, 230, 255), Color3.fromRGB(255, 80, 190)
+
+local function smooth(a, b, x)
+	local u = math.clamp((x - a) / (b - a), 0, 1)
+	return u * u * (3 - 2 * u)
+end
+local function backOut(u) -- 0..1 with about 10% overshoot
+	local c = 1.70158
+	u -= 1
+	return 1 + (c + 1) * u * u * u + c * u * u
+end
+
+local function part(parent, size, cf, color, props)
+	local p = Instance.new("Part")
+	p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow = true, false, false, false, false
+	p.Size, p.CFrame, p.Color, p.Material = size, cf, color, Enum.Material.SmoothPlastic
+	p.TopSurface, p.BottomSurface = Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
+	for k, v in props or {} do p[k] = v end
+	p.Parent = parent
+	return p
+end
+local function light(parent, color, range, bright)
+	local l = Instance.new("PointLight")
+	l.Color, l.Range, l.Brightness, l.Shadows = color, range, bright, false
+	l.Parent = parent
+	return l
+end
+
+-- options: { name, rarity = "Legendary", role = "Cave-in armour", odds = "1 IN 250" or "", tier = 1..n, ladder = { Color3 per tier },
+--   build = fn(name) -> Model (the pet), animate = fn(model, now, dt, moving) or nil, sfx = fn(name, pitch), fast = bool, calm = bool }
+-- yields until the player has closed the scene
+function M.play(opt)
+	local plr = Players.LocalPlayer
+	local cam = workspace.CurrentCamera
+	local sfx = opt.sfx or function() end
+	local tier, ladder = opt.tier or 1, opt.ladder or { WHITE }
+	local rc = ladder[tier] or WHITE
+	local k = (tier - 1) / math.max(#ladder - 1, 1) -- 0 Common .. 1 Secret
+	local rnd = Random.new(7)
+	local O = Vector3.new(-4000, 420, 0) -- the stage: far from the town, the mines and the caves
+	local world = Instance.new("Folder")
+	world.Name = "HatchStage"
+	world.Parent = workspace
+
+	-- THE GROTTO ------------------------------------------------------------------------------------------------------
+	local B = 1.6 -- rock voxel size
+	for x = -9, 9 do
+		for z = -9, 9 do
+			local r = math.sqrt(x * x + z * z)
+			if r <= 9.5 then -- the floor: a disc of rock blocks, a little uneven
+				local h = (r > 7.5 and (r - 7.5) * 1.4 or 0) + rnd:NextNumber(0, 0.35)
+				part(world, Vector3.new(B, B, B), CFrame.new(O + Vector3.new(x * B, -B / 2 + h, z * B)), ROCK[rnd:NextInteger(1, 4)])
+			end
+		end
+	end
+	for a = 0, 359, 9 do -- the walls: a ring of stacked blocks curling in overhead; the camera side (-Z) stays open low down
+		local t = math.rad(a)
+		local open = math.cos(t - math.pi * 1.5) > 0.55 -- facing the camera
+		for y = 0, 9 do
+			local inward = (y / 9) ^ 2 * 6.5
+			local r = 15 - inward
+			if not (open and y < 6) and not (y >= 8 and r < 9.5 and math.cos(t) > 0.2) then -- a gap in the roof on the far side lets the light shaft in
+				local c = ROCK[(a // 9 + y) % 4 + 1]:Lerp(Color3.new(0, 0, 0), y * 0.04)
+				part(world, Vector3.new(B * 1.6, B * 1.2, B * 1.6), CFrame.new(O + Vector3.new(math.cos(t) * r * B * 0.62, y * B * 1.1, math.sin(t) * r * B * 0.62)) * CFrame.Angles(0, -t, rnd:NextNumber(-0.08, 0.08)), c)
+			end
+		end
+	end
+	local glows = {} -- every light that floods with the rarity colour on the burst
+	local function crystal(at, n, h, col)
+		for i = 1, n do
+			local tilt = CFrame.Angles(rnd:NextNumber(-0.45, 0.45), rnd:NextNumber(0, 6.28), rnd:NextNumber(-0.45, 0.45))
+			local hh = h * rnd:NextNumber(0.55, 1)
+			local c = part(world, Vector3.new(0.5, hh, 0.5), CFrame.new(at) * tilt * CFrame.new(0, hh / 2, 0), col, { Material = Enum.Material.Neon, Transparency = 0.15 })
+			part(world, Vector3.new(0.36, 0.5, 0.36), c.CFrame * CFrame.new(0, hh / 2 + 0.2, 0) * CFrame.Angles(0, math.rad(45), 0), col:Lerp(WHITE, 0.4), { Material = Enum.Material.Neon })
+		end
+		local holder = part(world, Vector3.new(0.2, 0.2, 0.2), CFrame.new(at + Vector3.new(0, h * 0.6, 0)), col, { Transparency = 1 })
+		table.insert(glows, { l = light(holder, col, 16, 1.6), base = col })
+	end
+	local function mushroom(at, s)
+		part(world, Vector3.new(0.35, 1.0, 0.35) * s, CFrame.new(at + Vector3.new(0, 0.5 * s, 0)), Color3.fromRGB(230, 210, 240))
+		local cap = part(world, Vector3.new(1.3, 0.6, 1.3) * s, CFrame.new(at + Vector3.new(0, 1.1 * s, 0)), MAGENTA, { Material = Enum.Material.Neon, Shape = Enum.PartType.Ball })
+		table.insert(glows, { l = light(cap, MAGENTA, 10, 1.2), base = MAGENTA })
+	end
+	crystal(O + Vector3.new(-9, 0.4, 6), 5, 4.5, CYAN)
+	crystal(O + Vector3.new(9.5, 0.6, 4), 6, 5.5, CYAN)
+	crystal(O + Vector3.new(4, 0.3, 11), 4, 3.6, CYAN:Lerp(MAGENTA, 0.35))
+	crystal(O + Vector3.new(-5, 0.3, 11.5), 3, 3, CYAN)
+	mushroom(O + Vector3.new(-7, 0.3, 2), 1.1)
+	mushroom(O + Vector3.new(-6, 0.3, 3.4), 0.7)
+	mushroom(O + Vector3.new(7.2, 0.3, 9), 1.0)
+	mushroom(O + Vector3.new(6, 0.3, 0.5), 0.6)
+	-- the pedestal and the nest
+	for i, s in { 3.6, 3.0, 2.4 } do
+		part(world, Vector3.new(s, 0.7, s), CFrame.new(O + Vector3.new(0, 0.1 + i * 0.6, 0)) * CFrame.Angles(0, i * 0.4, 0), ROCK[i + 1]:Lerp(WHITE, 0.08))
+	end
+	local NEST = O + Vector3.new(0, 2.25, 0) -- the egg's foot
+	for a = 0, 359, 20 do
+		local t = math.rad(a)
+		for y = 0, 1 do
+			local r = 1.25 + y * 0.25
+			local moss = (a // 20 + y) % 3 == 0
+			part(world, Vector3.new(0.55, 0.42, 0.55), CFrame.new(NEST + Vector3.new(math.cos(t) * r, y * 0.36, math.sin(t) * r)) * CFrame.Angles(0, -t, 0.2),
+				moss and Color3.fromRGB(110, 150, 96) or Color3.fromRGB(122, 86, 58):Lerp(Color3.fromRGB(150, 110, 70), (a % 40) / 40))
+		end
+	end
+	-- the light shaft from the gap in the roof, and the dust that drifts in it
+	local shaftTop = O + Vector3.new(4, 13, 6)
+	local shaftLen = (shaftTop - NEST).Magnitude
+	local shaft = part(world, Vector3.new(shaftLen, 3.2, 3.2), CFrame.lookAt((shaftTop + NEST) / 2, NEST) * CFrame.Angles(0, math.pi / 2, 0), Color3.fromRGB(220, 230, 255),
+		{ Material = Enum.Material.Neon, Transparency = 0.9, Shape = Enum.PartType.Cylinder })
+	local motes = Instance.new("ParticleEmitter")
+	motes.Texture, motes.Rate, motes.LightEmission, motes.LightInfluence = SPARK, 14, 1, 0
+	motes.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.5, 0.18), NumberSequenceKeypoint.new(1, 0) })
+	motes.Transparency, motes.Lifetime, motes.Speed = NumberSequence.new(0.2, 1), NumberRange.new(4, 7), NumberRange.new(0.2, 0.6)
+	motes.SpreadAngle, motes.Color = Vector2.new(180, 180), ColorSequence.new(CYAN, MAGENTA)
+	motes.Parent = shaft
+	local nestLight = part(world, Vector3.new(0.2, 0.2, 0.2), CFrame.new(NEST + Vector3.new(0, 3, -1)), WHITE, { Transparency = 1 })
+	local keyL = light(nestLight, Color3.fromRGB(255, 236, 214), 14, 1.2) -- a warm key on the nest
+
+	-- THE EGG: a voxel egg of small cubes (the game's look), cream with darker speckles
+	local egg = Instance.new("Model")
+	egg.Name = "Egg"
+	local cells = {}
+	local E = 0.3
+	for x = -4, 4 do
+		for y = 0, 11 do
+			for z = -4, 4 do
+				local yy = (y + 0.5) * E - 1.75
+				local rx = (yy > 0) and 1.2 * (1 - (yy / 1.95) ^ 2) ^ 0.5 or 1.32 * (1 - (yy / 1.8) ^ 2) ^ 0.5 -- narrower at the top
+				local d = math.sqrt((x * E) ^ 2 + (z * E) ^ 2)
+				if d <= rx and d > rx - 0.62 then
+					local speck = (x * 7 + y * 3 + z * 5) % 9 == 0
+					local c = part(egg, Vector3.new(E, E, E), CFrame.new(NEST + Vector3.new(x * E, (y + 0.5) * E, z * E)), speck and Color3.fromRGB(176, 150, 196) or Color3.fromRGB(248, 236, 214):Lerp(Color3.fromRGB(230, 214, 240), y / 11))
+					table.insert(cells, { p = c, rest = CFrame.new(x * E, (y + 0.5) * E, z * E) })
+				end
+			end
+		end
+	end
+	local core = part(egg, Vector3.new(0.2, 0.2, 0.2), CFrame.new(NEST + Vector3.new(0, 1.8, 0)), rc, { Transparency = 1 })
+	local coreL = light(core, rc, 0, 0)
+	local cracks = {}
+	for i = 1, 5 do -- cracks of light down the front of the shell, opening one by one
+		local a = (i - 3) * 0.42
+		local y = 1.2 + (i % 3) * 0.55
+		local c = part(egg, Vector3.new(0.09, 0.55, 0.09), CFrame.new(NEST + Vector3.new(math.sin(a) * 1.25, y, -math.cos(a) * 1.25)) * CFrame.Angles(0, -a, (i % 2 == 0 and 1 or -1) * 0.5), rc:Lerp(WHITE, 0.35), { Material = Enum.Material.Neon, Transparency = 1 })
+		cracks[i] = { p = c, rest = CFrame.new(NEST):ToObjectSpace(c.CFrame) }
+	end
+	egg.Parent = world
+	-- two rings of light beads that orbit the egg
+	local beads = {}
+	for i = 1, 14 do
+		beads[i] = part(world, Vector3.new(0.22, 0.22, 0.22), CFrame.new(NEST), ladder[1], { Material = Enum.Material.Neon, Transparency = 1 })
+	end
+	local hl = Instance.new("Highlight")
+	hl.FillTransparency, hl.OutlineTransparency, hl.OutlineColor, hl.DepthMode = 1, 1, rc, Enum.HighlightDepthMode.Occluded
+	hl.Parent = egg
+
+	-- THE SCREEN LAYER: the fade, the letterbox, the flash, the name card
+	local pg = plr:WaitForChild("PlayerGui")
+	local gui = Instance.new("ScreenGui")
+	gui.Name, gui.IgnoreGuiInset, gui.ResetOnSpawn, gui.DisplayOrder, gui.ZIndexBehavior = "HatchSceneGui", true, false, 31, Enum.ZIndexBehavior.Sibling
+	local hidden = {}
+	for _, g in pg:GetChildren() do
+		if g:IsA("ScreenGui") and g.Enabled then g.Enabled = false table.insert(hidden, g) end
+	end
+	gui.Parent = pg
+	local function frame(props)
+		local f = Instance.new("Frame")
+		f.BorderSizePixel = 0
+		for kk, v in props do f[kk] = v end
+		f.Parent = props.Parent or gui
+		return f
+	end
+	local function label(txt, size, pos, color, z, stroke)
+		local l = Instance.new("TextLabel")
+		l.BackgroundTransparency, l.Font, l.TextScaled, l.Text, l.TextColor3, l.ZIndex = 1, Enum.Font.FredokaOne, true, txt, color, z
+		l.Size, l.Position, l.AnchorPoint = size, pos, Vector2.new(0.5, 0.5)
+		local s = Instance.new("UIStroke")
+		s.Color, s.Thickness = stroke or INK, 3
+		s.Parent = l
+		local sc = Instance.new("UIScale")
+		sc.Parent = l
+		l.Parent = gui
+		return l, sc
+	end
+	local veil = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(14, 8, 22), BackgroundTransparency = 0, ZIndex = 9 })
+	local barT = frame({ Size = UDim2.fromScale(1, 0.1), BackgroundColor3 = Color3.fromRGB(8, 4, 14), ZIndex = 5 })
+	local barB = frame({ Size = UDim2.fromScale(1, 0.1), Position = UDim2.fromScale(0, 0.9), BackgroundColor3 = Color3.fromRGB(8, 4, 14), ZIndex = 5 })
+	local flash = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, ZIndex = 8 })
+	local caption = label("SOMETHING STIRS IN THE NEST...", UDim2.fromScale(0.6, 0.045), UDim2.fromScale(0.5, 0.95), Color3.fromRGB(236, 224, 255), 6)
+	caption.TextTransparency, caption.UIStroke.Transparency = 1, 1
+	local nameL, nameS = label(string.upper(opt.name), UDim2.fromScale(0.62, 0.11), UDim2.fromScale(0.5, 0.17), WHITE, 7, rc:Lerp(INK, 0.45))
+	nameL.UIStroke.Thickness = 5
+	local nameGrad = Instance.new("UIGradient")
+	nameGrad.Color, nameGrad.Rotation = ColorSequence.new(WHITE, rc:Lerp(WHITE, 0.35)), 90
+	nameGrad.Parent = nameL
+	local subL, subS = label(string.upper(opt.rarity or "") .. "  -  " .. string.upper(opt.role or "") .. ((opt.odds or "") ~= "" and ("  -  " .. opt.odds) or ""),
+		UDim2.fromScale(0.5, 0.05), UDim2.fromScale(0.5, 0.26), rc:Lerp(WHITE, 0.25), 7)
+	local hint = label(game:GetService("UserInputService").TouchEnabled and "TAP TO CONTINUE" or "CLICK TO CONTINUE", UDim2.fromScale(0.3, 0.035), UDim2.fromScale(0.5, 0.95), Color3.fromRGB(236, 224, 255), 7)
+	for _, l in { nameL, subL, hint } do l.TextTransparency, l.UIStroke.Transparency = 1, 1 end
+	local tapBtn = Instance.new("TextButton")
+	tapBtn.Size, tapBtn.BackgroundTransparency, tapBtn.Text, tapBtn.ZIndex, tapBtn.Visible = UDim2.fromScale(1, 1), 1, "", 10, false
+	tapBtn.Parent = gui
+
+	-- LIGHTING: a dark cave, restored after; blur and depth of field off; the first-person tool hidden
+	local camSaved = { CameraType = cam.CameraType, CameraSubject = cam.CameraSubject, FieldOfView = cam.FieldOfView }
+	local saved = { ClockTime = Lighting.ClockTime, Brightness = Lighting.Brightness, Ambient = Lighting.Ambient, OutdoorAmbient = Lighting.OutdoorAmbient, ExposureCompensation = Lighting.ExposureCompensation, FogEnd = Lighting.FogEnd, FogColor = Lighting.FogColor }
+	local off = {}
+	for _, root in { Lighting, cam } do
+		for _, e in root:GetChildren() do
+			if (e:IsA("BlurEffect") or e:IsA("DepthOfFieldEffect")) and e.Enabled then e.Enabled = false table.insert(off, e) end
+		end
+	end
+	local atmo = Lighting:FindFirstChildOfClass("Atmosphere")
+	local atmoSaved = atmo and { Density = atmo.Density, Color = atmo.Color, Decay = atmo.Decay, Haze = atmo.Haze }
+	local hiddenVm = {}
+	for _, m in cam:GetChildren() do
+		for _, d in m:GetDescendants() do
+			if d:IsA("BasePart") and d.LocalTransparencyModifier < 1 then d.LocalTransparencyModifier = 1 table.insert(hiddenVm, d) end
+		end
+	end
+	Lighting.ClockTime, Lighting.Brightness, Lighting.ExposureCompensation = 0, 0.5, 0
+	Lighting.Ambient, Lighting.OutdoorAmbient = Color3.fromRGB(46, 30, 62), Color3.fromRGB(56, 36, 76)
+	if atmo then atmo.Density, atmo.Color, atmo.Decay, atmo.Haze = 0.42, Color3.fromRGB(40, 24, 56), Color3.fromRGB(24, 12, 34), 1.2 end
+
+	-- THE CLOCK --------------------------------------------------------------------------------------------------------
+	local fast = opt.fast
+	local A1 = fast and 0.5 or 1.4 -- arrive ends
+	local BUILD = fast and 0.6 or (1.6 + k * 1.6) -- the build-up, longer for rarer eggs
+	local A2 = A1 + BUILD
+	local HANG = fast and 0.2 or (0.35 + k * 0.25)
+	local A3 = A2 + HANG -- the burst
+	local t, last, fired = 0, os.clock(), {}
+	local done, closing, closeAt = false, false, nil
+	local pet, petT = nil, nil
+	local shards, shock = {}, nil
+	local climbStep, climbCol = 1, ladder[1]
+	local shake = 0
+	local function once(key, at, fn)
+		if t >= at and not fired[key] then
+			fired[key] = true
+			fn()
+		end
+	end
+	tapBtn.Activated:Connect(function()
+		if t > A3 + 0.8 and not closing then closing, closeAt = true, t end
+	end)
+	TweenService:Create(veil, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 }):Play()
+	local frozeAt = nil
+
+	RunService:BindToRenderStep("HatchScene", Enum.RenderPriority.Camera.Value + 21, function()
+		local now = os.clock()
+		local dt = math.min(now - last, 0.1)
+		last = now
+		t += dt
+		if opt.freeze then t = math.min(t, opt.freeze) end -- test hook (stills): hold the scene at one moment
+		if opt.freeze and t >= opt.freeze then
+			frozeAt = frozeAt or now
+			if opt.freezeFor and now - frozeAt > opt.freezeFor then done = true end
+		end
+		cam.CameraType = Enum.CameraType.Scriptable
+
+		-- 1 ARRIVE: down the light shaft to the nest; the caption fades in
+		once("cap", 0.3, function()
+			TweenService:Create(caption, TweenInfo.new(0.4), { TextTransparency = 0 }):Play()
+			TweenService:Create(caption.UIStroke, TweenInfo.new(0.4), { Transparency = 0.2 }):Play()
+		end)
+		local u1 = smooth(0, A1, t)
+		local camPos = (O + Vector3.new(2.5, 9, -22)):Lerp(NEST + Vector3.new(0.8, 2.6, -9), u1)
+		local look = NEST + Vector3.new(0, 1.7 + (1 - u1) * 1.5, 0)
+		local fov = 52 - u1 * 6
+
+		-- 2 BUILD: rock, crack, orbit, climb
+		local ub = smooth(A1, A2, t)
+		if t >= A1 and t < A3 then
+			camPos = camPos:Lerp(NEST + Vector3.new(0.5, 2.7, -8.2), smooth(A1, A2, t)) -- the whole egg and its rings stay in frame (stills hs5: the egg was cut off at the top)
+			fov = 46 - ub * 8
+			-- the climb: one colour step per tier, spread over the build-up
+			local step = math.clamp(math.floor(ub * tier) + 1, 1, tier)
+			if step ~= climbStep then
+				climbStep, climbCol = step, ladder[step]
+				sfx("upgrade", 1.1 + step * 0.12)
+				for _, g in glows do
+					TweenService:Create(g.l, TweenInfo.new(0.25), { Color = g.base:Lerp(climbCol, 0.6), Brightness = 1.6 + step * 0.25 }):Play()
+				end
+				shaft.Color = climbCol:Lerp(WHITE, 0.5)
+				hl.OutlineColor = climbCol
+			end
+			shake = opt.calm and 0 or ub ^ 3 * (0.08 + k * 0.08)
+		end
+		if t < A3 then -- the egg rocks harder and harder (and holds still in the hang)
+			local hang = t >= A2
+			local amp = hang and 0 or (0.02 + 0.3 * ub ^ 2.5) * (0.7 + k * 0.5)
+			local wob = CFrame.new(NEST) * CFrame.Angles(math.sin(t * (14 + 30 * ub)) * amp * 0.5, 0, math.sin(t * (11 + 34 * ub)) * amp)
+			local sq = hang and smooth(A2, A2 + 0.18, t) * 0.18 or 0 -- the squash before the snap
+			for _, c in cells do
+				local r = c.rest
+				c.p.CFrame = wob * CFrame.new(r.X * (1 + sq), r.Y * (1 - sq), r.Z * (1 + sq))
+			end
+			for i, c in cracks do
+				c.p.CFrame = wob * c.rest
+				c.p.Transparency = ub > (i - 0.5) / 6 and 0 or 1
+				c.p.Color = climbCol:Lerp(WHITE, 0.35)
+			end
+			coreL.Range, coreL.Brightness, coreL.Color = 4 + ub * 10, ub * 3, climbCol
+			hl.OutlineTransparency = 1 - ub * 0.8
+			for i, b in beads do -- two rings, tilted, speeding up
+				local ring = i <= 7 and 1 or -1
+				local a = (i % 7) / 7 * math.pi * 2 + (t - A1) * (1.5 + 9 * ub ^ 2) * ring
+				local rr = 2.1 - ub * 0.4
+				local off = CFrame.Angles(0, 0, ring * 0.5) * Vector3.new(math.cos(a) * rr, 0, math.sin(a) * rr)
+				b.CFrame = CFrame.new(NEST + Vector3.new(0, 1.8, 0) + off)
+				b.Transparency = t < A1 and 1 or (1 - math.min(1, ub * 3))
+				b.Color = climbCol
+			end
+			if hang then
+				coreL.Brightness = 3 + math.sin(t * 40) * 1.5
+				shake = 0
+			end
+		end
+		once("tick", A1, function()
+			task.spawn(function() -- ticks that climb in pitch and speed through the build-up
+				local s = os.clock()
+				while os.clock() - s < BUILD and not done do
+					local u = (os.clock() - s) / BUILD
+					sfx("hit", 0.8 + u * 0.9)
+					task.wait(0.32 - u * 0.22)
+				end
+			end)
+		end)
+		once("hang", A2, function()
+			sfx("swing", 1.3)
+			TweenService:Create(caption, TweenInfo.new(0.2), { TextTransparency = 1 }):Play()
+			TweenService:Create(caption.UIStroke, TweenInfo.new(0.2), { Transparency = 1 }):Play()
+		end)
+
+		-- 4 BURST
+		once("burst", A3, function()
+			sfx("claim", 1.0 + k * 0.2)
+			sfx("sparkle", 1.2)
+			flash.BackgroundTransparency = 0
+			TweenService:Create(flash, TweenInfo.new(0.35 + k * 0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 }):Play()
+			for _, c in cells do -- the shell flies apart
+				local out = (c.rest.Position * Vector3.new(1, 0.5, 1)).Unit
+				if out ~= out then out = Vector3.yAxis end
+				table.insert(shards, { p = c.p, v = out * rnd:NextNumber(6, 13) + Vector3.new(0, rnd:NextNumber(4, 9), 0), spin = Vector3.new(rnd:NextNumber(-8, 8), rnd:NextNumber(-8, 8), rnd:NextNumber(-8, 8)) })
+			end
+			for _, c in cracks do c.p.Transparency = 1 end
+			for _, b in beads do b.Transparency = 1 end
+			hl.Enabled = false
+			shock = part(world, Vector3.new(0.12, 1, 1), CFrame.new(NEST + Vector3.new(0, 0.15, 0)) * CFrame.Angles(0, 0, math.pi / 2), rc:Lerp(WHITE, 0.3), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Neon, Transparency = 0.2 })
+			for _, g in glows do -- the grotto floods with the rarity colour
+				TweenService:Create(g.l, TweenInfo.new(0.3), { Color = rc, Brightness = 1.3 + k * 0.6, Range = 18 }):Play() -- was 2.6 + k * 1.4: a gold flood washed the pet out (stills hs5)
+			end
+			keyL.Color, keyL.Brightness = rc:Lerp(WHITE, 0.6), 2
+			shaft.Color, shaft.Transparency = rc:Lerp(WHITE, 0.4), 0.88
+			coreL.Brightness, coreL.Range = 4, 16
+			TweenService:Create(coreL, TweenInfo.new(1.2), { Brightness = 0.5, Range = 10 }):Play()
+			pet = opt.build(opt.name)
+			if pet then
+				pet:PivotTo(CFrame.new(NEST + Vector3.new(0, 0.92, 0))) -- pets look -Z: at the camera
+				pet.Parent = world
+				pet:ScaleTo(0.2)
+			end
+			petT = t
+			shake = opt.calm and 0 or 0.35
+		end)
+		if #shards > 0 then
+			for i = #shards, 1, -1 do
+				local s = shards[i]
+				s.v += Vector3.new(0, -30, 0) * dt
+				s.p.CFrame = (s.p.CFrame + s.v * dt) * CFrame.Angles(s.spin.X * dt, s.spin.Y * dt, s.spin.Z * dt)
+				s.p.Size = s.p.Size * (1 - dt * 0.6)
+				if s.p.Position.Y < O.Y - 2 or t - A3 > 1.6 then s.p:Destroy() table.remove(shards, i) end
+			end
+		end
+		if shock then
+			local u = smooth(A3, A3 + 0.55, t)
+			shock.Size = Vector3.new(0.12, 1 + u * 26, 1 + u * 26)
+			shock.Transparency = 0.2 + u * 0.8
+			if u >= 1 then shock:Destroy() shock = nil end
+		end
+
+		-- 5 REVEAL: the pet pops toward the camera and lands, then turns to look about; the name slams in
+		if pet and petT then
+			local u = math.clamp((t - petT) / 0.55, 0, 1)
+			local s = 0.2 + 0.8 * backOut(u)
+			local hop = math.sin(math.min(u, 1) * math.pi) * 1.6
+			local turn = math.sin((t - petT) * 0.9) * 0.35 * smooth(petT + 0.8, petT + 1.6, t) -- it looks about a little after it lands
+			pet:ScaleTo(math.max(0.05, s) * 1.15)
+			pet:PivotTo(CFrame.new(NEST + Vector3.new(0, 0.92 * s * 1.15 + hop, -0.4 * (1 - u))) * CFrame.Angles(0, turn, 0))
+			if opt.animate then opt.animate(pet, now, dt, false) end
+			local ru = smooth(A3, A3 + 0.9, t)
+			camPos = (NEST + Vector3.new(0.5, 2.7, -8.2)):Lerp(NEST + Vector3.new(-0.6, 2.4, -9.6) + Vector3.new(math.sin((t - A3) * 0.35) * 1.2, 0, 0), ru)
+			look = NEST + Vector3.new(0, 1.15, 0) -- the pet sits low in frame, under its name
+			fov = 38 + ru * 4
+		end
+		once("name", A3 + 0.35, function()
+			nameL.TextTransparency, nameL.UIStroke.Transparency = 0, 0
+			nameS.Scale = 2.4
+			TweenService:Create(nameS, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+			sfx("hit", 0.6)
+		end)
+		once("sub", A3 + 0.75, function()
+			subL.TextTransparency, subL.UIStroke.Transparency = 0, 0.1
+			subS.Scale = 0.6
+			TweenService:Create(subS, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+			sfx("sparkle", 1.5)
+			if tier >= 3 then -- confetti cubes in the rarity colours, falling through the light
+				for i = 1, 12 + tier * 6 do
+					local c = part(world, Vector3.new(0.18, 0.18, 0.06), CFrame.new(NEST + Vector3.new(rnd:NextNumber(-5, 5), rnd:NextNumber(6, 9), rnd:NextNumber(-3, 4))), ({ rc, CYAN, MAGENTA, WHITE })[i % 4 + 1], { Material = Enum.Material.Neon })
+					table.insert(shards, { p = c, v = Vector3.new(rnd:NextNumber(-1, 1), rnd:NextNumber(-3, -1), 0), spin = Vector3.new(rnd:NextNumber(-6, 6), rnd:NextNumber(-6, 6), 0) })
+				end
+			end
+		end)
+		once("hint", A3 + 1.1, function()
+			hint.TextTransparency, hint.UIStroke.Transparency = 0, 0.3
+			tapBtn.Visible = true
+		end)
+		if t > A3 + 6 and not closing then closing, closeAt = true, t end
+		if closing and t - closeAt > 0.3 then done = true end
+		veil.BackgroundTransparency = closing and 1 - smooth(closeAt, closeAt + 0.28, t) or veil.BackgroundTransparency
+
+		shake = math.max(0, shake - dt * 0.9)
+		local sx, sy = math.noise(t * 22, 1) * shake, math.noise(t * 22, 2) * shake
+		cam.CFrame = CFrame.lookAt(camPos, look) * CFrame.Angles(sy * 0.12, sx * 0.12, sx * 0.05)
+		cam.FieldOfView = fov
+	end)
+	local started = os.clock()
+	while not done and os.clock() - started < 25 do task.wait() end -- never hang the player in the scene
+	RunService:UnbindFromRenderStep("HatchScene")
+	for kk, v in saved do Lighting[kk] = v end
+	if atmo and atmoSaved then for kk, v in atmoSaved do atmo[kk] = v end end
+	for _, e in off do e.Enabled = true end
+	for _, d in hiddenVm do if d.Parent then d.LocalTransparencyModifier = 0 end end
+	for _, g in hidden do if g.Parent then g.Enabled = true end end
+	for kk, v in camSaved do pcall(function() cam[kk] = v end) end
+	world:Destroy()
+	TweenService:Create(veil, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 }):Play()
+	task.delay(0.4, function() gui:Destroy() end)
+end
+
+return M
