@@ -12,7 +12,7 @@ args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 out = args[0] if args else os.path.join(here, "out")
 only = set(args[1:])
 os.makedirs(out, exist_ok=True)
-pets = json.load(open(os.path.join(here, "pets.json")))
+pets = json.load(open(os.environ.get("VOXEL_JSON") or os.path.join(here, "pets.json")))  # VOXEL_JSON: another set in the same format (design3d/picks/picks.json)
 FACES = [((1, 0, 0), [(1, 0, 0), (1, 1, 0), (1, 1, 1), (1, 0, 1)]), ((-1, 0, 0), [(0, 0, 0), (0, 0, 1), (0, 1, 1), (0, 1, 0)]),
          ((0, 1, 0), [(0, 1, 0), (0, 1, 1), (1, 1, 1), (1, 1, 0)]), ((0, -1, 0), [(0, 0, 0), (1, 0, 0), (1, 0, 1), (0, 0, 1)]),
          ((0, 0, 1), [(0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1)]), ((0, 0, -1), [(0, 0, 0), (0, 1, 0), (1, 1, 0), (1, 0, 0)])]
@@ -67,5 +67,6 @@ for pet in pets:
     bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_apply=True, export_yup=True)
     report.append(f"{pet['name']}: {len(groups)} objects, {tris} triangles -> {path}")
     assert tris < 5000, (pet["name"], tris)
+    for o in bpy.context.scene.objects: o.select_set(False)
 
 print("\n".join(report))

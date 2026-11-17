@@ -161,7 +161,7 @@ if __name__ == "__main__":
         d = p.data()
         d["vox"] = VOX
         d["palette"] = {"Head": t["head"], "Dark": t["dark"], "Light": t["light"], "Handle": t["handle"], "Grip": t["grip"], "GripDark": shade(t["grip"], 0.7),
-                        "Band": t["band"], "Accent": t["accent"], "Gem": t["accent"]}
+                        "Band": t["band"], "Accent": t["accent"], "Gem": t["accent"], "Crystal": t["light"]}
         d["glowRoles"] = ["Accent"] if t["glow"] or t["mark"] else []
         d["pivots"] = {}
         out.append(d)

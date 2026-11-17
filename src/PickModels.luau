@@ -41,9 +41,16 @@ function M.serverLoad(C)
 				if p:IsA("BasePart") then
 					local part, role = string.match(p.Name, "^(.-)__(.+)$")
 					role = role or "Head"
-					p.Color = d.palette[role] or p.Color
-					p.Material = (role == "Accent") and Enum.Material.Neon or (role == "Gem" and Enum.Material.Glass or (role == "Band" and Enum.Material.Metal or Enum.Material.SmoothPlastic))
+					if role == "Tex" then -- round 2: one baked texture (colour, occlusion, edge light) on all the solid parts; keep it
+						p.Material = Enum.Material.SmoothPlastic
+						head = head or p
+					else
+						p.Color = d.palette[role] or p.Color
+						if role == "Accent" then p.Color = p.Color:Lerp(Color3.new(0, 0, 0), 0.3) end -- darker neon: full-bright marks bloomed into white blobs (Gemini r2)
+						p.Material = (role == "Accent") and Enum.Material.Neon or ((role == "Gem" or role == "Crystal") and Enum.Material.Glass or (role == "Band" and Enum.Material.Metal or Enum.Material.SmoothPlastic))
+					end
 					if role == "Gem" then p.Transparency = 0.12 gem = gem or p end
+					if role == "Crystal" then p.Transparency = 0.22 end
 					if part == "Head" and role == "Head" then head = p end
 					p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow = true, false, false, false, false
 				end
@@ -61,6 +68,19 @@ function M.serverLoad(C)
 				e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.4, 0.22), NumberSequenceKeypoint.new(1, 0) })
 				e.Transparency, e.Lifetime, e.Speed, e.SpreadAngle = NumberSequence.new(0.1, 1), NumberRange.new(0.6, 1.2), NumberRange.new(0.3, 1), Vector2.new(180, 180)
 				e.Parent = head
+			end
+			if head and r >= 2 then -- a trail off the blade tip in the tier colour: it streaks through every swing
+				local cf, size = m:GetBoundingBox()
+				local tip = head.CFrame:PointToObjectSpace(cf.Position + cf.RightVector * size.X * 0.45 + cf.UpVector * size.Y * 0.38)
+				local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+				a0.Position, a1.Position = tip, tip + head.CFrame:VectorToObjectSpace(-cf.RightVector * 0.5)
+				a0.Parent, a1.Parent = head, head
+				local tr = Instance.new("Trail")
+				tr.Attachment0, tr.Attachment1, tr.Lifetime, tr.LightEmission = a0, a1, 0.22, 0.8
+				tr.Color = ColorSequence.new(d.palette.Accent, Color3.new(1, 1, 1))
+				tr.Transparency = NumberSequence.new(0.35, 1)
+				tr.MinLength = 0.15
+				tr.Parent = head
 			end
 			m.PrimaryPart = m.PrimaryPart or m:FindFirstChildWhichIsA("BasePart", true)
 			local old = lib:FindFirstChild(name)
