@@ -13,7 +13,7 @@ local STOPS = { -- the places worth finding: model name in workspace.Hub, letter
 	{ "NoticeBoard", "Q", CYAN }, { "Campfire", "C", Color3.fromRGB(255, 190, 120) },
 }
 M.TOP, M.SIZE = 14, 150 -- board pixels (1280 x 592): the map's top edge and its diameter
-M.STEP_Y = M.TOP + M.SIZE + 38 -- the NEXT UP card's top edge, under the map and the camp pill
+M.STEP_Y = M.TOP + M.SIZE + 10 -- the NEXT UP card's top edge, docked just under the map (Gemini v10n_r7: "a large empty gap")
 
 function M.start(E)
 	local S, new = E.S, E.new
@@ -65,7 +65,7 @@ function M.start(E)
 		if not cave then return end
 		cave.Size, cave.Position = S(M.SIZE, M.SIZE), S(1262, M.TOP)
 		local pill = E.caveHud:FindFirstChild("CampPill")
-		if pill then pill.Position = S(1262 - (M.SIZE - 124) / 2, M.TOP + M.SIZE + 2) end
+		if pill then pill.Position = S(1262 - M.SIZE - 8, M.TOP + M.SIZE - 34) end -- beside the radar, left of it: the NEXT UP card has the space below
 	end)
 	RunService.RenderStepped:Connect(function()
 		root.Visible = E.plr:GetAttribute("InCave") ~= true and not E.plr:GetAttribute("Seated") and not E.isBusy() and not E.vmHook.modalOpen

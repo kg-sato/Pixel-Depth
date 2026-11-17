@@ -27,9 +27,9 @@ end
 for i = 1, #list do
 	for j = i + 1, #list do
 		local pair = list[i].Name .. " x " .. list[j].Name
-		if hit(list[i], list[j], 1) and pair ~= "Minimap x DepthGauge" and pair ~= "DepthGauge x Minimap" then -- the depth pill sits on the minimap ring on purpose (v10)
+		if hit(list[i], list[j], 1) and pair ~= "Minimap x DepthGauge" and pair ~= "DepthGauge x Minimap" and not (list[i].Parent == list[j].Parent and list[i].Parent.Name == "PerfectStrike") then -- the strike's swing pips sit on their own pill on purpose (2026-11-16) -- the depth pill sits on the minimap ring on purpose (v10)
 			n += 1
-			table.insert(out, list[i].Name .. " x " .. list[j].Name)
+			table.insert(out, list[i].Parent.Name .. "/" .. list[i].Name .. " x " .. list[j].Parent.Name .. "/" .. list[j].Name) -- the parent says which "Frame"
 		end
 	end
 end

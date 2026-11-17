@@ -42,7 +42,7 @@ function M.start(E)
 		if not bar.Visible then return end
 		local hud = gui:FindFirstChild("CaveHud")
 		local ps = hud and hud:FindFirstChild("PerfectStrike")
-		bar.Position = (ps and ps.Visible) and S(1050, 300) or S(640, 70)
+		bar.Position = S(640, 70) -- directive v10 re-run: the strike dial now hangs on the knot in the world with no title bar, so the boss bar keeps its place (Gemini: "kicked out of top-centre")
 	end)
 	local jump = text(gui, "JUMP!", S(420, 110), S(640, 300), Vector2.new(0.5, 0.5), PINK, 700, false)
 	jump.Visible, jump.Font = false, Enum.Font.FredokaOne
@@ -241,13 +241,13 @@ function M.start(E)
 			local w = warden()
 			if not w or not w.PrimaryPart then return end
 			base = base or w:GetPivot()
-			local t0, ATK, hot = a, C.BOSS_ATK, now == 2 and FIRE or PINK
+			local t0, ATK, hot = a, C.BOSS_ATK, now == 2 and FIRE or Color3.fromRGB(255, 0, 127) -- magenta, not pale pink: at Brightness 2 the pink rings bloomed white over the floor (Gemini v10n_r7)
 			local o = floorAt(w) - Vector3.new(0, 0.03, 0)
 			local made = {}
 			for k, r in ATK.rings do
 				local d = 2 * r + ATK.ringW
 				local p = new("Part", workspace, { Size = Vector3.new(d, 0.1, d), CFrame = CFrame.new(o), Transparency = 1, Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
-				local sg = new("SurfaceGui", p, { Face = Enum.NormalId.Top, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = 12, LightInfluence = 0, Brightness = 2 })
+				local sg = new("SurfaceGui", p, { Face = Enum.NormalId.Top, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = 12, LightInfluence = 0, Brightness = 1.2 })
 				local f = new("Frame", sg, { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.fromScale((2 * r - ATK.ringW) / d, (2 * r - ATK.ringW) / d), BackgroundTransparency = 1 })
 				new("UICorner", f, { CornerRadius = UDim.new(0.5, 0) })
 				made[k] = { part = p, stroke = new("UIStroke", f, { Color = hot, Thickness = ATK.ringW * 12, Transparency = 0.75 }), r = r }
