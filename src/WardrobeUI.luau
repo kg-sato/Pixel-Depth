@@ -172,7 +172,17 @@ function M.start(E)
 		c.Name = "Figure"
 		c.Parent = world
 		local cf, size = c:GetBoundingBox()
-		c:PivotTo(CFrame.new(-cf.Position.X, 0.36 - (cf.Position.Y - size.Y / 2), -cf.Position.Z) * c:GetPivot()) -- feet on the pedestal, centred
+		local foot = cf.Position.Y - size.Y / 2
+		local low -- the soles: the lowest point of the feet or legs (the box also holds a dangling torch or tool, which left the figure floating above the pedestal)
+		for _, n in { "LeftFoot", "RightFoot", "Left Leg", "Right Leg" } do
+			local f = c:FindFirstChild(n)
+			if f and f:IsA("BasePart") then
+				local y = f.Position.Y - f.Size.Y / 2
+				low = low and math.min(low, y) or y
+			end
+		end
+		foot = low or foot
+		c:PivotTo(CFrame.new(-cf.Position.X, 0.36 - foot, -cf.Position.Z) * c:GetPivot()) -- feet on the pedestal, centred
 		figure = c
 		M.apply(figure, wear)
 		for _, p in figure.Wardrobe:GetChildren() do p.Anchored = true end
