@@ -8,6 +8,10 @@
 --   * the title and hint bars shrink to one slim line at the top
 -- The dial is held inside the middle of the view, so it can always be played even when the rock is off screen. Display only: PixelClient
 -- still owns the needle, the input and the server messages; this module only moves and dresses its widgets (E.cave.mg is wrapped).
+-- Directive v10.0 re-run (2026-11-16): the dial is now drawn IN the world. A copy of the dial lives in a BillboardGui (StrikeReticle)
+-- adorned to the deposit, so it sits on the rock in 3D; the title line rides above the ring inside the same billboard. The 2D
+-- original stays in the HUD (CaveHud.PerfectStrike...Needle and Arc) but parked off screen: PixelClient still turns its
+-- needle, the tests and the autopilot still read its Rotation, and every frame the copy takes the original's look.
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local M = {}
@@ -17,7 +21,8 @@ local MID = Vector2.new(0.5, 0.5)
 function M.start(E)
 	if not E.GLASS then return end
 	local cave, caveHud, plr = E.cave, E.caveHud, E.plr
-	local ps = caveHud:WaitForChild("PerfectStrike", 10)
+	local ps = caveHud:WaitForChild("PerfectStrike", 60) -- 10 s was too short on a slow start: the module quit and the 2D clock came back (2026-11-16)
+	while ps and not cave.mg do task.wait(0.2) end
 	local needle = ps and ps:FindFirstChild("Needle", true)
 	if not needle or not cave.mg then return end
 	local dial = needle.Parent
@@ -96,6 +101,35 @@ function M.start(E)
 	local say = new("Frame", ps, { Name = "Say", Size = UDim2.fromScale(0.34, 0.07), Position = UDim2.fromScale(0.5, 0.15), AnchorPoint = MID, BackgroundTransparency = 1, Visible = false, ZIndex = 13 })
 	local sayText = JellyText.new(say, "STRIKE ON GOLD!", { color = Color3.fromRGB(236, 224, 255), glow = true, z = 13 })
 
+	local world = new("BillboardGui", pg, { Name = "StrikeReticle", Size = UDim2.fromOffset(300, 360), AlwaysOnTop = false, LightInfluence = 0, ResetOnSpawn = false, Enabled = false, MaxDistance = 80 }) -- AlwaysOnTop = true did not draw in PlayerGui (measured 2026-11-16), so the billboard hangs on an anchor 3.5 studs before the eye on the line to the rock: nothing (rock, the boss) can stand in front of it
+	local worldTitle = new("TextLabel", world, { Name = "Title", Text = "STRIKE ON GOLD", Font = Enum.Font.FredokaOne, TextScaled = true, TextColor3 = Color3.fromRGB(236, 224, 255), TextStrokeColor3 = Color3.fromRGB(22, 8, 30), TextStrokeTransparency = 0.2, BackgroundTransparency = 1, Size = UDim2.fromScale(0.8, 0.1), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0) })
+	local anchor = new("Part", nil, { Name = "ReticleAnchor", Size = Vector3.new(0.2, 0.2, 0.2), Transparency = 1, Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+	local mirror -- { copy = the dial's copy, pairs = { { original, copy } } }
+	local PROPS = { GuiObject = { "Rotation", "Visible", "Size", "Position", "BackgroundColor3", "BackgroundTransparency" }, UIStroke = { "Color", "Transparency", "Enabled", "Thickness" }, UIGradient = { "Rotation", "Offset" } }
+	local function mirrorStart()
+		if mirror then mirror.copy:Destroy() end
+		local orig = dial:GetDescendants()
+		for k, d in orig do d:SetAttribute("MId", k) end -- pair each piece with its copy by tag: GetDescendants order differs between the two
+		local copy = dial:Clone()
+		copy.Name, copy.Size, copy.Position, copy.AnchorPoint = "Dial", UDim2.fromScale(1, 300 / 360), UDim2.fromScale(0.5, 1), Vector2.new(0.5, 1)
+		for _, c in copy:GetChildren() do if c:IsA("UIAspectRatioConstraint") or c:IsA("UIScale") then c:Destroy() end end -- the pop scale stuck at 0.6 on the copy (measured 2026-11-16)
+		copy.Parent = world
+		local byId, pairs_ = {}, {}
+		for _, c in copy:GetDescendants() do byId[c:GetAttribute("MId") or 0] = c end
+		for k, o in orig do
+			local c = byId[k]
+			local list = c and (o:IsA("GuiObject") and PROPS.GuiObject or PROPS[o.ClassName])
+			if list then table.insert(pairs_, { o, c, list }) end
+		end
+		local back = new("Frame", copy, { Name = "Back", Size = UDim2.fromScale(0.94, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.38, BorderSizePixel = 0, ZIndex = 9 }) -- obsidian glass behind the needle: the rock behind a clear face swallowed it
+		new("UICorner", back, { CornerRadius = UDim.new(0.5, 0) })
+		mirror = { copy = copy, pairs = pairs_ }
+	end
+	local function mirrorStop()
+		if mirror then mirror.copy:Destroy() mirror = nil end
+		world.Enabled = false
+		anchor.Parent = nil
+	end
 	local dep, kind, lockCol, at = nil, nil, Color3.new(1, 1, 1), nil
 	local aim = 0
 	local function stop()
@@ -104,10 +138,12 @@ function M.start(E)
 		lock.Enabled = false
 		undress()
 		say.Visible = false
+		mirrorStop()
 	end
 
 	local inner = cave.mg
-	cave.mg = function(what, ...)
+	local wrapped
+	wrapped = function(what, ...)
 		inner(what, ...)
 		if what == "mgStart" then
 			local d, which = ...
@@ -124,9 +160,11 @@ function M.start(E)
 			if which == "strike" then
 				dress()
 				if ringStroke then ringStroke.Color = lockCol end
-				say.Visible = true
-				sayText.set("STRIKE ON GOLD!")
-				sayText.pop()
+				say.Visible = false -- the title rides in the world above the ring now
+				mirrorStart()
+				anchor.Parent = workspace.CurrentCamera
+				world.Adornee, world.Enabled = anchor, true
+				worldTitle.TextColor3 = lockCol
 			end
 		elseif what == "mgStrike" and dep then -- every swing: a white flash and a punch outward (1 frame white, then back to the ore's colour)
 			tint(Color3.new(1, 1, 1))
@@ -137,6 +175,7 @@ function M.start(E)
 			stop()
 		end
 	end
+	cave.mg = wrapped
 
 	RunService:BindToRenderStep("PixelMiningReticle", Enum.RenderPriority.Camera.Value + 2, function()
 		if not dep then return end
@@ -167,10 +206,23 @@ function M.start(E)
 		local o = ps.AbsolutePosition
 		dial.Size = UDim2.fromOffset(px, px)
 		dial.Position = UDim2.fromOffset(at.X - o.X, at.Y - inset.Y - o.Y)
+		if mirror then
+			local eye = cam.CFrame.Position
+			anchor.Position = eye + (core.Position - eye).Unit * 3.5 + cam.CFrame.UpVector * 0.3 -- a little up: clear of the swing pips under it
+			world.Size = UDim2.fromOffset(px * 1.35, px * 1.62) -- the owner, 2026-11-15: the game must be big enough to play
+			dial.Position = UDim2.fromOffset(-4 * px, -4 * px) -- parked off screen: the needle still turns for the tests and the autopilot
+			for _, pr in mirror.pairs do
+				local a, c = pr[1], pr[2]
+				for _, k in pr[3] do if c[k] ~= a[k] then c[k] = a[k] end end
+			end
+		end
 		local boss = pg:FindFirstChild("BossBar", true) -- v10 (Gemini: "the UI smothers the boss"): in a boss fight only the dial is drawn, no title and no brackets
 		if boss and boss.Visible then
 			say.Visible = false
 			lock.Enabled = false
+			worldTitle.Visible = false
+		else
+			worldTitle.Visible = true
 		end
 	end)
 end
