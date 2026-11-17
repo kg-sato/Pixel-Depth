@@ -1997,7 +1997,7 @@ end
 	psTitleBar.ZIndex = 12 -- above the minigame's dim backdrop
 	local psTitle = text(psTitleBar, "PERFECT STRIKE", UDim2.fromScale(0.86, 0.44), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), INK, 700, false)
 	psTitle.ZIndex = 3
-	local psPop = text(ps, "PERFECT!", S(360, 44), S(640, 512), Vector2.new(0.5, 0.5), BUTTER)
+	local psPop = text(ps, "PERFECT!", S(360, 44), S(640, 418), Vector2.new(0.5, 0.5), BUTTER)
 	psPop.ZIndex, psPop.Visible = 14, false
 	local pipTrack = new("Frame", ps, { Size = S(130, 36), Position = S(640, 460), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = SLATE, BorderSizePixel = 0, ZIndex = 11 })
 	new("UICorner", pipTrack, { CornerRadius = UDim.new(0.5, 0) })

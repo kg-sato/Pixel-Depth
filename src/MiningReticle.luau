@@ -70,7 +70,7 @@ function M.start(E)
 			if o:IsA("Frame") and o ~= dial then
 				local k = o:GetAttribute("Kind")
 				if o.Name == "Dim" then set(o, "BackgroundTransparency", 1)
-				elseif k == "pill" or k == "dark" then set(o, "Visible", false)
+				elseif k == "pill" or k == "dark" then o.Visible = false -- the 2D title bars are never wanted again (the title rides on the rock): not put back, so none flashes up at the top between two knots
 				elseif o:FindFirstChildOfClass("UICorner") and o.Size == home.size and o.BackgroundTransparency < 1 and not k then set(o, "Visible", false) end -- the dial's shadow disc
 			end
 		end
