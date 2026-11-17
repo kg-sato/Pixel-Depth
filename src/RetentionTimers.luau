@@ -107,7 +107,7 @@ function M.start(E)
 		acc = 0
 		local boss = gui:FindFirstChild("BossBar", true)
 		local chest = E.plr.PlayerGui:FindFirstChild("DailyChest")
-		holder.Visible = not (boss and boss.Visible) and not (chest and chest.Enabled) and not (E.vmHook and (E.vmHook.arOpen or E.vmHook.modalOpen)) -- a reward chest has the top of the screen to itself
+		holder.Visible = not (boss and boss.Visible) and not (chest and chest.Enabled) and not (E.vmHook and (E.vmHook.arOpen or E.vmHook.modalOpen)) and not (E.isBusy and E.isBusy()) -- a minigame owns the top (it hid the Vein Rush quality bar, 2026-11-17); a reward chest has the top of the screen to itself
 		if not holder.Visible then return end
 		do -- open while the pointer is on the pill or its list, or while it is pinned by a click
 			local m = game:GetService("UserInputService"):GetMouseLocation() - game:GetService("GuiService"):GetGuiInset()

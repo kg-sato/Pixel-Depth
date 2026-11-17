@@ -219,6 +219,24 @@ function M.start(E)
 			local l = new("PointLight", ball, { Color = Color3.fromRGB(255, 226, 170), Range = 0, Brightness = 1.6 }) -- directive v10: Brightness 4 burned the first-person view white (Realistic style)
 			burstAt(pos, Color3.fromRGB(255, 220, 140), 50)
 			if b == plr.UserId then sfx("sparkle", 0.7) sfx("swing", 1.5) shake(0.25) end
+			if b == plr.UserId then -- flare bloom (directive v10): the light swells through the lens and settles; no flat white flash (the cap is alpha 0.35 for 0.12 s)
+				local L = game:GetService("Lighting")
+				local bl, cc = L:FindFirstChildOfClass("BloomEffect"), L:FindFirstChildOfClass("ColorCorrectionEffect")
+				if bl and not bl:GetAttribute("FlareBusy") then
+					bl:SetAttribute("FlareBusy", true)
+					local i0, s0 = bl.Intensity, bl.Size
+					tween(bl, 0.12, { Intensity = i0 + 0.6, Size = s0 + 20 }).Completed:Connect(function()
+						tween(bl, 0.9, { Intensity = i0, Size = s0 }).Completed:Connect(function() bl:SetAttribute("FlareBusy", nil) end)
+					end)
+				end
+				if cc and not cc:GetAttribute("FlareBusy") then
+					cc:SetAttribute("FlareBusy", true)
+					local t0 = cc.TintColor
+					tween(cc, 0.12, { TintColor = t0:Lerp(Color3.fromRGB(255, 226, 180), 0.35) }).Completed:Connect(function()
+						tween(cc, 1.1, { TintColor = t0 }).Completed:Connect(function() cc:SetAttribute("FlareBusy", nil) end)
+					end)
+				end
+			end
 			tween(ball, 0.35, { Size = Vector3.one * 9, Transparency = 0.65 }, Enum.EasingStyle.Quad).Completed:Connect(function()
 				tween(ball, 0.6, { Size = Vector3.one * 12, Transparency = 1 }):Play()
 			end)

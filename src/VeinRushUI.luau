@@ -192,13 +192,26 @@ function M.start(E)
 		if howTo and howTo.Visible then howTo.Visible = false end -- the first chisel is in: the card gives the screen back
 		live.jab = { side = side, at = os.clock() }
 		local at2 = S(640 + (side == 1 and -50 or 50), 400)
+		local function word(msg, col, big) -- a short word pops where the chisel struck and floats up (2026-11-17: the strike's juice, here too)
+			local t = text(vr, msg, S(220, big and 46 or 34), at2, Vector2.new(0.5, 0.5), col, 700)
+			t.ZIndex = 14
+			pop(t, big and 1.7 or 1.3, 0.25)
+			tween(t, 0.6, { Position = at2 - S(0, 40), TextTransparency = 1, TextStrokeTransparency = 1 })
+			task.delay(0.65, function() t:Destroy() end)
+		end
 		if mg.seq[mg.i] == side then -- struck the fissure: a slip
 			mg.slips += 1
+			mg.run = 0
+			sfx("thud", 0.8) -- a dull knock: wrong (StrikeJuice's sounds)
+			word("SLIP!", Color3.fromRGB(255, 120, 140))
 			sfx("hit", 0.6)
 			shake(0.5)
 			shards(side, mg.col, true)
 			uiBurst(vr, at2, { Color3.fromRGB(255, 90, 110), PINK }, 8, 0.14)
 		else -- a clean cleave: a glass crack, shards, a small shake
+			mg.run = (mg.run or 0) + 1
+			sfx("ping", 1 + math.min(mg.run, 8) * 0.05) -- a bright ping that climbs with the clean run
+			if mg.run >= 3 then word("CLEAN x" .. mg.run, Color3.fromRGB(255, 214, 92), mg.run >= 5) end
 			sfx("clink", 1.1 + mg.i * 0.04)
 			sfx("breakRock", 1.9)
 			shake(0.16)
@@ -206,7 +219,11 @@ function M.start(E)
 		end
 		live.dropAt = os.clock() -- the spire drops one segment
 		draw()
-		if mg.i >= #mg.seq then E.send(mg) end
+		if mg.i >= #mg.seq then
+			if mg.slips == 0 then sfx("flawless", 1) word("FLAWLESS!", Color3.fromRGB(255, 214, 92), true)
+			elseif mg.slips == 1 then sfx("aww", 1) end -- so close
+			E.send(mg)
+		end
 	end
 	function api.tick(mg)
 		if not live then return end
