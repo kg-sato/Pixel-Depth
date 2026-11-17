@@ -149,6 +149,13 @@ function M.start(E)
 			e.EmissionDirection = Enum.NormalId.Front -- toward the eye
 			e.Parent = a
 			e:Emit(14)
+			local ring = Instance.new("Part") -- a quick ring of dust thrown out flat across the rock face (Gemini n17_r3: the puff had no outward speed)
+			ring.Shape, ring.Anchored, ring.CanCollide, ring.CanQuery, ring.CanTouch, ring.CastShadow = Enum.PartType.Cylinder, true, false, false, false, false
+			ring.Material, ring.Color, ring.Transparency, ring.Size = Enum.Material.SmoothPlastic, Color3.fromRGB(176, 160, 190), 0.35, Vector3.new(0.05, 0.6, 0.6)
+			ring.CFrame = basis * CFrame.new(0, 0, -0.05) * CFrame.Angles(0, math.rad(90), 0)
+			ring.Parent = fx
+			TweenService:Create(ring, TweenInfo.new(0.28, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = Vector3.new(0.05, 4.2, 4.2), Transparency = plr:GetAttribute("DevJuiceHold") and 0.5 or 1 }):Play()
+			task.delay(plr:GetAttribute("DevJuiceHold") and 4 or 0.35, function() ring:Destroy() end)
 			if plr:GetAttribute("DevJuiceHold") then task.delay(0.15, function() e.TimeScale = 0 end) end -- capture hook (see shards)
 			task.delay(plr:GetAttribute("DevJuiceHold") and 4 or 1.2, function() a:Destroy() end)
 		end
@@ -188,8 +195,8 @@ function M.start(E)
 			local a = (i / n) * math.pi * 2 + math.random() * 0.4
 			local out = basis:VectorToWorldSpace(Vector3.new(math.cos(a), math.sin(a), 0.6)).Unit
 			local s = 0.18 + math.random() * 0.2
-			local p = Instance.new("Part")
-			p.Size, p.Color, p.Material = Vector3.new(s, s, s * 1.8), c:Lerp(WHITE, math.random() * 0.3), Enum.Material.Neon
+			local p = Instance.new("WedgePart") -- a faceted sliver, not a box (Gemini n17_r3)
+			p.Size, p.Color, p.Material = Vector3.new(s * 0.7, s, s * 2.2), c:Lerp(WHITE, math.random() * 0.3), Enum.Material.Neon
 			p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow, p.Massless = false, false, false, false, true
 			p.CFrame = CFrame.lookAt(basis.Position, basis.Position + out)
 			p.Parent = fx

@@ -117,7 +117,7 @@ function M.start(E)
 				end
 				if okSB then -- the picture is drawn by slime strips that shear and squash; the box itself stays whole
 					img.Image = ""
-					bodies[img] = { SlimeBody.new(img, { image = jelly, rect = L and L.rect, cell = L and L.size or Vector2.new(512, 512), strips = 12, z = 6, qmax = 0.9 }) }
+					bodies[img] = { SlimeBody.new(img, { image = jelly, rect = L and L.rect, cell = L and L.size or Vector2.new(512, 512), strips = 24, z = 6, qmax = 0.9 }) }
 				end
 				-- a plain letter under the picture, shown only if the picture never loads (a slow phone, an asset still in review)
 				local plain = glyph(box, ch, UDim2.new(), Color3.fromRGB(255, 170, 215), 5)
@@ -128,7 +128,7 @@ function M.start(E)
 					local hot = new("ImageLabel", img, { Name = "Hot", Image = hotId, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Stretch, ZIndex = 7 })
 					if bodies[img] then -- the white-hot copy bends with it
 						hot.Image = ""
-						local hb = SlimeBody.new(hot, { image = hotId, rect = L and L.rect, cell = L and L.size or Vector2.new(512, 512), strips = 12, z = 7, qmax = 0.9 })
+						local hb = SlimeBody.new(hot, { image = hotId, rect = L and L.rect, cell = L and L.size or Vector2.new(512, 512), strips = 24, z = 7, qmax = 0.9 })
 						hot:GetPropertyChangedSignal("ImageTransparency"):Connect(function() hb.alpha(hot.ImageTransparency) end)
 						table.insert(bodies[img], hb)
 					end

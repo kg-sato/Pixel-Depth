@@ -270,6 +270,15 @@ function M.build(caves)
 					m.Name = "Prop_" .. kind
 					m.Parent = folder
 					local meshed = fromMesh(kind, m, base)
+					if meshed and (kind == "rubble" or kind == "crystal") then B.pebbles(m, base) end -- loose glowing grit round the foot (Gemini n17_r3: lone props on bare floor)
+					if meshed and kind == "mushrooms" and templates.mushrooms then -- two little ones beside the big one
+						for _ = 1, 2 do
+							local side = base * CFrame.new(rng:NextNumber(-3.5, 3.5), 0, rng:NextNumber(-2.5, 0.5))
+							local sm = Instance.new("Model")
+							sm.Parent = m
+							if fromMesh("mushrooms", sm, side) then sm:ScaleTo(sm:GetScale() * 0.45) end
+						end
+					end
 					if not meshed then B[kind](m, base, ceil and ceil.Position.Y or nil) end
 					if not meshed and M.SCALE[kind] then -- built at person size, then grown to the cave's chunky scale (4-stud cells): at 1x they read as crumbs
 						m.WorldPivot = base
