@@ -23,13 +23,13 @@ if "InCave" not in N.lua("return game.Players:GetPlayers()[1]:GetAttribute('InCa
     N.key("Q"); time.sleep(15)
 SW = ("local hud=game.Players.LocalPlayer.PlayerGui.PixelHUD.CaveHud.PerfectStrike local nd,ar=hud:FindFirstChild('Needle',true),hud:FindFirstChild('Arc',true) "
       "local function d() return (nd.Rotation-ar.Rotation+180)%360-180 end local RS=game:GetService('RunService') local t0,pv=os.clock(),d() while os.clock()-t0<3 do RS.RenderStepped:Wait() local v=d() if pv<({off}) and v>=({off}) and v-pv<60 then break end pv=v end "
-      "local v=d() game.Players.LocalPlayer:SetAttribute('DevStrike',os.clock()) return v")
+      "local v=d() game.Players.LocalPlayer:SetAttribute('DevJuiceHold',true) game.Players.LocalPlayer:SetAttribute('DevStrike',os.clock()) return v")
 def run(tag, offs):
     print(tag, go_to("d:GetAttribute('Ore')<3")); time.sleep(1.2); face()
     N.key("E"); time.sleep(1.0)
     for i, off in enumerate(offs):
         print(" swing", i + 1, N.lua(SW.replace("{off}", str(off)), "Client").splitlines()[-1])
-        time.sleep(0.25); N.shot(f"{pre}_{tag}_{i + 1}")
+        time.sleep(0.05); N.shot(f"{pre}_{tag}_{i + 1}")
         time.sleep(0.5)
     time.sleep(2.5)
 run(sys.argv[2], [float(x) for x in sys.argv[3].split(",")])

@@ -25,6 +25,10 @@ M.MIX = MIX
 M.CHANCE = 0.65 -- of a floor slab getting a prop (when it has a wall near one edge)
 M.KEEP_OUT = 11 -- studs from deposits, shrines, nests, gates and the camp
 M.MAX_LIGHTS = 24
+-- low-poly meshes (design3d/cave_props.py, ids in design3d/out/props/ids.txt; Gemini n17_r1: the block-built props read as
+-- crude voxel steps). Loaded once from the owner's uploads; if a load fails, that prop falls back to the part-built version.
+M.MESH = { crystal = { 104563237686070, 101580352907109, 80182315006407 }, mushrooms = { 73042626698026, 135393222025057 }, rubble = { 118280881420536, 83540265809680 } }
+M.HEIGHT = { crystal = 8.5, mushrooms = 6.2, rubble = 2.8 } -- studs tall once placed (the cave's 4-stud cells)
 M.SCALE = { crystal = 1.9, mushrooms = 1.8, rubble = 1.7, pebbles = 1.4 } -- roots, supports and carts are built to the room's own size
 
 function M.pick(mix, r) -- weighted pick, r in [0, 1)
@@ -163,6 +167,60 @@ function M.build(caves)
 	end
 	M.B = B
 
+	-- the mesh templates, loaded once
+	local templates = {}
+	for kind, ids in M.MESH do
+		for _, id in ids do
+			local ok, raw = pcall(function() return game:GetService("InsertService"):LoadAsset(id) end)
+			if ok and raw then
+				local m = Instance.new("Model")
+				for _, d in raw:GetDescendants() do
+					if d:IsA("MeshPart") then
+						d.Anchored, d.CanCollide, d.CanQuery, d.CanTouch, d.CastShadow = true, false, false, false, false
+						local sa = d:FindFirstChildOfClass("SurfaceAppearance") if sa then sa:Destroy() end
+						d.TextureID = ""
+						d.Parent = m
+					end
+				end
+				raw:Destroy()
+				if #m:GetChildren() > 0 then
+					templates[kind] = templates[kind] or {}
+					table.insert(templates[kind], m)
+				end
+			end
+		end
+	end
+	local LOOK = { -- each mesh part's look by its name (the roles in design3d/cave_props.py)
+		Shell = function(p, c) p.Material, p.Color, p.Transparency, p.Reflectance = Enum.Material.Glass, c:Lerp(OBSIDIAN, 0.3), 0.18, 0.15 end,
+		Core = function(p, c) p.Material, p.Color = Enum.Material.Neon, c end,
+		Rock = function(p) p.Material, p.Color = Enum.Material.Slate, PLUM:Lerp(VIOLET, 0.12) end,
+		Cap = function(p, c) p.Material, p.Color = Enum.Material.SmoothPlastic, c end,
+		Gill = function(p, c) p.Material, p.Color = Enum.Material.Neon, c:Lerp(Color3.new(1, 1, 1), 0.2) end,
+		Stem = function(p) p.Material, p.Color = Enum.Material.SmoothPlastic, CREAM end,
+		Spot = function(p) p.Material, p.Color = Enum.Material.Neon, CREAM end,
+		Gem = function(p, c) p.Material, p.Color = Enum.Material.Neon, c end,
+	}
+	local function fromMesh(kind, m, base)
+		local list = templates[kind]
+		if not list then return false end
+		local t = list[rng:NextInteger(1, #list)]:Clone()
+		local col = kind == "crystal" and (rng:NextNumber() < 0.75 and CYAN or LAV) or kind == "mushrooms" and (rng:NextNumber() < 0.8 and MAGENTA or VIOLET) or (rng:NextNumber() < 0.5 and CYAN or MAGENTA)
+		for _, p in t:GetChildren() do
+			local f = LOOK[p.Name]
+			if f then f(p, col) end
+			p.Parent = m
+		end
+		t:Destroy()
+		local cf, size = m:GetBoundingBox()
+		m.WorldPivot = cf * CFrame.new(0, -size.Y / 2, 0) -- the foot
+		local k = M.HEIGHT[kind] * (0.8 + rng:NextNumber() * 0.4) / size.Y
+		m:ScaleTo(k)
+		m:PivotTo(base * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0) * CFrame.new(0, -0.25, 0)) -- sunk a little into the floor
+		local lit = m:FindFirstChild("Core") or m:FindFirstChild("Gill") or m:FindFirstChild("Gem")
+		if lit then light(lit, col, kind == "rubble" and 8 or 14, kind == "rubble" and 0.4 or 0.9) end
+		return true
+	end
+
 	-- where props may not go
 	local keep = {}
 	for _, name in { "Deposits", "Shrines", "Nests", "Gate", "Camp", "Altar", "Ziplines", "Clay" } do
@@ -211,8 +269,9 @@ function M.build(caves)
 					local m = Instance.new("Model")
 					m.Name = "Prop_" .. kind
 					m.Parent = folder
-					B[kind](m, base, ceil and ceil.Position.Y or nil)
-					if M.SCALE[kind] then -- built at person size, then grown to the cave's chunky scale (4-stud cells): at 1x they read as crumbs
+					local meshed = fromMesh(kind, m, base)
+					if not meshed then B[kind](m, base, ceil and ceil.Position.Y or nil) end
+					if not meshed and M.SCALE[kind] then -- built at person size, then grown to the cave's chunky scale (4-stud cells): at 1x they read as crumbs
 						m.WorldPivot = base
 						m:ScaleTo(M.SCALE[kind])
 					end

@@ -88,35 +88,69 @@ function M.start(E)
 			local at, nrm = hit and hit.Position or core.Position, hit and hit.Normal or (cam.CFrame.Position - core.Position).Unit
 			basis, r0 = CFrame.lookAt(at + nrm * 0.04, at + nrm * 2), 0
 		end
-		local col = run.col:Lerp(WHITE, perfect and 0.75 or 0.5) -- light from inside the rock: the ore's colour, very bright
-		for i = 1, perfect and 4 or 2 do
-			local deg = (#run.cracks * 29 + i * 97) % 360
-			if deg > 45 and deg < 135 then deg += 120 end -- never up through the title above the ring
-			local ang = math.rad(deg)
-			local len = (perfect and 1.1 or 0.6) + math.random() * 0.7
-			local dir = basis:VectorToWorldSpace(Vector3.new(math.cos(ang), math.sin(ang), 0))
-			local bend = basis:VectorToWorldSpace(Vector3.new(-math.sin(ang), math.cos(ang), 0)) * (math.random() - 0.5) * 0.5
-			local from = basis.Position + dir * r0
-			for seg = 1, 2 do -- two segments with a kink, so it reads as a crack, not a stick
-				local d2 = (dir + bend * (seg - 1)).Unit
-				local l2 = len * (seg == 1 and 0.55 or 0.45)
+		local hh, ss = run.col:ToHSV()
+		local col = Color3.fromHSV(hh, math.min(ss, 0.75), 1):Lerp(WHITE, perfect and 0.25 or 0.1) -- light from inside the rock: the ore's own hue at full brightness (white read as lightning)
+		local function seg(from, d, len, w)
+			local mid = from + d * len / 2
+			-- a crack in rock, not lightning (Gemini n17_r2): a dark split with, on a PERFECT, a thin hot line of ore light deep inside it
+			for _, q in perfect and { { w * 1.8, 0, false }, { w * 0.75, 0, true } } or { { w, 0, false } } do -- (a soft halo round it read as a pale ribbon)
 				local p = Instance.new("Part")
 				p.Anchored, p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow = true, false, false, false, false
-				p.Material, p.Color, p.Transparency = Enum.Material.Neon, col, 0.05
-				p.Size = Vector3.new(0.1, 0.1, 0.01)
-				local mid = from + d2 * l2 / 2
-				p.CFrame = CFrame.lookAt(mid, mid + d2)
+				p.Material, p.Color, p.Transparency = q[3] and Enum.Material.Neon or Enum.Material.Slate, q[3] and col or Color3.fromRGB(26, 14, 34), q[2] -- an OK swing: the dark split only, no light
+				p.Size = Vector3.new(q[1], q[1] * 0.5, 0.01)
+				p.CFrame = CFrame.lookAt(mid, mid + d, basis.LookVector) * CFrame.new(0, q[3] and 0.006 or 0, 0) -- the light sits a hair proud of the split
 				p.Parent = fx
-				local w = (perfect and 0.16 or 0.1) * (seg == 1 and 1 or 0.6)
-				local halo = p:Clone() -- a soft glow round the crack (a fainter, 3x thicker copy, Motion rule for glow on a line)
-				halo.Transparency, halo.Parent = 0.8, fx
-				for _, q in { { p, w }, { halo, w * 3 } } do
-					local tw = TweenService:Create(q[1], TweenInfo.new(0.06, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = Vector3.new(q[2], q[2], l2) })
-					task.delay((seg - 1) * 0.05, function() tw:Play() end) -- the crack runs outward
-					table.insert(run.cracks, q[1])
-				end
-				from += d2 * l2
+				table.insert(run.cracks, p)
+				TweenService:Create(p, TweenInfo.new(0.05, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = Vector3.new(q[1], q[1] * 0.5, len + q[1] * 0.4) }):Play()
 			end
+			return from + d * len
+		end
+		-- a fissure: it runs outward in short kinked steps, thinning as it goes, and forks once (rock does not split in straight bars)
+		local function fissure(ang, len, w, depth)
+			local from = basis.Position + basis:VectorToWorldSpace(Vector3.new(math.cos(ang), math.sin(ang), 0)) * r0
+			local steps = 4
+			for k = 1, steps do
+				ang += (math.random() - 0.5) * 0.9
+				local d = basis:VectorToWorldSpace(Vector3.new(math.cos(ang), math.sin(ang), 0))
+				local wk = w * (1 - (k - 1) / steps * 0.7)
+				local at = from
+				task.delay((k - 1) * 0.035, function() if run then seg(at, d, len / steps, wk) end end)
+				from += d * len / steps
+				if k == 2 and depth == 0 then
+					local f2, a2 = from, ang + (math.random() < 0.5 and -0.7 or 0.7)
+					task.delay(0.08, function() -- the fork
+						if not run then return end
+						local p2 = f2
+						for j = 1, 2 do
+							local d2 = basis:VectorToWorldSpace(Vector3.new(math.cos(a2), math.sin(a2), 0))
+							p2 = seg(p2, d2, len * 0.22, w * (0.45 - j * 0.12))
+							a2 += (math.random() - 0.5) * 0.8
+						end
+					end)
+				end
+			end
+		end
+		for i = 1, perfect and 5 or 1 do
+			local deg = (#run.cracks * 29 + i * 120 + math.random(-20, 20)) % 360
+			if deg > 45 and deg < 135 then deg += 120 end -- never up through the title above the ring
+			fissure(math.rad(deg), (perfect and 2.4 or 1.0) + math.random() * 0.8, perfect and 0.11 or 0.05, perfect and 0 or 1)
+		end
+		if not perfect then -- an OK swing: a dull puff of rock dust instead of light (Gemini n17_r1: the short glowing stubs read as a glitch)
+			local a = Instance.new("Part")
+			a.Anchored, a.CanCollide, a.CanQuery, a.CanTouch, a.Transparency, a.Size = true, false, false, false, 1, Vector3.one
+			a.CFrame = basis * CFrame.new(0, 0, -0.4)
+			a.Parent = fx
+			local e = Instance.new("ParticleEmitter")
+			e.Texture, e.Rate, e.Lifetime, e.Speed = "rbxasset://textures/particles/smoke_main.dds", 0, NumberRange.new(0.5, 0.9), NumberRange.new(3, 7)
+			e.SpreadAngle, e.Drag, e.Acceleration = Vector2.new(60, 60), 4, Vector3.new(0, -3, 0)
+			e.Color = ColorSequence.new(Color3.fromRGB(150, 130, 170))
+			e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.6), NumberSequenceKeypoint.new(1, 2.2) })
+			e.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.45), NumberSequenceKeypoint.new(1, 1) })
+			e.EmissionDirection = Enum.NormalId.Front -- toward the eye
+			e.Parent = a
+			e:Emit(14)
+			if plr:GetAttribute("DevJuiceHold") then task.delay(0.15, function() e.TimeScale = 0 end) end -- capture hook (see shards)
+			task.delay(plr:GetAttribute("DevJuiceHold") and 4 or 1.2, function() a:Destroy() end)
 		end
 	end
 
@@ -135,8 +169,39 @@ function M.start(E)
 			p.Parent = fx
 			p.AssemblyLinearVelocity = toEye * (6 + math.random() * 6) + Vector3.new(math.random(-5, 5), 8 + math.random() * 6, math.random(-5, 5))
 			p.AssemblyAngularVelocity = Vector3.new(math.random(-12, 12), math.random(-12, 12), math.random(-12, 12))
+			if plr:GetAttribute("DevJuiceHold") then task.delay(0.12, function() p.Anchored = true end) end -- capture hook (see shards)
 			task.delay(1.3, function() TweenService:Create(p, TweenInfo.new(0.4), { Transparency = 1, Size = p.Size * 0.4 }):Play() end)
 			task.delay(1.8, function() p:Destroy() end)
+		end
+	end
+
+	-- a PERFECT throws a ring of glowing ore shards out of the rock, fast and flat toward the eye (Gemini n17_r2: "a radial burst of faceted ore shards")
+	local function shards(n, col)
+		local core = run and run.dep.PrimaryPart
+		if not core then return end
+		local cam = workspace.CurrentCamera
+		local plate = cam:FindFirstChild("ReticleAnchor")
+		local basis = plate and plate.CFrame or CFrame.lookAt(core.Position, cam.CFrame.Position)
+		local hh, ss = col:ToHSV()
+		local c = Color3.fromHSV(hh, math.min(ss, 0.8), 1)
+		for i = 1, n do
+			local a = (i / n) * math.pi * 2 + math.random() * 0.4
+			local out = basis:VectorToWorldSpace(Vector3.new(math.cos(a), math.sin(a), 0.6)).Unit
+			local s = 0.18 + math.random() * 0.2
+			local p = Instance.new("Part")
+			p.Size, p.Color, p.Material = Vector3.new(s, s, s * 1.8), c:Lerp(WHITE, math.random() * 0.3), Enum.Material.Neon
+			p.CanCollide, p.CanQuery, p.CanTouch, p.CastShadow, p.Massless = false, false, false, false, true
+			p.CFrame = CFrame.lookAt(basis.Position, basis.Position + out)
+			p.Parent = fx
+			p.AssemblyLinearVelocity = out * (18 + math.random() * 10)
+			p.AssemblyAngularVelocity = Vector3.new(math.random(-20, 20), math.random(-20, 20), math.random(-20, 20))
+			if plr:GetAttribute("DevJuiceHold") then -- capture hook: the burst stops mid-flight for a still (screen captures land a second late)
+				task.delay(0.12, function() p.Anchored = true end)
+				task.delay(4, function() p:Destroy() end)
+			else
+				TweenService:Create(p, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Size = Vector3.one * 0.02, Transparency = 1 }):Play()
+				task.delay(0.5, function() p:Destroy() end)
+			end
 		end
 	end
 
@@ -201,7 +266,8 @@ function M.start(E)
 				sfx("crack", 1.1)
 				crack(true)
 				jolt(0.32)
-				chips(3, run.col)
+				chips(4, run.col)
+				shards(12, run.col)
 				rumble(true)
 				if n < STRIKES then say(run.streak > 1 and ("PERFECT x" .. run.streak) or "PERFECT!", GOLD) end
 			else

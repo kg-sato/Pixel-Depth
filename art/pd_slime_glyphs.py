@@ -74,11 +74,11 @@ def jelly(nt, b):
     ramp = nt.nodes.new("ShaderNodeValToRGB")
     mp = nt.nodes.new("ShaderNodeMapRange")
     mp.inputs["From Min"].default_value, mp.inputs["From Max"].default_value = -0.4, 0.4
-    ramp.color_ramp.elements[0].color = (1.0, 0.05, 0.42, 1) if not WHITE else (0.62, 0.6, 0.7, 1)  # magenta at the foot
+    ramp.color_ramp.elements[0].color = (0.92, 0.1, 0.62, 1) if not WHITE else (0.62, 0.6, 0.7, 1)  # slime: magenta-purple at the foot (ref slime_flux_s3)
     if TONE: ramp.color_ramp.elements[0].color = TONE[0] + (1,)
-    ramp.color_ramp.elements[1].color = (0.74, 0.5, 1.0, 1) if not WHITE else (0.9, 0.9, 0.94, 1)  # lavender at the head
+    ramp.color_ramp.elements[1].color = (0.62, 0.68, 1.0, 1) if not WHITE else (0.9, 0.9, 0.94, 1)  # slime: periwinkle at the head
     mid = ramp.color_ramp.elements.new(0.5)
-    mid.color = (1.0, 0.32, 0.72, 1) if not WHITE else (0.86, 0.85, 0.92, 1)
+    mid.color = (0.8, 0.45, 1.0, 1) if not WHITE else (0.86, 0.85, 0.92, 1)  # slime: lavender in the middle
     if TONE:
         mid.color = TONE[1] + (1,)
         ramp.color_ramp.elements[2].color = TONE[2] + (1,)
@@ -156,7 +156,7 @@ def text(ch, extrude, bevel, offset, z, material):
 
 
 import bmesh, random, mathutils
-NAMES = {"!": "bang", "?": "ask", "+": "plus", "%": "pct", ":": "colon", "-": "dash", "/": "slash", ".": "dot", "'": "apos", ",": "comma", "(": "lpar", ")": "rpar", "&": "amp", "<": "lt", ">": "gt", "=": "eq"}
+NAMES = {"~": "bridge", "!": "bang", "?": "ask", "+": "plus", "%": "pct", ":": "colon", "-": "dash", "/": "slash", ".": "dot", "'": "apos", ",": "comma", "(": "lpar", ")": "rpar", "&": "amp", "<": "lt", ">": "gt", "=": "eq"}
 BIG = SIZE >= 512
 NOISE = bpy.data.textures.new("lumps", "CLOUDS"); NOISE.noise_scale = 0.3
 
@@ -209,8 +209,34 @@ def slime(ch):
     return [o]
 
 
+def bridge():
+    """A goo strand: a soft rope that pinches thin in the middle with a blob at each end, laid along x (the logo hangs them between letters)."""
+    bm = bmesh.new()
+    rings, segs = 24, 16
+    verts = []
+    for i in range(rings + 1):
+        x = -0.55 + 1.1 * i / rings
+        r = 0.03 + 0.15 * (abs(x) / 0.55) ** 3  # thin in the middle, flaring wide where it meets a letter
+        sag = -0.14 * math.cos(math.pi * x / 1.1)  # it hangs: a catenary dip
+        verts.append([bm.verts.new((x, sag + r * math.cos(2 * math.pi * k / segs), r * math.sin(2 * math.pi * k / segs))) for k in range(segs)])
+    for i in range(rings):
+        for k in range(segs):
+            bm.faces.new((verts[i][k], verts[i][(k + 1) % segs], verts[i + 1][(k + 1) % segs], verts[i + 1][k]))
+    bm.faces.new(list(reversed(verts[0]))); bm.faces.new(verts[-1])
+    # no end balls: round knobs on the ends read as bones (2026-11-17); the flared ends hide inside the letters
+    me = bpy.data.meshes.new("bridge"); bm.to_mesh(me); bm.free()
+    o = bpy.data.objects.new("bridge", me); sc.collection.objects.link(o)
+    o.location = (0, 0, 0.06)
+    o.data.materials.append(M_JELLY)
+    r = o.modifiers.new("melt", "REMESH"); r.mode, r.voxel_size = "VOXEL", 0.009
+    sm = o.modifiers.new("soft", "SMOOTH"); sm.factor, sm.iterations = 0.9, 10
+    sub = o.modifiers.new("sub", "SUBSURF"); sub.levels = sub.render_levels = 1
+    for p in o.data.polygons: p.use_smooth = True
+    return [o]
+
+
 for ch in CHARS:
-    objs = slime(ch)
+    objs = bridge() if ch == "~" else slime(ch)
     bpy.context.view_layer.update()
     sc.render.filepath = os.path.join(os.path.abspath(out), NAMES.get(ch, ch) + ".png")
     bpy.ops.render.render(write_still=True)

@@ -11,7 +11,7 @@ video = game / "captures" / "loop" / f"{name}.mp4"
 if video.exists(): video.unlink()
 rec = subprocess.Popen([VENV, "-I", str(game.parent.parent / "tools" / "record_window.py"), str(video), sys.argv[2] if len(sys.argv) > 2 else "5", "30"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(1.2)
-N.lua('local C=require(game.ReplicatedStorage.Shared.Config) task.spawn(function() require(game.ReplicatedStorage.Shared.LoadingScreen).start({ C = { LOADING = { on = true, min = 6, letters = C.LOADING.letters, hot = C.LOADING.hot } }, plr = game.Players.LocalPlayer }) end) return 1', "Client")
+N.lua('local C=require(game.ReplicatedStorage.Shared.Config) task.spawn(function() require(game.ReplicatedStorage.Shared.LoadingScreen).start({ C = { LOADING = (function() local t = table.clone(C.LOADING) t.on, t.min = true, 6 return t end)(), UI_GLASS = C.UI_GLASS }, plr = game.Players.LocalPlayer }) end) return 1', "Client")
 rec.wait(timeout=30)
 tmp = game / "captures" / "loop" / f"_{name}"
 shutil.rmtree(tmp, ignore_errors=True); tmp.mkdir()

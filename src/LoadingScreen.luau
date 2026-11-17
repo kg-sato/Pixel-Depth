@@ -85,7 +85,7 @@ function M.start(E)
 				new("UIAspectRatioConstraint", halo, { AspectRatio = 1 })
 				if okSB then -- the picture is drawn by eight slime strips that shear and squash; the box itself stays whole
 					img.Image = ""
-					bodies[img] = { SlimeBody.new(img, { image = jelly, cell = Vector2.new(512, 512), strips = 8, z = 6, qmax = 0.9 }) }
+					bodies[img] = { SlimeBody.new(img, { image = jelly, cell = Vector2.new(512, 512), strips = 12, z = 6, qmax = 0.9 }) }
 				end
 				-- a plain letter under the picture, shown only if the picture never loads (a slow phone, an asset still in review)
 				local plain = glyph(box, ch, UDim2.new(), Color3.fromRGB(255, 170, 215), 5)
@@ -95,7 +95,7 @@ function M.start(E)
 					local hot = new("ImageLabel", img, { Name = "Hot", Image = cfg.hot[ch], BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Stretch, ZIndex = 7 })
 					if bodies[img] then -- the white-hot copy bends with it
 						hot.Image = ""
-						local hb = SlimeBody.new(hot, { image = cfg.hot[ch], cell = Vector2.new(512, 512), strips = 8, z = 7, qmax = 0.9 })
+						local hb = SlimeBody.new(hot, { image = cfg.hot[ch], cell = Vector2.new(512, 512), strips = 12, z = 7, qmax = 0.9 })
 						hot:GetPropertyChangedSignal("ImageTransparency"):Connect(function() hb.alpha(hot.ImageTransparency) end)
 						table.insert(bodies[img], hb)
 					end
@@ -182,6 +182,19 @@ function M.start(E)
 		l.sc.Scale = 1
 	end
 	local slamAt = letters[n].at + 0.13
+	-- goo bridges (Gemini n17_r1: "connect adjacent letters with viscous ligaments"): a strand of the same slime hangs between a
+	-- few neighbouring letters once both have landed; it stretches thinner as they move apart and wobbles with their bounce
+	local bridges = {}
+	if cfg.bridge then
+		for _, pr in { { 3, 4 }, { 6, 7 }, { 8, 9 } } do
+			local a, b = letters[pr[1]], letters[pr[2]]
+			if a and b then
+				local img = new("ImageLabel", title, { Name = "Goo", Image = cfg.bridge, BackgroundTransparency = 1, ImageTransparency = 1, AnchorPoint = MID, ScaleType = Enum.ScaleType.Stretch, ZIndex = 4 }) -- behind the letters: its end blobs hide inside them and only the stretched middle shows (in front they read as bones)
+				table.insert(bridges, { img = img, a = a, b = b, gap0 = nil })
+			end
+		end
+	end
+	local titleAspect = #WORD * 0.62
 	local spread, kickX, kickY, tilt, punch = spring(0.55, 4, 0.2), spring(0, 4.2, 0.15), spring(0, 4.6, 0.16), spring(-6, 3.3, 0.18), spring(0, 4.6, 0.18)
 	spread.goal, tilt.goal = 0.84, 0
 	local titleScale = title:FindFirstChildOfClass("UIScale")
@@ -403,6 +416,22 @@ function M.start(E)
 					l.box.Rotation = rot
 					l.halo.TextTransparency = breath
 				end
+			end
+		end
+		for _, br in bridges do
+			local a, b = br.a, br.b
+			if now >= math.max(a.at, b.at) + 0.3 then
+				local xa, xb = a.cell.Position.X.Scale, b.cell.Position.X.Scale
+				local gap = math.abs(xb - xa)
+				br.gap0 = br.gap0 or gap
+				local st = gap / br.gap0
+				local w = gap * 1.1 -- the end blobs sink into the two letters
+				local h = br.gap0 * 0.95 * titleAspect * 1.5 / math.sqrt(math.max(st, 0.3)) -- stretched thinner, pressed fatter
+				local sag = (a.sy.x + b.sy.x - 2) * 0.12 -- the bounce of the two letters pulls the strand down and up
+				br.img.Size = UDim2.fromScale(w, h)
+				br.img.Position = UDim2.fromScale((xa + xb) / 2, 0.5 + 0.2 + (a.cell.Position.Y.Scale + b.cell.Position.Y.Scale - 1) / 2 + sag)
+				br.img.Rotation = (b.cell.Position.Y.Scale - a.cell.Position.Y.Scale) * 40
+				br.img.ImageTransparency = math.max(0, br.img.ImageTransparency - dt * 5)
 			end
 		end
 		now = real
