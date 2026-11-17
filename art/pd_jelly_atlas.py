@@ -5,6 +5,8 @@ import pathlib
 from PIL import Image
 
 here = pathlib.Path(__file__).resolve().parent
+import sys
+PRE = sys.argv[1] if len(sys.argv) > 1 else "jelly"  # "slime": the slime glyphs of 2026-11-16 (pd_slime_glyphs.py)
 CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!?+%:-/.',()&<>="
 NAMES = {"!": "bang", "?": "ask", "+": "plus", "%": "pct", ":": "colon", "-": "dash", "/": "slash", ".": "dot", "'": "apos", ",": "comma", "(": "lpar", ")": "rpar", "&": "amp", "<": "lt", ">": "gt", "=": "eq"}
 CELL, COLS = 128, 8
@@ -14,7 +16,7 @@ def load(folder):
     return {ch: Image.open(here / folder / (NAMES.get(ch, ch) + ".png")).convert("RGBA") for ch in CHARS}
 
 
-pink = load("jelly_pink")
+pink = load(PRE + "_pink")
 src = pink["A"].size[0]
 # one square crop for every glyph, centred on the cell: as tall as the tallest capital, as wide as the widest glyph
 top, bot, wide = src, 0, 0
@@ -32,12 +34,12 @@ print("source", src, "crop side", side, crop)
 rows = (len(CHARS) + COLS - 1) // COLS
 adv = {}
 import os
-for folder, glyphs in [("jelly_pink", pink)] + [(f, load(f)) for f in ("jelly_white", "jelly_gold", "jelly_cyan", "jelly_violet", "jelly_mint") if os.path.isdir(here / f)]:
+for folder, glyphs in [(PRE + "_pink", pink)] + [(f, load(f)) for f in (PRE + "_white", PRE + "_gold", PRE + "_cyan", PRE + "_violet", PRE + "_mint") if os.path.isdir(here / f)]:
     atlas = Image.new("RGBA", (COLS * CELL, rows * CELL), (0, 0, 0, 0))
     for i, ch in enumerate(CHARS):
         g = glyphs[ch].crop(crop).resize((CELL, CELL), Image.LANCZOS)
         atlas.alpha_composite(g, ((i % COLS) * CELL, (i // COLS) * CELL))
-        if folder == "jelly_pink":
+        if folder == PRE + "_pink":
             b = boxes[ch]
             adv[ch] = round(((b[2] - b[0]) / side) * 0.9 + 0.02, 3)  # the puffy rims overlap a little: letters sit close like the reference
     atlas.save(here / folder / "_atlas.png")

@@ -1,0 +1,17 @@
+Image ids (Studio upload_image):
+slime_logo E 102471189182707
+slime_logo T 88045725725736
+slime_logo I 92865887161207
+slime_logo D 92183657568273
+slime_logo L 84678141966083
+slime_logo P 104344675103809
+slime_logo H 132244672865097
+slime_logo X 128332759596973
+slime_logo_white P 118450661157735
+slime_logo_white L 130511262876191
+slime_logo_white E 97606212943109
+slime_logo_white T 102434841030602
+slime_logo_white I 92653656219240
+slime_logo_white X 71899645060592
+slime_logo_white H 86843130143736
+slime_logo_white D 114820832903135

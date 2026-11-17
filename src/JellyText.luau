@@ -10,12 +10,15 @@
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local G = require(script.Parent:WaitForChild("JellyGlyphs"))
+local SlimeBody = require(script.Parent:WaitForChild("SlimeBody")) -- 2026-11-16 night: each letter is a soft slime body, not a stiff picture
 local C = require(script.Parent:WaitForChild("Config"))
 local M = {}
 
 local MID = Vector2.new(0.5, 0.5)
 local SPACE = 0.34
 local live = {} -- every word on screen, for the one shared animation loop
+local calm = false
+pcall(function() calm = game:GetService("GuiService").ReducedMotionEnabled end)
 
 -- The atlas pictures must really be on screen before any plain text is hidden: a picture that is still loading, or that the
 -- platform has not approved yet, draws nothing, and mirrored labels would be blank. ready[image] turns true once it has loaded.
@@ -101,9 +104,13 @@ function M.new(parent, str, opt)
 					glow.ZIndex, glow.ImageTransparency, glow.Size = z, 0.62, UDim2.fromScale(1.22 / total, 1.22)
 					glow.ImageColor3 = self.color or Color3.fromRGB(255, 0, 127)
 				end
-				local img = make("ImageLabel", row, props)
-				if tint then img.ImageColor3 = tint end
-				table.insert(self.glyphs, { img = img, glow = glow, sc = make("UIScale", img, {}), pos = pos, w = 1 / total, i = i })
+				local img = make("ImageLabel", row, props) -- the letter's box: it draws nothing itself; its slime strips draw the letter
+				img.Image = ""
+				local body = SlimeBody.new(img, { image = image, rect = rect, cell = Vector2.new(G.cell, G.cell), strips = 3, z = z + 1 })
+				if tint then img.ImageColor3 = tint body.tint(tint) end
+				img:GetPropertyChangedSignal("ImageTransparency"):Connect(function() body.alpha(img.ImageTransparency) end) -- callers fade the box (ArrivalBanner, mirror)
+				img:GetPropertyChangedSignal("ImageColor3"):Connect(function() body.tint(img.ImageColor3) end)
+				table.insert(self.glyphs, { img = img, body = body, glow = glow, sc = make("UIScale", img, {}), pos = pos, w = 1 / total, i = i })
 				x += g[2]
 			else
 				x += SPACE
@@ -128,6 +135,7 @@ function M.new(parent, str, opt)
 			g.born = self.born + (k - 1) * (stagger or 0.035)
 			task.delay((k - 1) * (stagger or 0.035), function()
 				if g.img.Parent then TweenService:Create(g.sc, TweenInfo.new(0.22, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play() end
+				task.delay(0.12, function() g.body.kick((math.random() - 0.5) * 5, -7) end) -- it lands: squashes flat, swings, settles
 			end)
 		end
 	end
@@ -138,6 +146,20 @@ function M.new(parent, str, opt)
 
 	build(str or "")
 	if opt.pop then self.pop() end
+	self.nextBlorp = os.clock() + 1 + math.random() * 4
+	local lastX
+	row.MouseMoved:Connect(function(x) -- the pointer brushing a word pushes the letters it passes, and the wave runs on
+		if calm or not lastX then lastX = x return end
+		local rel = (x - row.AbsolutePosition.X) / math.max(row.AbsoluteSize.X, 1)
+		local best, bd
+		for _, g in self.glyphs do
+			local d = math.abs(g.pos.X.Scale - rel)
+			if not bd or d < bd then best, bd = g, d end
+		end
+		if best then best.body.kick(math.clamp((x - lastX) * 0.04, -2.5, 2.5), -0.4) end
+		lastX = x
+	end)
+	row.MouseLeave:Connect(function() lastX = nil end)
 	live[self] = true
 	row.Destroying:Connect(function() live[self] = nil end)
 	return self
@@ -216,8 +238,6 @@ end
 
 -- A four-point star glint that pops on a letter and fades: the shine on glass (words made with glow = true twinkle now and
 -- then; never under Reduced Motion).
-local calm = false
-pcall(function() calm = game:GetService("GuiService").ReducedMotionEnabled end)
 local function shown(o) -- is this word really on screen: every ancestor visible, its gui enabled
 	while o do
 		if o:IsA("GuiObject") and not o.Visible then return false end
@@ -255,13 +275,25 @@ RunService.RenderStepped:Connect(function()
 	lastStep = now
 	for t in live do
 		if t.glow and not calm and #t.glyphs > 0 and t.frame.Parent and t.frame.Visible and math.random() < dt * 0.9 and t.frame.AbsoluteSize.Y >= 28 then glint(t) end
-		if t.frame.Parent and t.sway then
-			for _, g in t.glyphs do
-				local age = g.born and (now - g.born) or 9
-				local wob = (age > 0 and age < 1.2) and math.exp(-age * 5) * math.sin(age * 22) * 0.2 or 0 -- squash and stretch that dies away
-				g.img.Size = UDim2.fromScale(g.w * (1 + wob), 1 - wob)
-				g.img.Rotation = math.sin(now * 1.7 + g.i * 0.9) * 1.1
-				g.img.Position = g.pos + UDim2.fromScale(0, math.sin(now * 2.1 + g.i * 0.7) * 0.03)
+		if t.frame.Parent then -- every word is slime: kicks (a pop, a pointer) bend it; only swaying words also shiver and bob on their own
+			local n = #t.glyphs
+			if t.sway and not calm and n > 0 and now > t.nextBlorp then -- now and then the slime shivers by itself: a kick on one letter that runs through the word
+				t.nextBlorp = now + 3 + math.random() * 5
+				if shown(t.frame) and t.frame.AbsoluteSize.Y >= 18 then
+					local g = t.glyphs[math.random(1, n)]
+					g.body.kick((math.random() < 0.5 and -1 or 1) * (1.2 + math.random()), -1.5)
+				end
+			end
+			for k, g in t.glyphs do
+				if not calm then -- each letter pulls toward its neighbours' lean: a push on one letter travels along the word as a wave
+					local l, r = t.glyphs[k - 1], t.glyphs[k + 1]
+					local avg = ((l and l.body.s or g.body.s) + (r and r.body.s or g.body.s)) / 2
+					g.body.step(dt, avg - g.body.s)
+				end
+				if t.sway then
+					g.img.Rotation = math.sin(now * 1.7 + g.i * 0.9) * 1.1
+					g.img.Position = g.pos + UDim2.fromScale(0, math.sin(now * 2.1 + g.i * 0.7) * 0.03)
+				end
 			end
 		end
 	end

@@ -64,6 +64,8 @@ function M.start(E)
 	new("UIAspectRatioConstraint", title, { AspectRatio = #WORD * 0.62, DominantAxis = Enum.DominantAxis.Width })
 	new("UIScale", title, { Scale = 2.5 }) -- scaled text is capped at 100 px: the word is laid out small and magnified
 	local letters = {}
+	local okSB, SlimeBody = pcall(function() return require(script.Parent:WaitForChild("SlimeBody")) end)
+	local bodies = {} -- the letter picture's box -> its slime body (2026-11-16 night: the letters bend like slime, not only bounce)
 	local px = math.clamp(math.floor(workspace.CurrentCamera.ViewportSize.X * 0.3 / #WORD * 1.3), 8, 100) -- a fixed size, magnified by the UIScale: TextScaled stops at 100 px on screen
 	local function glyph(parent, ch, pos, color, z, tr)
 		return new("TextLabel", parent, { Text = ch, Font = Enum.Font.Arcade, TextSize = px, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Position = pos, TextColor3 = color, TextTransparency = tr or 0, ZIndex = z })
@@ -81,12 +83,22 @@ function M.start(E)
 				local img = new("ImageLabel", box, { Name = "Jelly", Image = jelly, BackgroundTransparency = 1, Size = UDim2.fromScale(1.12, 1.12), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ScaleType = Enum.ScaleType.Stretch, ZIndex = 6 }) -- Stretch: the picture itself squashes and stretches with its frame
 				new("UIAspectRatioConstraint", img, { AspectRatio = 1 })
 				new("UIAspectRatioConstraint", halo, { AspectRatio = 1 })
+				if okSB then -- the picture is drawn by eight slime strips that shear and squash; the box itself stays whole
+					img.Image = ""
+					bodies[img] = { SlimeBody.new(img, { image = jelly, cell = Vector2.new(512, 512), strips = 8, z = 6, qmax = 0.9 }) }
+				end
 				-- a plain letter under the picture, shown only if the picture never loads (a slow phone, an asset still in review)
 				local plain = glyph(box, ch, UDim2.new(), Color3.fromRGB(255, 170, 215), 5)
 				plain.Name, plain.Visible, plain.Font = "Plain", false, Enum.Font.FredokaOne
 				new("UIStroke", plain, { Color = Color3.fromRGB(120, 20, 110), Thickness = 2 })
 				if cfg.hot and cfg.hot[ch] then -- the same letter in white, laid over it while it is still hot from landing
-					new("ImageLabel", img, { Name = "Hot", Image = cfg.hot[ch], BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Stretch, ZIndex = 7 })
+					local hot = new("ImageLabel", img, { Name = "Hot", Image = cfg.hot[ch], BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Stretch, ZIndex = 7 })
+					if bodies[img] then -- the white-hot copy bends with it
+						hot.Image = ""
+						local hb = SlimeBody.new(hot, { image = cfg.hot[ch], cell = Vector2.new(512, 512), strips = 8, z = 7, qmax = 0.9 })
+						hot:GetPropertyChangedSignal("ImageTransparency"):Connect(function() hb.alpha(hot.ImageTransparency) end)
+						table.insert(bodies[img], hb)
+					end
 				end
 			else
 			halo = glyph(box, ch, UDim2.new(), MAGENTA, 3, 0.55) -- the neon bloom: a wide soft outline behind everything
@@ -205,7 +217,7 @@ function M.start(E)
 		end
 		ready = true
 	end)
-	local slammed = false
+	local slammed, waveAt = false, nil
 	-- sound: a soft pop for each letter, a step higher each time, and a thud with a sparkle when the word shakes (the game's
 	-- own "pop", "land" and "sparkle" sounds; not heard by Claude). Config.LOADING.sound = false turns it off.
 	local function play(id, vol, pitch)
@@ -334,6 +346,19 @@ function M.start(E)
 				end)
 			end
 		end
+		if slammed and now > (waveAt or 0) then -- now and then a shiver runs along the word from one letter, like a wobble through slime
+			if waveAt then
+				local from, dir = math.random(1, n), math.random() < 0.5 and -1 or 1
+				for k, l in letters do
+					task.delay(math.abs(k - from) * 0.06, function()
+						local f = 1 / (1 + math.abs(k - from) * 0.5)
+						l.rot.v += dir * 55 * f
+						l.sy.v -= 2.2 * f
+					end)
+				end
+			end
+			waveAt = now + 2.4 + math.random() * 1.6
+		end
 		local sp, kx, ky = spread.step(dt), kickX.step(dt), kickY.step(dt)
 		title.Rotation = tilt.step(dt)
 		if titleScale then titleScale.Scale = 2.5 * (1 + punch.step(dt) * 0.03) end
@@ -355,9 +380,19 @@ function M.start(E)
 				local breath = 0.5 + 0.2 * math.sin(now * 3 - i * 0.5)
 				if l.jelly then
 					local idle = slammed and 1 or 0
-					l.jelly.Size = UDim2.fromScale(1.12 * sx, 1.12 * sy)
-					l.jelly:FindFirstChildOfClass("UIAspectRatioConstraint").AspectRatio = sx / sy
-					l.jelly.Rotation = rot + idle * math.sin(now * 1.7 + i) * 2
+					local bs = bodies[l.jelly]
+					if bs then -- slime: the lean becomes a shear (the top swings, the foot stays) and the bounce a squash of the body
+						for _, b in bs do
+							b.s = rot / 85 + idle * math.sin(now * 1.3 + i * 0.8) * 0.025
+							b.q = sy - 1 + idle * math.sin(now * 2.2 + i) * 0.02
+							b.apply()
+						end
+						l.jelly.Rotation = rot * 0.2
+					else
+						l.jelly.Size = UDim2.fromScale(1.12 * sx, 1.12 * sy)
+						l.jelly:FindFirstChildOfClass("UIAspectRatioConstraint").AspectRatio = sx / sy
+						l.jelly.Rotation = rot + idle * math.sin(now * 1.7 + i) * 2
+					end
 					l.jelly.Position = UDim2.fromScale(0.5, 0.5 + idle * math.sin(now * 2.1 + i * 0.7) * 0.025)
 					l.halo.ImageTransparency = math.clamp(breath + 0.1 - l.heat * 0.6, 0, 1)
 					l.halo.ImageColor3 = MAGENTA:Lerp(Color3.new(1, 1, 1), math.min(l.heat, 1))

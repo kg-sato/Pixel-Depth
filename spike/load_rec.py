@@ -9,7 +9,7 @@ game = pathlib.Path(__file__).resolve().parent.parent
 VENV = r"C:\Users\kgsat\Documents\Roblox\Hunyuan3D\.venv\Scripts\python.exe"
 video = game / "captures" / "loop" / f"{name}.mp4"
 if video.exists(): video.unlink()
-rec = subprocess.Popen([VENV, "-I", str(game.parent.parent / "tools" / "record_window.py"), str(video), "5", "30"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+rec = subprocess.Popen([VENV, "-I", str(game.parent.parent / "tools" / "record_window.py"), str(video), sys.argv[2] if len(sys.argv) > 2 else "5", "30"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 time.sleep(1.2)
 N.lua('local C=require(game.ReplicatedStorage.Shared.Config) task.spawn(function() require(game.ReplicatedStorage.Shared.LoadingScreen).start({ C = { LOADING = { on = true, min = 6, letters = C.LOADING.letters, hot = C.LOADING.hot } }, plr = game.Players.LocalPlayer }) end) return 1', "Client")
 rec.wait(timeout=30)

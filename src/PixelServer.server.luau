@@ -84,6 +84,7 @@ if C.CAVES_ON then
 	local caves = CaveBuilder.build(workspace, C.CAVE_ORIGIN, os.time() // 3600)
 	caveLanding = caves:FindFirstChild("LiftLanding", true)
 	require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).build(caves) -- Camp 2's hall; its ore joins Caves.Deposits
+	require(game:GetService("ServerScriptService"):WaitForChild("CaveProps")).build(caves) -- set dressing against the cave walls (crystals, mushrooms, supports, roots)
 	local ids = { CaveNest = 0, CaveShrine = 0 } -- a number per nest and shrine prompt, for the saved cooldown keys
 	for _, d in caves:GetDescendants() do
 		if d:IsA("ProximityPrompt") then
