@@ -227,11 +227,12 @@ function M.start(E)
 		if label then label.TextWrapped = true end
 		table.insert(bands, { o = o, w = w, h = h })
 	end
-	band(gui:FindFirstChild("StepCard"), 560, 62, gui:FindFirstChild("StepCard") and gui.StepCard:FindFirstChildWhichIsA("TextLabel"))
+	band(gui:FindFirstChild("StepCard"), 330, 62, -- NEXT UP under the minimap (directive v10 HUD anchor 3)
+		 gui:FindFirstChild("StepCard") and gui.StepCard:FindFirstChildWhichIsA("TextLabel"))
 	local caveHud = gui:FindFirstChild("CaveHud")
 	local tipBanner = caveHud and caveHud:FindFirstChild("TipBanner")
 	band(tipBanner, 540, 52, tipBanner and tipBanner:FindFirstChildWhichIsA("TextLabel"))
-	local rights = { caveHud and caveHud:FindFirstChild("Minimap"), caveHud and caveHud:FindFirstChild("CampPill") }
+	local rights = { caveHud and caveHud:FindFirstChild("Minimap"), caveHud and caveHud:FindFirstChild("CampPill"), gui:FindFirstChild("HubMinimap") }
 	local function shown(o)
 		local p = o
 		while p and p ~= gui do

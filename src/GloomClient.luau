@@ -216,10 +216,10 @@ function M.start(E)
 		elseif kind == "flareFx" then -- a pocket sunrise: a white-gold ball swells and fades, sparks fly, the cave lights up
 			local pos = a
 			local ball = new("Part", workspace, { Shape = Enum.PartType.Ball, Size = Vector3.one, CFrame = CFrame.new(pos), Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Material = Enum.Material.Neon, Color = Color3.fromRGB(255, 240, 200) })
-			local l = new("PointLight", ball, { Color = Color3.fromRGB(255, 226, 170), Range = 0, Brightness = 4 })
+			local l = new("PointLight", ball, { Color = Color3.fromRGB(255, 226, 170), Range = 0, Brightness = 1.6 }) -- directive v10: Brightness 4 burned the first-person view white (Realistic style)
 			burstAt(pos, Color3.fromRGB(255, 220, 140), 50)
 			if b == plr.UserId then sfx("sparkle", 0.7) sfx("swing", 1.5) shake(0.25) end
-			tween(ball, 0.35, { Size = Vector3.one * 9, Transparency = 0.6 }, Enum.EasingStyle.Quad).Completed:Connect(function()
+			tween(ball, 0.35, { Size = Vector3.one * 9, Transparency = 0.65 }, Enum.EasingStyle.Quad).Completed:Connect(function()
 				tween(ball, 0.6, { Size = Vector3.one * 12, Transparency = 1 }):Play()
 			end)
 			tween(l, 0.15, { Range = 40 }).Completed:Connect(function() tween(l, 1.4, { Range = 0, Brightness = 0 }) end)

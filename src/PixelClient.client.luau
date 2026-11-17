@@ -143,7 +143,7 @@ local function skin(o, kind)
 	if pg and not o:FindFirstChild("Gloss") then
 		s.ImageTransparency = pg.alpha
 		for _, d in { { "Gloss", 0.035, 0.3, Color3.new(1, 1, 1), pg.gloss, 1 }, { "Glow", 0.69, 0.28, pg.glow, 1, pg.glowAlpha }, { "Edge", 0.958, 0.01, pg.edge, 0.25, 0.25 } } do
-			local f = new("Frame", o, { Name = d[1], Size = UDim2.fromScale(0.95, d[3]), Position = UDim2.fromScale(0.5, d[2]), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = d[4], BorderSizePixel = 0, ZIndex = 0 })
+			local f = new("Frame", o, { Name = d[1], Size = UDim2.fromScale(0.95, d[3]), Position = UDim2.fromScale(0.5, d[2]), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = d[4], BorderSizePixel = 0, ZIndex = 0, ClipsDescendants = true })
 			new("UICorner", f, { CornerRadius = UDim.new(0.14, 0) })
 			new("UIGradient", f, { Rotation = 90, Transparency = NumberSequence.new(d[5], d[6]) })
 		end
@@ -403,8 +403,8 @@ end
 local marker = new("Frame", strip, { Size = UDim2.new(1.9, 0, 0, 8), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BUTTER, BorderSizePixel = 0, ZIndex = 3 })
 new("UIStroke", marker, { Color = INK, Thickness = 2 })
 
-local stepCard = panel(gui, S(410, 56), S(1262, 18), Vector2.new(1, 0), "card")
-fit(stepCard, 410, 56)
+local stepCard = panel(gui, S(330, 62), S(1262, 202), Vector2.new(1, 0), "card") -- NEXT UP sits under the minimap (directive v10 HUD anchor 3, Shared.HubMinimap)
+fit(stepCard, 330, 62)
 local stepIcon = icon(stepCard, "pick", UDim2.fromScale(0.07, 0.6), UDim2.fromScale(0.045, 0.52), Vector2.new(0, 0.5)) -- clear of the card's cut corner
 new("UIAspectRatioConstraint", stepIcon, { AspectRatio = 1 })
 local stepText = text(stepCard, "", UDim2.fromScale(0.84, 0.8), UDim2.fromScale(0.55, 0.52), Vector2.new(0.5, 0.5), INK, 700, false)
@@ -967,8 +967,8 @@ local function hatchShow(name)
 			tween(fSc, 0.28, { Scale = 0.45 + i * 0.12 }, Enum.EasingStyle.Back)
 			tween(halo, 0.3, { Size = UDim2.fromScale(0.6 + i * 0.12, 0.6 + i * 0.12) })
 			flare.Rotation = (i % 2) * 8
-			bloom.BackgroundColor3, bloom.BackgroundTransparency = col, 0.55 -- the whole screen flashes the tier colour
-			tween(bloom, 0.3, { BackgroundTransparency = 0.9 })
+			bloom.BackgroundColor3, bloom.BackgroundTransparency = col, 0.65 -- the whole screen flashes the tier colour (directive v10: alpha 0.35 at most, gone in 0.12 s)
+			tween(bloom, 0.12, { BackgroundTransparency = 1 })
 			sfx("hit", 1 + i * 0.18)
 			if i > 1 then sfx("sparkle", 0.8 + i * 0.1) end
 			task.wait(i == tier and 0.55 or math.max(0.15, 0.36 - (i - 1) * 0.05)) -- the climb quickens tier by tier, then holds on the last (was an even 0.34)
@@ -1347,7 +1347,7 @@ RunService.RenderStepped:Connect(function()
 		local v, on = cam:WorldToScreenPoint(p)
 		u.bb.Visible = on
 		local sz, vp = u.bb.AbsoluteSize, cam.ViewportSize -- kept whole on screen: a bubble over a tall thing was cut by the top edge (Gemini UI review, 2026-11-10)
-		local x, y = math.clamp(v.X, sz.X * 0.62 + 6, math.max(vp.X - sz.X * 0.38 - 6, sz.X * 0.62 + 6)), math.max(v.Y, sz.Y + 6)
+		local x, y = math.clamp(v.X, sz.X * 0.62 + 6, math.max(vp.X - sz.X * 0.38 - 6, sz.X * 0.62 + 6)), math.max(v.Y, sz.Y + vp.Y * 0.2) -- below the top strip and the timers pill (directive v10: a boss prompt sat on the pill)
 		if on then
 			-- a bubble steps sideways off the minimap, the camp pill and the talisman (loop grade 2026-11-10: "Ride up" lay on SAFE AT CAMP)
 			local hud = gui:FindFirstChild("CaveHud")
@@ -2772,7 +2772,7 @@ end)()
 	end
 	forgeUI.spatialExtra = forgeUI.spatialExtra or {} -- the small panels built in this script stand in the world too (Shared.SpatialPanels); the forge keeps its own staged screen
 	for _, f in { night, odds, mapP, forge } do table.insert(forgeUI.spatialExtra, { frame = f, home = gui, menu = true, on = function() return f.Visible end }) end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "HubMinimap", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
@@ -2843,6 +2843,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	end
 	local modal = forge.Visible or odds.Visible or mapP.Visible or night.Visible
 	for _, m in forgeUI.modals do modal = modal or m.Visible end
+	forgeUI.modalOpen = modal -- read by Shared.HubMinimap
 	local card = caveHud:FindFirstChild("ResultDim")
 	if not toastHold then toastHold = function()
 		if cave.mgBusy or plr:GetAttribute("Seated") or fade.BackgroundTransparency < 0.5 or (forgeUI.deathPlaying and forgeUI.deathPlaying()) then return true end
@@ -2973,8 +2974,8 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		stepShown, stepExpired, stepSince = msg, false, now
 		stepText.Text = msg
 		stepCard.Visible = msg ~= ""
-		stepCard.Position = S(1262, -40)
-		tween(stepCard, 0.5, { Position = S(1262, 18) }, Enum.EasingStyle.Bounce)
+		stepCard.Position = S(1262, (forgeUI.stepY or 202) - 40)
+		tween(stepCard, 0.5, { Position = S(1262, forgeUI.stepY or 202) }, Enum.EasingStyle.Bounce)
 		stepDoneAt = (state.step >= 6 and not forgeUI.questHint and not (forgeUI.caveUrgent and forgeUI.caveUrgent())) and now + 6 or nil -- an urgent cave warning never times out (Codex)
 	end
 	if stepDoneAt and now > stepDoneAt then
