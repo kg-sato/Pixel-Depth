@@ -209,7 +209,7 @@ def slime(ch):
 def melt(o):
     o.location = (0, 0, 0.06)
     o.data.materials.append(M_JELLY)
-    d = o.modifiers.new("lumps", "DISPLACE"); d.texture, d.strength, d.mid_level = NOISE, 0.034 if BIG else 0.016, 0.5
+    d = o.modifiers.new("lumps", "DISPLACE"); d.texture, d.strength, d.mid_level = NOISE, (0.05 if CHARS.startswith("WORD:") else 0.034) if BIG else 0.016, 0.5  # the wordmark is lumpier still (Gemini n17_r3: "constant stem widths")
     r = o.modifiers.new("melt", "REMESH"); r.mode, r.voxel_size = "VOXEL", 0.009 if BIG else 0.011
     s = o.modifiers.new("soft", "SMOOTH"); s.factor, s.iterations = 0.9, 12 if BIG else 8
     sub = o.modifiers.new("sub", "SUBSURF"); sub.levels = sub.render_levels = 1
@@ -250,6 +250,11 @@ if CHARS.startswith("WORD:"):  # one fused wordmark: the letters set tight so th
     meshes, xs, x = [], [], 0.0
     for ch in word:
         me = slime(ch)
+        jr = random.Random(ord(ch) * 13 + len(meshes))  # each letter a little bigger or smaller, higher or lower, tipped: hand-poured, not typeset
+        k, dy, rot = jr.uniform(0.92, 1.1), jr.uniform(-0.05, 0.05), math.radians(jr.uniform(-5, 5))
+        for v in me.vertices:
+            x0, y0 = v.co.x * k, v.co.y * k
+            v.co.x, v.co.y, v.co.z = x0 * math.cos(rot) - y0 * math.sin(rot), x0 * math.sin(rot) + y0 * math.cos(rot) + dy, v.co.z * k
         lo = min(v.co.x for v in me.vertices); hi = max(v.co.x for v in me.vertices)
         if meshes: x += -lo - 0.035  # a little overlap: neighbouring letters fuse where they touch
         else: x = -lo

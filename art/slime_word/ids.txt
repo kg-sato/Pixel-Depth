@@ -1,0 +1,1 @@
+r2 hand-poured: word = { { image = "rbxassetid://75771224843983", hot = "rbxassetid://94912001849202", w = 1024, h = 418, cuts = { 0, 266, 336, 534, 740, 1024 } }, { image = "rbxassetid://90417194532899", hot = "rbxassetid://116667461459825", w = 1024, h = 376, cuts = { 0, 271, 444, 599, 765, 1024 } } }

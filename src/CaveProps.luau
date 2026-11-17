@@ -216,6 +216,10 @@ function M.build(caves)
 		local k = M.HEIGHT[kind] * (0.8 + rng:NextNumber() * 0.4) / size.Y
 		m:ScaleTo(k)
 		m:PivotTo(base * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0) * CFrame.new(0, -0.25, 0)) -- sunk a little into the floor
+		if kind ~= "rubble" then -- a soft pool of its light on the floor round its foot (the reference's glowing ground)
+			local r = M.HEIGHT[kind] * 0.9
+			part(m, Vector3.new(0.12, r, r), base * CFrame.new(0, 0.04, 0) * CFrame.Angles(0, 0, math.pi / 2), col, Enum.Material.Neon, { Shape = Enum.PartType.Cylinder, Transparency = 0.82 })
+		end
 		local lit = m:FindFirstChild("Core") or m:FindFirstChild("Gill") or m:FindFirstChild("Gem")
 		if lit then light(lit, col, kind == "rubble" and 8 or 14, kind == "rubble" and 0.35 or 0.55) end
 		return true
@@ -273,7 +277,7 @@ function M.build(caves)
 					if meshed and (kind == "rubble" or kind == "crystal") then B.pebbles(m, base) end -- loose glowing grit round the foot (Gemini n17_r3: lone props on bare floor)
 					if meshed and kind == "mushrooms" and templates.mushrooms then -- two little ones beside the big one
 						for _ = 1, 2 do
-							local side = base * CFrame.new(rng:NextNumber(-3.5, 3.5), 0, rng:NextNumber(-2.5, 0.5))
+							local side = base * CFrame.new((rng:NextNumber() < 0.5 and -1 or 1) * rng:NextNumber(3.2, 4.6), 0, rng:NextNumber(-1.5, 1.5)) -- clear of the big one's stem
 							local sm = Instance.new("Model")
 							sm.Parent = m
 							if fromMesh("mushrooms", sm, side) then sm:ScaleTo(sm:GetScale() * 0.45) end
