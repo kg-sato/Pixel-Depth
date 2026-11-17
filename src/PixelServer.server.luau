@@ -24,6 +24,7 @@ do -- the forge cutscene (client, ReplicatedStorage.Shared.ForgeCutscene) shows 
 		art.Parent = RS
 	end
 end
+pcall(function() require(RS.Shared:WaitForChild("PickModels")).serverLoad(C) end) -- the hybrid pickaxes replace the old models (2026-11-17)
 
 local B, W = C.B, C.MINE_W
 local ROWS = #C.LAYERS * C.LAYER_ROWS
