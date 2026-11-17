@@ -591,6 +591,7 @@ local SFX = {
 	tab = { 108382314361659, 0.35 }, open = { 122439587120394, 0.3 }, close = { 139837639994797, 0.25 }, pop = { 98559989688124, 0.3 },
 	error = { 129224473501721, 0.4 }, claim = { 93961639592928, 0.5 }, hatch = { 90744422601646, 0.55 }, step = { 101247424367019, 0.12 },
 	pluck = { 80200426277557, 0.4 }, land = { 88699226385252, 0.25 },
+	tick = { 92558403091464, 0.25 }, ping = { 87562821082308, 0.4 }, thud = { 117212121980518, 0.45 }, crack = { 81728204545816, 0.4 }, flawless = { 98344449554239, 0.5 }, aww = { 139679608260866, 0.4 }, -- Perfect Strike, our own (audio/pd_strike_sfx.py)
 }
 local soundBank = {}
 for name, s in SFX do
@@ -2113,11 +2114,13 @@ end
 	local function strike()
 		if not mg or mg.kind ~= "strike" or mg.done or os.clock() < mg.cool then return end
 		mg.cool = os.clock() + 0.28
+		cave.strikeOff = (needle.Rotation - arcPivot.Rotation + 180) % 360 - 180 -- < 0: early (Shared.StrikeJuice says TOO EARLY / TOO LATE)
 		ExtractR:FireServer("strike", workspace:GetServerTimeNow())
 		sfx("swing", 1.2)
 		pop(dial, 1.05, 0.15)
 	end
 	held.strike = strike -- the minigame lock's Space/A binding strikes through this
+	cave.strike = strike -- Shared.StrikeJuice's test hook (client attribute DevStrike) swings through the real path
 	strikeBtn.Activated:Connect(strike)
 	UIS.InputBegan:Connect(function(input, gp)
 		if not mg or gp then return end
@@ -2772,7 +2775,7 @@ end)()
 	end
 	forgeUI.spatialExtra = forgeUI.spatialExtra or {} -- the small panels built in this script stand in the world too (Shared.SpatialPanels); the forge keeps its own staged screen
 	for _, f in { night, odds, mapP, forge } do table.insert(forgeUI.spatialExtra, { frame = f, home = gui, menu = true, on = function() return f.Visible end }) end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "HubMinimap", "JellySkin", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "StrikeJuice", "HubMinimap", "JellySkin", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
