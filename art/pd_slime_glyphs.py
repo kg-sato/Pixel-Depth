@@ -161,6 +161,9 @@ BIG = SIZE >= 512
 NOISE = bpy.data.textures.new("lumps", "CLOUDS"); NOISE.noise_scale = 0.3
 
 
+RAW = False
+
+
 def slime(ch):
     """One slime letter: a fat rounded letter, a few drips under the bottoms of its strokes, all melted into one wet blob."""
     cu = bpy.data.curves.new(ch, "FONT")
@@ -198,7 +201,12 @@ def slime(ch):
             bmesh.ops.create_uvsphere(bm, u_segments=16, v_segments=10, radius=r, matrix=mathutils.Matrix.Translation((x, y - L, 0.04)))
             neck = bmesh.ops.create_cone(bm, cap_ends=True, segments=12, radius1=r * 0.5, radius2=r * 0.85, depth=L + r, matrix=mathutils.Matrix.Translation((x, y - L / 2 + r * 0.2, 0.04)) @ mathutils.Matrix.Rotation(math.radians(90), 4, "X"))
     bm.to_mesh(me); bm.free()
+    if RAW: return me
     o = bpy.data.objects.new(ch, me); sc.collection.objects.link(o)
+    return melt(o)
+
+
+def melt(o):
     o.location = (0, 0, 0.06)
     o.data.materials.append(M_JELLY)
     d = o.modifiers.new("lumps", "DISPLACE"); d.texture, d.strength, d.mid_level = NOISE, 0.034 if BIG else 0.016, 0.5
@@ -234,6 +242,42 @@ def bridge():
     for p in o.data.polygons: p.use_smooth = True
     return [o]
 
+
+if CHARS.startswith("WORD:"):  # one fused wordmark: the letters set tight so they touch, melted into one body
+    import json
+    word = CHARS[5:]
+    RAW = True
+    meshes, xs, x = [], [], 0.0
+    for ch in word:
+        me = slime(ch)
+        lo = min(v.co.x for v in me.vertices); hi = max(v.co.x for v in me.vertices)
+        if meshes: x += -lo - 0.035  # a little overlap: neighbouring letters fuse where they touch
+        else: x = -lo
+        for v in me.vertices: v.co.x += x
+        xs.append((x + lo, x + hi))
+        x += hi
+        meshes.append(me)
+    bm = bmesh.new()
+    for me in meshes: bm.from_mesh(me)
+    big = bpy.data.meshes.new(word); bm.to_mesh(big); bm.free()
+    width = xs[-1][1] - xs[0][0]
+    for v in big.vertices: v.co.x -= xs[0][0] + width / 2
+    o = bpy.data.objects.new(word, big); sc.collection.objects.link(o)
+    melt(o)
+    margin = 0.25
+    cam_d.ortho_scale = width + margin * 2
+    sc.render.resolution_x = SIZE * 4
+    H = 1.3  # world units shown top to bottom (the glyph camera's height)
+    sc.render.resolution_y = int(round(SIZE * 4 * H / (width + margin * 2)))
+    cam.location = (0.0, -0.42, 5)
+    sc.render.filepath = os.path.join(os.path.abspath(out), word + ".png")
+    bpy.context.view_layer.update()
+    bpy.ops.render.render(write_still=True)
+    px = sc.render.resolution_x / (width + margin * 2)
+    cols = [((a - xs[0][0] - width / 2 + width / 2 + margin) * px, (b - xs[0][0] + margin) * px) for a, b in xs]
+    json.dump({"word": word, "w": sc.render.resolution_x, "h": sc.render.resolution_y, "letters": cols}, open(os.path.join(os.path.abspath(out), word + ".json"), "w"))
+    print("word", word, sc.render.resolution_x, sc.render.resolution_y)
+    CHARS = ""
 
 for ch in CHARS:
     objs = bridge() if ch == "~" else slime(ch)

@@ -17,10 +17,13 @@ def reset():
     bpy.ops.wm.read_factory_settings(use_empty=True)
 
 
+SMOOTH = {"Cap", "Stem", "Gill"}  # soft organic parts are shaded smooth (Gemini n17_r2: "harsh low-segment discs"); crystals and rocks keep facets
+
+
 def obj(name, bm):
     me = bpy.data.meshes.new(name)
     bm.to_mesh(me); bm.free()
-    for p in me.polygons: p.use_smooth = False  # flat facets: the low-poly look
+    for p in me.polygons: p.use_smooth = name in SMOOTH
     o = bpy.data.objects.new(name, me)
     bpy.context.scene.collection.objects.link(o)
     return o
@@ -73,21 +76,21 @@ def mushroom(i):
         lean = Matrix.Rotation(rnd.uniform(-0.15, 0.15), 4, "X") @ Matrix.Rotation(rnd.uniform(-0.15, 0.15), 4, "Y")
         h = 2.6 * s
         m = Matrix.Translation(at) @ lean
-        bmesh.ops.create_cone(stem, cap_ends=True, segments=8, radius1=0.38 * s, radius2=0.28 * s, depth=h, matrix=m @ Matrix.Translation((0, 0, h / 2)))
+        bmesh.ops.create_cone(stem, cap_ends=True, segments=14, radius1=0.38 * s, radius2=0.28 * s, depth=h, matrix=m @ Matrix.Translation((0, 0, h / 2)))
         # the cap: the top of a sphere, squashed into a dome, faceted
-        res = bmesh.ops.create_uvsphere(cap, u_segments=10, v_segments=6, radius=1.4 * s, matrix=m @ Matrix.Translation((0, 0, h)))
+        res = bmesh.ops.create_uvsphere(cap, u_segments=20, v_segments=12, radius=1.4 * s, matrix=m @ Matrix.Translation((0, 0, h)))
         top = h
         for v in res["verts"]:
             rel = v.co - (m @ Vector((0, 0, h)))
             z = rel.z
             if z < 0: z *= 0.08  # the underside is nearly flat
             v.co = (m @ Vector((0, 0, h))) + Vector((rel.x * (1.0 if rel.z > 0 else 1.02), rel.y, z * 0.62))
-        bmesh.ops.create_cone(gill, cap_ends=True, segments=10, radius1=1.25 * s, radius2=0.3 * s, depth=0.18 * s, matrix=m @ Matrix.Translation((0, 0, h - 0.12 * s)))
+        bmesh.ops.create_cone(gill, cap_ends=True, segments=20, radius1=1.25 * s, radius2=0.3 * s, depth=0.18 * s, matrix=m @ Matrix.Translation((0, 0, h - 0.12 * s)))
         for _ in range(4 if k == 0 else 2):
             a = rnd.uniform(0, 2 * math.pi)
             rr = rnd.uniform(0.4, 0.95) * 1.4 * s
             zz = math.sqrt(max(0, 1 - (rr / (1.4 * s)) ** 2)) * 1.4 * s * 0.62
-            bmesh.ops.create_icosphere(spot, subdivisions=1, radius=0.17 * s, matrix=m @ Matrix.Translation((math.cos(a) * rr, math.sin(a) * rr, h + zz)))
+            bmesh.ops.create_icosphere(spot, subdivisions=2, radius=0.1 * s, matrix=m @ Matrix.Translation((math.cos(a) * rr, math.sin(a) * rr, h + zz)))
     return [obj("Cap", cap), obj("Gill", gill), obj("Stem", stem), obj("Spot", spot)]
 
 
@@ -102,8 +105,7 @@ def rubble(i):
     for k in range(3):
         ang = rnd.uniform(0, 2 * math.pi)
         at = Vector((math.cos(ang) * rnd.uniform(0.4, 1.2), math.sin(ang) * rnd.uniform(0.4, 1.2), rnd.uniform(0.6, 1.1)))
-        g = bmesh.ops.create_icosphere(gem, subdivisions=0, radius=rnd.uniform(0.22, 0.32), matrix=Matrix.Translation(at))
-        for v in g["verts"]: v.co = at + (v.co - at) * Vector((0.8, 0.8, 1.5))  # a long gem crystal poking out
+        shard(gem, at - Vector((0, 0, 0.3)), rnd.uniform(0.09, 0.14), rnd.uniform(0.5, 0.8), (rnd.uniform(-0.6, 0.6), rnd.uniform(-0.6, 0.6)), rnd.uniform(0, 3))  # a sharp gem crystal poking out (round gems read as egg sacs)
     return [obj("Rock", rock), obj("Gem", gem)]
 
 

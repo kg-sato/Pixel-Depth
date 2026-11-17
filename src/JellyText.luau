@@ -204,7 +204,7 @@ function M.mirror(label, opt)
 	local function fit()
 		if not label.Parent then return end
 		local h = label.AbsoluteSize.Y
-		local long = (opt.maxLen ~= nil and #label.Text > opt.maxLen) or (h > 0 and h < 17) or not M.covers(label.Text) -- jelly letters under 17 px are mush, and a string the font cannot spell would have gaps: such a label stays plain text
+		local long = (opt.maxLen ~= nil and #label.Text > opt.maxLen) or (h > 0 and h < 24) or not M.covers(label.Text) -- slime letters under 24 px are mush (their drips crowd the next line; was 17 px for the old jelly), and a string the font cannot spell would have gaps: such a label stays plain text
 		local ok = ready[(M.pick(t.color))] == true
 		label.MaxVisibleGraphemes = (long or not ok) and -1 or 0
 		t.frame.Visible = not long and ok

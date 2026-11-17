@@ -70,32 +70,65 @@ function M.start(E)
 	local function glyph(parent, ch, pos, color, z, tr)
 		return new("TextLabel", parent, { Text = ch, Font = Enum.Font.Arcade, TextSize = px, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), Position = pos, TextColor3 = color, TextTransparency = tr or 0, ZIndex = z })
 	end
+	-- the fused wordmark (2026-11-17, Gemini n17_r2: "letters glued to drips, not one gooey body"): each word is one rendered slime
+	-- body in which the letters melt into each other; it is cut into one column per letter, and each column still flies in,
+	-- bounces and bends on its own (at rest the columns meet and read as one piece of slime)
+	local lay = {}
+	if cfg.word and okSB then
+		local H = 1.3 -- world units in every word picture's height
+		local units, gapU = {}, 0.42
+		local total = 0
+		for j, wd in cfg.word do
+			units[j] = wd.w / wd.h * H
+			total += units[j] + (j > 1 and gapU or 0)
+		end
+		local x0, k = 0, 0
+		for j, wd in cfg.word do
+			for c = 1, #wd.cuts - 1 do
+				k += 1
+				local a, b = wd.cuts[c], wd.cuts[c + 1]
+				lay[k] = { x = (x0 + (a + b) / 2 / wd.h * H) / total, w = (b - a) / wd.h * H / total, image = wd.image, hot = wd.hot, rect = Vector2.new(a, 0), size = Vector2.new(b - a, wd.h) }
+			end
+			x0 += units[j] + gapU
+		end
+		title:FindFirstChildOfClass("UIAspectRatioConstraint").AspectRatio = total / H -- a column cell is then exactly as tall as the title: its picture keeps its own shape
+		title.Size = UDim2.fromScale(0.3, 0.2)
+	end
+	local li = 0
 	for i = 1, #WORD do
 		local ch = WORD:sub(i, i)
 		if ch ~= " " then
-			local cell = new("Frame", title, { Size = UDim2.fromScale(1 / #WORD, 1), Position = UDim2.fromScale((i - 0.5) / #WORD, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 5 })
-			local box = new("Frame", cell, { Size = UDim2.fromScale(1.75, 1.75), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, Visible = false, ZIndex = 5 }) -- wider than its cell: the font has wide side bearings
+			li += 1
+			local L = lay[li]
+			local cell = new("Frame", title, { Size = L and UDim2.fromScale(L.w, 1) or UDim2.fromScale(1 / #WORD, 1), Position = UDim2.fromScale(L and L.x or (i - 0.5) / #WORD, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 5 })
+			local box = new("Frame", cell, { Size = L and UDim2.fromScale(1, 1) or UDim2.fromScale(1.75, 1.75), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, Visible = false, ZIndex = 5 }) -- wider than its cell: the font has wide side bearings
 			local sc = new("UIScale", box, { Scale = 0.8 })
-			local jelly = cfg.letters and cfg.letters[ch]
+			local jelly = L and L.image or (cfg.letters and cfg.letters[ch])
 			local halo
 			if jelly then -- a 3D jelly glass letter (the user, 2026-11-12, reference reel DfUpUhcuASY): a rendered picture, with a glow behind and a glint that crosses it
 				halo = new("ImageLabel", box, { Image = jelly, ImageColor3 = MAGENTA, ImageTransparency = 0.6, BackgroundTransparency = 1, Size = UDim2.fromScale(1.28, 1.28), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 3 })
 				local img = new("ImageLabel", box, { Name = "Jelly", Image = jelly, BackgroundTransparency = 1, Size = UDim2.fromScale(1.12, 1.12), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ScaleType = Enum.ScaleType.Stretch, ZIndex = 6 }) -- Stretch: the picture itself squashes and stretches with its frame
-				new("UIAspectRatioConstraint", img, { AspectRatio = 1 })
-				new("UIAspectRatioConstraint", halo, { AspectRatio = 1 })
-				if okSB then -- the picture is drawn by eight slime strips that shear and squash; the box itself stays whole
+				if L then -- a column of the wordmark: it fills its cell exactly, so neighbouring columns meet
+					img.Size, halo.Size = UDim2.fromScale(1, 1), UDim2.fromScale(1.12, 1.12)
+					halo.ImageRectOffset, halo.ImageRectSize = L.rect, L.size
+				else
+					new("UIAspectRatioConstraint", img, { AspectRatio = 1 })
+					new("UIAspectRatioConstraint", halo, { AspectRatio = 1 })
+				end
+				if okSB then -- the picture is drawn by slime strips that shear and squash; the box itself stays whole
 					img.Image = ""
-					bodies[img] = { SlimeBody.new(img, { image = jelly, cell = Vector2.new(512, 512), strips = 12, z = 6, qmax = 0.9 }) }
+					bodies[img] = { SlimeBody.new(img, { image = jelly, rect = L and L.rect, cell = L and L.size or Vector2.new(512, 512), strips = 12, z = 6, qmax = 0.9 }) }
 				end
 				-- a plain letter under the picture, shown only if the picture never loads (a slow phone, an asset still in review)
 				local plain = glyph(box, ch, UDim2.new(), Color3.fromRGB(255, 170, 215), 5)
 				plain.Name, plain.Visible, plain.Font = "Plain", false, Enum.Font.FredokaOne
 				new("UIStroke", plain, { Color = Color3.fromRGB(120, 20, 110), Thickness = 2 })
-				if cfg.hot and cfg.hot[ch] then -- the same letter in white, laid over it while it is still hot from landing
-					local hot = new("ImageLabel", img, { Name = "Hot", Image = cfg.hot[ch], BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Stretch, ZIndex = 7 })
+				local hotId = L and L.hot or (cfg.hot and cfg.hot[ch])
+				if hotId then -- the same letter in white, laid over it while it is still hot from landing
+					local hot = new("ImageLabel", img, { Name = "Hot", Image = hotId, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ScaleType = Enum.ScaleType.Stretch, ZIndex = 7 })
 					if bodies[img] then -- the white-hot copy bends with it
 						hot.Image = ""
-						local hb = SlimeBody.new(hot, { image = cfg.hot[ch], cell = Vector2.new(512, 512), strips = 12, z = 7, qmax = 0.9 })
+						local hb = SlimeBody.new(hot, { image = hotId, rect = L and L.rect, cell = L and L.size or Vector2.new(512, 512), strips = 12, z = 7, qmax = 0.9 })
 						hot:GetPropertyChangedSignal("ImageTransparency"):Connect(function() hb.alpha(hot.ImageTransparency) end)
 						table.insert(bodies[img], hb)
 					end
@@ -185,7 +218,7 @@ function M.start(E)
 	-- goo bridges (Gemini n17_r1: "connect adjacent letters with viscous ligaments"): a strand of the same slime hangs between a
 	-- few neighbouring letters once both have landed; it stretches thinner as they move apart and wobbles with their bounce
 	local bridges = {}
-	if cfg.bridge then
+	if cfg.bridge and not cfg.word then -- the wordmark is already one piece
 		for _, pr in { { 3, 4 }, { 6, 7 }, { 8, 9 } } do
 			local a, b = letters[pr[1]], letters[pr[2]]
 			if a and b then
@@ -219,11 +252,12 @@ function M.start(E)
 		local t = os.clock()
 		while not done and os.clock() - t < 6 do task.wait() end -- never hold the screen for more than six seconds
 		for _, l in letters do -- a picture that did not arrive: the plain letter stands in
-			if l.jelly and not l.jelly.IsLoaded then
+			local face = l.jelly and (bodies[l.jelly] and bodies[l.jelly][1].strips[1] or l.jelly) -- a slime letter draws through its strips: ask a strip
+			if face and not face.IsLoaded then
 				local plain = l.box:FindFirstChild("Plain")
 				if plain then plain.Visible = true end
 				task.spawn(function() -- and steps back if the picture turns up later
-					while l.jelly.Parent and not l.jelly.IsLoaded do task.wait(0.3) end
+					while face.Parent and not face.IsLoaded do task.wait(0.3) end
 					if plain and plain.Parent then plain.Visible = false end
 				end)
 			end

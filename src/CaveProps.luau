@@ -27,7 +27,7 @@ M.KEEP_OUT = 11 -- studs from deposits, shrines, nests, gates and the camp
 M.MAX_LIGHTS = 24
 -- low-poly meshes (design3d/cave_props.py, ids in design3d/out/props/ids.txt; Gemini n17_r1: the block-built props read as
 -- crude voxel steps). Loaded once from the owner's uploads; if a load fails, that prop falls back to the part-built version.
-M.MESH = { crystal = { 104563237686070, 101580352907109, 80182315006407 }, mushrooms = { 73042626698026, 135393222025057 }, rubble = { 118280881420536, 83540265809680 } }
+M.MESH = { crystal = { 104563237686070, 101580352907109, 80182315006407 }, mushrooms = { 74992751047015, 139797019027904 }, rubble = { 118720837194462, 115340167637774 } }
 M.HEIGHT = { crystal = 8.5, mushrooms = 6.2, rubble = 2.8 } -- studs tall once placed (the cave's 4-stud cells)
 M.SCALE = { crystal = 1.9, mushrooms = 1.8, rubble = 1.7, pebbles = 1.4 } -- roots, supports and carts are built to the room's own size
 
@@ -191,8 +191,8 @@ function M.build(caves)
 		end
 	end
 	local LOOK = { -- each mesh part's look by its name (the roles in design3d/cave_props.py)
-		Shell = function(p, c) p.Material, p.Color, p.Transparency, p.Reflectance = Enum.Material.Glass, c:Lerp(OBSIDIAN, 0.3), 0.18, 0.15 end,
-		Core = function(p, c) p.Material, p.Color = Enum.Material.Neon, c end,
+		Shell = function(p, c) p.Material, p.Color, p.Transparency, p.Reflectance = Enum.Material.Glass, c:Lerp(OBSIDIAN, 0.12), 0.3, 0.15 end,
+		Core = function(p, c) p.Material, p.Color = Enum.Material.Neon, c end, -- full neon (at 0.25 see-through the crystals went dull teal)
 		Rock = function(p) p.Material, p.Color = Enum.Material.Slate, PLUM:Lerp(VIOLET, 0.12) end,
 		Cap = function(p, c) p.Material, p.Color = Enum.Material.SmoothPlastic, c end,
 		Gill = function(p, c) p.Material, p.Color = Enum.Material.Neon, c:Lerp(Color3.new(1, 1, 1), 0.2) end,
@@ -217,7 +217,7 @@ function M.build(caves)
 		m:ScaleTo(k)
 		m:PivotTo(base * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0) * CFrame.new(0, -0.25, 0)) -- sunk a little into the floor
 		local lit = m:FindFirstChild("Core") or m:FindFirstChild("Gill") or m:FindFirstChild("Gem")
-		if lit then light(lit, col, kind == "rubble" and 8 or 14, kind == "rubble" and 0.4 or 0.9) end
+		if lit then light(lit, col, kind == "rubble" and 8 or 14, kind == "rubble" and 0.35 or 0.55) end
 		return true
 	end
 
