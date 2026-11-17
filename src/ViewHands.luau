@@ -56,7 +56,13 @@ function M.start(E)
 	local sway, swayV = Vector2.zero, Vector2.zero -- lag behind the camera's turn
 	-- three swings in turn (the user, 2026-11-10: more swing animations): an overhead chop, a slash across from the right, a heavy
 	-- blow with a deeper wind-up. side: how far the tool rolls across the view as it comes down
-	local SWINGS = { { pull = -0.75, hit = 1.75, side = 0 }, { pull = -0.6, hit = 1.6, side = 0.6 }, { pull = -1.1, hit = 2.05, side = -0.3 } }
+	-- the owner, 2026-11-17: "bulkier, slower, bigger movements": every swing pulls further back, comes down further and
+	-- carries the whole arm with it (pull and hit were -0.75/1.75, -0.6/1.6, -1.1/2.05)
+	local SWINGS = { { pull = -1.0, hit = 1.15, side = 0 }, { pull = -0.85, hit = 1.05, side = 0.6 }, { pull = -1.35, hit = 1.25, side = -0.3 } } -- the hit lands the head on the crosshair now that the fist holds the handle's end
+	-- Perfect Strike (heavy = true): the pick is held up over the right shoulder between swings, drawn further back as the
+	-- needle nears the gold, then brought down in one big chop that bites into the rock a moment and climbs back slowly
+	-- (it used to vanish for the whole minigame). READY is the raised rest, NEAR the extra draw at the gold.
+	local READY, NEAR = -0.95, -0.45
 	local variant, lastT = 1, math.huge
 	local landY, landV, wasAir = 0, 0, false -- a dip of both hands when you land from a jump or a drop
 	local flareAt, relitSeen, liftAt = -10, nil, -10
@@ -112,8 +118,10 @@ function M.start(E)
 			pcall(E.sfx, "swing", 0.7)
 		end
 	end)
-	hook.vmPose = function(dt, t, moving, now, camCF)
+	local heavyW = 0 -- 0 normal digging .. 1 the raised Perfect Strike stance, eased so the pick climbs up and settles down
+	hook.vmPose = function(dt, t, moving, now, camCF, heavy, near)
 		dt = math.min(dt, 1 / 30)
+		heavyW += ((heavy and 1 or 0) - heavyW) * math.min(1, dt * 5)
 		if t < lastT then variant = variant % #SWINGS + 1 end -- a new swing began
 		lastT = t
 		local sw = SWINGS[variant]
@@ -124,11 +132,23 @@ function M.start(E)
 		landV += (-landY * 180 - landV * 14) * dt
 		landY += landV * dt
 		local target = 0 -- the swing curve the spring chases
-		if t < 0.09 then target = sw.pull * (t / 0.09) -- anticipation: a pull back
-		elseif t < 0.2 then target = sw.hit -- snap strike
-		elseif t < 0.3 then target = 1.2 -- a short hold on the rock
+		local k, c
+		if heavy then -- the big chop: a deep draw, a heavy fall, a long bite in the rock, a slow climb back to the shoulder
+			local ready = READY + NEAR * math.clamp(near or 0, 0, 1) ^ 2
+			if t < 0.14 then target = ready + (-1.55 - ready) * (t / 0.14)
+			elseif t < 0.34 then target = 1.15
+			elseif t < 0.62 then target = 0.95
+			else target = ready end
+			local fall = t >= 0.14 and t < 0.34
+			k, c = fall and 900 or (t < 0.62 and 300 or 70), fall and 34 or (t < 0.62 and 22 or 13) -- the climb back is a soft spring: the weight of the head
+		else -- digging: the same three beats, longer and bigger (they were 0.09 / 0.2 / 0.3 s)
+			if t < 0.11 then target = sw.pull * (t / 0.11) -- anticipation: a pull back
+			elseif t < 0.22 then target = sw.hit -- the strike
+			elseif t < 0.34 then target = 0.85 -- a hold on the rock
+			end
+			local fall = t >= 0.11 and t < 0.22
+			k, c = fall and 1100 or 300, fall and 36 or 15 -- fast into the hit, slow and loose after it: a heavier recoil
 		end
-		local k, c = (t >= 0.09 and t < 0.2) and 1400 or 520, (t >= 0.09 and t < 0.2) and 40 or 17 -- fast into the hit, loose after it: the recoil bounce
 		angV += (k * (target - ang) - c * angV) * dt
 		ang += angV * dt
 		local look = camCF.LookVector
@@ -142,7 +162,9 @@ function M.start(E)
 		sway = Vector2.new(math.clamp(sway.X, -0.4, 0.4), math.clamp(sway.Y, -0.3, 0.3))
 		local bob = moving and math.sin(now * 10) * 0.08 or math.sin(now * 1.7) * 0.035 -- walking bob, or slow breathing
 		local roll = moving and math.sin(now * 5) * 0.03 or math.sin(now * 0.85) * 0.02
-		local dip = math.max(ang, 0) * 0.12 -- the head carries the hand forward and down on the strike
+		local dip = math.max(ang, 0) * (0.2 + 0.12 * heavyW) -- the head carries the arm forward and down on the strike (was 0.12)
+		local lift = -math.min(ang, 0) * 0.35 -- the wind-up lifts the whole arm, not only the wrist
+		local hx, hy = 0.4 * heavyW, 0.2 * heavyW -- the raised stance: out to the right and up, clear of the dial and the STRIKE button
 		local step = moving and math.sin(now * 5) * 0.05 or 0 -- the hand swings side to side with each stride
 		local i = os.clock() - inspectAt
 		if t < 0.3 then inspectAt = -10 end -- a swing ends the look
@@ -153,8 +175,8 @@ function M.start(E)
 			local q = math.clamp((i - 0.2) / 1.3, 0, 1)
 			turn = q * q * (3 - 2 * q) * math.pi * 2
 		end
-		return CFrame.new(1.5 + sway.X - dip + step - 1.15 * w, -2 + bob + sway.Y - dip + landY + 0.95 * w, -2.4 - dip - 0.5 * w) * CFrame.Angles(-ang + sway.Y * 0.5 + 0.35 * w, -sway.X * 0.6 + math.max(ang, 0) * 0.25, sw.side * math.max(ang, 0) * 0.5) -- the swing chops forward and in toward the crosshair
-			* CFrame.Angles(-0.5, 0, 0.22 + roll) * CFrame.Angles(0, YAW + turn, 0) -- at rest: leaning forward and a little inward, handle to the bottom right corner
+		return CFrame.new(1.75 + hx + sway.X - dip * (1 + heavyW) + step - 1.15 * w, -1.4 + hy + lift + bob + sway.Y - dip * (1 + heavyW) + landY + 0.95 * w, -2.4 - dip - 0.5 * w) * CFrame.Angles(-ang + sway.Y * 0.5 + 0.35 * w, -sway.X * 0.6 + math.max(ang, 0) * 0.25, sw.side * math.max(ang, 0) * 0.5) -- the swing chops forward and in toward the crosshair
+			* CFrame.Angles(-0.35, 0, 0.44 + roll) * CFrame.Angles(0, YAW + turn, 0) -- at rest: the fist in the bottom right, the handle leaning 25 degrees in toward the middle (Minecraft's handheld first-person roll) and a little forward (was -0.5 / 0.22)
 	end
 end
 

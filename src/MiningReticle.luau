@@ -137,6 +137,7 @@ function M.start(E)
 		anchor.Parent = nil
 	end
 	local dep, kind, lockCol, at = nil, nil, Color3.new(1, 1, 1), nil
+	local depParts = {} -- the deposit's parts, for keeping the plate in front of every crystal
 	local aim = 0
 	local function stop()
 		dep, kind, at = nil, nil, nil
@@ -156,6 +157,8 @@ function M.start(E)
 			local core = d and d.PrimaryPart
 			if not core then return end
 			dep, kind, aim = d, which, 0
+			depParts = {}
+			for _, q in d:GetDescendants() do if q:IsA("BasePart") then table.insert(depParts, q) end end
 			local ore = E.C.LAYERS[d:GetAttribute("Layer")][4][d:GetAttribute("Ore")]
 			lockCol = (ore and ore[2] or Color3.fromRGB(120, 232, 255)):Lerp(Color3.new(1, 1, 1), 0.65)
 			tint(lockCol)
@@ -226,6 +229,20 @@ function M.start(E)
 			for _ = 1, 3 do if n:Dot(v) < 0.65 then n = (n + v).Unit end end
 			local dist = (at - eye).Magnitude
 			local k = math.clamp(dist * 0.36, 2, 4.4) -- studs across the dial: about a third of the view high
+			-- the owner, 2026-11-17: "the wheel is covered by the gemstone itself". The ray met the rock behind the crystals, so
+			-- gems standing out of the deposit poked through the plate. Now the plate sits just in front of the nearest corner of
+			-- any deposit part inside the dial's circle, facing the eye, so nothing of the gem can cover it.
+			local dir = to.Unit
+			local near = (at - eye):Dot(dir)
+			for _, q in depParts do
+				local h = q.Size / 2
+				for _, c in { Vector3.new(h.X, h.Y, h.Z), Vector3.new(-h.X, h.Y, h.Z), Vector3.new(h.X, -h.Y, h.Z), Vector3.new(h.X, h.Y, -h.Z), Vector3.new(-h.X, -h.Y, h.Z), Vector3.new(-h.X, h.Y, -h.Z), Vector3.new(h.X, -h.Y, -h.Z), Vector3.new(-h.X, -h.Y, -h.Z) } do
+					local rel = q.CFrame * c - eye
+					local along = rel:Dot(dir)
+					if along > 1 and along < near and (rel - dir * along).Magnitude < k * 0.7 then near = along end
+				end
+			end
+			if near < (at - eye):Dot(dir) - 0.05 then at, n = eye + dir * (near - 0.15), v end
 			anchor.Size = Vector3.new(k * 1.2, k * 1.44, 0.05)
 			local up = math.abs(n.Y) > 0.9 and cam.CFrame.UpVector or Vector3.yAxis
 			local pos = at + n * 0.12 + up * (k * 0.05)

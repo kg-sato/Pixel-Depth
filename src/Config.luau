@@ -47,7 +47,7 @@ C.START = { "base", "base", "ore3", "gild", "base", "egg" }
 C.PREFILL = 4 -- endowed progress: the backpack starts 4/10
 
 -- Digging
-C.DIG_COOLDOWN = 0.18 -- seconds between player hits (server enforced)
+C.DIG_COOLDOWN = 0.26 -- seconds between player hits (server enforced); the owner, 2026-11-17: slower, heavier mining (was 0.18)
 C.REACH = 13 -- studs from the character's head to a block centre
 -- Pixel textures (art/pd_roblox.py, 32 px art upscaled to 256 px, uploaded 2026-11-08)
 C.TEX = {

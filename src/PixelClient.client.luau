@@ -1118,14 +1118,20 @@ local function buildViewmodel()
 		end
 	end
 	local cf, size = vm:GetBoundingBox()
-	vm.WorldPivot = CFrame.new(cf.Position - Vector3.new(0, size.Y * 0.16, 0)) -- swing from the grip: mid-handle (at 0.38 the hand sat on the pommel)
-	vm:ScaleTo(vm:GetScale() * (3.2 / math.max(size.Y, 0.1))) -- a chunkier tool in the hand (audit 15: it read as a thin wand)
+	-- the owner, 2026-11-17: hold it like Minecraft and a real miner do. The hand sits low on the handle, near its end (a miner's
+	-- bottom hand; Minecraft's held tool is gripped at the foot of its sprite), so the whole handle and head rise out of the
+	-- fist. The tool is 2.5 studs long, not 3.2: it filled a third of the view (Minecraft's first-person tool is drawn at 0.68
+	-- of its item size and reaches about half way up the screen). It was gripped mid-handle (0.16 below the middle).
+	vm:ScaleTo(vm:GetScale() * (2.5 / math.max(size.Y, 0.1)))
+	vm.PrimaryPart = root
+	root.PivotOffset = CFrame.new(0, -root.Size.Y * 0.36, 0) -- on the tool's own handle axis, after the scale (a WorldPivot set before it came back as the mesh's centre, measured 2026-11-17)
 	new("Highlight", vm, { FillTransparency = 1, OutlineColor = Color3.fromRGB(255, 236, 200), OutlineTransparency = 0.7, DepthMode = Enum.HighlightDepthMode.Occluded })
 	local _, sz = vm:GetBoundingBox()
-	local a0 = new("Attachment", root, { Position = root.CFrame:PointToObjectSpace(vm:GetBoundingBox().Position + Vector3.new(0, sz.Y * 0.45, 0)) })
+	local bcf = vm:GetBoundingBox()
+	local a0 = new("Attachment", root, { Position = root.CFrame:PointToObjectSpace(bcf.Position + bcf.UpVector * sz.Y * 0.45) }) -- the head's edge, for the swing trail
 	local a1 = new("Attachment", root, { Position = a0.Position + Vector3.new(0.6, 0, 0) })
 	vmTrail = new("Trail", root, { Attachment0 = a0, Attachment1 = a1, Lifetime = 0.12, LightEmission = 0.8, Color = ColorSequence.new(WHITE), Transparency = NumberSequence.new(0.3, 1), Enabled = false })
-	if forgeUI.vmHands then forgeUI.vmHands(vm, root, vm:GetPivot() * CFrame.Angles(0, -(forgeUI.vmYaw or 0), 0), 1.45) end -- the gloved hand on the handle (Shared.ViewHands)
+	if forgeUI.vmHands then forgeUI.vmHands(vm, root, vm:GetPivot() * CFrame.Angles(0, -(forgeUI.vmYaw or 0), 0), 1.05) end -- the gloved hand on the handle (Shared.ViewHands); a fist about as thick as the handle is long wide (was 1.45: the cuff and sleeve hid the handle)
 	vm.Parent = cam
 end
 
@@ -1935,8 +1941,8 @@ end
 			local o = caveHud:FindFirstChild(n) or gui:FindFirstChild(n)
 			if o then o.Visible = not on end
 		end
-		if vm then -- the held pickaxe covered the STRIKE button
-			if on then vm.Parent = nil else vm.Parent = cam end
+		if vm then -- the held pickaxe covered the STRIKE button: Vein Rush still hides it; in Perfect Strike it is held up over the shoulder (Shared.ViewHands, heavy) and swings on every strike (the owner, 2026-11-17)
+			if on and not (mg and mg.kind == "strike") then vm.Parent = nil else vm.Parent = cam end
 		end
 		local compass = caveHud:FindFirstChild("Compass") -- the minigame title sits where the compass ribbon is
 		if compass then compass.Visible = not on end
@@ -2106,6 +2112,7 @@ end
 	local function close()
 		if not mg then return end
 		mg = nil
+		cave.vmHeavy = false
 		ps.Visible = false
 		VR.close()
 		freeze(false)
@@ -2114,6 +2121,7 @@ end
 	local function strike()
 		if not mg or mg.kind ~= "strike" or mg.done or os.clock() < mg.cool then return end
 		mg.cool = os.clock() + 0.28
+		swingT0 = os.clock() -- the held pick chops with the strike
 		cave.strikeOff = (needle.Rotation - arcPivot.Rotation + 180) % 360 - 180 -- < 0: early (Shared.StrikeJuice says TOO EARLY / TOO LATE)
 		ExtractR:FireServer("strike", workspace:GetServerTimeNow())
 		sfx("swing", 1.2)
@@ -2141,6 +2149,10 @@ end
 			local dep, which, t0, param, zone, period = ...
 			local col = C.LAYERS[dep:GetAttribute("Layer")][4][dep:GetAttribute("Ore")][2]
 			mg = { kind = which, dep = dep, t0 = t0, col = col, cool = 0, period = period }
+			cave.vmHeavy = which == "strike"
+			cave.strikeNear = function() -- 1 when the needle is on the gold, 0 a quarter turn or more away: the pick draws back as it nears
+				return 1 - math.clamp(math.abs((needle.Rotation - arcPivot.Rotation + 180) % 360 - 180) / 90, 0, 1)
+			end
 			freeze(true)
 			if which == "strike" then
 				mg.arc = param
@@ -2904,11 +2916,11 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	-- first-person pickaxe swing: wind-up, fast strike, short hold, recover; walking bob
 	if vm and (inMine or inCave) then
 		local t = now - swingT0
-		if vmTrail then vmTrail.Enabled = t > 0.06 and t < 0.2 end
+		if vmTrail then vmTrail.Enabled = t > 0.1 and t < (cave.vmHeavy and 0.34 or 0.24) end
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 		local moving = hum and hum.MoveDirection.Magnitude > 0.1
 		local bob = moving and math.sin(now * 10) * 0.08 or math.sin(now * 2) * 0.02
-		vm:PivotTo(cam.CFrame * (forgeUI.vmPose and forgeUI.vmPose(dt, t, moving, now, cam.CFrame) or CFrame.new(1.3, -1.5 + bob, -2.1) * CFrame.Angles(0.15, -0.35, 0.35))) -- springs: Shared.ViewHands
+		vm:PivotTo(cam.CFrame * (forgeUI.vmPose and forgeUI.vmPose(dt, t, moving, now, cam.CFrame, cave.vmHeavy, cave.vmHeavy and cave.strikeNear and cave.strikeNear()) or CFrame.new(1.3, -1.5 + bob, -2.1) * CFrame.Angles(0.15, -0.35, 0.35))) -- springs: Shared.ViewHands
 	end
 	-- aim outline on the block under the crosshair
 	if inMine then
