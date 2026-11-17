@@ -1242,26 +1242,26 @@ function M.play(opt)
 			shakeAmp = math.max(0, shakeAmp - dt * 1.2)
 			cam.CFrame = CFrame.lookAt(eye, cf.Position + Vector3.new(0, 1.5, 0)) * CFrame.Angles((math.random() - 0.5) * shakeAmp * 0.06, (math.random() - 0.5) * shakeAmp * 0.06, 0)
 			if u > 1 and not card then
-				card = frame({ Size = UDim2.fromScale(0.34, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = CREAM, ZIndex = 6 })
+				card = frame({ Size = UDim2.fromScale(0.34, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.1, ZIndex = 6 }) -- obsidian jelly glass (Gemini, loop v10n: "a stark white box after a dark ride")
 				round(card, 0.1)
-				stroke(card, Color3.fromRGB(158, 142, 194), 4)
+				stroke(card, Color3.fromRGB(155, 31, 232), 3)
 				local sc = Instance.new("UIScale")
 				sc.Scale = 0.6
 				sc.Parent = card
 				game:GetService("TweenService"):Create(sc, TweenInfo.new(0.35, Enum.EasingStyle.Back), { Scale = 1 }):Play()
-				label(card, "ESCAPED!", UDim2.fromScale(0.8, 0.18), UDim2.fromScale(0.5, 0.2), INK, 7)
+				label(card, "ESCAPED!", UDim2.fromScale(0.8, 0.18), UDim2.fromScale(0.5, 0.2), Color3.fromRGB(236, 224, 255), 7)
 				local stars = hits == 0 and 3 or (hits <= 2 and 2 or 1) -- a clean run is three stars
 				for k = 1, 3 do
 					local st = label(card, "\u{2605}", UDim2.fromScale(0.13, 0.17), UDim2.fromScale(0.36 + (k - 1) * 0.14, 0.05), k <= stars and Color3.fromRGB(255, 196, 70) or Color3.fromRGB(220, 212, 236), 8)
 					stroke(st, INK, 2)
 				end
-				local sub = frame({ Parent = card, Size = UDim2.fromScale(0.86, 0.46), Position = UDim2.fromScale(0.5, 0.56), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 249, 230), ZIndex = 6 })
+				local sub = frame({ Parent = card, Size = UDim2.fromScale(0.86, 0.46), Position = UDim2.fromScale(0.5, 0.56), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(36, 17, 56), BackgroundTransparency = 0.2, ZIndex = 6 })
 				round(sub, 0.12)
 				local go = Instance.new("TextButton")
 				go.Size, go.Position, go.AnchorPoint, go.ZIndex = UDim2.fromScale(0.46, 0.12), UDim2.fromScale(0.5, 0.9), Vector2.new(0.5, 0.5), 8
-				go.BackgroundColor3, go.Font, go.TextScaled, go.Text, go.TextColor3, go.AutoButtonColor = Color3.fromRGB(120, 224, 143), Enum.Font.FredokaOne, true, "CONTINUE", Color3.new(1, 1, 1)
+				go.BackgroundColor3, go.Font, go.TextScaled, go.Text, go.TextColor3, go.AutoButtonColor = Color3.fromRGB(255, 0, 127), Enum.Font.FredokaOne, true, "CONTINUE", Color3.new(1, 1, 1)
 				round(go, 0.3)
-				stroke(go, Color3.fromRGB(63, 156, 124), 3)
+				stroke(go, Color3.fromRGB(0, 240, 255), 2)
 				go.Parent = card
 				go.Activated:Connect(function() done = true end)
 				local rows = { { "TIME", string.format("%.1f s", runTime) }, { "DODGES", tostring(dodges) }, { gloom.caught and "THE GLOOM" or "BOOSTS", gloom.caught and "NIPPED YOU" or tostring(boosts) }, { "BONUS", "+" .. tostring(bonus or 0) .. " COINS" } }
@@ -1274,8 +1274,8 @@ function M.play(opt)
 				end
 				local step, tall = #rows > 4 and 0.083 or 0.104, #rows > 4 and 0.07 or 0.085
 				for i, r in rows do
-					label(card, r[1], UDim2.fromScale(0.4, tall), UDim2.fromScale(0.3, 0.30 + i * step), Color3.fromRGB(122, 98, 160), 7)
-					label(card, r[2], UDim2.fromScale(0.45, tall), UDim2.fromScale(0.7, 0.30 + i * step), i == #rows and Color3.fromRGB(214, 140, 40) or INK, 7)
+					label(card, r[1], UDim2.fromScale(0.4, tall), UDim2.fromScale(0.3, 0.30 + i * step), Color3.fromRGB(196, 160, 255), 7)
+					label(card, r[2], UDim2.fromScale(0.45, tall), UDim2.fromScale(0.7, 0.30 + i * step), i == #rows and Color3.fromRGB(255, 214, 107) or Color3.fromRGB(236, 224, 255), 7)
 				end
 			end
 			if u > 7 then done = true end -- CONTINUE ends it sooner
