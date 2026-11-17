@@ -106,7 +106,7 @@ function M.new(parent, str, opt)
 				end
 				local img = make("ImageLabel", row, props) -- the letter's box: it draws nothing itself; its slime strips draw the letter
 				img.Image = ""
-				local body = SlimeBody.new(img, { image = image, rect = rect, cell = Vector2.new(G.cell, G.cell), strips = 3, z = z + 1 })
+				local body = SlimeBody.new(img, { image = image, rect = rect, cell = Vector2.new(G.cell, G.cell), strips = 5, z = z + 1 })
 				if tint then img.ImageColor3 = tint body.tint(tint) end
 				img:GetPropertyChangedSignal("ImageTransparency"):Connect(function() body.alpha(img.ImageTransparency) end) -- callers fade the box (ArrivalBanner, mirror)
 				img:GetPropertyChangedSignal("ImageColor3"):Connect(function() body.tint(img.ImageColor3) end)
@@ -204,7 +204,7 @@ function M.mirror(label, opt)
 	local function fit()
 		if not label.Parent then return end
 		local h = label.AbsoluteSize.Y
-		local long = (opt.maxLen ~= nil and #label.Text > opt.maxLen) or (h > 0 and h < 24) or not M.covers(label.Text) -- slime letters under 24 px are mush (their drips crowd the next line; was 17 px for the old jelly), and a string the font cannot spell would have gaps: such a label stays plain text
+		local long = (opt.maxLen ~= nil and #label.Text > opt.maxLen) or (h > 0 and h < 17) or not M.covers(label.Text) -- jelly letters under 17 px are mush, and a string the font cannot spell would have gaps: such a label stays plain text
 		local ok = ready[(M.pick(t.color))] == true
 		label.MaxVisibleGraphemes = (long or not ok) and -1 or 0
 		t.frame.Visible = not long and ok

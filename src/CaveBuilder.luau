@@ -13,7 +13,7 @@ local C = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):Wa
 local CELL = 4
 local PAL = {
 	rock = { Color3.fromRGB(46, 32, 66), Color3.fromRGB(70, 50, 98), Color3.fromRGB(98, 72, 132), Color3.fromRGB(134, 104, 170) },
-	moss = { Color3.fromRGB(64, 130, 112), Color3.fromRGB(96, 176, 140), Color3.fromRGB(140, 214, 170) },
+	moss = { Color3.fromRGB(88, 52, 92), Color3.fromRGB(112, 66, 112), Color3.fromRGB(136, 84, 128) }, -- floor lichen in dark plum (the owner, 2026-11-17: no more green floors; was 64,130,112 .. 140,214,170)
 	teal = Color3.fromRGB(40, 176, 168), violet = Color3.fromRGB(150, 84, 220), mint = Color3.fromRGB(80, 196, 140),
 	lightTeal = Color3.fromRGB(120, 255, 236), lightViolet = Color3.fromRGB(206, 150, 255), lightMint = Color3.fromRGB(160, 255, 200),
 	warm = Color3.fromRGB(255, 196, 120), bark = Color3.fromRGB(104, 70, 66), barkLt = Color3.fromRGB(150, 104, 90),

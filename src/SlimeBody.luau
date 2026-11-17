@@ -4,7 +4,10 @@
 -- one, so the shape itself bends:
 --   * shear: the top lags behind the foot and swings back (jelly on a plate); the higher the strip, the further it moves
 --   * squash: the body gets shorter and fatter in the middle (volume kept), or taller and thinner, around its foot
--- Both are damped springs. A word couples its letters (JellyText), so a kick on one letter runs through the word as a wave.
+--   * wiggle (2026-11-17, the owner's references: After Effects jelly text, CC Bender from the foot plus a Twirl at the top,
+--     and puppet pins on an inertial-bounce expression): a faster second mode bends the letter into an S, so the top
+--     whips back while the middle still leans; each strip also tilts along the bend, so the letter reads bent, not sliced
+-- All three are damped springs. A word couples its letters (JellyText), so a kick on one letter runs through the word as a wave.
 --   local b = SlimeBody.new(parent, { image = id, rect = Vector2 (atlas cell offset) | nil, cell = Vector2 (picture or cell size in px), strips = 4, z = 3 })
 --   b.kick(shearSpeed, squashSpeed)   b.step(dt, pullShear)   b.tint(c)   b.alpha(a)   b.setRect(image, rect)   b.frame (fills parent)
 -- Under Reduced Motion the caller skips step (the strips sit still and whole).
@@ -12,10 +15,11 @@ local M = {}
 
 local KS, CS = 150, 7.5 -- shear spring: about 2 wobbles a second, dying away in about a second
 local KQ, CQ = 230, 10 -- squash spring
+local KW, CW = 520, 11 -- wiggle spring: the S-bend, about 3.6 wobbles a second, gone sooner than the lean
 
 function M.new(parent, o)
 	local n = o.strips or 4
-	local self = { s = 0, sv = 0, q = 0, qv = 0, strips = {}, n = n, still = false }
+	local self = { s = 0, sv = 0, q = 0, qv = 0, w = 0, wv = 0, strips = {}, n = n, still = false }
 	local frame = Instance.new("Frame")
 	frame.Name, frame.BackgroundTransparency, frame.Size, frame.ZIndex = "Slime", 1, UDim2.fromScale(1, 1), o.z or 3
 	frame.Parent = parent
@@ -46,13 +50,16 @@ function M.new(parent, o)
 	function self.kick(sv, qv)
 		self.sv += sv or 0
 		self.qv += qv or 0
+		self.wv -= (sv or 0) * 0.7 -- the top whips the other way first: overlap, like offset keyframes
 		self.still = false
 	end
 	-- draw the strips from the springs: k = 1 is the top strip; the foot stays put
 	function self.apply()
-		local s, q = math.clamp(self.s, -0.3, 0.3), math.clamp(self.q, -0.32, o.qmax or 0.36) -- qmax: how far it may stretch (the loading logo lands 1.9 tall)
+		local s, q, w = math.clamp(self.s, -0.3, 0.3), math.clamp(self.q, -0.32, o.qmax or 0.36), math.clamp(self.w, -0.2, 0.2) -- qmax: how far it may stretch (the loading logo lands 1.9 tall)
 		local sy = 1 + q
 		local sx = 1 / math.sqrt(sy)
+		local function off(up) return s * up ^ 1.6 + w * math.sin(math.pi * up) * up end -- sideways shift at height up (0 foot .. 1 top)
+		local asp = frame.AbsoluteSize.X / math.max(frame.AbsoluteSize.Y, 1)
 		for k, img in self.strips do
 			local a, b = hs[k][1], hs[k][2]
 			local mid = (a + b) / 2 -- 0 top .. 1 foot
@@ -60,7 +67,9 @@ function M.new(parent, o)
 			local belly = math.sin(math.pi * mid) -- the middle bulges most when squashed
 			local w = sx * (1 - 0.45 * q * belly)
 			img.Size = UDim2.fromScale(w, sy * (b - a))
-			img.Position = UDim2.fromScale(0.5 + s * up ^ 1.6, 1 - sy * (1 - mid))
+			img.Position = UDim2.fromScale(0.5 + off(up), 1 - sy * (1 - mid))
+			local slope = (off(math.min(up + 0.05, 1)) - off(math.max(up - 0.05, 0))) / 0.1 * asp / sy -- sideways per upward, in screen units
+			img.Rotation = math.clamp(math.deg(math.atan(slope)), -14, 14)
 		end
 	end
 	-- one physics step; pull = the shear the neighbours want this letter to have (0 when alone). Returns the energy left.
@@ -72,11 +81,13 @@ function M.new(parent, o)
 		dt = math.min(dt, 1 / 30)
 		self.sv += (-KS * self.s - CS * self.sv + (pull or 0) * 60) * dt
 		self.qv += (-KQ * self.q - CQ * self.qv) * dt
+		self.wv += (-KW * self.w - CW * self.wv) * dt
 		self.s += self.sv * dt
 		self.q += self.qv * dt
-		local e = math.abs(self.s) + math.abs(self.q) + (math.abs(self.sv) + math.abs(self.qv)) * 0.05
+		self.w += self.wv * dt
+		local e = math.abs(self.s) + math.abs(self.q) + math.abs(self.w) + (math.abs(self.sv) + math.abs(self.qv) + math.abs(self.wv)) * 0.05
 		if e < 0.0015 and not self.still then
-			self.s, self.sv, self.q, self.qv = 0, 0, 0, 0
+			self.s, self.sv, self.q, self.qv, self.w, self.wv = 0, 0, 0, 0, 0, 0
 			self.still = true
 			self.apply()
 		elseif not self.still then
@@ -93,6 +104,6 @@ do -- self-check: a kick dies away and the body comes to rest whole
 	local t = M.new(Instance.new("Frame"), { cell = Vector2.new(128, 128), strips = 3 })
 	t.kick(3, -4)
 	for _ = 1, 240 do t.step(1 / 60) end
-	assert(t.still and t.s == 0 and t.q == 0, "SlimeBody: settles") -- self-check
+	assert(t.still and t.s == 0 and t.q == 0 and t.w == 0, "SlimeBody: settles") -- self-check
 end
 return M
