@@ -841,15 +841,44 @@ function M.play(opt)
 		label(gauge, "STEAM", UDim2.fromScale(0.5, 0.9), UDim2.fromScale(-0.3, 0.5), WHITE, 4)
 		local bar, zone, needle, word
 		if K.job == "stoker" then
-			bar = frame({ Name = "Stoke", Size = UDim2.fromScale(0.34, 0.05), Position = UDim2.fromScale(0.5, 0.74), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(36, 17, 56), BackgroundTransparency = 0.12, ZIndex = 3 })
-			round(bar)
-			stroke(bar, Color3.fromRGB(224, 176, 255), 2)
-			zone = frame({ Parent = bar, Size = UDim2.fromScale(S.zone, 1), BackgroundColor3 = BUTTER, ZIndex = 4 })
-			round(zone)
-			needle = frame({ Parent = bar, Size = UDim2.fromScale(0.022, 1.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = WHITE, ZIndex = 5 })
+			-- a brass boiler gauge, not a flat bar (Gemini audit 2026-11-18: "unstyled Stoker needle bar"): a half dial with a brass
+			-- rim, notches, a gold arc for the window and a needle that sweeps from left to right as C.stokeAt runs 0 to 1
+			local BRASS, BRASS_D = Color3.fromRGB(214, 160, 78), Color3.fromRGB(120, 78, 34)
+			bar = frame({ Name = "Stoke", Size = UDim2.fromScale(0.24, 0.24), Position = UDim2.fromScale(0.5, 0.79), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 3 })
+			local ar = Instance.new("UIAspectRatioConstraint")
+			ar.AspectRatio = 2
+			ar.Parent = bar
+			local face = frame({ Parent = bar, Name = "Face", Size = UDim2.fromScale(0.96, 1.92), Position = UDim2.fromScale(0.5, 1), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(34, 20, 26), BackgroundTransparency = 0.05, ZIndex = 3 })
+			round(face)
+			stroke(face, BRASS, 6)
+			local fg = Instance.new("UIGradient")
+			fg.Rotation, fg.Color = 90, ColorSequence.new(Color3.fromRGB(80, 56, 60), Color3.fromRGB(20, 12, 18))
+			fg.Parent = face
+			local function arm(z) -- a full-size pivot over the face: turn it and its child sweeps round the dial's centre
+				return frame({ Parent = face, Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = z })
+			end
+			for i = 0, 12 do -- the notches
+				local a = arm(4)
+				a.Rotation = -90 + i * 15
+				frame({ Parent = a, Size = UDim2.fromScale(i % 3 == 0 and 0.022 or 0.012, i % 3 == 0 and 0.1 or 0.06), Position = UDim2.fromScale(0.5, 0.05), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = BRASS, ZIndex = 4 })
+			end
+			zone = {} -- the gold window: a run of segments laid along the arc
+			for i = 1, 9 do
+				local a = arm(4)
+				local seg = frame({ Parent = a, Size = UDim2.fromScale(0.07, 0.11), Position = UDim2.fromScale(0.5, 0.1), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = BUTTER, ZIndex = 4 })
+				round(seg)
+				zone[i] = a
+			end
+			local needleArm = arm(6)
+			needle = frame({ Parent = needleArm, Size = UDim2.fromScale(0.026, 0.43), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = WHITE, ZIndex = 6 })
 			round(needle)
 			stroke(needle, Color3.fromRGB(60, 24, 90), 2)
-			word = label(gui, touch and "STOKER:  TAP WHEN THE NEEDLE IS IN THE GOLD" or "STOKER:  SPACE WHEN THE NEEDLE IS IN THE GOLD", UDim2.fromScale(0.5, 0.04), UDim2.fromScale(0.5, 0.68), WHITE, 4)
+			local hub = frame({ Parent = face, Size = UDim2.fromScale(0.12, 0.12), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = BRASS_D, ZIndex = 7 })
+			round(hub)
+			stroke(hub, BRASS, 3)
+			needle:SetAttribute("Arm", true)
+			K.stokeArm = needleArm
+			word = label(gui, touch and "STOKER:  TAP IN THE GOLD" or "STOKER:  SPACE IN THE GOLD", UDim2.fromScale(0.3, 0.035), UDim2.fromScale(0.5, 0.82), WHITE, 4) -- under the gauge
 			local lastPress = 0
 			K.stoke = function()
 				if t <= 0 or os.clock() - lastPress < S.cool then return end
@@ -866,8 +895,9 @@ function M.play(opt)
 		K.steamStep = function(now)
 			steam.Size = UDim2.fromScale(math.clamp(K.heat - S.decay * (now - K.heatAt), 0, 1), 1)
 			if needle then
-				needle.Position = UDim2.fromScale(C.stokeAt(K.crew.t0 or 0, workspace:GetServerTimeNow()), 0.5)
-				zone.Position = UDim2.fromScale(C.stokeZone(K.crew.seed or 1, K.hits), 0)
+				K.stokeArm.Rotation = -90 + 180 * C.stokeAt(K.crew.t0 or 0, workspace:GetServerTimeNow())
+				local z0 = C.stokeZone(K.crew.seed or 1, K.hits)
+				for i, a in zone do a.Rotation = -90 + 180 * (z0 + S.zone * (i - 0.5) / #zone) end
 				local on = t > 0 and phase == "run" and K.job == "stoker"
 				bar.Visible, word.Visible = on, on
 			end
