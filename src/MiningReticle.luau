@@ -228,7 +228,7 @@ function M.start(E)
 			local n = hit and hit.Normal or v
 			for _ = 1, 3 do if n:Dot(v) < 0.65 then n = (n + v).Unit end end
 			local dist = (at - eye).Magnitude
-			local k = math.clamp(dist * 0.36, 2, 4.4) -- studs across the dial: about a third of the view high
+			local k = math.clamp(dist * 0.27, 1.6, 3.3) -- studs across the dial: about a quarter of the view high (Gemini audit 2026-11-18: at a third it read as a 2D clock hijacking the screen)
 			-- the owner, 2026-11-17: "the wheel is covered by the gemstone itself". The ray met the rock behind the crystals, so
 			-- gems standing out of the deposit poked through the plate. Now the plate sits just in front of the nearest corner of
 			-- any deposit part inside the dial's circle, facing the eye, so nothing of the gem can cover it.
@@ -239,11 +239,14 @@ function M.start(E)
 				for _, c in { Vector3.new(h.X, h.Y, h.Z), Vector3.new(-h.X, h.Y, h.Z), Vector3.new(h.X, -h.Y, h.Z), Vector3.new(h.X, h.Y, -h.Z), Vector3.new(-h.X, -h.Y, h.Z), Vector3.new(-h.X, h.Y, -h.Z), Vector3.new(h.X, -h.Y, -h.Z), Vector3.new(-h.X, -h.Y, -h.Z) } do
 					local rel = q.CFrame * c - eye
 					local along = rel:Dot(dir)
-					if along > 1 and along < near and (rel - dir * along).Magnitude < k * 0.7 then near = along end
+					if along > 1 and along < near and (rel - dir * along).Magnitude < k * 1.3 + 0.5 then near = along end -- wide enough that no deposit block covers the smaller dial
 				end
 			end
 			if near < (at - eye):Dot(dir) - 0.05 then at, n = eye + dir * (near - 0.15), v end
 			anchor.Size = Vector3.new(k * 1.2, k * 1.44, 0.05)
+			local glow = anchor:FindFirstChild("RockGlow") or new("PointLight", anchor, { Name = "RockGlow", Color = Color3.fromRGB(255, 200, 90), Shadows = false }) -- the dial lights the rock it sits on, so it reads as part of the world
+			glow.Range, glow.Brightness = k * 1.6, 0.9 + math.sin(os.clock() * 6) * 0.25
+			lock.Size = UDim2.fromScale(k * 1.25, k * 1.25) -- the brackets hug the smaller dial instead of framing half the view
 			local up = math.abs(n.Y) > 0.9 and cam.CFrame.UpVector or Vector3.yAxis
 			local pos = at + n * 0.12 + up * (k * 0.05)
 			anchor.CFrame = CFrame.lookAt(pos, pos + n, up)
