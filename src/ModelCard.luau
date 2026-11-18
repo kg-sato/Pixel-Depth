@@ -23,7 +23,7 @@ local function fit(cam, model, pad)
 end
 
 -- host: the GuiObject the model is drawn in (an image frame); hover: the GuiObject that reacts to the pointer (default host)
--- opts: { color = Color3 (glow), roll = degrees (a pickaxe leans), z = ZIndex, scale = 1 }
+-- opts: { color = Color3 (glow), roll = degrees (a pickaxe leans), z = ZIndex, scale = 1, stroke = the card's border UIStroke if not on hover }
 function M.attach(host, hover, opts)
 	opts = opts or {}
 	local z = opts.z or host.ZIndex
@@ -63,6 +63,8 @@ function M.attach(host, hover, opts)
 		sh.Size, sh.Position, sh.AnchorPoint, sh.ZIndex = UDim2.fromScale(1.3, 0.5), UDim2.fromScale(0.5, 1.02), Vector2.new(0.5, 0.5), math.max(hv.ZIndex - 1, 1)
 		sh.Parent = hv
 		h.shadow = sh
+		local st = opts.stroke or hv:FindFirstChildOfClass("UIStroke") -- the border catches the glow colour and thickens on hover (Gemini n17_hatch: a sharp border sheen; the equipped card's border stole the focus)
+		h.stroke = st
 	end
 	hv.MouseEnter:Connect(function()
 		h.want = 1
@@ -124,8 +126,18 @@ RunService.RenderStepped:Connect(function(dt)
 		h.sc.Scale = h.vp.ImageTransparency > 0.05 and h.sc.Scale or (1 + 0.16 * hov) -- Gemini n17_hatch: the lift at 8% was barely seen
 		h.vp.Position = UDim2.fromScale(0.5, 0.5 - 0.07 * hov)
 		h.glow.ImageTransparency = 1 - math.clamp(hov, 0, 1) * 0.85
-		if h.lift then h.lift.Scale = 1 + 0.06 * hov end -- the whole card rises toward you
-		if h.shadow then h.shadow.ImageTransparency = 1 - math.clamp(hov, 0, 1) * 0.6 end
+		if h.lift then h.lift.Scale = 1 + 0.08 * hov end -- the whole card rises toward you
+		if h.shadow then h.shadow.ImageTransparency = 1 - math.clamp(hov, 0, 1) * 0.75 end
+		if h.stroke then -- the card's own state colours the border at rest: take it when the hover starts, give it back when it ends
+			local u = math.clamp(hov, 0, 1)
+			if u > 0.01 then
+				if not h.strokeC then h.strokeC, h.strokeT = h.stroke.Color, h.stroke.Thickness elseif h.stroke.Color ~= h.strokeW then h.strokeC = h.stroke.Color end -- the card changed state (equipped) under the pointer: that is the new rest
+				h.stroke.Color, h.stroke.Thickness = h.strokeC:Lerp(h.glow.ImageColor3:Lerp(Color3.new(1, 1, 1), 0.45), u), h.strokeT + 1.5 * u
+				h.strokeW = h.stroke.Color
+			elseif h.strokeC then
+				h.stroke.Color, h.stroke.Thickness, h.strokeC = h.strokeC, h.strokeT, nil
+			end
+		end
 	end
 end)
 

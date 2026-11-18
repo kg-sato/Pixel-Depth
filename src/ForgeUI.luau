@@ -139,9 +139,9 @@ function M.start(E)
 		new("UIAspectRatioConstraint", lock, { AspectRatio = 1 })
 		lock.ZIndex = 8
 		local sc = scaler(b)
-		local card3d = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("ModelCard")).attach(art, b, { roll = -28, z = 5 }) -- the pickaxe as a live 3D model that lifts and tilts on hover (2026-11-17)
+		local card3d = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("ModelCard")).attach(art, b, { roll = -28, z = 5, stroke = rim }) -- the pickaxe as a live 3D model that lifts and tilts on hover (2026-11-17)
 		cards[i] = { card3d = card3d, lip = lip, btn = b, rim = rim, glow = glow, name = nm, art = art, lvBox = lvBox, lv = lv, ok = ok, eq = eq, price = price, priceT = pt, lock = lock, sc = sc }
-		b.MouseEnter:Connect(function() if not glow.Visible then tween(sc, 0.12, { Scale = 1.04 }) end end)
+		b.MouseEnter:Connect(function() if not glow.Visible then tween(sc, 0.12, { Scale = 1.08 }) end end) -- Gemini n17_hatch: 1.04 was barely seen
 		b.MouseLeave:Connect(function() if not glow.Visible then tween(sc, 0.15, { Scale = 1 }) end end)
 		b.MouseButton1Down:Connect(function() tween(sc, 0.07, { Scale = 0.94 }) if sfxClick then sfxClick() end end)
 		face:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() rim.Thickness = math.max(2, face.AbsoluteSize.Y * 0.03) end)
