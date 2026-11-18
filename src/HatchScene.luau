@@ -21,6 +21,7 @@ local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 
 local M = {}
+local RARITIES = require(script.Parent:WaitForChild("Config")).RARITIES or {}
 local WHITE, INK = Color3.new(1, 1, 1), Color3.fromRGB(28, 16, 40)
 local SPARK = "rbxasset://textures/particles/sparkles_main.dds"
 local ROCK = { Color3.fromRGB(58, 38, 72), Color3.fromRGB(70, 46, 86), Color3.fromRGB(48, 32, 62), Color3.fromRGB(82, 56, 98) }
@@ -273,13 +274,13 @@ function M.play(opt)
 	local flash = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, ZIndex = 8 })
 	local caption = label("SOMETHING STIRS IN THE NEST...", UDim2.fromScale(0.6, 0.045), UDim2.fromScale(0.5, 0.95), Color3.fromRGB(236, 224, 255), 6)
 	caption.TextTransparency, caption.UIStroke.Transparency = 1, 1
-	local nameL, nameS = label(string.upper(opt.name), UDim2.fromScale(0.62, 0.11), UDim2.fromScale(0.5, 0.165), WHITE, 7, rc:Lerp(INK, 0.45))
+	local nameL, nameS = label(string.upper(opt.name), UDim2.fromScale(0.5, 0.09), UDim2.fromScale(0.5, 0.155), WHITE, 7, rc:Lerp(INK, 0.45))
 	nameL.UIStroke.Thickness = 5
 	local nameGrad = Instance.new("UIGradient")
 	nameGrad.Color, nameGrad.Rotation = ColorSequence.new(WHITE, rc:Lerp(WHITE, 0.35)), 90
 	nameGrad.Parent = nameL
 	local subL, subS = label(string.upper(opt.rarity or "") .. "  -  " .. string.upper(opt.role or "") .. ((opt.odds or "") ~= "" and ("  -  " .. opt.odds) or ""),
-		UDim2.fromScale(0.5, 0.05), UDim2.fromScale(0.5, 0.26), rc:Lerp(WHITE, 0.25), 7)
+		UDim2.fromScale(0.5, 0.04), UDim2.fromScale(0.5, 0.228), rc:Lerp(WHITE, 0.25), 7)
 	local hint = label(game:GetService("UserInputService").TouchEnabled and "TAP TO CONTINUE" or "CLICK TO CONTINUE", UDim2.fromScale(0.3, 0.035), UDim2.fromScale(0.5, 0.95), Color3.fromRGB(236, 224, 255), 7)
 	for _, l in { nameL, subL, hint } do l.TextTransparency, l.UIStroke.Transparency = 1, 1 end
 	local tapBtn = Instance.new("TextButton")
@@ -374,6 +375,12 @@ function M.play(opt)
 			if step ~= climbStep then
 				climbStep, climbCol = step, ladder[step]
 				sfx("upgrade", 1.1 + step * 0.12)
+				local rar = RARITIES[step] -- the caption names each rung as it climbs (Gemini m13: no readable tier ramp in the stills)
+				if rar then
+					caption.Text, caption.TextColor3 = string.upper(rar[1]) .. (step < tier and "..." or "!"), climbCol:Lerp(WHITE, 0.35)
+					local sc = caption:FindFirstChildOfClass("UIScale")
+					if sc then sc.Scale = 1.35 TweenService:Create(sc, TweenInfo.new(0.3, Enum.EasingStyle.Back), { Scale = 1 }):Play() end
+				end
 				for _, g in glows do
 					TweenService:Create(g.l, TweenInfo.new(0.25), { Color = g.base:Lerp(climbCol, 0.3) }):Play()
 				end
@@ -465,6 +472,7 @@ function M.play(opt)
 			for _, b in beads do b.Transparency = 1 end
 			hl.Enabled = false
 			shock = part(world, Vector3.new(0.12, 1, 1), CFrame.new(NEST + Vector3.new(0, 0.15, 0)) * CFrame.Angles(0, 0, math.pi / 2), rc:Lerp(WHITE, 0.3), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Neon, Transparency = 0.2 })
+			for _, c in crystals do TweenService:Create(c, TweenInfo.new(0.6), { Color = c:GetAttribute("Base") }):Play() end -- the crystals step back so the pet's backlight reads (Gemini m13)
 			for _, g in glows do -- the grotto floods with the rarity colour
 				TweenService:Create(g.l, TweenInfo.new(0.3), { Color = g.base:Lerp(rc, 0.4), Brightness = (1.0 + k * 0.4) * lit, Range = 18 }):Play() -- was 2.6 + k * 1.4: a gold flood washed the pet out (stills hs5)
 			end
@@ -531,7 +539,7 @@ function M.play(opt)
 		end
 		once("name", A3 + 0.35, function()
 			-- the plate: a dot of light that opens into a jelly-glass pill behind the name (Oly's circle-to-pill morph)
-			local plate = frame({ Size = UDim2.fromScale(0.05, 0.08), Position = UDim2.fromScale(0.5, 0.2), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 10, 34), BackgroundTransparency = 0.18, ZIndex = 6 })
+			local plate = frame({ Size = UDim2.fromScale(0.05, 0.08), Position = UDim2.fromScale(0.5, 0.18), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 10, 34), BackgroundTransparency = 0.18, ZIndex = 6 })
 			local pc = Instance.new("UICorner")
 			pc.CornerRadius = UDim.new(0.5, 0)
 			pc.Parent = plate
@@ -541,7 +549,7 @@ function M.play(opt)
 			local pg2 = Instance.new("UIGradient")
 			pg2.Rotation, pg2.Transparency = 90, NumberSequence.new(0, 0.35)
 			pg2.Parent = plate
-			TweenService:Create(plate, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Size = UDim2.fromScale(0.64, 0.2) }):Play()
+			TweenService:Create(plate, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Size = UDim2.fromScale(0.52, 0.16) }):Play() -- 20% smaller and higher, clear of the pet's horns (Gemini m13)
 			nameL.TextTransparency, nameL.UIStroke.Transparency = 0, 0
 			nameS.Scale = 2.4
 			TweenService:Create(nameS, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
@@ -559,11 +567,11 @@ function M.play(opt)
 		end)
 		once("sub", A3 + 0.75, function()
 			-- word by word, the rarity word in its colour (Oly's reveals: one keyword lit, the rest calm)
-			local row = frame({ Size = UDim2.fromScale(0.8, 0.05), Position = UDim2.fromScale(0.5, 0.26), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 7 })
+			local row = frame({ Size = UDim2.fromScale(0.8, 0.04), Position = UDim2.fromScale(0.5, 0.228), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 7 })
 			local lay = Instance.new("UIListLayout")
 			lay.FillDirection, lay.HorizontalAlignment, lay.VerticalAlignment, lay.Padding = Enum.FillDirection.Horizontal, Enum.HorizontalAlignment.Center, Enum.VerticalAlignment.Center, UDim.new(0, 10)
 			lay.Parent = row
-			local px = math.max(14, math.floor(gui.AbsoluteSize.Y * 0.032))
+			local px = math.max(14, math.floor(gui.AbsoluteSize.Y * 0.027))
 			local words = { string.upper(opt.rarity or "") }
 			for w in string.gmatch(string.upper(opt.role or ""), "%S+") do table.insert(words, w) end
 			if (opt.odds or "") ~= "" then table.insert(words, "·") for w in string.gmatch(opt.odds, "%S+") do table.insert(words, w) end end
