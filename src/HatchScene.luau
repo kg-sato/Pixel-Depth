@@ -333,7 +333,7 @@ function M.play(opt)
 	local A3 = A2 + HANG -- the burst
 	local t, last, fired = 0, os.clock(), {}
 	local done, closing, closeAt = false, false, nil
-	local pet, petT = nil, nil
+	local pet, petT, petBig = nil, nil, 1
 	local shards, shock, rays = {}, nil, nil
 	local climbStep, climbCol = 1, ladder[1]
 	local shake = 0
@@ -495,7 +495,8 @@ function M.play(opt)
 			for _, g in glows do -- the grotto floods with the rarity colour
 				TweenService:Create(g.l, TweenInfo.new(0.3), { Color = g.base:Lerp(rc, 0.4), Brightness = (1.0 + k * 0.4) * lit, Range = 18 }):Play() -- was 2.6 + k * 1.4: a gold flood washed the pet out (stills hs5)
 			end
-			keyL.Color, keyL.Brightness = rc:Lerp(WHITE, 0.6), 2
+			keyL.Color, keyL.Brightness, keyL.Range = rc:Lerp(WHITE, 0.75), 1.7, 12
+			nestLight.Position = NEST + Vector3.new(0.8, 4.4, -4.5) -- a key on the pet's face from the camera side: it sat inside the floating pet's head (stills rv7)
 			shaft.Color, shaft.Transparency = rc:Lerp(WHITE, 0.4), 0.88
 			coreL.Brightness, coreL.Range = 4, 16
 			TweenService:Create(coreL, TweenInfo.new(1.2), { Brightness = 0.5, Range = 10 }):Play()
@@ -503,6 +504,8 @@ function M.play(opt)
 			if pet then
 				pet:PivotTo(CFrame.new(NEST + Vector3.new(0, 0.92, 0))) -- pets look -Z: at the camera
 				pet.Parent = world
+				local _, bb = pet:GetBoundingBox()
+				petBig = math.clamp(2.9 / math.max(bb.Y, 0.5), 1, 1.9) -- small pets grow to fill the hero shot like Fafnir does (stills rv: Tosk and Selkie read tiny)
 				pet:ScaleTo(0.2)
 			end
 			petT = t
@@ -539,8 +542,8 @@ function M.play(opt)
 			local s = 0.2 + 0.8 * backOut(u)
 			local hop = math.sin(math.min(u, 1) * math.pi) * 1.6
 			local turn = math.sin((t - petT) * 0.9) * 0.35 * smooth(petT + 0.8, petT + 1.6, t) -- it looks about a little after it lands
-			pet:ScaleTo(math.max(0.05, s) * 1.15)
-			pet:PivotTo(CFrame.new(NEST + Vector3.new(0, 0.92 * s * 1.15 + hop + 0.6 * u + math.sin((t - petT) * 2.2) * 0.12 * u, -0.4 * (1 - u))) * CFrame.Angles(0, turn, 0)) -- it floats clear of the nest rim (Gemini m5: the limbs blended into the nest)
+			pet:ScaleTo(math.max(0.05, s) * 1.15 * petBig)
+			pet:PivotTo(CFrame.new(NEST + Vector3.new(0, 0.92 * s * 1.15 * petBig + hop + 0.6 * u + math.sin((t - petT) * 2.2) * 0.12 * u, -0.4 * (1 - u))) * CFrame.Angles(0, turn, 0)) -- it floats clear of the nest rim (Gemini m5: the limbs blended into the nest)
 			if opt.animate then opt.animate(pet, now, dt, false) end
 			local ru = smooth(A3, A3 + 0.9, t)
 			camPos = (NEST + Vector3.new(0.5, 2.7, -8.2)):Lerp(NEST + Vector3.new(-0.6, 2.9, -10.8) + Vector3.new(math.sin((t - A3) * 0.35) * 1.2, 0, 0), ru)

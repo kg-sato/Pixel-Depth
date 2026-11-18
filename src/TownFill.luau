@@ -9,7 +9,7 @@
 -- Config.TOWN_FILL = { color, cave, joinHold, hold, fade }: the town's and the caves' fill colour; seconds at full fill
 -- after a join / after an arrival; seconds of fade.
 -- A fill is asked for by a join, by the player attribute InCave changing and by the camera jumping more than 120 studs in one
--- frame. Other code saves and restores Lighting.Ambient (the forge scene, the two rides, the cave look), so this module
+-- frame. Other code saves and restores Lighting.Ambient (the forge scene, the hatch scene, the two rides, the cave look), so this module
 -- never writes while one of them runs (the fill then starts when it ends), and with no fill running it keeps the ambient at
 -- the place's own value.
 local Lighting = game:GetService("Lighting")
@@ -24,7 +24,7 @@ function M.start(E)
 	E.vmHook.townAmbient = town
 	local function scene() -- something else owns the lighting right now
 		local escape = workspace:FindFirstChild("MinecartEscape") ~= nil -- its last act plays in town (the cart bursts out of the shaft): the fill runs under it
-		return workspace:FindFirstChild("ForgeStage") ~= nil or workspace:FindFirstChild("MinecartRide") ~= nil or (plr:GetAttribute("Seated") == true and not escape)
+		return workspace:FindFirstChild("ForgeStage") ~= nil or workspace:FindFirstChild("HatchStage") ~= nil or workspace:FindFirstChild("MinecartRide") ~= nil -- the hatch sets its own ambient (2026-11-17: the town's warm fill turned white pets tan in the grotto) or (plr:GetAttribute("Seated") == true and not escape)
 			or (escape and plr:GetAttribute("InCave") == true)
 	end
 	local pend = F.joinHold -- a fill is wanted: its seconds at full strength
