@@ -85,6 +85,7 @@ local KIND = {
 	zap = { tex = "square", size = NS(0.224, 0.0), rate = 10.5, life = NumberRange.new(0.1, 0.2), speed = NumberRange.new(2, 4), spread = 180, trans = NS(0, 1), light = 1 },
 	leaf = { tex = "square", size = NS(0.16, 0.08), rate = 3.0, life = NumberRange.new(1.5, 2.2), speed = NumberRange.new(0.3, 0.5), spread = 180, accel = Vector3.new(0, -0.3, 0), trans = NS(0.1, 1), light = 0.5, rot = 60 },
 	coins = { tex = "square", size = NS(0.256, 0.096), rate = 4.5, life = NumberRange.new(0.6, 1), speed = NumberRange.new(0.4, 0.8), spread = 60, accel = Vector3.new(0, -2.5, 0), trans = NS(0, 1), light = 1, rot = 200 },
+	dust = { tex = "puff", size = NS(0.6, 1.5), rate = 0, life = NumberRange.new(0.7, 1.1), speed = NumberRange.new(2, 3.2), spread = 85, accel = Vector3.new(0, -1.5, 0), trans = NS(0.1, 1), light = 0.25, drag = 3 }, -- impacts only (PetVoxels.animate)
 	aura = { tex = "glow", size = NS(3.84, 3.84), rate = 2.1, life = NumberRange.new(1.6, 2.2), speed = NumberRange.new(0, 0), spread = 0, trans = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.4, 0.82), NumberSequenceKeypoint.new(1, 1) }), light = 1, locked = true },
 }
 local C3 = Color3.fromRGB
@@ -107,6 +108,8 @@ local FX = {
 local function addFx(m, name, d, rig)
 	local list = FX[name]
 	if not list or not d.cx then return end
+	list = table.clone(list)
+	table.insert(list, { "Body", d.cx - 0.5, 0, d.cz - 0.5, "dust", Color3.fromRGB(232, 218, 196) }) -- under the middle of the pet
 	for _, f in list do
 		local part, x, y, z, kind, col, li = f[1], f[2], f[3], f[4], f[5], f[6], f[7]
 		local host
@@ -118,6 +121,7 @@ local function addFx(m, name, d, rig)
 			local P = (FLIP * CFrame.new((x + 0.5 - d.cx) * d.vox, (y + 0.5) * d.vox, (z + 0.5 - d.cz) * d.vox)).Position -- the pet's frame: feet at 0, looking -Z
 			local att = Instance.new("Attachment")
 			att.Name = "Fx_" .. kind
+			if kind == "dust" then att.Position = host.CFrame:PointToObjectSpace(Vector3.new(0, 0.05, 0)) end -- the feet, centred
 			att.Position = host.CFrame:PointToObjectSpace(P)
 			att.Parent = host
 			local e = Instance.new("ParticleEmitter")
@@ -197,6 +201,87 @@ function M.build(name)
 end
 M.rigs = setmetatable({}, { __mode = "k" })
 
+-- IDLE ACTIONS (2026-11-18, the owner: "add motion"; vault Research/3D and Art/Minecraft Mod Mob Quality (2026-11-18).md:
+-- Minecraft Legends moved to keyframed idles so every mob has its own). While a pet stands still it plays a short keyframed
+-- action every 4 to 8 s, picked from its own set: the dragon roars (head up, wings out, a puff from every emitter), the
+-- horses rear, the kobold raises its pickaxe and slams it down, the firebird flaps, the spirit fox fans its tails. Keys are
+-- { u (0..1 of the action), value } eased with smoothstep. Walking cancels an action smoothly (its weight is 1 - w).
+local function key(u, pts)
+	if u <= pts[1][1] then return pts[1][2] end
+	for i = 2, #pts do
+		local a, b = pts[i - 1], pts[i]
+		if u <= b[1] then
+			local x = (u - a[1]) / math.max(b[1] - a[1], 1e-4)
+			return a[2] + (b[2] - a[2]) * x * x * (3 - 2 * x)
+		end
+	end
+	return pts[#pts][2]
+end
+-- each action: dur (s), burst (emit from the pet's effects at this u), and fn(u) -> pose:
+--   head = CFrame, root = { pitch, roll, lift, pivotBack (true: rock about the hind feet) }, tail = CFrame,
+--   wing = spread (negative raises and spreads, positive folds), armR = CFrame, legF = CFrame (front legs), ring = speed boost
+local ACT = {}
+ACT.look = { dur = 2.6, fn = function(u)
+	return { head = CFrame.Angles(key(u, { { 0, 0 }, { 0.3, 0.12 }, { 0.6, 0.12 }, { 1, 0 } }), key(u, { { 0, 0 }, { 0.18, 0.75 }, { 0.42, 0.75 }, { 0.58, -0.75 }, { 0.84, -0.75 }, { 1, 0 } }), 0) }
+end }
+ACT.shake = { dur = 0.9, fn = function(u)
+	local d = math.sin(u * math.pi * 14) * (1 - u) * key(u, { { 0, 0 }, { 0.1, 1 }, { 1, 1 } })
+	return { root = { roll = d * 0.14 }, head = CFrame.Angles(0, 0, -d * 0.3), tail = CFrame.Angles(0, d * 0.8, 0) }
+end }
+ACT.stomp = { dur = 1.4, fn = function(u) -- lean back, lift, slam, compress, settle with a small overshoot
+	local up = key(u, { { 0, 0 }, { 0.12, -0.1 }, { 0.35, 1 }, { 0.45, 1 }, { 0.52, 0 }, { 1, 0 } })
+	local hit = key(u, { { 0.48, 0 }, { 0.54, 1 }, { 0.7, -0.3 }, { 0.85, 0 } })
+	return { legF = CFrame.Angles(-math.max(up, 0) * 1.1, 0, 0), root = { pitch = up * 0.12 - hit * 0.03, lift = -hit * 0.08, pivotBack = true }, head = CFrame.Angles(-hit * 0.25, 0, 0), squash = hit * 0.08 }
+end, impact = 0.53 }
+ACT.roar = { dur = 2.1, fn = function(u) -- breathe in (head down, chest swells), roar (head up, wings out, a tremble), overshoot down, settle
+	local inh = key(u, { { 0, 0 }, { 0.2, 1 }, { 0.3, 0 } })
+	local r = key(u, { { 0.18, 0 }, { 0.32, 1 }, { 0.72, 1 }, { 0.86, -0.15 }, { 1, 0 } })
+	local j = math.sin(u * 110) * 0.05 * key(u, { { 0.3, 0 }, { 0.36, 1 }, { 0.7, 1 }, { 0.76, 0 } })
+	return { head = CFrame.Angles(r * 0.6 - inh * 0.3 + j, 0, j), root = { pitch = r * 0.1 - inh * 0.06, lift = -inh * 0.05, pivotBack = true }, wing = -math.max(r, 0) * 0.75 + inh * 0.2, tail = CFrame.Angles(r * 0.35, 0, 0), squash = -inh * 0.06 + j * 0.5 }
+end, burst = 0.33 }
+ACT.flap = { dur = 1.8, fn = function(u) -- crouch with wings cocked, beat up into the air, land and compress
+	local c = key(u, { { 0, 0 }, { 0.18, 1 }, { 0.26, 0 } })
+	local f = key(u, { { 0.2, 0 }, { 0.3, 1 }, { 0.82, 1 }, { 0.9, 0 } })
+	local land = key(u, { { 0.86, 0 }, { 0.91, 1 }, { 1, 0 } })
+	return { wing = c * 0.35 - f * (0.5 + math.sin((u - 0.2) * math.pi * 8) * 0.45), root = { lift = -c * 0.12 + f * math.sin(math.clamp((u - 0.25) / 0.6, 0, 1) * math.pi) * 0.4 - land * 0.1 }, head = CFrame.Angles(-c * 0.25 + f * 0.2, 0, 0), squash = c * 0.08 + land * 0.1 - f * 0.04 }
+end, impact = 0.9 }
+ACT.rear = { dur = 1.9, fn = function(u) -- crouch on the haunches, rise and paw the air, drop hard, settle
+	local c = key(u, { { 0, 0 }, { 0.16, 1 }, { 0.24, 0 } })
+	local r = key(u, { { 0.16, 0 }, { 0.45, 1 }, { 0.7, 1 }, { 0.8, -0.1 }, { 0.9, 0 } }) -- a slower rise (judge: the kirin snapped up)
+	local land = key(u, { { 0.76, 0 }, { 0.81, 1 }, { 0.95, 0 } })
+	return { root = { pitch = r * (0.5 + math.sin(u * 20) * 0.04) - c * 0.06, lift = -c * 0.1 - land * 0.08, pivotBack = true }, legF = CFrame.Angles(-math.max(r, 0) * 0.9 + math.sin(u * 28) * 0.35 * math.max(r, 0), 0, 0), head = CFrame.Angles(r * 0.35 - land * 0.2, 0, 0), tail = CFrame.Angles(-r * 0.4, 0, 0), squash = c * 0.07 + land * 0.1 }
+end, burst = 0.4, impact = 0.8 }
+ACT.armflex = { dur = 1.9, fn = function(u) -- lean back as the pick goes up, hold, slam forward, compress, a small rebound
+	local up = key(u, { { 0, 0 }, { 0.38, 1 }, { 0.52, 1 }, { 0.6, -0.25 }, { 0.75, 0.12 }, { 1, 0 } })
+	local hit = key(u, { { 0.56, 0 }, { 0.61, 1 }, { 0.85, 0 } })
+	local lean = key(u, { { 0, 0 }, { 0.38, -1 }, { 0.52, -1 }, { 0.6, 0.8 }, { 0.8, 0 } })
+	return { armR = CFrame.Angles(up * 2.5, 0, 0), root = { pitch = lean * 0.1, lift = -hit * 0.1, pivotBack = true }, head = CFrame.Angles(up * 0.25 - hit * 0.15, 0, 0), squash = hit * 0.1 }
+end, impact = 0.6, burst = 0.6 }
+ACT.tailfan = { dur = 1.8, fn = function(u)
+	local f = key(u, { { 0, 0 }, { 0.2, 1 }, { 0.8, 1 }, { 1, 0 } })
+	return { tail = CFrame.Angles(f * 0.35, math.sin(u * math.pi * 4) * 0.7 * f, 0), head = CFrame.Angles(0, 0, math.sin(u * math.pi * 2) * 0.2 * f) }
+end, burst = 0.5 }
+ACT.hop = { dur = 1, fn = function(u) -- crouch, spring up, land, compress, settle
+	local c = key(u, { { 0, 0 }, { 0.2, 1 }, { 0.28, 0 } })
+	local h = math.sin(math.clamp((u - 0.24) / 0.5, 0, 1) * math.pi)
+	local land = key(u, { { 0.72, 0 }, { 0.77, 1 }, { 0.95, 0 } })
+	return { root = { lift = h * 0.5 - c * 0.12 - land * 0.1 }, head = CFrame.Angles(h * 0.2 - c * 0.2, 0, 0), squash = c * 0.12 + land * 0.12 - h * 0.08 }
+end, impact = 0.76 }
+ACT.sway = { dur = 2.4, fn = function(u)
+	local f = key(u, { { 0, 0 }, { 0.15, 1 }, { 0.85, 1 }, { 1, 0 } })
+	return { head = CFrame.Angles(math.sin(u * math.pi * 4) * 0.25 * f, math.sin(u * math.pi * 2) * 0.5 * f, 0) }
+end }
+ACT.spin = { dur = 2.2, fn = function(u)
+	local f = key(u, { { 0, 0 }, { 0.2, 1 }, { 0.8, 1 }, { 1, 0 } })
+	return { ring = f * 6, root = { lift = f * 0.25 }, head = CFrame.Angles(f * 0.15, 0, 0) }
+end, burst = 0.5 }
+local ACTS = {
+	Tosk = { "look", "shake", "stomp" }, Kobold = { "look", "armflex", "stomp" }, ["Kepri Scarab"] = { "look", "shake", "hop" },
+	Shinemane = { "look", "rear", "shake" }, Goldbristle = { "look", "shake", "hop" }, Pixiu = { "look", "roar", "stomp" },
+	Glimwisp = { "look", "tailfan", "hop" }, Selkie = { "look", "roar", "shake" }, Zharbird = { "look", "flap", "roar" },
+	Fafnir = { "look", "roar", "flap" }, Kirin = { "look", "rear", "roar" }, Ouro = { "sway", "look", "roar" }, Ninering = { "spin", "look" },
+}
+
 -- every frame, after the model was pivoted: pose the parts. now: os.clock(); moving: overrides the speed guess
 function M.animate(m, now, dt, moving)
 	local rig = M.rigs[m]
@@ -211,32 +296,87 @@ function M.animate(m, now, dt, moving)
 	rig.lastPos = pos
 	rig.w += ((moving and 1 or 0) - rig.w) * math.min(1, dt * 6) -- 0 standing .. 1 walking, eased (the lag is the follow-through)
 	local w, t, s = rig.w, now + rig.seed, m:GetScale()
+	if not rig.backZ then -- the hind end in the pet's frame (+Z is behind), for rearing about the hind feet
+		local z = 0
+		for _, g in rig.pieces do z = math.max(z, g.rest.Position.Z) end
+		rig.backZ = z * 0.7
+	end
+	-- the idle action: start one now and then while standing, ease it out when the pet walks
+	local pose, aw = nil, 1 - w
+	if rig.act then
+		local a = ACT[rig.act]
+		local u = (now - rig.actT) / a.dur
+		if u >= 1 then
+			rig.act, rig.nextAct = nil, now + 3 + math.random() * 3
+		else
+			pose = a.fn(u)
+			local lag = a.fn(math.max(0, u - 0.14 / a.dur)) -- the tail and the wings lag the body (follow-through)
+			pose.tail, pose.wing = lag.tail, lag.wing
+			if a.impact and not rig.hit and u >= a.impact then -- a dust ring at the feet on the impact frame
+				rig.hit = true
+				rig.actT += 0.07 -- hit-stop: the pose holds on the impact frame for a beat
+				for _, e in m:GetDescendants() do
+					if e:IsA("ParticleEmitter") and e.Parent.Name == "Fx_dust" then e:Emit(26) end
+				end
+			end
+			if a.burst and not rig.burst and u >= a.burst then -- a puff from every effect on the pet on the beat
+				rig.burst = true
+				for _, e in m:GetDescendants() do
+					if e:IsA("ParticleEmitter") and not e.LockedToPart and e.Parent.Name ~= "Fx_dust" then e:Emit(8) end
+				end
+			end
+		end
+	elseif w < 0.2 and now >= (rig.nextAct or now + 1) then
+		local list = ACTS[m.Name] or { "look" }
+		rig.act, rig.actT, rig.burst, rig.hit = list[math.random(#list)], now, false, false
+	end
+	if not rig.nextAct then rig.nextAct = now + 2 + math.random() * 4 end
+	pose = pose or {}
+	local rp = pose.root or {}
 	local base = root * CFrame.new(0, -ROOT_Y * s, 0) -- the feet
+	-- standing, the weight shifts from foot to foot and the body sways a little (judge: idle pets read as frozen statues)
+	local idle = 1 - w
+	rp = { pitch = (rp.pitch or 0) + math.sin(t * 1.1) * 0.025 * idle / math.max(aw, 0.01), roll = (rp.roll or 0) + math.sin(t * 0.8 + 1) * 0.035 * idle / math.max(aw, 0.01), lift = rp.lift, pivotBack = rp.pivotBack }
+	if rp.pitch or rp.roll or rp.lift then
+		local P = Vector3.new(0, 0, rp.pivotBack and rig.backZ or 0) * s
+		base = base * CFrame.new(0, (rp.lift or 0) * aw * s, 0) * CFrame.new(P) * CFrame.Angles((rp.pitch or 0) * aw, 0, (rp.roll or 0) * aw) * CFrame.new(-P)
+	end
 	local step = math.sin(t * 11)
 	local breathe = math.sin(t * 2.2)
-	local bodyLift = (math.abs(step) * 0.06 * w + breathe * 0.012 * (1 - w)) -- studs
+	local bodyLift = (math.abs(step) * 0.06 * w + breathe * 0.025 * (1 - w)) -- studs
 	local blink = (t % (3 + rig.seed % 2)) < 0.12
+	local twitch = (t % (2.7 + rig.seed % 1.3)) < 0.14 and 0.12 or 0 -- a quick head flick now and then: alive between actions
+	-- big crew pets fold their wings by their sides while they walk with you; they open them to flap and to roar
+	local foldWant = (s > 1.6 and not pose.wing) and 1 or 0
+	rig.fold = (rig.fold or foldWant) + (foldWant - (rig.fold or foldWant)) * math.min(1, dt * 4)
+	rig.ringPhase = (rig.ringPhase or 0) + dt * 0.8 * (1 + (pose.ring or 0) * aw)
 	for _, g in rig.pieces do
 		local rot = CFrame.identity
 		local lift = bodyLift
 		local name = g.part
 		if name == "Head" then
-			rot = CFrame.Angles(math.sin(t * 1.3) * 0.06 * (1 - w) - step * 0.05 * w, math.sin(t * 0.7) * 0.25 * (1 - w), math.sin(t * 0.9) * 0.05)
+			rot = CFrame.Angles(math.sin(t * 1.3) * 0.1 * (1 - w) - step * 0.05 * w, math.sin(t * 0.7) * 0.35 * (1 - w) * (pose.head and 0.3 or 1), math.sin(t * 0.9) * 0.08 + twitch * (1 - w))
+			if pose.head then rot = rot * CFrame.new():Lerp(pose.head, aw) end
 		elseif string.sub(name, 1, 3) == "Leg" then
 			local n = tonumber(string.sub(name, 4)) or 1
 			local phase = (n % 2 == (n > 2 and 1 or 0)) and 1 or -1 -- diagonal pairs swing together
 			rot = CFrame.Angles(step * 0.55 * w * phase, 0, 0)
+			if pose.legF and n <= 2 then rot = rot * CFrame.new():Lerp(pose.legF, aw) end
 			lift = 0
 		elseif string.sub(name, 1, 3) == "Arm" then
 			rot = CFrame.Angles(-step * 0.5 * w + breathe * 0.05, 0, 0)
+			if pose.armR and name == "ArmR" then rot = rot * CFrame.new():Lerp(pose.armR, aw) end
 		elseif name == "Tail" then
 			rot = CFrame.Angles(0.1 * w, math.sin(t * (3 + 5 * w)) * (0.35 + 0.2 * w), 0)
+			if pose.tail then rot = rot * CFrame.new():Lerp(pose.tail, aw) end
 		elseif string.sub(name, 1, 4) == "Wing" or string.sub(name, 1, 3) == "Fin" then
 			local side = string.sub(name, -1) == "L" and -1 or 1
-			rot = CFrame.Angles(0, 0, side * (math.sin(t * (4 + 10 * w)) * (0.18 + 0.3 * w)))
+			local spread = (pose.wing or 0) * aw
+			local f = string.sub(name, 1, 4) == "Wing" and rig.fold or 0
+			rot = CFrame.Angles(0, side * 1.1 * f, side * (math.sin(t * (4 + 10 * w)) * (0.18 + 0.3 * w) * (1 - f * 0.7) + spread + 0.3 * f))
 		elseif string.sub(name, 1, 4) == "Ring" then -- the nine rings orbit and bob about the spirit
 			local n = tonumber(string.sub(name, 5)) or 1
-			local a = t * 0.8
+			local a = rig.ringPhase
 			local off = Vector3.new(g.piv.X, 0, g.piv.Z)
 			local turned = CFrame.Angles(0, a, 0) * off
 			g.p.CFrame = base * CFrame.new(turned.X * s, (g.piv.Y + math.sin(t * 2 + n) * 0.12 + bodyLift) * s, turned.Z * s) * CFrame.Angles(0, a + n, 0) * (CFrame.new(-g.piv) * g.rest).Rotation
@@ -247,6 +387,11 @@ function M.animate(m, now, dt, moving)
 		if g.role == "Eye" or g.role == "Shine" then
 			local want = blink and Vector3.new(g.size.X, g.size.Y * 0.15, g.size.Z) or g.size
 			if g.p.Size ~= want * s then g.p.Size = want * s end
+		elseif name == "Body" and g.role == "Tex" then -- the chest breathes
+			local sq = (pose.squash or 0) * aw -- squash and stretch: down and wide on impacts, tall on the leap
+			local b = 1 + (1 - w) * 0.035 * (breathe + 1) * 0.5 -- breathing reads at game size (judge: no visible breath at 1.8%)
+			local want = g.size * s * Vector3.new(b * (1 + sq * 0.5), b * (1 - sq), b * (1 + sq * 0.5))
+			if (g.p.Size - want).Magnitude > 1e-3 then g.p.Size = want end
 		end
 		g.p.CFrame = cf
 	end
