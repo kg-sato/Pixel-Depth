@@ -109,7 +109,7 @@ function M.start(E)
 		s.fill = G and Color3.fromRGB(96, 74, 170) or Color3.fromRGB(236, 220, 180) -- glass tokens with the kit on; parchment tokens; the slot's own colour shows only when it is picked (Gemini: pastel candy circles undid the compass)
 		d.Name = s.name
 		new("UIGradient", d, { Rotation = 90, Color = ColorSequence.new(WHITE, G and Color3.fromRGB(150, 130, 200) or Color3.fromRGB(206, 188, 150)) }) -- lighter on top
-		s.lock = new("ImageLabel", d, { Image = E.ICON.lock, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 44, Visible = false })
+		s.lock = new("ImageLabel", d, { Image = E.ICON.lock, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.3, 0.3), Position = UDim2.fromScale(0.86, 0.14), AnchorPoint = MID, ZIndex = 44, Visible = false }) -- a small badge on the rim, so the dimmed icon still reads (Gemini stills 2026-11-18: the lock hid the icon)
 		s.disc, s.rim, s.scale = d, new("UIStroke", d, { Color = INK, Thickness = 3 }), new("UIScale", d, { Scale = 1 })
 		if s.icon then
 			s.img = new("ImageLabel", d, { Image = s.icon, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(G and 0.7 or 0.56, G and 0.7 or 0.56), Position = UDim2.fromScale(0.5, G and 0.38 or 0.4), AnchorPoint = MID, ZIndex = 42 })
@@ -224,7 +224,7 @@ function M.start(E)
 			s.rim.Color, s.rim.Thickness = off and OFF_INK or (G and Color3.fromRGB(236, 226, 255) or Color3.fromRGB(59, 36, 22)), (on and not off) and 5 or (G and 2 or 3)
 			s.label.TextColor3 = off and OFF_INK or LABEL
 			s.lock.Visible = off
-			if s.img then s.img.ImageTransparency, s.img.ImageColor3 = off and 0.72 or 0, off and Color3.fromRGB(170, 160, 190) or WHITE end
+			if s.img then s.img.ImageTransparency, s.img.ImageColor3 = off and 0.45 or 0, off and Color3.fromRGB(170, 160, 190) or WHITE end
 			if s.rings then for _, r in s.rings do r.Transparency = off and 0.6 or 0 end end
 			s.scale.Scale += ((on and 1.14 or 1) - s.scale.Scale) * 0.35
 		end
