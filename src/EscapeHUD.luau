@@ -57,12 +57,21 @@ function M.start(E)
 
 	-- the gap meter: bottom centre, just above the cart's rim, where the eye already is
 	local box = frame(gui, { Size = UDim2.fromScale(0.24, 0.085), Position = UDim2.fromScale(0.5, 0.925), BackgroundTransparency = 1, ZIndex = 3 })
-	local track = frame(box, { Size = UDim2.fromScale(0.9, 0.34), Position = UDim2.fromScale(0.5, 0.72), BackgroundColor3 = CREAM, ZIndex = 3 })
+	local track = frame(box, { Size = UDim2.fromScale(0.9, 0.34), Position = UDim2.fromScale(0.5, 0.72), BackgroundColor3 = Color3.fromRGB(22, 14, 34), ZIndex = 3 }) -- obsidian glass, not a flat cream pill (Gemini cp2 2026-11-18)
 	round(track)
-	track.BackgroundTransparency = 0.2
-	stroke(track, INK, 1.5)
+	track.BackgroundTransparency = 0.3
+	stroke(track, Color3.fromRGB(150, 110, 230), 1.5)
+	do -- a soft gloss along the top of the glass
+		local gl = frame(track, { Size = UDim2.fromScale(0.96, 0.35), Position = UDim2.fromScale(0.5, 0.24), BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 0.86, ZIndex = 5 })
+		round(gl)
+	end
 	local fill = frame(track, { AnchorPoint = Vector2.new(0, 0.5), Size = UDim2.fromScale(0.1, 1), Position = UDim2.fromScale(0, 0.5), BackgroundColor3 = GLOOM, ZIndex = 4 })
 	round(fill)
+	do -- the danger fill fades in from the dark end
+		local fg = Instance.new("UIGradient")
+		fg.Transparency = NumberSequence.new(0.55, 0)
+		fg.Parent = fill
+	end
 	local blob = square(box, 0.7, UDim2.fromScale(0.09, 0.68), GLOOM, 6) -- the Gloom: a soot ball with two eyes
 	stroke(blob, INK, 3)
 	for _, x in { 0.36, 0.68 } do square(blob, 0.2, UDim2.fromScale(x, 0.42), WHITE, 7) end
