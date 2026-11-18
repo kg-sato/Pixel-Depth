@@ -185,7 +185,7 @@ function M.play(opt)
 	motes.Transparency, motes.Lifetime, motes.Speed = NumberSequence.new(0.2, 1), NumberRange.new(4, 7), NumberRange.new(0.2, 0.6)
 	motes.SpreadAngle, motes.Color = Vector2.new(180, 180), ColorSequence.new(CYAN, MAGENTA)
 	motes.Parent = shaft
-	local nestLight = part(world, Vector3.new(0.2, 0.2, 0.2), CFrame.new(NEST + Vector3.new(0, 3, -1)), WHITE, { Transparency = 1 })
+	local nestLight = part(world, Vector3.new(0.2, 0.2, 0.2), CFrame.new(NEST + Vector3.new(0.8, 4.4, -4.5)), WHITE, { Transparency = 1 }) -- in front of the egg: at (0, 3, -1) it sat inside the 3.5-stud mesh egg and left its face dark (stills tier_Tosk)
 	local keyL = light(nestLight, Color3.fromRGB(255, 236, 214), 14, 1.2) -- a warm key on the nest
 
 	-- THE EGG: a voxel egg of small cubes (the game's look), cream with darker speckles
@@ -245,8 +245,8 @@ function M.play(opt)
 	egg.Parent = world
 	-- two rings of light beads that orbit the egg
 	local beads = {}
-	for i = 1, 14 do
-		beads[i] = part(world, Vector3.new(0.22, 0.22, 0.22), CFrame.new(NEST), ladder[1], { Material = Enum.Material.Neon, Transparency = 1 })
+	for i = 1, 36 do -- many small beads read as two rings of light (Gemini m21: 14 big cubes read as floating debris)
+		beads[i] = part(world, Vector3.new(0.11, 0.11, 0.11), CFrame.new(NEST), ladder[1], { Material = Enum.Material.Neon, Transparency = 1 })
 	end
 	local hl = Instance.new("Highlight")
 	hl.FillTransparency, hl.OutlineTransparency, hl.OutlineColor, hl.DepthMode = 1, 1, rc, Enum.HighlightDepthMode.Occluded
@@ -430,8 +430,8 @@ function M.play(opt)
 			hl.OutlineTransparency = 1 - ub * 0.8
 			if shell then hl.FillColor, hl.FillTransparency = climbCol:Lerp(WHITE, 0.3), 1 - ub * 0.3 end -- the shell itself takes the climbing colour (Gemini m5: the climb was only in the crystals)
 			for i, b in beads do -- two rings, tilted, speeding up
-				local ring = i <= 7 and 1 or -1
-				local a = (i % 7) / 7 * math.pi * 2 + (t - A1) * (1.5 + 9 * ub ^ 2) * ring
+				local ring = i <= 18 and 1 or -1
+				local a = (i % 18) / 18 * math.pi * 2 + (t - A1) * (1.5 + 9 * ub ^ 2) * ring
 				local rr = 2.1 - ub * 0.4
 				local off = CFrame.Angles(0, 0, ring * 0.5) * Vector3.new(math.cos(a) * rr, 0, math.sin(a) * rr)
 				b.CFrame = CFrame.new(NEST + Vector3.new(0, 1.8, 0) + off)
@@ -496,7 +496,6 @@ function M.play(opt)
 				TweenService:Create(g.l, TweenInfo.new(0.3), { Color = g.base:Lerp(rc, 0.4), Brightness = (1.0 + k * 0.4) * lit, Range = 18 }):Play() -- was 2.6 + k * 1.4: a gold flood washed the pet out (stills hs5)
 			end
 			keyL.Color, keyL.Brightness, keyL.Range = rc:Lerp(WHITE, 0.75), 1.7, 12
-			nestLight.Position = NEST + Vector3.new(0.8, 4.4, -4.5) -- a key on the pet's face from the camera side: it sat inside the floating pet's head (stills rv7)
 			shaft.Color, shaft.Transparency = rc:Lerp(WHITE, 0.4), 0.88
 			coreL.Brightness, coreL.Range = 4, 16
 			TweenService:Create(coreL, TweenInfo.new(1.2), { Brightness = 0.5, Range = 10 }):Play()
