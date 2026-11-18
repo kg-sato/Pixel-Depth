@@ -70,7 +70,7 @@ function M.start(E)
 		for _, c in cells do
 			local got = found[c.kind] and found[c.kind][c.key] == true
 			if got then have += 1 end
-			c.f.BackgroundColor3 = got and Color3.fromRGB(52, 26, 82) or DARK
+			c.f.BackgroundColor3 = got and (c.kind == "pet" and c.color:Lerp(DARK, 0.55) or Color3.fromRGB(52, 26, 82)) or DARK -- a hatched pet's cell takes its colour (Gemini cards2: the pets floated in dark voids)
 			if got and c.kind == "ore" and not c.icon then -- a found ore is a live 3D voxel ore, not a flat diamond (Gemini v10n_r11: "flat 2D diamond vectors")
 				c.icon = require(script.Parent:WaitForChild("OreIcon")).make(c.f, { Size = UDim2.fromScale(0.78, 0.78), Position = UDim2.fromScale(0.5, 0.42), AnchorPoint = MID, ZIndex = 6 })
 			end
@@ -79,6 +79,7 @@ function M.start(E)
 				local PV = require(script.Parent:WaitForChild("PetVoxels"))
 				local m = PV.build(c.key)
 				if m then
+					E.new("UICorner", E.new("Frame", c.f, { Name = "Plinth", Size = UDim2.fromScale(0.62, 0.12), Position = UDim2.fromScale(0.5, 0.86), AnchorPoint = MID, BackgroundColor3 = c.color:Lerp(Color3.new(1, 1, 1), 0.35), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 6 }), { CornerRadius = UDim.new(0.5, 0) }) -- a lit disc it stands on
 					c.card = require(script.Parent:WaitForChild("ModelCard")).attach(c.f, c.f, { z = 6, animate = PV.animate })
 					c.card.set(m, c.color)
 				end
