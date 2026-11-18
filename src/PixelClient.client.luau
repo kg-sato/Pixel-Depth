@@ -3046,7 +3046,8 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	for i, pet in petObjs do
 		local lead = forgeUI.petPose and forgeUI.petPose(i, pet, h, now, dt) -- in a cave the lead pet keeps to the edge of the view (Shared.PetCompanion)
 		if lead then pet.model:PivotTo(lead) require(RS.Shared.PetVoxels).animate(pet.model, now, dt) continue end
-		local ps = inMine and C.PET_SCALE_MINE or C.PET_SCALE -- the crew stands big in the open, smaller in the mine's tunnels (the owner 2026-11-18: 2 to 3x)
+		local fp = plr.CameraMode == Enum.CameraMode.LockFirstPerson or (cam.CFrame.Position - h.Position).Magnitude < 2.5
+		local ps = (inMine or fp) and C.PET_SCALE_MINE or C.PET_SCALE -- the crew stands big in the open, smaller in the tunnels and in first person (the owner 2026-11-18: 2 to 3x)
 		if pet.scale ~= ps then pet.model:ScaleTo(ps) pet.scale = ps end
 		local side = (i % 2 == 0) and 1 or -1
 		local k = math.max(1, ps * 0.8) -- bigger pets keep further off
@@ -3055,6 +3056,13 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		pet.pos = pet.pos:Lerp(goalP, 1 - math.exp(-dt * 10))
 		pet.model:PivotTo(CFrame.lookAt(pet.pos, pet.pos + Vector3.new(look.X, 0, look.Z)))
 		require(RS.Shared.PetVoxels).animate(pet.model, now, dt)
+		do -- a pet right at the lens fades out instead of filling the view (Gemini audit 2026-11-18: big pets clipped the first-person camera)
+			local fade = math.clamp(1 - ((cam.CFrame.Position - pet.pos).Magnitude - 1.5 * ps) / (2 * ps), 0, 0.85)
+			if math.abs(fade - (pet.fade or 0)) > 0.02 then
+				pet.fade = fade
+				for _, d in pet.model:GetDescendants() do if d:IsA("BasePart") then d.LocalTransparencyModifier = fade end end
+			end
+		end
 	end
 
 	-- depth label
