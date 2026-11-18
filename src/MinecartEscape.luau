@@ -573,16 +573,23 @@ function M.play(opt)
 		if not JellyText or calm then return end
 		local cf = pathCF(math.max(at - 30, 2)) * CFrame.new(side * 3.0, 3.3, 0)
 		local board = part(world, Vector3.new(3.8, 1.6, 0.12), CFrame.lookAt(cf.Position, pathCF(math.max(at - 48, 0)).Position + Vector3.new(0, 3.3, 0)), Color3.fromRGB(46, 32, 92), { Material = Enum.Material.Glass, Transparency = 0.1 })
-		part(world, Vector3.new(0.16, 3, 0.16), board.CFrame * CFrame.new(0, -2.1, 0.1), Color3.fromRGB(70, 52, 60), {})
+		part(world, Vector3.new(0.3, 3, 0.3), board.CFrame * CFrame.new(0, -2.3, 0.1), Color3.fromRGB(92, 62, 40), { Material = Enum.Material.Wood }) -- a sturdy post
 		local sg = Instance.new("SurfaceGui")
-		sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence, sg.Brightness = Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 60, 0, 1.6
+		sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence, sg.Brightness = Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 60, 0, 1.05 -- 1.6 bloomed the yellow LEAN! into a white blob (Gemini audit 2026-11-18)
 		sg.Parent = board
 		local holder = Instance.new("Frame")
 		holder.Size, holder.Position, holder.AnchorPoint, holder.BackgroundTransparency = UDim2.fromScale(0.9, 0.8), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), 1
 		holder.Parent = sg
 		JellyText.new(holder, word, { color = color, sway = false })
+		local WOOD, BRASS = Color3.fromRGB(92, 62, 40), Color3.fromRGB(196, 146, 70) -- a mine sign: a wooden frame with brass corners round the glass
+		for _, f in { { 4.1, 0.22, 0, 0.9 }, { 4.1, 0.22, 0, -0.9 }, { 0.22, 2, -2, 0 }, { 0.22, 2, 2, 0 } } do
+			part(world, Vector3.new(f[1], f[2], 0.22), board.CFrame * CFrame.new(f[3], f[4], 0.02), WOOD, { Material = Enum.Material.Wood })
+		end
+		for _, c in { { -2, 0.9 }, { 2, 0.9 }, { -2, -0.9 }, { 2, -0.9 } } do
+			part(world, Vector3.new(0.34, 0.34, 0.28), board.CFrame * CFrame.new(c[1], c[2], 0.02), BRASS, { Material = Enum.Material.Metal })
+		end
 		local l = Instance.new("PointLight")
-		l.Color, l.Range, l.Brightness, l.Parent = color, 7, 0.8, board
+		l.Color, l.Range, l.Brightness, l.Parent = color, 6, 0.5, board
 	end
 	local function spawnRock(lane, at, threat)
 		local x = LANES[lane]
