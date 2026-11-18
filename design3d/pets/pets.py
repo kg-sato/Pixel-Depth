@@ -378,13 +378,159 @@ def ninering():  # secret: a round pearl spirit with a halo, small paws and a fl
     return p
 
 
+# ACCESSORIES AND MARKINGS (2026-11-18, the owner: "the models aren't detailed enough, add unique accessories and visual
+# identities"). Each pet gets one prop that tells its job at a glance, one marking pattern and small face details. They run
+# after the builder (so coordinates include stilts) and use the shared roles in ROLES unless the pet's palette overrides them.
+ROLES = {"Metal": "#c8ccd8", "Leather": "#7a4a2a", "Cloth": "#e0483e", "Gem": "#5fe0ff", "Wood": "#a0703c", "Mouth": "#3a1622",
+         "Blush": "#ff9bb2", "Leaf": "#5cc45a", "Mark": "#ff5070", "Horn": "#f0e2b4", "Cloud": "#f4f6ff"}
+GOLD = "#f0c040"
+ROLE_OVERRIDES = {
+    "Kepri Scarab": {"Metal": GOLD, "Gem": "#3fd6ff"}, "Pixiu": {"Metal": GOLD}, "Fafnir": {"Metal": GOLD, "Gem": "#ff3d5a"},
+    "Kirin": {"Gem": "#4fe0a0"}, "Ouro": {"Metal": GOLD}, "Zharbird": {"Metal": GOLD, "Gem": "#38d0ff"},
+    "Ninering": {"Gem": "#7fe8ff"}, "Shinemane": {"Cloth": "#5b6cd0", "Metal": GOLD, "Gem": "#ffe270", "Hoof": "#4a3a68"},
+    "Glimwisp": {"Metal": GOLD, "Cloth": "#ff5a7a"}, "Selkie": {"Metal": "#d0a050", "Gem": "#9fe8ff"},
+    "Kobold": {"Gem": "#ffd27a"},
+}
+
+
+def d_tosk(p):  # the hauler: strapped pack, a pickaxe across it, a lantern on the side, a nose ring
+    p.paint("Leather", lambda x, y, z: z in (-3, 0) and y >= 3, part="Body")  # two straps over the barrel and the pack
+    p.box("Body", "Wood", -4, 3, 12, 12, -3, -3)  # pickaxe handle across the pack
+    p.box("Body", "Metal", 4, 4, 10, 14, -3, -3); p.put(5, 14, -3, "Body", "Metal"); p.put(5, 10, -3, "Body", "Metal")
+    p.box("Body", "Metal", -6, -6, 10, 10, -1, 0); p.box("Body", "Accent", -6, -6, 8, 9, -1, 0); p.box("Body", "Metal", -6, -6, 7, 7, -1, 0)  # lantern
+    p.put(-5, 10, -1, "Body", "Metal")
+    for x in (-1, 0, 1): p.put(x, 3, 12, "Head", "Metal")  # nose ring
+    p.box("Head", "Dark", -1, 1, 12, 12, 5, 8)  # a bristly crest
+    p.paint("Blush", lambda x, y, z: abs(x) == 4 and y == 7 and z == 9, part="Head")
+    for s in (-1, 1): p.put(s * 4, 8, 11, "Head", "Tusk"); p.put(s * 4, 9, 11, "Head", "Tusk")  # tusks that curl up and out
+
+
+def d_kobold(p):  # the digger: goggles on the helmet, scarf, tool belt with buckle and pouch, a pickaxe in hand
+    p.paint("Leather", lambda x, y, z: y == 17 and (abs(x) == 4 or z == -3), part="Head")  # goggle strap
+    for s in (-1, 1):
+        p.box("Head", "Metal", s * 1, s * 3, 19, 20, 2, 3)
+        p.put(s * 2, 19, 4, "Head", "Gem"); p.put(s * 2, 20, 4, "Head", "Gem")
+    p.box("Body", "Cloth", -3, 3, 9, 9, -2, 2); p.box("Body", "Cloth", 1, 2, 6, 8, -3, -3)  # scarf and its tail
+    p.paint("Leather", lambda x, y, z: y == 5, part="Body"); p.put(0, 5, 3, "Body", "Metal")  # belt and buckle
+    p.box("Body", "Leather", -2, -1, 3, 5, -3, -3)  # pouch
+    p.box("ArmR", "Wood", 5, 5, 5, 5, 2, 5); p.box("ArmR", "Metal", 5, 5, 3, 7, 6, 6); p.put(5, 2, 5, "ArmR", "Metal"); p.put(5, 8, 5, "ArmR", "Metal")
+    p.paint("Mouth", lambda x, y, z: z == 6 and y == 10 and abs(x) <= 1, part="Head")
+    p.paint("Blush", lambda x, y, z: z == 4 and abs(x) in (3, 4) and y == 12, part="Head")
+    p.box("Tail", "Main", -1, 1, 3, 4, -3, -4); p.box("Tail", "Main", 0, 0, 2, 3, -5, -7); p.put(0, 2, -8, "Tail", "Accent")  # a thick lizard tail
+
+
+def d_kepri(p):  # the fast digger: a curled rhino horn, a gem brow, a gold rim and a sun disc on the shell
+    p.box("Head", "Horn", 0, 0, 7, 9, 7, 7); p.put(0, 10, 8, "Head", "Horn"); p.put(0, 11, 9, "Head", "Horn")
+    p.put(0, 6, 9, "Head", "Gem")
+    p.paint("Metal", lambda x, y, z: y == 3, part="Body")
+    p.paint("Accent", lambda x, y, z: x * x + (z + 1) ** 2 <= 5 and y >= 9, part="Body")
+    p.paint("Dark", lambda x, y, z: (abs(x) + abs(z)) % 4 == 0 and 6 <= y <= 8 and abs(x) >= 2, part="Body")
+    p.paint("Dark", lambda x, y, z: x == 0 and y >= 6 and not (x * x + (z + 1) ** 2 <= 5), part="Body")  # the wing-case seam
+
+
+def d_shinemane(p):  # the light: a star on the brow, a saddle blanket with gold trim, a bridle
+    for (x, y) in ((0, 18), (-1, 18), (1, 18), (0, 19), (0, 17)): p.put(x, y, 8, "Head", "Gem")
+    p.box("Body", "Cloth", -4, 4, 12, 12, -3, 1)
+    for s in (-1, 1): p.box("Body", "Cloth", s * 4, s * 4, 10, 11, -3, 1)
+    p.paint("Metal", lambda x, y, z: (y == 10 and abs(x) == 4) or (y == 12 and z in (-3, 1)), part="Body")
+    p.paint("Leather", lambda x, y, z: (y == 14 and z >= 8) or (abs(x) == 3 and z == 6 and 14 <= y <= 16), part="Head")
+    for k in range(1, 5): p.paint("Metal", lambda x, y, z: y == 1, part=f"Leg{k}")  # gold horseshoes over dark hooves
+
+
+def d_goldbristle(p):  # the lucky one: a four-leaf clover, light spike tips, blush
+    p.box("Head", "Leaf", 0, 0, 7, 8, 5, 5)
+    for (x, z) in ((-1, 5), (1, 5), (0, 4), (0, 6)): p.put(x, 9, z, "Head", "Leaf")
+    tops = {}
+    for (x, y, z), (part, role) in p.v.items():
+        if part == "Body" and role == "Accent": tops[(x, z)] = max(tops.get((x, z), -1), y)
+    for (x, z), y in tops.items(): p.put(x, y, z, "Body", "Light")  # pale quill tips (a dark band read as muddy, Gemini dress2)
+    p.paint("Blush", lambda x, y, z: z == 7 and abs(x) == 3 and y == 3, part="Head")
+    p.box("Body", "Cloth", -2, 2, 2, 2, 3, 3)  # a red neckerchief
+
+
+def d_pixiu(p):  # the treasure keeper: an old coin pendant with a red tassel, a red collar, cloud swirls
+    p.box("Head", "Metal", -1, 1, 4, 6, 6, 6); p.put(0, 5, 6, "Head", "Dark")
+    p.box("Head", "Cloth", 0, 0, 2, 3, 6, 6)
+    p.paint("Cloth", lambda x, y, z: y == 7 and z >= 1, part="Head")
+    p.paint("Light", lambda x, y, z: abs(x) == 3 and 3 <= (y - 5.5) ** 2 + (z + 1.5) ** 2 <= 6, part="Body")
+
+
+def d_glimwisp(p):  # the guiding light: a bell on a collar, kitsune marks, bright ear tips
+    p.paint("Cloth", lambda x, y, z: y == 6, part="Body")
+    p.box("Body", "Metal", -1, 1, 4, 5, 4, 5); p.put(0, 4, 6, "Body", "Dark")
+    p.paint("Mark", lambda x, y, z: abs(x) == 3 and y in (7, 8) and z >= 3, part="Body")
+    p.paint("Mark", lambda x, y, z: y == 15 and abs(x) in (3, 4), part="Body")
+    for i, (x, y, z) in enumerate(((0, 2, -6), (0, 3, -7), (0, 4, -7), (0, 5, -8), (0, 6, -8), (0, 7, -9))):  # a wisp tail curling up
+        p.put(x, y, z, "Tail", "Accent" if i < 4 else "Light")
+
+
+def d_selkie(p):  # the diver: goggles up on the brow, an air tank on its back, spots and whisker dots
+    p.paint("Leather", lambda x, y, z: y == 10, part="Head")
+    for s in (-1, 1):
+        p.box("Head", "Metal", s * 1, s * 3, 10, 11, 7, 8); p.put(s * 2, 10, 8, "Head", "Gem"); p.put(s * 2, 11, 8, "Head", "Gem")
+    for k in list(p.v):
+        if p.v[k] == ("Body", "Accent"): del p.v[k]  # the old back bubble makes way for the tank
+    p.box("Body", "Metal", -1, 1, 8, 10, -6, -2); p.put(0, 11, -2, "Body", "Accent")
+    p.paint("Leather", lambda x, y, z: z == -4 and y >= 5, part="Body")
+    p.paint("Dark", lambda x, y, z: (x * 3 + z * 5) % 7 == 0 and y >= 6 and z < -6, part="Body")
+    for s in (-1, 1): p.put(s * 2, 5, 8, "Head", "Dark")
+    for (x, y, z) in ((-2, 9, -1), (-3, 9, 0), (-4, 8, 1), (-5, 8, 2), (-5, 7, 3)): p.put(x, y, z, "Body", "Leather")  # the air hose
+
+
+def d_zharbird(p):  # the heat-proof one: a gold neck ring, eye spots on the plumes, flame-tipped wings
+    p.paint("Metal", lambda x, y, z: y == 9, part="Head")
+    for x, h in ((-3, 6), (-2, 6), (0, 8), (2, 6), (3, 6)):  # long stepped plumes, an eye at each end
+        for k in range(0, 5): p.put(x, 5 + h // 2 + k // 2, -6 - h // 2 - k, "Tail", "Accent" if x == 0 else "Light")
+        p.put(x, 5 + h // 2 + 2, -6 - h // 2 - 5, "Tail", "Gem")
+    for nm in ("WingL", "WingR"): p.paint("Accent", lambda x, y, z: z == -3, part=nm)
+    p.paint("Blush", lambda x, y, z: abs(x) == 3 and y == 11 and z == 4, part="Head")
+
+
+def d_fafnir(p):  # the hoard keeper: a little gold crown with a ruby, fangs
+    p.box("Head", "Metal", -2, 2, 18, 18, 2, 6)
+    for (x, z) in ((-2, 2), (2, 2), (-2, 6), (2, 6), (0, 6), (0, 2)): p.put(x, 19, z, "Head", "Metal")
+    p.put(0, 18, 7, "Head", "Gem")
+    for s in (-1, 1): p.put(s * 1, 10, 9, "Head", "Horn")
+    p.paint("Metal", lambda x, y, z: z >= 1 and abs(x) <= 2 and y <= 9 and (x + y) % 3 == 0, part="Body")  # hoard coins stuck in the belly
+
+
+def d_kirin(p):  # the cleanser: a jade gem on the brow and jade beads at the neck
+    p.put(0, 18, 8, "Head", "Gem")
+    p.paint("Gem", lambda x, y, z: y == 12 and z == 3 and x % 2 == 0, part="Body")
+    for k in range(1, 5):  # it walks on clouds
+        feet = [(x, z) for (x, y, z), (pp, r) in p.v.items() if pp == f"Leg{k}" and y == 0]
+        for (x, z) in feet:
+            for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                if (x + dx, 0, z + dz) not in p.v: p.put(x + dx, 0, z + dz, f"Leg{k}", "Cloud")
+
+
+def d_ouro(p):  # the all-rounder: gold bands round the coil
+    p.paint("Metal", lambda x, y, z: 0 <= math.degrees(math.atan2(y - 9, z)) % 60 < 5, part="Body")
+
+
+def d_ninering(p):  # the secret: a gem on top of each ring
+    for i in range(1, 10):
+        vs = [k for k, (pp, r) in p.v.items() if pp == f"Ring{i}"]
+        top = max(vs, key=lambda k: k[1])
+        p.v[top] = (f"Ring{i}", "Gem")
+
+
+DRESS = {"Tosk": d_tosk, "Kobold": d_kobold, "Kepri Scarab": d_kepri, "Shinemane": d_shinemane, "Goldbristle": d_goldbristle,
+         "Pixiu": d_pixiu, "Glimwisp": d_glimwisp, "Selkie": d_selkie, "Zharbird": d_zharbird, "Fafnir": d_fafnir,
+         "Kirin": d_kirin, "Ouro": d_ouro, "Ninering": d_ninering}
+
+
+
 BUILDERS = [tosk, kobold, kepri, shinemane, goldbristle, pixiu, glimwisp, selkie, zharbird, fafnir, kirin, ouro, ninering]
 
 if __name__ == "__main__":
     out = []
     for b in BUILDERS:
         p = b()
-        d = p.data(); d["palette"] = PALETTES[p.name]
+        DRESS[p.name](p)
+        d = p.data()
+        full = {**ROLES, **PALETTES[p.name], **ROLE_OVERRIDES.get(p.name, {})}
+        d["palette"] = {r: c for r, c in full.items() if any(r == v[3] for vs in d["parts"].values() for v in vs)}
         missing = {r for vs in d["parts"].values() for *_, r in vs} - set(d["palette"])
         assert not missing, (p.name, missing)
         assert "Body" in d["parts"], p.name

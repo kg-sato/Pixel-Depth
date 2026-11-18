@@ -7,7 +7,7 @@ here = os.path.dirname(os.path.abspath(__file__))
 pets = json.load(open(os.environ.get("VOXEL_JSON") or os.path.join(here, "pets.json")))
 only = set(sys.argv[2].split(",")) if len(sys.argv) > 2 else None
 pets = [p for p in pets if not only or p["name"] in only]
-S, W, H = 9, 520, 520
+S = int(os.environ.get("ISO_S", 9)); W = H = S * 58
 FLIP = os.environ.get("ISO_SIDE", "left") == "left"  # pixels per voxel edge, cell size
 
 
