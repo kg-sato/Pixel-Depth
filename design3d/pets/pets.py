@@ -914,6 +914,39 @@ POWER = {"Tosk": tosk4, "Kobold": kobold4, "Kepri Scarab": kepri4, "Shinemane": 
 
 
 
+# CHAINS (2026-11-18): tails, wings and Fafnir's neck split into segments that bend one after another (PetVoxels.animate:
+# Tail -> Tail2 -> Tail3, WingL -> WingL2, Neck -> Head), so a motion ripples down them (video judge: one rigid piece per
+# limb gave no follow-through). Each segment's pivot sits on the joint with its parent.
+def chain(p, part, n, axis):
+    """split part into up to n segments by distance from its joint ('d': tails, any direction) or along |x| ('x': wings)"""
+    cells = [k for k, (pp, r) in p.v.items() if pp == part]
+    pv = p.pivots.get(part, (0, 0, 0))
+    key = (lambda c: math.dist(c, pv)) if axis == "d" else (lambda c: abs(c[0]))
+    lo, hi = min(map(key, cells)), max(map(key, cells))
+    n = int(min(n, (hi - lo) // 2, len(cells) // 4))
+    if n < 2: return
+    edges = [lo + (hi - lo) * i / n for i in range(n + 1)]
+    for i in range(1, n):
+        nm = f"{part}{i + 1}"
+        seg = [c for c in cells if key(c) >= edges[i] - 1e-6]
+        for c in seg: p.v[c] = (nm, p.v[c][1])
+        joint = [c for c in seg if key(c) < edges[i] + 1.2]
+        jx = sum(c[0] for c in joint) / len(joint); jy = sum(c[1] for c in joint) / len(joint); jz = sum(c[2] for c in joint) / len(joint)
+        p.pivots[nm] = (jx, jy, jz)
+
+
+def add_chains(p):
+    names = {pp for (pp, r) in p.v.values()}
+    if "Tail" in names: chain(p, "Tail", 3, "d")
+    for w in ("WingL", "WingR"):
+        if w in names: chain(p, w, 2, "x")
+    if p.name == "Fafnir":  # the neck: the voxels between the chest and the head, its own segment
+        for k, (pp, r) in list(p.v.items()):
+            x, y, z = k
+            if pp == "Body" and y >= 12 and z >= 3: p.v[k] = ("Neck", r)
+        p.pivots["Neck"] = (0, 12, 4)
+
+
 BUILDERS_V3 = [tosk, kobold, kepri, shinemane, goldbristle, pixiu, glimwisp, selkie, zharbird, fafnir, kirin, ouro, ninering]
 BUILDERS = list(POWER.values())  # v4 power body plan (2026-11-18); v3 builders + DRESS kept for reference
 
@@ -922,6 +955,7 @@ if __name__ == "__main__":
     for b in BUILDERS:
         p = b()
         if b in BUILDERS_V3: DRESS[p.name](p)
+        else: add_chains(p)
         d = p.data()
         full = {**ROLES, **PALETTES[p.name], **ROLE_OVERRIDES.get(p.name, {})}
         d["palette"] = {r: c for r, c in full.items() if any(r == v[3] for vs in d["parts"].values() for v in vs)}

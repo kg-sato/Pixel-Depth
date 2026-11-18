@@ -112,9 +112,13 @@ local function addFx(m, name, d, rig)
 	table.insert(list, { "Body", d.cx - 0.5, 0, d.cz - 0.5, "dust", Color3.fromRGB(232, 218, 196) }) -- under the middle of the pet
 	for _, f in list do
 		local part, x, y, z, kind, col, li = f[1], f[2], f[3], f[4], f[5], f[6], f[7]
-		local host
+		local host, best = nil, math.huge -- the nearest segment of that part (tails and wings are chains: Tail, Tail2, Tail3)
+		local P0 = (FLIP * CFrame.new((x + 0.5 - d.cx) * d.vox, (y + 0.5) * d.vox, (z + 0.5 - d.cz) * d.vox)).Position
 		for _, g in rig.pieces do
-			if g.part == part and g.role ~= "Eye" and g.role ~= "Shine" then host = g.p break end
+			if (g.part == part or string.match(g.part, "^" .. part .. "%d$")) and g.role ~= "Eye" and g.role ~= "Shine" then
+				local dd = (g.p.Position - P0).Magnitude
+				if dd < best then host, best = g.p, dd end
+			end
 		end
 		local k = KIND[kind]
 		if host and k then
@@ -168,7 +172,7 @@ function M.build(name)
 	root.CFrame = CFrame.new(0, ROOT_Y, 0)
 	root.Parent = m
 	m.PrimaryPart = root
-	local rig = { pieces = {}, seed = math.random() * 10, w = 0, lastPos = nil, scale0 = 1 }
+	local rig = { pieces = {}, piv = {}, seed = math.random() * 10, w = 0, lastPos = nil, scale0 = 1, hasNeck = d.pivots.Neck ~= nil }
 	for _, p in parts do
 		local c = p:Clone()
 		local part, role = string.match(p.Name, "^(.-)__(.+)$")
@@ -182,6 +186,7 @@ function M.build(name)
 		local piv = d.pivots[part]
 		piv = piv and (FLIP * CFrame.new(piv)).Position or Vector3.zero
 		table.insert(rig.pieces, { p = c, part = part, role = role, rest = rest, piv = piv, size = c.Size })
+		rig.piv[part] = piv
 		c.CFrame = CFrame.new(0, 0, 0) * rest
 		c.Parent = m
 	end
@@ -306,12 +311,13 @@ function M.animate(m, now, dt, moving)
 	if rig.act then
 		local a = ACT[rig.act]
 		local u = (now - rig.actT) / a.dur
-		if u >= 1 then
+		if u >= 1 + 0.45 / a.dur then -- run on until the last chain segment has settled too (a snap when it was cut at u = 1)
 			rig.act, rig.nextAct = nil, now + 3 + math.random() * 3
 		else
-			pose = a.fn(u)
-			local lag = a.fn(math.max(0, u - 0.14 / a.dur)) -- the tail and the wings lag the body (follow-through)
+			pose = a.fn(math.min(u, 1))
+			local lag = a.fn(math.clamp(u - 0.14 / a.dur, 0, 1)) -- the tail and the wings lag the body (follow-through)
 			pose.tail, pose.wing = lag.tail, lag.wing
+			rig.lagFn = function(k) return a.fn(math.clamp(u - 0.14 * k / a.dur, 0, 1)) end -- later segments lag more
 			if a.impact and not rig.hit and u >= a.impact then -- a dust ring at the feet on the impact frame
 				rig.hit = true
 				rig.actT += 0.07 -- hit-stop: the pose holds on the impact frame for a beat
@@ -350,31 +356,70 @@ function M.animate(m, now, dt, moving)
 	local foldWant = (s > 1.6 and not pose.wing) and 1 or 0
 	rig.fold = (rig.fold or foldWant) + (foldWant - (rig.fold or foldWant)) * math.min(1, dt * 4)
 	rig.ringPhase = (rig.ringPhase or 0) + dt * 0.8 * (1 + (pose.ring or 0) * aw)
-	for _, g in rig.pieces do
-		local rot = CFrame.identity
-		local lift = bodyLift
-		local name = g.part
-		if name == "Head" then
-			rot = CFrame.Angles(math.sin(t * 1.3) * 0.1 * (1 - w) - step * 0.05 * w, math.sin(t * 0.7) * 0.35 * (1 - w) * (pose.head and 0.3 or 1), math.sin(t * 0.9) * 0.08 + twitch * (1 - w))
-			if pose.head then rot = rot * CFrame.new():Lerp(pose.head, aw) end
+	-- CHAINS: Tail -> Tail2 -> Tail3, WingL -> WingL2, Neck -> Head (design3d/pets/pets.py add_chains). Each segment's own bend
+	-- rides its parent's, and each later segment plays the motion a little later, so a flick or a beat ripples to the tip.
+	local lagPose = rig.act and rig.lagFn or nil
+	local xf = {}
+	local function local_(name)
+		local base1, k = string.match(name, "^(%a+)(%d)$")
+		k = tonumber(k) or 1
+		local stem = base1 or name
+		if stem == "Head" or name == "Head" then
+			local r = CFrame.Angles(math.sin(t * 1.3) * 0.1 * (1 - w) - step * 0.05 * w, math.sin(t * 0.7) * 0.35 * (1 - w) * (pose.head and 0.3 or 1), math.sin(t * 0.9) * 0.08 + twitch * (1 - w))
+			if pose.head then r = r * CFrame.new():Lerp(pose.head, aw) end
+			if rig.hasNeck then r = CFrame.new():Lerp(r, 0.65) end -- the neck takes the rest
+			return r
+		elseif name == "Neck" then
+			local r = CFrame.Angles(math.sin(t * 1.3 - 0.5) * 0.06 * (1 - w) + breathe * 0.03 * (1 - w), math.sin(t * 0.7 - 0.4) * 0.15 * (1 - w), 0)
+			if pose.head then r = r * CFrame.new():Lerp(pose.head, aw * 0.4) end
+			return r
 		elseif string.sub(name, 1, 3) == "Leg" then
 			local n = tonumber(string.sub(name, 4)) or 1
 			local phase = (n % 2 == (n > 2 and 1 or 0)) and 1 or -1 -- diagonal pairs swing together
-			rot = CFrame.Angles(step * 0.55 * w * phase, 0, 0)
-			if pose.legF and n <= 2 then rot = rot * CFrame.new():Lerp(pose.legF, aw) end
-			lift = 0
+			local r = CFrame.Angles(step * 0.55 * w * phase, 0, 0)
+			if pose.legF and n <= 2 then r = r * CFrame.new():Lerp(pose.legF, aw) end
+			return r
 		elseif string.sub(name, 1, 3) == "Arm" then
-			rot = CFrame.Angles(-step * 0.5 * w + breathe * 0.05, 0, 0)
-			if pose.armR and name == "ArmR" then rot = rot * CFrame.new():Lerp(pose.armR, aw) end
-		elseif name == "Tail" then
-			rot = CFrame.Angles(0.1 * w, math.sin(t * (3 + 5 * w)) * (0.35 + 0.2 * w), 0)
-			if pose.tail then rot = rot * CFrame.new():Lerp(pose.tail, aw) end
-		elseif string.sub(name, 1, 4) == "Wing" or string.sub(name, 1, 3) == "Fin" then
-			local side = string.sub(name, -1) == "L" and -1 or 1
-			local spread = (pose.wing or 0) * aw
+			local r = CFrame.Angles(-step * 0.5 * w + breathe * 0.05, 0, 0)
+			if pose.armR and name == "ArmR" then r = r * CFrame.new():Lerp(pose.armR, aw) end
+			return r
+		elseif stem == "Tail" then -- a wave: each segment swings later and a little further than the one before
+			local ph = (k - 1) * 0.9
+			local r = CFrame.Angles(0.1 * w / k, math.sin(t * (3 + 5 * w) - ph) * (0.22 + 0.12 * w) * (k == 1 and 1 or 0.8), 0)
+			local tp = k == 1 and pose.tail or (lagPose and lagPose(k) or {}).tail
+			if tp then r = r * CFrame.new():Lerp(tp, aw / k) end
+			return r
+		elseif stem == "WingL" or stem == "WingR" or string.sub(name, 1, 3) == "Fin" then
+			local side = (stem == "WingL" or name == "FinL") and -1 or 1
+			local ph = (k - 1) * 0.8
+			local spread = ((k == 1 and pose.wing) or (lagPose and lagPose(k) or {}).wing or 0) * aw * (k == 1 and 1 or 0.5)
 			local f = string.sub(name, 1, 4) == "Wing" and rig.fold or 0
-			rot = CFrame.Angles(0, side * 1.1 * f, side * (math.sin(t * (4 + 10 * w)) * (0.18 + 0.3 * w) * (1 - f * 0.7) + spread + 0.3 * f))
-		elseif string.sub(name, 1, 4) == "Ring" then -- the nine rings orbit and bob about the spirit
+			if k == 1 then
+				return CFrame.Angles(0, side * 1.1 * f, side * (math.sin(t * (4 + 10 * w) - ph) * (0.18 + 0.3 * w) * (1 - f * 0.7) + spread + 0.3 * f))
+			end
+			return CFrame.Angles(0, side * 0.3 * f, side * (math.sin(t * (4 + 10 * w) - ph) * (0.12 + 0.2 * w) * (1 - f * 0.7) + spread + 0.35 * f)) -- the outer wing lags and tucks in further
+		end
+		return CFrame.identity
+	end
+	local function parentOf(name)
+		if name == "Head" and rig.hasNeck then return "Neck" end
+		local stem, k = string.match(name, "^(%a+)(%d)$")
+		if stem and tonumber(k) >= 2 then return tonumber(k) == 2 and stem or (stem .. (tonumber(k) - 1)) end
+		return nil
+	end
+	local function xfOf(name) -- the part's transform in the pet's frame (studs at scale s), parents first
+		if xf[name] then return xf[name] end
+		local pv = (rig.piv[name] or Vector3.zero) * s
+		local own = CFrame.new(pv) * local_(name) * CFrame.new(-pv)
+		local par = parentOf(name)
+		local r = par and xfOf(par) * own or own
+		xf[name] = r
+		return r
+	end
+	for _, g in rig.pieces do
+		local name = g.part
+		local lift = string.sub(name, 1, 3) == "Leg" and 0 or bodyLift
+		if string.sub(name, 1, 4) == "Ring" then -- the nine rings orbit and bob about the spirit
 			local n = tonumber(string.sub(name, 5)) or 1
 			local a = rig.ringPhase
 			local off = Vector3.new(g.piv.X, 0, g.piv.Z)
@@ -382,8 +427,7 @@ function M.animate(m, now, dt, moving)
 			g.p.CFrame = base * CFrame.new(turned.X * s, (g.piv.Y + math.sin(t * 2 + n) * 0.12 + bodyLift) * s, turned.Z * s) * CFrame.Angles(0, a + n, 0) * (CFrame.new(-g.piv) * g.rest).Rotation
 			continue
 		end
-		local pv = g.piv * s
-		local cf = base * CFrame.new(0, lift * s, 0) * CFrame.new(pv) * rot * CFrame.new(-pv) * (g.rest.Rotation + g.rest.Position * s)
+		local cf = base * CFrame.new(0, lift * s, 0) * xfOf(name) * (g.rest.Rotation + g.rest.Position * s)
 		if g.role == "Eye" or g.role == "Shine" then
 			local want = blink and Vector3.new(g.size.X, g.size.Y * 0.15, g.size.Z) or g.size
 			if g.p.Size ~= want * s then g.p.Size = want * s end
