@@ -330,7 +330,12 @@ function M.play(opt)
 	local fast = opt.fast
 	local A1 = fast and 0.5 or 1.4 -- arrive ends
 	local BUILD = fast and 0.6 or (1.6 + k * 1.6) -- the build-up, longer for rarer eggs
-	local A2 = A1 + BUILD
+	local AB = A1 + BUILD
+	local okSig, SigMod = pcall(require, script.Parent:FindFirstChild("HatchSignature"))
+	local sig = okSig and SigMod and SigMod.get(opt.name, opt.rarity) or nil -- Legendary, Mythic and Secret pets get a set piece of their own (Shared.HatchSignature)
+	local OMEN = sig and not fast and sig.omen or 0
+	local A2 = AB + OMEN -- the omen plays between the build-up and the hang
+	local ctx = sig and { world = world, egg = egg, NEST = NEST, rc = rc, part = part, light = light, sfx = sfx, rnd = Random.new(11), caption = caption, state = {} }
 	local HANG = fast and 0.2 or (0.35 + k * 0.25)
 	local A3 = A2 + HANG -- the burst
 	local t, last, fired = 0, os.clock(), {}
@@ -374,13 +379,13 @@ function M.play(opt)
 		local fov = 52 - u1 * 6
 
 		-- 2 BUILD: rock, crack, orbit, climb
-		local ub = smooth(A1, A2, t)
+		local ub = smooth(A1, AB, t)
 		if t >= A1 and t < A3 then
-			camPos = camPos:Lerp(NEST + Vector3.new(0.5, 2.7, -8.2), smooth(A1, A2, t)) -- the whole egg and its rings stay in frame (stills hs5: the egg was cut off at the top)
+			camPos = camPos:Lerp(NEST + Vector3.new(0.5, 2.7, -8.2), smooth(A1, AB, t)) -- the whole egg and its rings stay in frame (stills hs5: the egg was cut off at the top)
 			fov = 46 - ub * 8
 			if t >= A2 then fov = 38 - smooth(A2, A2 + 0.12, t) * 7 end
 			dof.FarIntensity = 0.45 * ub
-			local dim = smooth(A1, A2, t) * 0.85 + smooth(A2, A2 + 0.1, t) * 0.15 -- full black on the hang: the egg alone, a silhouette with its seams (Gemini m11) -- the cave sinks toward black as the egg wakes, so the egg carries the contrast (Gemini m8)
+			local dim = smooth(A1, AB, t) * 0.85 + smooth(A2, A2 + 0.1, t) * 0.15 -- full black on the hang: the egg alone, a silhouette with its seams (Gemini m11) -- the cave sinks toward black as the egg wakes, so the egg carries the contrast (Gemini m8)
 			Lighting.Ambient, Lighting.OutdoorAmbient = AMB:Lerp(DARK, dim), OAMB:Lerp(DARK, dim)
 			for _, g in glows do g.l.Brightness = 1.6 * lit * (1 - dim) end -- the cave lights die down with it
 			keyL.Range, keyL.Color = 14 - dim * 7, Color3.fromRGB(255, 236, 214):Lerp(Color3.fromRGB(225, 235, 255), dim) -- the key closes in on the egg and cools -- a snap in on the hang (Gemini m5: the camera stayed on one flat shot)
@@ -414,6 +419,7 @@ function M.play(opt)
 		if t < A3 then -- the egg rocks harder and harder (and holds still in the hang)
 			local hang = t >= A2
 			local amp = hang and 0 or (0.02 + 0.3 * ub ^ 2.5) * (0.7 + k * 0.5)
+			if sig and sig.still and t >= AB then amp = 0 end -- the void: the egg hangs dead still
 			local wob = CFrame.new(NEST) * CFrame.Angles(math.sin(t * (14 + 30 * ub)) * amp * 0.5, 0, math.sin(t * (11 + 34 * ub)) * amp)
 			local sq = hang and smooth(A2, A2 + 0.18, t) * 0.18 or 0 -- the squash before the snap
 			for _, c in cells do
@@ -468,10 +474,21 @@ function M.play(opt)
 			TweenService:Create(caption.UIStroke, TweenInfo.new(0.2), { Transparency = 1 }):Play()
 		end)
 
+		local fdt = opt.freeze and t >= opt.freeze and 0 or dt
+		if sig and t >= AB and t < A2 then -- the OMEN: the pet's own set piece takes the camera
+			once("omen", AB, function() if sig.start then sig.start(ctx) end end)
+			local cp, lk, fv = sig.step(ctx, (t - AB) / OMEN, fdt)
+			if cp then camPos, look, fov = cp, lk or look, fv or fov end
+		end
+
 		-- 4 BURST
 		once("burst", A3, function()
 			sfx("claim", 1.0 + k * 0.2)
 			sfx("sparkle", 1.2)
+			if sig then
+				once("omen", 0, function() if sig.start then sig.start(ctx) end end) -- Fast cutscenes skip the omen
+				if sig.burst then sig.burst(ctx) end
+			end
 			flash.BackgroundTransparency = 0.3 -- not a full white-out (Gemini m5: the flat flash hid the shards); faded by the clock below, so a held still shows it
 			for _, c in cells do -- the shell flies apart
 				local out = (c.rest.Position * Vector3.new(1, 0.5, 1)).Unit
@@ -498,13 +515,13 @@ function M.play(opt)
 			for _, c in cracks do c.p.Transparency = 1 end
 			for _, b in beads do b.Transparency = 1 end
 			hl.Enabled = false
-			shock = part(world, Vector3.new(0.12, 1, 1), CFrame.new(NEST + Vector3.new(0, 0.15, 0)) * CFrame.Angles(0, 0, math.pi / 2), rc:Lerp(WHITE, 0.3), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Neon, Transparency = 0.2 })
+			if not (sig and sig.still) then shock = part(world, Vector3.new(0.12, 1, 1), CFrame.new(NEST + Vector3.new(0, 0.15, 0)) * CFrame.Angles(0, 0, math.pi / 2), rc:Lerp(WHITE, 0.3), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Neon, Transparency = 0.2 }) end -- the void keeps no floor ring (Gemini sg2)
 			for _, c in crystals do TweenService:Create(c, TweenInfo.new(0.6), { Color = c:GetAttribute("Base"):Lerp(INK, 0.5) }):Play() end -- the crystals step back so the pet's backlight reads (Gemini m13)
 			for _, g in glows do -- the grotto floods with the rarity colour
-				TweenService:Create(g.l, TweenInfo.new(0.3), { Color = g.base:Lerp(rc, 0.4), Brightness = (1.0 + k * 0.4) * lit, Range = 18 }):Play() -- was 2.6 + k * 1.4: a gold flood washed the pet out (stills hs5)
+				TweenService:Create(g.l, TweenInfo.new(0.3), { Color = g.base:Lerp(sig and sig.tint or rc, sig and sig.tint and 0.75 or 0.4), Brightness = (1.0 + k * 0.4) * lit, Range = 18 }):Play() -- was 2.6 + k * 1.4: a gold flood washed the pet out (stills hs5)
 			end
 			keyL.Color, keyL.Brightness, keyL.Range = rc:Lerp(WHITE, 0.75), 1.7, 12
-			shaft.Color, shaft.Transparency = rc:Lerp(WHITE, 0.4), 0.88
+			shaft.Color, shaft.Transparency = (sig and sig.tint or rc):Lerp(WHITE, 0.4), 0.88 -- a signature pet keeps its own colour in the reveal (Gemini sg6: the reveal fell back to the generic cave)
 			coreL.Brightness, coreL.Range = 4, 16
 			TweenService:Create(coreL, TweenInfo.new(1.2), { Brightness = 0.5, Range = 10 }):Play()
 			pet = opt.build(opt.name)
@@ -560,6 +577,7 @@ function M.play(opt)
 			dof.FarIntensity, dof.FocusDistance = 0.5, 10.8
 			Lighting.Ambient, Lighting.OutdoorAmbient = DARK:Lerp(AMB, 0.1 + ru * 0.2), DARK:Lerp(OAMB, 0.1 + ru * 0.2) -- the cave stays mostly dark: the pet is the light (Gemini m17)
 		end
+		if sig and sig.reveal and t >= A3 and fired.omen then sig.reveal(ctx, t - A3, fdt) end
 		if rays then -- the blades turn slowly in a plane behind the pet, facing the camera
 			local spinA = (t - A3) * 0.35
 			for _, b in rays:GetChildren() do

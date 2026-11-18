@@ -101,7 +101,7 @@ PALETTES = {
     "Fafnir": {"Main": "#46784a", "Dark": "#2a4c2e", "Light": "#9cc87a", "Accent": "#ffc83c", "Horn": "#f0e2b4", "Eye": "#1c1026", "Shine": "#ffffff"},
     "Kirin": {"Main": "#5aa0c8", "Dark": "#356c92", "Light": "#cfe8f6", "Accent": "#ff963c", "Horn": "#ffe6a0", "Hoof": "#3a2c4c", "Eye": "#1c1026", "Shine": "#ffffff"},
     "Ouro": {"Main": "#4a3474", "Dark": "#2c1e44", "Light": "#7a5aa8", "Accent": "#ff5a8c", "Eye": "#ffd6ea", "Shine": "#ffffff"},
-    "Ninering": {"Main": "#f0dc8c", "Dark": "#c8a850", "Light": "#fff8dc", "Accent": "#ffffff", "Ring": "#ffd24a", "Eye": "#3c2a10", "Shine": "#ffffff"},
+    "Ninering": {"Main": "#efe6f6", "Dark": "#b8a4d0", "Light": "#ffffff", "Accent": "#ffffff", "Ring": "#ffd24a", "Blush": "#ffb0c4", "Eye": "#3c2a10", "Shine": "#ffffff"},
 }
 
 
@@ -260,71 +260,120 @@ def zharbird():  # pointed: a firebird chick with a flame crest and plumes
     return p
 
 
-def fafnir():  # pointed: a stocky little dragon with horns, spines and wings
+def fafnir():  # pointed: a chubby little dragon with curled horns, a plated belly, ribbed wings and a spade tail (v2 2026-11-18)
     p = Pet("Fafnir")
-    p.box("Body", "Main", -4, 4, 3, 9, -5, 3)
-    p.box("Body", "Light", -3, 3, 3, 4, -4, 3)
-    for z in range(-4, 3, 2): p.box("Body", "Accent", 0, 0, 10, 11, z, z)  # spines
-    p.box("Head", "Main", -4, 4, 8, 15, 2, 8)
-    p.box("Head", "Main", -2, 2, 8, 11, 9, 10)  # snout
-    p.put(-1, 11, 11, "Head", "Dark"); p.put(1, 11, 11, "Head", "Dark")
-    for s in (-1, 1): p.box("Head", "Horn", s * 3, s * 3, 16, 18, 3, 3); p.put(s * 3, 18, 2, "Head", "Horn")
-    p.eyes("Head", 12, 8, dx=2)
-    p.pivots["Head"] = (0, 9, 3)
+    p.ell("Body", "Main", 0, 7, -1, 4.6, 4.2, 5.2)
+    p.paint("Light", lambda x, y, z: z >= 1 and abs(x) <= 2 and y <= 9, part="Body")  # the plated belly
+    p.paint("Dark", lambda x, y, z: z >= 1 and abs(x) <= 2 and y <= 9 and y % 2 == 0, part="Body")
+    for i, z in enumerate(range(-5, 3, 2)):  # back spines, tallest over the shoulders
+        top = max(y for (x, y, zz) in p.v if x == 0 and zz == z)
+        for k in range(1, 2 + (i + 1) // 2 + 1): p.put(0, top + k, z, "Body", "Accent")
+    p.ell("Head", "Main", 0, 14, 4, 4.6, 4.0, 3.8)
+    p.box("Head", "Main", -2, 2, 11, 13, 7, 9)  # snout
+    p.box("Head", "Light", -2, 2, 10, 11, 5, 8)  # jaw, a step behind the snout
+    p.box("Head", "Light", -1, 1, 9, 12, 3, 6)  # pale throat
+    p.put(-1, 13, 10, "Head", "Dark"); p.put(1, 13, 10, "Head", "Dark")  # nostrils
+    for s in (-1, 1):
+        for (x, y, z) in ((3, 17, 3), (3, 18, 2), (3, 19, 1), (3, 19, 0), (3, 18, -1)): p.put(s * x, y, z, "Head", "Horn")  # horns curl back
+        p.box("Head", "Accent", s * 5, s * 5, 13, 15, 2, 3)  # ear frills
+    p.eyes("Head", 13, 7, dx=2)
+    p.pivots["Head"] = (0, 10, 2)
     for s, nm in ((-1, "WingL"), (1, "WingR")):
-        p.box(nm, "Dark", s * 5, s * 8, 9, 13, -3, -1); p.box(nm, "Dark", s * 8, s * 11, 11, 16, -3, -2); p.box(nm, "Accent", s * 6, s * 11, 16, 17, -3, -3); p.pivots[nm] = (s * 4.5, 10, -2)  # wide bat wings: the dragon reads from above
-    p.legs(2, [-4, 3], [-5, 2], w=2, role="Dark")
-    p.box("Tail", "Main", -1, 1, 4, 6, -8, -6); p.box("Tail", "Main", 0, 0, 5, 6, -12, -9); p.box("Tail", "Accent", -1, 1, 6, 8, -14, -13); p.pivots["Tail"] = (0, 5, -5.5)
+        for dx in range(0, 6):  # a raised bat wing: three bone fingers fanning up and out, scalloped membrane between them
+            x, ytop = s * (4 + dx), 11 + dx + (2 if dx >= 2 else 0)
+            ybot = 9 + dx // 2 + (1 if dx in (2, 4) else 0)
+            p.box(nm, "Dark", x, x, ybot, ytop, -3, -3)
+            for zz in (-3, -2): p.put(x, ytop, zz, nm, "Accent" if dx in (1, 3, 5) else "Light")
+        p.box(nm, "Light", s * 4, s * 4, 11, 17, -2, -2)  # the leading bone
+        p.box(nm, "Dark", s * 3, s * 4, 9, 11, -4, -1)  # the shoulder the wing hinges on
+        p.pivots[nm] = (s * 4.5, 10, -2.5)
+    p.legs(2, [-4, 3], [-4, 1], w=2, role="Dark")
+    for n in range(1, 5): p.paint("Horn", lambda x, y, z: y == 0 and z in (2, -3), part=f"Leg{n}")  # pale claws
+    for i in range(8):  # a tapering tail that curls up into a spade
+        z, y, w = -6 - i, 5 + i // 2, 1 if i < 4 else 0
+        p.box("Tail", "Main", -w, w, y, y + 1, z, z)
+    p.box("Tail", "Accent", -2, 2, 9, 10, -15, -15); p.box("Tail", "Accent", -1, 1, 9, 11, -16, -16); p.put(0, 10, -17, "Tail", "Accent")
+    p.pivots["Tail"] = (0, 6, -5.5)
     return p
 
 
-def kirin():  # pointed: a scaled fawn with a single horn and a flame mane
+def kirin():  # pointed: a scaled fawn with an antler horn, a flame mane that runs down the back, a beard and fetlock flames (v2 2026-11-18)
     p = Pet("Kirin")
     p.box("Body", "Main", -3, 3, 6, 10, -5, 3)
     p.box("Body", "Light", -2, 2, 6, 6, -4, 2)
     p.paint("Dark", lambda x, y, z: (x + z) % 3 == 0 and y >= 9, part="Body")  # scales on the back
+    for z in (-4, -1, 2): p.box("Body", "Accent", 0, 0, 11, 12 if z != 2 else 13, z, z)  # flames along the spine
     p.box("Head", "Main", -3, 3, 11, 17, 2, 7)
     p.box("Head", "Light", -2, 2, 11, 13, 8, 9)
     p.box("Head", "Accent", -1, 1, 12, 19, -1, 1)  # flame mane
+    p.box("Head", "Accent", -2, 2, 16, 18, 0, 0)
+    p.box("Head", "Accent", 0, 0, 9, 10, 8, 9)  # beard
+    p.box("Head", "Light", -1, 1, 11, 12, 10, 10)  # a stepped dragon snout
+    for s in (-1, 1): p.put(s * 3, 12, 9, "Head", "Accent"); p.put(s * 4, 12, 9, "Head", "Accent"); p.put(s * 5, 11, 9, "Head", "Accent")  # whiskers
     p.box("Head", "Horn", 0, 0, 18, 21, 5, 5); p.put(0, 22, 6, "Head", "Horn")
+    for s in (-1, 1): p.put(s * 1, 20, 5, "Head", "Horn"); p.put(s * 2, 21, 5, "Head", "Horn")  # antler tines
+    for s in (-1, 1): p.box("Head", "Main", s * 4, s * 4, 15, 16, 3, 4)  # ears
     p.eyes("Head", 14, 7, dx=2)
     p.pivots["Head"] = (0, 11, 3)
     p.legs(5, [-3, 2], [-5, 2], w=2, role="Main")
-    for k in range(1, 5): p.paint("Hoof", lambda x, y, z: y <= 1, part=f"Leg{k}")
-    p.box("Tail", "Accent", -1, 1, 8, 11, -7, -6); p.box("Tail", "Accent", 0, 0, 11, 13, -8, -7); p.pivots["Tail"] = (0, 9, -5.5)
+    for k in range(1, 5):
+        p.paint("Hoof", lambda x, y, z: y <= 1, part=f"Leg{k}")
+        xs = sorted({x for (x, y, z), (pp, rr) in p.v.items() if pp == f"Leg{k}"}); zb = min(z for (x, y, z), (pp, rr) in p.v.items() if pp == f"Leg{k}")
+        for x in xs: p.put(x, 2, zb - 1, f"Leg{k}", "Accent"); p.put(x, 3, zb - 1, f"Leg{k}", "Accent"); p.put(x, 3, zb - 2, f"Leg{k}", "Accent"); p.put(x, 4, zb - 2, f"Leg{k}", "Accent")  # fetlock flames, stepped like embers
+    p.box("Tail", "Accent", -1, 1, 8, 12, -7, -6); p.box("Tail", "Accent", 0, 0, 12, 16, -9, -7); p.box("Tail", "Accent", 0, 0, 16, 17, -6, -5); p.box("Tail", "Light", 0, 0, 9, 11, -8, -8); p.pivots["Tail"] = (0, 9, -5.5)
     p.box("Head", "Horn", 0, 0, 22, 24, 6, 6)
     p.stilts(2)
     return p
 
 
-def ouro():  # pointed: a serpent coiled in a ring, biting its tail, glowing markings
+def ouro():  # pointed: a serpent coiled in a tapering ring, biting the tip of its own tail, pale belly and glowing diamonds (v2 2026-11-18)
     p = Pet("Ouro")
-    R, r = 6.5, 2.1
-    for a in range(0, 360, 4):
-        t = math.radians(a)
+    R = 6.5
+    for a in range(70, 392, 3):
+        t, f = math.radians(a), (a - 70) / 322
+        r = 2.5 - 1.6 * f
         cy, cz = 9 + R * math.sin(t), R * math.cos(t)
-        p.ell("Body", "Main" if a % 40 else "Accent", 0, cy, cz, 2.2, r, r)
-    p.box("Head", "Main", -3, 3, 13, 18, 4, 9)
-    p.box("Head", "Accent", -3, 3, 19, 19, 5, 7)
-    for s in (-1, 1): p.box("Head", "Accent", s * 3, s * 3, 19, 21, 4, 4)
-    p.eyes("Head", 16, 9, dx=2)
+        p.ell("Body", "Main", 0, cy, cz, r * 1.05, r, r)
+    for (x, y, z) in list(p.v):  # the belly on the inside of the ring, diamonds on the outside
+        d = math.hypot(y - 9, z)
+        if d < R - 0.8: p.v[(x, y, z)] = ("Body", "Light")
+        elif d > R + 0.9 and abs(x) <= 1 and int(math.degrees(math.atan2(y - 9, z))) % 45 < 12: p.v[(x, y, z)] = ("Body", "Accent")
+    p.ell("Head", "Main", 0, 16, 6, 3.8, 3.2, 3.6)
+    p.box("Head", "Main", -2, 2, 14, 16, 8, 11)  # upper jaw
+    p.box("Head", "Light", -2, 2, 11, 12, 7, 10)  # lower jaw, open around the tail tip
+    for (x, y, z) in list(p.v):
+        if y == 13 and z >= 8: del p.v[(x, y, z)]  # the open mouth
+    p.box("Body", "Dark", 0, 0, 13, 13, 7, 11)  # the tail tip it bites
+    p.box("Head", "Accent", 0, 0, 18, 18, 7, 8)  # the forehead gem
+    for s in (-1, 1):
+        for (x, y, z) in ((2, 19, 4), (3, 20, 3), (3, 21, 2), (3, 21, 1)): p.put(s * x, y, z, "Head", "Accent")  # swept horns
+        p.put(s * 1, 13, 11, "Head", "Light"); p.put(s * 2, 13, 10, "Head", "Light")  # fangs over the tail
+        p.put(s * 2, 19, 5, "Head", "Accent"); p.put(s * 2, 20, 4, "Head", "Accent")  # thicker horn roots
+    p.eyes("Head", 16, 8, dx=2)
     p.pivots["Head"] = (0, 15, 5)
     return p
 
 
-def ninering():  # secret: a soft golden spirit inside nine floating rings
+def ninering():  # secret: a round pearl spirit with a halo, small paws and a flame tuft, inside nine crisp gold rings (v2 2026-11-18)
     p = Pet("Ninering")
-    p.ell("Body", "Main", 0, 9, 0, 4, 5, 4)
-    p.paint("Light", lambda x, y, z: y >= 11, part="Body")
-    p.box("Body", "Accent", -1, 1, 15, 16, -1, 1)
-    p.eyes("Body", 9, 4, dx=2)
+    p.ell("Body", "Main", 0, 8, 0, 4.6, 5.0, 4.4)
+    p.paint("Light", lambda x, y, z: y >= 10, part="Body")
+    p.box("Body", "Light", -3, -2, 3, 4, 3, 4); p.box("Body", "Light", 2, 3, 3, 4, 3, 4)  # paws
+    p.box("Body", "Ring", -2, 2, 13, 13, -1, 1)  # a three-prong coronet
+    for x, h in ((-2, 15), (0, 16), (2, 15)): p.box("Body", "Ring", x, x, 14, h, 0, 0)
+    p.put(0, 17, 0, "Body", "Accent")
+    for k in range(0, 360, 20):  # the halo
+        u = math.radians(k); p.put(round(3 * math.cos(u)), 18, round(3 * math.sin(u)), "Body", "Ring")
+    p.eyes("Body", 8, 4, dx=2)
+    for s in (-1, 1): p.put(s * 4, 7, 3, "Body", "Blush")
+    p.put(0, 11, 4, "Body", "Ring")  # forehead star
     for i in range(9):
         t = math.radians(i * 40)
-        cx, cz = round(7 * math.cos(t)), round(7 * math.sin(t))
+        cx, cz = round(10 * math.cos(t)), round(10 * math.sin(t))
         y, nm = 6 + (i % 3) * 3, f"Ring{i + 1}"
-        for k in range(0, 360, 30):
+        for k in range(0, 360, 15):
             u = math.radians(k)
-            p.put(cx + round(1.6 * math.cos(u)), y + round(1.6 * math.sin(u)), cz, nm, "Ring")
+            p.put(cx + round(1.8 * math.cos(u) * math.sin(t)), y + round(1.8 * math.sin(u)), cz - round(1.8 * math.cos(u) * math.cos(t)), nm, "Ring")  # each loop faces the spirit
         p.pivots[nm] = (cx, y, cz)
     return p
 
