@@ -212,7 +212,7 @@ function M.start(E)
 		if not d.bead then dress(pet.model, d, i == 1) end
 		if not d.big then -- big enough to read at the edge of the view
 			d.big, d.scale0 = true, d.scale0 or pet.model:GetScale()
-			pet.model:ScaleTo(d.scale0 * slot.scale)
+			pet.model:ScaleTo(slot.scale) -- the slot size is absolute: the town crew is scaled up (C.PET_SCALE) and that must not carry into the view
 		end
 		if i == 1 and now >= nextScan then -- twice a second: the nearest rare deposit and any Gloomling close by
 			nextScan = now + 0.5

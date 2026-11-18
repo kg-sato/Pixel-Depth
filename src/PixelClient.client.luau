@@ -3046,8 +3046,11 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	for i, pet in petObjs do
 		local lead = forgeUI.petPose and forgeUI.petPose(i, pet, h, now, dt) -- in a cave the lead pet keeps to the edge of the view (Shared.PetCompanion)
 		if lead then pet.model:PivotTo(lead) require(RS.Shared.PetVoxels).animate(pet.model, now, dt) continue end
+		local ps = inMine and C.PET_SCALE_MINE or C.PET_SCALE -- the crew stands big in the open, smaller in the mine's tunnels (the owner 2026-11-18: 2 to 3x)
+		if pet.scale ~= ps then pet.model:ScaleTo(ps) pet.scale = ps end
 		local side = (i % 2 == 0) and 1 or -1
-		local goalP = h.Position - look * (3 + math.floor((i - 1) / 2) * 2) + right * side * 2.2 + Vector3.new(0, -1.2 + math.sin(now * 5 + i) * 0.25, 0)
+		local k = math.max(1, ps * 0.8) -- bigger pets keep further off
+		local goalP = h.Position - look * (i <= 2 and 1.2 or 4) * k + right * (i <= 2 and side * 3.4 or 0) * k + Vector3.new(0, -1.2 + 0.92 * (ps - 1) + math.sin(now * 5 + i) * 0.25, 0) -- big pets flank you instead of trailing between you and the camera
 		if now < pet.digUntil then goalP = pet.digPos + Vector3.new(0, math.abs(math.sin((now - pet.hop) * 18)) * 0.6, 0) end
 		pet.pos = pet.pos:Lerp(goalP, 1 - math.exp(-dt * 10))
 		pet.model:PivotTo(CFrame.lookAt(pet.pos, pet.pos + Vector3.new(look.X, 0, look.Z)))

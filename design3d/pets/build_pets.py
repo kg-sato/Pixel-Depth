@@ -30,7 +30,7 @@ def hexlin(h):
     return tuple(((int(h[i:i + 2], 16) / 255) ** 2.2) for i in (0, 2, 4)) + (1.0,)
 
 
-def bake_mat(m, base, img):
+def bake_mat(m, base, img, vox=0.16, height=20):
     nt = m.node_tree
     for n in list(nt.nodes): nt.nodes.remove(n)
     out = nt.nodes.new("ShaderNodeOutputMaterial"); em = nt.nodes.new("ShaderNodeEmission")
@@ -50,10 +50,30 @@ def bake_mat(m, base, img):
     nt.links.new(ao.outputs["AO"], aom.inputs["Value"])
     m1 = nt.nodes.new("ShaderNodeMath"); m1.operation = "MULTIPLY"
     nt.links.new(aom.outputs[0], m1.inputs[0]); nt.links.new(upl.outputs[0], m1.inputs[1])
+    # 2026-11-18 (refs: Cataclysm/Alex's Mobs pixel-painted faces, Fugl gradients): every voxel gets its own small shade
+    # (white noise on the voxel cell, sampled half a voxel inside the face), and the pet lightens from feet to crown
+    sh = nt.nodes.new("ShaderNodeVectorMath"); sh.operation = "SCALE"; sh.inputs["Scale"].default_value = vox * 0.5
+    nt.links.new(geo.outputs["Normal"], sh.inputs[0])
+    ins = nt.nodes.new("ShaderNodeVectorMath"); ins.operation = "SUBTRACT"
+    nt.links.new(geo.outputs["Position"], ins.inputs[0]); nt.links.new(sh.outputs[0], ins.inputs[1])
+    snap = nt.nodes.new("ShaderNodeVectorMath"); snap.operation = "SNAP"; snap.inputs[1].default_value = (vox, vox, vox)
+    nt.links.new(ins.outputs[0], snap.inputs[0])
+    wn = nt.nodes.new("ShaderNodeTexWhiteNoise"); wn.noise_dimensions = "3D"
+    nt.links.new(snap.outputs[0], wn.inputs["Vector"])
+    jit = nt.nodes.new("ShaderNodeMapRange"); jit.inputs["To Min"].default_value, jit.inputs["To Max"].default_value = 0.85, 1.1
+    nt.links.new(wn.outputs["Value"], jit.inputs["Value"])
+    sp = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(geo.outputs["Position"], sp.inputs[0])
+    gr = nt.nodes.new("ShaderNodeMapRange"); gr.inputs["From Min"].default_value, gr.inputs["From Max"].default_value = 0, height * vox
+    gr.inputs["To Min"].default_value, gr.inputs["To Max"].default_value = 0.88, 1.08
+    nt.links.new(sp.outputs["Z"], gr.inputs["Value"])
+    m2 = nt.nodes.new("ShaderNodeMath"); m2.operation = "MULTIPLY"
+    nt.links.new(m1.outputs[0], m2.inputs[0]); nt.links.new(jit.outputs[0], m2.inputs[1])
+    m3 = nt.nodes.new("ShaderNodeMath"); m3.operation = "MULTIPLY"
+    nt.links.new(m2.outputs[0], m3.inputs[0]); nt.links.new(gr.outputs[0], m3.inputs[1])
     mix = nt.nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"; mix.blend_type = "MULTIPLY"; mix.inputs["Factor"].default_value = 1.0
-    nt.links.new(rgb.outputs[0], mix.inputs[6]); nt.links.new(m1.outputs[0], mix.inputs[7])
+    nt.links.new(rgb.outputs[0], mix.inputs[6]); nt.links.new(m3.outputs[0], mix.inputs[7])
     hi = nt.nodes.new("ShaderNodeMix"); hi.data_type = "RGBA"; hi.blend_type = "SCREEN"
-    sc = nt.nodes.new("ShaderNodeMath"); sc.operation = "MULTIPLY"; sc.inputs[1].default_value = 0.45
+    sc = nt.nodes.new("ShaderNodeMath"); sc.operation = "MULTIPLY"; sc.inputs[1].default_value = 0.6  # a crisper bevel light on every block edge (Cataclysm's faces)
     nt.links.new(edge.outputs[0], sc.inputs[0]); nt.links.new(sc.outputs[0], hi.inputs["Factor"])
     nt.links.new(mix.outputs[2], hi.inputs[6]); hi.inputs[7].default_value = (1, 1, 1, 1)
     nt.links.new(hi.outputs[2], em.inputs["Color"]); nt.links.new(em.outputs[0], out.inputs[0])
@@ -70,12 +90,12 @@ def bake_parts(pet, stem):
     for part in parts:
         group = [o for o in objs if o.name.split("__")[0] == part and o.name.split("__")[1] not in KEEP]
         if not group: continue
-        size = int(os.environ.get("VOXEL_TEX", 0)) or (256 if part in ("Body", "Head") else 128)
+        size = int(os.environ.get("VOXEL_TEX", 0)) or (512 if part in ("Body", "Head") else 256)
         img = bpy.data.images.new(f"{part}_bake", size, size)
         for o in group:
             role = o.name.split("__")[1]
             m = bpy.data.materials.new(f"{part}_{role}"); m.use_nodes = True
-            bake_mat(m, hexlin(pet["palette"][role]), img)
+            bake_mat(m, hexlin(pet["palette"][role]), img, pet["vox"], pet["height"])
             o.data.materials.clear(); o.data.materials.append(m)
         bpy.ops.object.select_all(action="DESELECT")
         for o in group: o.select_set(True)

@@ -13,7 +13,7 @@ local RS = game:GetService("ReplicatedStorage")
 local DATA = require(script.Parent:WaitForChild("PetVoxelsData"))
 local M = {}
 M.DATA = DATA
-local GLOW = {} -- Neon bloomed whole manes and rings into white blobs in the game's lighting (capture pets_lineup2); the accent glows through its PointLight instead
+local GLOW = { Gem = true } -- gems are their own small parts (VOXEL_KEEP=Gem) and glow like Cataclysm's emissive slits; Neon -- Neon bloomed whole manes and rings into white blobs in the game's lighting (capture pets_lineup2); the accent glows through its PointLight instead
 local FLIP = CFrame.Angles(0, math.pi, 0) -- the meshes look +Z; the game's pets look -Z
 local ROOT_Y = 0.92
 
@@ -59,6 +59,86 @@ function M.serverLoad()
 	end
 end
 
+-- PET VFX (2026-11-18, the owner: the pets "still need VFX"; refs: Cataclysm's Ignis and Harbinger glow from emissive slits,
+-- fire and sparks; Alex's Mobs give eyes and cores their own light). Each pet's signature part emits something that tells
+-- its job: the boar's lantern, the kobold's lamp and crystal pick, the dragon's smoking nostrils, the kirin's cloud hooves
+-- and crackling horn, the firebird's burning crest. Legendary and up also wear a soft aura. Points are builder voxels
+-- (design3d/pets/pets.py) on a moving part, so the effect rides that part as it animates; Model:ScaleTo scales them too.
+local TEX = {
+	spark = "rbxasset://textures/particles/sparkles_main.dds",
+	smoke = "rbxasset://textures/particles/smoke_main.dds",
+	fire = "rbxasset://textures/particles/fire_main.dds",
+	glow = "rbxassetid://77591933607769", -- the soft radial glow (art/forge/fx)
+	star = "rbxassetid://100737048426546", -- the soft-kit star sprite
+	square = "rbxassetid://99045074723360", -- a voxel: hard-edged square sprite (art/fx/voxel_square.png; Gemini: soft flares clashed with the blocks)
+	puff = "rbxassetid://106055573888260", -- a blocky smoke puff (art/fx/voxel_puff.png)
+}
+local function NS(a, b) return NumberSequence.new(a, b) end
+local KIND = {
+	motes = { tex = "square", size = NS(0.224, 0.0), rate = 7.5, life = NumberRange.new(1.4, 2.4), speed = NumberRange.new(0.2, 0.6), spread = 180, accel = Vector3.new(0, 0.5, 0), trans = NS(0.1, 1), light = 1 },
+	sparkle = { tex = "square", size = NS(0.352, 0.0), rate = 4.5, life = NumberRange.new(0.5, 0.9), speed = NumberRange.new(0.3, 0.7), spread = 180, trans = NS(0, 1), light = 1, rot = 120 },
+	embers = { tex = "square", size = NS(0.144, 0.0), rate = 13.5, life = NumberRange.new(0.7, 1.3), speed = NumberRange.new(1, 2), spread = 30, accel = Vector3.new(0, 1.2, 0), trans = NS(0, 1), light = 1, drag = 1 },
+	smoke = { tex = "puff", size = NS(0.192, 0.8), rate = 6.0, life = NumberRange.new(0.8, 1.4), speed = NumberRange.new(0.6, 1), spread = 12, accel = Vector3.new(0, 0.6, 0), trans = NS(0.45, 1), light = 0, dir = Enum.NormalId.Front },
+	flame = { tex = "square", size = NS(0.24, 0.04), rate = 24, life = NumberRange.new(0.35, 0.6), speed = NumberRange.new(1, 1.6), spread = 10, trans = NS(0.1, 1), light = 0.45 }, -- small and not too bright: big squares bloomed white (stills lineup_v7)
+	bubbles = { tex = "square", size = NS(0.16, 0.256), rate = 4.5, life = NumberRange.new(1.2, 1.8), speed = NumberRange.new(0.6, 1), spread = 15, accel = Vector3.new(0, 0.4, 0), trans = NS(0.3, 1), light = 0.6 },
+	puff = { tex = "puff", size = NS(0.288, 0.8), rate = 6.0, life = NumberRange.new(0.7, 1.1), speed = NumberRange.new(0.1, 0.3), spread = 180, trans = NS(0.35, 1), light = 0.3 },
+	zap = { tex = "square", size = NS(0.224, 0.0), rate = 10.5, life = NumberRange.new(0.1, 0.2), speed = NumberRange.new(2, 4), spread = 180, trans = NS(0, 1), light = 1 },
+	leaf = { tex = "square", size = NS(0.16, 0.08), rate = 3.0, life = NumberRange.new(1.5, 2.2), speed = NumberRange.new(0.3, 0.5), spread = 180, accel = Vector3.new(0, -0.3, 0), trans = NS(0.1, 1), light = 0.5, rot = 60 },
+	coins = { tex = "square", size = NS(0.256, 0.096), rate = 4.5, life = NumberRange.new(0.6, 1), speed = NumberRange.new(0.4, 0.8), spread = 60, accel = Vector3.new(0, -2.5, 0), trans = NS(0, 1), light = 1, rot = 200 },
+	aura = { tex = "glow", size = NS(3.84, 3.84), rate = 2.1, life = NumberRange.new(1.6, 2.2), speed = NumberRange.new(0, 0), spread = 0, trans = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.4, 0.82), NumberSequenceKeypoint.new(1, 1) }), light = 1, locked = true },
+}
+local C3 = Color3.fromRGB
+local FX = {
+	Tosk = { { "Body", -6, 9, -5, "motes", C3(255, 190, 90), { C3(255, 180, 90), 6, 0.8 } } },
+	Kobold = { { "Head", 0, 19, 7, "motes", C3(255, 220, 140), { C3(255, 220, 140), 7, 1 } }, { "ArmR", 11, 10, 1, "sparkle", C3(120, 230, 255), { C3(120, 230, 255), 4, 0.6 } } },
+	["Kepri Scarab"] = { { "Head", 0, 15, 8, "sparkle", C3(255, 210, 80) }, { "Body", 0, 9, -3, "motes", C3(255, 200, 80), { C3(255, 200, 80), 5, 0.5 } } },
+	Shinemane = { { "Head", 0, 20, 4, "motes", C3(255, 240, 170), { C3(255, 240, 180), 7, 0.9 } }, { "Head", 0, 20, 11, "sparkle", C3(255, 230, 120) } },
+	Goldbristle = { { "Body", 0, 12, -1, "coins", C3(255, 210, 70) }, { "Head", 0, 10, 6, "leaf", C3(110, 230, 100) } },
+	Pixiu = { { "Head", 0, 6, 9, "coins", C3(255, 210, 70), { C3(255, 210, 90), 4, 0.6 } }, { "Head", 0, 19, 8, "sparkle", C3(255, 230, 120) } },
+	Glimwisp = { { "Tail", -5, 15, -9, "flame", C3(90, 255, 220) }, { "Tail", 0, 15, -9, "flame", C3(90, 255, 220), { C3(90, 255, 220), 7, 1 } }, { "Tail", 5, 15, -9, "flame", C3(90, 255, 220) } },
+	Selkie = { { "Body", 0, 12, -1, "bubbles", C3(180, 230, 255) }, { "Head", 0, 12, 10, "bubbles", C3(180, 230, 255) } },
+	Zharbird = { { "Head", 0, 21, 1, "flame", C3(255, 140, 40), { C3(255, 150, 60), 7, 1.1 } }, { "Tail", 0, 10, -11, "embers", C3(255, 160, 60) } },
+	Fafnir = { { "Head", 0, 18, 14, "smoke", C3(120, 110, 110) }, { "Head", 0, 15, 12, "embers", C3(255, 140, 40), { C3(255, 140, 50), 5, 0.7 } }, { "Body", 0, 6, 0, "aura", C3(255, 200, 70) } },
+	Kirin = { { "Leg1", -3, 0, 4, "puff", C3(240, 245, 255) }, { "Leg2", 3, 0, 4, "puff", C3(240, 245, 255) }, { "Leg3", -3, 0, -6, "puff", C3(240, 245, 255) }, { "Leg4", 3, 0, -6, "puff", C3(240, 245, 255) },
+		{ "Head", 0, 26, 5, "zap", C3(140, 230, 255), { C3(140, 230, 255), 6, 0.8 } }, { "Body", 0, 6, 0, "aura", C3(255, 200, 70) } },
+	Ouro = { { "Head", 0, 19, 8, "sparkle", C3(255, 90, 150), { C3(255, 90, 150), 6, 0.8 } }, { "Body", 0, 9, 0, "motes", C3(255, 110, 170) }, { "Body", 0, 6, 0, "aura", C3(255, 70, 130) } },
+	Ninering = { { "Body", 0, 16, -3, "sparkle", C3(255, 230, 140), { C3(255, 230, 160), 8, 1 } }, { "Body", 0, 9, 4, "motes", C3(130, 230, 255) }, { "Body", 0, 6, 0, "aura", C3(255, 255, 255) } },
+}
+local function addFx(m, name, d, rig)
+	local list = FX[name]
+	if not list or not d.cx then return end
+	for _, f in list do
+		local part, x, y, z, kind, col, li = f[1], f[2], f[3], f[4], f[5], f[6], f[7]
+		local host
+		for _, g in rig.pieces do
+			if g.part == part and g.role ~= "Eye" and g.role ~= "Shine" then host = g.p break end
+		end
+		local k = KIND[kind]
+		if host and k then
+			local P = (FLIP * CFrame.new((x + 0.5 - d.cx) * d.vox, (y + 0.5) * d.vox, (z + 0.5 - d.cz) * d.vox)).Position -- the pet's frame: feet at 0, looking -Z
+			local att = Instance.new("Attachment")
+			att.Name = "Fx_" .. kind
+			att.Position = host.CFrame:PointToObjectSpace(P)
+			att.Parent = host
+			local e = Instance.new("ParticleEmitter")
+			e.Texture, e.Color, e.Size, e.Transparency = TEX[k.tex], ColorSequence.new(col), k.size, k.trans
+			e.Rate, e.Lifetime, e.Speed, e.SpreadAngle = k.rate, k.life, k.speed, Vector2.new(k.spread, k.spread)
+			e.Acceleration, e.Drag, e.LightEmission, e.LightInfluence = k.accel or Vector3.zero, k.drag or 0, k.light, 0
+			e.EmissionDirection, e.LockedToPart = k.dir or Enum.NormalId.Top, k.locked == true
+			if k.rot then e.RotSpeed, e.Rotation = NumberRange.new(-k.rot, k.rot), NumberRange.new(0, 360)
+			elseif k.tex == "square" then e.Rotation, e.RotSpeed = NumberRange.new(0, 90), NumberRange.new(-40, 40) end
+			if kind == "flame" then e.Color = ColorSequence.new(col:Lerp(Color3.new(1, 1, 1), 0.2), col:Lerp(Color3.fromRGB(120, 20, 10), 0.5)) end -- hot core, darker tips
+			if kind == "aura" then e.ZOffset = -1 end
+			e.Parent = att
+			if li then
+				local l = Instance.new("PointLight")
+				l.Color, l.Range, l.Brightness, l.Shadows = li[1], li[2], li[3], false
+				l.Parent = att
+			end
+		end
+	end
+end
+
 -- client: a fresh, painted model for this pet, or nil while its meshes have not arrived
 function M.build(name)
 	local d = DATA[name]
@@ -92,6 +172,7 @@ function M.build(name)
 		c.Name = part == "Head" and role == "Main" and "Head" or (part .. "_" .. role) -- PetCompanion looks for "Head"
 		if role ~= "Tex" then c.Color = d.palette[role] or Color3.new(1, 1, 1) end -- "Tex": a baked texture (colour, voxel occlusion, edge light) covers the part
 		c.Material = GLOW[role] and Enum.Material.Neon or Enum.Material.SmoothPlastic
+		if GLOW[role] then c.Color = c.Color:Lerp(Color3.new(0, 0, 0), 0.35) end -- a dimmer Neon: full colour blew Shinemane's star into a white square (Gemini lineup_after)
 		c.Anchored, c.CanCollide, c.CanQuery, c.CanTouch, c.CastShadow = true, false, false, false, false
 		local rest = FLIP * origin:ToObjectSpace(p.CFrame) -- in the pet's own frame: feet at 0, looking -Z
 		local piv = d.pivots[part]
@@ -108,6 +189,7 @@ function M.build(name)
 			rig.light = l
 		end
 	end
+	addFx(m, name, d, rig)
 	m:SetAttribute("Voxel", true)
 	M.rigs[m] = rig
 	m.WorldPivot = root.CFrame
