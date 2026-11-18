@@ -798,7 +798,7 @@ function M.play(opt)
 				say("FLARE!  THE GLOOM FALLS BACK", BUTTER, 0.9)
 			elseif kind == "m" and type(a) == "string" then -- a crew moment opens
 				K.mo = { side = a, untilT = os.clock() + (tonumber(b) or Mo.window), done = false }
-				local word = a == "duck" and (touch and "ALL DUCK!  TAP" or "ALL DUCK!  S") or (a == "left" and (touch and "ALL LEAN LEFT!" or "ALL LEAN LEFT!  A") or (touch and "ALL LEAN RIGHT!" or "ALL LEAN RIGHT!  D"))
+				local word = a == "duck" and (touch and "ALL DUCK!  TAP" or "ALL DUCK!  [S]") or (a == "left" and (touch and "ALL LEAN LEFT!" or "ALL LEAN LEFT!  [A]") or (touch and "ALL LEAN RIGHT!" or "ALL LEAN RIGHT!  [D]")) -- the key in brackets: a bare S read as a typo (Gemini stills 2026-11-18)
 				say(word, MINT, Mo.window)
 				sfx("click", 1.4)
 			elseif kind == "M" then -- the server's verdict
