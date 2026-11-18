@@ -1325,6 +1325,10 @@ function Hub.build(parent, origin)
 		shine.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.5, 0.4), NumberSequenceKeypoint.new(1, 0) })
 		shine.Parent = seam
 		prompt(chest, "Open", "Daily relic chest", "chest")
+		do -- only when you walk up to it: from the spawn its prompt sat on top of RIDE THE MINECART (Gemini audit 2026-11-18)
+			local pr = chest:FindFirstChildWhichIsA("ProximityPrompt", true)
+			if pr then pr.MaxActivationDistance = math.min(pr.MaxActivationDistance, 6) end
+		end
 		-- a parchment treasure map on the left wing: a dotted trail down the seven layers to an X
 		local map = wingL
 		local paper = vox(g, "MapPaper", Vector3.new(3.8, 4, 0.1), wingL.CFrame * CFrame.new(0, 0, 0.3), Color3.fromRGB(240, 222, 186), { CanCollide = false })

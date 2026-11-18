@@ -844,7 +844,7 @@ function M.play(opt)
 			-- a brass boiler gauge, not a flat bar (Gemini audit 2026-11-18: "unstyled Stoker needle bar"): a half dial with a brass
 			-- rim, notches, a gold arc for the window and a needle that sweeps from left to right as C.stokeAt runs 0 to 1
 			local BRASS, BRASS_D = Color3.fromRGB(214, 160, 78), Color3.fromRGB(120, 78, 34)
-			bar = frame({ Name = "Stoke", Size = UDim2.fromScale(0.24, 0.24), Position = UDim2.fromScale(0.5, 0.79), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 3 })
+			bar = frame({ Name = "Stoke", Size = UDim2.fromScale(0.24, 0.24), Position = UDim2.fromScale(0.5, 0.735), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 3 })
 			local ar = Instance.new("UIAspectRatioConstraint")
 			ar.AspectRatio = 2
 			ar.Parent = bar
@@ -878,7 +878,7 @@ function M.play(opt)
 			stroke(hub, BRASS, 3)
 			needle:SetAttribute("Arm", true)
 			K.stokeArm = needleArm
-			word = label(gui, touch and "STOKER:  TAP IN THE GOLD" or "STOKER:  SPACE IN THE GOLD", UDim2.fromScale(0.3, 0.035), UDim2.fromScale(0.5, 0.82), WHITE, 4) -- under the gauge
+			word = label(gui, touch and "STOKER:  TAP IN THE GOLD" or "STOKER:  SPACE IN THE GOLD", UDim2.fromScale(0.3, 0.035), UDim2.fromScale(0.5, 0.765), WHITE, 4) -- under the gauge, until the first hit
 			local lastPress = 0
 			K.stoke = function()
 				if t <= 0 or os.clock() - lastPress < S.cool then return end
@@ -886,6 +886,7 @@ function M.play(opt)
 				K.crew.send("k")
 			end
 			K.stokeSaid = function(hit) -- the server's verdict on the last press
+				if hit then K.stokeLearned = true end -- the hint has done its job
 				needle.BackgroundColor3 = hit and MINT or PINK
 				sfx(hit and "sparkle" or "click", hit and 1.2 or 0.7)
 				task.delay(0.25, function() if needle.Parent then needle.BackgroundColor3 = WHITE end end)
@@ -899,7 +900,7 @@ function M.play(opt)
 				local z0 = C.stokeZone(K.crew.seed or 1, K.hits)
 				for i, a in zone do a.Rotation = -90 + 180 * (z0 + S.zone * (i - 0.5) / #zone) end
 				local on = t > 0 and phase == "run" and K.job == "stoker"
-				bar.Visible, word.Visible = on, on
+				bar.Visible, word.Visible = on, on and not K.stokeLearned
 			end
 			gauge.Visible = phase == "run" and K.crew.stoker == true
 		end
