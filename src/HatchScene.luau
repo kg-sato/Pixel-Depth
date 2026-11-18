@@ -194,12 +194,24 @@ function M.play(opt)
 	local cells = {}
 	local E = 0.3
 	local shell, shellSize = nil, nil -- the baked egg mesh, when it has loaded
+	local band, bandRest, bandSize = nil, nil, nil -- its rune band (Band__Glow), lit in the climbing colour
 	if artE then
-		shell = artE:FindFirstChildWhichIsA("BasePart", true):Clone()
+		local src = artE:FindFirstChild("Body__Tex", true) or artE:FindFirstChildWhichIsA("BasePart", true)
+		shell = src:Clone()
 		shell.Anchored, shell.CanCollide, shell.CanQuery, shell.CanTouch, shell.CastShadow = true, false, false, false, false
 		shellSize = shell.Size * 1.2 -- 3.5 tall, the size of the old cube egg
 		shell.Size, shell.CFrame = shellSize, CFrame.new(NEST + Vector3.new(0, shellSize.Y / 2, 0))
 		shell.Parent = egg
+		local bsrc = artE:FindFirstChild("Band__Glow", true)
+		if bsrc then
+			band = bsrc:Clone()
+			band.Anchored, band.CanCollide, band.CanQuery, band.CanTouch, band.CastShadow = true, false, false, false, false
+			band.Material, band.Color = Enum.Material.Neon, Color3.fromRGB(96, 74, 140)
+			bandSize = band.Size * 1.2
+			bandRest = (bsrc.Position - src.Position) * 1.2 -- from the shell's middle
+			band.Size = bandSize
+			band.Parent = egg
+		end
 	end
 	for x = -4, 4 do
 		for y = 0, 11 do
@@ -384,7 +396,7 @@ function M.play(opt)
 				for _, g in glows do
 					TweenService:Create(g.l, TweenInfo.new(0.25), { Color = g.base:Lerp(climbCol, 0.3) }):Play()
 				end
-				for _, c in crystals do TweenService:Create(c, TweenInfo.new(0.3), { Color = c:GetAttribute("Base"):Lerp(climbCol:Lerp(INK, 0.4), 0.85) }):Play() end -- the crystals take the climbing colour too
+				for _, c in crystals do TweenService:Create(c, TweenInfo.new(0.3), { Color = c:GetAttribute("Base"):Lerp(climbCol:Lerp(INK, 0.55), 0.85) }):Play() end -- the crystals take the climbing colour too
 				shaft.Color = climbCol:Lerp(WHITE, 0.5)
 				for i, r in runes do r.Color = i <= math.ceil(12 * step / tier) and climbCol or Color3.fromRGB(70, 50, 96) end
 				hl.OutlineColor = climbCol
@@ -403,6 +415,11 @@ function M.play(opt)
 			if shell then
 				shell.Size = shellSize * Vector3.new(1 + sq, 1 - sq, 1 + sq)
 				shell.CFrame = wob * CFrame.new(0, shellSize.Y * (1 - sq) / 2, 0)
+				if band then
+					band.Size = bandSize * Vector3.new(1 + sq, 1 - sq, 1 + sq)
+					band.CFrame = shell.CFrame * CFrame.new(bandRest * Vector3.new(1 + sq, 1 - sq, 1 + sq))
+					band.Color = Color3.fromRGB(96, 74, 140):Lerp(climbCol:Lerp(WHITE, 0.2), math.min(1, ub * 1.5)) -- the runes wake in the climbing colour
+				end
 			end
 			for i, c in cracks do
 				c.p.CFrame = wob * c.rest
@@ -424,6 +441,7 @@ function M.play(opt)
 			if hang then
 				coreL.Brightness = 3 + math.sin(t * 40) * 1.5
 				shake = opt.calm and 0 or 0.05 -- a fine tremble under the pressure (Gemini n17_hatch: the hang had no strain)
+				keyL.Brightness, shaft.Transparency = 0.25, 0.97 -- the blackout: only the egg's own seams light the hang (Gemini m17)
 			end
 		end
 		once("tick", A1, function()
@@ -457,6 +475,7 @@ function M.play(opt)
 			end
 			if shell then -- the mesh shell: hide it and throw cube shards in its colours
 				shell.Transparency = 1
+				if band then band.Transparency = 1 end
 				local cols = { Color3.fromRGB(248, 236, 214), Color3.fromRGB(239, 228, 244), Color3.fromRGB(176, 150, 196), Color3.fromRGB(216, 192, 232) }
 				for i = 1, 50 do
 					local yy = rnd:NextNumber(0.1, 0.95) * shellSize.Y
@@ -472,7 +491,7 @@ function M.play(opt)
 			for _, b in beads do b.Transparency = 1 end
 			hl.Enabled = false
 			shock = part(world, Vector3.new(0.12, 1, 1), CFrame.new(NEST + Vector3.new(0, 0.15, 0)) * CFrame.Angles(0, 0, math.pi / 2), rc:Lerp(WHITE, 0.3), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Neon, Transparency = 0.2 })
-			for _, c in crystals do TweenService:Create(c, TweenInfo.new(0.6), { Color = c:GetAttribute("Base") }):Play() end -- the crystals step back so the pet's backlight reads (Gemini m13)
+			for _, c in crystals do TweenService:Create(c, TweenInfo.new(0.6), { Color = c:GetAttribute("Base"):Lerp(INK, 0.5) }):Play() end -- the crystals step back so the pet's backlight reads (Gemini m13)
 			for _, g in glows do -- the grotto floods with the rarity colour
 				TweenService:Create(g.l, TweenInfo.new(0.3), { Color = g.base:Lerp(rc, 0.4), Brightness = (1.0 + k * 0.4) * lit, Range = 18 }):Play() -- was 2.6 + k * 1.4: a gold flood washed the pet out (stills hs5)
 			end
@@ -487,7 +506,7 @@ function M.play(opt)
 				pet:ScaleTo(0.2)
 			end
 			petT = t
-			light(part(world, Vector3.new(0.2, 0.2, 0.2), CFrame.new(NEST + Vector3.new(0, 2.4, 2.2)), WHITE, { Transparency = 1 }), CYAN:Lerp(WHITE, 0.3), 8, 3) -- a cool rim light behind the pet against the warm burst (Gemini m11)
+			light(part(world, Vector3.new(0.2, 0.2, 0.2), CFrame.new(NEST + Vector3.new(0, 2.4, 2.2)), WHITE, { Transparency = 1 }), CYAN:Lerp(WHITE, 0.5), 10, 5) -- a cool rim light behind the pet against the warm burst (Gemini m11)
 			shake = opt.calm and 0 or 0.35
 			rays = Instance.new("Model")
 			rays.Parent = world
@@ -526,9 +545,9 @@ function M.play(opt)
 			local ru = smooth(A3, A3 + 0.9, t)
 			camPos = (NEST + Vector3.new(0.5, 2.7, -8.2)):Lerp(NEST + Vector3.new(-0.6, 2.9, -10.8) + Vector3.new(math.sin((t - A3) * 0.35) * 1.2, 0, 0), ru)
 			look = NEST + Vector3.new(0, 2.75, 0) -- the pet sits low in frame, under its name (stills m6: the floating pet's head was behind the card)
-			fov = 54 - ru * 14
+			fov = 54 - ru * 14 -- a wide pop on the burst that settles in
 			dof.FarIntensity, dof.FocusDistance = 0.5, 10.8
-			Lighting.Ambient, Lighting.OutdoorAmbient = DARK:Lerp(AMB, 0.15 + ru * 0.35), DARK:Lerp(OAMB, 0.15 + ru * 0.35) -- the cave comes back only half way -- a wide pop on the burst that settles in
+			Lighting.Ambient, Lighting.OutdoorAmbient = DARK:Lerp(AMB, 0.1 + ru * 0.2), DARK:Lerp(OAMB, 0.1 + ru * 0.2) -- the cave stays mostly dark: the pet is the light (Gemini m17)
 		end
 		if rays then -- the blades turn slowly in a plane behind the pet, facing the camera
 			local spinA = (t - A3) * 0.35

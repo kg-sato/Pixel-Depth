@@ -46,7 +46,7 @@ def bake_mat(m, base, img):
     upl = nt.nodes.new("ShaderNodeMapRange"); upl.inputs["From Min"].default_value, upl.inputs["From Max"].default_value = -1, 1
     upl.inputs["To Min"].default_value, upl.inputs["To Max"].default_value = 0.8, 1.1
     nt.links.new(sep.outputs["Z"], upl.inputs["Value"])
-    aom = nt.nodes.new("ShaderNodeMapRange"); aom.inputs["To Min"].default_value, aom.inputs["To Max"].default_value = 0.5, 1.0
+    aom = nt.nodes.new("ShaderNodeMapRange"); aom.inputs["To Min"].default_value, aom.inputs["To Max"].default_value = 0.62, 1.0  # 0.5 made white coats muddy (Shinemane read beige)
     nt.links.new(ao.outputs["AO"], aom.inputs["Value"])
     m1 = nt.nodes.new("ShaderNodeMath"); m1.operation = "MULTIPLY"
     nt.links.new(aom.outputs[0], m1.inputs[0]); nt.links.new(upl.outputs[0], m1.inputs[1])
@@ -64,6 +64,8 @@ def bake_parts(pet, stem):
     sc = bpy.context.scene
     sc.render.engine = "CYCLES"; sc.cycles.samples = 16; sc.cycles.device = "CPU"; sc.render.bake.margin = 3
     objs = [o for o in sc.objects if o.type == "MESH"]
+    for o in objs:  # the eyes sit on the face: hidden from the bake, or their occlusion stains the whole face (Shinemane's tan face, 2026-11-17)
+        if o.name.split("__")[1] in ("Eye", "Shine"): o.hide_render = True
     parts = sorted({o.name.split("__")[0] for o in objs})
     for part in parts:
         group = [o for o in objs if o.name.split("__")[0] == part and o.name.split("__")[1] not in KEEP]
@@ -92,6 +94,7 @@ def bake_parts(pet, stem):
         mat.node_tree.links.new(t2.outputs["Color"], mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"])
         body.data.materials.clear(); body.data.materials.append(mat)
         objs = [o for o in sc.objects if o.type == "MESH"]
+    for o in sc.objects: o.hide_render = False
 
 
 report = []

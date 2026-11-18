@@ -96,11 +96,13 @@ def egg():
                 r = math.hypot(x, z)
                 if r <= rx and r > rx - 2.2:
                     speck = (x * 7 + y * 3 + z * 5) % 11 == 0
-                    band = 9 <= y <= 11
-                    p.put(x, y, z, "Body", "Speck" if speck else ("Band" if band and (x + z) % 2 == 0 else ("Top" if y > 15 else "Main")))
+                    # a dashed rune band round the belly on the outer layer: its own part, kept unbaked, that the game lights in the rarity colour (Gemini m13: the egg read as a plain rock)
+                    if 9 <= y <= 10 and r > rx - 1.2 and int((math.atan2(z, x) + math.pi) / (2 * math.pi) * 16) % 4 != 3:
+                        p.put(x, y, z, "Band", "Glow"); continue
+                    p.put(x, y, z, "Body", "Speck" if speck else ("Top" if y > 15 else "Main"))
     d = p.data()
     d["vox"] = 0.12
-    d["palette"] = {"Main": "#f8ecd6", "Top": "#efe4f4", "Speck": "#b096c4", "Band": "#d8c0e8"}
+    d["palette"] = {"Main": "#f8ecd6", "Top": "#efe4f4", "Speck": "#b096c4", "Glow": "#d8c0e8"}
     d["pivots"] = {}
     return d
 
