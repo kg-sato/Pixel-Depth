@@ -19,6 +19,38 @@ function M.start(E)
 	local fxFolder = workspace:FindFirstChild("ClientFX") or workspace
 	local function clay() return workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild("Clay") end
 
+	-- the air of the Clay Caves (Gemini audit 2026-11-18: "add floating orange and cyan dust motes"): a box of drifting square
+	-- motes and slow kiln embers that rides with the camera while you are in Camp 2, so the halls feel lived in
+	do
+		local box = new("Part", fxFolder, { Name = "ClayAir", Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Transparency = 1, Size = Vector3.new(50, 18, 36) })
+		local function emitter(col, rate, size, light, accel, tex)
+			return new("ParticleEmitter", box, {
+				Rate = 0, Lifetime = NumberRange.new(4, 7), Speed = NumberRange.new(0.2, 0.8), SpreadAngle = Vector2.new(180, 180), Color = ColorSequence.new(col),
+				Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.25, size), NumberSequenceKeypoint.new(1, 0) }),
+				Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.25, 0.2), NumberSequenceKeypoint.new(1, 1) }),
+				LightEmission = light, LightInfluence = 0, Shape = Enum.ParticleEmitterShape.Box, Acceleration = accel,
+				Rotation = NumberRange.new(0, 90), RotSpeed = NumberRange.new(-30, 30), Texture = tex, ZOffset = -0.5,
+			}), rate
+		end
+		local SQUARE = "rbxassetid://99045074723360" -- art/fx/voxel_square.png
+		local list = {
+			{ emitter(Color3.fromRGB(255, 176, 84), 0, 0.16, 0.9, Vector3.new(0, 0.35, 0), SQUARE) }, -- kiln embers, rising
+			{ emitter(Color3.fromRGB(120, 230, 240), 0, 0.12, 0.7, Vector3.new(0.2, 0.05, 0.1), SQUARE) }, -- cool dust in the shafts of light
+			{ emitter(Color3.fromRGB(220, 170, 140), 0, 0.22, 0.1, Vector3.new(0.1, -0.05, 0.1), SQUARE) }, -- clay dust
+		}
+		local rates = { 7, 5, 6 }
+		RunService.Heartbeat:Connect(function()
+			local cam = workspace.CurrentCamera
+			local h = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+			local here = h and C.CAVE2_ORIGIN and (h.Position - C.CAVE2_ORIGIN).Magnitude < 260
+			for i, e in list do
+				local want = here and rates[i] or 0
+				if e[1].Rate ~= want then e[1].Rate = want end
+			end
+			if here then box.CFrame = CFrame.new(cam.CFrame.Position + cam.CFrame.LookVector * 30) end -- far enough that no mote drifts into the lens
+		end)
+	end
+
 	-- the travel fade
 	local fade = new("Frame", E.top, { Name = "ClayFade", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(20, 12, 26), BackgroundTransparency = 1, Visible = false, ZIndex = 54 })
 

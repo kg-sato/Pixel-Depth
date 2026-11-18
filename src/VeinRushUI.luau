@@ -173,6 +173,15 @@ function M.start(E)
 		cam.CFrame = CFrame.lookAt(eye, at + Vector3.new(0, PLINTH + SEG_H * 2.2, 0)) -- turn to the spire (first person keeps the new look)
 		vr.Visible = true
 		pop(quality, 0.7, 0.3)
+		do -- the chisels slide in from their sides with a little overshoot (Gemini audit 2026-11-18: they snapped in)
+			local TS = game:GetService("TweenService")
+			for i, b in { leftBtn, rightBtn } do
+				local home = b:GetAttribute("Home") or b.Position
+				b:SetAttribute("Home", home)
+				b.Position = home + UDim2.fromScale(i == 1 and -0.25 or 0.25, 0)
+				TS:Create(b, TweenInfo.new(0.42, Enum.EasingStyle.Back, Enum.EasingDirection.Out, 0, false, 0.05 * i), { Position = home }):Play()
+			end
+		end
 		sfx("sparkle", 0.9)
 	end
 	function api.close()
