@@ -285,6 +285,8 @@ function M.play(opt)
 	local barB = frame({ Size = UDim2.fromScale(1, 0.1), Position = UDim2.fromScale(0, 0.9), BackgroundColor3 = Color3.fromRGB(8, 4, 14), ZIndex = 5 })
 	local flash = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = WHITE, BackgroundTransparency = 1, ZIndex = 8 })
 	local caption = label("SOMETHING STIRS IN THE NEST...", UDim2.fromScale(0.6, 0.045), UDim2.fromScale(0.5, 0.95), Color3.fromRGB(236, 224, 255), 6)
+	local rung = label("", UDim2.fromScale(0.5, 0.09), UDim2.fromScale(0.5, 0.2), WHITE, 6) -- each rung of the climb stamps big over the egg and fades (Gemini m20: the tier text belongs in the middle of the screen)
+	rung.TextTransparency, rung.UIStroke.Transparency = 1, 1
 	caption.TextTransparency, caption.UIStroke.Transparency = 1, 1
 	local nameL, nameS = label(string.upper(opt.name), UDim2.fromScale(0.5, 0.09), UDim2.fromScale(0.5, 0.155), WHITE, 7, rc:Lerp(INK, 0.45))
 	nameL.UIStroke.Thickness = 5
@@ -392,6 +394,12 @@ function M.play(opt)
 					caption.Text, caption.TextColor3 = string.upper(rar[1]) .. (step < tier and "..." or "!"), climbCol:Lerp(WHITE, 0.35)
 					local sc = caption:FindFirstChildOfClass("UIScale")
 					if sc then sc.Scale = 1.35 TweenService:Create(sc, TweenInfo.new(0.3, Enum.EasingStyle.Back), { Scale = 1 }):Play() end
+					rung.Text, rung.TextColor3, rung.UIStroke.Color = caption.Text, climbCol:Lerp(WHITE, 0.25), climbCol:Lerp(INK, 0.6)
+					rung.TextTransparency, rung.UIStroke.Transparency = 0, 0
+					local rs = rung:FindFirstChildOfClass("UIScale")
+					if rs then rs.Scale = 1.6 TweenService:Create(rs, TweenInfo.new(0.25, Enum.EasingStyle.Back), { Scale = 1 }):Play() end
+					TweenService:Create(rung, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In, 0, false, 0.35), { TextTransparency = 1 }):Play()
+					TweenService:Create(rung.UIStroke, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In, 0, false, 0.35), { Transparency = 1 }):Play()
 				end
 				for _, g in glows do
 					TweenService:Create(g.l, TweenInfo.new(0.25), { Color = g.base:Lerp(climbCol, 0.3) }):Play()
@@ -548,6 +556,7 @@ function M.play(opt)
 			camPos = (NEST + Vector3.new(0.5, 2.7, -8.2)):Lerp(NEST + Vector3.new(-0.6, 2.9, -10.8) + Vector3.new(math.sin((t - A3) * 0.35) * 1.2, 0, 0), ru)
 			look = NEST + Vector3.new(0, 2.75, 0) -- the pet sits low in frame, under its name (stills m6: the floating pet's head was behind the card)
 			fov = 54 - ru * 14 -- a wide pop on the burst that settles in
+			if t - A3 < 0.07 then fov = 30 end -- a snap in on the impact frame before the pop (Gemini m20/m21)
 			dof.FarIntensity, dof.FocusDistance = 0.5, 10.8
 			Lighting.Ambient, Lighting.OutdoorAmbient = DARK:Lerp(AMB, 0.1 + ru * 0.2), DARK:Lerp(OAMB, 0.1 + ru * 0.2) -- the cave stays mostly dark: the pet is the light (Gemini m17)
 		end
