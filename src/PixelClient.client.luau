@@ -610,6 +610,7 @@ sfx = function(name, pitch)
 	task.delay(math.min(s.TimeLength > 0 and s.TimeLength or 3, len and len + 0.2 or 3), function() s:Destroy() end)
 end
 sfxClick = function() sfx("click") end
+require(RS.Shared:WaitForChild("PetVoxels")).sfx = sfx -- the pets' idle actions roar, stomp and flap with the game's sounds
 uiSound = sfx
 
 -- World FX

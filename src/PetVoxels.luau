@@ -280,6 +280,21 @@ ACT.spin = { dur = 2.2, fn = function(u)
 	local f = key(u, { { 0, 0 }, { 0.2, 1 }, { 0.8, 1 }, { 1, 0 } })
 	return { ring = f * 6, root = { lift = f * 0.25 }, head = CFrame.Angles(f * 0.15, 0, 0) }
 end, burst = 0.5 }
+-- the sound of each action on its beat (impact or burst): { name, pitch } from PixelClient's bank (M.sfx); pets far from the
+-- camera stay quiet, and a big pet sounds deeper
+local ACT_SFX = {
+	roar = { { "thud", 0.45 }, { "swing", 0.55 } }, stomp = { { "thud", 0.8 } }, rear = { { "thud", 0.7 }, { "step", 0.8 } },
+	armflex = { { "hit", 0.85 }, { "breakRock", 1.2 } }, flap = { { "swing", 1.25 }, { "land", 0.9 } }, hop = { { "land", 1.1 } },
+	tailfan = { { "sparkle", 0.9 } }, spin = { { "sparkle", 1.2 } }, shake = { { "step", 1.3 } },
+}
+local function actSound(m, act)
+	local list = M.sfx and ACT_SFX[act]
+	if not list or not m.PrimaryPart then return end
+	local d = (workspace.CurrentCamera.CFrame.Position - m.PrimaryPart.Position).Magnitude
+	if d > 45 then return end
+	local deep = 1 / math.clamp(m:GetScale() ^ 0.3, 1, 1.4)
+	for _, sd in list do M.sfx(sd[1], sd[2] * deep) end
+end
 local ACTS = {
 	Tosk = { "look", "shake", "stomp" }, Kobold = { "look", "armflex", "stomp" }, ["Kepri Scarab"] = { "look", "shake", "hop" },
 	Shinemane = { "look", "rear", "shake" }, Goldbristle = { "look", "shake", "hop" }, Pixiu = { "look", "roar", "stomp" },
@@ -320,6 +335,7 @@ function M.animate(m, now, dt, moving)
 			rig.lagFn = function(k) return a.fn(math.clamp(u - 0.14 * k / a.dur, 0, 1)) end -- later segments lag more
 			if a.impact and not rig.hit and u >= a.impact then -- a dust ring at the feet on the impact frame
 				rig.hit = true
+				actSound(m, rig.act)
 				rig.actT += 0.07 -- hit-stop: the pose holds on the impact frame for a beat
 				for _, e in m:GetDescendants() do
 					if e:IsA("ParticleEmitter") and e.Parent.Name == "Fx_dust" then e:Emit(26) end
@@ -327,6 +343,7 @@ function M.animate(m, now, dt, moving)
 			end
 			if a.burst and not rig.burst and u >= a.burst then -- a puff from every effect on the pet on the beat
 				rig.burst = true
+				if not a.impact then actSound(m, rig.act) end
 				for _, e in m:GetDescendants() do
 					if e:IsA("ParticleEmitter") and not e.LockedToPart and e.Parent.Name ~= "Fx_dust" then e:Emit(8) end
 				end
@@ -335,6 +352,7 @@ function M.animate(m, now, dt, moving)
 	elseif w < 0.2 and now >= (rig.nextAct or now + 1) then
 		local list = ACTS[m.Name] or { "look" }
 		rig.act, rig.actT, rig.burst, rig.hit = list[math.random(#list)], now, false, false
+		if not ACT[rig.act].burst and not ACT[rig.act].impact then actSound(m, rig.act) end -- no beat: it sounds as it starts
 	end
 	if not rig.nextAct then rig.nextAct = now + 2 + math.random() * 4 end
 	pose = pose or {}
