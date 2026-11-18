@@ -521,13 +521,407 @@ DRESS = {"Tosk": d_tosk, "Kobold": d_kobold, "Kepri Scarab": d_kepri, "Shinemane
 
 
 
-BUILDERS = [tosk, kobold, kepri, shinemane, goldbristle, pixiu, glimwisp, selkie, zharbird, fafnir, kirin, ouro, ninering]
+# ---------------------------------------------------------------------------------------------------------------------
+# v4 POWER BODY PLAN for all 13 pets (2026-11-18; vault Research/3D and Art/Voxel Creature Power Proportions (2026-11-18).md).
+# The owner: the v3 bodies "look really weak and not very powerful"; cute is only a pass/fail check, power and silhouette are
+# graded. Rules: wedge mass (chest and shoulders biggest, hips small), the head low and forward with angled brows over big
+# eyes, short thick legs with wider feet, signature parts sweeping back. Accessories from the v3 DRESS pass are built in.
+def leg(p, nm, x0, x1, z0, z1, top, role="Dark", foot=None, claw=None):
+    p.box(nm, role, x0, x1, 0, top, z0, z1)
+    if foot: p.box(nm, foot, x0 - 1, x1 + 1, 0, 1, z0, z1 + 1)  # a foot wider than the leg
+    if claw:
+        for x in range(x0, x1 + 1, 2): p.put(x, 0, z1 + 2, nm, claw)
+    p.pivots[nm] = ((x0 + x1) / 2, top + 0.5, (z0 + z1) / 2)
+
+
+def brows(p, part, y, z, dx=2):  # angled brows over the outer half of each eye: determined, eyes still big
+    for s in (-1, 1):
+        p.put(s * (dx + 1), y + 1, z, part, "Dark"); p.put(s * dx, y, z, part, "Dark")
+
+
+def ridge(p, part, role, z0, z1, h0, h1, step=1):  # a crest of spikes along x = 0, from h0 tall at z0 to h1 tall at z1
+    n = max(1, abs(z1 - z0))
+    for i, z in enumerate(range(z0, z1 + (1 if z1 >= z0 else -1), step if z1 >= z0 else -step)):
+        top = max((y for (x, y, zz) in p.v if x == 0 and zz == z), default=None)
+        if top is None: continue
+        h = round(h0 + (h1 - h0) * i * step / n)
+        for k in range(1, h + 1): p.put(0, top + k, z, part, role)
+
+
+def tosk4():  # the hauler as a war boar
+    p = Pet("Tosk")
+    p.ell("Body", "Main", 0, 9, 1, 6.4, 5.4, 4.8)  # shoulders wider than anything else
+    p.ell("Body", "Main", 0, 7.5, -5, 4.2, 3.8, 3.6)
+    p.paint("Light", lambda x, y, z: y <= 5, part="Body")
+    p.paint("Dark", lambda x, y, z: z <= -2 and (x + y) % 4 == 0 and y > 5, part="Body")
+    ridge(p, "Body", "Dark", 4, -2, 3, 1)
+    p.box("Head", "Main", -4, 4, 4, 10, 5, 10)
+    p.box("Head", "Dark", -3, 3, 3, 3, 5, 11)  # a shadow line under the jaw
+    p.box("Head", "Light", -3, 3, 4, 7, 11, 13)  # a pale snout: the face reads against the body
+    p.box("Head", "Light", -2, 2, 4, 6, 14, 14); p.put(-1, 5, 15, "Head", "Dark"); p.put(1, 5, 15, "Head", "Dark")
+    p.eyes("Head", 7, 10, dx=2, h=3); brows(p, "Head", 10, 11)
+    for s in (-1, 1):
+        for (x, y, z) in ((3, 6, 12), (4, 7, 13), (5, 8, 13), (6, 9, 14), (6, 10, 14), (7, 11, 13)): p.put(s * x, y, z, "Head", "Tusk")  # tusks flared out
+        p.box("Head", "Dark", s * 4, s * 5, 10, 11, 6, 7)
+    for x in (-1, 0, 1): p.put(x, 3, 14, "Head", "Metal")  # nose ring
+    p.pivots["Head"] = (0, 7, 5)
+    leg(p, "Leg1", -5, -3, 1, 3, 5, foot="Dark"); leg(p, "Leg2", 3, 5, 1, 3, 5, foot="Dark")
+    leg(p, "Leg3", -5, -3, -7, -5, 4, foot="Dark"); leg(p, "Leg4", 3, 5, -7, -5, 4, foot="Dark")  # thick haunches too
+    p.box("Body", "Pack", -4, 4, 11, 13, -6, -1); p.box("Body", "Accent", -1, 1, 14, 14, -4, -3)
+    p.paint("Leather", lambda x, y, z: z in (-5, -2) and y >= 4, part="Body")
+    p.box("Body", "Wood", -4, 3, 15, 15, -4, -4); p.box("Body", "Metal", 4, 4, 13, 17, -4, -4)
+    p.box("Body", "Metal", -6, -6, 11, 11, -5, -4); p.box("Body", "Accent", -6, -6, 9, 10, -5, -4); p.box("Body", "Metal", -6, -6, 8, 8, -5, -4)
+    p.box("Tail", "Dark", 0, 0, 8, 10, -9, -9); p.pivots["Tail"] = (0, 8, -8.5)
+    return p
+
+
+def kobold4():  # the digger as a mine brute: gorilla chest, long heavy arms with big fists, short legs, head sunk under the helmet
+    p = Pet("Kobold")
+    p.ell("Body", "Main", 0, 10, 0, 5.2, 4.6, 3.6)
+    p.box("Body", "Main", -3, 3, 4, 7, -2, 2)
+    p.paint("Light", lambda x, y, z: z >= 2 and abs(x) <= 3 and y <= 11, part="Body")
+    p.paint("Leather", lambda x, y, z: y == 6, part="Body"); p.put(0, 6, 3, "Body", "Metal")  # belt and buckle
+    p.box("Body", "Leather", -2, -1, 4, 6, -3, -3)  # pouch
+    p.box("Body", "Cloth", -4, 4, 14, 14, -2, 3); p.box("Body", "Cloth", 2, 3, 10, 13, -4, -4)  # scarf and its tail
+    p.box("Head", "Main", -3, 3, 13, 18, 0, 5)
+    p.box("Head", "Light", -2, 2, 13, 14, 6, 7)  # snout
+    p.paint("Mouth", lambda x, y, z: z == 7 and y == 13 and abs(x) <= 1, part="Head")
+    p.eyes("Head", 15, 5, dx=2, h=3)
+    p.box("Head", "Helmet", -4, 4, 19, 20, -1, 6); p.box("Head", "Helmet", -5, 5, 18, 18, -2, 7)
+    p.box("Head", "Accent", -1, 1, 18, 20, 7, 7)  # lamp
+    p.paint("Leather", lambda x, y, z: y == 19 and (abs(x) == 4 or z == -1), part="Head")
+    for s in (-1, 1):
+        p.box("Head", "Metal", s * 1, s * 3, 21, 22, 3, 4); p.put(s * 2, 21, 5, "Head", "Gem"); p.put(s * 2, 22, 5, "Head", "Gem")
+    p.paint("Blush", lambda x, y, z: z == 5 and abs(x) == 3 and y == 14, part="Head")
+    p.pivots["Head"] = (0, 13, 2)
+    for s, nm in ((-1, "ArmL"), (1, "ArmR")):  # heavy arms that hang to the knees, fists bigger than the head is wide
+        p.box(nm, "Main", s * 5, s * 7, 6, 13, -1, 2)
+        p.box(nm, "Dark", s * 5, s * 8, 2, 5, -2, 3)
+        p.box(nm, "Metal", s * 4, s * 8, 13, 14, -2, 3)  # iron pauldrons: the shoulder line is the widest thing
+        p.pivots[nm] = (s * 6, 13, 0.5)
+    p.box("ArmR", "Wood", 8, 11, 4, 4, 1, 1); p.box("ArmR", "Metal", 11, 12, 0, 9, 1, 1); p.box("ArmR", "Metal", 10, 13, 9, 9, 1, 1); p.put(11, 10, 2, "ArmR", "Gem"); p.put(12, 10, 2, "ArmR", "Gem")  # a big pickaxe with a crystal tip  # the pickaxe held out wide
+    leg(p, "Leg1", -3, -1, -1, 1, 3, role="Main", foot="Dark", claw="Horn"); leg(p, "Leg2", 1, 3, -1, 1, 3, role="Main", foot="Dark", claw="Horn")
+    p.box("Tail", "Main", -1, 1, 4, 6, -3, -4); p.box("Tail", "Main", 0, 0, 3, 4, -5, -7); p.put(0, 3, -8, "Tail", "Accent")
+    p.pivots["Tail"] = (0, 5, -2.5)
+    return p
+
+
+def kepri4():  # the fast digger as a rhino beetle: a high front shield, one huge curved horn, splayed thick legs
+    p = Pet("Kepri Scarab")
+    p.ell("Body", "Main", 0, 5, -3, 5.5, 4.2, 5.5, cut=lambda x, y, z: y >= 2)
+    p.paint("Metal", lambda x, y, z: y == 3, part="Body")
+    p.paint("Accent", lambda x, y, z: x * x + (z + 3) ** 2 <= 5 and y >= 8, part="Body")
+    p.paint("Dark", lambda x, y, z: x == 0 and y >= 6 and not (x * x + (z + 3) ** 2 <= 5), part="Body")
+    p.paint("Light", lambda x, y, z: (abs(x) + abs(z)) % 4 == 0 and 6 <= y <= 7 and abs(x) >= 2, part="Body")
+    p.ell("Head", "Dark", 0, 6, 3, 4.8, 4.2, 2.8, cut=lambda x, y, z: y >= 2)  # the front shield: the highest, widest mass
+    p.paint("Metal", lambda x, y, z: y == 9 or (y >= 8 and abs(x) >= 4), part="Head")
+    p.box("Head", "Main", -2, 2, 2, 5, 5, 7)  # face
+    p.eyes("Head", 3, 7, dx=2, h=2)
+    for (y, z, w) in ((6, 8, 1), (7, 8, 1), (8, 9, 1), (9, 9, 1), (10, 10, 0), (11, 10, 0), (12, 10, 0), (13, 10, 0), (14, 9, 0), (15, 8, 0)): p.box("Head", "Horn", -w, w, y, y, z, z)  # the great horn
+    for s in (-1, 1):
+        for (x, y, z) in ((2, 3, 8), (3, 4, 9), (4, 5, 10), (4, 6, 10), (4, 7, 9)): p.put(s * x, y, z, "Head", "Horn")  # mandibles sweeping up
+    p.put(0, 10, 7, "Head", "Gem")
+    p.pivots["Head"] = (0, 4, 1)
+    leg(p, "Leg1", -7, -5, 2, 3, 3, foot=None, claw="Dark"); leg(p, "Leg2", 5, 7, 2, 3, 3, claw="Dark")
+    leg(p, "Leg3", -7, -5, -6, -5, 3); leg(p, "Leg4", 5, 7, -6, -5, 3)
+    p.box("Body", "Dark", -7, -6, 0, 3, -2, -1); p.box("Body", "Dark", 6, 7, 0, 3, -2, -1)  # the middle pair
+    return p
+
+
+def horse4(p, top_y=6):  # a warhorse base: deep chest, arched thick neck, short heavy legs with feathered hooves
+    p.ell("Body", "Main", 0, top_y + 4, 1, 4.6, 4.4, 5.6)
+    p.ell("Body", "Main", 0, top_y + 4, -5, 4, 4, 3)
+    p.ell("Body", "Main", 0, top_y + 2.6, 3, 3.6, 3, 3)  # a deep chest that drops between the forelegs
+    p.paint("Light", lambda x, y, z: y <= top_y + 1, part="Body")
+    p.ell("Head", "Main", 0, top_y + 9, 5, 2.8, 3.8, 2.8)  # the arched neck (moves with the head)
+    p.box("Head", "Main", -3, 3, top_y + 10, top_y + 15, 6, 10)
+    p.box("Head", "Light", -2, 2, top_y + 10, top_y + 12, 11, 12)  # muzzle
+    p.put(-1, top_y + 11, 13, "Head", "Dark"); p.put(1, top_y + 11, 13, "Head", "Dark")
+    p.eyes("Head", top_y + 12, 10, dx=2, h=3); brows(p, "Head", top_y + 15, 11)
+    for s in (-1, 1): p.box("Head", "Main", s * 2, s * 3, top_y + 16, top_y + 17, 7, 8)  # ears
+    p.pivots["Head"] = (0, top_y + 7, 4)
+    for nm, x0, x1, z0, z1 in (("Leg1", -4, -2, 3, 5), ("Leg2", 2, 4, 3, 5), ("Leg3", -4, -2, -7, -5), ("Leg4", 2, 4, -7, -5)):
+        leg(p, nm, x0, x1, z0, z1, top_y, role="Main", foot="Light")
+        p.paint("Hoof", lambda x, y, z: y == 0, part=nm)
+    return p
+
+
+def shinemane4():  # the light as a radiant warhorse: a mane of light, a star on the brow, saddle blanket, feathered hooves
+    p = horse4(Pet("Shinemane"))
+    p.box("Head", "Accent", -1, 1, 13, 20, 2, 6); p.box("Head", "Accent", -1, 1, 18, 21, 7, 9)  # mane and forelock
+    for (x, y) in ((0, 20), (-1, 20), (1, 20), (0, 21), (0, 19)): p.put(x, y, 11, "Head", "Gem")
+    p.paint("Leather", lambda x, y, z: (y == 18 and z >= 11) or (abs(x) == 3 and z == 9 and 16 <= y <= 18), part="Head")
+    p.box("Body", "Cloth", -5, 5, 14, 14, -4, 2)
+    for s in (-1, 1): p.box("Body", "Cloth", s * 5, s * 5, 11, 13, -4, 2)
+    p.paint("Metal", lambda x, y, z: (y == 11 and abs(x) == 5) or (y == 14 and z in (-4, 2)), part="Body")
+    p.box("Tail", "Accent", -2, 2, 10, 14, -9, -8); p.box("Tail", "Accent", -1, 1, 13, 16, -11, -10); p.box("Tail", "Light", 0, 0, 15, 17, -12, -12); p.box("Tail", "Accent", -1, 1, 4, 10, -10, -10); p.pivots["Tail"] = (0, 12, -7.5)  # a flared plume
+    return p
+
+
+def kirin4():  # the cleanser as a qilin warhorse: scales, antler horn, flame mane down the back, beard, cloud hooves
+    p = horse4(Pet("Kirin"))
+    p.paint("Dark", lambda x, y, z: (x + z) % 3 == 0 and y >= 12, part="Body")
+    p.box("Head", "Accent", -1, 1, 13, 21, 2, 5)
+    ridge(p, "Body", "Accent", -6, 0, 1, 2, step=3)
+    p.box("Head", "Accent", 0, 0, 13, 15, 11, 12)  # beard
+    for s in (-1, 1): p.put(s * 3, 17, 12, "Head", "Accent"); p.put(s * 4, 17, 12, "Head", "Accent"); p.put(s * 5, 16, 12, "Head", "Accent")
+    for (x, y, z) in ((0, 22, 8), (0, 23, 8), (0, 24, 7), (0, 25, 6), (1, 23, 8), (-1, 23, 8), (2, 24, 8), (-2, 24, 8), (0, 26, 5)): p.put(x, y, z, "Head", "Horn")
+    p.put(0, 19, 11, "Head", "Gem")
+    for k in range(1, 5):
+        feet = [(x, z) for (x, y, z), (pp, r) in p.v.items() if pp == f"Leg{k}" and y == 0]
+        for (x, z) in feet:
+            for dx, dz in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                if (x + dx, 0, z + dz) not in p.v: p.put(x + dx, 0, z + dz, f"Leg{k}", "Cloud")
+    p.box("Tail", "Accent", -1, 1, 9, 13, -9, -8); p.box("Tail", "Accent", 0, 0, 13, 17, -11, -9); p.pivots["Tail"] = (0, 11, -7.5)
+    return p
+
+
+def goldbristle4():  # the lucky one as an armoured quill-back: a wedge under a mantle of long swept quills, big front claws
+    p = Pet("Goldbristle")
+    p.ell("Body", "Main", 0, 7, 1, 5.8, 5.8, 4.6, cut=lambda x, y, z: y >= 1)  # shoulders
+    p.ell("Body", "Main", 0, 5, -5, 4.2, 4.2, 3.6, cut=lambda x, y, z: y >= 1)  # hips
+    for x in range(-5, 6, 2):  # quills: longest over the shoulders, all raked back
+        for z in range(-7, 4, 2):
+            top = max((y for (vx, y, vz) in p.v if vx == x and vz == z), default=None)
+            if top is None or top < 5: continue
+            n = 6 if z >= -1 else (5 if z >= -4 else 3)
+            for k in range(1, n + 1): p.put(x, top + k - k // 3, z - k + 1, "Body", "Accent" if k < n else "Light")
+    for y in (3, 5, 7):  # quills splayed out past the flanks: the outline is a spiked fan, not a loaf
+        for z in range(-6, 3, 2):
+            xs = [x for (x, yy, zz) in p.v if yy == y and zz == z]
+            if not xs: continue
+            for sgn, x0 in ((-1, min(xs)), (1, max(xs))):
+                for k in range(1, 4): p.put(x0 + sgn * k, y + k // 2, z - k, "Body", "Accent" if k < 3 else "Light")
+    p.box("Head", "Light", -3, 3, 1, 7, 5, 9)
+    p.box("Head", "Light", -2, 2, 1, 3, 10, 11)
+    p.put(0, 3, 12, "Head", "Nose")
+    p.eyes("Head", 4, 9, dx=2, h=3); brows(p, "Head", 7, 10)
+    p.paint("Blush", lambda x, y, z: z == 9 and abs(x) == 3 and y == 3, part="Head")
+    p.box("Head", "Leaf", 0, 0, 8, 9, 7, 7)
+    for (x, z) in ((-1, 7), (1, 7), (0, 6), (0, 8)): p.put(x, 10, z, "Head", "Leaf")
+    p.box("Body", "Cloth", -3, 3, 2, 3, 5, 5)
+    p.pivots["Head"] = (0, 4, 4)
+    leg(p, "Leg1", -6, -4, 2, 4, 3, foot="Dark", claw="Nose"); leg(p, "Leg2", 4, 6, 2, 4, 3, foot="Dark", claw="Nose")
+    for nm in ("Leg1", "Leg2"):
+        for (x, y, z), (pp, r) in list(p.v.items()):
+            if pp == nm and r == "Nose": p.put(x, 0, z + 1, nm, "Nose")  # long digging claws
+    leg(p, "Leg3", -4, -2, -7, -5, 2, foot="Dark"); leg(p, "Leg4", 2, 4, -7, -5, 2, foot="Dark")
+    return p
+
+
+def pixiu4():  # the treasure keeper as a jade guardian lion: a huge mane, barrel chest, big paws, a gold horn
+    p = Pet("Pixiu")
+    p.ell("Body", "Main", 0, 8, 1, 4.8, 4.6, 4.6)
+    p.ell("Body", "Main", 0, 7, -5, 3.6, 3.6, 3)
+    p.paint("Light", lambda x, y, z: abs(x) == 4 and 3 <= (y - 7.5) ** 2 + (z + 1) ** 2 <= 6, part="Body")
+    for sgn in (-1, 1):  # cloud-flame tufts along the ribs
+        for (y, z) in ((8, 0), (9, -1), (10, -3), (7, -3), (8, -5)): p.put(sgn * 5, y, z, "Body", "Accent"); p.put(sgn * 6, y + 1, z - 1, "Body", "Accent")
+    p.box("Head", "Main", -3, 3, 8, 14, 4, 9)
+    p.box("Head", "Light", -2, 2, 8, 10, 10, 11)
+    p.eyes("Head", 11, 9, dx=2, h=3); brows(p, "Head", 14, 10)
+    for x in range(-8, 9):  # the mane: a big, thick ruff framing the head, wider than the shoulders
+        for y in range(4, 19):
+            if (x / 8) ** 2 + ((y - 11) / 7) ** 2 <= 1 and not (abs(x) <= 3 and 8 <= y <= 14):
+                for zz in (2, 3): p.put(x, y, zz, "Head", "Accent" if (x + y) % 5 else "Light")
+    p.box("Head", "Accent", -2, 2, 15, 16, 4, 6)
+    p.box("Head", "Metal", 0, 0, 15, 18, 7, 7); p.put(0, 19, 8, "Head", "Metal")  # gold horn
+    p.box("Head", "Metal", -1, 1, 5, 7, 9, 9); p.put(0, 6, 9, "Head", "Dark"); p.box("Head", "Cloth", 0, 0, 3, 4, 9, 9)  # coin pendant and tassel
+    p.paint("Cloth", lambda x, y, z: y == 8 and z >= 4 and abs(x) <= 3, part="Head")
+    p.pivots["Head"] = (0, 9, 3)
+    leg(p, "Leg1", -4, -2, 1, 3, 4, foot="Dark", claw="Metal"); leg(p, "Leg2", 2, 4, 1, 3, 4, foot="Dark", claw="Metal")
+    leg(p, "Leg3", -3, -2, -7, -5, 3, foot="Dark"); leg(p, "Leg4", 2, 3, -7, -5, 3, foot="Dark")
+    p.box("Tail", "Main", 0, 0, 7, 10, -8, -8); p.box("Tail", "Accent", -1, 1, 10, 12, -9, -8); p.pivots["Tail"] = (0, 7, -7.5)
+    return p
+
+
+def glimwisp4():  # the guiding light as a spirit fox: a lean chest, tall ears, three glowing tails fanned up behind
+    p = Pet("Glimwisp")
+    p.ell("Body", "Main", 0, 8, 0, 3.8, 3.8, 5)
+    p.ell("Body", "Main", 0, 7, 2, 4.2, 4, 3.2)  # a deep chest
+    p.paint("Light", lambda x, y, z: z >= 2 and y <= 8, part="Body")
+    p.paint("Cloth", lambda x, y, z: z >= 3 and y == 10, part="Body")
+    p.box("Body", "Metal", -1, 1, 8, 9, 5, 5); p.put(0, 8, 6, "Body", "Dark")  # bell
+    p.box("Head", "Main", -3, 3, 10, 15, 3, 8)
+    p.box("Head", "Light", -1, 1, 10, 12, 9, 10); p.put(0, 12, 11, "Head", "Dark")  # pointed snout
+    p.paint("Light", lambda x, y, z: y <= 11 and z >= 6, part="Head")
+    p.eyes("Head", 12, 8, dx=2, h=3); brows(p, "Head", 15, 9)
+    p.paint("Mark", lambda x, y, z: abs(x) == 3 and y in (12, 13) and z == 8, part="Head")
+    for s in (-1, 1):
+        p.box("Head", "Main", s * 2, s * 3, 16, 18, 4, 5); p.put(s * 2, 19, 5, "Head", "Mark")  # tall ears
+    p.pivots["Head"] = (0, 10, 3)
+    leg(p, "Leg1", -3, -2, 2, 3, 4, role="Main", foot="Light"); leg(p, "Leg2", 2, 3, 2, 3, 4, role="Main", foot="Light")
+    leg(p, "Leg3", -3, -2, -4, -3, 4, role="Main", foot="Light"); leg(p, "Leg4", 2, 3, -4, -3, 4, role="Main", foot="Light")
+    for dx in (-3, 0, 3):  # three tails fanning up and back, glowing at the tips
+        for k in range(9):
+            x, y, z = dx + (dx // 3) * (k // 3), 7 + k, -5 - k // 2
+            p.box("Tail", "Main" if k < 4 else ("Accent" if k < 8 else "Light"), x - (1 if k < 8 else 0), x + (1 if k < 8 else 0), y, y, z - (1 if k < 7 else 0), z)  # thick, full tails
+    p.pivots["Tail"] = (0, 7, -4.5)
+    return p
+
+
+def selkie4():  # the diver as a walrus bull: chest reared up on big fore flippers, tusks, goggles, an air tank
+    p = Pet("Selkie")
+    p.ell("Body", "Main", 0, 7, 1, 4.8, 5.6, 4.2, cut=lambda x, y, z: y >= 0)  # reared chest
+    p.ell("Body", "Main", 0, 3, -5, 3.8, 3, 4.6, cut=lambda x, y, z: y >= 0)
+    p.paint("Light", lambda x, y, z: z >= 3 and y <= 10, part="Body")
+    p.paint("Dark", lambda x, y, z: (x * 3 + z * 5) % 7 == 0 and y >= 3 and z < -3, part="Body")
+    p.box("Head", "Main", -3, 3, 11, 16, 2, 7)
+    p.box("Head", "Light", -3, 3, 11, 13, 8, 9)  # a broad muzzle
+    for s in (-1, 1):
+        p.put(s * 2, 12, 10, "Head", "Dark")
+        p.box("Head", "Horn", s * 2, s * 2, 8, 10, 9, 9)  # walrus tusks
+    p.eyes("Head", 13, 7, dx=2, h=3)
+    p.paint("Leather", lambda x, y, z: y == 16, part="Head")
+    for s in (-1, 1):
+        p.box("Head", "Metal", s * 1, s * 3, 16, 17, 7, 8); p.put(s * 2, 16, 8, "Head", "Gem"); p.put(s * 2, 17, 8, "Head", "Gem")
+    p.pivots["Head"] = (0, 11, 3)
+    for s, nm in ((-1, "FinL"), (1, "FinR")):
+        p.box(nm, "Dark", s * 4, s * 7, 0, 2, 1, 5); p.box(nm, "Dark", s * 4, s * 5, 3, 6, 1, 3); p.pivots[nm] = (s * 4.5, 5, 2)
+    p.box("Body", "Metal", -1, 1, 8, 11, -4, -1); p.put(0, 12, -1, "Body", "Accent")  # air tank
+    p.paint("Leather", lambda x, y, z: z == -2 and 3 <= y <= 10, part="Body")
+    for (x, y, z) in ((-2, 11, 0), (-3, 11, 1), (-4, 11, 2), (-4, 12, 3)): p.put(x, y, z, "Body", "Leather")
+    p.box("Tail", "Dark", -3, 3, 0, 1, -10, -10); p.box("Tail", "Dark", -4, 4, 1, 2, -11, -12); p.box("Tail", "Accent", -5, 5, 2, 3, -13, -13); p.pivots["Tail"] = (0, 1, -9.5)  # flukes swept up
+    return p
+
+
+def zharbird4():  # the heat-proof one as a raptor firebird: puffed chest, hooked beak, raised wings, talons, long plumes
+    p = Pet("Zharbird")
+    p.ell("Body", "Main", 0, 8, 0, 4.2, 5, 4.4)
+    p.paint("Light", lambda x, y, z: z >= 2 and y <= 10, part="Body")
+    p.paint("Accent", lambda x, y, z: z >= 3 and y <= 8 and (x + y) % 3 == 0, part="Body")  # ember speckles
+    p.box("Head", "Main", -3, 3, 12, 16, 1, 6)
+    p.paint("Metal", lambda x, y, z: y == 12, part="Head")
+    p.box("Head", "Beak", -1, 1, 12, 14, 7, 8); p.put(0, 12, 9, "Head", "Beak"); p.put(0, 11, 9, "Head", "Beak")  # hooked beak
+    p.eyes("Head", 13, 6, dx=2, h=2); brows(p, "Head", 15, 7)
+    for i, (x, h) in enumerate(((-1, 4), (0, 6), (1, 5))):
+        for k in range(h): p.put(x, 17 + k, 2 - k // 2, "Head", "Accent")  # flame crest
+    p.pivots["Head"] = (0, 12, 2)
+    for s, nm in ((-1, "WingL"), (1, "WingR")):  # half-raised wings with stepped feathers
+        for dx in range(0, 8):  # flared out wide
+            x = s * (4 + dx)
+            p.box(nm, "Dark", x, x, 7 + dx // 2, 12 + dx, -3, 0)
+            p.box(nm, "Accent", x, x, 6 + dx // 2, 6 + dx // 2, -3, 0)
+            if dx % 2 == 1: p.put(x, 13 + dx, -1, nm, "Accent")
+        p.pivots[nm] = (s * 4, 11, -1.5)
+    leg(p, "Leg1", -3, -1, -1, 1, 4, role="Beak", foot="Beak", claw="Dark"); leg(p, "Leg2", 1, 3, -1, 1, 4, role="Beak", foot="Beak", claw="Dark")
+    for nm, s in (("Leg1", -1), ("Leg2", 1)): p.put(s * 4, 0, 2, nm, "Dark"); p.put(0 + s, 0, -3, nm, "Dark")  # splayed talons
+    for x, h in ((-4, 6), (-2, 6), (0, 8), (2, 6), (4, 6)):  # plumes fanned out sideways as they go back
+        sgn = (x > 0) - (x < 0)
+        for k in range(0, 7): p.put(x + sgn * (k // 2), 6 + h // 2 + k // 2, -4 - h // 2 - k, "Tail", "Accent" if x == 0 else "Light")
+        p.put(x + sgn * 3, 6 + h // 2 + 3, -4 - h // 2 - 7, "Tail", "Gem")
+    p.pivots["Tail"] = (0, 6, -4)
+    return p
+
+
+def fafnir4():  # the hoard tyrant
+    p = Pet("Fafnir")
+    p.ell("Body", "Main", 0, 9, 2, 5.2, 5.2, 4.6)
+    p.ell("Body", "Main", 0, 7, -5, 3.6, 3.6, 3.4)
+    p.ell("Body", "Main", 0, 13, 5, 2.6, 3.2, 2.6)
+    p.paint("Light", lambda x, y, z: z >= 3 and abs(x) <= 2 and y <= 13, part="Body")
+    p.paint("Dark", lambda x, y, z: z >= 3 and abs(x) <= 2 and y <= 13 and y % 2 == 0, part="Body")
+    p.paint("Metal", lambda x, y, z: z >= 3 and abs(x) <= 2 and y <= 9 and (x + y) % 3 == 0, part="Body")
+    ridge(p, "Body", "Accent", -7, 1, 1, 4, step=2)
+    p.box("Head", "Main", -3, 3, 15, 20, 4, 9)
+    p.box("Head", "Main", -2, 2, 16, 18, 10, 13)
+    p.box("Head", "Light", -2, 2, 14, 15, 6, 12)
+    p.put(-1, 18, 14, "Head", "Dark"); p.put(1, 18, 14, "Head", "Dark")
+    for s in (-1, 1): p.put(s * 2, 14, 13, "Head", "Horn")
+    p.eyes("Head", 16, 9, dx=2, h=3); brows(p, "Head", 19, 10)
+    for s in (-1, 1):
+        for (x, y, z) in ((2, 20, 5), (3, 21, 4), (3, 21, 3), (4, 22, 2), (4, 22, 1), (5, 23, 0), (5, 23, -1)): p.put(s * x, y, z, "Head", "Horn")  # horns swept low and back
+        p.box("Head", "Accent", s * 4, s * 4, 17, 19, 5, 6)
+    p.box("Head", "Metal", -1, 1, 21, 21, 6, 8); p.put(0, 22, 7, "Head", "Metal"); p.put(0, 21, 9, "Head", "Gem")
+    p.pivots["Head"] = (0, 14, 5)
+    for s, nm in ((-1, "WingL"), (1, "WingR")):
+        for dx in range(0, 13):  # a span that matches the chest
+            x, ytop = s * (5 + dx), 12 + int(dx * 1.25)
+            ybot = 11 + dx // 2 + (2 if dx in (3, 6, 9, 12) else 0)
+            p.box(nm, "Dark", x, x, ybot, ytop, -2, -2)
+            for zz in (-2, -1): p.put(x, ytop, zz, nm, "Accent" if dx in (3, 6, 9, 12) else "Light")
+        p.box(nm, "Dark", s * 4, s * 5, 11, 13, -3, 0)
+        p.pivots[nm] = (s * 4.5, 12, -1.5)
+    leg(p, "Leg1", -5, -3, 1, 3, 6, role="Main", foot="Dark", claw="Horn"); leg(p, "Leg2", 3, 5, 1, 3, 6, role="Main", foot="Dark", claw="Horn")
+    leg(p, "Leg3", -4, -2, -7, -5, 5, role="Main", foot="Dark", claw="Horn"); leg(p, "Leg4", 2, 4, -7, -5, 5, role="Main", foot="Dark", claw="Horn")
+    for i in range(10):
+        z, y, w = -8 - i, 6 + i // 3, 2 if i < 3 else (1 if i < 7 else 0)
+        p.box("Tail", "Main", -w, w, y, y + (1 if i < 6 else 0), z, z)
+    p.box("Tail", "Accent", -2, 2, 9, 10, -18, -18); p.box("Tail", "Accent", -1, 1, 9, 11, -19, -19); p.put(0, 10, -20, "Tail", "Accent")
+    p.pivots["Tail"] = (0, 7, -7.5)
+    return p
+
+
+def ouro4():  # the all-rounder as a hooded serpent: a thick coil, a cobra hood flared round a big head biting its tail
+    p = Pet("Ouro")
+    R = 6.8
+    for a in range(70, 392, 3):
+        t, f = math.radians(a), (a - 70) / 322
+        r = 3.1 - 2.0 * f
+        p.ell("Body", "Main", 0, 9.5 + R * math.sin(t), R * math.cos(t), r * 1.05, r, r)
+    for (x, y, z) in list(p.v):
+        d = math.hypot(y - 9.5, z)
+        if d < R - 1: p.v[(x, y, z)] = ("Body", "Light")
+        elif d > R + 1.2 and abs(x) <= 1 and int(math.degrees(math.atan2(y - 9.5, z))) % 45 < 12: p.v[(x, y, z)] = ("Body", "Accent")
+    p.paint("Metal", lambda x, y, z: 0 <= math.degrees(math.atan2(y - 9.5, z)) % 60 < 5, part="Body")
+    for x in range(-6, 7):  # the hood: a flared plate behind the head
+        for y in range(12, 22):
+            if (x / 6.2) ** 2 + ((y - 17) / 5) ** 2 <= 1: p.put(x, y, 4, "Head", "Dark" if abs(x) >= 4 or y >= 20 else "Main")
+    p.paint("Accent", lambda x, y, z: z == 4 and abs(x) == 4 and y in (16, 17), part="Head")  # eye spots on the hood
+    p.box("Head", "Main", -3, 3, 15, 19, 5, 9)
+    p.box("Head", "Main", -2, 2, 14, 16, 10, 12)
+    p.box("Head", "Light", -2, 2, 11, 12, 7, 11)
+    for (x, y, z) in list(p.v):
+        if y == 13 and z >= 9: del p.v[(x, y, z)]
+    p.box("Body", "Dark", 0, 0, 13, 13, 8, 12)
+    for s in (-1, 1):
+        for (x, y, z) in ((3, 19, 6), (3, 20, 5), (4, 20, 4), (4, 21, 3), (5, 21, 2), (5, 22, 1), (6, 22, 0)): p.put(s * x, y, z, "Head", "Accent")  # horns sweeping back along the coil  # horns flared out past the hood
+    p.eyes("Head", 16, 9, dx=2, h=2); brows(p, "Head", 18, 10)
+    p.pivots["Head"] = (0, 15, 5)
+    return p
+
+
+def ninering4():  # the secret as a seraph: a robed chest with a glowing core, a crowned head, a great halo, nine rings
+    p = Pet("Ninering")
+    p.ell("Body", "Main", 0, 9, 0, 6.2, 5, 4.2)  # broad shoulders and chest
+    p.ell("Body", "Main", 0, 6, 0, 4, 2.4, 3)
+    for y in range(2, 6):  # the body thins into a wisp below
+        r = 1 + (y - 2) * 0.9
+        p.ell("Body", "Light", 0, y, 0, r, 0.6, r * 0.8)
+    p.box("Body", "Gem", -1, 1, 8, 10, 3, 3); p.put(0, 9, 4, "Body", "Accent")  # the glowing core
+    for s in (-1, 1): p.box("Body", "Ring", s * 4, s * 7, 11, 13, -2, 2); p.put(s * 7, 14, 0, "Body", "Gem")  # big gold pauldrons
+    p.ell("Body", "Light", 0, 15, 0.5, 3.2, 3.2, 3)  # head
+    p.eyes("Body", 14, 3, dx=2, h=3)
+    for s in (-1, 1): p.put(s * 3, 13, 3, "Body", "Blush")
+    p.box("Body", "Ring", -2, 2, 18, 18, -1, 1)
+    for x, h in ((-2, 20), (0, 21), (2, 20)): p.box("Body", "Ring", x, x, 19, h, 0, 0)
+    for k in range(0, 360, 12):  # a great halo behind the head
+        u = math.radians(k); p.put(round(5 * math.cos(u)), 16 + round(5 * math.sin(u)), -3, "Body", "Ring")
+    for i in range(9):
+        t = math.radians(i * 40)
+        cx, cz = round(10 * math.cos(t)), round(10 * math.sin(t))
+        y, nm = 11 + (i % 3) * 3, f"Ring{i + 1}"  # a high mantle of rings round the shoulders and the head
+        for k in range(0, 360, 15):
+            u = math.radians(k)
+            p.put(cx + round(1.8 * math.cos(u) * math.sin(t)), y + round(1.8 * math.sin(u)), cz - round(1.8 * math.cos(u) * math.cos(t)), nm, "Ring")
+        top = max((kk for kk, (pp, r) in p.v.items() if pp == nm), key=lambda kk: kk[1]); p.v[top] = (nm, "Gem")
+        p.pivots[nm] = (cx, y, cz)
+    return p
+
+
+POWER = {"Tosk": tosk4, "Kobold": kobold4, "Kepri Scarab": kepri4, "Shinemane": shinemane4, "Goldbristle": goldbristle4,
+         "Pixiu": pixiu4, "Glimwisp": glimwisp4, "Selkie": selkie4, "Zharbird": zharbird4, "Fafnir": fafnir4, "Kirin": kirin4,
+         "Ouro": ouro4, "Ninering": ninering4}
+
+
+
+BUILDERS_V3 = [tosk, kobold, kepri, shinemane, goldbristle, pixiu, glimwisp, selkie, zharbird, fafnir, kirin, ouro, ninering]
+BUILDERS = list(POWER.values())  # v4 power body plan (2026-11-18); v3 builders + DRESS kept for reference
 
 if __name__ == "__main__":
     out = []
     for b in BUILDERS:
         p = b()
-        DRESS[p.name](p)
+        if b in BUILDERS_V3: DRESS[p.name](p)
         d = p.data()
         full = {**ROLES, **PALETTES[p.name], **ROLE_OVERRIDES.get(p.name, {})}
         d["palette"] = {r: c for r, c in full.items() if any(r == v[3] for vs in d["parts"].values() for v in vs)}
