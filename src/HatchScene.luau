@@ -163,6 +163,16 @@ function M.play(opt)
 		local rr, ry = artG and 2.1 or 1.9, artG and NEST.Y - O.Y - 1.44 or 2.0 -- the meshes: on the lowest step of the pedestal, clear of the nest
 		table.insert(runes, part(world, Vector3.new(0.5, 0.12, 0.22), CFrame.new(O + Vector3.new(math.cos(a) * rr, ry, math.sin(a) * rr)) * CFrame.Angles(0, -a, 0), Color3.fromRGB(70, 50, 96), { Material = Enum.Material.Neon }))
 	end
+	-- Rare and up: an octagram rune on the floor round the pedestal that wakes and spins faster as the egg builds (directive
+	-- v12 task 8, ref Instagram Dfv0FGdgm8F @ropilotai: the floor rune spins, the room darkens, the rarity escalates)
+	local gram, GC = {}, NEST - Vector3.new(0, 0.3, 0) -- level with the nest's foot, so the low camera sees it (on the floor it was out of frame)
+	if tier >= 3 then
+		local R = 2.7
+		for sq = 0, 1 do for e = 0, 3 do
+			local rest = CFrame.Angles(0, sq * math.pi / 4 + e * math.pi / 2, 0) * CFrame.new(0, 0, -R)
+			table.insert(gram, { p = part(world, Vector3.new(2 * R + 0.2, 0.06, 0.16), CFrame.new(GC) * rest, ladder[1], { Material = Enum.Material.Neon, Transparency = 1, CastShadow = false }), rest = rest })
+		end end
+	end
 	if not artG then
 	for a = 0, 359, 20 do
 		local t = math.rad(a)
@@ -374,6 +384,11 @@ function M.play(opt)
 			TweenService:Create(caption.UIStroke, TweenInfo.new(0.4), { Transparency = 0.2 }):Play()
 		end)
 		local u1 = smooth(0, A1, t)
+		if #gram > 0 then -- the octagram: fades in with the build, spins up, takes the climbing colour
+			local on = smooth(A1, A1 + 0.6, t)
+			local spin = CFrame.Angles(0, t * (0.4 + 2.2 * smooth(A1, AB, t)), 0)
+			for _, g in gram do g.p.CFrame, g.p.Transparency, g.p.Color = CFrame.new(GC) * spin * g.rest, 1 - 0.7 * on, climbCol end
+		end
 		local camPos = (O + Vector3.new(2.5, 9, -22)):Lerp(NEST + Vector3.new(0.8, 2.6, -9), u1)
 		local look = NEST + Vector3.new(0, 1.7 + (1 - u1) * 1.5, 0)
 		local fov = 52 - u1 * 6
