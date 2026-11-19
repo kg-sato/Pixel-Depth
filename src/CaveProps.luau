@@ -150,7 +150,7 @@ function M.build(caves)
 		if not ceilY then return B.rubble(m, base) end
 		local top = ceilY + 0.5
 		for i = 1, rng:NextInteger(2, 4) do
-			local x, z = rng:NextNumber(-2, 2), rng:NextNumber(-1.5, 1)
+			local x, z = rng:NextNumber(-0.6, 0.6), rng:NextNumber(-0.6, 0.6) -- shortcut: roots stay near the one ceiling ray; cast one ray per root if a roof is steeper
 			local len = math.min(top - base.Position.Y - 3, rng:NextNumber(4, 9))
 			if len < 2 then break end
 			local p0 = base * CFrame.new(x, 0, z)

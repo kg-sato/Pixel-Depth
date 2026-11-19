@@ -38,7 +38,9 @@ function M.build(parent, origin, seed, opt)
 	local function idx(x, y, z) return (x * NY + y) * NZ + z end
 	local function inside(x, y, z) return x >= 0 and y >= 0 and z >= 0 and x < NX and y < NY and z < NZ end
 	local function get(x, y, z) if not inside(x, y, z) then return 0 end return buffer.readu8(grid, idx(x, y, z)) end
-	local function set(x, y, z, v) if inside(x, y, z) then buffer.writeu8(grid, idx(x, y, z), v) end end
+	local function set(x, y, z, v) -- the outermost voxels of the grid stay rock: a passage carved to the edge opened a hole to the sky (Gemini, 2026-11-19)
+		if inside(x, y, z) and (v == 0 or (x > 0 and y > 0 and z > 0 and x < NX - 1 and y < NY - 1 and z < NZ - 1)) then buffer.writeu8(grid, idx(x, y, z), v) end
+	end
 	local function toWorld(x, y, z) return origin + Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V) end
 	local function toVox(p) -- local studs (x east, y up, z south) -> voxel coordinates (fractional)
 		return p.X / V + CX, p.Y / V + CY, p.Z / V + CZ
@@ -134,7 +136,7 @@ function M.build(parent, origin, seed, opt)
 	if opt.hall then
 		-- the live layer 2 (C.CAVE_V2_L2): ClayCaves builds its closed hall (x -80..80, z -60..60, y 0..76) with doors at x = +-80, z 0.
 		-- v2 keeps that box as rock (cleared again after carving, below) and runs a gallery out of each door.
-		passage({ P(-80, 4, 0), P(-100, 4, 6), P(-120, 4, 20) }, 5, 5, { flat = 0.8 })
+		passage({ P(-80, 4, 0), P(-100, 4, 6), P(-110, 4, 20) }, 5, 5, { flat = 0.8 })
 		passage({ P(80, 4, 0), P(100, 4, -4), P(116, 2, 0) }, 5, 5, { flat = 0.8 })
 		spots.Camp = P(-100, 1, 6)
 		spots.HallEast = P(100, 1, -4) -- the hall itself is walkable in the game: the reach flood starts from both of its doors
@@ -369,10 +371,10 @@ function M.build(parent, origin, seed, opt)
 			end
 		end
 		-- the drop was under the hall's floor: it moves out to the west gallery and drops into the lower gallery's west end
-		passage({ P(-118, 4, 20), P(-114, 1, 40) }, 5, 5, { flat = 0.8 })
-		shaft(P(-114, -20, 44), 6, 24)
-		passage({ P(-66, -20, 50), P(-90, -20, 48), P(-114, -20, 44) }, 12, 5, { flat = 0.8 })
-		spot("SwallowHole", P(-114, 1, 40))
+		passage({ P(-110, 4, 20), P(-106, 1, 40) }, 5, 5, { flat = 0.8 })
+		shaft(P(-106, -20, 44), 6, 24)
+		passage({ P(-66, -20, 50), P(-90, -20, 48), P(-106, -20, 44) }, 12, 5, { flat = 0.8 })
+		spot("SwallowHole", P(-106, 1, 40))
 		local b1 = spots.B1 - P(0, dipY(spots.B1.X), 0) -- B1's squeeze began inside the hall: a short tube joins it to the west gallery
 		passage({ P(-100, 4, 6), (P(-100, 4, 6) + b1) / 2, b1 }, 5, 5, { flat = 0.8 })
 	end
