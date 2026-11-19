@@ -82,7 +82,7 @@ mark("settings: middle, left, right"); key("N", 3); key("A", 2); key("D", 1); ke
 mark("forge"); key("G", 4); key("G", 1.5)
 mark("Q: ride down"); key("Q", 30)
 mark("arrival at Camp 1")
-S(P + ZIP + "h.CFrame=CFrame.new(pr.Parent.Position+Vector3.new(-6,0,-9)) return 1"); time.sleep(2)
+S(P + "local c=cv.Spot_Camp.Value.WorldPosition h.CFrame=CFrame.lookAt(c+Vector3.new(0,3,14),c+Vector3.new(0,3,0)) return 1"); time.sleep(2)  # Cave v2: the camp spot (zip 1 is in the cathedral now)
 mark("HOME on the wheel: the hearthstone hold")
 C("local p=game.Players.LocalPlayer p:SetAttribute('DevWheel',nil) p:SetAttribute('DevWheel',4) return 1"); time.sleep(6)
 mark("root zipline")

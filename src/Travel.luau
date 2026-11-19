@@ -114,10 +114,12 @@ function M.init(ctx)
 	local cath = caves:FindFirstChild("Spot_Cathedral") -- Cave v2 (2026-11-19): no chasm or grotto pieces; the lines span its two big rooms
 	if zipN == 0 and cath and cath.Value then
 		local o = C.CAVE_ORIGIN
-		local cy = cath.Value.WorldPosition.Y
-		-- across the Root Cathedral, one line each way along its length, each sloping down the way it runs (rope numbers 1 and 2)
-		line(o + Vector3.new(114, cy - o.Y + 4, -12), o + Vector3.new(176, cy - o.Y - 4, -8), 10, 6)
-		line(o + Vector3.new(176, cy - o.Y - 4, 12), o + Vector3.new(114, cy - o.Y + 4, 14), 10, 6)
+		local c = cath.Value.WorldPosition
+		-- across the Root Cathedral, one line each way along its length, each sloping down the way it runs (rope numbers 1 and 2).
+		-- The ends sit 10 studs under the floor spot so ground() casts from 4 above the floor, inside the room: from higher up
+		-- its ray started in the roof rock and stood the west posts on top of the cave (2026-11-19). x -8 to 40: the roof is 17+ high.
+		line(c + Vector3.new(-8, -10, -12), c + Vector3.new(40, -10, -12), 10, 6)
+		line(c + Vector3.new(40, -10, 12), c + Vector3.new(-8, -10, 12), 10, 6)
 		-- across the camp's room, both ways (rope 3, prompts 3 and 4: the old grotto line's numbers)
 		line(o + Vector3.new(-38, 0, -22), o + Vector3.new(38, 0, -22), 9, 9, true)
 	end
