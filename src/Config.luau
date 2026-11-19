@@ -487,6 +487,8 @@ C.CAVE_FLOOR_RIMS = false -- soft peach rims on floor edges that drop away (Cave
 C.CAMP_RING = 8.6 * 4 -- Camp 1's safe ring radius in studs (CaveBuilder ringR): inside it the torch relights and fear clears
 C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, above FallenPartsDestroyHeight (-500)
 C.CAVE2_ORIGIN = Vector3.new(-3000, 0, 1200) -- Camp 2 (Clay Caves), clear of Camp 1's caves (z -56..252); the camp is not built yet
+-- Cave v2 (2026-11-18, ServerScriptService.CaveV2: layer 1 as a real cave). false: preview only, built on demand at CAVE_V2_ORIGIN; the live caves stay CaveBuilder.
+C.CAVE_V2, C.CAVE_V2_ORIGIN = false, Vector3.new(-3000, 0, -1300)
 C.CAMPS = { { origin = C.CAVE_ORIGIN, ring = C.CAMP_RING }, { origin = C.CAVE2_ORIGIN, ring = C.CAMP_RING } }
 function C.campAt(pos) -- which camp's safe ring holds this position (1 or 2), or nil
 	for i, c in C.CAMPS do
