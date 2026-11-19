@@ -188,8 +188,9 @@ function M.build(parent, origin, seed, opt)
 
 	-- THE BRANCHES (seeded every hour) --------------------------------------------------------------------------------------
 	-- B1 ore pocket: a squeeze west of camp into a small low chamber, with a tube up to the Old Tube's west end
-	passage({ P(-34, 2, -4), J(P(-60, 2, -14)), J(P(-84, 3, -22)) }, 3.5, 2.6, { flat = 0.95 })
-	local b1 = J(P(-98, 4, -26))
+	local b1 = J(P(-98, 4, -26)) -- the chamber first: the squeeze then ends exactly in it (seed 11 left B1 sealed off)
+	passage({ P(-34, 2, -4), J(P(-60, 2, -14)), J(P(-84, 3, -22)), b1 }, 3.5, 2.6, { flat = 0.95 })
+	
 	chamber(b1, 12, 6, 9)
 	passage({ b1, J(P(-120, 14, -60)), P(-140, 24, -86) }, 4, 4, { flat = 0.85 })
 	spot("B1", b1)
@@ -236,8 +237,9 @@ function M.build(parent, origin, seed, opt)
 	passage({ P(-30, 2, 8), P(-48, 2, 24), P(-64, 0, 40) }, 5, 5, { flat = 0.8 })
 	shaft(P(-68, -24, 46), 5, 28) -- the vent drop
 	spot("SwallowHole", P(-64, 0, 40))
-	passage({ P(-34, 2, -4), J(P(-60, 2, -14)), J(P(-84, 3, -22)) }, 5, 5, { flat = 0.6 })
-	local b1 = J(P(-98, 4, -26)) chamber(b1, 12, 7, 9) passage({ b1, J(P(-120, 14, -60)), P(-130, 22, -84) }, 5, 5, { flat = 0.7 }) spot("B1", b1)
+	local b1 = J(P(-98, 4, -26)) -- the chamber first: the squeeze then ends exactly in it (seed 11 left B1 sealed off)
+	passage({ P(-34, 2, -4), J(P(-60, 2, -14)), J(P(-84, 3, -22)), b1 }, 5, 5, { flat = 0.6 })
+	 chamber(b1, 12, 7, 9) passage({ b1, J(P(-120, 14, -60)), P(-130, 22, -84) }, 5, 5, { flat = 0.7 }) spot("B1", b1)
 	local b2 = J(P(-92, -4, 18)) passage({ J(P(-66, 2, -8)), b2 }, 5, 5, { flat = 0.7 }) chamber(b2, 13, 8, 11, { floor = 0.5 }) spot("B2", b2)
 	local b3 = J(P(-112, -6, 52)) passage({ b2, b3 }, 5, 5, { flat = 0.7 }) chamber(b3, 11, 8, 10) spot("B3", b3)
 	local b4 = J(P(200, 12, -22)) passage({ P(176, 10, -4), b4 }, 5, 6, { flat = 0.6 }) chamber(b4, 7, 9, 6) spot("B4", b4)
@@ -264,8 +266,9 @@ function M.build(parent, origin, seed, opt)
 	passage({ P(-30, 2, 8), P(-48, 2, 24), P(-64, 0, 40) }, 5, 4, { flat = 0.9 })
 	shaft(P(-68, -24, 46), 5, 28) -- the crystal chimney
 	spot("SwallowHole", P(-64, 0, 40))
-	passage({ P(-34, 2, -4), J(P(-60, 2, -14)), J(P(-84, 3, -22)) }, 4.2, 5, { flat = 0.6 })
-	local b1 = J(P(-98, 4, -26)) chamber(b1, 12, 8, 9) passage({ b1, J(P(-120, 14, -60)), P(-130, 24, -84) }, 4.2, 5, { flat = 0.8 }) spot("B1", b1)
+	local b1 = J(P(-98, 4, -26)) -- the chamber first: the squeeze then ends exactly in it (seed 11 left B1 sealed off)
+	passage({ P(-34, 2, -4), J(P(-60, 2, -14)), J(P(-84, 3, -22)), b1 }, 4.2, 5, { flat = 0.6 })
+	 chamber(b1, 12, 8, 9) passage({ b1, J(P(-120, 14, -60)), P(-130, 24, -84) }, 4.2, 5, { flat = 0.8 }) spot("B1", b1)
 	local b2 = J(P(-92, -4, 18)) passage({ J(P(-66, 2, -8)), b2 }, 4.2, 5, { flat = 0.8 }) chamber(b2, 13, 9, 11, { floor = 0.55 }) spot("B2", b2)
 	local b3 = J(P(-112, -6, 52)) passage({ b2, b3 }, 4.2, 5, { flat = 0.8 }) chamber(b3, 11, 9, 10) spot("B3", b3)
 	local b4 = J(P(200, 12, -22)) passage({ P(176, 10, -4), b4 }, 4.2, 7, { flat = 0.6 }) chamber(b4, 7, 10, 6) spot("B4", b4)
@@ -289,8 +292,9 @@ function M.build(parent, origin, seed, opt)
 	passage({ P(-30, 2, 8), P(-48, 2, 24), P(-64, 0, 40) }, 5, 4, { flat = 0.9 })
 	shaft(P(-68, -20, 46), 6, 24) -- the footprint drop: a giant's heel punched through the floor
 	spot("SwallowHole", P(-64, 0, 40))
-	passage({ P(-34, 2, -4), J(P(-62, 2, -16)), J(P(-86, 3, -24)) }, 5, 4, { flat = 0.9 })
-	local b1 = J(P(-100, 4, -28)) chamber(b1, 14, 6, 10) passage({ b1, J(P(-118, 12, -58)), P(-130, 20, -82) }, 5, 4, { flat = 0.85 }) spot("B1", b1)
+	local b1 = J(P(-100, 4, -28)) -- the chamber first: the squeeze then ends exactly in it (seed 11 left B1 sealed off)
+	passage({ P(-34, 2, -4), J(P(-62, 2, -16)), J(P(-86, 3, -24)), b1 }, 5, 4, { flat = 0.9 })
+	 chamber(b1, 14, 6, 10) passage({ b1, J(P(-118, 12, -58)), P(-130, 20, -82) }, 5, 4, { flat = 0.85 }) spot("B1", b1)
 	local b2 = J(P(-94, -4, 20)) passage({ J(P(-68, 2, -10)), b2 }, 5, 4, { flat = 0.9 }) chamber(b2, 16, 7, 12, { floor = 0.55 }) spot("B2", b2)
 	local b3 = J(P(-114, -6, 54)) passage({ b2, b3 }, 5, 4, { flat = 0.85 }) chamber(b3, 12, 7, 10) spot("B3", b3)
 	local b4 = J(P(214, 12, -22)) passage({ P(190, 8, -4), b4 }, 5, 6, { flat = 0.6 }) chamber(b4, 7, 8, 6) spot("B4", b4)
@@ -507,7 +511,7 @@ function M.build(parent, origin, seed, opt)
 		or L == 2 and { Color3.fromRGB(62, 30, 22), Color3.fromRGB(104, 54, 42), Color3.fromRGB(140, 80, 62), Color3.fromRGB(170, 108, 82) } -- the damp foot of the walls darker (Gemini l2r1) -- layer 2: fired clay, darker low, sun-baked high
 		or { Color3.fromRGB(40, 26, 54), Color3.fromRGB(61, 41, 82), Color3.fromRGB(86, 61, 112), Color3.fromRGB(110, 84, 140) } -- deep amethyst slate to soft lavender granite (Gemini r1 palette, a step lighter at the top)
 	local function colorOf(k)
-		if k == 99 then return Color3.fromRGB(45, 26, 56) end
+		if k == 99 then return ({ Color3.fromRGB(45, 26, 56), Color3.fromRGB(60, 34, 26), Color3.fromRGB(224, 242, 254), Color3.fromRGB(24, 18, 22) })[L] end -- the pool's shore: wet mud, wet clay, frost (Gemini l3r1), cooled obsidian
 		if k < 100 then return WALL[k] end
 		local th = THEMES[math.floor((k - 100) / 10)]
 		local v = k % 10

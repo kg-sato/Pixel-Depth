@@ -274,7 +274,7 @@ function M.build(caves)
 				local near = false
 				for _, q in placed do if (q - spot).Magnitude < 7 then near = true break end end -- 7 studs apart (Gemini n17_r4: the floor round each prop still bare)
 				local roomy = wallDist and wallDist > 1.2 -- a prop needs space between the wall and the walking lane, or it lands in the lane
-				for _, q in lanes do if (q - spot).Magnitude < 3.5 then roomy = false break end end
+				for _, q in lanes do if (q - spot).Magnitude < 6 then roomy = false break end end -- the place markers stand where players arrive and look round: no prop in the face
 				if wallDir and not near and roomy and clear(spot) then
 					local kind = M.pick(mix, rng:NextNumber())
 					local at = spot + wallDir * math.max(wallDist - 1.6, 0) -- against the wall, not in the passage (Gemini: 3.5-stud lane clearance)
