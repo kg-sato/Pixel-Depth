@@ -47,6 +47,10 @@ function M.build(parent, origin, seed)
 	-- its bottom cut flat at floorK of ry under the axis so the floor walks; radii breathe along the length with noise
 	local function passage(pts, rx, ry, opt)
 		opt = opt or {}
+		if (opt.fill or 1) == 1 then -- walkable: at least two voxels of headroom over the flat floor and room to turn (path test, 2026-11-19: crawls one voxel high blocked every branch)
+			rx, ry = math.max(rx, 4.2), math.max(ry, 5)
+			opt.flat = math.min(opt.flat or 0.55, 0.6)
+		end
 		local floorK = opt.flat or 0.55
 		local fill = opt.fill or 1
 		for s = 1, #pts - 1 do
@@ -210,8 +214,8 @@ function M.build(parent, origin, seed)
 				if v == 0 then
 					local airN = (get(x + 1, y, z) == 1 and 1 or 0) + (get(x - 1, y, z) == 1 and 1 or 0) + (get(x, y, z + 1) == 1 and 1 or 0) + (get(x, y, z - 1) == 1 and 1 or 0) + (get(x, y + 1, z) == 1 and 1 or 0)
 					if airN >= 2 and math.noise(x * 0.31 + wob, y * 0.31, z * 0.31) > 0.25 and get(x, y - 1, z) ~= 1 then table.insert(flip, { x, y, z, 1 }) end -- eaten (never undercut a floor)
-				elseif v == 1 and get(x, y + 1, z) == 0 then
-					if math.noise(x * 0.27, y * 0.27 + wob, z * 0.27) > 0.42 then table.insert(flip, { x, y, z, 0 }) end -- a knob hangs from the roof
+				elseif v == 1 and get(x, y + 1, z) == 0 and get(x, y - 1, z) == 1 and get(x, y - 2, z) == 1 and get(x, y - 3, z) == 1 then
+					if math.noise(x * 0.27, y * 0.27 + wob, z * 0.27) > 0.42 then table.insert(flip, { x, y, z, 0 }) end -- a knob hangs from the roof (only where 3+ voxels of room stay under it: a crawl must keep its 2)
 				end
 			end
 		end
@@ -265,6 +269,45 @@ function M.build(parent, origin, seed)
 				end
 			end
 		end
+	end
+
+	-- REACH: which places a player can walk to from the camp, on the voxels (a standing cell is air on rock with air above;
+	-- a step moves one cell sideways and at most one voxel up, or any distance down). Model attributes Reach_<place>.
+	local function isAirV(v) return v == 1 or v == 2 end
+	local function stand(x, y, z) return get(x, y, z) ~= 0 and get(x, y, z) ~= 2 and get(x, y - 1, z) ~= 1 and get(x, y - 1, z) ~= 2 and isAirV(get(x, y + 1, z)) end
+	local reach = {}
+	do
+		local q, qi = {}, 1
+		local function push(x, y, z) local k = idx(x, y, z) if not reach[k] then reach[k] = true table.insert(q, { x, y, z }) end end
+		local cx, cy, cz = toVox(spots.Camp)
+		local sx, sz = math.floor(cx), math.floor(cz)
+		for y = math.floor(cy) + 3, 1, -1 do if stand(sx, y, sz) then push(sx, y, sz) break end end
+		while q[qi] do
+			local c = q[qi]
+			qi += 1
+			for _, d in { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } } do
+				local nx, nz = c[1] + d[1], c[3] + d[2]
+				for dy = 1, -6, -1 do -- up one, level, or a drop
+					local ny = c[2] + dy
+					if stand(nx, ny, nz) and (dy <= 0 or isAirV(get(c[1], c[2] + 2, c[3]))) then
+						if dy >= -1 or true then push(nx, ny, nz) end
+						break
+					end
+					if get(nx, ny, nz) == 0 and dy <= 0 then break end -- a wall: no drop through rock
+				end
+			end
+		end
+	end
+	local function reached(p)
+		local vx, vy, vz = toVox(p)
+		for r = 0, 2 do
+			for x = math.floor(vx) - r, math.floor(vx) + r do
+				for z = math.floor(vz) - r, math.floor(vz) + r do
+					for y = math.floor(vy) - 4, math.floor(vy) + 2 do if reach[idx(x, y, z)] then return true end end
+				end
+			end
+		end
+		return false
 	end
 
 	-- MESH: every solid voxel that touches air (26 neighbours) is shell; shell voxels merge into boxes per colour key
@@ -429,7 +472,7 @@ function M.build(parent, origin, seed)
 				if get(x, y, z) == 1 and get(x, y - 1, z) == 0 and get(x, y + 1, z) == 1 then
 					for _, dd in DIRS do
 						local nx, nz = x + dd[1], z + dd[2]
-						if get(nx, y, nz) == 0 and isAir(get(nx, y + 1, nz)) and isAir(get(nx, y + 2, nz)) and get(x - dd[1], y, z - dd[2]) == 1 then
+						if get(nx, y, nz) == 0 and isAir(get(nx, y + 1, nz)) and isAir(get(nx, y + 2, nz)) then -- every one-voxel step, also in one-wide crawls (walk test 2026-11-19)
 							local c = toWorld(x, y, z)
 							local look = Vector3.new(-dd[1], 0, -dd[2]) -- a WedgePart rises toward its -Z: face it away from the step
 							local w = Instance.new("WedgePart")
@@ -514,16 +557,17 @@ function M.build(parent, origin, seed)
 					local foot = toWorld(x, y, z) - Vector3.new(0, V / 2, 0)
 					local head = 0
 					while head < 8 and get(x, y + head, z) == 1 do head += 1 end
-					if head <= 3 and hsh > 0.93 then -- a column: floor to roof where they nearly meet
+					local roomy = get(x + 2, y, z) == 1 and get(x - 2, y, z) == 1 and get(x, y, z + 2) == 1 and get(x, y, z - 2) == 1
+					if head <= 3 and hsh > 0.93 and roomy then -- a column: floor to roof where they nearly meet, only in an open room (never plugging a crawl)
 						deco("Column", Vector3.new(3, head * V, 3), CFrame.new(foot + Vector3.new(0, head * V / 2, 0)), PAL.rock[3], { CastShadow = true })
 						deco("ColumnFoot", Vector3.new(4.4, 1.2, 4.4), CFrame.new(foot + Vector3.new(0, 0.6, 0)), PAL.flow:Lerp(PAL.rock[2], 0.5), {})
 					elseif head >= 3 and hsh > 0.9 then -- a stalagmite under the drip
 						local hgt = 1.6 + hash(x, z, 12) * 3.4
-						deco("Stalagmite", Vector3.new(2.4, hgt, 2.4), CFrame.new(foot + Vector3.new(0, hgt / 2, 0)), PAL.rock[2], {})
-						deco("Stalagmite", Vector3.new(1.2, 1.4, 1.2), CFrame.new(foot + Vector3.new(0, hgt + 0.7, 0)), PAL.flow, {})
+						deco("Stalagmite", Vector3.new(2.4, hgt, 2.4), CFrame.new(foot + Vector3.new(0, hgt / 2, 0)), PAL.rock[2], { CanCollide = roomy, CanQuery = roomy })
+						deco("Stalagmite", Vector3.new(1.2, 1.4, 1.2), CFrame.new(foot + Vector3.new(0, hgt + 0.7, 0)), PAL.flow, { CanCollide = false })
 					elseif head >= 2 and hsh > 0.84 then -- a fallen boulder (breakdown), tilted
 						local s = 2 + hash(x, z, 13) * 2.6
-						deco("Boulder", Vector3.new(s, s * 0.7, s * 0.9), CFrame.new(foot + Vector3.new(0, s * 0.3, 0)) * CFrame.Angles(hash(x, z, 14) * 0.6, hash(z, x, 15) * 3, 0), PAL.rock[3], {})
+						deco("Boulder", Vector3.new(s, s * 0.7, s * 0.9), CFrame.new(foot + Vector3.new(0, s * 0.3, 0)) * CFrame.Angles(hash(x, z, 14) * 0.6, hash(z, x, 15) * 3, 0), PAL.rock[3], { CanCollide = roomy, CanQuery = roomy })
 					end
 				end
 			end
@@ -609,11 +653,95 @@ function M.build(parent, origin, seed)
 		tag.Name, tag.Value = a.Name, a
 		tag.Parent = model
 	end
+	-- ORE DEPOSITS (plan section 5): base ore lines the main route's walls, mid ore sits in the branch rooms, rare ore only at the dead
+	-- ends (B1, B3, B4, B5) and in the cathedral's cracks. Each stands on a reachable floor cell against a wall, 14 studs apart, with
+	-- the attributes the rest of the game reads (Layer, Ore, OreName) and the same shard-and-core look as CaveBuilder's.
+	local C = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Config"))
+	local ORES = C.LAYERS[1][4]
+	local DEAD = { spots.B1, spots.B3, spots.B4, spots.B5 }
+	local BRANCH = { spots.B2, spots.SwallowHole, spots.OldTube }
+	local cands = {}
+	for k in reach do
+		local z = k % NZ
+		local y = math.floor(k / NZ) % NY
+		local x = math.floor(k / (NZ * NY))
+		for _, d in { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } } do
+			if get(x + d[1], y, z + d[2]) == 0 and get(x + d[1], y + 1, z + d[2]) == 0 then table.insert(cands, { x, y, z, d }) break end
+		end
+	end
+	local function rank(c) -- dead ends first, then branches, then the rest; shuffled within each by a hash
+		local lp = toWorld(c[1], c[2], c[3]) - origin
+		for _, d in DEAD do if (d - lp).Magnitude < 20 then return 0 end end
+		for _, b in BRANCH do if (b - lp).Magnitude < 24 then return 1 end end
+		return 2
+	end
+	for _, c in cands do c.r = rank(c) + hash(c[1], c[3], c[2]) end
+	table.sort(cands, function(a2, b2) return a2.r < b2.r end)
+	local placed, nDep = {}, 0
+	local CAP, have = { 22, 9, 5 }, { 0, 0, 0 } -- base, mid, rare: rare stays rare
+	local campW = origin + spots.Camp
+	for _, c in cands do
+		if nDep >= 36 then break end
+		local w = toWorld(c[1], c[2], c[3]) - Vector3.new(0, V / 2, 0)
+		local lp = w - origin
+		if (w - campW).Magnitude > 40 then
+			local free = true
+			for _, q in placed do if (q - w).Magnitude < 10 then free = false break end end
+			if free then
+				local idx2 = 1
+				for _, d in DEAD do if (d - lp).Magnitude < 20 then idx2 = 3 end end
+				if idx2 == 1 then for _, b in BRANCH do if (b - lp).Magnitude < 24 then idx2 = 2 end end end
+				if idx2 == 1 and (spots.Cathedral - lp).Magnitude < 30 and hash(c[1], c[3], 77) > 0.6 then idx2 = 3 end -- a crack in the cathedral
+				if have[idx2] >= CAP[idx2] then continue end
+				have[idx2] += 1
+				table.insert(placed, w)
+				nDep += 1
+				local ore = ORES[idx2]
+				local dep = Instance.new("Model")
+				dep.Name = "Deposit"
+				dep:SetAttribute("Layer", 1)
+				dep:SetAttribute("Ore", idx2)
+				dep:SetAttribute("OreName", ore[1])
+				local wall = Vector3.new(c[4][1], 0, c[4][2])
+				local foot = w + wall * (V / 2 - 0.9)
+				local base = CFrame.lookAt(foot, foot + wall)
+				local k = 0.85 + idx2 * 0.3
+				local dark = ore[2]:Lerp(Color3.new(0, 0, 0), 0.35)
+				local function shard(size, cf, col, props)
+					local sp = part("Deposits", "Shard", size * k, cf, col, props)
+					sp.Parent = dep
+					return sp
+				end
+				shard(Vector3.new(2.2, 0.8, 1.6), base * CFrame.new(0, 0.3 * k, 0), WALL[3], { CastShadow = false })
+				local core = shard(Vector3.new(0.9, 1.9, 0.9), base * CFrame.new(0, 1.15 * k, -0.1) * CFrame.Angles(0.15, 0, 0.1), ore[2]:Lerp(Color3.new(0, 0, 0), 0.28 - idx2 * 0.08), { Material = Enum.Material.Neon, MaterialVariant = "", CastShadow = false })
+				core.Name = "Core"
+				for sI = 1, 1 + idx2 do -- shards lean out from the wall, tallest in the middle
+					local a = (sI / (1 + idx2) - 0.5) * 2.4
+					local h = 1 + hash(c[1], c[3], sI + 40) * 1.1
+					shard(Vector3.new(0.7, h, 0.7), base * CFrame.new(math.sin(a) * 0.8, h * 0.45 * k, math.cos(a) * 0.3 - 0.4) * CFrame.Angles(0.35, 0, -a * 0.4), dark:Lerp(ore[2], hash(c[1], sI, 41) * 0.6), { CastShadow = false })
+				end
+				local l = Instance.new("PointLight") -- a faint glint in the ore's colour: a vein reads in the dark from about 30 studs
+				l.Name, l.Color, l.Range, l.Brightness, l.Shadows = "Glint", ore[2], 9, 0.6, false
+				l.Parent = core
+				dep.PrimaryPart = core
+				dep.Parent = group("Deposits")
+			end
+		end
+	end
+	model:SetAttribute("Deposits", nDep)
+	local nReach = 0
+	for name, p in spots do
+		local r = reached(p)
+		model:SetAttribute("Reach_" .. name, r)
+		if r then nReach += 1 end
+	end
+	model:SetAttribute("Reached", nReach)
 	model:SetAttribute("Shell", nShell)
 	model:SetAttribute("Parts", nParts + nRamp + nDecor + nWater)
 	model:SetAttribute("Ramps", nRamp)
 	model:SetAttribute("Decor", nDecor)
 	model.Parent = parent
+	model:SetAttribute("ZFixed", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(model)) -- no z-fighting (the user, 2026-11-08)
 	return model
 end
 
