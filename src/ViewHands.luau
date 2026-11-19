@@ -24,18 +24,23 @@ function M.start(E)
 			w.Parent = q
 			return q
 		end
-		p(Vector3.new(0.3, 0.46, 0.34), CFrame.new(0, 0, 0.2), GLOVE) -- the palm, behind the handle
-		for k = 0, 3 do -- four fingers wrapped round the front of the handle, each a little further round than the last
+		-- rounded chibi glove (directive v12 task 6, 2026-11-19: the box hand read as loose blocks by the handle): a ball palm,
+		-- tube fingers and knuckle balls, a round cuff and a tube sleeve, all welded to the pickaxe copy
+		local Y90 = CFrame.Angles(0, math.pi / 2, 0) -- a cylinder runs along X: turned, it runs along the arm (Z)
+		local function round(q, shape) q.Shape = shape return q end
+		round(p(Vector3.new(0.5, 0.5, 0.5), CFrame.new(0, 0.02, 0.2), GLOVE), Enum.PartType.Ball) -- the palm, behind the handle
+		for k = 0, 3 do -- four fingers wrapped round the front of the handle
 			local y = 0.18 - k * 0.12
-			p(Vector3.new(0.5, 0.085, 0.16), CFrame.new(0, y, -0.14 - 0.02 * (k % 2)) * CFrame.Angles(0, 0.08 * (k - 1.5), 0), GLOVE:Lerp(Color3.new(1, 1, 1), 0.22 * (k % 2))) -- a dark gap and a shade step between fingers
-			p(Vector3.new(0.14, 0.1, 0.3), CFrame.new(-0.24, y, 0.02), GLOVE:Lerp(Color3.new(0, 0, 0), 0.12)) -- the fingertip coming back round
+			local shade = GLOVE:Lerp(Color3.new(1, 1, 1), 0.16 * (k % 2))
+			round(p(Vector3.new(0.46, 0.13, 0.13), CFrame.new(0, y, -0.14 - 0.02 * (k % 2)) * CFrame.Angles(0, 0.08 * (k - 1.5), 0), shade), Enum.PartType.Cylinder)
+			round(p(Vector3.new(0.15, 0.15, 0.15), CFrame.new(-0.24, y, 0.0), GLOVE:Lerp(Color3.new(0, 0, 0), 0.1)), Enum.PartType.Ball) -- the fingertip coming back round
 		end
-		p(Vector3.new(0.18, 0.34, 0.22), CFrame.new(0.24, 0.22, -0.1) * CFrame.Angles(0, 0, -0.5), GLOVE:Lerp(Color3.new(1, 1, 1), 0.25)) -- the thumb, wrapped up along the handle
-		p(Vector3.new(0.46, 0.4, 0.26), CFrame.new(0, -0.02, 0.46), CUFF) -- the cuff, toward the body
-		p(Vector3.new(0.5, 0.09, 0.3), CFrame.new(0, 0.16, 0.46), Color3.fromRGB(236, 196, 116)) -- its butter band
-		p(Vector3.new(0.14, 0.14, 0.06), CFrame.new(0.12, 0.02, 0.6), Color3.fromRGB(214, 168, 84)).Material = Enum.Material.Metal -- a brass buckle
-		p(Vector3.new(0.4, 0.38, 2.2), CFrame.new(0.02, -0.4, 1.62) * CFrame.Angles(-0.35, 0, 0), SLEEVE) -- the whole forearm, running off the bottom of the screen (the user, 2026-11-10: arms in view like the cart ride)
-		p(Vector3.new(0.44, 0.1, 0.3), CFrame.new(0.02, -0.12, 0.86) * CFrame.Angles(-0.35, 0, 0), SLEEVE:Lerp(Color3.new(1, 1, 1), 0.14)) -- a rolled sleeve hem
+		round(p(Vector3.new(0.34, 0.17, 0.17), CFrame.new(0.24, 0.22, -0.1) * CFrame.Angles(0, 0, 1.07), GLOVE:Lerp(Color3.new(1, 1, 1), 0.22)), Enum.PartType.Cylinder) -- the thumb, up along the handle
+		round(p(Vector3.new(0.3, 0.52, 0.52), CFrame.new(0, -0.02, 0.46) * Y90, CUFF), Enum.PartType.Cylinder) -- the cuff, toward the body
+		round(p(Vector3.new(0.09, 0.56, 0.56), CFrame.new(0, -0.02, 0.36) * Y90, Color3.fromRGB(236, 196, 116)), Enum.PartType.Cylinder) -- its butter band
+		p(Vector3.new(0.14, 0.14, 0.06), CFrame.new(0.2, 0.08, 0.6), Color3.fromRGB(214, 168, 84)).Material = Enum.Material.Metal -- a brass buckle
+		round(p(Vector3.new(2.2, 0.44, 0.44), CFrame.new(0.02, -0.4, 1.62) * CFrame.Angles(-0.35, 0, 0) * Y90, SLEEVE), Enum.PartType.Cylinder) -- the whole forearm, running off the bottom of the screen
+		round(p(Vector3.new(0.12, 0.5, 0.5), CFrame.new(0.02, -0.12, 0.86) * CFrame.Angles(-0.35, 0, 0) * Y90, SLEEVE:Lerp(Color3.new(1, 1, 1), 0.14)), Enum.PartType.Cylinder) -- a rolled sleeve hem
 	end
 
 	-- the rider's own body in first person (the user, 2026-11-10): Roblox hides the whole character in LockFirstPerson; the legs
