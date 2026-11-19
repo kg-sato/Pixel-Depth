@@ -286,7 +286,7 @@ local function hideModel(model, list)
 end
 
 -- opt: { cart = the town cart Model (PrimaryPart at the rail base, facing the shaft), camp = workspace Caves Camp folder,
---        full = the first ride (no SKIP), reduceMotion = bool, sfx = fn(name, pitch), inCave = fn() -> bool, arrived = fn(),
+--        full = the first ride (no SKIP), camp2 = bound for the Kiln Camp (ends in the CUT2 dip), reduceMotion = bool, sfx = fn(name, pitch), inCave = fn() -> bool, arrived = fn(),
 --        restore = fn() puts the game's camera back }
 -- yields until the ride has ended (11 s, 5.7 s for a repeat ride, less when skipped)
 function M.play(opt)
@@ -549,6 +549,7 @@ function M.play(opt)
 		if T > CUT2 - 0.14 and T < CUT2 + 0.2 then dk = math.max(dk, smooth(CUT2 - 0.14, CUT2 - 0.02, T) * (1 - smooth(CUT2 + 0.02, CUT2 + 0.2, T))) end
 		if seg < #segs and segs[seg][2] - T < 0.1 then dk = math.max(dk, 1 - (segs[seg][2] - T) / 0.1) end
 		if now < dipUntil then dk = math.max(dk, (dipUntil - now) / 0.22) end
+		if opt.camp2 and T > CUT2 - 0.14 then dk = math.max(dk, smooth(CUT2 - 0.14, CUT2 - 0.02, T)) end -- Camp 2: stay dark, the ride ends here
 		dip.BackgroundTransparency = 1 - math.clamp(dk, 0, 1)
 		-- the cavern card, sparks, speed lines, sound
 		cardText.TextTransparency = 1 - smooth(4.75, 5.05, T) * (1 - smooth(5.8, 6.1, T))
@@ -621,7 +622,7 @@ function M.play(opt)
 		cam.FieldOfView = fov
 		air.step(cam.CFrame, firstPerson and speed or 0, calm)
 		lastD = d
-		if T >= T_END then done = true end
+		if T >= T_END or (opt.camp2 and T >= CUT2 - 0.02) then done = true end -- Camp 2 (2026-11-19): the camera used to glide from the far stage across open sky to the Kiln Camp; the ride ends in the dark dip and the game fades in there
 	end)
 	local started = os.clock()
 	while not done and os.clock() - started < 20 do task.wait() end -- never hang the player in the ride

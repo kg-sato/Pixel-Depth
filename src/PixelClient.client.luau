@@ -2688,8 +2688,8 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 	elseif kind == "escapeDone" then
 		local b, cr = ...
 		cave.escapeBonus, cave.escapeCrew = b or 0, cr
-	elseif kind == "ride" then -- the minecart ride down to Camp 1 (ReplicatedStorage.Shared.MinecartRide)
-		local full = ...
+	elseif kind == "ride" then -- the minecart ride down to Camp 1 or the Kiln Camp (ReplicatedStorage.Shared.MinecartRide)
+		local full, camp2 = ...
 		local mod = RS.Shared:FindFirstChild("MinecartRide")
 		local hub = workspace:FindFirstChild("Hub")
 		local cartM = hub and hub:FindFirstChild("HubCart", true)
@@ -2697,17 +2697,19 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		task.spawn(function()
 			local ok, err = pcall(function()
 				require(mod).play({
-					cart = cartM, camp = caves and caves:FindFirstChild("Camp"), full = full, sfx = sfx,
+					cart = cartM, camp = caves and caves:FindFirstChild("Camp"), full = full, sfx = sfx, camp2 = camp2,
 					inCave = function() return plr:GetAttribute("InCave") == true end,
-					restore = function() setMode(modeNow()) end,
+					restore = function() if camp2 then fade.BackgroundTransparency = 0 end setMode(modeNow()) end,
 				})
 			end)
 			if not ok then warn("[MinecartRide] " .. tostring(err)) end
 			R.Surface:FireServer("arrived")
-			if ok then toast("CAMP 1  ·  ORE IS SAFE HERE", MINT, true) end
+			if camp2 then tween(fade, 0.5, { BackgroundTransparency = 1 }) end -- from the ride's dark dip straight into the Kiln Camp
+			if ok then toast(camp2 and "KILN CAMP  ·  ORE IS SAFE HERE" or "CAMP 1  ·  ORE IS SAFE HERE", MINT, true) end
 			task.delay(0.35, function() -- step out looking level at the camp fire: the ride left the view on the cart floor (arrival captures, 2026-11-11)
 				local cam2 = workspace.CurrentCamera
 				local eye = cam2.CFrame.Position
+				if camp2 then return end
 				local at = Vector3.new(C.CAVE_ORIGIN.X, eye.Y, C.CAVE_ORIGIN.Z)
 				if plr:GetAttribute("InCave") and (at - eye).Magnitude > 3 and (at - eye).Magnitude < 80 then cam2.CFrame = CFrame.lookAt(eye, at) end
 			end)

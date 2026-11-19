@@ -1539,7 +1539,7 @@ enterMine = function(s, camp2)
 		hrp.Anchored = true
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 		if HUB_CART then hrp.CFrame = HUB_CART:GetPivot() * CFrame.new(0, 1.05 + hrp.Size.Y / 2 + (hum and hum.HipHeight or 2), 0.3) end
-		FxR:FireClient(plr, "ride", full)
+		FxR:FireClient(plr, "ride", full, camp2 and workspace.Caves:FindFirstChild("ClayLanding", true) ~= nil)
 		A.step(s, "RodeDown")
 		task.delay(full and 2.15 or 1.25, function()
 			local h = hrpOf(plr)
