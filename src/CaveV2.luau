@@ -927,6 +927,10 @@ function M.build(parent, origin, seed, opt)
 			mp("MossSatchel", Vector3.new(0.9, 1, 0.6), CFrame.new(1.25, 1.8, 0.2), Color3.fromRGB(170, 110, 70))
 			mp("MossLantern", Vector3.new(0.7, 0.9, 0.7), CFrame.new(-1.6, 0.45, -0.6), Color3.fromRGB(255, 190, 110), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false })
 			head:SetAttribute("Npc", "Moss")
+			local pr = Instance.new("ProximityPrompt") -- PixelServer pays the first find (s.found.moss)
+			pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.HoldDuration, pr.MaxActivationDistance = "Help up", "Moss", Enum.KeyCode.E, 0.4, 9
+			pr:SetAttribute("FindMoss", true)
+			pr.Parent = head
 			local rope = Instance.new("TrussPart") -- the rope ladder up the Swallow Hole: climb it to get back
 			local sx, sz = (-70 + 2.6), 48 + 2.6
 			local bottom = floorUnder(P(sx, -24, sz)) or foot

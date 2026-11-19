@@ -87,6 +87,7 @@ if C.CAVES_ON then
 	caveLanding = caves:FindFirstChild("LiftLanding", true)
 	require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).build(caves) -- Camp 2's hall; its ore joins Caves.Deposits
 	require(game:GetService("ServerScriptService"):WaitForChild("CaveProps")).build(caves) -- set dressing against the cave walls (crystals, mushrooms, supports, roots)
+	if C.CAVE_V2 then caves:SetAttribute("ZFixedProps", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(caves)) end -- the props came after the builder's own pass: a pebble lay flush on a floor
 	local ids = { CaveNest = 0, CaveShrine = 0 } -- a number per nest and shrine prompt, for the saved cooldown keys
 	for _, d in caves:GetDescendants() do
 		if d:IsA("ProximityPrompt") then
@@ -508,7 +509,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.gold, d.pick, d.pack, d.best, d.hatched, d.pity, d.step = s.gold, s.pick, s.pack, s.best, s.hatched, s.pity, s.step
 	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
 	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
-	d.wear, d.quests, d.lanterns = s.wear, s.quests, s.lanterns
+	d.wear, d.quests, d.lanterns, d.found = s.wear, s.quests, s.lanterns, s.found
 	d.opts = s.opts or {}
 	d.gift = s.gift -- the playtime gift ladder of today (ServerScriptService.Retention)
 	d.refine = s.refine or 0 -- when the geode in the refinery is done (0 = empty)
@@ -1466,6 +1467,21 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	FxR:FireClient(plr, "lantern", i, n, C.LANTERN.gems)
 	sendState(s)
 end)
+game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- Moss, Wick's lost apprentice (Cave v2): finding him pays once, ever
+	if prompt:GetAttribute("FindMoss") ~= true then return end
+	local s = data[plr]
+	if not s or not plr:GetAttribute("InCave") or not nearPrompt(plr, prompt) then return end
+	if s.found.moss then
+		FxR:FireClient(plr, "toast", "MOSS: THE ROPE'S THERE. GO ON!")
+		return
+	end
+	s.found.moss = true
+	s.gems += C.LANTERN.gems
+	A.earn(s, "Gems", C.LANTERN.gems, s.gems, "FoundMoss")
+	A.event(s, "FoundMoss")
+	FxR:FireClient(plr, "toast", "YOU FOUND MOSS!  +" .. C.LANTERN.gems .. " GEMS")
+	sendState(s)
+end)
 local Gloom = require(game:GetService("ServerScriptService"):WaitForChild("Gloom")) -- gloomlings, HP, the catch, flares (phase 6)
 Shop.init({ data = data, fx = FxR, sendState = sendState })
 require(game:GetService("ServerScriptService"):WaitForChild("Boss")).init({ data = data, fx = FxR, sendState = sendState, hrpOf = hrpOf, analytics = A, strikes = C.DEPOSIT.strikes,
@@ -2176,6 +2192,7 @@ local function onJoin(plr)
 	}
 	s.equip = (d.equip or 0) >= 1 and math.min(d.equip, s.pick) or s.pick
 	s.quests = Quests.clean(d.quests, Quests.day())
+	s.found = type(d.found) == "table" and { moss = d.found.moss == true } or {} -- story finds that pay once ever (Moss the lost apprentice, Cave v2)
 	s.lanterns = {} -- lost lanterns found: { ["1"] = true, ... }
 	for k = 1, C.LANTERN.count do if type(d.lanterns) == "table" and d.lanterns[tostring(k)] == true then s.lanterns[tostring(k)] = true end end
 	s.cool = {}

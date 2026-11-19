@@ -61,6 +61,9 @@ function M.start(E)
 			task.delay(1.4, function() E.toast(GRAN[i] or GRAN[1], E.GOLD, false) end)
 		elseif kind == "lanternHave" then
 			E.toast("You already carried this lantern home.", E.GOLD, false)
+		elseif kind == "toast" and type(i) == "string" then -- a plain line from the server (Moss, Cave v2)
+			if string.find(i, "FOUND") then sfx("claim") emote("cheer") end
+			E.toast(i, E.GOLD, string.find(i, "FOUND") ~= nil)
 		end
 	end)
 	game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt)
