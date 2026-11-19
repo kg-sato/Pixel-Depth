@@ -15,7 +15,7 @@ local DIP = math.rad(6) -- the rock beds tilt down to the east: every shape sink
 
 local PAL = {
 	rock = { Color3.fromRGB(46, 32, 66), Color3.fromRGB(62, 44, 88), Color3.fromRGB(82, 60, 112), Color3.fromRGB(106, 80, 140) },
-	moss = { Color3.fromRGB(88, 52, 92), Color3.fromRGB(112, 66, 112), Color3.fromRGB(70, 120, 104) },
+	moss = { Color3.fromRGB(88, 52, 92), Color3.fromRGB(112, 66, 112), Color3.fromRGB(126, 80, 124) }, -- dark plum lichen, never green (the owner, 2026-11-17)
 	sand = Color3.fromRGB(150, 118, 124), bark = Color3.fromRGB(96, 62, 44), barkDark = Color3.fromRGB(70, 44, 32),
 	water = Color3.fromRGB(56, 170, 190), mint = Color3.fromRGB(110, 230, 180), warm = Color3.fromRGB(255, 196, 120),
 	flow = Color3.fromRGB(196, 160, 150),
@@ -181,7 +181,7 @@ function M.build(parent, origin, seed)
 	-- THEMES per place, for floor colours and for CaveProps (it dresses Floor parts by their Theme attribute)
 	local REG = {
 		{ spots.Camp, "camp" }, { spots.Canyon, "chasm" }, { P(112, -6, 2), "chasm" }, { spots.Cathedral, "grotto" }, { P(150, 8, 0), "grotto" },
-		{ spots.OldTube, "tunnel" }, { P(-60, 24, -92), "tunnel" }, { P(100, 22, -90), "tunnel" }, { spots.SumpGate, "grotto" },
+		{ spots.OldTube, "chasm" }, { P(-60, 24, -92), "chasm" }, { P(100, 22, -90), "chasm" }, { spots.SumpGate, "grotto" },
 		{ P(40, -26, 66), "chasm" }, { P(-20, -26, 60), "chasm" }, { spots.SwallowHole, "squeeze" }, { P(-60, 2, -14), "squeeze" },
 		{ spots.B1, "squeeze" }, { spots.B2, "grotto" }, { spots.B3, "mush" }, { spots.B4, "tunnel" }, { spots.B5, "squeeze" }, { P(164, 2, 42), "squeeze" },
 	}
@@ -217,6 +217,30 @@ function M.build(parent, origin, seed)
 		end
 	end
 	for _, f in flip do set(f[1], f[2], f[3], f[4]) end
+	-- SMOOTH: where a walkable floor sits 2 or more voxels under its neighbour's (a ledge a player cannot step), the low side is
+	-- raised one voxel, twice over, so passages climb in single steps (which then get ramps). Shafts are kept (narrow on purpose).
+	local function floorAt(x, z, nearY)
+		for y = math.min(NY - 2, nearY + 3), math.max(1, nearY - 3), -1 do
+			if get(x, y, z) == 1 and get(x, y - 1, z) == 0 and get(x, y + 1, z) == 1 then return y end
+		end
+		return nil
+	end
+	for _ = 1, 2 do
+		local raise = {}
+		for x = 1, NX - 2 do
+			for z = 1, NZ - 2 do
+				for y = 1, NY - 4 do
+					if get(x, y, z) == 1 and get(x, y - 1, z) == 0 and get(x, y + 1, z) == 1 and get(x, y + 2, z) == 1 and get(x, y + 3, z) == 1 then
+						for _, dd in { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } } do
+							local f = floorAt(x + dd[1], z + dd[2], y)
+							if f and f >= y + 2 then table.insert(raise, { x, y, z }) break end
+						end
+					end
+				end
+			end
+		end
+		for _, r in raise do set(r[1], r[2], r[3], 0) end
+	end
 
 	local rootC = P(150, 0, 6) + P(0, dipY(150), 0) -- the cathedral's landmark (built after the mesh: a real trunk, not voxels)
 
@@ -234,7 +258,7 @@ function M.build(parent, origin, seed)
 		end
 		return folders[n]
 	end
-	local VARIANT = game:GetService("MaterialService"):FindFirstChild("PixelCaveRock") and "PixelCaveRock" or nil
+	local VARIANT = nil -- Gemini r1: the blotchy PixelCaveRock tile read as dirty camouflage; plain slate, soft tri-tone colours
 	local function part(g, name, size, cf, color, props)
 		local p = Instance.new("Part")
 		p.Name, p.Anchored, p.Size, p.CFrame, p.Color = name, true, size, cf, color
@@ -274,7 +298,7 @@ function M.build(parent, origin, seed)
 			end
 		end
 	end
-	local WALL = { Color3.fromRGB(62, 44, 88), Color3.fromRGB(84, 62, 114), Color3.fromRGB(108, 82, 142), Color3.fromRGB(134, 104, 170) } -- the old builder's rock, a step lighter
+	local WALL = { Color3.fromRGB(40, 26, 54), Color3.fromRGB(61, 41, 82), Color3.fromRGB(86, 61, 112), Color3.fromRGB(110, 84, 140) } -- deep amethyst slate to soft lavender granite (Gemini r1 palette, a step lighter at the top)
 	local function colorOf(k)
 		if k < 100 then return WALL[k] end
 		local th = THEMES[math.floor((k - 100) / 10)]
@@ -307,7 +331,11 @@ function M.build(parent, origin, seed)
 					local c = toWorld(x + (w - 1) / 2, y + (h - 1) / 2, z + (d - 1) / 2)
 					local isFloor = k >= 100
 					local p = part(isFloor and "Floor" or "Walls", isFloor and "Floor" or "Rock", Vector3.new(w * V, h * V, d * V), CFrame.new(c), colorOf(k))
-					if isFloor then p:SetAttribute("Theme", THEMES[math.floor((k - 100) / 10)]) end
+					if isFloor then
+						p:SetAttribute("Theme", THEMES[math.floor((k - 100) / 10)])
+						p.Material = Enum.Material.Pebble -- packed grit: the floor reads apart from the smooth slate walls (Ground rendered olive: the owner, 2026-11-17, no green floors)
+						p.Color = p.Color:Lerp(Color3.fromRGB(160, 120, 132), 0.35)
+					end
 					p.CastShadow = h > 1
 					nParts += 1
 				end
@@ -315,6 +343,7 @@ function M.build(parent, origin, seed)
 		end
 	end
 
+	-- (see SMOOTH below the crumple)
 	-- THE WORLD ROOT: one giant root of the World Tree comes down through the cathedral roof and spreads into the floor. A trunk of
 	-- stacked cylinders that leans and narrows as it rises, bark rings, and six flaring roots at its foot; mint moss on the bark.
 	do
@@ -409,7 +438,12 @@ function M.build(parent, origin, seed)
 							deco("Straw", Vector3.new(0.25, l, 0.25), CFrame.new(top + Vector3.new((hash(s, x, z) - 0.5) * 3, -l / 2, (hash(z, s, x) - 0.5) * 3)), PAL.flow, NOCOL)
 						end
 					elseif room >= 4 and hsh > 0.74 and hsh < 0.78 then -- glowing moss cushion
-						local m = deco("CeilMoss", Vector3.new(2.4, 0.5, 2), CFrame.new(top - Vector3.new(0, 0.25, 0)), PAL.mint, { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
+						local m = deco("CeilMoss", Vector3.new(2.4, 0.5, 2), CFrame.new(top - Vector3.new(0, 0.2, 0)), PAL.mint, { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
+						for q = 1, 3 do -- an irregular patch pressed to the rock, with a thin drip hanging from it
+							local a = q * 2.1 + hsh * 6
+							deco("CeilMoss", Vector3.new(1 + q * 0.3, 0.3, 0.9 + q * 0.2), CFrame.new(top + Vector3.new(math.cos(a) * 1.6, -0.15, math.sin(a) * 1.6)), PAL.mint:Lerp(PAL.moss[3], 0.4), { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
+						end
+						deco("CeilMossDrip", Vector3.new(0.2, 1.2, 0.2), CFrame.new(top + Vector3.new(0.5, -0.8, 0.3)), PAL.mint, { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
 						if hash(z, x, 9) > 0.6 then
 							local l = Instance.new("PointLight")
 							l.Color, l.Range, l.Brightness, l.Shadows = PAL.mint, 18, 0.9, false
@@ -492,6 +526,29 @@ function M.build(parent, origin, seed)
 		local sl = Instance.new("SpotLight")
 		sl.Color, sl.Range, sl.Brightness, sl.Angle, sl.Face, sl.Shadows = Color3.fromRGB(160, 230, 255), 50, 1.4, 50, Enum.NormalId.Bottom, true
 		sl.Parent = cool
+	end
+	do -- the sump: a pool of still water over its low floor (Gemini r1: it did not read as flooded)
+		local f = floorUnder(spots.SumpGate - Vector3.new(0, dipY(spots.SumpGate.X), 0))
+		if f then
+			local w = part("Water", "SumpWater", Vector3.new(26, 0.4, 20), CFrame.new(f + Vector3.new(0, 2.5, 0)), Color3.fromRGB(34, 211, 238), { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.4, Reflectance = 0.3, CanCollide = false, CastShadow = false })
+			for k = 1, 3 do
+				local pad = part("Water", "LilyGlow", Vector3.new(2.4, 0.2, 2.4), w.CFrame * CFrame.new((k - 2) * 6, 0.3, (hash(k, 3, 1) - 0.5) * 8), PAL.mint, { Material = Enum.Material.Neon, MaterialVariant = "", Shape = Enum.PartType.Cylinder, CanCollide = false })
+				pad.CFrame = pad.CFrame * CFrame.Angles(0, 0, math.pi / 2)
+			end
+		end
+		-- the Swallow Hole: amber spore lights every 14 studs down its wall and a ring of narrow ledges spiralling down
+		local top = spots.SwallowHole + Vector3.new(-4, 0, 8)
+		for k = 0, 3 do
+			local a = k * 1.6
+			local at = origin + top + Vector3.new(math.cos(a) * 4.2, -4 - k * 7, math.sin(a) * 4.2)
+			part("Decor", "ShaftLedge", Vector3.new(3.4, 0.8, 3), CFrame.new(at) * CFrame.Angles(0, -a, 0), WALL[3], {})
+			if k % 2 == 0 then
+				local s2 = part("Decor", "SporeGlow", Vector3.new(0.9, 0.9, 0.9), CFrame.new(at + Vector3.new(0, 2, 0)), Color3.fromRGB(255, 186, 90), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false })
+				local l = Instance.new("PointLight")
+				l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 186, 90), 16, 0.7, false
+				l.Parent = s2
+			end
+		end
 	end
 	for name, p in spots do -- markers for tests and later systems (camp ring, shrines, deposits)
 		local a = Instance.new("Attachment")
