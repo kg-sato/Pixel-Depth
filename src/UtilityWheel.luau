@@ -75,7 +75,7 @@ function M.start(E)
 	local G = E.GLASS
 	local JellyText = G and require(script.Parent:WaitForChild("JellyText"))
 	if G then
-		local jelly = { SONAR = "sonar", CHEER = "smile", WARDROBE = "shirt", NOTES = "gear", PING = "pin", BAG = "bag", QUESTS = "star" }
+		local jelly = { SONAR = "sonar", CHEER = "smile", WARDROBE = "shirt", NOTES = "book", PING = "pin", BAG = "bag", QUESTS = "star" }
 		for _, s in SLOTS do
 			if jelly[s.name] then s.icon = E.ICON[jelly[s.name]] end
 		end

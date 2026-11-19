@@ -8,10 +8,11 @@ local M = {}
 local OBS, PLUM, VIOLET, MAGENTA, CYAN = Color3.fromRGB(22, 8, 30), Color3.fromRGB(36, 17, 56), Color3.fromRGB(155, 31, 232), Color3.fromRGB(255, 0, 127), Color3.fromRGB(0, 240, 255)
 local RADIUS = 62 -- studs of town from the centre to the rim (the stores ring the plaza at about 40; farther is pinned to the rim)
 local STOPS = { -- the places worth finding: model name in workspace.Hub, letter, colour
-	{ "MineShaft", "M", MAGENTA }, { "SellStall", "$", Color3.fromRGB(255, 214, 90) }, { "Forge", "F", Color3.fromRGB(255, 140, 60) },
-	{ "Incubator", "E", Color3.fromRGB(255, 150, 210) }, { "TrophyHouse", "T", Color3.fromRGB(196, 160, 255) },
-	{ "NoticeBoard", "Q", CYAN }, { "Campfire", "C", Color3.fromRGB(255, 190, 120) },
-}
+	{ "MineShaft", "M", MAGENTA, "cart" }, { "SellStall", "$", Color3.fromRGB(255, 214, 90), "pouch" }, { "Forge", "F", Color3.fromRGB(255, 140, 60), "hammer" },
+	{ "Incubator", "E", Color3.fromRGB(255, 150, 210), "egg" }, { "TrophyHouse", "T", Color3.fromRGB(196, 160, 255), "trophy" },
+	{ "NoticeBoard", "Q", CYAN, "scroll" }, { "Campfire", "C", Color3.fromRGB(255, 190, 120), "camp" },
+} -- 2026-11-18: each stop shows its jelly icon (Config.UI_GLASS.icon) instead of a letter (Gemini: letters read as debug markers)
+local ICON = (require(game:GetService("ReplicatedStorage").Shared:WaitForChild("Config")).UI_GLASS or {}).icon or {}
 M.TOP, M.SIZE = 14, 150 -- board pixels (1280 x 592): the map's top edge and its diameter
 M.STEP_Y = M.TOP + M.SIZE + 10 -- the NEXT UP card's top edge, docked just under the map (Gemini v10n_r7: "a large empty gap")
 
@@ -51,7 +52,13 @@ function M.start(E)
 				local bead = new("Frame", face, { Name = s[1], Size = UDim2.fromScale(0.13, 0.13), Position = onMap(m:GetBoundingBox().Position), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = s[3], BorderSizePixel = 0, ZIndex = 4 })
 				new("UICorner", bead, { CornerRadius = UDim.new(0.5, 0) })
 				new("UIStroke", bead, { Color = OBS, Thickness = 1.2 })
-				new("TextLabel", bead, { Text = s[2], Font = Enum.Font.FredokaOne, TextScaled = true, TextColor3 = OBS, BackgroundTransparency = 1, Size = UDim2.fromScale(0.8, 0.8), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5 })
+				if s[4] and ICON[s[4]] then -- a dark glass bead with a coloured rim and the place's icon on it
+					bead.BackgroundColor3, bead.Size = OBS, UDim2.fromScale(0.17, 0.17)
+					bead:FindFirstChildOfClass("UIStroke").Color, bead:FindFirstChildOfClass("UIStroke").Thickness = s[3], 1.6
+					new("ImageLabel", bead, { Name = "Icon", Image = ICON[s[4]], BackgroundTransparency = 1, Size = UDim2.fromScale(1.25, 1.25), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = bead.ZIndex + 1 })
+				else
+					new("TextLabel", bead, { Text = s[2], Font = Enum.Font.FredokaOne, TextScaled = true, TextColor3 = OBS, BackgroundTransparency = 1, Size = UDim2.fromScale(0.8, 0.8), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5 })
+				end
 			end
 		end
 	end)

@@ -74,7 +74,19 @@ function M.start(E)
 	end
 	local blob = square(box, 0.7, UDim2.fromScale(0.09, 0.68), GLOOM, 6) -- the Gloom: a soot ball with two eyes
 	stroke(blob, INK, 3)
-	for _, x in { 0.36, 0.68 } do square(blob, 0.2, UDim2.fromScale(x, 0.42), WHITE, 7) end
+	local CFG = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("Config"))
+	local skull = CFG.UI_GLASS and CFG.UI_GLASS.icon and CFG.UI_GLASS.icon.skull
+	if skull then -- 2026-11-18: the jelly skull with a rose halo, half again as big (Gemini UI round 2: the 12 px soot ball melted into the track)
+		blob.BackgroundColor3 = Color3.fromRGB(255, 107, 151)
+		blob.BackgroundTransparency = 0.35
+		blob:FindFirstChildOfClass("UIStroke").Color = Color3.fromRGB(255, 190, 215)
+		local im = Instance.new("ImageLabel")
+		im.Name, im.Image, im.BackgroundTransparency, im.ScaleType = "Skull", skull, 1, Enum.ScaleType.Fit
+		im.Size, im.Position, im.AnchorPoint, im.ZIndex = UDim2.fromScale(1.7, 1.7), UDim2.fromScale(0.5, 0.45), Vector2.new(0.5, 0.5), 8
+		im.Parent = blob
+	else
+		for _, x in { 0.36, 0.68 } do square(blob, 0.2, UDim2.fromScale(x, 0.42), WHITE, 7) end
+	end
 	local cart = frame(box, { Size = UDim2.fromScale(0.86, 0.56), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(0.93, 0.56), BackgroundColor3 = BUTTER, ZIndex = 6 })
 	round(cart, 0.25)
 	stroke(cart, INK, 3)

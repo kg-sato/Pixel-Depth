@@ -7,6 +7,7 @@
 --     (JellyPress already bounces the real buttons that wear a skin)
 -- The cave hotbar's hexes get the same dome shine. Display only; nothing here changes what a button does.
 local TweenService = game:GetService("TweenService")
+local GEL = true -- the kit skins are the lit gel v2 (Config.UI_GLASS.jelly)
 local M = {}
 local VIOLET, MAGENTA, CYAN = Color3.fromRGB(155, 31, 232), Color3.fromRGB(255, 0, 127), Color3.fromRGB(0, 240, 255)
 local PINKISH = { pink = true, pillPink = true }
@@ -19,7 +20,7 @@ local function shine(o, z, w, h, y)
 	f.Name, f.BorderSizePixel, f.BackgroundColor3, f.ClipsDescendants = "DomeShine", 0, Color3.new(1, 1, 1), true
 	f.Size, f.Position, f.AnchorPoint, f.ZIndex = UDim2.fromScale(w or 0.84, h or 0.4), UDim2.fromScale(0.5, y or 0.07), Vector2.new(0.5, 0), z
 	local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0.5, 0) c.Parent = f
-	local g = Instance.new("UIGradient") g.Rotation, g.Transparency = 90, NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(0.7, 0.8), NumberSequenceKeypoint.new(1, 1) }) g.Parent = f
+	local g = Instance.new("UIGradient") g.Rotation, g.Transparency = 90, NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.72), NumberSequenceKeypoint.new(0.7, 0.92), NumberSequenceKeypoint.new(1, 1) }) g.Parent = f
 	f.Parent = o
 end
 
@@ -59,9 +60,13 @@ function M.dress(o)
 		return
 	end
 	if typeof(kind) ~= "string" or not o:IsA("GuiObject") or not (M.KINDS(kind) or o.Name == "StepCard") then return end
-	local sk = o:FindFirstChild("Skin")
-	shine(o, (sk and sk.ZIndex or 0) + 1)
-	rim(o, kind)
+	-- 2026-11-18: the gel skins v2 (art/pd_ui_gel.py) are lit in the image itself: bevel, Fresnel rim, glint, shadow. The old
+	-- white dome read as a sticker and the outer stroke stood off the skin with a gap (Gemini UI audit), so the kit pieces only bounce.
+	if not GEL then
+		local sk = o:FindFirstChild("Skin")
+		shine(o, (sk and sk.ZIndex or 0) + 1)
+		rim(o, kind)
+	end
 	bounce(o)
 end
 

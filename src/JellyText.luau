@@ -12,6 +12,7 @@ local TweenService = game:GetService("TweenService")
 local G = require(script.Parent:WaitForChild("JellyGlyphs"))
 local SlimeBody = require(script.Parent:WaitForChild("SlimeBody")) -- 2026-11-16 night: each letter is a soft slime body, not a stiff picture
 local C = require(script.Parent:WaitForChild("Config"))
+local GumText = require(script.Parent:WaitForChild("GumText")) -- 2026-11-18: what the jelly cannot draw (long, small) goes to Gumdrop, not back to a plain font
 local M = {}
 
 local MID = Vector2.new(0.5, 0.5)
@@ -204,9 +205,16 @@ function M.mirror(label, opt)
 	local function fit()
 		if not label.Parent then return end
 		local h = label.AbsoluteSize.Y
-		local long = (opt.maxLen ~= nil and #label.Text > opt.maxLen) or (h > 0 and h < 17) or not M.covers(label.Text) -- jelly letters under 17 px are mush, and a string the font cannot spell would have gaps: such a label stays plain text
+		local long = (opt.maxLen ~= nil and #label.Text > opt.maxLen) or (h > 0 and h < 26) or not M.covers(label.Text) -- jelly letters under 26 px read flat (2026-11-18: SPORE STORM, MENU looked like a plain font): Gumdrop draws those; and a string the font cannot spell would have gaps: such a label stays plain text
 		local ok = ready[(M.pick(t.color))] == true
-		label.MaxVisibleGraphemes = (long or not ok) and -1 or 0
+		local gumOn = false
+		if long or not ok then
+			t.gum = t.gum or GumText.attach(label)
+			gumOn = t.gum ~= nil and t.gum.on(true)
+		elseif t.gum then
+			t.gum.on(false)
+		end
+		label.MaxVisibleGraphemes = ((long or not ok) and not gumOn) and -1 or 0
 		t.frame.Visible = not long and ok
 		-- a text set while the jelly was hidden (atlas still loading, label too small) was never built: build it when the jelly shows
 		-- (2026-11-13: the quest marker's word RIDE was missing in town, its tag was empty)

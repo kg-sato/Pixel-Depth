@@ -350,8 +350,8 @@ end
 -- HUD (board HUD artboard): gold and egg pills, bag pill, left rail, layer pill and depth strip, tutorial card, DIG, crosshair
 local goldPill = panel(gui, S(170, 46), S(20, 18), nil, "pillButter")
 fit(goldPill, 116, 46) -- the owner, 2026-11-15: the counters were far wider than their numbers
-local coinIcon = icon(goldPill, "coin", UDim2.fromScale(0.28, 0.66), UDim2.fromScale(0.07, 0.5), Vector2.new(0, 0.5))
-new("UIAspectRatioConstraint", coinIcon, { AspectRatio = 1 })
+local coinIcon = icon(goldPill, "coin", UDim2.fromScale(0.4, 0.92), UDim2.fromScale(0.04, 0.47), Vector2.new(0, 0.5)) -- 2026-11-18: bigger (Gemini: the jelly coin read muddy at 16 px)
+new("UIAspectRatioConstraint", coinIcon, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 local goldText = text(goldPill, "0", UDim2.fromScale(0.56, 0.8), UDim2.fromScale(0.38, 0.5), Vector2.new(0, 0.5), GLASS and INK or Color3.fromRGB(59, 36, 22), 700, false) -- larger and darker: thin gold digits vanished on a phone
 goldText.TextXAlignment, goldText.Font = Enum.TextXAlignment.Left, HEAD
 goldPill.Name = "GoldPill"
@@ -405,9 +405,9 @@ new("UIStroke", marker, { Color = INK, Thickness = 2 })
 
 local stepCard = panel(gui, S(330, 62), S(1262, 202), Vector2.new(1, 0), "card") -- NEXT UP sits under the minimap (directive v10 HUD anchor 3, Shared.HubMinimap)
 fit(stepCard, 330, 62)
-local stepIcon = icon(stepCard, "pick", UDim2.fromScale(0.07, 0.6), UDim2.fromScale(0.045, 0.52), Vector2.new(0, 0.5)) -- clear of the card's cut corner
-new("UIAspectRatioConstraint", stepIcon, { AspectRatio = 1 })
-local stepText = text(stepCard, "", UDim2.fromScale(0.84, 0.8), UDim2.fromScale(0.55, 0.52), Vector2.new(0.5, 0.5), INK, 700, false)
+local stepIcon = icon(stepCard, "pick", UDim2.fromScale(0.2, 0.74), UDim2.fromScale(0.035, 0.52), Vector2.new(0, 0.5)) -- clear of the card's cut corner; 2026-11-18 twice the size (Gemini: the 12 px pickaxe was illegible)
+new("UIAspectRatioConstraint", stepIcon, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
+local stepText = text(stepCard, "", UDim2.fromScale(0.78, 0.8), UDim2.fromScale(0.585, 0.52), Vector2.new(0.5, 0.5), INK, 700, false)
 stepText.TextWrapped = true -- a long step takes two lines instead of shrinking to phone-unreadable size
 stepCard.Name = "StepCard"
 do -- a small wooden plank nailed over the card's corner names it (Field Notebook pass 2026-11-12)
@@ -1504,8 +1504,8 @@ end)()
 	local gemPill = panel(gui, S(128, 46), S(198, 18), nil, "pillPink")
 	fit(gemPill, 100, 46)
 	gemPill.Name = "GemPill"
-	local gemIc = icon(gemPill, "gem", UDim2.fromScale(0.34, 0.7), UDim2.fromScale(0.07, 0.5), Vector2.new(0, 0.5))
-	new("UIAspectRatioConstraint", gemIc, { AspectRatio = 1 })
+	local gemIc = icon(gemPill, "gem", UDim2.fromScale(0.42, 0.88), UDim2.fromScale(0.04, 0.47), Vector2.new(0, 0.5)) -- 2026-11-18: bigger, as the coin
+	new("UIAspectRatioConstraint", gemIc, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 	local gemText = text(gemPill, "0", UDim2.fromScale(0.48, 0.8), UDim2.fromScale(0.45, 0.5), Vector2.new(0, 0.5), Color3.fromRGB(140, 30, 62), 700, false) -- deeper than DEEP_GEM: 2.8:1 on the pink pill measured with spike/hud_contrast.luau, now about 4:1
 	gemText.Font = HEAD
 	gemText.TextXAlignment = Enum.TextXAlignment.Left
@@ -2824,7 +2824,7 @@ end)()
 	end
 	forgeUI.spatialExtra = forgeUI.spatialExtra or {} -- the small panels built in this script stand in the world too (Shared.SpatialPanels); the forge keeps its own staged screen
 	for _, f in { night, odds, mapP, forge } do table.insert(forgeUI.spatialExtra, { frame = f, home = gui, menu = true, on = function() return f.Visible end }) end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "StrikeJuice", "Charms", "HubMinimap", "JellySkin", "JellyHUD", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "HatchCine", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "StrikeJuice", "Charms", "HubMinimap", "JellySkin", "JellyHUD", "GumText", "IconPass", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end

@@ -26,12 +26,14 @@ function M.start(E)
 	})
 	local wipe = new("Frame", E.top, { Name = "RootsWipe", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(46, 34, 44), BackgroundTransparency = 1, Visible = false, ZIndex = 55 })
 
-	local ribbon = new("Frame", E.gui, { Size = E.S(560, 42), Position = E.S(640, 462), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = Color3.fromRGB(255, 0, 127), BorderSizePixel = 0 }) -- warning red: a pale pink pill had no urgency (Gemini, 2026-11-10)
+	local ribbon = new("Frame", E.gui, { Size = E.S(560, 42), Position = E.S(640, 462), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = Color3.fromRGB(36, 18, 54), BorderSizePixel = 0 }) -- 2026-11-18: obsidian amethyst with a pulsing rose rim (Gemini UI round 1: the hot magenta slab fought the cave light); was warning red (Gemini, 2026-11-10: a pale pink pill had no urgency)
 	E.fit(ribbon, 560, 42)
 	new("UICorner", ribbon, { CornerRadius = UDim.new(0.5, 0) })
-	new("UIStroke", ribbon, { Color = E.WHITE, Thickness = 2 })
+	local rstroke = new("UIStroke", ribbon, { Color = Color3.fromRGB(255, 107, 151), Thickness = 2.5 })
+	new("UIGradient", ribbon, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(255, 235, 255), Color3.fromRGB(150, 125, 175)) }) -- multiplies the fill: lit top, deeper bottom
+	game:GetService("TweenService"):Create(rstroke, TweenInfo.new(0.7, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), { Transparency = 0.55, Thickness = 1.5 }):Play() -- the urgency now pulses in the rim
 	ribbon.Name, ribbon.Visible = "RootsRibbon", false
-	local ribbonText = E.text(ribbon, "", UDim2.fromScale(0.92, 0.56), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), E.WHITE, 700)
+	local ribbonText = E.text(ribbon, "", UDim2.fromScale(0.84, 0.56), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 214, 140), 700) -- inside the round ends: the countdown touched the rim (Gemini round 1)
 	local cc = new("ColorCorrectionEffect", Lighting, { Name = "SporeTint", TintColor = Color3.new(1, 1, 1) })
 	local storm, glints, nextRumble, lastLeft = false, {}, 0, nil
 	local function setStorm(on, inCave)
