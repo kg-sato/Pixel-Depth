@@ -271,7 +271,7 @@ function M.start(E)
 		E.vmHook.heavy = heavy -- Juice adds a clink to heavy footsteps
 		if inv.Visible then refresh() end
 		-- egg tip (board 4/5): after the first forge, with no egg in hand, point to Maribel's stall once
-		if (s.pick or 1) >= 2 and (s.eggs or 0) == 0 and not (s.tips and s.tips.eggTip) and not ui.eggTip then
+		if (s.pick or 1) >= 2 and (s.eggs or 0) == 0 and not (s.tips and s.tips.eggTip) and not ui.eggTip and not game.Players.LocalPlayer:GetAttribute("InCave") then -- in town only: it ran across the Root Warden fight (full1119d 221 s)
 			ui.eggTip = true
 			R.Tip:FireServer("eggTip")
 			task.delay(2.5, function()

@@ -35,7 +35,7 @@ function M.start(E)
 		new("UIGradient", spur, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(120, 200, 200)) })
 	end
 	-- the name lands big when the boss wakes
-	local banner = text(gui, "ROOT WARDEN", S(760, 120), S(640, 250), Vector2.new(0.5, 0.5), AMBER, 700, false)
+	local banner = text(gui, "ROOT WARDEN", S(520, 80), S(640, 150), Vector2.new(0.5, 0.5), AMBER, 700, false) -- top third, smaller: centred it covered the fight (full1119d 221 s, 2026-11-19)
 	banner.Name, banner.Visible, banner.Font = "BossBanner", false, Enum.Font.FredokaOne
 	local bannerScale = new("UIScale", banner, { Scale = 1 })
 	game:GetService("RunService").Heartbeat:Connect(function() -- beside the dial while a Perfect Strike is up: at the top it lay on the strike's title
@@ -148,7 +148,7 @@ function M.start(E)
 			bar.Visible = true
 			banner.Text, banner.Visible, bannerScale.Scale = TITLES[now], true, 1.7
 			tween(bannerScale, 0.45, { Scale = 1 }, Enum.EasingStyle.Back)
-			task.delay(2.3, function()
+			task.delay(1.2, function()
 				tween(bannerScale, 0.2, { Scale = 0 }, Enum.EasingStyle.Quad, Enum.EasingDirection.In)
 				task.delay(0.22, function() banner.Visible = false end)
 			end)
