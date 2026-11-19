@@ -489,6 +489,7 @@ C.CAVE_ORIGIN = Vector3.new(-3000, 0, 0) -- far from the hub and the old mines, 
 C.CAVE2_ORIGIN = Vector3.new(-3000, 0, 1200) -- Camp 2 (Clay Caves), clear of Camp 1's caves (z -56..252); the camp is not built yet
 -- Cave v2 (2026-11-18, ServerScriptService.CaveV2: layer 1 as a real cave). false: preview only, built on demand at CAVE_V2_ORIGIN; the live caves stay CaveBuilder.
 C.CAVE_V2, C.CAVE_V2_ORIGIN = true, Vector3.new(-3000, 0, -1300)
+C.CAVE_V2_L2 = true -- in progress (2026-11-19): Cave v2 layer 2 carved round the Clay Caves hall, doors in its side walls
 C.CAMPS = { { origin = C.CAVE_ORIGIN, ring = C.CAMP_RING }, { origin = C.CAVE2_ORIGIN, ring = C.CAMP_RING } }
 function C.campAt(pos) -- which camp's safe ring holds this position (1 or 2), or nil
 	for i, c in C.CAMPS do

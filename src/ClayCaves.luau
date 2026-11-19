@@ -62,7 +62,15 @@ function M.build(caves)
 	local SOLID = { { -79, 6 }, { 16, 45 }, { 60, 79 } }
 	for _, s in SOLID do part("Wall", Vector3.new(s[2] - s[1], 76, 6), O * CFrame.new((s[1] + s[2]) / 2, 35, -57), CLAY, ROCK) end
 	for _, o in OPEN do part("Wall", Vector3.new(o[2] - o[1], 73 - o[3], 6), O * CFrame.new((o[1] + o[2]) / 2, (73 + o[3]) / 2, -57), CLAY_D, ROCK) end
-	for _, x in { -77, 77 } do part("Wall", Vector3.new(6, 76, 110), O * CFrame.new(x, 35, 0), CLAY, ROCK) end
+	if C.CAVE_V2_L2 then -- Cave v2 layer 2 round the hall (2026-11-19): a door in each side wall, z -9..9, 16 high, onto the v2 galleries
+		for _, x in { -77, 77 } do
+			part("Wall", Vector3.new(6, 76, 46), O * CFrame.new(x, 35, -32), CLAY, ROCK)
+			part("Wall", Vector3.new(6, 76, 46), O * CFrame.new(x, 35, 32), CLAY, ROCK)
+			part("Wall", Vector3.new(6, 57, 18), O * CFrame.new(x, 44.5, 0), CLAY_D, ROCK) -- the lintel over the door
+		end
+	else
+		for _, x in { -77, 77 } do part("Wall", Vector3.new(6, 76, 110), O * CFrame.new(x, 35, 0), CLAY, ROCK) end
+	end
 	part("Dado", Vector3.new(146, 1.4, 0.5), O * CFrame.new(0, 9, 53.8), CREAM:Lerp(CLAY, 0.35), ROCK) -- a pale painted band round the hall at head height
 	for _, s in SOLID do
 		local a, b = math.max(s[1] + 0.06, -73), math.min(s[2] - 0.06, 73) -- 0.06 back from an opening's edge: flush with the wall's cut face it z-fights
@@ -70,10 +78,22 @@ function M.build(caves)
 		part("Dado", Vector3.new(db - da, 1.4, 0.5), O * CFrame.new((da + db) / 2, 9, -53.8), CREAM:Lerp(CLAY, 0.35), ROCK)
 		part("Wainscot", Vector3.new(b - a + (a == -73 and 0.5 or 0) + (b == 73 and 0.5 or 0), 8.7, 0.54), O * CFrame.new((a + b) / 2 + (a == -73 and -0.25 or 0) + (b == 73 and 0.25 or 0), 4.15, -53.93), CREAM:Lerp(CLAY, 0.5), ROCK)
 	end
-	for _, x in { -73.8, 73.8 } do part("Dado", Vector3.new(0.5, 1.4, 106), O * CFrame.new(x, 9, 0), CREAM:Lerp(CLAY, 0.35), ROCK) end
+	for _, x in { -73.8, 73.8 } do
+		if C.CAVE_V2_L2 then -- the side doors cut the band (z -9..9)
+			for _, zz in { { -53, -9.2 }, { 9.2, 53 } } do part("Dado", Vector3.new(0.5, 1.4, zz[2] - zz[1]), O * CFrame.new(x, 9, (zz[1] + zz[2]) / 2), CREAM:Lerp(CLAY, 0.35), ROCK) end
+		else
+			part("Dado", Vector3.new(0.5, 1.4, 106), O * CFrame.new(x, 9, 0), CREAM:Lerp(CLAY, 0.35), ROCK)
+		end
+	end
 	-- a pale plastered wainscot below the band: at eye level the walls now part from the floor (the hall graded 4.5 as one-colour soup)
 	part("Wainscot", Vector3.new(147, 8.7, 0.54), O * CFrame.new(0, 4.15, 53.93), CREAM:Lerp(CLAY, 0.5), ROCK)
-	for _, x in { -73.93, 73.93 } do part("Wainscot", Vector3.new(0.54, 8.7, 106.6), O * CFrame.new(x, 4.15, 0), CREAM:Lerp(CLAY, 0.5), ROCK) end
+	for _, x in { -73.93, 73.93 } do
+		if C.CAVE_V2_L2 then
+			for _, zz in { { -53.3, -9.3 }, { 9.3, 53.3 } } do part("Wainscot", Vector3.new(0.54, 8.7, zz[2] - zz[1]), O * CFrame.new(x, 4.15, (zz[1] + zz[2]) / 2), CREAM:Lerp(CLAY, 0.5), ROCK) end
+		else
+			part("Wainscot", Vector3.new(0.54, 8.7, 106.6), O * CFrame.new(x, 4.15, 0), CREAM:Lerp(CLAY, 0.5), ROCK)
+		end
+	end
 	for i = 1, 26 do -- clay strata: long ledges of a lighter band stepping round the walls, so the box reads as dug rock
 		local side, y = i % 4, 6 + rng:NextNumber() * 52
 		local len, deep = rng:NextNumber(18, 44), rng:NextNumber(1.2, 3)
@@ -87,7 +107,10 @@ function M.build(caves)
 			if clear then part("Strata", Vector3.new(len, h, deep), O * CFrame.new(x, y, z), i % 3 == 0 and CLAY_L or CLAY_D, ROCK) end
 		else
 			local x = (side == 2 and -1 or 1) * (74 - deep / 2 + 0.05 + i * 0.05)
-			part("Strata", Vector3.new(deep, rng:NextNumber(2, 5), len), O * CFrame.new(x, y, rng:NextNumber(-36, 36)), i % 3 == 0 and CLAY_L or CLAY_D, ROCK)
+			local sh, sz = rng:NextNumber(2, 5), rng:NextNumber(-36, 36)
+			if not (C.CAVE_V2_L2 and y - sh / 2 < 18 and math.abs(sz) < len / 2 + 10) then -- no ledge across a side door
+				part("Strata", Vector3.new(deep, sh, len), O * CFrame.new(x, y, sz), i % 3 == 0 and CLAY_L or CLAY_D, ROCK)
+			end
 		end
 	end
 	for i = 0, 29 do -- floor slabs of baked clay on a loose grid (one per 24 x 20 cell, so no two overlap), sunk 0.05 into the floor
@@ -137,6 +160,7 @@ function M.build(caves)
 	part("ArchRoot", Vector3.new(2, 2, 13), arrive * CFrame.new(-5.2, 13.4, 0), BARK, { Material = Enum.Material.Wood })
 	local back = part("ArchDark", Vector3.new(0.6, 11, 8), arrive * CFrame.new(-5.6, 6.7, 0), Color3.fromRGB(14, 8, 22))
 	prompt(back, "Climb back", "Camp 1", "ClayPortal", 1, 10)
+	if C.CAVE_V2_L2 then back.CanCollide, back.Transparency = false, 0.7 end -- the arch is a real way out now: the west gallery of Cave v2 layer 2 lies behind it
 	local land = part("ClayLanding", Vector3.new(4, 1, 4), arrive * CFrame.new(1, 1.7, 0), CLAY, { Transparency = 1, CanCollide = false, CanQuery = false })
 	land.Parent = folder
 	lamp(Vector3.new(-60, 16, 0), 0.7)

@@ -131,7 +131,14 @@ function M.build(parent, origin, seed, opt)
 
 	-- THE MAIN ROUTE (fixed) ------------------------------------------------------------------------------------------------
 	-- Hearth Camp: a wide low tube where an old stream pooled (60 x 26, 12 high), flat sand floor, the lift shaft out of the roof
-	if opt.camp then
+	if opt.hall then
+		-- the live layer 2 (C.CAVE_V2_L2): ClayCaves builds its closed hall (x -80..80, z -60..60, y 0..76) with doors at x = +-80, z 0.
+		-- v2 keeps that box as rock (cleared again after carving, below) and runs a gallery out of each door.
+		passage({ P(-80, 4, 0), P(-100, 4, 6), P(-120, 4, 20) }, 5, 5, { flat = 0.8 })
+		passage({ P(80, 4, 0), P(100, 4, -4), P(116, 2, 0) }, 5, 5, { flat = 0.8 })
+		spots.Camp = P(-100, 1, 6)
+		spots.HallEast = P(100, 1, -4) -- the hall itself is walkable in the game: the reach flood starts from both of its doors
+	elseif opt.camp then
 		-- the live game: CaveBuilder builds the camp's props and systems (fire, Wick, tents, stall, rail station, the Deep Gate and
 		-- the Root Warden, the safe ring) on a flat floor at the origin; v2 gives them a room that fits: a wide low chamber about
 		-- 100 x 92 studs, floor exactly at y 0 (the dip is not applied here), a lumpy roof 22 to 30 high, and the Deep Gate alcove
@@ -342,6 +349,34 @@ function M.build(parent, origin, seed, opt)
 		return best
 	end
 
+	if opt.hall then -- the hall's box stays solid: ClayCaves builds there
+		local hx0, hx1 = math.floor(toVox(P(-82, 0, 0))), math.ceil(toVox(P(82, 0, 0)))
+		local _, hy0 = toVox(P(0, -6, 0))
+		local _, hy1 = toVox(P(0, 80, 0))
+		local _, _, hz0 = toVox(P(0, 0, -62))
+		local _, _, hz1 = toVox(P(0, 0, 62))
+		for x = hx0, hx1 do for y = math.floor(hy0), math.ceil(hy1) do for z = math.floor(hz0), math.ceil(hz1) do set(x, y, z, 0) end end end
+		do -- and the two rooms behind its north wall (ClayCaves: the Jar Gallery x -6..28 and the Fossil Dig x 34..74, z -110..-60)
+			local ax0, ay0, az0 = toVox(P(-12, -6, -116))
+			local ax1, ay1, az1 = toVox(P(80, 52, -56))
+			for x = math.floor(ax0), math.ceil(ax1) do for y = math.floor(ay0), math.ceil(ay1) do for z = math.floor(az0), math.ceil(az1) do set(x, y, z, 0) end end end
+		end
+		for _, sx in { -1, 1 } do -- the hall's doors open through the box's rim onto the galleries (the refill had sealed them)
+			for x = math.floor(toVox(P(sx * 76, 0, 0))), math.ceil(toVox(P(sx * 92, 0, 0))), sx do
+				for z = math.floor(select(3, toVox(P(0, 0, -8)))), math.ceil(select(3, toVox(P(0, 0, 8)))) do
+					for y = math.floor(select(2, toVox(P(0, 0.5, 0)))), math.ceil(select(2, toVox(P(0, 14, 0)))) do set(x, y, z, 1) end
+				end
+			end
+		end
+		-- the drop was under the hall's floor: it moves out to the west gallery and drops into the lower gallery's west end
+		passage({ P(-118, 4, 20), P(-114, 1, 40) }, 5, 5, { flat = 0.8 })
+		shaft(P(-114, -20, 44), 6, 24)
+		passage({ P(-66, -20, 50), P(-90, -20, 48), P(-114, -20, 44) }, 12, 5, { flat = 0.8 })
+		spot("SwallowHole", P(-114, 1, 40))
+		local b1 = spots.B1 - P(0, dipY(spots.B1.X), 0) -- B1's squeeze began inside the hall: a short tube joins it to the west gallery
+		passage({ P(-100, 4, 6), (P(-100, 4, 6) + b1) / 2, b1 }, 5, 5, { flat = 0.8 })
+	end
+
 	-- CRUMPLE: rock next to air is eaten or grown a little by 3D noise, so no wall is a clean curve
 	local flip = {}
 	for x = 1, NX - 2 do
@@ -417,9 +452,11 @@ function M.build(parent, origin, seed, opt)
 	do
 		local q, qi = {}, 1
 		local function push(x, y, z) local k = idx(x, y, z) if not reach[k] then reach[k] = true table.insert(q, { x, y, z }) end end
-		local cx, cy, cz = toVox(spots.Camp)
-		local sx, sz = math.floor(cx), math.floor(cz)
-		for y = math.floor(cy) + 3, 1, -1 do if stand(sx, y, sz) then push(sx, y, sz) break end end
+		for _, sp in { spots.Camp, spots.HallEast } do
+			local cx, cy, cz = toVox(sp)
+			local sx, sz = math.floor(cx), math.floor(cz)
+			for y = math.floor(cy) + 3, 1, -1 do if stand(sx, y, sz) then push(sx, y, sz) break end end
+		end
 		while q[qi] do
 			local c = q[qi]
 			qi += 1
@@ -480,7 +517,9 @@ function M.build(parent, origin, seed, opt)
 		for y = 0, NY - 1 do
 			for z = 0, NZ - 1 do
 				local v = get(x, y, z)
-				if v == 0 or v == 3 then
+				local lx, ly, lz = (x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V
+				local hallRock = opt.hall and ((math.abs(lx) < 80 and math.abs(lz) < 60 and ly > -6) or (lx > -12 and lx < 80 and lz > -116 and lz < -56 and ly > -6 and ly < 52)) -- ClayCaves draws its own walls there
+				if (v == 0 or v == 3) and not hallRock then
 					local touch = false
 					for dx = -1, 1 do for dy = -1, 1 do for dz = -1, 1 do
 						if not touch and isAir(get(x + dx, y + dy, z + dz)) then touch = true end
@@ -1062,12 +1101,14 @@ function M.build(parent, origin, seed, opt)
 end
 
 -- Layer tint for the shared prop set (CaveProps makes cyan crystals for every cave): call after CaveProps.build on a layer 2+ model.
-function M.tintProps(model, layer)
+function M.tintProps(model, layer, near, radius) -- near, radius: only props within radius studs of near (the live caves hold two layers)
 	local TO = ({ nil, Color3.fromRGB(245, 158, 11), Color3.fromRGB(150, 140, 255), Color3.fromRGB(255, 110, 50) })[layer]
 	local props = model:FindFirstChild("Props")
 	if not TO or not props then return 0 end
 	local n = 0
 	for _, d in props:GetDescendants() do
+		local far = near and d:IsA("BasePart") and (d.Position - near).Magnitude > radius
+		if far then continue end
 		if d:IsA("BasePart") and d.Material == Enum.Material.Glass then -- the crystal's clear shell: amber seen through cyan glass came out green
 			local h, sat = d.Color:ToHSV()
 			if h > 0.42 and h < 0.58 and sat > 0.4 then d.Color = TO:Lerp(Color3.new(1, 1, 1), 0.25) end

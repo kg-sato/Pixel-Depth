@@ -86,7 +86,16 @@ if C.CAVES_ON then
 	local caves = CaveBuilder.build(workspace, C.CAVE_ORIGIN, os.time() // 3600)
 	caveLanding = caves:FindFirstChild("LiftLanding", true)
 	require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).build(caves) -- Camp 2's hall; its ore joins Caves.Deposits
+	if C.CAVE_V2 and C.CAVE_V2_L2 then -- Cave v2 layer 2 round the Clay hall (in progress, off by default): its folders join workspace.Caves
+		local l2 = require(game:GetService("ServerScriptService"):WaitForChild("CaveV2")).build(workspace, C.CAVE2_ORIGIN, os.time() // 3600, { layer = 2, hall = true })
+		for _, f in l2:GetChildren() do
+			local mine = caves:FindFirstChild(f.Name)
+			if mine and f:IsA("Folder") then for _, c in f:GetChildren() do c.Parent = mine end f:Destroy() else f.Name = "L2_" .. f.Name f.Parent = caves end
+		end
+		l2:Destroy()
+	end
 	require(game:GetService("ServerScriptService"):WaitForChild("CaveProps")).build(caves) -- set dressing against the cave walls (crystals, mushrooms, supports, roots)
+	if C.CAVE_V2 and C.CAVE_V2_L2 then require(game:GetService("ServerScriptService"):WaitForChild("CaveV2")).tintProps(caves, 2, C.CAVE2_ORIGIN, 320) end -- layer 2's crystals in its own amber
 	if C.CAVE_V2 then caves:SetAttribute("ZFixedProps", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(caves)) end -- the props came after the builder's own pass: a pebble lay flush on a floor
 	local ids = { CaveNest = 0, CaveShrine = 0 } -- a number per nest and shrine prompt, for the saved cooldown keys
 	for _, d in caves:GetDescendants() do
