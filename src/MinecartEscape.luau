@@ -851,13 +851,14 @@ function M.play(opt)
 			-- a brass boiler gauge, not a flat bar (Gemini audit 2026-11-18: "unstyled Stoker needle bar"): a half dial with a brass
 			-- rim, notches, a gold arc for the window and a needle that sweeps from left to right as C.stokeAt runs 0 to 1
 			local BRASS, BRASS_D = Color3.fromRGB(214, 160, 78), Color3.fromRGB(120, 78, 34)
-			bar = frame({ Name = "Stoke", Size = UDim2.fromScale(0.24, 0.24), Position = UDim2.fromScale(0.5, 0.735), AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 3 })
+			bar = frame({ Name = "Stoke", Size = UDim2.fromScale(0.15, 0.15), Position = UDim2.fromScale(0.5, 0.86), -- smaller, lower and smoked (full1119d 472 s, 2026-11-19: the big brass dial covered the rails)
+				 AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 3 })
 			local ar = Instance.new("UIAspectRatioConstraint")
 			ar.AspectRatio = 2
 			ar.Parent = bar
-			local face = frame({ Parent = bar, Name = "Face", Size = UDim2.fromScale(0.96, 1.92), Position = UDim2.fromScale(0.5, 1), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(34, 20, 26), BackgroundTransparency = 0.05, ZIndex = 3 })
+			local face = frame({ Parent = bar, Name = "Face", Size = UDim2.fromScale(0.96, 1.92), Position = UDim2.fromScale(0.5, 1), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(34, 20, 26), BackgroundTransparency = 0.4, ZIndex = 3 })
 			round(face)
-			stroke(face, BRASS, 6)
+			stroke(face, BRASS, 3)
 			local fg = Instance.new("UIGradient")
 			fg.Rotation, fg.Color = 90, ColorSequence.new(Color3.fromRGB(80, 56, 60), Color3.fromRGB(20, 12, 18))
 			fg.Parent = face
@@ -885,7 +886,7 @@ function M.play(opt)
 			stroke(hub, BRASS, 3)
 			needle:SetAttribute("Arm", true)
 			K.stokeArm = needleArm
-			word = label(gui, touch and "STOKER:  TAP IN THE GOLD" or "STOKER:  SPACE IN THE GOLD", UDim2.fromScale(0.3, 0.035), UDim2.fromScale(0.5, 0.765), WHITE, 4) -- under the gauge, until the first hit
+			word = label(gui, touch and "STOKER:  TAP IN THE GOLD" or "STOKER:  SPACE IN THE GOLD", UDim2.fromScale(0.3, 0.03), UDim2.fromScale(0.5, 0.885), WHITE, 4) -- under the gauge, until the first hit
 			local lastPress = 0
 			K.stoke = function()
 				if t <= 0 or os.clock() - lastPress < S.cool then return end
