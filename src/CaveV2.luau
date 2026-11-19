@@ -448,6 +448,7 @@ function M.build(parent, origin, seed, opt)
 	local model = Instance.new("Model")
 	model.Name = "CavesV2"
 	model:SetAttribute("Seed", seed)
+	model:SetAttribute("Layer", L)
 	local folders = {}
 	local function group(n)
 		if not folders[n] then
@@ -541,7 +542,7 @@ function M.build(parent, origin, seed, opt)
 					if isFloor then
 						p:SetAttribute("Theme", THEMES[math.floor((k - 100) / 10)])
 						p.Material = Enum.Material.Pebble -- packed grit: the floor reads apart from the smooth slate walls (Ground rendered olive: the owner, 2026-11-17, no green floors)
-						p.Color = p.Color:Lerp(Color3.fromRGB(160, 120, 132), 0.35)
+						p.Color = p.Color:Lerp(({ Color3.fromRGB(160, 120, 132), Color3.fromRGB(160, 120, 132), Color3.fromRGB(150, 160, 210), Color3.fromRGB(110, 84, 80) })[L], 0.35) -- grit in the layer's own light
 					end
 					p.CastShadow = h > 1
 					nParts += 1
@@ -654,7 +655,7 @@ function M.build(parent, origin, seed, opt)
 		local COLS = { Color3.fromRGB(156, 92, 206), Color3.fromRGB(70, 146, 255), Color3.fromRGB(190, 160, 255) }
 		for k = 1, 5 do
 			local a = k / 5 * math.pi * 2 + seed
-			local at = rootC + P(math.cos(a) * 14, 0, math.sin(a) * 11)
+			local at = rootC + P(math.cos(a) * 18, 0, math.sin(a) * 14) + P(10, 0, 0) -- round the hall's far half, clear of the way in
 			local vx, _, vz = toVox(at)
 			local x, z = math.floor(vx), math.floor(vz)
 			local foot, top
@@ -666,7 +667,14 @@ function M.build(parent, origin, seed, opt)
 				local h = math.min(((top or foot + Vector3.new(0, 40, 0)).Y - foot.Y) * (0.55 + hash(k, seed, 1) * 0.35), 44)
 				local col = COLS[k % 3 + 1]
 				local tilt = CFrame.Angles((hash(k, 2, seed) - 0.5) * 0.3, a, (hash(k, 3, seed) - 0.5) * 0.3)
-				part("Landmark", "CrystalColumn", Vector3.new(5, h, 5), CFrame.new(foot) * tilt * CFrame.new(0, h / 2, 0), col, { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.15, Reflectance = 0.2 })
+				for q = 0, 1 do -- two blocks turned 45 degrees apart: a faceted eight-sided prism, narrowing a little toward the top
+					part("Landmark", "CrystalColumn", Vector3.new(5 - q * 0.4, h, 5 - q * 0.4), CFrame.new(foot) * tilt * CFrame.new(0, h / 2, 0) * CFrame.Angles(0, q * math.pi / 4, 0), col, { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.15, Reflectance = 0.2 })
+				end
+				for b = 1, 3 do -- smaller crystals branching off its foot
+					local bh = h * (0.18 + hash(k, b, 9) * 0.2)
+					local ba = b * 2.1 + k
+					part("Landmark", "CrystalShard", Vector3.new(1.8, bh, 1.8), CFrame.new(foot + Vector3.new(math.cos(ba) * 3.6, 0, math.sin(ba) * 3.6)) * CFrame.Angles(math.cos(ba) * 0.5, ba, math.sin(ba) * 0.5) * CFrame.new(0, bh / 2, 0), col, { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.2 })
+				end
 				local core = part("Landmark", "CrystalCore", Vector3.new(2, h * 0.8, 2), CFrame.new(foot) * tilt * CFrame.new(0, h * 0.45, 0), col, { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false })
 				local tip = Instance.new("WedgePart")
 				tip.Name, tip.Anchored, tip.Size, tip.Color, tip.Material, tip.Transparency = "CrystalTip", true, Vector3.new(5, 5, 5), col, Enum.Material.Glass, 0.15
@@ -694,7 +702,7 @@ function M.build(parent, origin, seed, opt)
 							local w = Instance.new("WedgePart")
 							w.Name, w.Anchored, w.Size = "Ramp", true, Vector3.new(V, V, V)
 							w.CFrame = CFrame.lookAt(c, c + look)
-							w.Color, w.Material = colorOf(100 + TI[themeAt(Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V))] * 10 + 1):Lerp(Color3.fromRGB(160, 120, 132), 0.35), Enum.Material.Pebble -- the step is floor: the floor's own colour and grit
+							w.Color, w.Material = colorOf(100 + TI[themeAt(Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V))] * 10 + 1):Lerp(({ Color3.fromRGB(160, 120, 132), Color3.fromRGB(160, 120, 132), Color3.fromRGB(150, 160, 210), Color3.fromRGB(110, 84, 80) })[L], 0.35), Enum.Material.Pebble -- the step is floor: the floor's own colour and grit
 							if VARIANT then w.MaterialVariant = VARIANT end
 							w.Parent = group("Ramps")
 							nRamp += 1
@@ -747,6 +755,13 @@ function M.build(parent, origin, seed, opt)
 							local l = 0.8 + hash(x + s, z, 6) * 2.2
 							deco("Straw", Vector3.new(0.25, l, 0.25), CFrame.new(top + Vector3.new((hash(s, x, z) - 0.5) * 3, -l / 2, (hash(z, s, x) - 0.5) * 3)), FLOW, NOCOL)
 						end
+					elseif L == 3 and room >= 5 and hsh > 0.7 and hsh < 0.74 then -- starlight druses: tiny crystals twinkling high in the vaults
+						local dr = deco("Druse", Vector3.new(0.5, 0.9, 0.5), CFrame.new(top - Vector3.new(0, 0.45, 0)) * CFrame.Angles(0.3, hsh * 9, 0.2), Color3.fromRGB(147, 197, 253), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CanQuery = false, CastShadow = false })
+						if hash(x, z, 77) > 0.5 then
+							local dl = Instance.new("PointLight")
+							dl.Color, dl.Range, dl.Brightness, dl.Shadows = Color3.fromRGB(147, 197, 253), 6, 0.25, false
+							dl.Parent = dr
+						end
 					elseif room >= 4 and hsh > 0.74 and hsh < 0.78 then -- glowing moss cushion
 						local m = deco("CeilMoss", Vector3.new(2.4, 0.5, 2), CFrame.new(top - Vector3.new(0, 0.2, 0)), GLOW, { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
 						for q = 1, 3 do -- an irregular patch pressed to the rock, with a thin drip hanging from it
@@ -783,7 +798,7 @@ function M.build(parent, origin, seed, opt)
 						local hgt = 1.6 + hash(x, z, 12) * 3.4
 						deco("Stalagmite", Vector3.new(2.4, hgt, 2.4), CFrame.new(foot + Vector3.new(0, hgt / 2, 0)), ROCK2, { CanCollide = roomy, CanQuery = roomy })
 						deco("Stalagmite", Vector3.new(1.2, 1.4, 1.2), CFrame.new(foot + Vector3.new(0, hgt + 0.7, 0)), FLOW, { CanCollide = false })
-					elseif head >= 2 and hsh > 0.8 and hsh < 0.815 then -- lichen flecks low on the rock: faint teal light so no stretch is a dead zone (Gemini r3)
+					elseif head >= 2 and hsh > 0.8 and hsh < (L == 4 and 0.835 or 0.815) then -- lichen flecks (in Muspell: glowing cracks, more of them) low on the rock: faint teal light so no stretch is a dead zone (Gemini r3)
 						local lf = deco("Lichen", Vector3.new(1.4, 0.25, 1), CFrame.new(foot + Vector3.new(0, 0.12, 0)) * CFrame.Angles(0, hsh * 20, 0), GLOW, { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CanQuery = false, CastShadow = false })
 						local ll = Instance.new("PointLight")
 						ll.Color, ll.Range, ll.Brightness, ll.Shadows = GLOW, 8, 0.35, false
@@ -802,7 +817,13 @@ function M.build(parent, origin, seed, opt)
 		for z = 0, NZ - 1 do
 			for y = 0, NY - 2 do
 				if get(x, y, z) == 2 and get(x, y + 1, z) ~= 2 then
-					local w = part("V2Water", "StreamWater", Vector3.new(V, 0.6, V), CFrame.new(toWorld(x, y, z) + Vector3.new(0, V / 2 - 1.2, 0)), PAL.water, { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.35, CanCollide = false, CastShadow = false })
+					local hot = L == 4 -- in Muspell the streams and pools are lava (no swimming: it is only a glow on the floor of the slot)
+					local w = part("V2Water", hot and "LavaFlow" or "StreamWater", Vector3.new(V, 0.6, V), CFrame.new(toWorld(x, y, z) + Vector3.new(0, V / 2 - 1.2, 0)), hot and Color3.fromRGB(255, 96, 36) or PAL.water, hot and { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false } or { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.35, CanCollide = false, CastShadow = false })
+					if hot and hash(x, z, 5) > 0.82 then
+						local hl = Instance.new("PointLight")
+						hl.Color, hl.Range, hl.Brightness, hl.Shadows = Color3.fromRGB(255, 110, 50), 18, 0.8, false
+						hl.Parent = w
+					end
 					nWater += 1
 					w.Reflectance = 0.1
 				end
@@ -847,7 +868,7 @@ function M.build(parent, origin, seed, opt)
 		local f = floorUnder(spots.SumpGate - Vector3.new(0, dipY(spots.SumpGate.X), 0))
 		if f then
 			local w = { CFrame = CFrame.new(f + Vector3.new(0, 2.6, 0)) } -- the water itself is voxels now; this is only where the pads float
-			for k = 1, 3 do
+			for k = 1, (L == 1 and 3 or 0) do -- glowing pads on layer 1's pool only (clay, ice and lava pools have none)
 				local pad = part("V2Water", "LilyGlow", Vector3.new(2.4, 0.2, 2.4), w.CFrame * CFrame.new((k - 2) * 6, 0.3, (hash(k, 3, 1) - 0.5) * 8), PAL.mint, { Material = Enum.Material.Neon, MaterialVariant = "", Shape = Enum.PartType.Cylinder, CanCollide = false })
 				pad.CFrame = pad.CFrame * CFrame.Angles(0, 0, math.pi / 2)
 			end

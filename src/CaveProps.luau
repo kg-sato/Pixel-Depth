@@ -251,6 +251,10 @@ function M.build(caves)
 	local count = 0
 	for _, f in floor and floor:GetChildren() or {} do
 		local mix = MIX[f:GetAttribute("Theme") or ""]
+		local layer = caves:GetAttribute("Layer") or 1
+		if mix and layer >= 3 then -- deeper layers have no World Tree roots and no timber: crystals, rubble and pebbles only (Cave v2, 2026-11-19)
+			mix = { crystal = 5, rubble = 3, pebbles = 2 }
+		end
 		if mix and f:IsA("BasePart") and rng:NextNumber() < M.CHANCE then
 			local topY = f.Position.Y + f.Size.Y / 2
 			local spot = Vector3.new(f.Position.X + rng:NextNumber(-0.35, 0.35) * f.Size.X, topY, f.Position.Z + rng:NextNumber(-0.35, 0.35) * f.Size.Z)
