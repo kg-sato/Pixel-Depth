@@ -434,6 +434,7 @@ function M.build(parent, origin, seed)
 				local twist = CFrame.Angles(math.sin(sgm * 0.9 + seed) * 0.12, sgm * 0.45, math.cos(sgm * 0.7) * 0.12)
 				local cf = CFrame.new(at) * twist * CFrame.new(0, seg / 2, 0)
 				part("Landmark", "WorldRoot", Vector3.new(r * 2, seg, r * 1.7), cf, sgm % 2 == 0 and PAL.bark or PAL.barkDark, { Material = Enum.Material.Wood, MaterialVariant = "" })
+				part("Landmark", "WorldRootCrease", Vector3.new(r * 2.04, 0.8, r * 1.74), cf * CFrame.new(0, -seg / 2 + 0.3, 0), Color3.fromRGB(43, 22, 12), { Material = Enum.Material.Wood, MaterialVariant = "", CastShadow = false }) -- a dark crease where blocks meet
 				part("Landmark", "WorldRoot", Vector3.new(r * 1.6, seg * 0.9, r * 2.1), cf * CFrame.Angles(0, 0.8, 0), sgm % 2 == 1 and PAL.bark or PAL.barkDark, { Material = Enum.Material.Wood, MaterialVariant = "" })
 				if hash(sgm, seed, 3) > 0.35 then -- a cushion of glowing moss in a crease of the bark
 					part("Landmark", "RootMoss", Vector3.new(2.2, 1.4, 1.2), cf * CFrame.new(r * 0.85, seg * (hash(sgm, 1, 2) - 0.5) * 0.6, 0) * CFrame.Angles(0, 0, 0.3), PAL.mint, { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false })
@@ -565,6 +566,11 @@ function M.build(parent, origin, seed)
 						local hgt = 1.6 + hash(x, z, 12) * 3.4
 						deco("Stalagmite", Vector3.new(2.4, hgt, 2.4), CFrame.new(foot + Vector3.new(0, hgt / 2, 0)), PAL.rock[2], { CanCollide = roomy, CanQuery = roomy })
 						deco("Stalagmite", Vector3.new(1.2, 1.4, 1.2), CFrame.new(foot + Vector3.new(0, hgt + 0.7, 0)), PAL.flow, { CanCollide = false })
+					elseif head >= 2 and hsh > 0.8 and hsh < 0.815 then -- lichen flecks low on the rock: faint teal light so no stretch is a dead zone (Gemini r3)
+						local lf = deco("Lichen", Vector3.new(1.4, 0.25, 1), CFrame.new(foot + Vector3.new(0, 0.12, 0)) * CFrame.Angles(0, hsh * 20, 0), Color3.fromRGB(94, 234, 212), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CanQuery = false, CastShadow = false })
+						local ll = Instance.new("PointLight")
+						ll.Color, ll.Range, ll.Brightness, ll.Shadows = Color3.fromRGB(94, 234, 212), 8, 0.35, false
+						ll.Parent = lf
 					elseif head >= 2 and hsh > 0.84 then -- a fallen boulder (breakdown), tilted
 						local s = 2 + hash(x, z, 13) * 2.6
 						deco("Boulder", Vector3.new(s, s * 0.7, s * 0.9), CFrame.new(foot + Vector3.new(0, s * 0.3, 0)) * CFrame.Angles(hash(x, z, 14) * 0.6, hash(z, x, 15) * 3, 0), PAL.rock[3], { CanCollide = roomy, CanQuery = roomy })
