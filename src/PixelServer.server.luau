@@ -1630,6 +1630,24 @@ local function finishMinigame(s)
 		end)
 	end
 	s.claimed[mg.dep] = os.clock() + D.regrow -- grows back for this player after D.regrow seconds
+	if flawless and C.VEIN then -- a vein chain: same-ore deposits close by pop with it (vault Briefs/Cave Mining Loops)
+		local here, popped = mg.dep:GetPivot().Position, {}
+		for _, d in mg.dep.Parent:GetChildren() do
+			if #popped >= C.VEIN.max then break end
+			if d ~= mg.dep and d:GetAttribute("Layer") == L and d:GetAttribute("Ore") == idx and not (s.claimed[d] and os.clock() < s.claimed[d])
+				and (d:GetPivot().Position - here).Magnitude <= C.VEIN.radius then
+				s.claimed[d] = os.clock() + D.regrow
+				table.insert(popped, d)
+			end
+		end
+		if #popped > 0 then
+			local more = #popped * C.VEIN.chunks
+			s.bag += more
+			s.bagV += more * v
+			s.bagOres[key] = (s.bagOres[key] or 0) + more
+			task.delay(1.1, function() FxR:FireClient(s.player, "veinChain", popped, more, o[2]) end) -- after the ore card lands
+		end
+	end
 	quest(s, "extract")
 	if grade == D.strikes or grade == D.grades[1][1] then quest(s, "perfect") end
 	local gems = (idx == 3 and C.GEMS.rare or 0) + ((grade == D.strikes or grade == D.grades[1][1]) and C.GEMS.perfect or 0) + (gilded and D.gilded.gems or 0)
@@ -2288,6 +2306,40 @@ local function onJoin(plr)
 	task.defer(sendState, s)
 end
 Players.PlayerAdded:Connect(onJoin)
+if C.PULSE and C.PULSE.on and caveLanding then -- the Root Pulse: every C.PULSE.every seconds of server time the roots breathe (vault Briefs/Cave Mining Loops)
+	task.spawn(function()
+		local P = C.PULSE
+		local function safe(hrp)
+			for _, l in { caveLanding, workspace.Caves:FindFirstChild("ClayLanding", true) } do
+				if l and (l.Position - hrp.Position).Magnitude <= P.safe then return true end
+			end
+			return false
+		end
+		local warned = -1
+		while true do
+			task.wait(0.5)
+			local now = workspace:GetServerTimeNow()
+			local n, left = math.floor(now / P.every), P.every - now % P.every
+			if left <= P.warn and warned ~= n then
+				warned = n
+				for _, plr in Players:GetPlayers() do if plr:GetAttribute("InCave") then FxR:FireClient(plr, "pulseWarn", math.ceil(left)) end end
+				task.delay(left, function()
+					for _, plr in Players:GetPlayers() do
+						local s, hrp = data[plr], hrpOf(plr)
+						if s and hrp and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] then
+							local lost = (s.bag > 0 and not safe(hrp)) and loseShare(s, P.loss) or 0
+							FxR:FireClient(plr, "pulse", lost, P.glow)
+							if lost > 0 then
+								A.event(s, "PulseLoss", lost)
+								sendState(s)
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+end
 for _, plr in Players:GetPlayers() do task.spawn(onJoin, plr) end
 
 Players.PlayerRemoving:Connect(function(plr)

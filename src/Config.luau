@@ -442,6 +442,10 @@ end
 -- swimming in the grotto lake (CaveSwim): seconds of air, seconds to refill, swim / rise / sink speeds (studs/s), and the share of
 -- the unbanked ore lost when you pass out (the same rule as a gloomling catch)
 C.SWIM = { air = 14, refill = 2.5, speed = 12, rise = 9, sink = 1.2, loss = 0.25 }
+-- cave mining loops (vault Briefs/Cave Mining Loops (2026-11-19)): echo taps on walls, vein chains, the Root Pulse
+C.ECHO = { reach = 10, radius = 26, cool = 0.6, show = 4 } -- client only: studs to the tapped wall, studs counted round it, seconds
+C.VEIN = { radius = 16, max = 4, chunks = 2 } -- a flawless extraction pops up to max same-ore deposits within radius, chunks ore each
+C.PULSE = { on = true, every = 180, warn = 15, loss = 0.15, safe = 40, glow = 6 } -- seconds, share of unbanked ore lost, studs from a camp landing that are safe
 -- the Gloom (ServerScriptService.Gloom): HP, damage per BONK, share of unbanked ore lost when caught, golden shield seconds, flares
 -- per dive and their reach, creep speed at UNEASY and SCARED (studs/s; you walk 16), BONK reach, daze after a BONK, seconds
 -- between spawns
