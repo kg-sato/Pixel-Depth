@@ -324,9 +324,9 @@ function M.build(parent, origin, seed, opt)
 		}
 	elseif L == 2 then -- warm clay floors, a little teal glass in the damp ones
 		FLOOR = {
-			camp = { Color3.fromRGB(150, 96, 76), Color3.fromRGB(176, 118, 92), 0.08 }, tunnel = { Color3.fromRGB(128, 76, 60), Color3.fromRGB(150, 94, 72), 0.15 },
-			chasm = { Color3.fromRGB(120, 70, 58), Color3.fromRGB(144, 88, 68), 0.2 }, grotto = { Color3.fromRGB(110, 82, 76), Color3.fromRGB(134, 100, 88), 0.3 },
-			squeeze = { Color3.fromRGB(132, 78, 62), Color3.fromRGB(156, 98, 76), 0.1 }, mush = { Color3.fromRGB(116, 74, 66), Color3.fromRGB(138, 92, 80), 0.25 },
+			camp = { Color3.fromRGB(176, 124, 90), Color3.fromRGB(196, 142, 104), 0.08 }, tunnel = { Color3.fromRGB(156, 104, 72), Color3.fromRGB(176, 122, 86), 0.15 }, -- Gemini l2r1: warm biscuit, well lighter than the walls
+			chasm = { Color3.fromRGB(150, 98, 70), Color3.fromRGB(170, 116, 84), 0.2 }, grotto = { Color3.fromRGB(146, 108, 90), Color3.fromRGB(166, 126, 104), 0.3 },
+			squeeze = { Color3.fromRGB(158, 104, 74), Color3.fromRGB(178, 122, 88), 0.1 }, mush = { Color3.fromRGB(150, 100, 82), Color3.fromRGB(170, 118, 96), 0.25 },
 		}
 	end
 	local function themeAt(wp) -- the nearest place's theme (wp in local studs)
@@ -408,7 +408,7 @@ function M.build(parent, origin, seed, opt)
 	-- REACH: which places a player can walk to from the camp, on the voxels (a standing cell is air on rock with air above;
 	-- a step moves one cell sideways and at most one voxel up, or any distance down). Model attributes Reach_<place>.
 	local function isAirV(v) return v == 1 or v == 2 end
-	local function stand(x, y, z) return get(x, y, z) ~= 0 and get(x, y, z) ~= 2 and get(x, y - 1, z) ~= 1 and get(x, y - 1, z) ~= 2 and isAirV(get(x, y + 1, z)) end
+	local function stand(x, y, z) return isAirV(get(x, y, z)) and not isAirV(get(x, y - 1, z)) and isAirV(get(x, y + 1, z)) end -- shallow water is walked through
 	local reach = {}
 	do
 		local q, qi = {}, 1
@@ -500,9 +500,10 @@ function M.build(parent, origin, seed, opt)
 			end
 		end
 	end
+	local WALL0 = nil
 	local WALL = L == 4 and { Color3.fromRGB(26, 18, 20), Color3.fromRGB(42, 28, 30), Color3.fromRGB(62, 40, 40), Color3.fromRGB(88, 52, 48) } -- layer 4: basalt, warmer where the glow reaches
 		or L == 3 and { Color3.fromRGB(20, 22, 48), Color3.fromRGB(32, 36, 72), Color3.fromRGB(48, 54, 100), Color3.fromRGB(70, 76, 132) } -- layer 3: night-blue granite
-		or L == 2 and { Color3.fromRGB(88, 44, 40), Color3.fromRGB(118, 62, 50), Color3.fromRGB(150, 86, 66), Color3.fromRGB(180, 116, 88) } -- layer 2: fired clay, darker low, sun-baked high
+		or L == 2 and { Color3.fromRGB(62, 30, 22), Color3.fromRGB(104, 54, 42), Color3.fromRGB(140, 80, 62), Color3.fromRGB(170, 108, 82) } -- the damp foot of the walls darker (Gemini l2r1) -- layer 2: fired clay, darker low, sun-baked high
 		or { Color3.fromRGB(40, 26, 54), Color3.fromRGB(61, 41, 82), Color3.fromRGB(86, 61, 112), Color3.fromRGB(110, 84, 140) } -- deep amethyst slate to soft lavender granite (Gemini r1 palette, a step lighter at the top)
 	local function colorOf(k)
 		if k == 99 then return Color3.fromRGB(45, 26, 56) end
@@ -615,7 +616,13 @@ function M.build(parent, origin, seed, opt)
 			tp("TitanBrow", Vector3.new(24, 4, 6), CFrame.new(0, 7, -5), STONE_D)
 			tp("TitanNose", Vector3.new(5, 10, 6), CFrame.new(0, 0, -6), STONE)
 			tp("TitanLip", Vector3.new(12, 2.4, 3), CFrame.new(0, -8, -5), STONE_D)
-			for _, ex in { -6.5, 6.5 } do tp("TitanLid", Vector3.new(7, 1.4, 1.2), CFrame.new(ex, 3.5, -4.6), STONE_D) end
+			local UMBER = Color3.fromRGB(42, 21, 13)
+			for _, ex in { -6.5, 6.5 } do
+				tp("TitanSocket", Vector3.new(8, 4, 1), CFrame.new(ex, 3.2, -4.1), UMBER) -- the deep sockets read the face from across the hall
+				tp("TitanLid", Vector3.new(7, 1.4, 1.2), CFrame.new(ex, 3.5, -4.7), STONE_D)
+				tp("TitanTear", Vector3.new(0.6, 6, 0.4), CFrame.new(ex + 1, -0.5, -4.6) * CFrame.Angles(0, 0, 0.15), Color3.fromRGB(64, 210, 196), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false }) -- a teal seam weeps from each lid
+			end
+			tp("TitanMouth", Vector3.new(10, 1.2, 1), CFrame.new(0, -8.6, -6.6), UMBER)
 			tp("TitanChin", Vector3.new(16, 5, 7), CFrame.new(0, -13, -1), STONE_D)
 			for k = 1, 5 do -- glowing teal seams where the stone cracked
 				tp("TitanSeam", Vector3.new(0.6, 6 + k, 0.4), CFrame.new(-10 + k * 4, (k % 2) * 4 - 2, -4.3) * CFrame.Angles(0, 0, (k - 3) * 0.3), TEAL, { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false })
@@ -687,7 +694,7 @@ function M.build(parent, origin, seed, opt)
 							local w = Instance.new("WedgePart")
 							w.Name, w.Anchored, w.Size = "Ramp", true, Vector3.new(V, V, V)
 							w.CFrame = CFrame.lookAt(c, c + look)
-							w.Color, w.Material = PAL.moss[1]:Lerp(PAL.rock[2], 0.5), Enum.Material.Slate
+							w.Color, w.Material = colorOf(100 + TI[themeAt(Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V))] * 10 + 1):Lerp(Color3.fromRGB(160, 120, 132), 0.35), Enum.Material.Pebble -- the step is floor: the floor's own colour and grit
 							if VARIANT then w.MaterialVariant = VARIANT end
 							w.Parent = group("Ramps")
 							nRamp += 1
@@ -702,6 +709,8 @@ function M.build(parent, origin, seed, opt)
 	-- DECOR: stalactites from roofs with headroom, stalagmites and boulders on floors, columns where roof and floor nearly meet,
 	-- hanging roots, glowing moss on the roof, rimstone rims and water in the pool
 	local nDecor = 0
+	local ROCK2, ROCK3 = WALL[2], WALL[3] -- dripstone and boulders in the layer's own rock
+	local FLOW = ({ PAL.flow, Color3.fromRGB(214, 170, 140), Color3.fromRGB(200, 214, 255), Color3.fromRGB(120, 90, 84) })[L] -- calcite tips: pale pink, pale clay, frost, ash
 	local function deco(...) nDecor += 1 return part("Decor", ...) end
 	local NOCOL = { CanCollide = false, CanQuery = false, CastShadow = false }
 	for x = 1, NX - 2 do
@@ -716,7 +725,7 @@ function M.build(parent, origin, seed, opt)
 					if room >= 4 and hsh > 0.86 then -- a dripstone, one of three kinds (Gemini r2: every stalactite was the same two-tier block)
 						local kind = math.floor(hash(x, z, 51) * 3)
 						local len = 2 + hash(z, x, 5) * 5
-						local col = PAL.rock[2]:Lerp(PAL.flow, hash(x, z, 52) * 0.4)
+						local col = ROCK2:Lerp(FLOW, hash(x, z, 52) * 0.4)
 						local turn = CFrame.Angles(0, hash(x, z, 53) * 3, 0)
 						if kind == 0 then -- a wide cone: three shrinking blocks, no tip colour
 							for t = 0, 2 do
@@ -727,16 +736,16 @@ function M.build(parent, origin, seed, opt)
 							for t = 0, 1 do
 								local l2 = len * (t == 0 and 1 or 0.6)
 								deco("Stalactite", Vector3.new(1.4, l2, 1.4), CFrame.new(top + Vector3.new(t * 1.6 - 0.8, -l2 / 2, (t - 0.5) * 0.8)) * turn, col, NOCOL)
-								deco("Stalactite", Vector3.new(0.7, 1, 0.7), CFrame.new(top + Vector3.new(t * 1.6 - 0.8, -l2 - 0.5, (t - 0.5) * 0.8)), PAL.flow, NOCOL)
+								deco("Stalactite", Vector3.new(0.7, 1, 0.7), CFrame.new(top + Vector3.new(t * 1.6 - 0.8, -l2 - 0.5, (t - 0.5) * 0.8)), FLOW, NOCOL)
 							end
 						else -- a single slender spike
 							deco("Stalactite", Vector3.new(1.2, len, 1.2), CFrame.new(top - Vector3.new(0, len / 2, 0)) * turn, col, NOCOL)
-							deco("Stalactite", Vector3.new(0.5, 1.4, 0.5), CFrame.new(top - Vector3.new(0, len + 0.7, 0)), PAL.flow, NOCOL)
+							deco("Stalactite", Vector3.new(0.5, 1.4, 0.5), CFrame.new(top - Vector3.new(0, len + 0.7, 0)), FLOW, NOCOL)
 						end
 					elseif room >= 3 and hsh > 0.8 then -- soda straws: thin pale tubes in a cluster
 						for s = 1, 3 do
 							local l = 0.8 + hash(x + s, z, 6) * 2.2
-							deco("Straw", Vector3.new(0.25, l, 0.25), CFrame.new(top + Vector3.new((hash(s, x, z) - 0.5) * 3, -l / 2, (hash(z, s, x) - 0.5) * 3)), PAL.flow, NOCOL)
+							deco("Straw", Vector3.new(0.25, l, 0.25), CFrame.new(top + Vector3.new((hash(s, x, z) - 0.5) * 3, -l / 2, (hash(z, s, x) - 0.5) * 3)), FLOW, NOCOL)
 						end
 					elseif room >= 4 and hsh > 0.74 and hsh < 0.78 then -- glowing moss cushion
 						local m = deco("CeilMoss", Vector3.new(2.4, 0.5, 2), CFrame.new(top - Vector3.new(0, 0.2, 0)), GLOW, { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
@@ -768,12 +777,12 @@ function M.build(parent, origin, seed, opt)
 					while head < 8 and get(x, y + head, z) == 1 do head += 1 end
 					local roomy = get(x + 2, y, z) == 1 and get(x - 2, y, z) == 1 and get(x, y, z + 2) == 1 and get(x, y, z - 2) == 1
 					if head <= 3 and hsh > 0.93 and roomy then -- a column: floor to roof where they nearly meet, only in an open room (never plugging a crawl)
-						deco("Column", Vector3.new(3, head * V, 3), CFrame.new(foot + Vector3.new(0, head * V / 2, 0)), PAL.rock[3], { CastShadow = true })
-						deco("ColumnFoot", Vector3.new(4.4, 1.2, 4.4), CFrame.new(foot + Vector3.new(0, 0.6, 0)), PAL.flow:Lerp(PAL.rock[2], 0.5), {})
+						deco("Column", Vector3.new(3, head * V, 3), CFrame.new(foot + Vector3.new(0, head * V / 2, 0)), ROCK3, { CastShadow = true })
+						deco("ColumnFoot", Vector3.new(4.4, 1.2, 4.4), CFrame.new(foot + Vector3.new(0, 0.6, 0)), FLOW:Lerp(ROCK2, 0.5), {})
 					elseif head >= 3 and hsh > 0.9 then -- a stalagmite under the drip
 						local hgt = 1.6 + hash(x, z, 12) * 3.4
-						deco("Stalagmite", Vector3.new(2.4, hgt, 2.4), CFrame.new(foot + Vector3.new(0, hgt / 2, 0)), PAL.rock[2], { CanCollide = roomy, CanQuery = roomy })
-						deco("Stalagmite", Vector3.new(1.2, 1.4, 1.2), CFrame.new(foot + Vector3.new(0, hgt + 0.7, 0)), PAL.flow, { CanCollide = false })
+						deco("Stalagmite", Vector3.new(2.4, hgt, 2.4), CFrame.new(foot + Vector3.new(0, hgt / 2, 0)), ROCK2, { CanCollide = roomy, CanQuery = roomy })
+						deco("Stalagmite", Vector3.new(1.2, 1.4, 1.2), CFrame.new(foot + Vector3.new(0, hgt + 0.7, 0)), FLOW, { CanCollide = false })
 					elseif head >= 2 and hsh > 0.8 and hsh < 0.815 then -- lichen flecks low on the rock: faint teal light so no stretch is a dead zone (Gemini r3)
 						local lf = deco("Lichen", Vector3.new(1.4, 0.25, 1), CFrame.new(foot + Vector3.new(0, 0.12, 0)) * CFrame.Angles(0, hsh * 20, 0), GLOW, { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CanQuery = false, CastShadow = false })
 						local ll = Instance.new("PointLight")
@@ -781,7 +790,7 @@ function M.build(parent, origin, seed, opt)
 						ll.Parent = lf
 					elseif head >= 2 and hsh > 0.84 then -- a fallen boulder (breakdown), tilted
 						local s = 2 + hash(x, z, 13) * 2.6
-						deco("Boulder", Vector3.new(s, s * 0.7, s * 0.9), CFrame.new(foot + Vector3.new(0, s * 0.3, 0)) * CFrame.Angles(hash(x, z, 14) * 0.6, hash(z, x, 15) * 3, 0), PAL.rock[3], { CanCollide = roomy, CanQuery = roomy })
+						deco("Boulder", Vector3.new(s, s * 0.7, s * 0.9), CFrame.new(foot + Vector3.new(0, s * 0.3, 0)) * CFrame.Angles(hash(x, z, 14) * 0.6, hash(z, x, 15) * 3, 0), ROCK3, { CanCollide = roomy, CanQuery = roomy })
 					end
 				end
 			end
@@ -1003,6 +1012,34 @@ function M.build(parent, origin, seed, opt)
 	model.Parent = parent
 	model:SetAttribute("ZFixed", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(model)) -- no z-fighting (the user, 2026-11-08)
 	return model, { walls = walls }
+end
+
+-- Layer tint for the shared prop set (CaveProps makes cyan crystals for every cave): call after CaveProps.build on a layer 2+ model.
+function M.tintProps(model, layer)
+	local TO = ({ nil, Color3.fromRGB(245, 158, 11), Color3.fromRGB(150, 140, 255), Color3.fromRGB(255, 110, 50) })[layer]
+	local props = model:FindFirstChild("Props")
+	if not TO or not props then return 0 end
+	local n = 0
+	for _, d in props:GetDescendants() do
+		if d:IsA("BasePart") and d.Material == Enum.Material.Glass then -- the crystal's clear shell: amber seen through cyan glass came out green
+			local h, sat = d.Color:ToHSV()
+			if h > 0.42 and h < 0.58 and sat > 0.4 then d.Color = TO:Lerp(Color3.new(1, 1, 1), 0.25) end
+		elseif d:IsA("BasePart") and d.Material == Enum.Material.Neon and not (d:IsA("MeshPart") and d.TextureID ~= "") then
+			local h, sat = d.Color:ToHSV()
+			local mesh = d:FindFirstChildOfClass("SpecialMesh")
+			local vc = mesh and mesh.VertexColor
+			local cyanMesh = vc and vc.Y > 0.6 and vc.Z > 0.6 and vc.X < 0.5
+			if (h > 0.42 and h < 0.58 and sat > 0.4) or cyanMesh then -- cyan crystals take the layer's glow
+				d.Color = TO
+				if mesh then mesh.VertexColor = Vector3.one end -- the mesh's own cyan multiplies the colour: amber x cyan came out green
+				n += 1
+			end
+		elseif d:IsA("PointLight") then
+			local h = d.Color:ToHSV()
+			if h > 0.42 and h < 0.58 then d.Color = TO end
+		end
+	end
+	return n
 end
 
 return M
