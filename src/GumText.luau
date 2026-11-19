@@ -121,6 +121,7 @@ function M.attach(label, opt)
 		if not on or not label.Parent then return end
 		local text = label.Text
 		local abs = label.AbsoluteSize
+		if abs.X < 2 or abs.Y < 2 then return end -- not drawn (a billboard out of range): lay out when it has a size again
 		local pad = label:FindFirstChildOfClass("UIPadding")
 		local l, r, t, b = 0, 0, 0, 0
 		if pad then
@@ -155,7 +156,7 @@ function M.attach(label, opt)
 			end
 			s = lo
 		end
-		s = math.floor(s * 2 + 0.5) / 2
+		s = math.floor(s * 2) / 2 -- round down: rounding up let long lines spill a few px past their box
 		local ls, cell = lines(text, s, w, wrap)
 		local lineH = s * LINE * label.LineHeight
 		local total = #ls * lineH
@@ -188,6 +189,10 @@ function M.attach(label, opt)
 		used = n
 		local widest = 0
 		for _, ln in ls do widest = math.max(widest, ln[2]) end
+		-- the ink box relative to the holder (text checks: spike/text_overlap.luau): line starts, first cap top to last baseline
+		local bx0 = math.huge
+		for _, ln in ls do bx0 = math.min(bx0, l + (xa == Enum.TextXAlignment.Left and 0 or (xa == Enum.TextXAlignment.Right and w - ln[2] or (w - ln[2]) / 2))) end
+		label:SetAttribute("GumBox", Rect.new(bx0, y0 + (lineH - capPx) / 2, bx0 + widest, y0 + (#ls - 1) * lineH + (lineH + capPx) / 2))
 		label:SetAttribute("GumWidth", widest) -- the drawn text's width in px: the plain TextBounds is 0 while the glyphs are hidden (IconPass reads it)
 		paint()
 	end
@@ -199,7 +204,7 @@ function M.attach(label, opt)
 		v = v and ready and M.covers(label.Text) and not label.RichText
 		on = v
 		holder.Visible = v
-		if not v then label:SetAttribute("GumWidth", nil) end
+		if not v then label:SetAttribute("GumWidth", nil) label:SetAttribute("GumBox", nil) end
 		if v then queue() end
 		return v
 	end
@@ -242,6 +247,9 @@ function M.start(E)
 	end
 	for _, d in pg:GetDescendants() do later(d) end
 	pg.DescendantAdded:Connect(later)
+	local cam = workspace.CurrentCamera -- the town's floating station cards are SurfaceGuis on parts under the camera
+	for _, d in cam:GetDescendants() do later(d) end
+	cam.DescendantAdded:Connect(later)
 end
 
 -- self-check: the atlas spells the HUD's words, and a long sentence wraps into more than one line in a narrow box

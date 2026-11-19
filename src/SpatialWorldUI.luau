@@ -149,6 +149,48 @@ function M.start(E)
 		end
 		return false
 	end
+	-- 2026-11-18 (the owner: "a lot of text is overlapping"): the town camera saw the card over its own [F] prompt and under the
+	-- event timer. The card now takes the first of three spots (right of the station, left of it, above it) whose outline on screen
+	-- clears the prompt and the HUD; failing all three, the one that covers least.
+	local GuiService = game:GetService("GuiService")
+	local AVOID = { PromptUI = true, Timers = true, LeftColumn = true, HubMinimap = true, StepCard = true, QuestMarker = true }
+	local function screenRect(cam, pos, right, up)
+		local mn, mx = Vector2.new(math.huge, math.huge), Vector2.new(-math.huge, -math.huge)
+		for _, k in { { -1, -1 }, { 1, -1 }, { -1, 1 }, { 1, 1 } } do
+			local v = cam:WorldToViewportPoint(pos + right * (W / 2 * k[1]) + up * (H / 2 * k[2]))
+			if v.Z <= 0 then return nil end
+			mn, mx = Vector2.new(math.min(mn.X, v.X), math.min(mn.Y, v.Y)), Vector2.new(math.max(mx.X, v.X), math.max(mx.Y, v.Y))
+		end
+		return mn, mx
+	end
+	local function hudRects()
+		local out, gui = {}, E.gui
+		local off = gui.IgnoreGuiInset and Vector2.zero or GuiService:GetGuiInset()
+		for _, o in gui:GetChildren() do
+			if AVOID[o.Name] and o:IsA("GuiObject") and o.Visible then table.insert(out, { o.AbsolutePosition + off - Vector2.new(6, 6), o.AbsolutePosition + o.AbsoluteSize + off + Vector2.new(6, 6) }) end
+		end
+		return out
+	end
+	local function covered(mn, mx, rects)
+		local area = 0
+		for _, r in rects do
+			local w, h = math.min(mx.X, r[2].X) - math.max(mn.X, r[1].X), math.min(mx.Y, r[2].Y) - math.max(mn.Y, r[1].Y)
+			if w > 0 and h > 0 then area += w * h end
+		end
+		return area
+	end
+	local function spot(c, cam) -- the offset from the station's top that keeps the card clear
+		local right, up = cam.CFrame.RightVector, cam.CFrame.UpVector
+		local rects = hudRects()
+		local best, ba
+		for _, o in { right * (W / 2 + 7) + up * 1.5, -right * (W / 2 + 7) + up * 1.5, up * 5.5, up * 9 } do
+			local mn, mx = screenRect(cam, c.top + o, right, up)
+			local a = mn and covered(mn, mx, rects) or math.huge
+			if a == 0 then return o end
+			if not ba or a < ba then best, ba = o, a end
+		end
+		return best
+	end
 	local acc = 0
 	RunService.RenderStepped:Connect(function(dt)
 		local h = E.hrp()
@@ -182,7 +224,9 @@ function M.start(E)
 		for _, c in cards do
 			if c.open or c.card.GroupTransparency < 0.99 then
 				local side = cam.CFrame.RightVector * Vector3.new(1, 0, 1)
-				local pos = c.top + cam.CFrame.UpVector * 5.5 + Vector3.new(0, math.sin(now * 1.6 + c.top.X) * 0.12, 0) -- above the station and its prompt bubble as the camera sees it (directive v9: it was beside it), with a slow hover
+				if scan or not c.off then c.want = spot(c, cam) end
+				c.off = c.off and c.off:Lerp(c.want, math.min(1, dt * 8)) or c.want
+				local pos = c.top + c.off + Vector3.new(0, math.sin(now * 1.6 + c.top.X) * 0.12, 0) -- in the clear spot round the station (see spot), with a slow hover
 				-- face against the camera's view direction (not toward its position: off-centre cards then look twisted), turning about the
 				-- vertical axis and leaning back up to 55 degrees for the town's high camera; the card keeps its perspective
 				local look = cam.CFrame.LookVector

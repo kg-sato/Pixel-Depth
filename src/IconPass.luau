@@ -61,32 +61,52 @@ function M.attach(label)
 			icon.Parent = label
 		end
 		local text = label.TextBounds.Y > 0 and label.TextBounds.Y or h * 0.6
-		local s = math.clamp(math.max(text * 1.35, h * 0.72), math.min(12, h * 1.15), h * 1.15) -- a little taller than the capitals: an icon reads at the size of the word's line
+		-- k = screen pixels per offset unit here: a UIScale above the label (pop-ins) or a 3D panel's canvas scales offsets, so
+		-- sizes are measured on screen and divided by k before they go into offsets (measured from the icon itself)
+		local k = (icon.Size.X.Offset > 0 and icon.AbsoluteSize.X > 0) and icon.AbsoluteSize.X / icon.Size.X.Offset or 1
+		local sAbs = math.clamp(math.max(text * 1.35, h * 0.72), math.min(12, h * 1.15), h * 1.15) -- a little taller than the capitals: an icon reads at the size of the word's line
+		local s = sAbs / k
 		icon.Image, icon.Visible, icon.ZIndex = ICON[key], true, label.ZIndex + 2
 		icon.Size = UDim2.fromOffset(s, s)
 		pad.PaddingLeft = UDim.new(base.Scale, base.Offset + s * 1.05)
 		if label.TextScaled and label.Parent:IsA("GuiObject") then -- a tight scaled word (MENU) would shrink to make room: widen it into the pill's spare width instead
 			size0 = size0 or label.Size
-			local grow = math.max(0, math.min(s * 1.05, label.Parent.AbsoluteSize.X * 0.84 - (label.AbsoluteSize.X - (label.Size.X.Offset - size0.X.Offset))))
+			local grow = math.max(0, math.min(s * 1.05, (label.Parent.AbsoluteSize.X * 0.84 - (label.AbsoluteSize.X - (label.Size.X.Offset - size0.X.Offset) * k)) / k))
 			local want = UDim2.new(size0.X.Scale, size0.X.Offset + grow, size0.Y.Scale, size0.Y.Offset)
 			if label.Size ~= want then label.Size = want end
 		end
 		local xa = label.TextXAlignment
 		local jel = label:FindFirstChild("Jelly")
 		if jel and not jel:IsA("GuiObject") then jel = nil end -- JellyPress names its bounce UIScale "Jelly" too
-		if jel and not watched then watched = true jel:GetPropertyChangedSignal("AbsoluteSize"):Connect(queue) jel:GetPropertyChangedSignal("Visible"):Connect(queue) end
-		-- hidden glyphs report no width: the 3D jelly row or Gumdrop says what was drawn
-		local w = (jel and jel.Visible and jel.AbsoluteSize.X) or label:GetAttribute("GumWidth") or label.TextBounds.X
-		local left = base.Scale * label.AbsoluteSize.X + base.Offset -- where the padded area starts
-		local inner = label.AbsoluteSize.X - left - (pad.PaddingRight.Scale * label.AbsoluteSize.X + pad.PaddingRight.Offset) - s * 1.05
-		local x0 = left + s * 1.05 + (xa == Enum.TextXAlignment.Left and 0 or (xa == Enum.TextXAlignment.Right and inner - w or (inner - w) / 2))
-		icon.Position = UDim2.new(0, x0 - s * 0.58 - (left + s * 1.05), 0.5, 0) -- just left of where the text starts (the icon sits inside the padding too: measured from the padded edge)
+		if jel and not watched then
+			watched = true
+			for _, prop in { "AbsoluteSize", "AbsolutePosition", "Visible" } do jel:GetPropertyChangedSignal(prop):Connect(queue) end
+		end
+		local left = base.Scale * label.AbsoluteSize.X + base.Offset * k -- where the padded area starts, on screen
+		-- the icon is a child of the label, so it sits inside the padding: its offsets count from the padded corner, found from the icon's own place
+		local padded = icon.AbsolutePosition.X + icon.AnchorPoint.X * icon.AbsoluteSize.X - icon.Position.X.Offset * k
+		-- where the ink really starts: the 3D jelly row or Gumdrop's ink box (the plain glyphs are hidden and report no width), else the plain text
+		local gum, box = label:FindFirstChild("Gum"), label:GetAttribute("GumBox")
+		local inkX
+		if jel and jel.Visible then
+			inkX = jel.AbsolutePosition.X
+		elseif gum and gum.Visible and box then
+			inkX = gum.AbsolutePosition.X + box.Min.X
+		else
+			local w = label.TextBounds.X
+			local inner = label.AbsoluteSize.X - left - (pad.PaddingRight.Scale * label.AbsoluteSize.X + pad.PaddingRight.Offset * k) - sAbs * 1.05
+			inkX = padded + (xa == Enum.TextXAlignment.Left and 0 or (xa == Enum.TextXAlignment.Right and inner - w or (inner - w) / 2))
+		end
+		local want = UDim2.new(0, (inkX - sAbs * 0.6 - padded) / k, 0.5, 0) -- just left of where the text starts
+		if (icon.Position.X.Offset - want.X.Offset) ^ 2 > 0.25 then icon.Position = want queue() end -- one more pass once the new place has been drawn
 		icon.ImageTransparency = label.TextTransparency
 	end
 	local queued = false
 	function queue() if not queued then queued = true task.defer(function() queued = false if label.Parent then place() end end) end end
 	for _, p in { "Text", "AbsoluteSize", "TextBounds", "TextXAlignment", "TextTransparency" } do label:GetPropertyChangedSignal(p):Connect(queue) end
 	label:GetAttributeChangedSignal("GumWidth"):Connect(queue)
+	label:GetAttributeChangedSignal("GumBox"):Connect(queue)
+	label.ChildAdded:Connect(function() task.defer(queue) end) -- the jelly row or the Gumdrop holder often arrives after the icon
 	queue()
 end
 
