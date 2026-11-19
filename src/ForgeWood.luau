@@ -294,7 +294,7 @@ function M.setup(ctx)
 		local bolt1 = (t >= 0.95 and t < 1.02) or (t >= 1.32 and t < 1.46)
 		skyBolt:show("Bolt", bolt1)
 		if bolt1 then ctx.light({ Brightness = 4, Ambient = rgb(190, 200, 225) }) end
-		ctx.flashAlpha = math.max((t >= 0.95 and t < 1.0) and 0.35 or 0, 0.85 * (1 - lin(1.32, 1.62, t)) * (t >= 1.32 and 1 or 0), (1 - lin(3.0, 3.22, t)) * (t >= 2.94 and 1 or 0) * smooth(2.94, 3.0, t), 0.9 * (1 - lin(8.45, 8.8, t)) * (t >= 8.45 and 1 or 0))
+		ctx.flashAlpha = math.max((t >= 0.95 and t < 1.0) and 0.35 or 0, 0.5 * (1 - lin(1.32, 1.62, t)) * (t >= 1.32 and 1 or 0), 0.55 * (1 - lin(3.0, 3.22, t)) * (t >= 2.94 and 1 or 0) * smooth(2.94, 3.0, t), 0.6 * (1 - lin(8.45, 8.8, t)) * (t >= 8.45 and 1 or 0)) -- peaks softened from 0.85 / 1 / 0.9: the two strikes read as near-white frames (Gemini, 2026-11-19)
 		ctx.once("thunder1", 0.95, t, function() ctx.sound(SND.thunder, 0.3, 1.25) end)
 		ctx.once("thunder2", 1.32, t, function() ctx.sound(SND.thunder, 0.75, 0.95) sfx("breakRock", 0.5) ctx.shake(1.1) ctx.hold(3 / 60) end)
 		rainS.Volume = 0.4 * storm * smooth(0, 0.4, t)

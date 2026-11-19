@@ -36,7 +36,9 @@ function M.setup(ctx)
 	-- ===== the place =====
 	local MAP = require(script.Parent:WaitForChild("ForgeMossbackMap"))
 	local land = ctx.prop("MossbackWorld")
-	land:all(function(p, b) p.Material = Enum.Material.Rubber if b.name == "Far" then p.CastShadow = false end end)
+	-- the canyon and its big rocks answer the camera's line-of-sight ray (only this scene's ray: Include list). 2026-11-19
+	local solid = {}
+	land:all(function(p, b) p.Material = Enum.Material.Rubber if b.name == "Far" then p.CastShadow = false else p.CanQuery = true table.insert(solid, p) end end)
 	local SMALL = { PalePebble1 = true, PalePebble2 = true, PalePebble3 = true, WispyGrass = true, GrassTuft = true, FlowerPatch = true, FlowerPatch2 = true, Fern = true, Clover = true, Plant1 = true, Plant7 = true, Mushroom = true }
 	for _, it in MAP.items do
 		local r = ctx.prop(it[1], CFrame.new(it[2], it[3], it[4]) * CFrame.Angles(0, math.rad(it[5]), 0), it[6])
@@ -48,7 +50,21 @@ function M.setup(ctx)
 				p.Material = Enum.Material.Rubber
 			end
 			if small then p.CastShadow = false end
+			if not small and not fall then p.CanQuery = true table.insert(solid, p) end
 		end)
+	end
+	local seeRp = RaycastParams.new()
+	seeRp.FilterType, seeRp.FilterDescendantsInstances = Enum.RaycastFilterType.Include, solid
+	local lift = 0
+	local function clearShot(from, aim, dt) -- a canyon rock between the camera and her: lift the camera until she shows (the Mossback camera sat in a rock, 2026-11-19)
+		local want = 0
+		for k = 0, 12 do
+			local f, a = O * (from + V(0, k * 0.75, 0)), O * aim
+			want = k * 0.75
+			if not workspace:Raycast(f, a - f, seeRp) then break end
+		end
+		lift += (want - lift) * math.min(1, dt * 5) -- eased, so the camera rises instead of jumping
+		return from + V(0, lift, 0)
 	end
 	-- the pool under the fall behind the shelf: a round clear sheet with the ripple picture turning on it
 	local pool = ctx.part(v3(0.2, 7.2, 7.2), CFrame.new(MAP.pool[1], -0.42, MAP.pool[3]) * CFrame.Angles(0, 0, math.rad(90)), hex("#6f9a96"), { Shape = Enum.PartType.Cylinder, Transparency = 0.45, Reflectance = 0.15 })
@@ -368,7 +384,9 @@ function M.setup(ctx)
 		elseif t < 7.6 then
 			local c = CAMS[math.clamp(yi - 1, 1, #CAMS)]
 			local start = at(YEARS[yi][3])
-			shot(start + c + V(0, 0, 0.6 * lin(YEARS[yi][1], YEARS[yi][1] + 0.9, t)), pos + V(0, 2.3, 0), 44)
+			local aim = pos + V(0, 2.3, 0)
+			local cf0 = clearShot(start + c + V(0, 0, 0.6 * lin(YEARS[yi][1], YEARS[yi][1] + 0.9, t)), pos + V(0, 0.9, 0), dt) -- clear down to her body, not just her head
+			shot(cf0, aim, 44)
 		else -- low on the shelf: her, the pickaxe, and behind them the fall and the whole canyon she came down
 			local up = smooth(8.4, 9.3, t)
 			shot(V(END.X + 1.0 - 0.3 * smooth(8.4, 10.8, t), 0.9, END.Z - 11.5 + 0.8 * smooth(8.4, 10.8, t)), (END + V(1.5, 2.3, -1.3)):Lerp(END + V(2.2, 3.8, -1.8), up), 56 - 2 * smooth(8.4, 10.8, t))

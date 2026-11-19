@@ -14,6 +14,9 @@ SCENES = [("WoodPickaxe", "Wood Pickaxe"), ("StonePickaxe", "Stone Pickaxe"), ("
           ("CopperPickaxe", "Kobold-Copper Pickaxe"), ("BogIronPickaxe", "Bog-Iron Pickaxe"), ("RootheartPickaxe", "Rootheart Pickaxe"),
           ("MossbackPickaxe", "Mossback Pickaxe"), ("KilnPickaxe", "Kiln Pickaxe"), ("RuneTinPickaxe", "Rune-Tin Pickaxe"),
           ("GeodePickaxe", "Geode Pickaxe"), ("FossilPickaxe", "Fossil Pickaxe"), ("TitanHammerPickaxe", "Titan Hammer Pickaxe")]
+import os
+if os.environ.get("CUT_ONLY"):  # e.g. CUT_ONLY=WoodPickaxe,GeodePickaxe: re-check a few scenes
+    SCENES = [s for s in SCENES if s[0] in os.environ["CUT_ONLY"].split(",")]
 RUN = ("local S = require(game.ReplicatedStorage.Shared.ForgeStory) local ok, e = pcall(function() return S.play({ name = '%s', model = '%s', "
        "rarity = { 'Common', 1, Color3.fromRGB(159, 227, 196) } }) end) return tostring(ok) .. ' ' .. tostring(e)")
 N.play(False); N.restore(); N.play(True); time.sleep(12)

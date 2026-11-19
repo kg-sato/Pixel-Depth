@@ -214,7 +214,7 @@ function M.setup(ctx)
 			local b = kid:joint("ForeR") * CFrame.new(V(0.04, -0.5, -0.2))
 			local join = smooth(8.4, 9.0, t)
 			local mid = a.Position:Lerp(b.Position, 0.5)
-			hammer.root = CFrame.new(mid + O:VectorToWorldSpace(V(1.0 * smooth(8.4, 9.2, t), -0.55, -0.2))) * (O - O.Position) * R(0, 0, -12 * smooth(8.4, 9.2, t)) -- upright in her paws, then held out to the side so her face shows
+			hammer.root = CFrame.new(mid + O:VectorToWorldSpace(V(-1.1 * smooth(8.4, 9.2, t), -0.55 - 0.8 * smooth(8.4, 9.2, t), -0.2 - 0.3 * smooth(8.4, 9.2, t)))) * (O - O.Position) * R(0, 0, 12 * smooth(8.4, 9.2, t)) -- upright in her paws, then held out to screen right (the name card sits top left) and a little lower and nearer, so her face and the whole pick show (2026-11-19)
 			local head = hammer.root * CFrame.new(0, 0.74, 0)
 			rock.root = CFrame.new(mid:Lerp(head.Position, join)) * (O - O.Position) * R(0, 180, 0)
 			rock:set("HalfA", (CFrame.new(-0.75, 0, 0) * R(0, 90, 0)):Lerp(CFrame.new(-0.42, -0.08, 0) * R(0, 90, 0) * R(-22, 0, 0), join)) -- the halves go either side of the hammer head, crystal to the front, drooping like the two points of a pick
@@ -222,7 +222,7 @@ function M.setup(ctx)
 			glowPart.CFrame = rock.root * CFrame.new(0, 0, -0.3)
 			once("join", 9.0, t, function() ctx.sound(SND.bonk, 0.45, 2.24) crystalDust:Emit(30) ctx.kick(2) end)
 			if t >= 9.0 and pick then -- the halves and the hammer are now one thing: the pickaxe
-				pick:ScaleTo(pickScale0 * 2.6 / pickH)
+				pick:ScaleTo(pickScale0 * 2.1 / pickH) -- 2.1 high (was 2.6): the low camera cut its head off the top of the frame
 				pick:PivotTo(hammer.root * CFrame.new(0, -0.2, -0.1))
 				hammer.root, rock.root = FAR, FAR
 			end
