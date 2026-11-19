@@ -117,6 +117,9 @@ function M.start(E)
 		local nm = text(f, name, UDim2.fromScale(0.9, 0.15), UDim2.fromScale(0.5, 0.67), Vector2.new(0.5, 0.5), INK, 700, false)
 		local ct = text(f, count, UDim2.fromScale(0.9, 0.15), UDim2.fromScale(0.5, 0.85), Vector2.new(0.5, 0.5), MUTED, 700, false)
 		nm.ZIndex, ct.ZIndex = 8, 8
+		for _, t in { nm, ct } do -- light on the dark glass card: ink text could not be read (full1119d 97 s, 2026-11-19)
+			t.TextColor3, t.TextStrokeColor3, t.TextStrokeTransparency = t == nm and Color3.fromRGB(245, 238, 255) or Color3.fromRGB(200, 186, 232), Color3.fromRGB(22, 8, 30), 0.3
+		end
 		if key and neededBy(key) > 0 then -- a reminder that the next pickaxe uses this ore
 			local tag = panel(f, UDim2.fromScale(0.9, 0.16), UDim2.fromScale(0.5, 0.11), Vector2.new(0.5, 0.5), "pillButter") -- inside the card: on its top edge it hung over the row above
 			ic.Position, ic.Size = UDim2.fromScale(0.5, 0.4), UDim2.fromScale(0.44, 0.38)
@@ -139,6 +142,7 @@ function M.start(E)
 		return f
 	end
 	refresh = function()
+		st = st or (E.getState and E.getState()) -- the first State can arrive before this module listens: the bag opened blank (2026-11-19)
 		if not st then return end
 		for _, f in ui.slots do f:Destroy() end
 		ui.slots = {}
@@ -146,7 +150,8 @@ function M.start(E)
 		local heavy = (st.bag or 0) > (st.cap or pack.cap)
 		capT.Visible, capTrack.Visible = ui.tab == "bag", ui.tab == "bag"
 		capT.Text = pack.name .. "   " .. commas(st.bag or 0) .. " / " .. commas(st.cap or pack.cap) .. (heavy and "   HEAVY" or "")
-		capT.TextColor3 = heavy and DEEP_GOLD or INK
+		capT.TextColor3 = heavy and BUTTER or Color3.fromRGB(245, 238, 255) -- light on the dark glass (ink was unreadable)
+		capT.TextStrokeColor3, capT.TextStrokeTransparency = Color3.fromRGB(22, 8, 30), 0.3
 		tween(capFill, 0.3, { Size = UDim2.fromScale(math.clamp((st.bag or 0) / (st.cap or pack.cap), 0, 1), 1), BackgroundColor3 = heavy and BUTTER or MINT }, Enum.EasingStyle.Back)
 		for k, b in tabs do setKind(b, k == ui.tab and "tabOn" or "tab") end
 		local n = 0
@@ -183,7 +188,18 @@ function M.start(E)
 			if flares > 0 then n += 1 slot(n, E.ICON and E.ICON.star, "Flares", "x" .. flares) end
 			emptyT.Text = "No items yet. Eggs and flares go here."
 		end
-		emptyT.Visible = n == 0
+		local want = ui.tab == "bag" and math.max(12, math.min(st.cap or pack.cap, 18)) or 12 -- the rest of the grid: dim "?" slots, so the bag reads as a bag with room in it and never as an empty box
+		for i = n + 1, want do
+			local g = panel(grid, UDim2.new(), UDim2.new(), nil, "slot")
+			g.LayoutOrder, g.ZIndex = i, 7
+			for _, d in g:GetDescendants() do if d:IsA("ImageLabel") then d.ImageTransparency = math.max(d.ImageTransparency, 0.62) end end
+			if g:IsA("ImageLabel") then g.ImageTransparency = math.max(g.ImageTransparency, 0.62) end
+			local q = text(g, "?", UDim2.fromScale(0.5, 0.4), UDim2.fromScale(0.5, 0.45), Vector2.new(0.5, 0.5), Color3.fromRGB(200, 186, 232), 700, false)
+			q.ZIndex, q.TextTransparency = 8, 0.55
+			ui.slots[#ui.slots + 1] = g
+		end
+		emptyT.Visible = false
+		emptyIc.Visible = false
 		for i, f in ui.slots do -- slots stagger in, 25 ms apart (board 8)
 			local sc = f:FindFirstChild("Pop") or new("UIScale", f, { Name = "Pop" })
 			sc.Scale = 0.6
@@ -192,7 +208,7 @@ function M.start(E)
 		foot.Visible = ui.sell
 		titleT.Text = ui.sell and "SELL TO BOLT" or "BACKPACK"
 		totalT.Text = "SELL FOR " .. commas(total()) .. " COINS"
-		hintT.Text = ui.sell and "Tap stacks to pick them. Ore your next pickaxe needs is tagged, never locked." or "Over capacity you walk slower. Bank at the camp fire; sell at Bolt in town."
+		hintT.Text = ui.sell and "Tap stacks to pick them. Ore your next pickaxe needs is tagged, never locked." or (n == 0 and emptyT.Text) or "Over capacity you walk slower. Bank at the camp fire; sell at Bolt in town."
 	end
 
 	local function open(sellMode)
