@@ -431,6 +431,13 @@ function M.build(caves)
 		jar.PrimaryPart = b
 		jar:SetAttribute("Jar", i)
 		jar.Parent = folder
+		do -- stand it on the real floor: some sat half a stud over the uneven clay (Gemini full1119b, 581 s)
+			local rp = RaycastParams.new()
+			rp.FilterType, rp.FilterDescendantsInstances = Enum.RaycastFilterType.Exclude, { jar }
+			local foot = b.Position - Vector3.new(0, b.Size.Y / 2, 0)
+			local hit = workspace:Raycast(foot + Vector3.new(0, 2, 0), Vector3.new(0, -5, 0), rp)
+			if hit then jar:PivotTo(jar:GetPivot() + Vector3.new(0, hit.Position.Y - foot.Y - 0.02, 0)) end
+		end
 		jars[i] = prompt(b, "Smash", "Clay jar", "ClayJar", i, 7)
 	end
 	-- fossil spots: a slab of pale clay on the wall with the amber shape showing faintly through

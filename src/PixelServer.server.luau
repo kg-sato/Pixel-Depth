@@ -1162,7 +1162,7 @@ task.spawn(function() -- the sign and its prompt over Camp 1's cart
 	a.Name, a.Size, a.Transparency, a.Anchored, a.CanCollide, a.CanQuery, a.CanTouch = "CrewAnchor", Vector3.new(1, 1, 1), 1, true, false, false, false
 	a.CFrame = body.CFrame * CFrame.new(0, 7, 0) -- above the cart's own Ride up card
 	local bb = Instance.new("BillboardGui")
-	bb.Name, bb.Size, bb.MaxDistance, bb.LightInfluence = "CrewSign", UDim2.fromScale(10, 1.1), 70, 0
+	bb.Name, bb.Size, bb.MaxDistance, bb.LightInfluence, bb.StudsOffset = "CrewSign", UDim2.fromScale(10, 1.1), 70, 0, Vector3.new(0, 1.9, 0) -- lifted over its own V prompt card, which sat on the middle of the sign (2026-11-19)
 	local t = Instance.new("TextLabel")
 	t.Name, t.Size, t.BackgroundColor3, t.BackgroundTransparency, t.TextScaled, t.Font = "Line", UDim2.fromScale(1, 1), Color3.fromRGB(36, 17, 56), 0.2, true, Enum.Font.FredokaOne
 	t.TextColor3, t.Text = Color3.fromRGB(255, 214, 107), "CREW RIDE:  PRESS V TO BOARD"
@@ -1620,16 +1620,6 @@ local function finishMinigame(s)
 	s.bagV += count * v
 	local key = L .. "." .. idx
 	s.bagOres[key] = (s.bagOres[key] or 0) + count
-	if C.CHARMS_ON and s.charms.courier and s.bag >= cap(s) then -- the Ore Courier charm: a full bag goes to the bank for a fee
-		task.delay(1.5, function() -- after the ore card
-			if data[s.player] ~= s or s.bag < cap(s) then return end
-			local lost = loseShare(s, C.COURIER_FEE)
-			FxR:FireClient(s.player, "courier", lost)
-			sell(s)
-			sendState(s)
-		end)
-	end
-	s.claimed[mg.dep] = os.clock() + D.regrow -- grows back for this player after D.regrow seconds
 	if flawless and C.VEIN then -- a vein chain: same-ore deposits close by pop with it (vault Briefs/Cave Mining Loops)
 		local here, popped = mg.dep:GetPivot().Position, {}
 		for _, d in mg.dep.Parent:GetChildren() do
@@ -1648,6 +1638,16 @@ local function finishMinigame(s)
 			task.delay(1.1, function() FxR:FireClient(s.player, "veinChain", popped, more, o[2]) end) -- after the ore card lands
 		end
 	end
+	if C.CHARMS_ON and s.charms.courier and s.bag >= cap(s) then -- the Ore Courier charm: a full bag goes to the bank for a fee
+		task.delay(1.5, function() -- after the ore card
+			if data[s.player] ~= s or s.bag < cap(s) then return end
+			local lost = loseShare(s, C.COURIER_FEE)
+			FxR:FireClient(s.player, "courier", lost)
+			sell(s)
+			sendState(s)
+		end)
+	end
+	s.claimed[mg.dep] = os.clock() + D.regrow -- grows back for this player after D.regrow seconds
 	quest(s, "extract")
 	if grade == D.strikes or grade == D.grades[1][1] then quest(s, "perfect") end
 	local gems = (idx == 3 and C.GEMS.rare or 0) + ((grade == D.strikes or grade == D.grades[1][1]) and C.GEMS.perfect or 0) + (gilded and D.gilded.gems or 0)

@@ -1975,6 +1975,9 @@ end
 				psPop.Rotation = 0
 			end
 			if n >= D.strikes then mg.done = true end
+		elseif kind == "veinChain" then -- the chained deposits are claimed too (Shared.MiningLoops draws the bursts; Codex review 2026-11-19)
+			local list = ...
+			for _, d in list or {} do for _, g in map.deps do if g.dep == d then claim(g) end end end
 		elseif kind == "mgEnd" then
 			local dep, oreName, count, value, col, grade = ...
 			for _, g in map.deps do if g.dep == dep then claim(g) end end
@@ -2673,6 +2676,14 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		end
 		cave.tvm:ScaleTo(0.6)
 		cave.tvm.Name = "ViewTorch"
+		do -- chunky pixel flames over the neon blocks (Shared.PixelFire), locked to the torch so they do not trail when the view turns
+			local top
+			for _, d in cave.tvm:GetDescendants() do if d:IsA("BasePart") and d.Name:sub(1, 5) == "Flame" and (not top or d.Position.Y > top.Position.Y) then top = d end end
+			if top then
+				local e = require(RS.Shared.PixelFire).attach(top, Color3.fromRGB(255, 205, 110), Color3.fromRGB(255, 96, 40), 0.3) -- small: at the lens 0.75 filled a quarter of the view
+				e.LockedToPart, e.Rate, e.Speed = true, 10, NumberRange.new(0.15, 0.3)
+			end
+		end
 		if forgeUI.vmHands then forgeUI.vmHands(cave.tvm, cave.tvm.PrimaryPart, cave.tvm.PrimaryPart.CFrame * CFrame.new(0, -0.2, 0), 0.72) end -- the left hand holds it (audit 15)
 		cave.tvm.Parent = cam
 	end
