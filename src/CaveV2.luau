@@ -552,6 +552,14 @@ function M.build(parent, origin, seed, opt)
 	end
 
 	-- (see SMOOTH below the crumple)
+	local function floorUnder(p) -- the walk height under a local point (studs, local frame)
+		local vx, vy, vz = toVox(p + Vector3.new(0, dipY(p.X), 0))
+		local x, z = math.floor(vx), math.floor(vz)
+		for y = math.floor(vy) + 2, 0, -1 do
+			if get(x, y, z) == 1 and get(x, y - 1, z) == 0 then return toWorld(x, y, z) - Vector3.new(0, V / 2, 0) end
+		end
+		return nil
+	end
 	-- THE WORLD ROOT: one giant root of the World Tree comes down through the cathedral roof and spreads into the floor. A trunk of
 	-- stacked cylinders that leans and narrows as it rises, bark rings, and six flaring roots at its foot; mint moss on the bark.
 	if L == 1 then
@@ -641,13 +649,31 @@ function M.build(parent, origin, seed, opt)
 		local ll = Instance.new("PointLight")
 		ll.Color, ll.Range, ll.Brightness, ll.Shadows = Color3.fromRGB(255, 110, 50), 60, 1.2, false
 		ll.Parent = lake
+		part("Landmark", "MagmaCrust", Vector3.new(64, 0.8, 48), lake.CFrame * CFrame.new(0, -0.2, 0), Color3.fromRGB(24, 18, 22), { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.2, CanCollide = false }) -- the cooled obsidian rim round the glow
+		for k = 1, 3 do -- floating rafts of dark slag
+			part("Landmark", "SlagRaft", Vector3.new(4 + k, 0.8, 3 + k * 0.5), lake.CFrame * CFrame.new((k - 2) * 14, 0.6, (hash(k, seed, 8) - 0.5) * 20) * CFrame.Angles(0, k, 0), Color3.fromRGB(30, 22, 24), { Material = Enum.Material.Basalt, MaterialVariant = "", CanCollide = false })
+		end
+		local vent = floorUnder(P(-68, -24, 46)) -- a vent at the bottom of the drop: a rising glow and sparks
+		if vent then
+			local v = part("Landmark", "MagmaVent", Vector3.new(3, 0.6, 3), CFrame.new(vent + Vector3.new(0, 0.3, 0)), Color3.fromRGB(255, 85, 0), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false })
+			local vl = Instance.new("PointLight")
+			vl.Color, vl.Range, vl.Brightness, vl.Shadows = Color3.fromRGB(255, 85, 0), 24, 1.6, false
+			vl.Parent = v
+			local e = Instance.new("ParticleEmitter")
+			e.Texture, e.Color, e.LightEmission = "rbxasset://textures/particles/sparkles_main.dds", ColorSequence.new(Color3.fromRGB(255, 150, 60)), 1
+			e.Size, e.Rate, e.Lifetime, e.Speed, e.SpreadAngle = NumberSequence.new(0.3, 0), 8, NumberRange.new(2, 3.5), NumberRange.new(4, 7), Vector2.new(12, 12)
+			e.Parent = v
+		end
 		for k = 1, 9 do
 			local a = k / 9 * math.pi * 2
 			local at = origin + rootC + P(math.cos(a) * 26, 0, math.sin(a) * 18)
 			local h = 6 + hash(k, seed, 4) * 14
-			for q = 0, 2 do -- a cluster of three stacked basalt columns
-				local o2 = Vector3.new(math.cos(q * 2.1) * 2.2, 0, math.sin(q * 2.1) * 2.2)
-				part("Landmark", "BasaltColumn", Vector3.new(2.6, h - q * 2, 2.6), CFrame.new(at + o2 + Vector3.new(0, (h - q * 2) / 2 - 4, 0)) * CFrame.Angles(0, q * 0.5, 0), Color3.fromRGB(40, 30, 32), { Material = Enum.Material.Basalt, MaterialVariant = "" })
+			for q = 0, 4 do -- a cluster of five basalt columns, each a different height: natural stepping stones (Gemini l4r1)
+				local o2 = q == 0 and Vector3.zero or Vector3.new(math.cos(q * 1.57 + k) * 2.4, 0, math.sin(q * 1.57 + k) * 2.4)
+				local ch = h - q * (1 + hash(k, q, 6) * 3)
+				for t = 0, 1 do -- two blocks turned 30 degrees apart: a six-sided profile
+					part("Landmark", "BasaltColumn", Vector3.new(2.4, ch, 2.4), CFrame.new(at + o2 + Vector3.new(0, ch / 2 - 4, 0)) * CFrame.Angles(0, q * 0.5 + t * math.pi / 6, 0), Color3.fromRGB(40 + q * 3, 30, 32), { Material = Enum.Material.Basalt, MaterialVariant = "" })
+				end
 			end
 		end
 	end
@@ -838,14 +864,6 @@ function M.build(parent, origin, seed, opt)
 		l.Color, l.Range, l.Brightness, l.Shadows = color, range, b or 0.45, true
 		l.Parent = lamp
 		return post
-	end
-	local function floorUnder(p) -- the walk height under a local point (studs, local frame)
-		local vx, vy, vz = toVox(p + Vector3.new(0, dipY(p.X), 0))
-		local x, z = math.floor(vx), math.floor(vz)
-		for y = math.floor(vy) + 2, 0, -1 do
-			if get(x, y, z) == 1 and get(x, y - 1, z) == 0 then return toWorld(x, y, z) - Vector3.new(0, V / 2, 0) end
-		end
-		return nil
 	end
 	for _, p in { P(-20, 6, -6), P(20, 6, 6), P(52, 0, 10), P(100, -4, 4), P(120, 4, -12), P(60, 22, -88), P(-60, 24, -92), P(130, -10, 44) } do
 		local at = floorUnder(p)

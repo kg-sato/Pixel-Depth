@@ -237,6 +237,10 @@ function M.build(caves)
 	end
 	local landing = caves:FindFirstChild("LiftLanding", true)
 	if landing then table.insert(keep, landing.Position) end
+	local lanes = {} -- Cave v2: the narrow passages' middle lines (Spot markers in order), a prop never stands within 3.5 studs of them
+	for _, v in caves:GetChildren() do
+		if v:IsA("ObjectValue") and string.sub(v.Name, 1, 5) == "Spot_" and v.Value then table.insert(lanes, v.Value.WorldPosition) end
+	end
 	local function clear(pos)
 		for _, k in keep do
 			if (k - pos).Magnitude < M.KEEP_OUT then return false end
@@ -269,9 +273,11 @@ function M.build(caves)
 				end
 				local near = false
 				for _, q in placed do if (q - spot).Magnitude < 7 then near = true break end end -- 7 studs apart (Gemini n17_r4: the floor round each prop still bare)
-				if wallDir and not near and clear(spot) then
+				local roomy = wallDist and wallDist > 1.2 -- a prop needs space between the wall and the walking lane, or it lands in the lane
+				for _, q in lanes do if (q - spot).Magnitude < 3.5 then roomy = false break end end
+				if wallDir and not near and roomy and clear(spot) then
 					local kind = M.pick(mix, rng:NextNumber())
-					local at = spot + wallDir * math.max(wallDist - 2.4, 0) -- against the wall, not in the passage
+					local at = spot + wallDir * math.max(wallDist - 1.6, 0) -- against the wall, not in the passage (Gemini: 3.5-stud lane clearance)
 					local base = CFrame.lookAt(at, at - wallDir) * CFrame.new(0, -0.15, 0) -- facing out of the wall; sunk into the floor
 					local ceil = workspace:Raycast(at + Vector3.new(0, 1, 0), Vector3.new(0, 40, 0), rp)
 					local m = Instance.new("Model")
