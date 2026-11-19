@@ -131,8 +131,18 @@ function M.start(E)
 		tween(sc, 0.35, { Scale = 1 }, Enum.EasingStyle.Back)
 	end
 	local shownHp, lastFl, flareAt, lastFrost = -1, nil, 0, -1
+	-- GRABBED: the flare slot flashes a red ring and grows a little while a gloomling holds you, so the reflex finds it (Gemini live audit, 2026-11-19)
+	local alarmHex = flare and new("ImageLabel", flare.b, { Name = "GrabAlarm", Image = HEX, ImageColor3 = Color3.fromRGB(239, 68, 68), ImageTransparency = 1, BackgroundTransparency = 1, Size = UDim2.fromScale(1.3, 1.3), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 1 }) -- a red hex halo behind the slot (a UIStroke drew a square)
+	local alarm = alarmHex and { }
+	local alarmScale = flare and new("UIScale", flare.img, { Name = "GrabPulse" })
 	game:GetService("RunService").RenderStepped:Connect(function(dt)
 		local inCave = caveHud.Visible and root.Visible
+		if alarm then
+			local held = inCave and ((E.plr:GetAttribute("GrabbedUntil") or 0) - workspace:GetServerTimeNow()) > 0
+			local t = os.clock() * 9
+			alarmHex.ImageTransparency = held and (0.15 + 0.45 * (0.5 + 0.5 * math.sin(t))) or 1
+			alarmScale.Scale = held and (1.12 + 0.1 * math.sin(t)) or 1
+		end
 		local fear = inCave and (cave.fear or 0) or 0
 		local fa = math.floor(math.clamp((fear - 0.25) * 0.9, 0, 0.55) * 50 + 0.5) / 50 -- 0 calm .. 0.55 terrified, in small steps
 		if fa ~= lastFrost then

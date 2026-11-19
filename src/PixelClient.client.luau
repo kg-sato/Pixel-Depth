@@ -2362,8 +2362,8 @@ end)()
 		strike = { "PERFECT STRIKE", { { "hammer", "The needle spins round the dial" }, { "star", "Strike when it crosses the GOLD" }, { "gem", "3 swings: each PERFECT gives bonus ore" } } },
 		rush = { "VEIN RUSH", { { "chisel", "A red crack shows on one side" }, { "chisel", "Chisel the OTHER side, fast!" }, { "star", "No slips = FLAWLESS, 3 stars" } } },
 	}
-	local card = panel(caveHud, S(330, 250), S(36, 140), nil, "panel")
-	fit(card, 330, 250)
+	local card = panel(caveHud, S(250, 190), S(28, 300), nil, "panel") -- 2026-11-19: smaller and lower (Gemini live audit: the first-run card filled the left of the view)
+	fit(card, 250, 190)
 	card.Name, card.Visible, card.ZIndex = "HowTo", false, 13
 	local cTitle = ribbonTitle(card, "HOW TO PLAY", "ribbonPink", 0.78)
 	cTitle.ZIndex = 14
