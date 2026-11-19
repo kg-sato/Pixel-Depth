@@ -21,12 +21,12 @@ def path_of(f):
     return "ReplicatedStorage.Shared." + n, "ModuleScript"
 
 
-def run(tool, args=None, shot=None, file=None):
+def run(tool, args=None, shot=None, file=None, timeout=None):
     env = dict(os.environ)
     if shot: env["STUDIO_SHOT"] = str(shot)
     cmd = [sys.executable, str(root / "tools" / "studio_live.py"), tool]
     cmd += ["--file", file, "code", json.dumps(args or {})] if file else [json.dumps(args or {})]
-    r = subprocess.run(cmd, capture_output=True, text=True, cwd=root, env=env, encoding="utf-8", errors="replace")
+    r = subprocess.run(cmd, capture_output=True, text=True, cwd=root, env=env, encoding="utf-8", errors="replace", timeout=timeout)
     return ((r.stdout or "") + (r.stderr or "")).strip()
 
 
@@ -48,7 +48,7 @@ def restore():  # a minimised Studio captures grey: restore it
 def shot(name):
     restore(); time.sleep(0.25)
     p = out / f"{name}.png"
-    run("screen_capture", {"capture_id": name}, shot=p)
+    run("screen_capture", {"capture_id": name}, shot=p, timeout=20)  # a hung capture stopped the stills thread for good (2026-11-19)
     return p
 
 
