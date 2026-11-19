@@ -159,8 +159,16 @@ function Cave.build(parent, origin, seed)
 		end
 		for k = 0, 2 do part("Camp", "Log", Vector3.new(0.9, 0.9, 4), CFrame.new(fire + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, k * 2.1, 0.25), PAL.bark) end
 		local flame = part("Camp", "Flame", Vector3.new(1.8, 2.6, 1.8), CFrame.new(fire + Vector3.new(0, 2, 0)) * CFrame.Angles(0, 0.6, 0), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
-		part("Camp", "FlameCore", Vector3.new(0.9, 1.6, 0.9), CFrame.new(fire + Vector3.new(0, 2.6, 0)), Color3.fromRGB(255, 240, 190), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+		part("Camp", "FlameCore", Vector3.new(0.6, 0.9, 0.6), CFrame.new(fire + Vector3.new(0, 1.6, 0)), Color3.fromRGB(255, 240, 190), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		glow(flame, Color3.fromRGB(255, 185, 95), 32, 1.15, true) -- was 3.4 then 1.7: the camp blew out to white (i65, Gemini r2 2026-11-09)
+		do -- chunky pixel flames over the logs (Shared.PixelFire); the neon blocks stay as the glowing heart, smaller and half clear
+			local okPF, PF = pcall(require, game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("PixelFire"))
+			if okPF then
+				PF.attach(flame, Color3.fromRGB(255, 196, 92), Color3.fromRGB(255, 104, 52), 3.2)
+				flame.Size, flame.Transparency = Vector3.new(1.2, 1.4, 1.2), 0.45
+				flame.CFrame = CFrame.new(fire + Vector3.new(0, 1.4, 0)) * CFrame.Angles(0, 0.6, 0)
+			end
+		end
 		local sparks = Instance.new("ParticleEmitter")
 		sparks.Color, sparks.LightEmission, sparks.Rate = ColorSequence.new(PAL.warm), 1, 6
 		sparks.Size, sparks.Lifetime, sparks.Speed = NumberSequence.new(0.25, 0), NumberRange.new(1.5, 2.5), NumberRange.new(3, 6)
