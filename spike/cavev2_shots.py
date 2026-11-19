@@ -2,10 +2,11 @@
 import sys, time
 import night as N
 tag = sys.argv[1] if len(sys.argv) > 1 else "a"
-OLD = len(sys.argv) > 3 and sys.argv[3] == "old"  # the same camera and torch in the live caves (CaveBuilder), for a fair comparison
+OLD = len(sys.argv) > 3 and sys.argv[3] == "old"
+LAYER = int(sys.argv[3]) if len(sys.argv) > 3 and sys.argv[3].isdigit() else 1  # python spike/cavev2_shots.py <tag> <seed> 2  = layer 2  # the same camera and torch in the live caves (CaveBuilder), for a fair comparison
 seed = sys.argv[2] if len(sys.argv) > 2 else "7"
 if not OLD: print(N.lua("local C=require(game.ReplicatedStorage.Shared.Config) local o=workspace:FindFirstChild('CavesV2') if o then o:Destroy() end for _,a in workspace.Terrain:GetChildren() do if a:GetAttribute('CaveV2') then a:Destroy() end end "
-            f"local m=require(game.ServerScriptService.CaveV2).build(workspace, C.CAVE_V2_ORIGIN, {seed}) local pr=require(game.ServerScriptService.CaveProps).build(m) "
+            f"local m=require(game.ServerScriptService.CaveV2).build(workspace, C.CAVE_V2_ORIGIN, {seed}, {{ layer = {LAYER} }}) local pr=require(game.ServerScriptService.CaveProps).build(m) "
             "local p=game.Players:GetPlayers()[1] p.Character:PivotTo(workspace.Terrain.Spot_Camp.WorldCFrame) p.Character.HumanoidRootPart.Anchored=true return m:GetAttribute('Parts')..' props '..tostring(pr:GetAttribute('Count'))", "Server"))
 time.sleep(3)
 if OLD:  # markers in the old caves: the camp and three points along its floors

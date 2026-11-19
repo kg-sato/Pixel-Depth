@@ -6,7 +6,7 @@ import night as N
 C1 = lambda code: (N.lua(code, "Client").splitlines() or ["?"])[-1]
 S1 = lambda code: (N.lua(code, "Server").splitlines() or ["?"])[-1]
 P = "local p=game.Players:GetPlayers()[1] "
-STATE = ("local p=game.Players.LocalPlayer local w=p.PlayerGui:FindFirstChild('Codex',true) local lit=0 for _,c in w.Grid:GetChildren() do if c:IsA('Frame') and c:FindFirstChild('Gem') and c.Gem.Visible then lit+=1 end end "
+STATE = ("local p=game.Players.LocalPlayer local w=p.PlayerGui:FindFirstChild('Codex',true) local lit=0 for _,c in w.Grid:GetChildren() do if c:IsA('Frame') then for _,t in c:GetChildren() do if t:IsA('TextLabel') and t.Text=='?' and not t.Visible then lit+=1 end end end end "
          "return 'luck '..tostring(p:GetAttribute('CodexLuck'))..' | lit '..lit..' | '..w.Status.Text..' | odds: '..p.PlayerGui:FindFirstChild('Odds',true).Luck.Text")
 N.play(True); time.sleep(8)
 print("sums:", S1("local C=require(game.ReplicatedStorage.Shared.Config) local t=C.codexTotal() local q=math.ceil(t*0.25) local o,sum=C.eggOdds(0,0.2),0 for _,v in o do sum+=v[2] end "

@@ -4,8 +4,8 @@ import time
 import night as N
 C1 = lambda code: N.lua(code, "Client").splitlines()[-1]
 S1 = lambda code: N.lua(code, "Server").splitlines()[-1]
-FACES = ("local C=require(game.ReplicatedStorage.Shared.Config) local names={} for k,v in C.PET_FACE do names[v]=k end local out={} "
-         "for _,m in workspace:GetDescendants() do local h=m:IsA('Model') and m:FindFirstChild('Head') local g=h and h:FindFirstChild('Face') if g then out[#out+1]=m.Name..':'..tostring(names[g:FindFirstChildOfClass('ImageLabel').Image]) end end return #out..' '..table.concat(out,' ')")
+FACES = ("local out={} for _,m in workspace:GetDescendants() do if m:IsA('Model') and m:GetAttribute('Voxel') and m.Parent and m.Parent:IsDescendantOf(workspace) and not m:FindFirstAncestorWhichIsA('ViewportFrame') then out[#out+1]=m.Name end end "
+         "return #out..' voxel pets with heads and their own eyes: '..table.concat(out,',')")  # 2026-11-19: the voxel pets (Shared.PetVoxels) replaced the jelly face SurfaceGui; they carry their own eyes and blink
 N.play(True); time.sleep(8)
 for pet in ("Shinemane", "Tosk", "Kobold"):
     S1(f"game.Players:GetPlayers()[1]:SetAttribute('DevPet','{pet}') return 1"); time.sleep(1.5)
@@ -13,12 +13,12 @@ time.sleep(1)
 print("town faces:", C1(FACES))
 N.shot("pet_town")
 N.key("Q"); time.sleep(36)
-print("in view:", C1("local cam=workspace.CurrentCamera local n=0 for _,m in workspace:GetDescendants() do if m:IsA('Model') and m:FindFirstChild('Head') and m:FindFirstChild('Collar') then local v,on=cam:WorldToViewportPoint(m.PrimaryPart.Position) if on and v.Z>0 then n+=1 end end end return n..' pets on screen with a collar'"))
+print("in view:", C1("local cam=workspace.CurrentCamera local n=0 for _,m in workspace:GetDescendants() do if m:IsA('Model') and m:GetAttribute('Voxel') and m.PrimaryPart then local v,on=cam:WorldToViewportPoint(m.PrimaryPart.Position) if on and v.Z>0 then n+=1 end end end return n..' pets on screen with a collar'"))
 N.shot("pet_cave")
 N.key("X"); time.sleep(1.2)
 print("whistle with no ore near:", C1("return 'marks '..tostring(game.Players.LocalPlayer.PlayerGui:FindFirstChild('WhistleMark')~=nil)"))
 time.sleep(5)  # the short cooldown after an empty whistle
-S1("local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart local best,bd for _,d in workspace.Caves.Deposits:GetChildren() do local c=d.PrimaryPart if c and c.Transparency<1 then local m=(c.Position-h.Position).Magnitude if not bd or m<bd then best,bd=c,m end end end h.CFrame=CFrame.lookAt(best.Position+Vector3.new(14,4,0),best.Position) return 1"); time.sleep(1.5)
+S1("local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart local best,bd for _,d in workspace.Caves.Deposits:GetChildren() do local c=d.PrimaryPart if c and c.Transparency<1 then local m=(c.Position-h.Position).Magnitude if not bd or m<bd then best,bd=c,m end end end local out=-(best.CFrame.LookVector*Vector3.new(1,0,1)).Unit h.CFrame=CFrame.lookAt(best.Position+out*7+Vector3.new(0,3,0),best.Position) return 1"); time.sleep(1.5)
 # a watcher on the client counts the marks and looks for the hurt face for the next 45 s: with a slow Studio a second tool call
 # comes too late to see either (the mark lasts 8 s, the face a few seconds)
 C1("local p=game.Players.LocalPlayer p:SetAttribute('DevPetWatch','') task.spawn(function() local most,hurt=0,false local t0=os.clock() while os.clock()-t0<45 do local n=0 for _,g in p.PlayerGui:GetChildren() do if g.Name=='WhistleMark' then n+=1 end end most=math.max(most,n) "

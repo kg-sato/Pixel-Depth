@@ -111,6 +111,16 @@ function M.init(ctx)
 	if water then -- the grotto: over the lake from the entrance shore to the far shore, both ways
 		line((water.CFrame * CFrame.new(-60, 0, 0)).Position, (water.CFrame * CFrame.new(54, 0, 0)).Position, 8, 8, true)
 	end
+	local cath = caves:FindFirstChild("Spot_Cathedral") -- Cave v2 (2026-11-19): no chasm or grotto pieces; the lines span its two big rooms
+	if zipN == 0 and cath and cath.Value then
+		local o = C.CAVE_ORIGIN
+		local cy = cath.Value.WorldPosition.Y
+		-- across the Root Cathedral, one line each way along its length, each sloping down the way it runs (rope numbers 1 and 2)
+		line(o + Vector3.new(114, cy - o.Y + 4, -12), o + Vector3.new(176, cy - o.Y - 4, -8), 10, 6)
+		line(o + Vector3.new(176, cy - o.Y - 4, 12), o + Vector3.new(114, cy - o.Y + 4, 14), 10, 6)
+		-- across the camp's room, both ways (rope 3, prompts 3 and 4: the old grotto line's numbers)
+		line(o + Vector3.new(-38, 0, -22), o + Vector3.new(38, 0, -22), 9, 9, true)
+	end
 
 	-- ---------------------------------------------------------------- hearthstone
 	local R = ctx.remote("Travel")

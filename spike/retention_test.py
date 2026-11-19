@@ -39,8 +39,12 @@ def zone(tries=4):  # walk to deposits further and further away until one starts
         if r.startswith("strike"): return r
     return r
 z1 = zone()
-S1("workspace:SetAttribute('DevGold',60) return 1"); time.sleep(2)
-print("event pill in a surge:", C1(PILL))
+S1("workspace:SetAttribute('DevGold',60) local t0=os.clock() while os.clock()-t0<12 and not ((workspace:GetAttribute('GoldSurge') or 0) > workspace:GetServerTimeNow()) do task.wait(0.25) end return 1"); time.sleep(1)  # the events loop can sit out 8 s after a Roots Stir: wait for the surge itself
+for _ in range(20):  # the pill holds still while a minigame owns the top of the screen: give the strike from zone() time to end
+    r = C1(PILL)
+    if "SURGE ON" in r: break
+    time.sleep(1)
+print("event pill in a surge:", r)
 z2 = zone()
 print("strike zone: %s without, %s in a Golden Vein Surge" % (z1, z2))
 try: print("zone doubled:", abs(float(z2.split()[1]) - 2 * float(z1.split()[1])) < 0.01)

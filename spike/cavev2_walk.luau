@@ -3,7 +3,7 @@
 local C = require(game.ReplicatedStorage.Shared.Config)
 local old = workspace:FindFirstChild("CavesV2") if old then old:Destroy() end
 for _, a in workspace.Terrain:GetChildren() do if a:GetAttribute("CaveV2") then a:Destroy() end end
-local m = require(game.ServerScriptService.CaveV2).build(workspace, C.CAVE_V2_ORIGIN, _G.CV2_SEED or 7)
+local m = require(game.ServerScriptService.CaveV2).build(workspace, C.CAVE_V2_ORIGIN, _G.CV2_SEED or 7, { layer = _G.CV2_LAYER or 1 })
 require(game.ServerScriptService.CaveProps).build(m)
 task.wait(1)
 local PS, T = game:GetService("PathfindingService"), workspace.Terrain

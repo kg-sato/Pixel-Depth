@@ -249,6 +249,7 @@ function M.start(E)
 	local LINES = {
 		Wick = { "One rule down here: stay in the light.", "Torch relit! Your ore's safe with me.", "Hold Tab for your tools.", "Shrine runes give blessings. Pray!", "Ore's out there. Look for sparkles!", "Low torch? Come back to camp.", "Gloomlings hate flares. Press R!", "Banked ore is safe ore." },
 		Smudge = { "...is it bright in there? Can I come?", "I'm not scary. Promise.", "The dark is SO dark." },
+		Moss = { "Oh! A light! I fell down the hole...", "I'm Moss. Wick's apprentice. Was.", "The rope's there. I'm just... resting.", "Climb up and tell Wick I'm fine!", "There's copper down here. Lots!" }, -- the lost apprentice at the bottom of the Swallow Hole (Cave v2)
 	}
 	local bubbles = {}
 	task.spawn(function()

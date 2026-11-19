@@ -741,6 +741,7 @@ function Cave.build(parent, origin, seed)
 
 	-- the seed: which piece hangs off which camp exit, how far, how deep, mirrored or not; then winding tunnels join them
 	local campExits = buildCamp()
+	if not C.CAVE_V2 then -- Cave v2 carves everything outside the camp (ServerScriptService.CaveV2)
 	local kinds = { { chasm, "Chasm" }, { grotto, "Grotto" }, { mushrooms, "Mushrooms" } }
 	for k = #kinds, 2, -1 do
 		local m = rng:NextInteger(1, k)
@@ -781,6 +782,7 @@ function Cave.build(parent, origin, seed)
 		end
 	end
 
+	end
 	-- build the raster: floors (merged up to 3x3 on equal height and theme), ceilings (merged up to 4x4), walls round the edge
 	local list = {}
 	for _, c in cells do table.insert(list, c) end
@@ -788,6 +790,7 @@ function Cave.build(parent, origin, seed)
 	local used = {}
 	local function at(i, j) return cells[key(i, j)] end
 	local nFloor, nCeil, nWall = 0, 0, 0
+	if not C.CAVE_V2 then -- Cave v2 builds the rock shell, the camp's room included
 	for _, c in list do
 		local k = key(c.i, c.j)
 		if not used[k] then
@@ -915,6 +918,26 @@ function Cave.build(parent, origin, seed)
 			end
 		end
 	end
+	end
+	local v2spots
+	if C.CAVE_V2 then -- 2026-11-19: the real cave (vault Briefs/Cave Layout Plan v2): v2 builds round the camp and joins this model
+		local v2, extra = require(game:GetService("ServerScriptService"):WaitForChild("CaveV2")).build(workspace, origin, seed, { camp = true })
+		v2spots = {}
+		for _, w in extra.walls do -- wall spots in this builder's cell terms, dead ends first: the shrines, nests and the altar take them below
+			table.insert(v2spots, { c = { i = (w.pos.X - origin.X) / CELL, j = (w.pos.Z - origin.Z) / CELL, f = w.pos.Y - origin.Y, theme = "tunnel" }, o = { w.dir.X, w.dir.Z } })
+		end
+		for _, f in v2:GetChildren() do
+			local mine = model:FindFirstChild(f.Name)
+			if mine and f:IsA("Folder") then
+				for _, c in f:GetChildren() do c.Parent = mine end
+				f:Destroy()
+			else
+				f.Parent = model
+			end
+		end
+		for k, v in v2:GetAttributes() do model:SetAttribute("V2_" .. k, v) end
+		v2:Destroy()
+	end
 	-- ore deposits (ORE-01/02): crystal clusters against walls of cells you can walk to from camp (a flood fill over steps a
 	-- player can jump, 6 studs or less), at least D.spacing apart, out of the camp; dark shards round a dim core so only the glint gives them away
 	local D = C.DEPOSIT
@@ -997,6 +1020,10 @@ function Cave.build(parent, origin, seed)
 			local d = box:PointToObjectSpace(p.Position)
 			if math.abs(d.X) < 8 and math.abs(d.Y) < 6 and math.abs(d.Z) < 5 then p:Destroy() end
 		end
+	end
+	if v2spots then -- Cave v2: the deposits are v2's; the shrines, nests and altar take v2's wall spots
+		spots = v2spots
+		for _, d in (model:FindFirstChild("Deposits") or Instance.new("Folder")):GetChildren() do table.insert(placed, d:GetPivot().Position) end
 	end
 	do -- hidden shrines: a rune stone, a plinth and a little chest in a quiet nook far from camp, away from the deposits
 		local SH = D.shrines
