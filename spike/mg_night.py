@@ -12,7 +12,12 @@ P = 'local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart '
 def go_to(which):
     return N.lua(P + "local best,bd for _,d in workspace.Caves.Deposits:GetChildren() do if (" + which + ") and d.PrimaryPart.Transparency<1 then "
                  "local m=(d.PrimaryPart.Position-Vector3.new(-3000,0,0)).Magnitude if not bd or m<bd then best,bd=d,m end end end "
-                 "if not best then return 'none' end local c=best.PrimaryPart local at=c.Position-c.CFrame.LookVector*Vector3.new(1,0,1)*6+Vector3.new(0,3,0) "
+                 "if not best then return 'none' end local c=best.PrimaryPart local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Exclude rp.FilterDescendantsInstances={p.Character,best} "
+                 # 2026-11-19: 6 studs behind the deposit's own look direction was often inside the rock (the tour faced a wall for 5 min);
+                 # try 16 spots round it and take the first with floor under it and a clear line to the ore
+                 "local at=c.Position-c.CFrame.LookVector*Vector3.new(1,0,1)*6+Vector3.new(0,3,0) for i=0,15 do local a=i*math.pi/8 local q=c.Position+Vector3.new(math.cos(a)*6,3,math.sin(a)*6) "
+                 "local fl=workspace:Raycast(q,Vector3.new(0,-8,0),rp) local los=workspace:Raycast(q,(c.Position-q),rp) local inside=workspace:GetPartBoundsInRadius(q,1.2) local solid=false for _,x in inside do if x.CanCollide and not x:IsDescendantOf(p.Character) and not x:IsDescendantOf(best) then solid=true end end "
+                 "if fl and not los and not solid then at=fl.Position+Vector3.new(0,3,0) break end end "
                  "h.CFrame=CFrame.lookAt(at,Vector3.new(c.Position.X,at.Y,c.Position.Z)) return best:GetAttribute('OreName')").splitlines()[-1]
 
 
