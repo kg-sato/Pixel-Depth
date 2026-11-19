@@ -19,12 +19,12 @@ for name, spot, d in VIEWS:
     time.sleep(3)
     code = ("local RS=game:GetService('RunService') pcall(function() RS:UnbindFromRenderStep('CV2Cam') end) local a=workspace.Terrain:WaitForChild('Spot_" + spot + "') "
             "for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') then g.Enabled=false end end "
-            f"local p=a.WorldPosition+Vector3.new(0,2.5,0) local dir=Vector3.new({d[0]},{d[1]},{d[2]}).Unit "
+            f"local p=a.WorldPosition+Vector3.new(0,4,0) for _,b in workspace:GetDescendants() do if b:IsA('Beam') or b:IsA('Trail') then b.Enabled=false end end local dir=Vector3.new({d[0]},{d[1]},{d[2]}).Unit "
             "local ch=game.Players.LocalPlayer.Character for _,d in ch:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 end end "
             "for _,d in workspace:GetDescendants() do if d:IsA('Model') and d:GetAttribute('Pet') ~= nil then d:PivotTo(d:GetPivot()+Vector3.new(0,-500,0)) end end "
             "local torch=workspace:FindFirstChild('CV2Torch') or Instance.new('Part') torch.Name='CV2Torch' torch.Anchored=true torch.CanCollide=false torch.Transparency=1 torch.Size=Vector3.one torch.Parent=workspace "
             "local tl=torch:FindFirstChildOfClass('PointLight') or Instance.new('PointLight', torch) tl.Color=Color3.fromRGB(255,190,120) tl.Range=36 tl.Brightness=1.1 tl.Shadows=true "
-            "RS:BindToRenderStep('CV2Cam', Enum.RenderPriority.Camera.Value+40, function() local cam=workspace.CurrentCamera cam.CameraType=Enum.CameraType.Scriptable cam.FieldOfView=80 cam.CFrame=CFrame.lookAt(p-dir*2, p+dir*10) torch.CFrame=CFrame.new(p+Vector3.new(0.6,-0.6,0)) for _,d in ch:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 end end end) "
+            "RS:BindToRenderStep('CV2Cam', Enum.RenderPriority.Camera.Value+40, function() local cam=workspace.CurrentCamera cam.CameraType=Enum.CameraType.Scriptable cam.FieldOfView=80 cam.CFrame=CFrame.lookAt(p-dir*2, p+dir*10) torch.CFrame=CFrame.new(p+Vector3.new(0.6,-0.6,0)) for _,d in ch:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 end end for _,d in cam:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 end end end) "
             "task.delay(9, function() pcall(function() RS:UnbindFromRenderStep('CV2Cam') end) end) return 1")
     N.lua(code, "Client")
     time.sleep(1.2)

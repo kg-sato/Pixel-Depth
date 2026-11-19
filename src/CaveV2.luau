@@ -183,7 +183,7 @@ function M.build(parent, origin, seed)
 		{ spots.Camp, "camp" }, { spots.Canyon, "chasm" }, { P(112, -6, 2), "chasm" }, { spots.Cathedral, "grotto" }, { P(150, 8, 0), "grotto" },
 		{ spots.OldTube, "chasm" }, { P(-60, 24, -92), "chasm" }, { P(100, 22, -90), "chasm" }, { spots.SumpGate, "grotto" },
 		{ P(40, -26, 66), "chasm" }, { P(-20, -26, 60), "chasm" }, { spots.SwallowHole, "squeeze" }, { P(-60, 2, -14), "squeeze" },
-		{ spots.B1, "squeeze" }, { spots.B2, "grotto" }, { spots.B3, "mush" }, { spots.B4, "tunnel" }, { spots.B5, "squeeze" }, { P(164, 2, 42), "squeeze" },
+		{ spots.B1, "squeeze" }, { spots.B2, "grotto" }, { spots.B3, "mush" }, { spots.B4, "chasm" }, { spots.B5, "squeeze" }, { P(164, 2, 42), "squeeze" },
 	}
 	local THEMES = { "camp", "tunnel", "chasm", "grotto", "squeeze", "mush" }
 	local TI = {} for i, t in THEMES do TI[t] = i end
@@ -244,6 +244,29 @@ function M.build(parent, origin, seed)
 
 	local rootC = P(150, 0, 6) + P(0, dipY(150), 0) -- the cathedral's landmark (built after the mesh: a real trunk, not voxels)
 
+	-- THE SUMP'S WATER fills the chamber's real shape up to one voxel over its lowest floor (Gemini r2: a flat sheet cut off in mid-air)
+	local sumpY
+	do
+		local c = spots.SumpGate
+		local vx, vy, vz = toVox(c)
+		local lowest = math.huge
+		for x = math.floor(vx) - 5, math.ceil(vx) + 5 do
+			for z = math.floor(vz) - 4, math.ceil(vz) + 4 do
+				for y = math.floor(vy) - 5, math.ceil(vy) + 3 do
+					if get(x, y, z) == 1 and get(x, y - 1, z) == 0 then lowest = math.min(lowest, y) end
+				end
+			end
+		end
+		if lowest < math.huge then
+			sumpY = lowest
+			for x = math.floor(vx) - 5, math.ceil(vx) + 5 do
+				for z = math.floor(vz) - 4, math.ceil(vz) + 4 do
+					if get(x, sumpY, z) == 1 then set(x, sumpY, z, 2) end
+				end
+			end
+		end
+	end
+
 	-- MESH: every solid voxel that touches air (26 neighbours) is shell; shell voxels merge into boxes per colour key
 	local model = Instance.new("Model")
 	model.Name = "CavesV2"
@@ -283,6 +306,8 @@ function M.build(parent, origin, seed)
 					if touch then
 						local k
 						if v == 3 then k = 9
+						elseif sumpY and y == sumpY and get(x, y + 1, z) == 1 and (get(x + 1, y + 1, z) == 2 or get(x - 1, y + 1, z) == 2 or get(x, y + 1, z + 1) == 2 or get(x, y + 1, z - 1) == 2 or get(x + 1, y, z) == 2 or get(x - 1, y, z) == 2 or get(x, y, z + 1) == 2 or get(x, y, z - 1) == 2) then
+							k = 99 -- wet mud along the water's edge
 						elseif isAir(get(x, y + 1, z)) then -- a floor: its place's tint, dark or mid, with moss in the damp hollows
 							local th = themeAt(Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V))
 							local f = FLOOR[th]
@@ -300,6 +325,7 @@ function M.build(parent, origin, seed)
 	end
 	local WALL = { Color3.fromRGB(40, 26, 54), Color3.fromRGB(61, 41, 82), Color3.fromRGB(86, 61, 112), Color3.fromRGB(110, 84, 140) } -- deep amethyst slate to soft lavender granite (Gemini r1 palette, a step lighter at the top)
 	local function colorOf(k)
+		if k == 99 then return Color3.fromRGB(45, 26, 56) end
 		if k < 100 then return WALL[k] end
 		local th = THEMES[math.floor((k - 100) / 10)]
 		local v = k % 10
@@ -377,7 +403,15 @@ function M.build(parent, origin, seed)
 				local base = foot + dir * 7 + Vector3.new(0, 3, 0)
 				local tip = foot + dir * 20 + Vector3.new(0, -1.5, 0)
 				local mid = (base + tip) / 2
-				part("Landmark", "WorldRootFlare", Vector3.new(4.5, 4, (tip - base).Magnitude + 3), CFrame.lookAt(mid, tip), PAL.barkDark, { Material = Enum.Material.Wood, MaterialVariant = "" })
+				local len = (tip - base).Magnitude + 3
+				local fl = Instance.new("WedgePart") -- a tapered flare: thick at the trunk, thinning to the floor
+				fl.Name, fl.Anchored, fl.Size, fl.Color, fl.Material = "WorldRootFlare", true, Vector3.new(5, 6, len), PAL.barkDark, Enum.Material.Wood
+				fl.CFrame = CFrame.lookAt(mid, tip) * CFrame.new(0, 1, 0)
+				fl.Parent = group("Landmark")
+				for q = 1, 2 do -- thin strands draping from the knee
+					local sl = 3 + hash(k, q, 9) * 5
+					part("Landmark", "RootStrand", Vector3.new(0.5, sl, 0.5), CFrame.new(base + dir * (2 + q * 2) + Vector3.new((hash(q, k, 1) - 0.5), 4 - sl / 2, 0)) * CFrame.Angles(0, 0, (hash(k, q, 2) - 0.5) * 0.4), PAL.bark, { Material = Enum.Material.Wood, MaterialVariant = "", CanCollide = false, CastShadow = false })
+				end
 			end
 			local glowP = part("Landmark", "RootGlow", Vector3.new(1, 1, 1), CFrame.new(foot + Vector3.new(0, 10, 0)), PAL.mint, { Transparency = 1, CanCollide = false, CanQuery = false })
 			local l = Instance.new("PointLight")
@@ -427,11 +461,26 @@ function M.build(parent, origin, seed)
 					while room < 8 and get(x, y - room, z) == 1 do room += 1 end
 					local hsh = hash(x, z, y)
 					local top = toWorld(x, y, z) + Vector3.new(0, V / 2, 0)
-					if room >= 4 and hsh > 0.86 then -- a stalactite: three tapering blocks
-						local len = V * (1 + math.floor(hash(z, x, 5) * 2))
-						deco("Stalactite", Vector3.new(2.6, len, 2.6), CFrame.new(top - Vector3.new(0, len / 2, 0)), PAL.rock[2], NOCOL)
-						deco("Stalactite", Vector3.new(1.6, 1.8, 1.6), CFrame.new(top - Vector3.new(0, len + 0.9, 0)), PAL.rock[2], NOCOL)
-						deco("Stalactite", Vector3.new(0.8, 1.2, 0.8), CFrame.new(top - Vector3.new(0, len + 2.4, 0)), PAL.flow, NOCOL)
+					if room >= 4 and hsh > 0.86 then -- a dripstone, one of three kinds (Gemini r2: every stalactite was the same two-tier block)
+						local kind = math.floor(hash(x, z, 51) * 3)
+						local len = 2 + hash(z, x, 5) * 5
+						local col = PAL.rock[2]:Lerp(PAL.flow, hash(x, z, 52) * 0.4)
+						local turn = CFrame.Angles(0, hash(x, z, 53) * 3, 0)
+						if kind == 0 then -- a wide cone: three shrinking blocks, no tip colour
+							for t = 0, 2 do
+								local w2 = 2.8 - t * 0.85
+								deco("Stalactite", Vector3.new(w2, len / 3 + 0.3, w2), CFrame.new(top - Vector3.new(0, len / 6 + t * len / 3, 0)) * turn, col, NOCOL)
+							end
+						elseif kind == 1 then -- twins of different lengths
+							for t = 0, 1 do
+								local l2 = len * (t == 0 and 1 or 0.6)
+								deco("Stalactite", Vector3.new(1.4, l2, 1.4), CFrame.new(top + Vector3.new(t * 1.6 - 0.8, -l2 / 2, (t - 0.5) * 0.8)) * turn, col, NOCOL)
+								deco("Stalactite", Vector3.new(0.7, 1, 0.7), CFrame.new(top + Vector3.new(t * 1.6 - 0.8, -l2 - 0.5, (t - 0.5) * 0.8)), PAL.flow, NOCOL)
+							end
+						else -- a single slender spike
+							deco("Stalactite", Vector3.new(1.2, len, 1.2), CFrame.new(top - Vector3.new(0, len / 2, 0)) * turn, col, NOCOL)
+							deco("Stalactite", Vector3.new(0.5, 1.4, 0.5), CFrame.new(top - Vector3.new(0, len + 0.7, 0)), PAL.flow, NOCOL)
+						end
 					elseif room >= 3 and hsh > 0.8 then -- soda straws: thin pale tubes in a cluster
 						for s = 1, 3 do
 							local l = 0.8 + hash(x + s, z, 6) * 2.2
@@ -530,7 +579,7 @@ function M.build(parent, origin, seed)
 	do -- the sump: a pool of still water over its low floor (Gemini r1: it did not read as flooded)
 		local f = floorUnder(spots.SumpGate - Vector3.new(0, dipY(spots.SumpGate.X), 0))
 		if f then
-			local w = part("Water", "SumpWater", Vector3.new(26, 0.4, 20), CFrame.new(f + Vector3.new(0, 2.5, 0)), Color3.fromRGB(34, 211, 238), { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.4, Reflectance = 0.3, CanCollide = false, CastShadow = false })
+			local w = { CFrame = CFrame.new(f + Vector3.new(0, 2.6, 0)) } -- the water itself is voxels now; this is only where the pads float
 			for k = 1, 3 do
 				local pad = part("Water", "LilyGlow", Vector3.new(2.4, 0.2, 2.4), w.CFrame * CFrame.new((k - 2) * 6, 0.3, (hash(k, 3, 1) - 0.5) * 8), PAL.mint, { Material = Enum.Material.Neon, MaterialVariant = "", Shape = Enum.PartType.Cylinder, CanCollide = false })
 				pad.CFrame = pad.CFrame * CFrame.Angles(0, 0, math.pi / 2)
