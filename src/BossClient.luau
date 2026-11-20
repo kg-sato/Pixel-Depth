@@ -135,6 +135,27 @@ function M.start(E)
 			if kn and kn.PrimaryPart then kn.PrimaryPart.Transparency = 0 end
 		end
 		for _, p in pips do p.BackgroundColor3 = Color3.fromRGB(255, 0, 127) end
+		local old = w:FindFirstChild("Cracks")
+		if old then old:Destroy() end
+	end
+	local function crackBody(n) -- each cracked knot splits the stone a little more (Gemini full1119j: "pristine until the last knot")
+		local w = warden()
+		local body = w and (w:FindFirstChild("WardenBody", true) or w.PrimaryPart)
+		if not body then return end
+		local f = w:FindFirstChild("Cracks") or Instance.new("Folder")
+		f.Name, f.Parent = "Cracks", w
+		local rnd = Random.new(n * 7)
+		for _ = 1, 3 do
+			local c = Instance.new("Part")
+			c.Name, c.Material, c.Color = "Crack", Enum.Material.Neon, Color3.fromRGB(255, 170, 70)
+			c.Size = Vector3.new(0.14, 1.2 + rnd:NextNumber() * 1.4, 0.08)
+			c.CanCollide, c.CanQuery, c.CanTouch, c.CastShadow, c.Massless, c.Anchored = false, false, false, false, true, false
+			local x, y = rnd:NextNumber(-0.4, 0.4) * body.Size.X, rnd:NextNumber(-0.35, 0.35) * body.Size.Y
+			c.CFrame = body.CFrame * CFrame.new(x, y, -body.Size.Z / 2 - 0.03) * CFrame.Angles(0, 0, rnd:NextNumber(-0.9, 0.9))
+			local wc = Instance.new("WeldConstraint")
+			wc.Part0, wc.Part1, wc.Parent = body, c, c
+			c.Parent = f
+		end
 	end
 
 	local ID_AT = { bossStart = 2, bossKnot = 3, bossSlam = 2, bossWin = 3, bossLose = 1, bossLocked = 2, bossOpen = 1, bossHit = 2, bossDodge = 1, bossHold = 1, bossSweep = 3, bossRings = 2 }
@@ -163,6 +184,7 @@ function M.start(E)
 				b.PrimaryPart.Transparency = 1
 			end
 			sfx("breakRock", 0.8)
+			crackBody(3 - a)
 			toast(a > 0 and ("KNOT CRACKED!  " .. a .. " TO GO") or "THE LAST KNOT CRACKS!", MINT, true)
 		elseif kind == "bossHold" then
 			toast("The knot holds! Two PERFECT swings crack it", PINK, false)

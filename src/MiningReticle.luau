@@ -245,7 +245,7 @@ function M.start(E)
 			if near < (at - eye):Dot(dir) - 0.05 then at, n = eye + dir * (near - 0.15), v end
 			anchor.Size = Vector3.new(k * 1.2, k * 1.44, 0.05)
 			local glow = anchor:FindFirstChild("RockGlow") or new("PointLight", anchor, { Name = "RockGlow", Color = Color3.fromRGB(255, 200, 90), Shadows = false }) -- the dial lights the rock it sits on, so it reads as part of the world
-			glow.Range, glow.Brightness = k * 1.6, 0.9 + math.sin(os.clock() * 6) * 0.25
+			glow.Range, glow.Brightness = k * 1.6, 0.5 + math.sin(os.clock() * 6) * 0.15 -- softer: up close the rock under the dial blew out (Gemini full1119i)
 			lock.Size = UDim2.fromScale(k * 1.25, k * 1.25) -- the brackets hug the smaller dial instead of framing half the view
 			local up = math.abs(n.Y) > 0.9 and cam.CFrame.UpVector or Vector3.yAxis
 			local pos = at + n * 0.12 + up * (k * 0.05)

@@ -151,11 +151,12 @@ function M.start(E)
 		if line then eventT.Text, eventT.TextColor3 = line, col end
 		-- the one pill: what wants the player now, else what comes soonest
 		local below = E.plr:GetAttribute("InCave") == true -- in the caves the cave events lead the pill; a waiting gift is not shouted over the boss and the chimes (Gemini full1119e)
-		if giftIn == 0 and not (below and line) then mainT.Text, mainT.TextColor3 = giftT.Text, GOLD
+		if giftIn == 0 and not below then mainT.Text, mainT.TextColor3 = giftT.Text, GOLD -- below ground the gift waits in the list (Gemini full1119j): the cave pill is for cave events
 		elseif line and soon == -1 then mainT.Text, mainT.TextColor3 = line, col
 		elseif refAt and refAt <= now and not below then mainT.Text, mainT.TextColor3 = refT.Text, GOLD -- the refinery is in town: below, its line waits in the list
 		elseif line and soon < giftIn and not (refAt and refAt - now < soon) then mainT.Text, mainT.TextColor3 = line, col
-		elseif refAt and refAt - now < giftIn then mainT.Text, mainT.TextColor3 = refT.Text, WHITE
+		elseif refAt and refAt - now < giftIn and not (below and refAt <= now) then mainT.Text, mainT.TextColor3 = refT.Text, WHITE
+		elseif below and line then mainT.Text, mainT.TextColor3 = line, col
 		else mainT.Text, mainT.TextColor3 = giftT.Text, WHITE end
 		-- the list shows the OTHER lines: the one on the pill is not said twice (Gemini, 2026-11-14)
 		giftP.Visible = giftT.Text ~= mainT.Text

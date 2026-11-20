@@ -152,7 +152,7 @@ function M.start(E)
 		capT.Text = pack.name .. "   " .. commas(st.bag or 0) .. " / " .. commas(st.cap or pack.cap) .. (heavy and "   HEAVY" or "")
 		capT.TextColor3 = heavy and BUTTER or Color3.fromRGB(245, 238, 255) -- light on the dark glass (ink was unreadable)
 		capT.TextStrokeColor3, capT.TextStrokeTransparency = Color3.fromRGB(22, 8, 30), 0.3
-		tween(capFill, 0.3, { Size = UDim2.fromScale(math.clamp((st.bag or 0) / (st.cap or pack.cap), 0, 1), 1), BackgroundColor3 = heavy and Color3.fromRGB(255, 120, 90) or Color3.fromRGB(255, 184, 48) }, Enum.EasingStyle.Back) -- amber ore fill, coral when heavy: mint means health (Gemini full1119b)
+		tween(capFill, 0.3, { Size = UDim2.fromScale(math.clamp((st.bag or 0) / (st.cap or pack.cap), 0, 1), 1), BackgroundColor3 = (heavy or (st.bag or 0) / (st.cap or pack.cap) > 0.8) and Color3.fromRGB(255, 120, 90) or ((st.bag or 0) / (st.cap or pack.cap) > 0.5 and Color3.fromRGB(255, 184, 48) or Color3.fromRGB(96, 226, 236)) }, Enum.EasingStyle.Back) -- cyan room, amber half full, coral nearly full (Gemini full1119i)
 		for k, b in tabs do setKind(b, k == ui.tab and "tabOn" or "tab") end
 		local n = 0
 		if ui.tab == "bag" or ui.tab == "bank" then

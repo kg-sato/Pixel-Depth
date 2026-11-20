@@ -70,10 +70,34 @@ function M.start(E)
 	end
 	local found = { ore = {}, pet = {} }
 	local paint
-	for _, c in cells do -- point at a cell: its name on the status line
+	-- a glass hover card beside the pointed cell: name, where it comes from and what it is (Gemini full1119j)
+	local hover = E.new("Frame", win, { Name = "Hover", Size = UDim2.fromScale(0.3, 0.16), AnchorPoint = Vector2.new(0, 1), BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.08, Visible = false, ZIndex = 20 })
+	E.new("UICorner", hover, { CornerRadius = UDim.new(0.18, 0) })
+	E.new("UIStroke", hover, { Color = Color3.fromRGB(155, 31, 232), Thickness = 1.5 })
+	local hName = E.text(hover, "", UDim2.fromScale(0.9, 0.42), UDim2.fromScale(0.5, 0.3), MID, WHITE, 700, false)
+	local hInfo = E.text(hover, "", UDim2.fromScale(0.9, 0.3), UDim2.fromScale(0.5, 0.72), MID, Color3.fromRGB(200, 186, 232), 600, false)
+	hName.ZIndex, hInfo.ZIndex = 21, 21
+	local function info(c)
+		if c.kind == "ore" then
+			local L, i = c.key:match("^(%d+)%.(%d+)$")
+			local layer = C.LAYERS[tonumber(L)]
+			return (layer and string.upper(layer[2]) or "THE CAVES") .. "  ·  " .. ({ "COMMON", "UNCOMMON", "RARE" })[tonumber(i)] .. " ORE"
+		end
+		local p = C.PETS[c.key]
+		return p and (string.upper(p[1]) .. " PET  ·  " .. string.upper(p[2])) or "PET"
+	end
+	for _, c in cells do -- point at a cell: its name on the status line and the hover card
 		c.f.Active = true
-		c.f.MouseEnter:Connect(function() status.Text = c.got and c.label or (c.kind == "pet" and "A PET YOU HAVE NOT HATCHED YET" or "AN ORE YOU HAVE NOT BANKED YET") end)
-		c.f.MouseLeave:Connect(function() paint() end)
+		c.f.MouseEnter:Connect(function()
+			status.Text = c.got and c.label or (c.kind == "pet" and "A PET YOU HAVE NOT HATCHED YET" or "AN ORE YOU HAVE NOT BANKED YET")
+			hName.Text = c.got and c.label or "???"
+			hInfo.Text = c.got and info(c) or (c.kind == "pet" and "HATCH IT TO FIND OUT" or "BANK IT TO FIND OUT")
+			local rel = c.f.AbsolutePosition - win.AbsolutePosition
+			local x = math.clamp(rel.X / win.AbsoluteSize.X, 0.02, 0.68)
+			hover.Position = UDim2.fromScale(x, math.max(rel.Y / win.AbsoluteSize.Y - 0.01, 0.17))
+			hover.Visible = true
+		end)
+		c.f.MouseLeave:Connect(function() hover.Visible = false paint() end)
 	end
 	paint = function()
 		local have = 0

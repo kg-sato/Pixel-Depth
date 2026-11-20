@@ -663,6 +663,7 @@ function M.play(opt)
 				part(m, Vector3.new(0.3, 0.3, 1.6), here * CFrame.new(x + s * 0.7, 0.85, -0.7) * CFrame.Angles(-0.8, 0, -s * 0.1), RAIL, { Material = Enum.Material.Metal })
 			end
 			part(m, Vector3.new(1.8, 0.3, 0.5), here * CFrame.new(x, 0.35, 1.4) * CFrame.Angles(0, 0.4, 0.25), BARK_LT) -- a split sleeper
+			for _, s in { -1, 1 } do part(m, Vector3.new(0.18, 1.5, 0.18), here * CFrame.new(x + s * 1.15, 0.75, -1.4), Color3.fromRGB(90, 230, 220), { Material = Enum.Material.Neon }) end -- two cyan stakes at the lip: the crack reads from as far as the duck beams (Gemini full1119j)
 		end
 		m.Parent = world
 		warnBoard(at, "JUMP!", Color3.fromRGB(110, 215, 255), -1)
@@ -1250,11 +1251,11 @@ function M.play(opt)
 			end
 		elseif phase == "town" then
 			local u = t - resultAt
-			flash.BackgroundTransparency = smooth(0, 0.5, u)
+			flash.BackgroundTransparency = smooth(0.2, 0.6, u) -- the flash holds a beat so the burst, not the empty stop, is the first thing seen (Gemini full1119i)
 			local cart0 = opt.cart:GetPivot()
 			local a = smooth(0, 0.9, u)
 			local arc = math.sin(a * math.pi) * 6
-			local from = cart0 * CFrame.new(0, -12, -6) * CFrame.Angles(1.1, 0, 0)
+			local from = cart0 * CFrame.new(0, -7, -4) * CFrame.Angles(1.1, 0, 0) -- starts just under the lip, so it is in view as the flash clears
 			local cf = from:Lerp(cart0, a) + Vector3.new(0, arc, 0)
 			if u > 0.9 and u < 1.2 then cf *= CFrame.new(0, math.sin((u - 0.9) / 0.3 * math.pi) * 0.4, 0) end
 			cart:PivotTo(cf)
@@ -1279,7 +1280,7 @@ function M.play(opt)
 			cam.FieldOfView = 70
 			shakeAmp = math.max(0, shakeAmp - dt * 1.2)
 			cam.CFrame = CFrame.lookAt(eye, cf.Position + Vector3.new(0, 1.5, 0)) * CFrame.Angles((math.random() - 0.5) * shakeAmp * 0.06, (math.random() - 0.5) * shakeAmp * 0.06, 0)
-			if u > 1 and not card then
+			if u > 0.85 and not card then
 				card = frame({ Size = UDim2.fromScale(0.34, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.1, ZIndex = 6 }) -- obsidian jelly glass (Gemini, loop v10n: "a stark white box after a dark ride")
 				round(card, 0.1)
 				stroke(card, Color3.fromRGB(155, 31, 232), 3)

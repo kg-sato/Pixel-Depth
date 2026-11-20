@@ -1093,7 +1093,12 @@ function Hub.build(parent, origin)
 			vox(g, "TrophyCap", Vector3.new(1.7, 0.25, 1.6), at(x, 3.125, 4), PAL.cream[3])
 			local glass = vox(g, "TrophyGlass", Vector3.new(1.3, 1.7, 1.2), at(x, 4.1, 4), Color3.fromRGB(190, 225, 255), { Material = Enum.Material.Glass, Transparency = 0.78, CanCollide = false, CastShadow = false })
 			glass:SetAttribute("Trophy", key)
-			vox(g, "TrophyLid", Vector3.new(1.5, 0.2, 1.4), at(x, 5.05, 4), GOLD, { Material = Enum.Material.Metal })
+			local lid = vox(g, "TrophyLid", Vector3.new(1.5, 0.2, 1.4), at(x, 5.05, 4), GOLD, { Material = Enum.Material.Metal })
+			do -- a small warm light under the lid: back-lit, the empty cases read as dark boxes (Gemini full1119i)
+				local sl = Instance.new("SpotLight")
+				sl.Face, sl.Angle, sl.Range, sl.Brightness, sl.Color, sl.Shadows = N.Bottom, 70, 5, 0.9, Color3.fromRGB(255, 214, 160), false
+				sl.Parent = lid
+			end
 			local plaque = vox(g, "TrophyPlaque", Vector3.new(1.3, 0.8, 0.12), at(x, 2.3, 4.74), Color3.fromRGB(36, 17, 56), { CanCollide = false })
 			plaque:SetAttribute("Trophy", key)
 			local sg = Instance.new("SurfaceGui")

@@ -2444,7 +2444,16 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 				local eye = cam2.CFrame.Position
 				if camp2 then return end
 				local at = Vector3.new(C.CAVE_ORIGIN.X, eye.Y, C.CAVE_ORIGIN.Z)
-				if plr:GetAttribute("InCave") and (at - eye).Magnitude > 3 and (at - eye).Magnitude < 80 then cam2.CFrame = CFrame.lookAt(eye, at) end
+				if plr:GetAttribute("InCave") and (at - eye).Magnitude > 3 and (at - eye).Magnitude < 80 then -- a 0.3 s turn, not a cut (Gemini full1119h)
+					local from, t0 = cam2.CFrame, os.clock()
+					local turn
+					turn = RunService.RenderStepped:Connect(function()
+						local k = math.min((os.clock() - t0) / 0.3, 1)
+						local e = k * k * (3 - 2 * k)
+						cam2.CFrame = CFrame.new(cam2.CFrame.Position) * from.Rotation:Lerp(CFrame.lookAt(eye, at).Rotation, e)
+						if k >= 1 then turn:Disconnect() end
+					end)
+				end
 			end)
 		end)
 	elseif kind == "lift" then

@@ -538,6 +538,14 @@ function M.build(caves)
 		part("GalleryWall", Vector3.new(40, 28, 6), O * CFrame.new(8, 14, -107), CLAY_D, ROCK) -- ends at the dig's west wall (x 28)
 		for k = 0, 2 do part("GalleryBeam", Vector3.new(34, 1.6, 1.6), O * CFrame.new(11, 21.2, -68 - k * 15), BARK, { Material = Enum.Material.Wood, CanCollide = false }) end
 		part("GalleryBand", Vector3.new(0.4, 1.2, 43.6), O * CFrame.new(-5.8, 9, -82), CREAM:Lerp(CLAY, 0.35), ROCK)
+		for _, z in { -64, -84 } do -- two clay wall sconces down the west wall: the way into the gallery was too dark to read the stepping stones (Gemini full1119i)
+			part("SconcePot", Vector3.new(1.0, 1.0, 1.2), O * CFrame.new(-5.2, 8, z), CLAY_D, DECO)
+			local wick = part("SconceWick", Vector3.new(0.45, 0.45, 0.45), O * CFrame.new(-5.2, 8.7, z), AMBER, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+			local l = Instance.new("PointLight")
+			l.Color, l.Range, l.Brightness, l.Shadows = AMBER:Lerp(CREAM, 0.4), 26, 0.6, false
+			l.Parent = wick
+			l:SetAttribute("Fixture", true)
+		end
 		part("GalleryBand", Vector3.new(33.6, 1.1, 0.4), O * CFrame.new(11, 9, -103.8), CREAM:Lerp(CLAY, 0.35), ROCK)
 		for _, s in { { 0, -74, 8, 4 }, { 0, -96, 8, 8 }, { 22, -98, 10, 12 }, { 22, -72, 8, 5 } } do -- stone steps: x, z, width, height
 			part("GalleryStep", Vector3.new(s[3], s[4], 8), O * CFrame.new(s[1], s[4] / 2, s[2]), s[4] % 8 == 0 and CLAY_L or CLAY, ROCK)
