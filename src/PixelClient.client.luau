@@ -1384,7 +1384,7 @@ do
 		end
 		local lantern = plr.Character and plr.Character:FindFirstChild("Lantern", true) -- on the torch in the left hand
 		if lantern then
-			local flick = math.noise(now * 6, 1.7) * 0.18 + math.noise(now * 17, 4.2) * 0.08
+			local flick = math.noise(now * 6, 1.7) * 0.11 + math.noise(now * 17, 4.2) * 0.04 -- a calmer flicker: faces near the torch strobed (Gemini full1119k)
 			lantern.Color = plr:GetAttribute("TorchColor") or Color3.fromRGB(255, 196, 120) -- the lantern cosmetic (Shared.WardrobeUI)
 			lantern.Range = C.TORCH.minRange + (C.TORCH.range - C.TORCH.minRange) * cave.fuel ^ 0.5 + flick * 2 + job.light
 			lantern.Brightness = (0.27 + 0.31 * cave.fuel + flick * 0.25) * (forgeUI.lightK or 1) -- soft: close things blew out white (the floor, then chests and tents; Gemini 2026-11-09)
@@ -2407,6 +2407,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 				if not cave.escapeBonus then R.Surface:FireServer("escaped", nil) end
 			end
 			R.Surface:FireServer("arrived")
+			forgeUI.promptsQuietUntil = os.clock() + 2.5 -- RIDE UP sat in view the moment the cart stopped
 			if ok and cave.escapeBonus and cave.escapeBonus > 0 then toast("ESCAPE BONUS  +" .. commas(cave.escapeBonus) .. " COINS", GOLD, true) end
 		end)
 	elseif kind == "drowned" then -- out of air in the lake, or a fall to the chasm floor: the server woke us at Camp 1
@@ -2650,7 +2651,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		if tipB and tipB.Visible then return true end
 		return false
 	end end
-	local promptsOn = not (modal or cave.mgBusy or forgeUI.cardUp or (card and card.Visible)) -- audit 05: no world prompt over a modal or a loot card
+	local promptsOn = not (modal or cave.mgBusy or forgeUI.cardUp or (card and card.Visible) or forgeUI.homeHolding or os.clock() < (forgeUI.promptsQuietUntil or 0)) -- audit 05: no world prompt over a modal or a loot card; none during the hearthstone hold or the first moments off the cart (Gemini full1119l)
 	caveHud.Visible = inCave and not modal -- the cave HUD and its tip ribbon step back behind a modal
 	layerPill.Visible, goldPill.Parent.Parent.Visible = not (modal or cave.mgBusy or forgeUI.cardUp) and os.clock() < layerShowUntil, not (modal or cave.mgBusy) -- so do the location pill and the left column (Gemini r2: they floated over the blur)
 	if PPS.Enabled ~= promptsOn then PPS.Enabled = promptsOn end

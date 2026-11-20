@@ -53,7 +53,7 @@ function M.start(E)
 		b.ZIndex = 6
 		tabs[t[1]] = b
 	end
-	local capT = text(inv, "", UDim2.fromScale(0.56, 0.065), UDim2.fromScale(0.06, 0.27), nil, INK, 700, false)
+	local capT = text(inv, "", UDim2.fromScale(0.5, 0.065), UDim2.fromScale(0.06, 0.27), nil, INK, 700, false)
 	capT.TextXAlignment, capT.ZIndex = Enum.TextXAlignment.Left, 6
 	local capTrack = new("Frame", inv, { Size = UDim2.fromScale(0.3, 0.04), Position = UDim2.fromScale(0.64, 0.29), BackgroundColor3 = Color3.fromRGB(230, 220, 245), BorderSizePixel = 0, ZIndex = 6 })
 	new("UICorner", capTrack, { CornerRadius = UDim.new(0.5, 0) })
@@ -194,7 +194,8 @@ function M.start(E)
 			g.LayoutOrder, g.ZIndex = i, 7
 			for _, d in g:GetDescendants() do if d:IsA("ImageLabel") then d.ImageTransparency = math.max(d.ImageTransparency, 0.62) end end
 			if g:IsA("ImageLabel") then g.ImageTransparency = math.max(g.ImageTransparency, 0.62) end
-			local q = text(g, "?", UDim2.fromScale(0.5, 0.4), UDim2.fromScale(0.5, 0.45), Vector2.new(0.5, 0.5), Color3.fromRGB(200, 186, 232), 700, false)
+			local locked = ui.tab == "bag" and i > (st.cap or pack.cap) -- past the pouch's size: a padlock, a bigger pack opens it (Gemini full1119n)
+			local q = text(g, locked and "🔒" or "?", UDim2.fromScale(0.5, 0.4), UDim2.fromScale(0.5, 0.45), Vector2.new(0.5, 0.5), Color3.fromRGB(200, 186, 232), 700, false)
 			q.ZIndex, q.TextTransparency = 8, 0.55
 			ui.slots[#ui.slots + 1] = g
 		end

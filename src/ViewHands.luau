@@ -180,7 +180,7 @@ function M.start(E)
 			local q = math.clamp((i - 0.2) / 1.3, 0, 1)
 			turn = q * q * (3 - 2 * q) * math.pi * 2
 		end
-		return CFrame.new(1.75 + hx + sway.X - dip * (1 + heavyW) + step - 1.15 * w, -1.4 + hy + lift + bob + sway.Y - dip * (1 + heavyW) + landY + 0.95 * w, -2.4 - dip - 0.5 * w) * CFrame.Angles(-ang + sway.Y * 0.5 + 0.35 * w, -sway.X * 0.6 + math.max(ang, 0) * 0.25, sw.side * math.max(ang, 0) * 0.5) -- the swing chops forward and in toward the crosshair
+		return CFrame.new(1.75 + hx + sway.X - dip * (1 + heavyW) + step - 1.15 * w, -1.55 + hy + lift + bob + sway.Y - dip * (1 + heavyW) + landY + 0.95 * w, -2.4 - dip - 0.5 * w) * CFrame.Angles(-ang + sway.Y * 0.5 + 0.35 * w, -sway.X * 0.6 + math.max(ang, 0) * 0.25, sw.side * math.max(ang, 0) * 0.5) -- the swing chops forward and in toward the crosshair
 			* CFrame.Angles(-0.35, 0, 0.44 + roll) * CFrame.Angles(0, YAW + turn, 0) -- at rest: the fist in the bottom right, the handle leaning 25 degrees in toward the middle (Minecraft's handheld first-person roll) and a little forward (was -0.5 / 0.22)
 	end
 end

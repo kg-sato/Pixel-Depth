@@ -23,6 +23,7 @@ function M.start(E)
 	local function stop(tell)
 		if not hold then return end
 		hold = nil
+		hook.homeHolding = false
 		box.Visible = false
 		if tell then R:FireServer("homeStop") end
 	end
@@ -40,6 +41,7 @@ function M.start(E)
 		if what == "go" then
 			local h = E.hrp()
 			hold = { t0 = os.clock(), secs = a, p = h and h.Position }
+			hook.homeHolding = true -- the world prompts step back while the ring fills
 			ring.set(0)
 			scale.Scale = 0.6
 			box.Visible = true

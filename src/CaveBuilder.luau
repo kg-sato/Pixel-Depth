@@ -158,6 +158,7 @@ function Cave.build(parent, origin, seed)
 			part("Camp", "FireStone", Vector3.new(1.6, 1, 1.6), CFrame.new(fire + Vector3.new(math.cos(a) * 3, 0.5, math.sin(a) * 3)) * CFrame.Angles(0, a, 0), PAL.rock[3])
 		end
 		for k = 0, 2 do part("Camp", "Log", Vector3.new(0.9, 0.9, 4), CFrame.new(fire + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, k * 2.1, 0.25), PAL.bark) end
+		part("Camp", "Ash", Vector3.new(0.06, 5.2, 5.2), CFrame.new(fire + Vector3.new(0, 0.07, 0)) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(34, 28, 32), { Shape = Enum.PartType.Cylinder, CanCollide = false, CastShadow = false }) -- an ash ring under the logs, 0.04 over the floor (Gemini full1119k)
 		local flame = part("Camp", "Flame", Vector3.new(1.8, 2.6, 1.8), CFrame.new(fire + Vector3.new(0, 2, 0)) * CFrame.Angles(0, 0.6, 0), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		part("Camp", "FlameCore", Vector3.new(0.6, 0.9, 0.6), CFrame.new(fire + Vector3.new(0, 1.6, 0)), Color3.fromRGB(255, 240, 190), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		glow(flame, Color3.fromRGB(255, 185, 95), 32, 1.15, true) -- was 3.4 then 1.7: the camp blew out to white (i65, Gemini r2 2026-11-09)

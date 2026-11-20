@@ -120,6 +120,8 @@ function M.start(E)
 			end
 			c.gem.Visible = got and not c.icon and not c.card
 			c.mark.Visible = not got
+			local st = c.f:FindFirstChildOfClass("UIStroke")
+			if st then st.Color, st.Thickness = got and c.color:Lerp(Color3.new(1, 1, 1), 0.25) or Color3.fromRGB(155, 31, 232), got and 2.5 or 2 end -- a found entry wears its own colour (Gemini full1119l: every frame looked the same)
 			c.name.Text = "" -- names are read by pointing at a cell (they were tiny inside it)
 			c.got = got
 		end

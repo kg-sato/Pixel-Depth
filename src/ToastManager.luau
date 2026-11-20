@@ -10,7 +10,7 @@ local Players = game:GetService("Players")
 local function lane() -- in a boss fight the notices sit under the boss bar, off the fighting floor (Gemini v10n_r9: "floating across the combat space")
 	local pg = Players.LocalPlayer and Players.LocalPlayer:FindFirstChild("PlayerGui")
 	local bar = pg and pg:FindFirstChild("BossBar", true)
-	return (bar and bar:IsA("GuiObject") and bar.Visible) and 0.25 or LANE
+	return (bar and bar:IsA("GuiObject") and bar.Visible) and 0.34 or LANE -- under the boss bar and its pips (at 0.25 it sat on the pips, full1119o)
 end
 local queue, live, E, gap = {}, nil, nil, 0
 

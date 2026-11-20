@@ -1050,6 +1050,11 @@ function M.play(opt)
 					local post = pathCF(ahead - 5)
 					K.net("f", gold, ahead)
 					K.forkSign(post, gold, ahead)
+					for k = 0, 5 do -- lit lanes past the sign, pink to the risky side and cyan to the safe one: the switch rails were dark (Gemini full1119m)
+						for _, d in { { LANES[gold], Color3.fromRGB(255, 0, 127) }, { -LANES[gold], Color3.fromRGB(0, 240, 255) } } do
+							part(world, Vector3.new(0.45, 0.06, 1.3), pathCF(ahead - 3 + k * 2.6) * CFrame.new(d[1], 0.14, 0), d[2], { Material = Enum.Material.Neon, Transparency = 0.25 })
+						end
+					end
 					spawnCart(ahead + 6, 2)
 					if not taught.fork then hazards[#hazards].teach = "FORK!  PINK: BOOSTS, A ROCK AND A GEM.  CYAN: SAFE" end
 					taught.fork = true

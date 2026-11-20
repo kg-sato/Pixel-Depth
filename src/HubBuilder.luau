@@ -1332,7 +1332,7 @@ function Hub.build(parent, origin)
 		prompt(chest, "Open", "Daily relic chest", "chest")
 		do -- only when you walk up to it: from the spawn its prompt sat on top of RIDE THE MINECART (Gemini audit 2026-11-18)
 			local pr = chest:FindFirstChildWhichIsA("ProximityPrompt", true)
-			if pr then pr.MaxActivationDistance = math.min(pr.MaxActivationDistance, 6) end
+			if pr then pr.MaxActivationDistance = math.min(pr.MaxActivationDistance, 6) end -- F like every town prompt (an E here broke the one-key habit, Gemini full1119n); 6 studs keeps it off the minecart's prompt
 		end
 		-- a parchment treasure map on the left wing: a dotted trail down the seven layers to an X
 		local map = wingL

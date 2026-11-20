@@ -75,7 +75,7 @@ function M.start(E)
 		end
 	end
 	new("UIAspectRatioConstraint", chest, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-	local title = panel(layer, S(380, 72), S(600, 64), Vector2.new(0.5, 0.5), "ribbonPink") -- narrower and a little left: it ran under the NEXT UP card
+	local title = panel(layer, S(380, 72), S(600, 100), Vector2.new(0.5, 0.5), "ribbonPink") -- narrower and a little left: it ran under the NEXT UP card; 100 not 64: its top was cut off on wide screens (full1119o)
 	fit(title, 380, 72)
 	local titleT = text(title, "DAILY CHEST", UDim2.fromScale(0.62, 0.52), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), WHITE)
 	titleT.TextStrokeColor3 = DEEP.ribbonPink

@@ -311,6 +311,24 @@ function M.start(E)
 			prompt(true)
 			openDoor(true)
 			sfx("upgrade", 1)
+			do -- the stone gives: a spill of basalt chunks rolls off the beaten boss (Gemini full1119k), client only, gone in 5 s
+				local w = warden()
+				local body = w and (w:FindFirstChild("WardenBody", true) or w.PrimaryPart)
+				if body then
+					local rnd = Random.new()
+					for k = 1, 10 do
+						local c = Instance.new("Part")
+						local sz = rnd:NextNumber(0.5, 1.2)
+						c.Name, c.Size, c.Color, c.Material = "Rubble", Vector3.new(sz, sz * rnd:NextNumber(0.6, 1), sz), Color3.fromRGB(46, 42, 58), Enum.Material.Slate
+						c.CFrame = body.CFrame * CFrame.new(rnd:NextNumber(-2.5, 2.5), rnd:NextNumber(0, 2.5), rnd:NextNumber(-2.5, 2.5)) * CFrame.Angles(rnd:NextNumber(0, 6), rnd:NextNumber(0, 6), 0)
+						c.CanQuery, c.CanTouch, c.CastShadow = false, false, true
+						c.Parent = workspace
+						c.AssemblyLinearVelocity = Vector3.new(rnd:NextNumber(-10, 10), rnd:NextNumber(8, 16), rnd:NextNumber(-10, 10))
+						game:GetService("Debris"):AddItem(c, 5)
+						if k % 3 == 0 then c.Material, c.Color = Enum.Material.Glass, Color3.fromRGB(0, 240, 255) end -- a few crystal shards in the spill
+					end
+				end
+			end
 			local won = now
 			toast(won == 2 and "THE KILN GOLEM YIELDS!" or "THE DEEP GATE IS OPEN!", GOLD, true)
 			task.delay(2.2, function() -- the reward: the 3D chest of the daily reward with the boss's name (the server has already paid)
