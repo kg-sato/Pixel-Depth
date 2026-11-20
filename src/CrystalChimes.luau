@@ -23,7 +23,7 @@ function M.start(E)
 		local bb = p:FindFirstChild("ChimeNumber")
 		if bb then return bb, bb.Num end
 		bb = Instance.new("BillboardGui")
-		bb.Name, bb.Size, bb.StudsOffsetWorldSpace, bb.LightInfluence, bb.MaxDistance, bb.Enabled = "ChimeNumber", UDim2.fromOffset(46, 46), Vector3.new(0, p.Size.Y / 2 + 1.5, 0), 0, 35, false -- a fixed 46 px badge: at 2.2 studs it filled the top of the view up close and ran over the HUD (full1119d 321 s, 2026-11-19)
+		bb.Name, bb.Size, bb.StudsOffsetWorldSpace, bb.LightInfluence, bb.MaxDistance, bb.Enabled = "ChimeNumber", UDim2.fromOffset(46, 46), Vector3.new(0, p.Size.Y / 2 + 3.4, 0), 0, 35, false -- a fixed 46 px badge: at 2.2 studs it filled the top of the view up close and ran over the HUD (full1119d 321 s, 2026-11-19)
 		local t = Instance.new("TextLabel")
 		t.Name, t.Size, t.BackgroundColor3, t.BackgroundTransparency, t.TextScaled, t.Font, t.TextColor3 = "Num", UDim2.fromScale(1, 1), Color3.fromRGB(36, 17, 56), 0.15, true, Enum.Font.FredokaOne, WHITE
 		local corner = Instance.new("UICorner")

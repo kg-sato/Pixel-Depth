@@ -1415,6 +1415,29 @@ do -- kill floor at the chasm bottom (playtest 2): a fall ends the dive like pas
 		end
 	end
 end
+if caveLanding then -- a fall out of the cave world (the tour once ended a zipline ride 120 studs under Camp 1 and woke in town,
+	-- 2026-11-19): anyone in the caves who drops 30 studs under the lowest cave part is put back at the nearest camp landing, nothing lost
+	task.spawn(function()
+		local low = math.huge
+		for _, d in workspace.Caves:GetDescendants() do
+			if d:IsA("BasePart") and d.CanCollide then low = math.min(low, d.Position.Y - d.Size.Y / 2) end
+		end
+		if low == math.huge then return end
+		local function flat(v) return Vector3.new(v.X, 0, v.Z) end
+		while true do
+			task.wait(0.5)
+			for _, plr in Players:GetPlayers() do
+				local hrp = hrpOf(plr)
+				if hrp and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] and hrp.Position.Y < low - 30 then
+					local best, l2 = caveLanding, workspace.Caves:FindFirstChild("ClayLanding", true)
+					if l2 and (flat(l2.Position) - flat(hrp.Position)).Magnitude < (flat(caveLanding.Position) - flat(hrp.Position)).Magnitude then best = l2 end
+					hrp.AssemblyLinearVelocity = Vector3.zero
+					hrp.CFrame = best.CFrame + Vector3.new(0, 3, 0)
+				end
+			end
+		end
+	end)
+end
 Players.PlayerRemoving:Connect(function(plr)
 	crew.drop(plr)
 	riding[plr], escaping[plr] = nil, nil

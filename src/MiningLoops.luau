@@ -26,6 +26,9 @@ function M.start(E)
 
 	-- ===== Echo Tap
 	local E_ = C.ECHO
+	local marks = Instance.new("ScreenGui")
+	marks.Name, marks.ResetOnSpawn, marks.IgnoreGuiInset, marks.DisplayOrder = "EchoMarks", false, true, 2
+	marks.Parent = plr:WaitForChild("PlayerGui")
 	local ready = 0
 	local rp = RaycastParams.new()
 	rp.FilterType = Enum.RaycastFilterType.Exclude
@@ -42,24 +45,30 @@ function M.start(E)
 		ready = os.clock() + E_.cool
 		local n = 0
 		for _, d in deposits() do if (d.PrimaryPart.Position - hit.Position).Magnitude <= E_.radius then n += 1 end end
-		local a = Instance.new("Attachment")
-		a.WorldPosition = hit.Position + hit.Normal * 0.4
-		local host = workspace.Terrain
-		a.Parent = host
-		local bb = Instance.new("BillboardGui")
-		bb.Size, bb.LightInfluence, bb.AlwaysOnTop, bb.MaxDistance, bb.Adornee = UDim2.fromOffset(58, 58), 0, false, 40, a
+		-- drawn in screen space and placed on the rock every frame: a world BillboardGui sometimes did not draw (and never in
+		-- Studio captures when always-on-top), the custom prompts work the same way
+		local at = hit.Position + hit.Normal * 0.4
 		local t = Instance.new("TextLabel")
-		t.Size, t.BackgroundTransparency, t.Text, t.Font, t.TextScaled = UDim2.fromScale(1, 1), 1, tostring(n), Enum.Font.FredokaOne, true
-		t.TextColor3, t.TextStrokeColor3, t.TextStrokeTransparency = PASTEL[math.min(n, 3)], INK, 0.1
-		t.Parent = bb
+		t.Size, t.AnchorPoint, t.BackgroundTransparency, t.Text, t.Font, t.TextScaled = UDim2.fromOffset(54, 54), Vector2.new(0.5, 0.5), 1, tostring(n), Enum.Font.FredokaOne, true
+		t.TextColor3, t.TextStrokeColor3, t.TextStrokeTransparency, t.ZIndex = PASTEL[math.min(n, 3)], INK, 0.1, 2
+		local st = Instance.new("UIStroke") -- a thick dark edge: on pale rock the pastel number was faint (Gemini full1119e)
+		st.Color, st.Thickness, st.Parent = INK, 3, t
 		local sc = Instance.new("UIScale")
 		sc.Scale, sc.Parent = 0.4, t
-		bb.Parent = plr:WaitForChild("PlayerGui")
+		t.Parent = marks
+		local function place()
+			local v, on = workspace.CurrentCamera:WorldToViewportPoint(at)
+			t.Visible = on and (workspace.CurrentCamera.CFrame.Position - at).Magnitude < 40
+			t.Position = UDim2.fromOffset(v.X, v.Y)
+		end
+		place()
+		local conn = game:GetService("RunService").RenderStepped:Connect(place)
 		TweenService:Create(sc, TweenInfo.new(0.32, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 		if sfx then sfx("click", 0.6 + math.min(n, 4) * 0.15) end -- the echo rings higher the more ore it hears
 		task.delay(E_.show, function()
 			TweenService:Create(t, TweenInfo.new(0.4), { TextTransparency = 1, TextStrokeTransparency = 1 }):Play()
-			task.delay(0.45, function() bb:Destroy() a:Destroy() end)
+			TweenService:Create(st, TweenInfo.new(0.4), { Transparency = 1 }):Play()
+			task.delay(0.45, function() conn:Disconnect() t:Destroy() end)
 		end)
 	end
 	if game:GetService("RunService"):IsStudio() then plr:GetAttributeChangedSignal("DevEcho"):Connect(function() echo(workspace.CurrentCamera.ViewportSize / 2) end) end -- test hook (spike): a tap at the screen centre

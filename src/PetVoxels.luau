@@ -180,7 +180,7 @@ function M.build(name)
 		c.Name = part == "Head" and role == "Main" and "Head" or (part .. "_" .. role) -- PetCompanion looks for "Head"
 		if role ~= "Tex" then c.Color = d.palette[role] or Color3.new(1, 1, 1) end -- "Tex": a baked texture (colour, voxel occlusion, edge light) covers the part
 		if role ~= "Tex" and role ~= "Shine" and role ~= "Eye" and c.Color.R + c.Color.G + c.Color.B > 2.55 then -- near-white coats: Shinemane burned into a white block under Camp 1's lanterns (full1119d 147 s, 2026-11-19)
-			c.Color = c.Color:Lerp(Color3.fromRGB(150, 144, 172), 0.2)
+			c.Color = c.Color:Lerp(Color3.fromRGB(150, 144, 172), 0.3)
 		end
 		c.Material = GLOW[role] and Enum.Material.Neon or Enum.Material.SmoothPlastic
 		if GLOW[role] then c.Color = c.Color:Lerp(Color3.new(0, 0, 0), 0.35) end -- a dimmer Neon: full colour blew Shinemane's star into a white square (Gemini lineup_after)

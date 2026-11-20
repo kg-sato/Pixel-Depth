@@ -21,7 +21,36 @@ def path_of(f):
     return "ReplicatedStorage.Shared." + n, "ModuleScript"
 
 
+import contextlib, msvcrt, threading
+# NIGHT_SERIAL=1: one Studio call at a time across every process (the tour runs mg_night.py as a child). 2026-11-19: a capture
+# overlapping a Lua call hung Studio's MCP for about 5 minutes, five times in one tour.
+_TLOCK = threading.Lock()
+_LOCKFILE = pathlib.Path(__file__).resolve().parent / ".night.lock"
+
+
+@contextlib.contextmanager
+def _serial():
+    with _TLOCK:
+        with open(_LOCKFILE, "a+b") as f:
+            while True:
+                try:
+                    f.seek(0); msvcrt.locking(f.fileno(), msvcrt.LK_NBLCK, 1); break
+                except OSError:
+                    time.sleep(0.05)
+            try:
+                yield
+            finally:
+                f.seek(0); msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+
+
 def run(tool, args=None, shot=None, file=None, timeout=None):
+    if os.environ.get("NIGHT_SERIAL"):
+        with _serial():
+            return _run(tool, args, shot, file, timeout)
+    return _run(tool, args, shot, file, timeout)
+
+
+def _run(tool, args=None, shot=None, file=None, timeout=None):
     env = dict(os.environ)
     if shot: env["STUDIO_SHOT"] = str(shot)
     cmd = [sys.executable, str(root / "tools" / "studio_live.py"), tool]

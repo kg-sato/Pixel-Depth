@@ -17,14 +17,24 @@ function M.start(E)
 	if E.addModal then E.addModal(win) end
 	local title = E.text(win, "CODEX", UDim2.fromScale(0.4, 0.1), UDim2.fromScale(0.5, 0.08), MID, WHITE, 700, false)
 	title.Font, title.ZIndex = E.HEAD or title.Font, 6
-	local status = E.text(win, "", UDim2.fromScale(0.9, 0.055), UDim2.fromScale(0.5, 0.17), MID, GOLD, 700, false)
+	local status = E.text(win, "", UDim2.fromScale(0.84, 0.05), UDim2.fromScale(0.5, 0.17), MID, GOLD, 700, false)
 	status.Name, status.ZIndex = "Status", 6
-	local plate = E.new("Frame", win, { Name = "StatusPlate", Size = UDim2.fromScale(0.66, 0.075), Position = UDim2.fromScale(0.5, 0.17), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.15, BorderSizePixel = 0, ZIndex = 5 }) -- a dark pill: the panel is glass now
+	local plate = E.new("Frame", win, { Name = "StatusPlate", Size = UDim2.fromScale(0.9, 0.075), Position = UDim2.fromScale(0.5, 0.17), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.15, BorderSizePixel = 0, ZIndex = 5 }) -- a dark pill: the panel is glass now
 	E.new("UICorner", plate, { CornerRadius = UDim.new(0.5, 0) })
 	E.new("UIStroke", plate, { Color = Color3.fromRGB(155, 31, 232), Thickness = 1, Transparency = 0.3 })
 	local close = E.closeButton(win, "CodexClose")
-	local grid = E.new("Frame", win, { Name = "Grid", Size = UDim2.fromScale(0.92, 0.72), Position = UDim2.fromScale(0.5, 0.6), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 5 })
-	E.new("UIGridLayout", grid, { CellSize = UDim2.fromScale(0.1, 0.2), CellPadding = UDim2.fromScale(0.011, 0.03), SortOrder = Enum.SortOrder.LayoutOrder })
+	local grid = E.new("Frame", win, { Name = "Grid", Size = UDim2.fromScale(0.92, 0.64), Position = UDim2.fromScale(0.5, 0.645), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 5 })
+	E.new("UIGridLayout", grid, { CellSize = UDim2.fromScale(0.1, 0.225), CellPadding = UDim2.fromScale(0.011, 0.03), SortOrder = Enum.SortOrder.LayoutOrder })
+	-- ALL / ORES / PETS (Gemini full1119h: "34 entries in one unsorted grid"): a row of glass tabs, each with its found count
+	local tab, tabs = "all", {}
+	for i, t in { { "all", "ALL" }, { "ore", "ORES" }, { "pet", "PETS" } } do
+		local b = E.new("TextButton", win, { Name = "Tab_" .. t[1], Size = UDim2.fromScale(0.2, 0.06), Position = UDim2.fromScale(0.27 + (i - 1) * 0.23, 0.265), AnchorPoint = MID,
+			BackgroundColor3 = DARK, BackgroundTransparency = 0.25, Text = t[2], Font = E.HEAD or Enum.Font.FredokaOne, TextScaled = true, TextColor3 = WHITE, AutoButtonColor = false, ZIndex = 6 })
+		E.new("UICorner", b, { CornerRadius = UDim.new(0.5, 0) })
+		E.new("UIStroke", b, { Color = Color3.fromRGB(155, 31, 232), Thickness = 1.5, ApplyStrokeMode = Enum.ApplyStrokeMode.Border })
+		E.new("UIPadding", b, { PaddingTop = UDim.new(0.18, 0), PaddingBottom = UDim.new(0.18, 0) })
+		tabs[t[1]] = { b = b, word = t[2] }
+	end
 	local cells = {} -- { frame, mark, name, kind ("ore" or "pet"), key, color, label }
 	local function cell(kind, key, color, label, order)
 		local f = E.new("Frame", grid, { Name = key, LayoutOrder = order, BackgroundColor3 = DARK, BackgroundTransparency = 0.4, BorderSizePixel = 0, ZIndex = 5 })
@@ -89,6 +99,15 @@ function M.start(E)
 			c.name.Text = "" -- names are read by pointing at a cell (they were tiny inside it)
 			c.got = got
 		end
+		local per = { all = { 0, 0 }, ore = { 0, 0 }, pet = { 0, 0 } }
+		for _, c in cells do
+			c.f.Visible = tab == "all" or c.kind == tab
+			for _, k in { "all", c.kind } do per[k][2] += 1 if c.got then per[k][1] += 1 end end
+		end
+		for k, t in tabs do
+			t.b.Text = t.word .. "  " .. per[k][1] .. "/" .. per[k][2]
+			t.b.BackgroundColor3 = k == tab and Color3.fromRGB(155, 31, 232) or DARK
+		end
 		local luck = C.codexLuck(have)
 		local nextAt
 		for _, a in C.CODEX.at do
@@ -96,6 +115,7 @@ function M.start(E)
 		end
 		status.Text = "FOUND " .. have .. " OF " .. #cells .. "    EGG LUCK +" .. math.floor(luck * 100 + 0.5) .. "%" .. (nextAt and ("    NEXT AT " .. nextAt) or "")
 	end
+	for k, t in tabs do t.b.Activated:Connect(function() tab = k E.sfx("click", 1.1) paint() end) end
 	E.R.State.OnClientEvent:Connect(function(st)
 		if st and type(st.codex) == "table" then
 			found = { ore = st.codex.ore or {}, pet = st.codex.pet or {} }

@@ -42,8 +42,18 @@ function M.start(e)
 			gap = os.clock() + 0.34 -- the next line waits until this one is gone
 			return
 		end
-		local t = not hold and os.clock() >= gap and table.remove(queue, 1)
-		if not t then return end
+		if hold or os.clock() < gap or #queue == 0 then return end
+		local fight = lane() ~= LANE -- a boss fight: only its own lines show now; the rest (quests, torch, gifts) wait for the end (Gemini full1119h)
+		local pick = 1
+		if fight then
+			pick = nil
+			for i, q in queue do
+				local m = string.upper(q.msg)
+				if m:find("WARDEN") or m:find("GOLEM") or m:find("KNOT") or m:find("VENT") or m:find("JUMP") or m:find("DODGE") or m:find("FLARE") or m:find("GRAB") or m:find("CHEST") then pick = i break end
+			end
+			if not pick then return end
+		end
+		local t = table.remove(queue, pick)
 		E.sfx("pop", t.big and 0.9 or 1.1)
 		-- a dark pill behind the words: bare text lay across the first-person hands (Gemini, 2026-11-10)
 		local l = Instance.new("Frame")

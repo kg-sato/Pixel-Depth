@@ -192,8 +192,7 @@ function M.start(E)
 			shake(0.5)
 			sfx("hit", 0.7)
 			sfx("breakRock", 1.4)
-			hitFlash.BackgroundTransparency = 0.55
-			toast("BONK!", PINK, true)
+			hitFlash.BackgroundTransparency = 0.55 -- the flash, the shake and the thud say it: the BONK! pill read as a touch button (Gemini full1119h)
 		elseif kind == "caught" then
 			shake(0.8)
 			sfx("breakRock", 0.8)

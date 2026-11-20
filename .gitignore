@@ -54,3 +54,4 @@ spike/.last_quick
 # three.js copy for the local model preview (pinned in tools/design3d)
 design3d/vendor/
 design3d/out/
+spike/.night.lock

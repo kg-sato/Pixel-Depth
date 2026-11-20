@@ -635,6 +635,7 @@ function M.play(opt)
 		local m = Instance.new("Model")
 		-- a low timber beam (Gemini r5: the neon striped bar read as a placeholder): a split log banded in iron, two red flare lanterns hanging from it
 		part(m, Vector3.new(9.6, 0.9, 0.9), here * CFrame.new(0, 3.35, 0), BARK_LT, { Material = Enum.Material.Wood })
+		for _, z in { -0.47, 0.47 } do part(m, Vector3.new(9.4, 0.14, 0.06), here * CFrame.new(0, 2.94, z), TAPE, { Material = Enum.Material.Neon }) end -- an amber edge under the timber so it reads against the dark roof (Gemini full1119h)
 		part(m, Vector3.new(3.2, 0.5, 0.7), here * CFrame.new(-2.2, 2.85, 0.05) * CFrame.Angles(0, 0, 0.12), BARK, { Material = Enum.Material.Wood }) -- a splintered half hanging lower
 		for _, x in { -3.4, 0, 3.4 } do part(m, Vector3.new(0.5, 1.0, 1.0), here * CFrame.new(x, 3.35, 0), Color3.fromRGB(58, 52, 72), { Material = Enum.Material.Metal }) end
 		for _, x in { -1.7, 3.0 } do
@@ -886,7 +887,7 @@ function M.play(opt)
 			stroke(hub, BRASS, 3)
 			needle:SetAttribute("Arm", true)
 			K.stokeArm = needleArm
-			word = label(gui, touch and "STOKER:  TAP IN THE GOLD" or "STOKER:  SPACE IN THE GOLD", UDim2.fromScale(0.3, 0.03), UDim2.fromScale(0.5, 0.885), WHITE, 4) -- under the gauge, until the first hit
+			word = label(gui, touch and "STOKER:  TAP IN THE GOLD" or "STOKER:  SPACE IN THE GOLD", UDim2.fromScale(0.3, 0.03), UDim2.fromScale(0.5, 0.705), WHITE, 4) -- over the gauge (under it, it ran into THE GLOOM label), until the first hit
 			local lastPress = 0
 			K.stoke = function()
 				if t <= 0 or os.clock() - lastPress < S.cool then return end
@@ -978,10 +979,8 @@ function M.play(opt)
 			hint.TextTransparency = smooth(4, 5, t)
 			hintStroke.Transparency = hint.TextTransparency
 			hintPlate.BackgroundTransparency, hintEdge.Transparency = 0.25 + 0.75 * hint.TextTransparency, hint.TextTransparency
-			if badges then
-				badges.GroupTransparency = hint.TextTransparency
-				hintPlate.BackgroundTransparency, hintEdge.Transparency = 1, 1
-			end
+			if badges then badges.GroupTransparency = hint.TextTransparency end
+			if badges or hint.Text == "" then hintPlate.BackgroundTransparency, hintEdge.Transparency = 1, 1 end -- no words, no plate: the stoker's run showed an empty pill (full1119g)
 			-- speed: base, boosts stack, a bonk halves it
 			local live = 0
 			for i = #boostUntil, 1, -1 do if now < boostUntil[i] then live += 1 else table.remove(boostUntil, i) end end

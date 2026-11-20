@@ -186,7 +186,13 @@ function M.build(caves)
 	ml.Parent = mouth
 	ml:SetAttribute("Fixture", true)
 	part("KilnThroat", Vector3.new(3.6, 2.4, 1.4), kiln * CFrame.new(0, 1.5, 5.5), Color3.fromRGB(30, 14, 16), { CanCollide = false })
-	for k = -1, 1 do part("KilnCoal", Vector3.new(0.9, 0.6, 0.7), kiln * CFrame.new(k * 1.1, 1.0 + (k % 2) * 0.07, 6.9) * CFrame.Angles(0, k * 0.5, 0.2 * k), Color3.fromRGB(255, 140, 50), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false }) end
+	for k = -1, 1 do
+		local coal = part("KilnCoal", Vector3.new(0.9, 0.6, 0.7), kiln * CFrame.new(k * 1.1, 1.0 + (k % 2) * 0.07, 6.9) * CFrame.Angles(0, k * 0.5, 0.2 * k), Color3.fromRGB(255, 140, 50), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+		if k == 0 then -- chunky pixel flames licking out of the kiln mouth (Shared.PixelFire, as Camp 1's camp fire)
+			local okPF, PF = pcall(require, game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("PixelFire"))
+			if okPF then PF.attach(coal, Color3.fromRGB(255, 190, 90), Color3.fromRGB(240, 80, 30), 2) end
+		end
+	end
 	local embers = Instance.new("ParticleEmitter")
 	embers.Rate, embers.Lifetime, embers.Speed, embers.SpreadAngle = 7, NumberRange.new(1.2, 2.2), NumberRange.new(2, 4), Vector2.new(25, 25)
 	embers.Size, embers.Color, embers.LightEmission = NumberSequence.new(0.22, 0), ColorSequence.new(Color3.fromRGB(255, 170, 70)), 0.8
@@ -553,7 +559,7 @@ function M.build(caves)
 		lantern(Vector3.new(11, 17.5, -94))
 		for _, x in { 5.2, 16.8 } do part("DoorPost", Vector3.new(1.4, 14.6, 1.4), O * CFrame.new(x, 7.3, -53.2), BARK, { Material = Enum.Material.Wood }) end
 		part("DoorLintel", Vector3.new(14.4, 1.4, 1.6), O * CFrame.new(11, 15.3, -53.2), BARK, { Material = Enum.Material.Wood, CanCollide = false })
-		sign("JAR GALLERY", O * CFrame.new(11, 18, -53.5) * CFrame.Angles(0, math.pi, 0))
+		sign("JAR GALLERY", O * CFrame.new(11, 18, -52) * CFrame.Angles(0, math.pi, 0)) -- 1.5 studs out from the wall: it cut into the rock (Gemini full1119e)
 	end
 
 	-- THE FOSSIL DIG: x 34..74, z -110..-60, 46 high. Two dug terraces rise to the back, where a giant hammer head lies half
