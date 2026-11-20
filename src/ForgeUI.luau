@@ -86,6 +86,10 @@ function M.start(E)
 		local b = button(forge, t[2], UDim2.fromScale(0.175, 0.15), UDim2.fromScale(0.025, 0.2 + (i - 1) * 0.18), nil, "lilac", t[3])
 		b.Name = "Tab" .. t[2]
 		tabBtn[t[1]] = b
+		if t[1] ~= "pick" then -- what the tab holds, in a small line under its name: BACKPACKS and CHARMS gave no hint (Gemini full1119p)
+			local sub = text(b, t[1] == "pack" and "MORE ROOM" or (C.CHARMS_ON and "PERKS" or "SOON"), UDim2.fromScale(0.6, 0.2), UDim2.fromScale(0.5, 0.88), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 214, 107), 700, false)
+			sub.ZIndex = 5
+		end
 		if t[1] == "charm" and not C.CHARMS_ON then
 			local l = icon(b, "lock", UDim2.fromScale(0.2, 0.46), UDim2.fromScale(0.95, 0.12), Vector2.new(0.5, 0.5))
 			new("UIAspectRatioConstraint", l, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
@@ -116,8 +120,9 @@ function M.start(E)
 		local glow = new("Frame", b, { Name = "Selected", Size = UDim2.new(1, 10, 1, 10), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 3, Visible = false })
 		round(glow, 0.16)
 		new("UIStroke", glow, { Color = WHITE, Thickness = 3 })
-		local nm = text(face, "", UDim2.fromScale(0.9, 0.13), UDim2.fromScale(0.5, 0.06), Vector2.new(0.5, 0), INK, 700, false)
+		local nm = text(face, "", UDim2.fromScale(0.84, 0.12), UDim2.fromScale(0.5, 0.065), Vector2.new(0.5, 0), INK, 700, false) -- a little narrower: long names ran into the card edge (Gemini full1119p)
 		nm.ZIndex = 6
+		local halo = new("ImageLabel", face, { Name = "Halo", Image = FX_GLOW, BackgroundTransparency = 1, ImageTransparency = 0.25, Size = UDim2.fromScale(0.9, 0.7), Position = UDim2.fromScale(0.5, 0.53), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4 }) -- a soft rarity glow behind the art, so dark heads (Ashcoal, Bog-Iron) stand off the card (Gemini full1119p)
 		local art = new("ImageLabel", face, { Name = "Art", BackgroundTransparency = 1, Size = UDim2.fromScale(0.94, 0.7), Position = UDim2.fromScale(0.5, 0.53), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 5 })
 		local lvBox = panel(face, UDim2.fromScale(0.38, 0.17), UDim2.fromScale(0.04, 0.96), Vector2.new(0, 1), "dark")
 		lvBox.ZIndex = 6
@@ -140,7 +145,7 @@ function M.start(E)
 		lock.ZIndex = 8
 		local sc = scaler(b)
 		local card3d = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("ModelCard")).attach(art, b, { roll = -28, z = 5, stroke = rim }) -- the pickaxe as a live 3D model that lifts and tilts on hover (2026-11-17)
-		cards[i] = { card3d = card3d, lip = lip, btn = b, rim = rim, glow = glow, name = nm, art = art, lvBox = lvBox, lv = lv, ok = ok, eq = eq, price = price, priceT = pt, lock = lock, sc = sc }
+		cards[i] = { halo = halo, card3d = card3d, lip = lip, btn = b, rim = rim, glow = glow, name = nm, art = art, lvBox = lvBox, lv = lv, ok = ok, eq = eq, price = price, priceT = pt, lock = lock, sc = sc }
 		b.MouseEnter:Connect(function() if not glow.Visible then tween(sc, 0.12, { Scale = 1.08 }) end end) -- Gemini n17_hatch: 1.04 was barely seen
 		b.MouseLeave:Connect(function() if not glow.Visible then tween(sc, 0.15, { Scale = 1 }) end end)
 		b.MouseButton1Down:Connect(function() tween(sc, 0.07, { Scale = 0.94 }) if sfxClick then sfxClick() end end)
@@ -184,9 +189,9 @@ function M.start(E)
 	end
 	local stage = new("Frame", det, { Name = "Stage", Size = UDim2.fromScale(0.9, 0.42), Position = UDim2.fromScale(0.5, 0.235), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 2 })
 	local glows = {}
-	local rays = new("ImageLabel", stage, { Name = "Rays", Image = FX_RAYS, ImageTransparency = 0.6, BackgroundTransparency = 1, Size = UDim2.fromScale(1.3, 1.3), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 2 })
+	local rays = new("ImageLabel", stage, { Name = "Rays", Image = FX_RAYS, ImageTransparency = 0.8, BackgroundTransparency = 1, Size = UDim2.fromScale(1.3, 1.3), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 2 })
 	new("UIAspectRatioConstraint", rays, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-	for k, g in { { 1.25, 0.1 }, { 0.7, 0.25 } } do -- a wide soft glow in the rarity colour, a brighter core
+	for k, g in { { 1.25, 0.35 }, { 0.7, 0.6 } } do -- a wide soft glow in the rarity colour, a softer core: the white core washed out pale pickaxes (Gemini full1119p)
 		local c = new("ImageLabel", stage, { Image = FX_GLOW, ImageTransparency = g[2], BackgroundTransparency = 1, Size = UDim2.fromScale(g[1], g[1]), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 3 })
 		new("UIAspectRatioConstraint", c, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 		glows[k] = c
@@ -308,7 +313,7 @@ function M.start(E)
 		if not def or not getState() then return end
 		local r = rarityOf(tab, i)
 		local fill, rim = tones(r[3])
-		glows[1].ImageColor3, glows[2].ImageColor3, rays.ImageColor3 = r[3]:Lerp(WHITE, 0.35), r[3]:Lerp(WHITE, 0.75), r[3]:Lerp(WHITE, 0.55)
+		glows[1].ImageColor3, glows[2].ImageColor3, rays.ImageColor3 = r[3]:Lerp(WHITE, 0.2), r[3]:Lerp(WHITE, 0.35), r[3]:Lerp(WHITE, 0.35)
 		big.Image = tab == "pick" and PICK_ART[i] or (tab == "charm" and ICON.star) or ICON.bag
 		do -- the big detail art as a live 3D pickaxe too
 			bigCard = bigCard or require(game:GetService("ReplicatedStorage").Shared:WaitForChild("ModelCard")).attach(big, big.Parent, { roll = -28, z = 4 })
@@ -417,6 +422,7 @@ function M.start(E)
 			if def then
 				local fill, rim = tones(rarityOf(tab, i)[3])
 				cd.face.BackgroundColor3, cd.rim.Color, cd.lip.BackgroundColor3 = fill, rim, rim
+				cd.halo.ImageColor3 = rim:Lerp(Color3.new(1, 1, 1), 0.4)
 				cd.name.Text = short(def.name) -- mixed case: capitals crowded the tile edges (Gemini UI review, 2026-11-10)
 				cd.art.Image = tab == "pick" and (CARD_ART[i] or PICK_ART[i]) or (tab == "charm" and ICON.star) or ICON.bag
 				local own, nxt = i <= cur, i == cur + 1

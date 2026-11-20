@@ -96,6 +96,7 @@ function M.start(E)
 				local near = gap > 0 and math.clamp(1 - gap / 0.3, 0, 1) or 0
 				seamStroke.Thickness = 5 + near * 5
 				seamStroke.Color = GOLD:Lerp(WHITE, near * 0.5)
+				if math.abs(gap) < K.perfect / K.shrink then stroke.Color, seamStroke.Color = Color3.fromRGB(80, 255, 160), Color3.fromRGB(80, 255, 160) end -- the perfect moment flashes green (Gemini full1120s: "no cue at the sweet spot")
 				local step = (gap > 0 and gap < 0.3) and math.floor(gap / 0.06) or -1
 				if step >= 0 and lastTick and step ~= lastTick and not live.sent then E.sfx("tick", 1 + (4 - step) * 0.12) end
 				lastTick = step
@@ -105,7 +106,11 @@ function M.start(E)
 			local at = live and live.at
 			clear()
 			local tier, gems, gold = a, tonumber(b) or 0, tonumber(c) or 0
-			if at and E.burst then E.burst(at, Vector3.yAxis, tier == "perfect" and GOLD or Color3.fromRGB(200, 140, 255), tier == "perfect" and 40 or (tier == "good" and 22 or 8)) end
+			if at and E.burst then
+				local col = tier == "perfect" and GOLD or Color3.fromRGB(200, 140, 255)
+				E.burst(at, Vector3.yAxis, col, tier == "perfect" and 40 or (tier == "good" and 22 or 8))
+				if tier ~= "bad" then task.delay(0.22, function() E.burst(at + Vector3.new(0, 0.6, 0), Vector3.yAxis, col:Lerp(Color3.new(1, 1, 1), 0.3), tier == "perfect" and 18 or 10) end) end -- a second, lighter puff: the first was gone in 0.2 s (Gemini full1119l)
+			end
 			E.sfx(tier == "bad" and "click" or "upgrade", tier == "perfect" and 1.4 or 1.1)
 			if tier == "perfect" then E.sfx("ping", 1.2) E.sfx("crack", 1.1) E.sfx("flawless", 1) -- one sound per grade (Shared.StrikeJuice's set)
 			elseif tier == "good" then E.sfx("ping", 1) E.sfx("crack", 0.9)

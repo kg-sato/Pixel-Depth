@@ -163,7 +163,7 @@ function Cave.build(parent, origin, seed)
 		part("Camp", "FlameCore", Vector3.new(0.6, 0.9, 0.6), CFrame.new(fire + Vector3.new(0, 1.6, 0)), Color3.fromRGB(255, 240, 190), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		glow(flame, Color3.fromRGB(255, 185, 95), 32, 1.15, true) -- was 3.4 then 1.7: the camp blew out to white (i65, Gemini r2 2026-11-09)
 		do -- chunky pixel flames over the logs (Shared.PixelFire); the neon blocks stay as the glowing heart, smaller and half clear
-			local okPF, PF = pcall(require, game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("PixelFire"))
+			local okPF, PF = pcall(require, game:GetService("ReplicatedStorage"):WaitForChild("Shared"):FindFirstChild("PixelFire"))
 			if okPF then
 				PF.attach(flame, Color3.fromRGB(255, 196, 92), Color3.fromRGB(255, 104, 52), 3.2)
 				flame.Size, flame.Transparency = Vector3.new(1.2, 1.4, 1.2), 0.45

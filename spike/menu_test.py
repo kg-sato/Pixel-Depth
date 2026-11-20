@@ -8,6 +8,7 @@ def click(path): return N.run("user_mouse_input", {"actions": [{"action": "mouse
 STATE = ("local h=" + HUD + " local r=h.LeftColumn.Buttons local t=h:FindFirstChild('Timers',true) local n=0 for _,c in t:GetChildren() do if c:IsA('GuiObject') and c.Visible then n+=1 end end "
          "return 'buttons '..tostring(r.Visible)..' attr '..tostring(game.Players.LocalPlayer:GetAttribute('MenuOpen'))..' | timer boxes showing '..n..' | list '..tostring(t.Drop.Visible)")
 N.play(True); time.sleep(8)
+C1("game.Players.LocalPlayer:SetAttribute('DevRidden', true) return 1"); time.sleep(0.5)  # the pill hides until the first ride (2026-11-20)
 PATH = "Players." + C1("return game.Players.LocalPlayer.Name") + ".PlayerGui.PixelHUD"  # the click tool wants the path from the data model's root
 print("at the start:", C1(STATE))
 click(HUD + ".LeftColumn.Currency.MenuButton.Hit"); time.sleep(0.8)

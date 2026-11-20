@@ -32,7 +32,9 @@ function M.start(E)
 			sp(Vector3.new(19, DEPTH, 1), face * CFrame.new(0, -DEPTH / 2, -9), ROCK:Lerp(Color3.fromRGB(58, 44, 88), (k % 2) * 0.35))
 			sp(Vector3.new(0.4, DEPTH, 0.4), face * CFrame.new(k % 2 == 0 and 3.9 or -3.9, -DEPTH / 2, -8.3), Color3.fromRGB(138, 128, 168), { Material = Enum.Material.Metal })
 			for r = 0, DEPTH // 20 - 1 do
-				sp(Vector3.new(18, 0.9, 0.7), face * CFrame.new(0, -r * 20 - (k % 2) * 10, -8.2), BARK, { Material = Enum.Material.Wood })
+				local rib = face * CFrame.new(0, -r * 20 - (k % 2) * 10, -8.2)
+				sp(Vector3.new(18, 0.9, 0.7), rib, BARK, { Material = Enum.Material.Wood })
+				for _, bx in { -6, 0, 6 } do sp(Vector3.new(0.35, 0.35, 0.2), rib * CFrame.new(bx, 0, 0.42), Color3.fromRGB(120, 110, 140), { Material = Enum.Material.Metal }) end -- iron bolt heads (Gemini full1120u: "a greybox shaft")
 			end
 		end
 		for k = 0, 3 do -- strata: a lighter band of rock every 16 studs, so the walls are not one flat colour
@@ -120,6 +122,8 @@ function M.start(E)
 					fade(0, 0.35)
 				end
 				local e = t * t * (3 - 2 * t) -- eases off the top and onto the floor
+				vp.Ambient = Color3.fromRGB(140, 140, 200):Lerp(Color3.fromRGB(205, 150, 120), e) -- cool slate up top, the kiln's warm glow as you near the Clay Caves
+				vp.LightColor = Color3.fromRGB(220, 230, 255):Lerp(Color3.fromRGB(255, 200, 150), e)
 				local floor = top * CFrame.new(0, -14 - e * dist, 0)
 				cage:PivotTo(floor)
 				local speed = 6 * t * (1 - t) -- 0 at both ends, 1.5 in the middle

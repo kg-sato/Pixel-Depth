@@ -410,6 +410,9 @@ function M.play(opt)
 	cardStroke.Color, cardStroke.Thickness, cardStroke.Transparency = INK, 3, 1
 	cardStroke.Parent = cardText
 	cardText.Parent = gui
+	local subText = cardText:Clone() -- under the name: a ride to sit back and watch (Gemini full1120s: new players reached for the keys)
+	subText.Text, subText.Size, subText.Position = opt.camp2 and "SIT BACK  ·  NEXT STOP KILN CAMP" or "SIT BACK  ·  NEXT STOP CAMP 1", UDim2.fromScale(0.3, 0.035), UDim2.fromScale(0.5, 0.255)
+	subText.Parent = gui
 	local skip = Instance.new("TextButton")
 	skip.Size, skip.Position, skip.AnchorPoint = UDim2.fromScale(0.09, 0.055), UDim2.fromScale(0.95, 0.06), Vector2.new(1, 0)
 	skip.BackgroundColor3, skip.BackgroundTransparency, skip.Font, skip.TextScaled, skip.Text = Color3.fromRGB(255, 250, 243), 0.1, Enum.Font.FredokaOne, true, "SKIP"
@@ -554,6 +557,8 @@ function M.play(opt)
 		-- the cavern card, sparks, speed lines, sound
 		cardText.TextTransparency = 1 - smooth(4.75, 5.05, T) * (1 - smooth(5.8, 6.1, T))
 		cardStroke.Transparency = cardText.TextTransparency
+		subText.TextTransparency = cardText.TextTransparency
+		subText.UIStroke.Transparency = cardText.TextTransparency
 		local braking = T > 7.6 and T < 9.25 and speed > 3
 		for _, e in sparks do e.Rate = (braking and 60) or (speed > 42 and 25) or 0 end
 		local lineA = calm and 0 or math.clamp((speed - 42) / 14, 0, 1)

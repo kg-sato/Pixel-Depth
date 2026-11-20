@@ -1037,9 +1037,12 @@ function Hub.build(parent, origin)
 			P("Brow", Vector3.new(3.4, 0.5, 0.4), 0, 0.3, 1.15, PAL.cream[3])
 			for _, e in { -0.7, 0.7 } do P("Eye", Vector3.new(0.8, 0.85, 0.2), e, -0.35, 1.2, INK) end
 			for _, e in { -0.28, 0.28 } do P("Nose", Vector3.new(0.3, 0.5, 0.2), e, -2.8, 1.3, INK) end
+			P("SkullMount", Vector3.new(4.2, 3.6, 0.4), 0, 0.2, -1.32, Color3.fromRGB(46, 40, 54)) -- a dark iron plate it hangs on
+			P("Suture", Vector3.new(0.14, 1.2, 0.1), 0.45, 1.05, 1.13, Color3.fromRGB(150, 128, 112)) -- a crack across the crown
+			P("Suture", Vector3.new(0.9, 0.14, 0.1), 0.05, 1.5, 1.13, Color3.fromRGB(150, 128, 112))
 			for _, sd in { -1, 1 } do -- each horn sweeps out, curls up and hooks back in six blocks, thinning to a tip
 				for k, h in { { 2.0, 1.3, 0, 1.2, 0.9 }, { 2.9, 1.6, -0.1, 1.0, 0.85 }, { 3.7, 2.2, -0.2, 0.85, 0.8 }, { 4.2, 3.0, -0.35, 0.7, 0.75 }, { 4.2, 3.9, -0.5, 0.55, 0.65 }, { 3.8, 4.6, -0.6, 0.45, 0.5 } } do
-					P(k == 6 and "HornTip" or "Horn", Vector3.new(h[4] + 0.4, h[5], h[4] + 0.1), sd * h[1], h[2], h[3], k > 4 and PAL.cream[3] or (k > 2 and PAL.cream[2] or PAL.cream[1]))
+					P(k == 6 and "HornTip" or "Horn", Vector3.new(h[4] + 0.4, h[5], h[4] + 0.1), sd * h[1], h[2], h[3], k > 4 and Color3.fromRGB(128, 108, 96) or (k > 2 and PAL.cream[1] or PAL.cream[2])) -- old bone darkens toward the tips (Gemini full1120v: "flat beige wedges")
 				end
 			end
 		end
@@ -1078,6 +1081,7 @@ function Hub.build(parent, origin)
 			local fl = vox(g, "BrazierFire", Vector3.new(1.4, 1.2, 1.4), at(s * 5.2, 5.7, 2.2), EMBER, { CanCollide = false })
 			glow(fl, EMBER, 16, 1.2):SetAttribute("Flicker", 1)
 			vox(g, "BrazierFlame", Vector3.new(0.8, 0.8, 0.8), at(s * 5.2, 6.6, 2.2), GOLD, { CanCollide = false, Material = Enum.Material.Neon })
+			do local okPF, PF = pcall(require, game:GetService("ReplicatedStorage"):WaitForChild("Shared"):FindFirstChild("PixelFire")) if okPF then PF.attach(fl, Color3.fromRGB(255, 200, 100), Color3.fromRGB(240, 90, 40), 1.8) end end -- chunky pixel flames (Shared.PixelFire)
 			-- glowing gem pedestals further out
 			tvox(g, "Pedestal", Vector3.new(1.8, 2.4, 1.8), at(s * 9, 2.6, 4), "stonebrick", 2)
 			tvox(g, "PedestalTop", Vector3.new(2.2, 0.4, 2.2), at(s * 9, 4, 4), "stonebrick", 2)
@@ -1394,6 +1398,7 @@ function Hub.build(parent, origin)
 		em.Color, em.LightEmission, em.EmissionDirection = ColorSequence.new(GOLD, EMBER), 1, N.Top
 		em.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.25), NumberSequenceKeypoint.new(1, 0) })
 		em.Parent = flames:FindFirstChild("Flame")
+		do local okPF, PF = pcall(require, game:GetService("ReplicatedStorage"):WaitForChild("Shared"):FindFirstChild("PixelFire")) if okPF then PF.attach(flames:FindFirstChild("Flame"), Color3.fromRGB(255, 200, 100), Color3.fromRGB(240, 90, 40), 3.4) end end -- chunky pixel flames over the town fire (Shared.PixelFire)
 		local plume = Instance.new("ParticleEmitter") -- a lazy lilac smoke plume
 		plume.Rate, plume.Lifetime, plume.Speed, plume.SpreadAngle = 2, NumberRange.new(4, 6), NumberRange.new(1.5, 2.5), Vector2.new(8, 8)
 		plume.Color, plume.EmissionDirection = ColorSequence.new(Color3.fromRGB(176, 168, 185)), N.Top

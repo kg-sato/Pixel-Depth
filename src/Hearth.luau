@@ -54,7 +54,7 @@ function M.start(E)
 			E.tween(flash, 0.9, { BackgroundTransparency = 1 })
 			task.delay(0.95, function() flash.Visible = false end)
 			E.sfx("land", 0.8)
-			E.toast("HOME SAFE", MINT, true)
+			E.toast("BACK AT CAMP  ·  ORE IS SAFE HERE", MINT, true) -- says where: HOME SAFE left players unsure if it meant town (Gemini full1120s)
 		elseif what == "no" then
 			stop(false)
 			if type(a) == "number" then

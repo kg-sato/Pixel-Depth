@@ -588,6 +588,9 @@ function M.play(opt)
 		for _, c in { { -2, 0.9 }, { 2, 0.9 }, { -2, -0.9 }, { 2, -0.9 } } do
 			part(world, Vector3.new(0.34, 0.34, 0.28), board.CFrame * CFrame.new(c[1], c[2], 0.02), BRASS, { Material = Enum.Material.Metal })
 		end
+		for k = 0, 6 do -- a hazard stripe plank under the sign: amber and soot in diagonal blocks, like a railway shunting board (Gemini full1120u)
+			part(world, Vector3.new(0.55, 0.32, 0.12), board.CFrame * CFrame.new(-1.65 + k * 0.55, -1.2, 0.02) * CFrame.Angles(0, 0, 0.5), k % 2 == 0 and Color3.fromRGB(255, 196, 60) or Color3.fromRGB(34, 26, 30), { Material = Enum.Material.SmoothPlastic, CanCollide = false })
+		end
 		local l = Instance.new("PointLight")
 		l.Color, l.Range, l.Brightness, l.Parent = color, 6, 0.5, board
 	end

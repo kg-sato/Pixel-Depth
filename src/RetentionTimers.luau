@@ -108,7 +108,21 @@ function M.start(E)
 		local boss = gui:FindFirstChild("BossBar", true)
 		local chest = E.plr.PlayerGui:FindFirstChild("DailyChest")
 		holder.Visible = not (boss and boss.Visible) and not (chest and chest.Enabled) and not (E.vmHook and (E.vmHook.arOpen or E.vmHook.modalOpen)) and not (E.isBusy and E.isBusy()) -- a minigame owns the top (it hid the Vein Rush quality bar, 2026-11-17); a reward chest has the top of the screen to itself
+		local st = E.getState and E.getState()
+		if st and st.tips and not st.tips.ride and not E.plr:GetAttribute("DevRidden") then holder.Visible = false end -- before the first ride down the pill only adds noise (Gemini full1120r: "storm panic at spawn")
 		if not holder.Visible then return end
+		do -- narrow screens: keep the pill clear of the coin strip (at 874 wide it sat on HOME, 2026-11-20)
+			local col = gui:FindFirstChild("LeftColumn")
+			local money = col and col:FindFirstChild("Currency")
+			local right = 0
+			if money then
+				for _, c in money:GetChildren() do
+					if c:IsA("GuiObject") and c.Visible then right = math.max(right, c.AbsolutePosition.X + c.AbsoluteSize.X) end
+				end
+			end
+			local shift = math.max(0, right + 10 - (holder.AbsolutePosition.X - holder.Position.X.Offset)) -- the pill's left edge without any shift, against the strip's right edge
+			if holder.Position.X.Offset ~= shift then holder.Position = UDim2.new(holder.Position.X.Scale, shift, holder.Position.Y.Scale, holder.Position.Y.Offset) end
+		end
 		do -- open while the pointer is on the pill or its list, or while it is pinned by a click
 			local m = game:GetService("UserInputService"):GetMouseLocation() - game:GetService("GuiService"):GetGuiInset()
 			local p, s = holder.AbsolutePosition, holder.AbsoluteSize

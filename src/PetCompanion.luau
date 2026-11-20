@@ -27,7 +27,7 @@ function M.start(E)
 	local nextScan, rare, gloomNear, hopAt = 0, nil, false, -10
 	-- where each of the first three pets keeps to in the first-person view (camera space), and its size
 	local SLOT = {
-		{ off = Vector3.new(-7.4, -0.4, -10), scale = 1.6 },
+		{ off = Vector3.new(-8.4, -0.9, -13), scale = 1.6 }, -- further out and lower: at -7.4/-10 it filled a third of the left view (Gemini full1119p)
 		{ off = Vector3.new(-10.6, -1.0, -14.5), scale = 1.25 },
 		{ off = Vector3.new(-5.0, -1.1, -15.5), scale = 1.25 },
 	}
@@ -102,13 +102,24 @@ function M.start(E)
 		cube(Vector3.new(0.3, 0.36, 0.3), Vector3.new(0, 0.3, -0.8), Color3.fromRGB(70, 60, 66))
 		local bead = cube(Vector3.new(0.3, 0.34, 0.3), Vector3.new(0, 0.3, -1.03), WARM, true)
 		local light = Instance.new("PointLight")
-		light.Range, light.Brightness, light.Color, light.Shadows = lead and 9 or 6, 0.3, WARM, false
+		light.Range, light.Brightness, light.Color, light.Shadows = lead and 12 or 6, 0.3, WARM, false
 		light.Parent = bead
 		for _, p in model:GetDescendants() do -- the pet's own back glow is 1.2: this close to the camera it burned out
 			if p:IsA("PointLight") and p ~= light then p.Brightness = 0.25 end
 			if p:IsA("BasePart") and p.Material == Enum.Material.Neon and p ~= bead then p.Color = p.Color:Lerp(Color3.new(0, 0, 0), 0.45) end -- so did its neon back
 		end
 		d.bead, d.light = bead, light
+		if lead then -- a faint trail of sparkles at its feet: its power shows in the dark (Gemini full1119p)
+			local foot = Instance.new("Attachment")
+			foot.Name, foot.Position = "PowerFeet", Vector3.new(0, -0.2, 0)
+			foot.Parent = root
+			local e = Instance.new("ParticleEmitter")
+			e.Name, e.Rate, e.Lifetime, e.Speed = "PowerSparkle", 3, NumberRange.new(0.6, 1), NumberRange.new(0.3, 0.8)
+			e.Color, e.LightEmission, e.LightInfluence = ColorSequence.new(WARM, Color3.fromRGB(255, 240, 200)), 0.8, 0
+			e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.18), NumberSequenceKeypoint.new(1, 0) })
+			e.SpreadAngle, e.Acceleration, e.EmissionDirection = Vector2.new(60, 60), Vector3.new(0, 0.8, 0), Enum.NormalId.Top
+			e.Parent = foot
+		end
 		if lead and JellyText then -- a mood mark over the lead's head
 			local bb = Instance.new("BillboardGui")
 			bb.Name, bb.Size, bb.StudsOffsetWorldSpace, bb.LightInfluence, bb.AlwaysOnTop, bb.MaxDistance = "Mood", UDim2.fromScale(2.4, 1.5), Vector3.new(0, 2.5, 0), 0, false, 80
@@ -183,6 +194,8 @@ function M.start(E)
 		if not gp and io.KeyCode == Enum.KeyCode.X then hook.whistle() end
 	end)
 
+	local petRp = RaycastParams.new()
+	petRp.FilterType = Enum.RaycastFilterType.Exclude
 	hook.petPose = function(i, pet, h, now, dt)
 		local d = rec(pet.model)
 		if i == 1 then
@@ -244,6 +257,12 @@ function M.start(E)
 		local goal = cam.CFrame:PointToWorldSpace(gloomNear and slot.off + Vector3.new(0, -1, 0) or slot.off + Vector3.new(0, bob + bounce, 0))
 		local called = i == 1 and whistle.dep and now < whistle.untilT and whistle.dep.PrimaryPart
 		if called then goal = called.Position + Vector3.new(0, 2.6 + math.abs(math.sin(now * 7)) * 0.5, 0) end -- answering the whistle: it stands on the deposit and hops
+		if not called then -- keep it out of the rock: a wall between the eye and its place pulls it in front of the wall (Gemini full1119p: it walked through a clay pillar)
+			petRp.FilterDescendantsInstances = { plr.Character, pet.model, workspace.CurrentCamera }
+			local from = cam.CFrame.Position
+			local hit = workspace:Raycast(from, goal - from, petRp)
+			if hit and hit.Distance > 7 then goal = hit.Position - (goal - from).Unit * 1.6 end -- a wall close to the eye (a stall beside you) would pull it onto the lens: then it keeps its place
+		end
 		pet.pos = pet.pos:Lerp(goal, 1 - math.exp(-dt * (called and 4 or (gloomNear and 12 or 7))))
 		local face = called and cam.CFrame.Position or (rare and not gloomNear and rare.PrimaryPart.Position) or pet.pos + cam.CFrame.LookVector * (moving and 3 or -4) + cam.CFrame.RightVector * 8 -- walking: it trots ahead, half turned; standing: it turns its face to you
 		local flat = Vector3.new(face.X, pet.pos.Y, face.Z)
@@ -253,7 +272,7 @@ function M.start(E)
 		local cf = CFrame.new(aim.Position) * d.rot
 		local c = gloomNear and RED:Lerp(WARM, math.noise(now * 14, 5 + i) * 0.5 + 0.5) or WARM
 		d.bead.Color, d.light.Color = c, c
-		d.light.Brightness = gloomNear and 0.2 + math.abs(math.noise(now * 18, 9 + i)) * 0.5 or 0.3
+		d.light.Brightness = gloomNear and 0.2 + math.abs(math.noise(now * 18, 9 + i)) * 0.5 or (i == 1 and 0.4 or 0.3) -- the lead lights the tunnel round it (Gemini full1119p: "an inert block in the dark")
 		if d.mood then
 			local wantM = gloomNear and "scared" or ((rare and now - hopAt < 2.2) and "found" or "")
 			if wantM ~= d.mood.state then

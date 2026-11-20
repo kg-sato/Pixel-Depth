@@ -2338,18 +2338,24 @@ if C.PULSE and C.PULSE.on and caveLanding then -- the Root Pulse: every C.PULSE.
 			end
 			return false
 		end
-		local warned = -1
+		local warned, since = -1, {} -- since[plr]: when this player last went into the caves
+		local function settled(plr) return since[plr] and os.clock() - since[plr] >= 90 end -- the first 90 s of a dive are calm (Gemini full1120r: a new player froze at camp under the warning)
 		while true do
 			task.wait(0.5)
+			for _, plr in Players:GetPlayers() do
+				if plr:GetAttribute("InCave") then since[plr] = since[plr] or os.clock() else since[plr] = nil end
+			end
+			for plr in since do if not plr.Parent then since[plr] = nil end end
 			local now = workspace:GetServerTimeNow()
 			local n, left = math.floor(now / P.every), P.every - now % P.every
 			if left <= P.warn and warned ~= n then
 				warned = n
-				for _, plr in Players:GetPlayers() do if plr:GetAttribute("InCave") then FxR:FireClient(plr, "pulseWarn", math.ceil(left)) end end
+				local told = {} -- only players who heard the warning feel the breath
+				for _, plr in Players:GetPlayers() do if plr:GetAttribute("InCave") and settled(plr) then told[plr] = true FxR:FireClient(plr, "pulseWarn", math.ceil(left)) end end
 				task.delay(left, function()
-					for _, plr in Players:GetPlayers() do
+					for plr in told do
 						local s, hrp = data[plr], hrpOf(plr)
-						if s and hrp and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] then
+						if s and hrp and plr.Parent and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] then
 							local lost = (s.bag > 0 and not safe(hrp)) and loseShare(s, P.loss) or 0
 							FxR:FireClient(plr, "pulse", lost, P.glow)
 							if lost > 0 then

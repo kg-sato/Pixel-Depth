@@ -77,9 +77,10 @@ function M.start(E)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
 			local mouse = UIS.MouseBehavior == Enum.MouseBehavior.LockCenter and workspace.CurrentCamera.ViewportSize / 2 or UIS:GetMouseLocation() - game:GetService("GuiService"):GetGuiInset()
 			echo(mouse)
-		elseif input.UserInputType == Enum.UserInputType.Touch then
-			echo(Vector2.new(input.Position.X, input.Position.Y))
 		end
+	end)
+	UIS.TouchTap:Connect(function(points, gp) -- a real tap only: a touch that starts a camera drag must not echo
+		if not gp and points[1] then echo(Vector2.new(points[1].X, points[1].Y)) end
 	end)
 
 	-- ===== glow and bursts

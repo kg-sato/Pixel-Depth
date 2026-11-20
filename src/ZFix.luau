@@ -32,6 +32,11 @@ local function facesOf(p)
 	return out
 end
 
+local function isVoxel(p) -- a block of a Cave v2 rock or floor (CaveV2 builds them into folders Walls and Floor)
+	local f = p.Parent
+	return f ~= nil and ((p.Name == "Rock" and f.Name == "Walls") or (p.Name == "Floor" and f.Name == "Floor")) and p:FindFirstAncestor("Caves") ~= nil
+end
+
 -- one pass; returns the number of faces pushed
 local function pass(root, PUSH)
 	local buckets = {}
@@ -58,9 +63,13 @@ local function pass(root, PUSH)
 						and (f.p.Color ~= g.p.Color or f.p.Material ~= g.p.Material or f.p.MaterialVariant ~= g.p.MaterialVariant
 							or f.p:FindFirstChildWhichIsA("Texture") or g.p:FindFirstChildWhichIsA("Texture")) then -- same colour, different skins still flicker
 						local m = f.vol <= g.vol and f or g -- the smaller part steps forward
-						local tag = m.a .. ":" .. m.s
-						pushed[m.p] = pushed[m.p] or {}
-						if not pushed[m.p][tag] then
+						-- cave voxel blocks never move: Cave v2's greedy blocks only touch, never overlap, and pushing them made new
+						-- overlaps with their neighbours pass after pass (11-20 pairs west of the Clay hall, 2026-11-20). The prop moves instead.
+						local fv, gv = isVoxel(f.p), isVoxel(g.p)
+						if fv and gv then m = nil elseif fv then m = g elseif gv then m = f end
+						local tag = m and (m.a .. ":" .. m.s)
+						if m then pushed[m.p] = pushed[m.p] or {} end
+						if m and not pushed[m.p][tag] then
 							pushed[m.p][tag] = true
 							local p = m.p
 							local sz = { p.Size.X, p.Size.Y, p.Size.Z }

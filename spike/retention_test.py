@@ -8,6 +8,7 @@ C1 = lambda code: (N.lua(code, "Client").splitlines() or ["?"])[-1]
 S1 = lambda code: (N.lua(code, "Server").splitlines() or ["?"])[-1]
 P = "local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart "
 N.play(True); time.sleep(8)
+C1("game.Players.LocalPlayer:SetAttribute('DevRidden', true) return 1"); time.sleep(0.6)  # the pill hides until the first ride (2026-11-20)
 C1("local p=game.Players.LocalPlayer p:SetAttribute('DevPaid','') game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,a,b,c) if k=='giftPaid' then p:SetAttribute('DevPaid',(p:GetAttribute('DevPaid') or '')..' '..tostring(a)..':'..tostring(b)) end end) return 1")
 PILL = "local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('Timers',true) return g and (g.Drop.Gift.Line.Text..' | '..tostring(g.Drop.Event.Visible and g.Drop.Event.Line.Text)..' || one pill: '..g.Main.Line.Text) or 'no pills'"
 print("pills at the start:", C1(PILL))

@@ -7,6 +7,7 @@ C1 = lambda code: (N.lua(code, "Client").splitlines() or ["?"])[-1]
 S1 = lambda code: (N.lua(code, "Server").splitlines() or ["?"])[-1]
 P = "local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart local cv=workspace.Caves "
 N.play(True); time.sleep(6)
+S1("workspace:SetAttribute('DevChimeSlow', 4) return 1")  # each scripted strike takes ~4 s in a long-running Studio (2026-11-20)
 N.key("Q"); time.sleep(33)
 S1(P + "p:SetAttribute('DevClay',2) return 1"); time.sleep(17)
 C1("local p=game.Players.LocalPlayer p:SetAttribute('DevChime','') game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,w,a,b) if k=='chime' then "
@@ -22,7 +23,7 @@ log = strike(1); o = order(log)
 print("woken:", "start" in log, "| three crystals in the order:", sorted(o) == [1, 2, 3])
 log = strike(o[1])
 print("the second crystal first:", log.split()[-1])
-time.sleep(11)
+time.sleep(41)
 log = strike(2); o = order(log)
 for k in o: log = strike(k)
 print("in order:", " ".join(w.split(":")[0] + (":" + w.split(":")[1] if w.startswith("done") else "") for w in log.split()[-3:]))

@@ -62,6 +62,14 @@ function M.build(caves)
 	local SOLID = { { -79, 6 }, { 16, 45 }, { 60, 79 } }
 	for _, s in SOLID do part("Wall", Vector3.new(s[2] - s[1], 76, 6), O * CFrame.new((s[1] + s[2]) / 2, 35, -57), CLAY, ROCK) end
 	for _, o in OPEN do part("Wall", Vector3.new(o[2] - o[1], 73 - o[3], 6), O * CFrame.new((o[1] + o[2]) / 2, (73 + o[3]) / 2, -57), CLAY_D, ROCK) end
+	do -- rock strata across the long walls: ochre, slate and red clay bands, so the hall is not one mud colour (Gemini full1120u)
+		local BANDS = { { 22, 2.4, Color3.fromRGB(176, 120, 72) }, { 31, 1.2, Color3.fromRGB(70, 52, 72) }, { 44, 3, Color3.fromRGB(150, 70, 50) }, { 58, 1.6, Color3.fromRGB(176, 120, 72) } }
+		for _, b in BANDS do
+			part("Strata", Vector3.new(156, b[2], 0.3), O * CFrame.new(0, b[1], 53.8), b[3], ROCK) -- 0.05 in front of the wall's face
+			for _, seg in SOLID do part("Strata", Vector3.new(seg[2] - seg[1] - 0.4, b[2], 0.3), O * CFrame.new((seg[1] + seg[2]) / 2, b[1], -53.8), b[3], ROCK) end
+			for _, o in OPEN do if b[1] > o[3] + 1 then part("Strata", Vector3.new(o[2] - o[1] - 0.4, b[2], 0.3), O * CFrame.new((o[1] + o[2]) / 2, b[1], -53.8), b[3], ROCK) end end
+		end
+	end
 	if C.CAVE_V2_L2 then -- Cave v2 layer 2 round the hall (2026-11-19): a door in each side wall, z -9..9, 16 high, onto the v2 galleries
 		for _, x in { -77, 77 } do
 			part("Wall", Vector3.new(6, 76, 46), O * CFrame.new(x, 35, -32), CLAY, ROCK)
@@ -189,7 +197,7 @@ function M.build(caves)
 	for k = -1, 1 do
 		local coal = part("KilnCoal", Vector3.new(0.9, 0.6, 0.7), kiln * CFrame.new(k * 1.1, 1.0 + (k % 2) * 0.07, 6.9) * CFrame.Angles(0, k * 0.5, 0.2 * k), Color3.fromRGB(255, 140, 50), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		if k == 0 then -- chunky pixel flames licking out of the kiln mouth (Shared.PixelFire, as Camp 1's camp fire)
-			local okPF, PF = pcall(require, game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("PixelFire"))
+			local okPF, PF = pcall(require, game:GetService("ReplicatedStorage"):WaitForChild("Shared"):FindFirstChild("PixelFire"))
 			if okPF then PF.attach(coal, Color3.fromRGB(255, 190, 90), Color3.fromRGB(240, 80, 30), 2) end
 		end
 	end
@@ -549,7 +557,12 @@ function M.build(caves)
 		part("GalleryBand", Vector3.new(33.6, 1.1, 0.4), O * CFrame.new(11, 9, -103.8), CREAM:Lerp(CLAY, 0.35), ROCK)
 		for _, s in { { 0, -74, 8, 4 }, { 0, -96, 8, 8 }, { 22, -98, 10, 12 }, { 22, -72, 8, 5 } } do -- stone steps: x, z, width, height
 			part("GalleryStep", Vector3.new(s[3], s[4], 8), O * CFrame.new(s[1], s[4] / 2, s[2]), s[4] % 8 == 0 and CLAY_L or CLAY, ROCK)
-			part("GalleryStepCap", Vector3.new(s[3] + 0.8, 0.5, 8.8), O * CFrame.new(s[1], s[4] + 0.25, s[2]), CREAM:Lerp(CLAY, 0.3), ROCK)
+			part("GalleryStepCap", Vector3.new(s[3] + 0.8, 0.5, 8.8), O * CFrame.new(s[1], s[4] + 0.25, s[2]), CREAM:Lerp(CLAY, 0.45), ROCK) -- a warmer cap: the pale white slab looked new against the old clay (Gemini full1119l)
+			for _, sx in { -1, 1 } do -- a worn, darker lip along both long edges so the cap does not end in one hard white line
+				part("GalleryStepLip", Vector3.new(0.5, 0.36, 8.6), O * CFrame.new(s[1] + sx * (s[3] / 2 + 0.25), s[4] + 0.44, s[2]), CLAY_D:Lerp(CLAY, 0.4), ROCK)
+			end
+			part("GalleryStepFoot", Vector3.new(s[3] + 1.0, 0.9, 9.0), O * CFrame.new(s[1], 0.45, s[2]), CLAY_D, ROCK) -- a darker plinth foot, so the step stands on the floor instead of sitting on it (Gemini full1120x)
+			part("GalleryStepBand", Vector3.new(s[3] + 0.3, 0.3, 8.3), O * CFrame.new(s[1], math.max(1.3, s[4] * 0.55), s[2]), CREAM:Lerp(CLAY_D, 0.5), ROCK) -- one carved band round the middle
 		end
 		pad(11, 0, -86, 78) -- from the floor up to any step
 		pad(22, 5.5, -72, 62) -- from the low step on to the tall one
@@ -759,8 +772,9 @@ function M.init(ctx)
 					local j = math.random(1, i)
 					order[i], order[j] = order[j], order[i]
 				end
-				chime[plr] = { order = order, at = 1, till = os.clock() + H.secs }
-				ctx.fx:FireClient(plr, "chime", "start", order, H.secs)
+				local slow = game:GetService("RunService"):IsStudio() and workspace:GetAttribute("DevChimeSlow") or 1 -- test hook: a slow Studio needs ~4 s a scripted strike
+				chime[plr] = { order = order, at = 1, till = os.clock() + H.secs * slow }
+				ctx.fx:FireClient(plr, "chime", "start", order, H.secs * slow)
 			elseif g.order[g.at] == k then
 				g.at += 1
 				if g.at > 3 then

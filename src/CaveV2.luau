@@ -904,7 +904,12 @@ function M.build(parent, origin, seed, opt)
 	-- LIGHT: warm lanterns along the main route only (the branches stay dark: your torch), the camp fire, a cool shaft of light on the root
 	local function lantern(p, color, range, b)
 		local post = part("Lights", "LanternPost", Vector3.new(0.6, 5, 0.6), CFrame.new(p + Vector3.new(0, 2.5, 0)), PAL.barkDark, { Material = Enum.Material.Wood, MaterialVariant = "" })
-		local lamp = part("Lights", "Lantern", Vector3.new(1.2, 1.4, 1.2), CFrame.new(p + Vector3.new(0, 5.4, 0)), color, { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false })
+		-- a caged lantern, not a bare neon block: up close the 1.2-stud neon cube blew out to a flat yellow slab (Gemini full1120v/w)
+		local lamp = part("Lights", "Lantern", Vector3.new(0.55, 0.8, 0.55), CFrame.new(p + Vector3.new(0, 5.4, 0)), color:Lerp(Color3.new(0, 0, 0), 0.2), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false })
+		local IRON = Color3.fromRGB(44, 38, 52)
+		for _, y in { 0.78, -0.78 } do part("Lights", "LanternCap", Vector3.new(1.3, 0.22, 1.3), CFrame.new(p + Vector3.new(0, 5.4 + y, 0)), IRON, { Material = Enum.Material.Metal, MaterialVariant = "", CanCollide = false }) end
+		for _, c in { { 0.55, 0.55 }, { -0.55, 0.55 }, { 0.55, -0.55 }, { -0.55, -0.55 } } do part("Lights", "LanternBar", Vector3.new(0.12, 1.34, 0.12), CFrame.new(p + Vector3.new(c[1], 5.4, c[2])), IRON, { Material = Enum.Material.Metal, MaterialVariant = "", CanCollide = false }) end
+		part("Lights", "LanternGlass", Vector3.new(1.0, 1.3, 1.0), CFrame.new(p + Vector3.new(0, 5.4, 0)), color:Lerp(Color3.fromRGB(255, 240, 210), 0.3), { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.6, CanCollide = false, CastShadow = false })
 		local l = Instance.new("PointLight")
 		l.Color, l.Range, l.Brightness, l.Shadows = color, range, b or 0.45, true
 		l.Parent = lamp
@@ -918,6 +923,7 @@ function M.build(parent, origin, seed, opt)
 		local fire = not opt.camp and floorUnder(P(0, 6, 0))
 		if fire then
 			local f = part("Lights", "CampFire", Vector3.new(3, 1.2, 3), CFrame.new(fire + Vector3.new(0, 0.6, 0)), Color3.fromRGB(255, 150, 70), { Material = Enum.Material.Neon, MaterialVariant = "" })
+			do local okPF, PF = pcall(require, game:GetService("ReplicatedStorage"):WaitForChild("Shared"):FindFirstChild("PixelFire")) if okPF then PF.attach(f, Color3.fromRGB(255, 200, 100), Color3.fromRGB(240, 90, 40), 3) end end -- chunky pixel flames (Shared.PixelFire)
 			local l = Instance.new("PointLight")
 			l.Color, l.Range, l.Brightness, l.Shadows = PAL.warm, 44, 0.6, true
 			l.Parent = f
