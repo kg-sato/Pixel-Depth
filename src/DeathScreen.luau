@@ -170,7 +170,7 @@ function M.start(E)
 			local hr = E.hrp()
 			local who = (hr and (hr.Position - E.C.CAVE2_ORIGIN).Magnitude < 130) and "CLAYLING" or "GLOOMLING" -- the Clay Caves hall has claylings (server: Gloom kind 2)
 			local my = show({ title = a > 0 and ("A " .. who .. " GOT YOUR ORE") or ("A " .. who .. " GOT YOU"), titleColor = PINK, big = a > 0 and ("-" .. E.commas(a) .. " ORE") or "NOTHING LOST",
-				note = "Golden shield: RUN to the light!", secs = C.GLOOM.shield, drain = true, bar = GOLD, edge = GOLD, y = 0.62, scale = 0.62, dark = 0.9, edges = 0.74, edgeColor = GOLD, hud = false }) -- golden edges: the shield the card promises
+				note = "Golden shield: RUN to the light!", secs = C.GLOOM.shield, drain = true, bar = GOLD, edge = GOLD, y = 0.62, scale = 0.62, dark = 0.9, edges = 0.86, edgeColor = GOLD, hud = false }) -- edges 0.86 (was 0.74): in the amber Clay hall the gold edges washed the whole view out (Gemini full1121b) -- golden edges: the shield the card promises
 			task.delay(2.4, function() hide(my) end)
 		elseif kind == "rescued" then
 			local my = show({ title = b and "FLARED FREE!" or "RESCUED!", titleColor = MINT, big = "NOTHING LOST", bigColor = MINT, note = b and "" or ("by " .. tostring(a)), secs = 1.2,
