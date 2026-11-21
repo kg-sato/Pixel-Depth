@@ -438,6 +438,13 @@ function M.play(opt)
 			local hang = t >= A2
 			local amp = hang and 0 or (0.02 + 0.3 * ub ^ 2.5) * (0.7 + k * 0.5)
 			if sig and sig.still and t >= AB then amp = 0 end -- the void: the egg hangs dead still
+			if not hang and OMEN > 0 and t >= AB and t < A2 and amp > 0 then -- the omen (video judge 2026-11-20: "2.4 s of one even shake"):
+				-- three knocks that come faster and harder, each a hard tip and a settle, with near-stillness between them
+				local o = (t - AB) / OMEN
+				local ph = o ^ 1.35 * 3 -- the knocks crowd toward the end
+				local knock = math.max(0, math.sin((ph % 1) * math.pi)) ^ 3
+				amp *= (0.2 + 0.95 * knock) * (0.75 + 0.5 * math.min(math.floor(ph) / 2, 1))
+			end
 			-- directive v13: an asymmetric rock: it tips over fast and settles back slowly at each extreme (a skewed wave), not a sine
 			local function lean(x) return math.sin(x) + 0.32 * math.sin(2 * x + 0.6) end
 			local wob = CFrame.new(NEST) * CFrame.Angles(lean(t * (14 + 30 * ub)) * amp * 0.42, 0, lean(t * (11 + 34 * ub)) * amp * 0.85)
