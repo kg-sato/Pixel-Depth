@@ -15,9 +15,10 @@ def hold(pos, at, fov=60, secs=16):
     nm = f"Thumb{_n[0]}"
     C("local RS=game:GetService('RunService') local C=require(game.ReplicatedStorage.Shared.Config) local O1,O2=C.CAVE_ORIGIN,C.CAVE2_ORIGIN "
       f"for i=1,{_n[0]} do pcall(function() RS:UnbindFromRenderStep('Thumb'..i) end) end "
-      "for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') or g:IsA('BillboardGui') then g.Enabled=false end end for _,b in workspace:GetDescendants() do if b:IsA('BillboardGui') then b.Enabled=false end end "
+      "for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') or g:IsA('BillboardGui') or g:IsA('SurfaceGui') then g.Enabled=false end end for _,b in workspace:GetDescendants() do if b:IsA('BillboardGui') then b.Enabled=false end end "
       f"local p, a = {pos}, {at} "
       f"RS:BindToRenderStep('{nm}', Enum.RenderPriority.Camera.Value+45, function() local cam=workspace.CurrentCamera cam.CameraType=Enum.CameraType.Scriptable cam.FieldOfView={fov} cam.CFrame=CFrame.lookAt(p, a) "
+      "for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') and g.Enabled then g.Enabled=false end end "  # every frame: some layers switch themselves back on (the forge shot kept a purple corner)
       "for _,d in cam:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 elseif d:IsA('ParticleEmitter') and d.Enabled then d.Enabled=false d:Clear() end end "
       "local ch=game.Players.LocalPlayer.Character if ch then for _,d in ch:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 elseif d:IsA('ParticleEmitter') or d:IsA('BillboardGui') or d:IsA('Light') then d.Enabled=false end end end "
       "for _,d in workspace:GetChildren() do if d:IsA('Model') and d:GetAttribute('Pet') ~= nil then d:PivotTo(CFrame.new(0,-900,0)) end end end) "
@@ -42,7 +43,7 @@ hold("workspace.Caves:FindFirstChild('Warden',true):GetPivot().Position + Vector
 # 5 the campfire clink at Camp 1's hearth (Valheim capsule): the miner by the fire, gold clink sparks
 S(P + "h.CFrame=CFrame.new(require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN+Vector3.new(-26,3,-14)) return 1"); time.sleep(2.5)  # away from Wick: his line bubble shows only near him
 S(P + "game.ReplicatedStorage.Remotes.Fx:FireClient(p,'clink',p.UserId,require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN+Vector3.new(3.5,0.5,13)) return 1")
-hold("O1+Vector3.new(-1.5,4.8,21)", "O1+Vector3.new(3.6,1.4,10.2)", 52); snap("5_campfire")  # Wick and the fire, close but not in the flames (Gemini: too far, the floor ate the frame)
+hold("O1+Vector3.new(13.5,3.4,13.5)", "O1+Vector3.new(6,1.9,8.6)", 50); snap("5_campfire")  # Wick and the fire, close but not in the flames (Gemini: too far, the floor ate the frame)
 # 3 the mythic egg rupture (Slime Rancher 2 + Hollow Knight): a Secret hatch frozen on the burst
 C("for i=1,20 do pcall(function() game:GetService('RunService'):UnbindFromRenderStep('Thumb'..i) end) end for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') then g.Enabled=(g.Name~='DailyChest') end end game.Players.LocalPlayer:SetAttribute('DevHatchFreeze', 8.25) return 1")  # the daily chest pops up again on the way home from the crew ride
 S("game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1], 'hatch', 'Ninering') return 1"); time.sleep(9.2)
@@ -57,7 +58,7 @@ time.sleep(9)
 C("local RS=game:GetService('RunService') RS:BindToRenderStep('ThumbCart', Enum.RenderPriority.Last.Value, function() "
   "local w=workspace:FindFirstChild('MinecartEscape') if not w then return end local cart "
   "local best=0 for _,m in w:GetChildren() do if m:IsA('Model') and not m:FindFirstChildOfClass('Humanoid') then local n=0 for _,d in m:GetDescendants() do if d:IsA('BasePart') then n+=1 end end if n>best then best,cart=n,m end end end "
-  "if not cart then return end local cam=workspace.CurrentCamera local c=cart:GetPivot() "
+  "if not cart then return end for _,d in w:GetDescendants() do if d:IsA('BasePart') and string.sub(d.Name,1,5)=='Flame' then d.LocalTransparencyModifier=1 elseif d:IsA('ParticleEmitter') then d.Enabled=false end end local cam=workspace.CurrentCamera local c=cart:GetPivot() "
   "cam.CameraType=Enum.CameraType.Scriptable cam.FieldOfView=58 cam.CFrame=CFrame.lookAt((c*CFrame.new(0.6,4.3,-6.2)).Position,(c*CFrame.new(0,3.1,0.8)).Position) "
   "for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') then g.Enabled=false end end end) "
   "task.delay(6, function() pcall(function() RS:UnbindFromRenderStep('ThumbCart') end) end) return 1")
