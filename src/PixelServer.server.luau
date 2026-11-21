@@ -1183,7 +1183,7 @@ task.spawn(function() -- the sign and its prompt over Camp 1's cart, and (direct
 	local function sign(over, parent, name, pre)
 	local a = Instance.new("Part")
 	a.Name, a.Size, a.Transparency, a.Anchored, a.CanCollide, a.CanQuery, a.CanTouch = name, Vector3.new(1, 1, 1), 1, true, false, false, false
-	a.CFrame = over.CFrame * CFrame.new(0, 7, 0) -- above the cart's own Ride up card
+	a.CFrame = over.CFrame * CFrame.new(0, 5.4, 0) -- above the cart's own Ride up card; 5.4 (was 7): from beside the cart the sign was cut by the top of the screen (Gemini full1121c)
 	local bb = Instance.new("BillboardGui")
 	bb.Name, bb.Size, bb.MaxDistance, bb.LightInfluence, bb.StudsOffset = "CrewSign", UDim2.fromScale(10, 1.1), 70, 0, Vector3.new(0, 1.9, 0) -- lifted over its own V prompt card, which sat on the middle of the sign (2026-11-19)
 	local t = Instance.new("TextLabel")
