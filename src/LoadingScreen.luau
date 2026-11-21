@@ -158,7 +158,14 @@ function M.start(E)
 	new("UIGradient", fill, { Color = ColorSequence.new(CYAN, MAGENTA) })
 	local glow = new("Frame", fill, { Size = UDim2.new(1, 0, 2.4, 0), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = MAGENTA, BackgroundTransparency = 0.8, BorderSizePixel = 0, ZIndex = 5 })
 	new("UICorner", glow, { CornerRadius = UDim.new(0.5, 0) })
-	local pct = new("TextLabel", all, { Text = "0%", Font = Enum.Font.Arcade, TextScaled = true, TextColor3 = LAV, BackgroundTransparency = 1, Size = UDim2.fromScale(0.2, 0.07), Position = UDim2.fromScale(0.5, 0.915), AnchorPoint = MID, ZIndex = 5 })
+	local pct = new("TextLabel", all, { Text = "0%", Font = Enum.Font.Arcade, TextScaled = true, TextColor3 = LAV, BackgroundTransparency = 1, Size = UDim2.fromScale(0.2, 0.052), Position = UDim2.fromScale(0.5, 0.893), AnchorPoint = MID, ZIndex = 5 })
+	do -- directive v13: the three-word fantasy hook under the line (Deep Rock's "DANGER. DARKNESS. DWARVES."), a quiet lavender
+		-- pill on the plain backdrop (the owner's 2026-11-13 no-stripes rule stands: Config.LOADING.fx)
+		local hookPill = new("Frame", all, { Name = "Hook", Size = UDim2.fromScale(0.34, 0.046), Position = UDim2.fromScale(0.5, 0.952), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(40, 24, 66), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 5 })
+		new("UICorner", hookPill, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", hookPill, { Color = LAV, Thickness = 1.2, Transparency = 0.45 })
+		new("TextLabel", hookPill, { Name = "Line", Text = "MINE THE DEEP  \u{00B7}  STAY IN THE LIGHT", Font = Enum.Font.GothamBold, TextScaled = true, TextColor3 = LAV, BackgroundTransparency = 1, Size = UDim2.fromScale(0.9, 0.56), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 6 })
+	end
 
 	do -- the percentage in cyan jelly digits (the plain arcade digits were the last non-jelly text on this screen)
 		local ok, JellyText = pcall(function() return require(script.Parent:WaitForChild("JellyText")) end)

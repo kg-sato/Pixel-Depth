@@ -10,28 +10,32 @@ local M = {}
 function M.start(E)
 	local UIS, RunService = game:GetService("UserInputService"), game:GetService("RunService")
 	local C, plr, S, hook = E.C, E.plr, E.S, E.vmHook
-	local function isTouch() return (UIS.TouchEnabled and not UIS.KeyboardEnabled) or plr:GetAttribute("DevTouch") ~= nil end
+	-- directive v13: the device's own preferred input, not "touch and no keyboard" (a touch laptop or an iPad with a keyboard)
+	local function isTouch() return UIS.PreferredInput == Enum.PreferredInput.Touch or plr:GetAttribute("DevTouch") ~= nil end
+	pcall(function() -- the HUD keeps clear of notches and the home bar; interactive pieces stay in the core-UI safe area
+		E.gui.SafeAreaCompatibility = Enum.SafeAreaCompatibility.FullscreenExtension
+		E.gui.ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets
+	end)
 	local function inCave() return plr:GetAttribute("InCave") == true end
 
 	-- name, board size, board position (anchor: right edge, centre), kind, icon, action
-	local flare = E.button(E.gui, "FLARE", S(96, 96), S(1256, 402), Vector2.new(1, 0.5), "pink", "star", true)
-	local sonar = E.button(E.gui, "SONAR", S(76, 76), S(1150, 412), Vector2.new(1, 0.5), "mint", "map", true)
-	local ping = E.button(E.gui, "PING", S(76, 76), S(1064, 412), Vector2.new(1, 0.5), "lilac", "map", true)
-	local notes = E.button(E.gui, "NOTES", S(76, 76), S(1256, 402), Vector2.new(1, 0.5), "butter", "hammer", true)
-	flare.Name, sonar.Name, ping.Name, notes.Name = "TouchFlare", "TouchSonar", "TouchPing", "TouchNotes"
-	for _, b in { flare, sonar, ping, notes } do
+	local flare = E.button(E.gui, "FLARE", S(86, 86), S(1256, 402), Vector2.new(1, 0.5), "pink", "star", true) -- round 2: one family of squircles (Gemini: mismatched sizes)
+	-- the thumb arc above Roblox's jump button: FLARE biggest at the edge, SONAR and PING stepping up and inward
+	local sonar = E.button(E.gui, "SONAR", S(78, 78), S(1158, 380), Vector2.new(1, 0.5), "mint", "sonar", true)
+	local ping = E.button(E.gui, "PING", S(78, 78), S(1076, 330), Vector2.new(1, 0.5), "lilac", "pin", true)
+	local notes = E.button(E.gui, "NOTES", S(76, 76), S(1256, 402), Vector2.new(1, 0.5), "butter", "book", true)
+	local clinkB = E.button(E.gui, "CLINK", S(66, 66), S(992, 292), Vector2.new(1, 0.5), "butter", "smile", true) -- directive v13: the clink salute (Shared.Clink)
+	flare.Name, sonar.Name, ping.Name, notes.Name, clinkB.Name = "TouchFlare", "TouchSonar", "TouchPing", "TouchNotes", "TouchClink"
+	clinkB.Activated:Connect(function() if hook.clink then hook.clink() end end)
+	for _, b in { flare, sonar, ping, notes, clinkB } do
 		E.fit(b, 1, 1)
 		b.Visible = false
 	end
 	flare.Icon.Image = C.HUD_ICON.flare
-	-- the sonar has no icon in the kit: three rings
-	sonar.Icon.Image = ""
-	for i, k in { 0.22, 0.44, 0.66 } do
-		local r = E.new("Frame", sonar.Icon, { Size = UDim2.fromScale(k, k), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = E.MINT, BackgroundTransparency = i == 1 and 0 or 1, BorderSizePixel = 0, ZIndex = 3 })
-		E.new("UICorner", r, { CornerRadius = UDim.new(0.5, 0) })
-		E.new("UIStroke", r, { Color = Color3.fromRGB(255, 244, 214), Thickness = 2.5 })
-	end
-	local count = E.text(flare, "", UDim2.fromScale(0.36, 0.3), UDim2.fromScale(0.86, 0.14), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 244, 214))
+	-- directive v13: the jelly sonar and pin icons (Config.UI_GLASS.icon) replace the three drawn rings and the borrowed map
+	if E.ICON.sonar then sonar.Icon.Image = E.ICON.sonar end
+	if E.ICON.pin then ping.Icon.Image = E.ICON.pin end
+	local count = E.text(flare, "", UDim2.fromScale(0.3, 0.24), UDim2.fromScale(0.78, 0.2), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 244, 214))
 	count.Font, count.ZIndex = Enum.Font.Bangers, 5
 
 	flare.Activated:Connect(function() if E.cave.flare then E.cave.flare() end end)
@@ -54,7 +58,7 @@ function M.start(E)
 		local free = touch and not E.isBusy() and not hook.wheelOpen and not plr:GetAttribute("Seated")
 		for _, m in hook.modals or {} do if m.Visible then free = false end end
 		local cave = free and inCave()
-		flare.Visible, sonar.Visible, ping.Visible = cave, cave, cave
+		flare.Visible, sonar.Visible, ping.Visible, clinkB.Visible = cave, cave, cave, cave
 		notes.Visible = free and not inCave() and not plr:GetAttribute("InMine")
 		if cave then
 			local n = plr:GetAttribute("Flares") or C.GLOOM.flares
@@ -66,6 +70,7 @@ function M.start(E)
 		end
 	end)
 	plr:GetAttributeChangedSignal("DevTouch"):Connect(function() was = nil end)
+	UIS:GetPropertyChangedSignal("PreferredInput"):Connect(function() was = nil end) -- a keyboard plugged in or a pad picked up: the layout follows
 end
 
 return M

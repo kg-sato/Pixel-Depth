@@ -409,6 +409,7 @@ local stepIcon = icon(stepCard, "pick", UDim2.fromScale(0.2, 0.74), UDim2.fromSc
 new("UIAspectRatioConstraint", stepIcon, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 local stepText = text(stepCard, "", UDim2.fromScale(0.78, 0.8), UDim2.fromScale(0.585, 0.52), Vector2.new(0.5, 0.5), INK, 700, false)
 stepText.TextWrapped = true -- a long step takes two lines instead of shrinking to phone-unreadable size
+new("UITextSizeConstraint", stepText, { MaxTextSize = 30 }) -- directive v13: a short step stays a crisp line, not a shout
 stepCard.Name = "StepCard"
 do -- a small wooden plank nailed over the card's corner names it (Field Notebook pass 2026-11-12)
 	local plank = new("Frame", stepCard, { Name = "Plank", Size = UDim2.fromScale(0.3, 0.66), Position = UDim2.fromScale(0.03, -0.06), AnchorPoint = Vector2.new(0, 0.5), Rotation = -2, ZIndex = 3 })
@@ -603,7 +604,7 @@ sfx = function(name, pitch)
 	local base = soundBank[name]
 	if not base then return end
 	local s = base:Clone()
-	s.PlaybackSpeed = (pitch or 1) * (0.94 + math.random() * 0.12)
+	s.PlaybackSpeed = (pitch or 1) * (0.93 + math.random() * 0.15) -- 0.93..1.08 (directive v13, aud01: a repeated sound never repeats exactly)
 	s.Parent = game:GetService("SoundService")
 	s:Play()
 	local len = SFX[name][3]
@@ -668,15 +669,41 @@ local function breakFx(pos, color)
 	end
 end
 
-local function oreFly(pos, color)
+local function oreFly(pos, color, i)
+	local PENTA = { 1, 1.125, 1.25, 1.5, 1.6875, 2 } -- a pentatonic climb: each chip lands a note higher (inside: the main chunk is at its 200-local limit)
 	local o = new("Part", fx, { Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, Size = Vector3.new(1, 1, 1), Color = color, Material = Enum.Material.Neon })
 	local a0 = new("Attachment", o, { Position = Vector3.new(0, 0.4, 0) })
 	local a1 = new("Attachment", o, { Position = Vector3.new(0, -0.4, 0) })
 	new("Trail", o, { Attachment0 = a0, Attachment1 = a1, Lifetime = 0.2, Color = ColorSequence.new(color), LightEmission = 1, Transparency = NumberSequence.new(0, 1) })
+	-- directive v13 (Astroneer, Dome Keeper): in the caves the chunks first spray out of the rock (0.4 s), then swoop into the
+	-- lantern you hold, each with a chime a note higher; up in the shaft they still fly to the bag pill
 	local p0, t0 = pos, os.clock()
+	local out = Vector3.new(math.random() - 0.5, 0.6 + math.random() * 0.5, math.random() - 0.5).Unit * (1.6 + math.random())
+	local cavey = inCave
 	local conn
 	conn = RunService.RenderStepped:Connect(function()
-		local a = math.min((os.clock() - t0) / 0.45, 1)
+		local el = os.clock() - t0
+		if cavey then
+			local sprayEnd = p0 + out
+			if el < 0.4 then
+				local a = el / 0.4
+				o.Position = p0:Lerp(sprayEnd, 1 - (1 - a) ^ 3)
+				o.Size = Vector3.one * 0.7
+				return
+			end
+			local a = math.min((el - 0.4) / 0.38, 1)
+			local goal = (cam.CFrame * CFrame.new(-1.45, -1.15, -2.3)).Position -- the lantern in the left hand (Shared.ViewHands)
+			o.Position = sprayEnd:Lerp(goal, a * a)
+			o.Size = Vector3.one * (0.7 - a * 0.45)
+			if a >= 1 then
+				conn:Disconnect()
+				o:Destroy()
+				sfx("pluck", 1.4 * (PENTA[((i or 1) - 1) % #PENTA + 1]))
+				pop(bagPill, 1.1)
+			end
+			return
+		end
+		local a = math.min(el / 0.45, 1)
 		local goal = (cam.CFrame * CFrame.new(-2.2, 1.2, -3)).Position -- toward the bag pill at the top left
 		o.Position = p0:Lerp(goal, a * a) + Vector3.new(0, math.sin(a * math.pi) * 2.5, 0)
 		o.Size = Vector3.one * (1 - a * 0.6)
@@ -836,12 +863,14 @@ local function hatchShow(name)
 			local pct = C.eggOdds(plr:GetAttribute("Friends"), (plr:GetAttribute("CodexLuck") or 0) / 100)[tier][2]
 			local calm = false
 			pcall(function() calm = game:GetService("GuiService").ReducedMotionEnabled end)
+			forgeUI.hatchBusy = true -- the cave beds dip under the hatch (Shared.AudioManager)
 			local ok, err = pcall(HS.play, {
 				name = name, rarity = p[1], role = p[2], odds = pct >= 5 and "" or ("1 IN " .. commas(math.floor(100 / pct + 0.5))), tier = tier, ladder = ladder,
-				build = petModel, animate = function(...) require(RS.Shared.PetVoxels).animate(...) end, sfx = sfx, fast = plr:GetAttribute("FastCine") == true, calm = calm,
+				build = petModel, animate = function(...) require(RS.Shared.PetVoxels).animate(...) end, act = function(m) require(RS.Shared.PetVoxels).hero(m) end, sfx = sfx, fast = plr:GetAttribute("FastCine") == true, calm = calm,
 				freeze = RunService:IsStudio() and plr:GetAttribute("DevHatchFreeze") or nil, freezeFor = 2.5, -- test hook for stills (spike/hatch_shots.py)
 			})
 			if not ok then warn("[HatchScene] " .. tostring(err)) end
+			forgeUI.hatchBusy = false
 			hatchBusy = false
 			syncPets()
 			return
@@ -963,7 +992,10 @@ local function digPart(p, res)
 	R.Dig:FireServer(p)
 	lastHitPos, lastHitNormal = res and res.Position or p.Position, res and res.Normal or Vector3.yAxis
 	burst(lastHitPos, lastHitNormal, p.Color:Lerp(WHITE, 0.4), 6)
-	shake(0.12)
+	-- directive v13 (feel01): no white-noise jitter: a short bite (hit-stop), the arm knocked back and a 1.5 degree FOV dip
+	if forgeUI.vmHold then forgeUI.vmHold(0.04) forgeUI.vmKick(0.6) end
+	fovKick = math.min(fovKick, -1.5)
+	shake(0.05)
 	pop(cross, 1.6, 0.25)
 end
 
@@ -1023,8 +1055,8 @@ UIS.InputBegan:Connect(function(input, gp)
 	local k = input.KeyCode
 	if k == Enum.KeyCode.Q then
 		lift()
-	elseif k == Enum.KeyCode.G then
-		forgeUI.toggle()
+	elseif k == Enum.KeyCode.G then -- directive v13: G is the pickaxe clink (Shared.Clink), and still the forge by Bolt's anvil
+		if not (forgeUI.clink and forgeUI.clink()) then forgeUI.toggle() end
 	elseif k == Enum.KeyCode.Return and sellPop.Visible then
 		R.Sell:FireServer()
 	end
@@ -1156,8 +1188,8 @@ local STEPS = {
 	"Tap the glowing block to dig!",
 	"Dig down to the shiny gold vein!",
 	"Backpack full! Sell your ore!",
-	"Visit Bolt at the forge for a new pickaxe!", -- playtest 2: no FORGE button any more; the tracker shows what it needs
-	"A fossil egg is buried below. Dig it out!",
+	"Visit Bolt's forge for a pickaxe!", -- playtest 2: no FORGE button any more; the tracker shows what it needs
+	"A fossil egg is below. Dig it out!",
 	"Your crew digs with you. Go deeper!",
 }
 local stepShown, stepDoneAt, stepExpired = "", nil, false
@@ -1167,9 +1199,10 @@ local function stepMessage()
 	if not state then return "" end
 	local urgent = forgeUI.caveUrgent and forgeUI.caveUrgent() -- in the caves the card says what matters now (Gemini loop grade: it stayed on "find a deposit" while the torch died)
 	if urgent then return urgent end
+	if forgeUI.questHint and forgeUI.questCave and not inCave then return "Ride the minecart down!" end -- no stale cave step in town (directive v13)
 	if forgeUI.questHint then return forgeUI.questHint end -- the tutorial: the open story quest (Shared.QuestUI)
-	if not inMine and state.step <= 2 then return C.CAVES_ON and "Ride the minecart down into the mine!" or "Jump into the glowing mine shaft!" end
-	if not inMine and state.step == 5 then return "Ride the minecart back down to find the egg!" end
+	if not inMine and state.step <= 2 then return C.CAVES_ON and "Ride the minecart into the mine!" or "Jump into the glowing mine shaft!" end
+	if not inMine and state.step == 5 then return "Ride down again to find the egg!" end
 	return STEPS[state.step] or ""
 end
 R.State.OnClientEvent:Connect(function(s)
@@ -1310,9 +1343,9 @@ do
 	cave = { relitAt = os.clock(), saved = nil, wasInCamp = true, fuel = 1, fear = 0 }
 	forgeUI.caveUrgent = function()
 		if not inCave or not state or cave.wasInCamp or cave.mgBusy then return nil end
-		if cave.fear >= 0.6 then return "Your torch is dying! Run back to the camp fire!" end
-		if state.bag >= state.cap then return "Heavy bag! Bank your ore at the camp fire." end
-		if cave.fear >= 0.25 and state.bag > 0 then return "It is getting dark. Bank your ore at camp soon!" end
+		if cave.fear >= 0.6 then return "Torch dying! Run back to camp!" end
+		if state.bag >= state.cap then return "Bag full! Bank ore at the fire." end
+		if cave.fear >= 0.25 and state.bag > 0 then return "Getting dark. Bank ore at camp!" end
 		return nil
 	end
 	local Lighting = game:GetService("Lighting")
@@ -1986,7 +2019,8 @@ end
 			if core then
 				burst(core.Position, Vector3.yAxis, col, 26)
 				shockwave(core.Position, col)
-				for i = 1, math.min(count, 6) do task.delay(i * 0.07, function() oreFly(core.Position, col) end) end
+				for i = 1, math.min(count, 6) do task.delay(i * 0.07, function() oreFly(core.Position, col, i) end) end
+				if forgeUI.vmHold then forgeUI.vmHold(0.055) forgeUI.vmKick(1) end -- the vein breaks: the pick bites (directive v13)
 			end
 			sfx("breakRock", 0.9)
 			if dep:GetAttribute("OreName") == "Root Knot" or dep:GetAttribute("OreName") == "Kiln Vent" then -- a Root Warden knot: no ore card (BossClient shows the result)
@@ -2571,7 +2605,7 @@ end)()
 	forgeUI.spatialExtra = forgeUI.spatialExtra or {} -- the small panels built in this script stand in the world too (Shared.SpatialPanels); the forge keeps its own staged screen
 	for _, f in { night, odds, mapP, forge } do table.insert(forgeUI.spatialExtra, { frame = f, home = gui, menu = true, on = function() return f.Visible end }) end
 	E.getState = E.getState or function() return state end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "StrikeJuice", "Charms", "HubMinimap", "JellySkin", "JellyHUD", "GumText", "IconPass", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes", "MiningLoops" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "StrikeJuice", "Charms", "HubMinimap", "JellySkin", "JellyHUD", "GumText", "IconPass", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes", "MiningLoops", "DynamicHud", "InputGate", "TraversalFeel", "CrewHearth", "MuckPeeks", "FtueGate", "Clink" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end
@@ -2623,14 +2657,18 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	if inCave then caveStep(now) end
 	if inMine or inCave then
 		mgZoom += ((cave.mgBusy and -22 or 0) - mgZoom) * (1 - math.exp(-dt * 5))
-		cam.FieldOfView = C.FP_FOV + fovKick + mgZoom
+		local hv = h.AssemblyLinearVelocity * Vector3.new(1, 0, 1)
+		local vf = forgeUI.velFov or 0 -- in forgeUI: the main chunk is at Luau's 200-local limit
+		vf += (math.clamp((hv.Magnitude - 16) / 14, 0, 1) * 6 - vf) * (1 - math.exp(-dt * 4)) -- speed widens the view up to 6 degrees (sprints, slides, boosts)
+		forgeUI.velFov = vf
+		cam.FieldOfView = C.FP_FOV + fovKick + mgZoom + (cave.mgBusy and 0 or vf) + (forgeUI.bossFov or 0) -- bossFov: Shared.BossClient widens a boss fight to 82
 		local hd = head()
 		if now < lookDownUntil and hd then
 			local lv = h.CFrame.LookVector
 			cam.CFrame = CFrame.lookAt(cam.CFrame.Position, cam.CFrame.Position + Vector3.new(lv.X, 0, lv.Z).Unit - Vector3.new(0, 0.9, 0))
 		end
-		if shakeAmp > 0.01 then
-			cam.CFrame = cam.CFrame * CFrame.Angles((math.random() - 0.5) * shakeAmp * 0.08, (math.random() - 0.5) * shakeAmp * 0.08, 0)
+		if shakeAmp > 0.01 then -- damped smooth noise, not a random jitter per frame (directive v13)
+			cam.CFrame = cam.CFrame * CFrame.Angles(math.noise(now * 22, 1.3) * shakeAmp * 0.07, math.noise(now * 22, 7.1) * shakeAmp * 0.07, 0)
 		end
 	else
 		cam.CameraType = Enum.CameraType.Scriptable
@@ -2780,6 +2818,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	if msg ~= stepShown then
 		stepShown, stepExpired, stepSince = msg, false, now
 		stepText.Text = msg
+		stepCard:SetAttribute("BandH", #msg > 21 and 78 or 62) -- two lines get room to breathe (Shared.UpgradeTracker sizes the card)
 		stepCard.Visible = msg ~= ""
 		stepCard.Position = S(1262, (forgeUI.stepY or 202) - 40)
 		tween(stepCard, 0.5, { Position = S(1262, forgeUI.stepY or 202) }, Enum.EasingStyle.Bounce)

@@ -127,9 +127,58 @@ function M.start(E)
 			local list = c and (o:IsA("GuiObject") and PROPS.GuiObject or PROPS[o.ClassName])
 			if list then table.insert(pairs_, { o, c, list }) end
 		end
+		-- directive v13 ("still reads as a clock", 4.5): the round gauge goes. In the world copy only: the round case, bezel and
+		-- face turn clear, the needle's straight hand is hidden, and the dial becomes an open octagonal crystal bracket with a
+		-- glowing gem spark riding the old needle's angle (a short comet tail behind it) and a twin spark sweeping the mirror
+		-- angle, so the two converge on the gold fracture arc. The 2D original keeps its Needle and Arc for PixelClient,
+		-- mg_night.py, boss_fight_test.py and the autopilot.
+		local keepPairs, hidden = {}, {}
+		local needleCopy, arcCopy
+		for _, c in copy:GetDescendants() do
+			if c.Name == "Needle" then needleCopy = c elseif c.Name == "Arc" then arcCopy = c end
+		end
+		local function isRound(o)
+			local cr = o:FindFirstChildOfClass("UICorner")
+			return o:IsA("Frame") and cr and cr.CornerRadius.Scale >= 0.49 and o.Size.X.Scale >= 0.3
+		end
+		if isRound(copy) or copy:FindFirstChildOfClass("UICorner") then copy.BackgroundTransparency = 1 hidden[copy] = true end
+		for _, c in copy:GetDescendants() do
+			if isRound(c) then c.BackgroundTransparency = 1 hidden[c] = true end
+			if needleCopy and c:IsDescendantOf(needleCopy) and c:IsA("Frame") then c.BackgroundTransparency = 1 hidden[c] = true end
+		end
+		for _, pr in pairs_ do -- the sync must not paint the hidden case or hand back in
+			if not hidden[pr[2]] then table.insert(keepPairs, pr)
+			elseif pr[2] == needleCopy then table.insert(keepPairs, { pr[1], pr[2], { "Rotation", "Visible" } }) end
+		end
+		pairs_ = keepPairs
+		local CY, GOLDC = Color3.fromRGB(140, 236, 255), Color3.fromRGB(255, 214, 110)
+		for i = 0, 7 do -- the octagon: eight bevelled glass bars, a gap at each corner (an open bracket, not a closed ring)
+			local piv = new("Frame", copy, { Name = "Oct", Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, Rotation = i * 45 + 22.5, ZIndex = 11 })
+			local bar = new("Frame", piv, { Size = UDim2.fromScale(0.3, 0.026), Position = UDim2.fromScale(0.5, 0.045), AnchorPoint = MID, BackgroundColor3 = CY, BackgroundTransparency = 0.15, BorderSizePixel = 0, ZIndex = 11 })
+			new("UIGradient", bar, { Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), CY) })
+			new("UIStroke", bar, { Color = CY, Thickness = 2, Transparency = 0.55 })
+			local gem = new("Frame", piv, { Size = UDim2.fromScale(0.03, 0.03), Position = UDim2.fromScale(0.5, 0.045), AnchorPoint = MID, Rotation = 45, BackgroundColor3 = i % 2 == 0 and GOLDC or Color3.fromRGB(255, 255, 255), BorderSizePixel = 0, ZIndex = 12 })
+			gem.Position = UDim2.fromScale(0.5 + 0.17, 0.045) -- at the corner gap
+		end
+		local function spark(parent, k, tr)
+			local s = new("Frame", parent, { Size = UDim2.fromScale(0.07 * k, 0.07 * k), Position = UDim2.fromScale(0.5, 0.11), AnchorPoint = MID, Rotation = 45, BackgroundColor3 = Color3.fromRGB(255, 246, 200), BackgroundTransparency = tr, BorderSizePixel = 0, ZIndex = 13 })
+			new("UIStroke", s, { Color = GOLDC, Thickness = 2, Transparency = math.min(1, tr + 0.2) })
+			return s
+		end
+		if needleCopy then -- the lead spark and a comet tail of three fading gems behind it
+			spark(needleCopy, 1, 0)
+			for j, d in { 7, 14, 21 } do
+				local piv = new("Frame", needleCopy, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Rotation = -d, ZIndex = 12 })
+				spark(piv, 0.75 - j * 0.15, 0.3 + j * 0.18)
+			end
+		end
+		local twin = new("Frame", copy, { Name = "Twin", Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 12 })
+		spark(twin, 0.85, 0.1).BackgroundColor3 = Color3.fromRGB(200, 250, 255)
 		local back = new("Frame", copy, { Name = "Back", Size = UDim2.fromScale(0.94, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.38, BorderSizePixel = 0, ZIndex = 9 }) -- obsidian glass behind the needle: the rock behind a clear face swallowed it
 		new("UICorner", back, { CornerRadius = UDim.new(0.5, 0) })
-		mirror = { copy = copy, pairs = pairs_ }
+		back.BackgroundTransparency = 0.55 -- a soft dark disc only behind the arc and sparks, not a watch face
+		back.Size = UDim2.fromScale(0.72, 0.72)
+		mirror = { copy = copy, pairs = pairs_, twin = twin, needleO = dial:FindFirstChild("Needle"), arcO = dial:FindFirstChild("Arc") }
 	end
 	local function mirrorStop()
 		if mirror then mirror.copy:Destroy() mirror = nil end
@@ -254,6 +303,9 @@ function M.start(E)
 			for _, pr in mirror.pairs do
 				local a, c = pr[1], pr[2]
 				for _, k in pr[3] do if c[k] ~= a[k] then c[k] = a[k] end end
+			end
+			if mirror.twin and mirror.needleO and mirror.arcO then -- the twin spark mirrors the lead about the arc: they meet on the gold
+				mirror.twin.Rotation = 2 * mirror.arcO.Rotation - mirror.needleO.Rotation
 			end
 		end
 		local boss = pg:FindFirstChild("BossBar", true) -- v10 (Gemini: "the UI smothers the boss"): in a boss fight only the dial is drawn, no title and no brackets

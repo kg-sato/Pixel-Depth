@@ -263,6 +263,23 @@ function M.play(opt)
 				sitDown(g)
 				g.Parent = world
 				table.insert(K.mates, { g, CFrame.new(seats[i][1], riderOff.Y, seats[i][2]), id })
+				-- directive v13 (Group Cart Escape open item 2): a jelly job badge over each rider's head
+				local jobs = C.CREW.jobs[#(K.crew.riders or {})] or {}
+				local job = jobs[i]
+				local head = g:FindFirstChild("Head")
+				if job and head then
+					local COL = { driver = Color3.fromRGB(255, 0, 127), lookout = Color3.fromRGB(0, 220, 255), stoker = Color3.fromRGB(255, 150, 50), tail = Color3.fromRGB(255, 210, 80) }
+					local bb = Instance.new("BillboardGui")
+					bb.Name, bb.Size, bb.StudsOffset, bb.AlwaysOnTop, bb.LightInfluence, bb.MaxDistance = "JobBadge", UDim2.fromScale(3.4, 0.9), Vector3.new(0, 2.1, 0), true, 0, 80
+					local f = Instance.new("TextLabel")
+					f.Size, f.BackgroundColor3, f.BackgroundTransparency, f.Font, f.TextScaled, f.Text = UDim2.fromScale(1, 1), Color3.fromRGB(28, 14, 46), 0.1, Enum.Font.FredokaOne, true, string.upper(job)
+					f.TextColor3 = COL[job] or Color3.new(1, 1, 1)
+					local uc = Instance.new("UICorner") uc.CornerRadius = UDim.new(0.5, 0) uc.Parent = f
+					local us = Instance.new("UIStroke") us.Color, us.Thickness, us.ApplyStrokeMode = COL[job] or Color3.new(1, 1, 1), 2, Enum.ApplyStrokeMode.Border us.Parent = f
+					local up = Instance.new("UIPadding") up.PaddingTop, up.PaddingBottom = UDim.new(0.14, 0), UDim.new(0.14, 0) up.Parent = f
+					f.Parent = bb
+					bb.Adornee, bb.Parent = head, g
+				end
 			end
 		end
 	end
@@ -545,7 +562,8 @@ function M.play(opt)
 		local k = input.KeyCode
 		if k == Enum.KeyCode.Space or k == Enum.KeyCode.ButtonA or k == Enum.KeyCode.W or k == Enum.KeyCode.Up then jump()
 		elseif k == Enum.KeyCode.S or k == Enum.KeyCode.Down or k == Enum.KeyCode.C or k == Enum.KeyCode.ButtonB then duck()
-		elseif (k == Enum.KeyCode.R or k == Enum.KeyCode.ButtonX) and K.flare then K.flare() end
+		elseif (k == Enum.KeyCode.R or k == Enum.KeyCode.ButtonX) and K.flare then K.flare()
+		elseif (k == Enum.KeyCode.E or k == Enum.KeyCode.F or k == Enum.KeyCode.ButtonY) and K.grab then K.grab() end
 	end))
 	local swipe = {}
 	table.insert(cons, UIS.TouchStarted:Connect(function(tch) swipe[tch] = { tch.Position, os.clock() } end))
@@ -556,6 +574,7 @@ function M.play(opt)
 		local d = tch.Position - s0[1]
 		if os.clock() - s0[2] < 0.4 and math.abs(d.Y) > 50 and math.abs(d.Y) > math.abs(d.X) * 1.3 then
 			if d.Y < 0 then jump() else duck() end
+		elseif d.Magnitude < 20 and K.grab then K.grab() -- a tap: the tail grabs a gold bead
 		end
 	end))
 	local boosts, boostUntil, slowUntil, dodges, hits = 0, {}, 0, 0, 0
@@ -1004,6 +1023,35 @@ function M.play(opt)
 				K.next = now + 0.1
 				K.net("s", dist, speed, want, gloom.gap)
 			end
+			if K.crew and K.job == "tail" and phase == "run" and t > 1 then -- directive v13 (open item 1): gold beads hang beside the rails;
+				-- the tail grabs one as it passes (E, F or a tap): +2 coins for every rider, eight at most (the server counts them)
+				K.beads, K.beadAt = K.beads or {}, K.beadAt or 2
+				if t >= K.beadAt and (K.beadN or 0) + #K.beads < 10 then
+					K.beadAt = t + 3 + math.random() * 1.5
+					local at = dist + math.max(speed, 20) * 1.7
+					local side = math.random() < 0.5 and -1 or 1
+					local b = part(world, Vector3.new(0.9, 0.9, 0.9), pathCF(at) * CFrame.new(side * 3.2, 2.3, 0), Color3.fromRGB(255, 206, 84), { Shape = Enum.PartType.Ball, Material = Enum.Material.Neon })
+					local bl = Instance.new("PointLight")
+					bl.Color, bl.Range, bl.Brightness, bl.Parent = Color3.fromRGB(255, 206, 84), 8, 1, b
+					table.insert(K.beads, { p = b, at = at })
+				end
+				for i = #K.beads, 1, -1 do
+					local bd = K.beads[i]
+					if bd.at < dist - 5 then bd.p:Destroy() table.remove(K.beads, i) end
+				end
+				K.grab = K.grab or function()
+					for i, bd in K.beads or {} do
+						if math.abs(bd.at - dist) < 5 then
+							bd.p:Destroy()
+							table.remove(K.beads, i)
+							K.beadN = (K.beadN or 0) + 1
+							sfx("coin", 1 + K.beadN * 0.05) -- each grab a step higher
+							K.crew.send("b")
+							return
+						end
+					end
+				end
+			end
 			if K.replica and K.d then -- follow the driver's cart: where it was, carried on at its speed
 				local pull = 1 - math.exp(-dt / 0.2)
 				dist += (K.d + K.v * (now - K.at) - dist) * pull
@@ -1323,6 +1371,14 @@ function M.play(opt)
 				for i, r in rows do
 					label(card, r[1], UDim2.fromScale(0.4, tall), UDim2.fromScale(0.3, 0.30 + i * step), Color3.fromRGB(196, 160, 255), 7)
 					label(card, r[2], UDim2.fromScale(0.45, tall), UDim2.fromScale(0.7, 0.30 + i * step), i == #rows and Color3.fromRGB(255, 214, 107) or Color3.fromRGB(236, 224, 255), 7)
+				end
+				if K.crew and type(cr) == "table" then -- directive v13 (open item 4): a playful crew superlative for this rider
+					local sup = (K.beadN or 0) >= 3 and "GOLD SNATCHER" or ((cr.flares or 0) >= 2 and K.job == "tail" and "FLARE ACE")
+						or (hits == 0 and "IRON NERVES") or ((cr.calls or 0) >= 4 and K.job == "lookout" and "EAGLE EYE") or ((cr.hits or 0) >= 6 and K.job == "stoker" and "FURNACE HEART") or "TRUE CREW"
+					local pill = frame({ Parent = card, Size = UDim2.fromScale(0.5, 0.075), Position = UDim2.fromScale(0.5, 0.3 + (#rows + 1) * step), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(70, 40, 20), BackgroundTransparency = 0.1, ZIndex = 7 })
+					round(pill, 0.5)
+					stroke(pill, Color3.fromRGB(255, 196, 70), 2)
+					label(pill, "\u{2605} " .. sup .. " \u{2605}", UDim2.fromScale(0.9, 0.7), UDim2.fromScale(0.5, 0.5), Color3.fromRGB(255, 214, 107), 8)
 				end
 			end
 			if u > 7 then done = true end -- CONTINUE ends it sooner

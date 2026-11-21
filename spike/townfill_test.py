@@ -16,8 +16,9 @@ def bright(name):
 STATE = "local L=game:GetService('Lighting') local a=L.Ambient return 'fill '..tostring(game.Players.LocalPlayer:GetAttribute('TownFill'))..' ambient '..math.floor(a.R*255+0.5)..','..math.floor(a.G*255+0.5)..','..math.floor(a.B*255+0.5)"
 N.run("start_stop_play", {"is_start": True}); time.sleep(7)
 C1("local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('PixelLoading') if g then g:Destroy() end return 1")
+st = C1(STATE)  # read the flag first: on a slow Studio the capture took the rest of the 16 s fill hold (2026-11-20 flake)
 b = bright("fill_join")
-print("just after the join:", C1(STATE), "| lit:", b > 55, "(%.0f)" % b)
+print("just after the join:", st, "| lit:", b > 55, "(%.0f)" % b)
 time.sleep(20)
 print("25 s later:", C1(STATE))
 S1("local p=game.Players:GetPlayers()[1] p:SetAttribute('InCave',true) return 1"); time.sleep(1.5)

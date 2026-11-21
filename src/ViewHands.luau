@@ -124,8 +124,22 @@ function M.start(E)
 		end
 	end)
 	local heavyW = 0 -- 0 normal digging .. 1 the raised Perfect Strike stance, eased so the pick climbs up and settles down
+	-- directive v13 (feel01): on a PERFECT or a vein break the pick bites into the rock: the swing spring freezes for 2 to 4
+	-- frames (hook.vmHold) and the arm is knocked back toward the eye along the strike, then springs home (hook.vmKick)
+	local holdUntil, kick, kickV = 0, 0, 0
+	hook.vmHold = function(sec) holdUntil = math.max(holdUntil, os.clock() + math.clamp(sec or 0.045, 0.035, 0.055)) end
+	hook.vmKick = function(a) kickV += (a or 1) * 9 end
+	local clinkAt = -10 -- the clink salute (Shared.Clink): the pick swings up high for 0.8 s
+	hook.vmClink = function() clinkAt = os.clock() end
+	local function clinkW()
+		local c = os.clock() - clinkAt
+		if c > 0.8 then return 0 end
+		local up, down = math.clamp(c / 0.15, 0, 1), math.clamp((0.8 - c) / 0.3, 0, 1)
+		return math.min(up * up * (3 - 2 * up), down * down * (3 - 2 * down))
+	end
 	hook.vmPose = function(dt, t, moving, now, camCF, heavy, near)
 		dt = math.min(dt, 1 / 30)
+		local held = os.clock() < holdUntil
 		heavyW += ((heavy and 1 or 0) - heavyW) * math.min(1, dt * 5)
 		if t < lastT then variant = variant % #SWINGS + 1 end -- a new swing began
 		lastT = t
@@ -154,8 +168,12 @@ function M.start(E)
 			local fall = t >= 0.11 and t < 0.22
 			k, c = fall and 1100 or 300, fall and 36 or 15 -- fast into the hit, slow and loose after it: a heavier recoil
 		end
-		angV += (k * (target - ang) - c * angV) * dt
-		ang += angV * dt
+		if not held then -- frozen on the impact frame while the hit-stop holds
+			angV += (k * (target - ang) - c * angV) * dt
+			ang += angV * dt
+		end
+		kickV += (-kick * 260 - kickV * 20) * dt
+		kick += kickV * dt
 		local look = camCF.LookVector
 		if lastLook then -- the tool trails a turning camera, then settles
 			local d = camCF:VectorToObjectSpace(look - lastLook)
@@ -180,7 +198,8 @@ function M.start(E)
 			local q = math.clamp((i - 0.2) / 1.3, 0, 1)
 			turn = q * q * (3 - 2 * q) * math.pi * 2
 		end
-		return CFrame.new(1.75 + hx + sway.X - dip * (1 + heavyW) + step - 1.15 * w, -1.55 + hy + lift + bob + sway.Y - dip * (1 + heavyW) + landY + 0.95 * w, -2.4 - dip - 0.5 * w) * CFrame.Angles(-ang + sway.Y * 0.5 + 0.35 * w, -sway.X * 0.6 + math.max(ang, 0) * 0.25, sw.side * math.max(ang, 0) * 0.5) -- the swing chops forward and in toward the crosshair
+		local cw = clinkW()
+		return CFrame.Angles(0.75 * cw, 0, 0) * CFrame.new(1.75 + hx + sway.X - dip * (1 + heavyW) + step - 1.15 * w, -1.55 + hy + lift + bob + sway.Y - dip * (1 + heavyW) + landY + 0.95 * w + kick * 0.08, -2.4 - dip - 0.5 * w + kick * 0.22) * CFrame.Angles(-ang + sway.Y * 0.5 + 0.35 * w, -sway.X * 0.6 + math.max(ang, 0) * 0.25, sw.side * math.max(ang, 0) * 0.5) -- the swing chops forward and in toward the crosshair
 			* CFrame.Angles(-0.35, 0, 0.44 + roll) * CFrame.Angles(0, YAW + turn, 0) -- at rest: the fist in the bottom right, the handle leaning 25 degrees in toward the middle (Minecraft's handheld first-person roll) and a little forward (was -0.5 / 0.22)
 	end
 end

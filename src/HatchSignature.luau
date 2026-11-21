@@ -12,6 +12,7 @@
 -- ctx = { world, egg, NEST, rc, part, light, sfx, rnd, caption, state }. Everything is parented to ctx.world, which
 -- HatchScene destroys at the end, and Lighting is restored by HatchScene too. Display only.
 local Lighting = game:GetService("Lighting")
+local TweenService = game:GetService("TweenService")
 local M = {}
 local WHITE = Color3.new(1, 1, 1)
 local GOLD = Color3.fromRGB(255, 200, 60)
@@ -37,6 +38,53 @@ local function fly(list, dt, g) -- simple ballistic bits: { p, v, spin, life, fa
 	end
 end
 
+-- directive v13 (@ropilotai Df9gDunHMAp): before a Mythic or Secret rupture, jagged white fracture lines creep in from the
+-- screen edges, as if the glass of the screen itself is about to break; the burst's white cut takes them away
+local function edgeCracks(ctx, u, tint)
+	local st = ctx.state
+	if not st.crackGui then
+		local pg = game:GetService("Players").LocalPlayer:FindFirstChildOfClass("PlayerGui")
+		if not pg then return end
+		local g = Instance.new("ScreenGui")
+		g.Name, g.IgnoreGuiInset, g.DisplayOrder, g.ResetOnSpawn = "HatchCracks", true, 50, false
+		g.Parent = pg
+		ctx.world.Destroying:Connect(function() g:Destroy() end)
+		st.crackGui, st.crackSegs = g, {}
+		local rnd = Random.new(7)
+		for e = 1, 10 do -- ten cracks from the four edges, each a chain of six jagged segments toward the middle
+			local side = (e - 1) % 4 + 1
+			local p = ({ Vector2.new(0, rnd:NextNumber(0.12, 0.88)), Vector2.new(1, rnd:NextNumber(0.12, 0.88)), Vector2.new(rnd:NextNumber(0.1, 0.9), 0), Vector2.new(rnd:NextNumber(0.1, 0.9), 1) })[side]
+			local dir = (Vector2.new(0.5, 0.5) - p).Unit
+			for k = 1, 6 do
+				local ang = math.atan2(dir.Y, dir.X) + rnd:NextNumber(-0.75, 0.75)
+				local q = p + Vector2.new(math.cos(ang), math.sin(ang)) * rnd:NextNumber(0.025, 0.055)
+				local f = Instance.new("Frame")
+				f.BorderSizePixel, f.BackgroundColor3, f.AnchorPoint, f.Visible = 0, Color3.fromRGB(240, 252, 255), Vector2.new(0.5, 0.5), false
+				local gl = Instance.new("UIStroke")
+				gl.Color, gl.Thickness, gl.Transparency = tint or Color3.fromRGB(150, 230, 255), 2, 0.35
+				gl.Parent = f
+				f.Parent = g
+				table.insert(st.crackSegs, { a = p, b = q, k = (k - 1) / 6, w = 7 - k, f = f })
+				p = q
+			end
+		end
+	end
+	local vp = workspace.CurrentCamera.ViewportSize
+	for _, sg in st.crackSegs do
+		local show = u > sg.k * 0.9
+		sg.f.Visible = show
+		if show then
+			local a, b = sg.a * vp, sg.b * vp
+			sg.f.Position = UDim2.fromOffset((a.X + b.X) / 2, (a.Y + b.Y) / 2)
+			sg.f.Size = UDim2.fromOffset((b - a).Magnitude, math.max(1.5, sg.w * 0.55))
+			sg.f.Rotation = math.deg(math.atan2(b.Y - a.Y, b.X - a.X))
+		end
+	end
+end
+local function clearCracks(ctx)
+	if ctx.state.crackGui then ctx.state.crackGui:Destroy() ctx.state.crackGui = nil end
+end
+
 -- FAFNIR: the hoard ------------------------------------------------------------------------------------------------------
 local hoard = { omen = 1.8, tint = FIRE }
 function hoard.start(ctx)
@@ -46,9 +94,42 @@ function hoard.start(ctx)
 	st.eyes = {}
 	local skull = CFrame.new(ctx.NEST + Vector3.new(0, 7.2, 7.9))
 	local DARKH = Color3.fromRGB(26, 12, 10)
-	for _, d in { { Vector3.new(9.5, 3.2, 0.6), Vector3.new(0, 0, 0) }, { Vector3.new(4.5, 2.2, 0.6), Vector3.new(0, -2.4, -0.2) }, { Vector3.new(0.9, 3.4, 0.6), Vector3.new(-4.2, 2.6, 0.1), -0.5 }, { Vector3.new(0.9, 3.4, 0.6), Vector3.new(4.2, 2.6, 0.1), 0.5 } } do
-		ctx.part(ctx.world, d[1], skull * CFrame.new(d[2]) * CFrame.Angles(0, 0, d[3] or 0), DARKH) -- brow, snout, horns: a head the size of the cave
+	-- directive v13 (Fafnir 6.0, "gold bars"): a voxel dragon skull fills the dark behind the egg: a domed cranium, heavy brow
+	-- ridges over deep sockets (the eyes below glow inside them), a long muzzle with nostrils, a jaw with teeth and back-swept
+	-- horns; molten gold rims the brows, the muzzle and the teeth from below
+	local BONE, BONE2, RIM = DARKH, Color3.fromRGB(42, 22, 16), Color3.fromRGB(255, 170, 60)
+	local function bone(size, off, rot, col)
+		return ctx.part(ctx.world, size, skull * CFrame.new(off) * (rot or CFrame.new()), col or BONE)
 	end
+	local function rim(size, off, rot)
+		return neon(ctx, size, skull * CFrame.new(off) * (rot or CFrame.new()), RIM, 0.35)
+	end
+	for i, w in { 10.5, 9.4, 7.6, 5.2 } do -- the cranium: stacked slabs narrowing to the crown, set back from the face
+		bone(Vector3.new(w, 1.1, 3.4 - i * 0.35), Vector3.new(0, 1.6 + i * 1.0, 1.4 + i * 0.2), nil, i % 2 == 0 and BONE2 or BONE)
+	end
+	for sgn = -1, 1, 2 do
+		bone(Vector3.new(3.8, 1.1, 1.6), Vector3.new(sgn * 3.2, 1.55, -0.2), CFrame.Angles(0, 0, sgn * 0.26)) -- the brow ridge, angled down to the snout
+		rim(Vector3.new(3.4, 0.12, 0.2), Vector3.new(sgn * 3.15, 0.98, -0.95), CFrame.Angles(0, 0, sgn * 0.26)) -- its molten under-edge
+		bone(Vector3.new(1.0, 2.6, 1.4), Vector3.new(sgn * 5.0, 0.2, 0.1)) -- the socket's outer wall
+		bone(Vector3.new(3.4, 0.8, 1.4), Vector3.new(sgn * 3.2, -1.25, 0.1), CFrame.Angles(0, 0, -sgn * 0.12)) -- the cheekbone under the socket
+		bone(Vector3.new(2.6, 2.2, 0.4), Vector3.new(sgn * 3.2, 0.15, 0.85), nil, Color3.fromRGB(8, 3, 2)) -- the socket's black depth behind the eye
+		for k = 1, 4 do -- the horns: four blocks sweeping back and up from the temples
+			local sz = 1.5 - k * 0.22
+			bone(Vector3.new(sz, sz, 1.8), Vector3.new(sgn * (5.2 + k * 0.7), 2.4 + k * 1.05, 1.2 + k * 1.1), CFrame.Angles(-0.5, 0, -sgn * (0.35 + k * 0.08)), k % 2 == 0 and BONE2 or BONE)
+		end
+	end
+	bone(Vector3.new(3.6, 2.2, 4.2), Vector3.new(0, -2.6, -1.6), nil, BONE2) -- the muzzle, reaching toward the egg
+	bone(Vector3.new(2.6, 1.0, 3.4), Vector3.new(0, -1.3, -1.3)) -- the bridge of the nose
+	for sgn = -1, 1, 2 do
+		neon(ctx, Vector3.new(0.5, 0.22, 0.2), skull * CFrame.new(sgn * 0.8, -1.9, -3.75), Color3.fromRGB(255, 120, 30), 0.15) -- smouldering nostrils
+	end
+	bone(Vector3.new(5.6, 0.9, 3.2), Vector3.new(0, -4.3, -0.9), CFrame.Angles(0.14, 0, 0)) -- the lower jaw, a little open
+	rim(Vector3.new(5.0, 0.14, 0.2), Vector3.new(0, -3.75, -2.45))
+	for k = -2, 2 do -- teeth along both jaws, pale and lit gold from below
+		ctx.part(ctx.world, Vector3.new(0.35, 0.6, 0.35), skull * CFrame.new(k * 0.75, -3.45, -2.6), Color3.fromRGB(226, 206, 170))
+		ctx.part(ctx.world, Vector3.new(0.3, 0.5, 0.3), skull * CFrame.new(k * 0.75 + 0.35, -3.95, -2.3), Color3.fromRGB(210, 186, 150))
+	end
+	st.skullLight = ctx.light(ctx.part(ctx.world, Vector3.one * 0.2, skull * CFrame.new(0, -5.5, -3.5), WHITE, { Transparency = 1 }), RIM, 14, 0) -- the gold glow from the hoard below, rising
 	for s = -1, 1, 2 do -- slit pupils in the dark behind the egg: something big is watching
 		local at = CFrame.new(ctx.NEST + Vector3.new(s * 3.2, 7.4, 7.5)) * CFrame.Angles(0, 0, s * 0.22) -- big and high: a dragon the size of the cave (Gemini sg2)
 		local bars = {}
@@ -62,6 +143,7 @@ function hoard.start(ctx)
 end
 function hoard.step(ctx, u, dt)
 	local st, rnd = ctx.state, ctx.rnd
+	if st.skullLight then st.skullLight.Brightness = 0.4 + u * 1.6 end
 	while st.n < u * 260 do -- a rain of coins that gets heavier
 		st.n += 1
 		local a, r = rnd:NextNumber(0, math.pi * 2), rnd:NextNumber(0.6, 4.2)
@@ -147,6 +229,20 @@ function storm.start(ctx)
 		table.insert(st.clouds, { p = c, a = a, r = r, y = c.Position.Y - ctx.NEST.Y })
 	end
 	st.flash = ctx.light(ctx.part(ctx.world, Vector3.one * 0.2, CFrame.new(ctx.NEST + Vector3.new(0, 5, -1)), WHITE, { Transparency = 1 }), CYANW, 11, 0)
+	-- directive v13 (Kirin 5.5, "it stays a warm cave"): the whole grotto turns to a deep slate-indigo storm for the omen: a cold
+	-- colour grade on the camera, and pale cyan light shafts that stab down through the clouds and flicker
+	local cc = Instance.new("ColorCorrectionEffect")
+	cc.Name, cc.TintColor, cc.Saturation, cc.Contrast, cc.Brightness = "StormGrade", Color3.fromRGB(196, 210, 255), -0.25, 0.18, -0.04
+	cc.Parent = workspace.CurrentCamera
+	ctx.world.Destroying:Connect(function() cc:Destroy() end)
+	st.cc = cc
+	st.shafts = {}
+	for i = 1, 5 do
+		local a = i / 5 * math.pi * 2 + rnd:NextNumber(-0.3, 0.3)
+		local r = rnd:NextNumber(3.5, 6.5)
+		local sh = neon(ctx, Vector3.new(0.5, 26, 0.5), CFrame.new(ctx.NEST + Vector3.new(math.cos(a) * r, 9, math.sin(a) * r)) * CFrame.Angles(rnd:NextNumber(-0.18, 0.18), 0, rnd:NextNumber(-0.25, 0.25)), Color3.fromRGB(150, 230, 255), 1)
+		table.insert(st.shafts, { p = sh, seed = rnd:NextNumber(0, 10) })
+	end
 	ctx.sfx("swing", 0.6)
 end
 function storm.step(ctx, u, dt)
@@ -190,12 +286,21 @@ function storm.step(ctx, u, dt)
 		for _, p in m:GetChildren() do p.Transparency = math.min(1, p.Transparency + dt * 1.4) end
 	end
 	st.amb = math.max(0, (st.amb or 0) - dt * 6)
-	Lighting.Ambient = Color3.fromRGB(10, 8, 30):Lerp(Color3.fromRGB(14, 16, 34), u):Lerp(Color3.fromRGB(150, 190, 230), st.amb)
+	Lighting.Ambient = Color3.fromRGB(10, 14, 34):Lerp(Color3.fromRGB(150, 190, 230), st.amb) -- slate-indigo from the first beat, not a warm cave
+	Lighting.OutdoorAmbient = Color3.fromRGB(10, 14, 34)
+	for _, sh in st.shafts or {} do -- the shafts flicker like light through moving cloud
+		local f = math.noise(os.clock() * 5, sh.seed)
+		sh.p.Transparency = math.clamp(0.82 - u * 0.25 - f * 0.4 - st.amb * 0.4, 0.3, 1)
+	end
+	if u > 0.5 then edgeCracks(ctx, (u - 0.5) / 0.5, Color3.fromRGB(150, 230, 255)) end
 	local a = -0.7 + u * 0.7 -- the camera swings in from the side under the storm
 	return ctx.NEST + Vector3.new(math.sin(a) * 8.6, 2.4 + u * 1.2, -math.cos(a) * 8.6), ctx.NEST + Vector3.new(0, 2.6 + (1 - u) * 1.2, 0), 50 - u * 6
 end
 function storm.burst(ctx)
 	local st = ctx.state
+	clearCracks(ctx)
+	if st.cc then TweenService:Create(st.cc, TweenInfo.new(1.4), { Saturation = 0, Contrast = 0, TintColor = Color3.new(1, 1, 1), Brightness = 0 }):Play() end
+	for _, sh in st.shafts or {} do sh.p.Transparency = 1 end
 	st.ripple = neon(ctx, Vector3.new(0.1, 1, 1), CFrame.new(ctx.NEST + Vector3.new(0, -0.35, 0)) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(210, 250, 255), 0, Enum.PartType.Cylinder)
 	st.ripple2 = neon(ctx, Vector3.new(0.12, 1, 1), st.ripple.CFrame, Color3.fromRGB(90, 220, 255), 1, Enum.PartType.Cylinder)
 	for _, c in st.clouds or {} do c.v = (c.p.Position - ctx.NEST) * Vector3.new(1, 0, 1) end
@@ -265,6 +370,7 @@ local function coilRing(ctx, u, r, spin)
 end
 function coil.step(ctx, u, dt)
 	local st = ctx.state
+	if u > 0.5 then edgeCracks(ctx, (u - 0.5) / 0.5, PINK) end -- Mythic: the screen starts to crack (directive v13)
 	st.spin = (st.spin or 0) + dt * (2 + u * 7)
 	coilRing(ctx, u, 4.6 - u * 2.4, st.spin)
 	st.glow.Brightness = u * 3
@@ -279,6 +385,7 @@ function coil.step(ctx, u, dt)
 end
 function coil.burst(ctx)
 	local st, rnd = ctx.state, ctx.rnd
+	clearCracks(ctx)
 	for _, p in st.segs or {} do -- the coil snaps and flies apart
 		local out = (p.Position - ctx.NEST) * Vector3.new(1, 0, 1)
 		out = out.Magnitude > 0.01 and out.Unit or Vector3.xAxis
@@ -347,6 +454,7 @@ local function facing(a, turn)
 end
 function void.step(ctx, u, dt)
 	local st = ctx.state
+	if u > 0.55 then edgeCracks(ctx, (u - 0.55) / 0.45, Color3.fromRGB(230, 220, 255)) end -- Secret: the screen starts to crack (directive v13)
 	for i = 1, 9 do
 		local at = (i - 1) / 10
 		if u >= at and not st.rings[i] then
@@ -365,6 +473,7 @@ function void.step(ctx, u, dt)
 end
 function void.burst(ctx)
 	local st = ctx.state
+	clearCracks(ctx)
 	for _, m in st.rings or {} do
 		for _, b in m do b.p.Color = WHITE end
 	end

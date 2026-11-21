@@ -76,6 +76,46 @@ function M.start(E)
 	end
 	-- v10: while the boss bar is up the exploring HUD steps back (coins, the menu, the quest card, the map, the how-to card), so
 	-- the boss and the strike dial own the picture
+	-- directive v13 ("the camera stands at its feet"): while a boss fight runs and no strike dial is up, the view widens from 70
+	-- to 82 degrees (E.vmHook.bossFov, added by PixelClient), the camera tips up toward its chest as it winds up a slam or a sweep,
+	-- and a cool turquoise (Warden) or magma (Golem) rim light stands behind it, so its silhouette fills the frame head to toe
+	local RunServiceB = game:GetService("RunService")
+	local rim, tilt, tiltGoalUntil = nil, 0, 0
+	E.vmHook.bossFov = 0
+	R.Fx.OnClientEvent:Connect(function(kind)
+		if kind == "bossSlam" or kind == "bossSweep" then tiltGoalUntil = os.clock() + 1.1 end
+	end)
+	RunServiceB:BindToRenderStep("BossFraming", Enum.RenderPriority.Camera.Value + 3, function(dt)
+		local fight = bar.Visible
+		local w = fight and warden()
+		local busy = E.cave and E.cave.mgBusy
+		E.vmHook.bossFov += (((fight and not busy) and 12 or 0) - E.vmHook.bossFov) * math.min(1, dt * 2.5)
+		local tg = (fight and not busy and os.clock() < tiltGoalUntil) and math.rad(4) or 0
+		tilt += (tg - tilt) * math.min(1, dt * (tg > tilt and 6 or 3))
+		if math.abs(tilt) > 0.0005 then
+			local cam = workspace.CurrentCamera
+			cam.CFrame = cam.CFrame * CFrame.Angles(tilt, 0, 0)
+		end
+		if w and w.PrimaryPart then
+			if not rim then
+				rim = Instance.new("Part")
+				rim.Name, rim.Anchored, rim.CanCollide, rim.CanQuery, rim.CanTouch, rim.Transparency, rim.Size = "BossRim", true, false, false, false, 1, Vector3.one
+				local l = Instance.new("PointLight")
+				l.Range, l.Brightness, l.Shadows = 26, 2.2, false
+				l.Parent = rim
+				rim.Parent = workspace:FindFirstChild("ClientFX") or workspace
+			end
+			local h = E.hrp and E.hrp()
+			local bp = w.PrimaryPart.Position
+			local away = h and (bp - h.Position) * Vector3.new(1, 0, 1) or Vector3.zAxis
+			away = away.Magnitude > 0.1 and away.Unit or Vector3.zAxis
+			rim.Position = bp + away * 7 + Vector3.new(0, 6, 0)
+			rim.PointLight.Color = now == 2 and Color3.fromRGB(255, 120, 50) or Color3.fromRGB(80, 230, 220)
+			rim.PointLight.Enabled = true
+		elseif rim then
+			rim.PointLight.Enabled = false
+		end
+	end)
 	local stepped = {}
 	game:GetService("RunService"):BindToRenderStep("BossHudStepBack", Enum.RenderPriority.Last.Value + 20, function() -- last in the frame: the HUD's own code shows these again between two strikes
 		local fight = bar.Visible

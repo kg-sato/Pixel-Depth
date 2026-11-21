@@ -45,13 +45,13 @@ function M.start(E)
 	local flag = new("Frame", E.gui, { Name = "ARSettings", BackgroundTransparency = 1, Size = UDim2.fromOffset(1, 1), Visible = false })
 	if E.addModal then E.addModal(flag) end
 	local folder = new("Folder", workspace.CurrentCamera, { Name = "ARSettings" })
-	local state = { vol = 8, shake = true, hints = true, dark = false, fast = false }
+	local state = { vol = 8, shake = true, hints = true, dark = false, fast = false, hudDynamic = false }
 	-- The settings are saved with the player's profile (the owner said yes, 2026-11-13): every change goes to the server
-	-- (remote Opts, which keeps only these four fields), and at the start the panel asks the server for them.
+	-- (remote Opts, which keeps only these fields), and at the start the panel asks the server for them.
 	local setters = {} -- key -> function(value): put a loaded value on its control and apply it
 	local OptsR = E.R:FindFirstChild("Opts")
 	local function send()
-		if OptsR then OptsR:FireServer({ vol = state.vol, shake = state.shake, hints = state.hints, dark = state.dark, fast = state.fast }) end
+		if OptsR then OptsR:FireServer({ vol = state.vol, shake = state.shake, hints = state.hints, dark = state.dark, fast = state.fast, hudDynamic = state.hudDynamic }) end
 	end
 	local panels, isOpen, focus = {}, false, 0 -- focus: -1 left, 0 middle, 1 right
 	local shut
@@ -88,8 +88,9 @@ function M.start(E)
 		new("UIGradient", card, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(160, 140, 215)) })
 		local sheen = new("Frame", card, { Size = UDim2.fromScale(0.14, 1.7), Position = UDim2.fromScale(0.2, 0.5), AnchorPoint = MID, Rotation = 22, BackgroundColor3 = WHITE, BackgroundTransparency = 0.91, BorderSizePixel = 0, ZIndex = 2 })
 		card.ClipsDescendants = true
-		local head = new("Frame", root, { Size = UDim2.fromScale(0.9, 0.24), Position = UDim2.fromScale(0.5, 0.13), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 6 })
-		local jt = JellyText.new(head, title, { color = nil, glow = true, z = 6 }) -- one title colour on all three panels (directive v10: three neon headers fought each other)
+		-- round 2 (Gemini: "bulging pink balloon headers"): a third smaller, frosted cyan, still the jelly letters
+		local head = new("Frame", root, { Size = UDim2.fromScale(0.6, 0.16), Position = UDim2.fromScale(0.5, 0.16), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 6 })
+		local jt = JellyText.new(head, title, { color = Color3.fromRGB(150, 232, 255), glow = true, z = 6 }) -- one title colour on all three panels (directive v10: three neon headers fought each other)
 		local p = { slot = slot, part = part, sg = sg, root = root, sc = sc, card = card, title = jt, sheen = sheen }
 		panels[slot] = p
 		return p, card
@@ -127,10 +128,10 @@ function M.start(E)
 	do
 		local _, card = panel(0, "SETTINGS", PINK)
 		local function toggle(i, name, key, act)
-			local y = 0.13 + (i - 1) * 0.165 -- four rows since directive v9 (were three, 0.2 apart)
-			label(card, name, UDim2.fromScale(0.52, 0.12), UDim2.fromScale(0.33, y), WHITE, E.FONT, true) -- the open sentence font: condensed capitals filled in on a phone
+			local y = 0.12 + (i - 1) * 0.13 -- five rows since directive v13 (four, 0.165 apart, since v9); clear of the buttons at 0.84
+			label(card, name, UDim2.fromScale(0.52, 0.1), UDim2.fromScale(0.33, y), WHITE, E.FONT, true) -- the open sentence font: condensed capitals filled in on a phone
 			local b, jt
-			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and CYAN or DEEP, UDim2.fromScale(0.26, 0.135), UDim2.fromScale(0.8, y), function()
+			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and CYAN or DEEP, UDim2.fromScale(0.26, 0.112), UDim2.fromScale(0.8, y), function()
 				state[key] = not state[key]
 				jt.set(state[key] and "ON" or "OFF")
 				b.BackgroundColor3 = state[key] and CYAN or DEEP
@@ -154,6 +155,8 @@ function M.start(E)
 		-- directive v9: "Fast-Open / Skip Cutscene": the forge scene, the Secret hatch scene and the glass lift are left out and
 		-- are replaced by a plain fade (attribute FastCine, read where each scene starts)
 		toggle(4, "Fast cutscenes", "fast", function(on) plr:SetAttribute("FastCine", on or nil) end)
+		-- directive v13: "Dynamic HUD": calm chrome slides off the edges until something needs the player (Shared.DynamicHud)
+		toggle(5, "Dynamic HUD", "hudDynamic", function(on) plr:SetAttribute("HudDynamic", on or nil) end)
 		local x = 0.2
 		for _, s in { { "BAG", DEEP, "bag" }, { "QUESTS", DEEP, "quests" }, { "DONE", PINK, nil } } do
 			glassButton(card, s[1], s[2], UDim2.fromScale(0.27, 0.15), UDim2.fromScale(x, 0.84), function()

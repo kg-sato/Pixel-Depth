@@ -20,8 +20,8 @@ function M.start(E)
 		E.closePanel(win)
 		R.Surface:FireServer("down", n)
 	end
-	for i, d in { { "CAMP 1", "lilac", "Root Caves" }, { "CAMP 2", "pink", "Clay Caves" } } do
-		local b = E.button(win, d[1], UDim2.fromScale(0.4, 0.42), UDim2.fromScale(0.07 + (i - 1) * 0.46, 0.27), nil, d[2])
+	for i, d in { { "CAMP 1", "lilac", "Root Caves", "root" }, { "CAMP 2", "pink", "Clay Caves", "kiln" } } do -- directive v13: Camp 2 wears the kiln, not a sack
+		local b = E.button(win, d[1], UDim2.fromScale(0.4, 0.42), UDim2.fromScale(0.07 + (i - 1) * 0.46, 0.27), nil, d[2], E.ICON[d[4]] and d[4] or nil)
 		b.Name, b.ZIndex = "Camp" .. i, 6
 		local sub = E.text(win, d[3], UDim2.fromScale(0.4, 0.11), UDim2.fromScale(0.07 + (i - 1) * 0.46, 0.74), nil, E.WHITE, 700, false)
 		sub.ZIndex = 6

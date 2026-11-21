@@ -16,7 +16,8 @@ function M.start(E)
 	if not PingR then return end
 	local cam = workspace.CurrentCamera
 	local MID = Vector2.new(0.5, 0.5)
-	local LOOK = { ore = { "ORE", E.MINT }, gloom = { "GLOOM", E.PINK }, here = { "HERE", E.BUTTER } }
+	local LOOK = { ore = { "ORE", E.MINT }, gloom = { "GLOOM", E.PINK }, here = { "HERE", E.BUTTER },
+		camp = { "CAMP", Color3.fromRGB(255, 176, 72) }, help = { "HELP!", Color3.fromRGB(255, 60, 180) }, rare = { "RARE!", Color3.fromRGB(255, 214, 90) } } -- directive v13: five callouts and the automatic rare one
 	local live = {}
 	local inset = game:GetService("GuiService"):GetGuiInset().Y
 
@@ -36,12 +37,21 @@ function M.start(E)
 		local hit = workspace:Raycast(cam.CFrame.Position, cam.CFrame.LookVector * REACH, prm)
 		if not hit then return end
 		local kind = under(hit.Instance, "Deposits") and "ore" or ((hit.Instance:GetAttribute("State") ~= nil or under(hit.Instance, "Gloom")) and "gloom" or "here")
+		if kind == "here" and (under(hit.Instance, "Camp") or under(hit.Instance, "Hearth")) then kind = "camp" end -- the camp itself: CAMP
+		-- HELP: held Shift, grabbed or badly hurt: the call goes where you stand
+		local hurt = plr:GetAttribute("GrabbedUntil") ~= nil or (plr:GetAttribute("HP") or 100) < 40
+		if UIS:IsKeyDown(Enum.KeyCode.LeftShift) or hurt then
+			local h = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
+			if h then PingR:FireServer(h.Position, "help") return end
+		end
 		PingR:FireServer(hit.Position, kind)
 	end
 	if E.vmHook then E.vmHook.ping = send end -- the utility wheel
+	local IG = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("InputGate")) -- the Input Action System (directive v13): a key behind an open panel does nothing
+	local viaIAS = IG.init(E.plr or game:GetService("Players").LocalPlayer) and IG.on("Ping", send)
 	UIS.InputBegan:Connect(function(io, gp)
 		if gp then return end
-		if io.KeyCode == Enum.KeyCode.Z or io.UserInputType == Enum.UserInputType.MouseButton3 then send() end
+		if (io.KeyCode == Enum.KeyCode.Z and not viaIAS) or io.UserInputType == Enum.UserInputType.MouseButton3 then send() end
 	end)
 
 	local function show(pos, kind, who)
@@ -73,6 +83,9 @@ function M.start(E)
 		ring.Size, ring.CFrame = Vector3.new(0.12, 5, 5), CFrame.new(pos + Vector3.new(0, 0.1, 0)) * CFrame.Angles(0, 0, math.rad(90))
 		ring.Parent = beam
 		beam.Parent = workspace
+		if kind == "rare" or kind == "help" then -- these two ring out: a chime for a find, an alarm pop for a call for help
+			pcall(E.sfx, kind == "rare" and "sparkle" or "error", kind == "rare" and 1.25 or 1.4)
+		end
 		pcall(E.sfx, "pop", 1.3)
 		pcall(E.pop, pill)
 		table.insert(live, { pill = pill, beam = beam, ring = ring, tip = tip, pos = pos, label = label, word = look[1], t0 = os.clock() })

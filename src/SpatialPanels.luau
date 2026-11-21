@@ -31,6 +31,41 @@ function M.start(E)
 	sg.SizingMode, sg.LightInfluence, sg.AlwaysOnTop, sg.MaxDistance, sg.ZIndexBehavior = Enum.SurfaceGuiSizingMode.FixedSize, 0, false, 1000, Enum.ZIndexBehavior.Sibling
 	sg.Parent = pg
 
+	-- directive v13 (@uxui_howard.le, Df7IzotS9aH): two more layers give the panel real depth as the head turns: a soft shadow
+	-- plate 0.12 studs behind the menu and a thin glass rim 0.06 studs in front of it, both drawn round the open menu's rectangle
+	local layers = {}
+	for _, d in { { "Back", 0.12 }, { "Front", -0.06 } } do
+		local lp = part:Clone()
+		lp.Name = "SpatialPanel" .. d[1]
+		lp.CanQuery = false
+		lp.Parent = workspace.CurrentCamera
+		local lg = Instance.new("SurfaceGui")
+		lg.Name, lg.Adornee, lg.Face, lg.ResetOnSpawn, lg.Enabled = "SpatialPanels" .. d[1], lp, Enum.NormalId.Front, false, false
+		lg.SizingMode, lg.LightInfluence, lg.AlwaysOnTop, lg.MaxDistance, lg.ZIndexBehavior = Enum.SurfaceGuiSizingMode.FixedSize, 0, false, 1000, Enum.ZIndexBehavior.Sibling
+		lg.Parent = pg
+		local rect = Instance.new("Frame")
+		rect.Name, rect.BorderSizePixel = "Rect", 0
+		if d[1] == "Back" then -- a dark violet plate a little down and right of the menu, like a card lifted off the page
+			rect.BackgroundColor3, rect.BackgroundTransparency = Color3.fromRGB(14, 6, 30), 0.42
+			local st = Instance.new("UIStroke")
+			st.Color, st.Thickness, st.Transparency = Color3.fromRGB(155, 31, 232), 6, 0.72
+			st.Parent = rect
+		else -- the front layer: only a fine cyan glass edge, so nothing covers the menu's buttons
+			rect.BackgroundTransparency = 1
+			local st = Instance.new("UIStroke")
+			st.Color, st.Thickness, st.Transparency = Color3.fromRGB(150, 232, 255), 2, 0.55
+			st.Parent = rect
+		end
+		local rc = Instance.new("UICorner")
+		rc.CornerRadius = UDim.new(0.035, 0)
+		rc.Parent = rect
+		rect.Parent = lg
+		layers[d[1]] = { part = lp, sg = lg, rect = rect, z = d[2] }
+	end
+	local function layersOn(on)
+		for _, l in layers do if l.sg.Enabled ~= on then l.sg.Enabled = on end end
+	end
+
 	local held = {} -- frame -> the parent it came from
 	local count, openedAt, swing, swingV, lean = 0, 0, 0, 0, Vector2.zero
 	local wasAny = false
@@ -112,6 +147,7 @@ function M.start(E)
 			return
 		end
 		if not any then
+			layersOn(false)
 			if wasAny then
 				if hook.blur then hook.blur.Enabled = true end
 				tools(false)
@@ -147,6 +183,24 @@ function M.start(E)
 		-- only the turn trails; the place follows the eye at once (the owner, 2026-11-15: a walking player left the menu behind and had to stop to use it)
 		last = last and last:Lerp(want.Rotation, math.min(1, dt * 14)) or want.Rotation
 		part.CFrame = CFrame.new(want.Position) * last
+		local top, area = nil, 0 -- the open menu: the biggest frame on the panel
+		for f in held do
+			if f.Parent == sg and f.Visible then
+				local a = f.AbsoluteSize.X * f.AbsoluteSize.Y
+				if a > area then top, area = f, a end
+			end
+		end
+		layersOn(top ~= nil and area > 400)
+		if top then
+			for name, l in layers do
+				l.sg.CanvasSize = canvas
+				l.part.Size = part.Size
+				l.part.CFrame = part.CFrame * CFrame.new(0, 0, l.z) -- +z: away from the eye (the front face looks back at it)
+				local off = name == "Back" and Vector2.new(canvas.Y * 0.012, canvas.Y * 0.016) or Vector2.zero
+				l.rect.Position = UDim2.fromOffset(top.AbsolutePosition.X + off.X, top.AbsolutePosition.Y + off.Y)
+				l.rect.Size = UDim2.fromOffset(top.AbsoluteSize.X, top.AbsoluteSize.Y)
+			end
+		end
 	end)
 
 	plr:GetAttributeChangedSignal("DevFlatUI"):Connect(function() -- a test can put every menu back on the flat HUD
@@ -154,6 +208,7 @@ function M.start(E)
 			for f in held do release(f) end
 			RunService:UnbindFromRenderStep("PixelSpatialPanels")
 			sg.Enabled, hook.spatialOpen, live, part.CanQuery = false, false, false, false
+			layersOn(false)
 		end
 	end)
 end

@@ -685,6 +685,44 @@ function M.build(parent, origin, seed, opt)
 			local l = Instance.new("PointLight")
 			l.Color, l.Range, l.Brightness, l.Shadows = TEAL, 44, 0.8, false
 			l.Parent = gl
+			-- directive v13 (story01 12:00, light01): warm excavation light rises from the floor along the face, so its brow and
+			-- chin cut a silhouette against the dark (old dig lamps left at its chin)
+			for k, o in { P(-9, -11, -5), P(9, -11, -5), P(0, -15, -3) } do
+				local lamp = part("Landmark", "DigLamp", Vector3.new(0.9, 1.2, 0.9), face * CFrame.new(o), Color3.fromRGB(255, 190, 110), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false })
+				local sl = Instance.new("SpotLight")
+				sl.Face, sl.Angle, sl.Range, sl.Brightness, sl.Color, sl.Shadows = Enum.NormalId.Top, 70, 34, 2.2, Color3.fromRGB(255, 176, 96), k == 3
+				sl.Parent = lamp
+			end
+		end
+		-- Waitomo drapery ribs: honey limestone curtains hanging in rows from the vault over the hall (sheet_caves #4)
+		for k = 1, 14 do
+			local at = rootC + P(-24 + k * 3.6, 0, (hash(k, seed, 21) - 0.5) * 26)
+			local vx, vy, vz = toVox(at)
+			local x, z = math.floor(vx), math.floor(vz)
+			local roof
+			for y = math.floor(vy), NY - 2 do if get(x, y, z) == 0 and get(x, y + 1, z) == 1 then roof = toWorld(x, y, z) + Vector3.new(0, V / 2, 0) break end end
+			if roof then
+				local len = 3 + hash(k, seed, 22) * 7
+				for q = 0, 2 do -- each curtain: three overlapping tapered blades
+					local w = 2.6 - q * 0.7
+					part("Landmark", "Drapery", Vector3.new(w, len - q * 1.2, 0.5), CFrame.new(roof + Vector3.new(q * 0.4, -(len - q * 1.2) / 2 + 0.6, q * 0.3)) * CFrame.Angles(0, k * 0.7, (q - 1) * 0.08), Color3.fromRGB(196, 150, 96):Lerp(Color3.fromRGB(236, 200, 140), q / 2), { Material = Enum.Material.Limestone, MaterialVariant = "", CanCollide = false })
+				end
+			end
+		end
+	end
+	-- mint glow-pebble breadcrumbs at the branch forks: five small lit pebbles in a line pointing back toward the camp (level01 #6)
+	if L == 2 or L == 3 or L == 4 then
+		local home = spots.Camp or rootC
+		for _, b in { "B1", "B2", "B3", "B4", "B5" } do
+			local at = spots[b]
+			if at then
+				local dir = (home - at) * Vector3.new(1, 0, 1)
+				dir = dir.Magnitude > 1 and dir.Unit or Vector3.xAxis
+				for k = 0, 4 do
+					local f = floorUnder(at + dir * (k * 2.2))
+					if f then part("Landmark", "GlowPebble", Vector3.new(0.5, 0.3, 0.5), CFrame.new(f + Vector3.new(0, 0.12, 0)) * CFrame.Angles(0, k, 0), Color3.fromRGB(120, 255, 200), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false }) end
+				end
+			end
 		end
 	end
 
@@ -709,6 +747,34 @@ function M.build(parent, origin, seed, opt)
 			e.Size, e.Rate, e.Lifetime, e.Speed, e.SpreadAngle = NumberSequence.new(0.3, 0), 8, NumberRange.new(2, 3.5), NumberRange.new(4, 7), Vector2.new(12, 12)
 			e.Parent = v
 		end
+		-- directive v13 (Giant's Causeway, sheet_caves #3): stepping plinths of hexagonal basalt, 1 to 6 studs, in uneven clusters
+		-- by the lake's shore, and a dark wrought-iron grate walk on two rails across the lake, hung from the vault on chains
+		for k = 1, 7 do
+			local a = k / 7 * math.pi * 2 + 0.3
+			local c0 = origin + rootC + P(math.cos(a) * 34, -4, math.sin(a) * 24)
+			for i = 0, 6 do
+				local ring = i == 0 and Vector3.zero or Vector3.new(math.cos(i / 6 * math.pi * 2) * 2.1, 0, math.sin(i / 6 * math.pi * 2) * 2.1)
+				local hh = 1 + math.floor(hash(k, i, 31) * 6)
+				for t = 0, 1 do
+					part("Landmark", "CausewayStep", Vector3.new(2, hh, 2), CFrame.new(c0 + ring + Vector3.new(0, hh / 2, 0)) * CFrame.Angles(0, t * math.pi / 6 + i * 0.1, 0), Color3.fromRGB(46 + i * 2, 34, 36), { Material = Enum.Material.Basalt, MaterialVariant = "" })
+				end
+			end
+		end
+		do
+			local y = lake.Position.Y + 2.2
+			local a0, a1 = lake.Position + Vector3.new(-30, 0, 0), lake.Position + Vector3.new(30, 0, 0)
+			for _, sd in { -1.6, 1.6 } do
+				part("Landmark", "GrateRail", Vector3.new(60, 0.4, 0.4), CFrame.new((a0 + a1) / 2 + Vector3.new(0, 2.2, sd)), Color3.fromRGB(28, 24, 28), { Material = Enum.Material.Metal, MaterialVariant = "" })
+			end
+			for k = -14, 14 do
+				part("Landmark", "GrateSlat", Vector3.new(0.5, 0.2, 3.6), CFrame.new(lake.Position + Vector3.new(k * 2, 2.05, 0)), Color3.fromRGB(36, 30, 34), { Material = Enum.Material.Metal, MaterialVariant = "" })
+				if k % 4 == 0 then -- chains up to the vault
+					for _, sd in { -1.6, 1.6 } do
+						part("Landmark", "GrateChain", Vector3.new(0.25, 18, 0.25), CFrame.new(lake.Position + Vector3.new(k * 2, 2.2 + 9, sd)), Color3.fromRGB(46, 40, 44), { Material = Enum.Material.DiamondPlate, MaterialVariant = "", CanCollide = false })
+					end
+				end
+			end
+		end
 		for k = 1, 9 do
 			local a = k / 9 * math.pi * 2
 			local at = origin + rootC + P(math.cos(a) * 26, 0, math.sin(a) * 18)
@@ -719,6 +785,23 @@ function M.build(parent, origin, seed, opt)
 				for t = 0, 1 do -- two blocks turned 30 degrees apart: a six-sided profile
 					part("Landmark", "BasaltColumn", Vector3.new(2.4, ch, 2.4), CFrame.new(at + o2 + Vector3.new(0, ch / 2 - 4, 0)) * CFrame.Angles(0, q * 0.5 + t * math.pi / 6, 0), Color3.fromRGB(40 + q * 3, 30, 32), { Material = Enum.Material.Basalt, MaterialVariant = "" })
 				end
+			end
+		end
+	end
+	if L == 3 then -- directive v13 (Naica #5, Reed Flute #6): three huge translucent crystal ribs lean diagonally across the hall
+		-- over still, dark obsidian pools that mirror their light; the walkways stay clear between them
+		for k = 1, 3 do
+			local a = k * 2.1 + seed
+			local foot = floorUnder(rootC + P(math.cos(a) * 20, 0, math.sin(a) * 15))
+			if foot then
+				local cf = CFrame.new(foot) * CFrame.Angles(0, a + math.pi, 0) * CFrame.Angles(math.rad(52), 0, 0) * CFrame.new(0, 24, 0)
+				part("Landmark", "CrystalRib", Vector3.new(4.5, 52, 4.5), cf, Color3.fromRGB(200, 220, 255), { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.35, CanCollide = false })
+				part("Landmark", "CrystalRibCore", Vector3.new(1.2, 48, 1.2), cf, Color3.fromRGB(170, 210, 255), { Material = Enum.Material.Neon, MaterialVariant = "", Transparency = 0.45, CanCollide = false, CastShadow = false })
+			end
+			local pool = floorUnder(rootC + P(math.cos(a + 1) * 12, 0, math.sin(a + 1) * 9))
+			if pool then
+				part("Landmark", "ObsidianPool", Vector3.new(9, 0.2, 6.5), CFrame.new(pool + Vector3.new(0, 0.13, 0)) * CFrame.Angles(0, a, 0), Color3.fromRGB(12, 10, 24), { Material = Enum.Material.Glass, MaterialVariant = "", Reflectance = 0.45, CanCollide = false })
+				part("Landmark", "PoolRim", Vector3.new(9.8, 0.14, 7.3), CFrame.new(pool + Vector3.new(0, 0.05, 0)) * CFrame.Angles(0, a, 0), Color3.fromRGB(120, 150, 255), { Material = Enum.Material.Neon, MaterialVariant = "", Transparency = 0.55, CanCollide = false, CastShadow = false })
 			end
 		end
 	end
@@ -1109,6 +1192,40 @@ function M.build(parent, origin, seed, opt)
 end
 
 -- Layer tint for the shared prop set (CaveProps makes cyan crystals for every cave): call after CaveProps.build on a layer 2+ model.
+-- directive v13 phase 7 (vault Research/Roblox Engine/First-Person Feel, Mobile Touch and Cross-Tier Lighting, section 4):
+-- the streaming foundation. M.chunk(caves, size) moves the rock and floor blocks of the Walls and Floor folders into Models of
+-- one size x size stud cell each (attribute CaveChunk), ModelStreamingMode Atomic, so with StreamingEnabled a room streams in
+-- whole and a phone never shows half a cave wall. PixelServer runs it only when workspace.StreamingEnabled is on (it is off
+-- today); ZFix and the other readers find a block through its folder either way. Returns the number of chunks made.
+function M.chunk(caves, size)
+	size = size or 64
+	local made = 0
+	for _, fname in { "Walls", "Floor" } do
+		for _, folder in caves:GetDescendants() do
+			if folder.Name == fname and folder:IsA("Folder") then
+				local cells = {}
+				for _, p in folder:GetChildren() do
+					if p:IsA("BasePart") then
+						local k = math.floor(p.Position.X / size) .. "_" .. math.floor(p.Position.Z / size)
+						local m = cells[k]
+						if not m then
+							m = Instance.new("Model")
+							m.Name = "Chunk_" .. k
+							m:SetAttribute("CaveChunk", true)
+							pcall(function() m.ModelStreamingMode = Enum.ModelStreamingMode.Atomic end)
+							m.Parent = folder
+							cells[k] = m
+							made += 1
+						end
+						p.Parent = m
+					end
+				end
+			end
+		end
+	end
+	return made
+end
+
 function M.tintProps(model, layer, near, radius) -- near, radius: only props within radius studs of near (the live caves hold two layers)
 	local TO = ({ nil, Color3.fromRGB(245, 158, 11), Color3.fromRGB(150, 140, 255), Color3.fromRGB(255, 110, 50) })[layer]
 	local props = model:FindFirstChild("Props")

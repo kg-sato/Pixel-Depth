@@ -145,6 +145,29 @@ function M.start(E)
 		return c
 	end
 	local last = {}
+	local whispered -- the tier whose closest-upgrade whisper already played
+	do -- the FTUE anvil cone: a warm spot from above Bolt's anvil while the first pickaxe can be forged (directive v13)
+		local cone
+		game:GetService("RunService").Heartbeat:Connect(function()
+			local on = E.vmHook.anvilCone == true and not plr:GetAttribute("InCave")
+			if on and not cone then
+				local hub = workspace:FindFirstChild("Hub")
+				local anvil = hub and hub:FindFirstChild("Anvil", true)
+				if anvil then
+					cone = Instance.new("Part")
+					cone.Name, cone.Anchored, cone.CanCollide, cone.CanQuery, cone.CanTouch, cone.Transparency, cone.Size = "AnvilCone", true, false, false, false, 1, Vector3.one
+					cone.CFrame = CFrame.new(anvil.Position + Vector3.new(0, 9, 0))
+					local sl = Instance.new("SpotLight")
+					sl.Face, sl.Angle, sl.Range, sl.Brightness, sl.Color, sl.Shadows = Enum.NormalId.Bottom, 40, 16, 4, Color3.fromRGB(255, 196, 110), true
+					sl.Parent = cone
+					cone.Parent = workspace:FindFirstChild("ClientFX") or workspace
+				end
+			elseif not on and cone then
+				cone:Destroy()
+				cone = nil
+			end
+		end)
+	end
 	R.State.OnClientEvent:Connect(function(s)
 		local i = (s.pick or 1) + 1
 		local nxt = C.PICKS[i]
@@ -196,6 +219,21 @@ function M.start(E)
 			hint.TextColor3 = MUTED
 		end
 		if changed then unfold(4) end
+		-- directive v13 (ret01): within 20% of the next pickaxe, banking in town whispers the one thing still missing
+		if not ready and not plr:GetAttribute("InCave") and want + nxt.cost > 0 then
+			local short, shortName, coinsShort = 0, nil, math.max(0, nxt.cost - (s.gold or 0))
+			for _, k in keys do
+				local miss = need[k] - math.min((s.ores and s.ores[k]) or 0, need[k])
+				if miss > 0 then short += miss shortName = shortName or C.oreName(k) end
+			end
+			local share = ((want > 0 and got / want or 1) + math.clamp((s.gold or 0) / math.max(nxt.cost, 1), 0, 1)) / 2
+			if share >= 0.8 and whispered ~= i then
+				whispered = i
+				local what = short > 0 and (short .. " " .. string.upper(shortName or "ORE")) or (commas(coinsShort) .. " COINS")
+				toast(what .. " TO " .. string.upper(nxt.name) .. "!", BUTTER, true)
+			end
+		end
+		E.vmHook.anvilCone = (s.pick or 1) < 2 and ready -- the first forge: a warm cone of light over Bolt's anvil (below)
 		if not unlocked and (s.tips and (s.tips.obFirstDeposit or s.tips.banked) or (s.ores and next(s.ores))) then
 			unlocked = true -- appears once the first ore exists, with the teaching line (board 4, step 2)
 			pop(pill, 0.6, 0.4)
@@ -245,9 +283,15 @@ function M.start(E)
 	game:GetService("RunService").Heartbeat:Connect(function()
 		local scrim = gui:FindFirstChild("Scrim")
 		local busy = (E.isBusy and E.isBusy()) or (scrim and scrim.Visible and scrim.BackgroundTransparency < 0.9) -- a minigame or a modal is up
-		-- in the caves the pill shows for 8 s after its numbers change, then steps away (top games keep the HUD small: vault
-		-- Research/UI/Viral Game HUDs (2026-11-10)); in town it stays
-		pillRow.Visible = unlocked and not busy and (E.plr:GetAttribute("InCave") ~= true or os.clock() < showUntil or hovering)
+		-- the pill shows for 8 s after its numbers change, then steps away (top games keep the HUD small: vault
+		-- Research/UI/Viral Game HUDs (2026-11-10)). Directive v13: in town too, unless it is ready or the player stands by Bolt
+		local nearBolt = false
+		if E.plr:GetAttribute("InCave") ~= true then
+			local bp, ch = boltPart(), E.plr.Character
+			local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+			nearBolt = bp ~= nil and hrp ~= nil and (bp.Position - hrp.Position).Magnitude < 26
+		end
+		pillRow.Visible = unlocked and not busy and (os.clock() < showUntil or hovering or readyGlow.Enabled or nearBolt)
 		local open = pillRow.Visible and (hovering or os.clock() < openUntil)
 		cardRow.Visible = open
 		feedRow.Visible = not open -- the feed gives its place to the open card
@@ -279,8 +323,9 @@ function M.start(E)
 				end
 				local free = 2 * (math.min(vp.X / 2 - left, right - vp.X / 2) - 26) -- a clear gap to both columns (the ribbon's tails stick out past its frame)
 				local full = b.w * k
-				local w = math.clamp(free, 120, full)
-				b.o.Size = UDim2.fromOffset(w, b.h * k * (w < full * 0.62 and 1.45 or 1)) -- squeezed: a line taller, the text wraps
+				local w = math.clamp(free, 160, full) -- 160: a 34-character step never breaks into three lines
+				local h = b.o:GetAttribute("BandH") or b.h -- the step card asks for 78 when its line wraps (directive v13)
+				b.o.Size = UDim2.fromOffset(w, h * k * (w < full * 0.62 and 1.3 or 1)) -- squeezed: a line taller, the text wraps
 			end
 		end
 	end)

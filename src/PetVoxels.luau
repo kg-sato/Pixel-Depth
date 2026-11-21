@@ -306,6 +306,19 @@ local ACTS = {
 }
 
 -- every frame, after the model was pivoted: pose the parts. now: os.clock(); moving: overrides the speed guess
+-- directive v13: start the pet's signature act now (the hatch fires it on the landing frame instead of after 2 to 6 s)
+function M.hero(m)
+	local rig = M.rigs[m]
+	if not rig then return end
+	local list = ACTS[m.Name] or { "look" }
+	local pick = list[1]
+	for _, a in list do
+		if a == "roar" or a == "flap" or a == "rear" or a == "tailfan" then pick = a break end
+		if a ~= "look" and a ~= "sway" then pick = a end
+	end
+	rig.act, rig.actT, rig.burst, rig.hit = pick, os.clock(), false, false
+end
+
 function M.animate(m, now, dt, moving)
 	local rig = M.rigs[m]
 	if not rig or not m.PrimaryPart then return end

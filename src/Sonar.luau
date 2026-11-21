@@ -94,10 +94,13 @@ function M.start(E)
 		end
 	end
 
-	UIS.InputBegan:Connect(function(io, gp)
-		if gp or io.KeyCode ~= Enum.KeyCode.T then return end
-		ping()
-	end)
+	local IG = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("InputGate")) -- the Input Action System (directive v13): a key behind an open panel does nothing
+	if not (IG.init(game:GetService("Players").LocalPlayer) and IG.on("Sonar", ping)) then
+		UIS.InputBegan:Connect(function(io, gp)
+			if gp or io.KeyCode ~= Enum.KeyCode.T then return end
+			ping()
+		end)
+	end
 	E.vmHook.sonar = ping -- the utility wheel
 	E.vmHook.sonarLeft = function() return math.max(0, readyAt - os.clock()) end
 end

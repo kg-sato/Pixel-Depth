@@ -23,7 +23,7 @@ function M.start(E)
 	local bar = new("Frame", caveHud, { Name = "Hotbar", Size = S(252, 84), Position = S(640, 526), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 2 })
 	new("UIAspectRatioConstraint", bar, { AspectRatio = 3, DominantAxis = Enum.DominantAxis.Height })
 
-	local root = new("Frame", caveHud, { Name = "Survival", Size = S(W, Hh), Position = S(22, 578), AnchorPoint = Vector2.new(0, 1), BackgroundTransparency = 1, ZIndex = 2 })
+	local root = new("CanvasGroup", caveHud, { Name = "Survival", Size = S(W, Hh), Position = S(31, 569), BorderSizePixel = 0, AnchorPoint = Vector2.new(0, 1), BackgroundTransparency = 1, ZIndex = 2 })
 	new("UIAspectRatioConstraint", root, { AspectRatio = W / Hh, DominantAxis = Enum.DominantAxis.Height })
 	local function X(px) return px / W end
 
@@ -109,8 +109,8 @@ function M.start(E)
 	local flare, sonar
 	if not touch then
 		flare = hex("Flare", 1, "R", C.HUD_ICON.flare, function() if cave.flare then cave.flare() end end)
-		sonar = hex("Sonar", 2, "T", nil, function() if hook.sonar then hook.sonar() end end)
-		hex("Ping", 3, "Z", E.ICON.map, function() if hook.ping then hook.ping() end end)
+		sonar = hex("Sonar", 2, "T", E.ICON.sonar, function() if hook.sonar then hook.sonar() end end)
+		hex("Ping", 3, "Z", E.ICON.pin or E.ICON.map, function() if hook.ping then hook.ping() end end)
 	end
 
 	plr:GetAttributeChangedSignal("DevTouch"):Connect(function() -- a touch test switched on after the start: the thumb buttons take over, the hex slots go
@@ -163,6 +163,10 @@ function M.start(E)
 		lantern.shell.ImageColor3 = fuel < 0.2 and Color3.new(1, 1, 1):Lerp(VIOLET, 0.5 + 0.5 * math.sin(now * 6)) or Color3.new(1, 1, 1)
 		local hp, maxHp = plr:GetAttribute("HP") or C.GLOOM.hp, C.GLOOM.hp
 		vital.fill = hp / maxHp
+		-- directive v13 (HUD research #5): calm orbs step back to about half strength; any loss brings them to full at once
+		local calmOrbs = fuel > 0.75 and hp >= maxHp and (E.cave.fear or 0) < 0.25
+		local want = calmOrbs and 0.45 or 0
+		root.GroupTransparency += (want - root.GroupTransparency) * math.min(1, dt * (want > root.GroupTransparency and 1.5 or 8))
 		vital.step(dt, now, -26)
 		vital.shell.ImageColor3 = hp <= maxHp / 3 and Color3.new(1, 1, 1):Lerp(Color3.fromRGB(255, 70, 90), 0.5 + 0.5 * math.sin(now * 7)) or Color3.new(1, 1, 1)
 		if hp ~= shownHp then

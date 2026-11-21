@@ -3,6 +3,8 @@
 Wood scene: thunder, rain (loop), fire (loop), whittle, bonk, dawn."""
 import os, sys, wave
 import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pd_audit import report  # directive v13: every sound is measured (peak, RMS, rough LUFS, crest, three bands)
 SR = 44100
 out = sys.argv[1]; os.makedirs(out, exist_ok=True)
 rng = np.random.default_rng(7)
@@ -24,7 +26,7 @@ def save(name, x, peak=0.8, loop=False):
     x = x * peak / max(np.abs(x).max(), 1e-9)
     with wave.open(os.path.join(out, name + ".wav"), "wb") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((x * 32767).astype(np.int16).tobytes())
-    print(name, round(len(x) / SR, 2), "s")
+    report(name, x, SR)
 
 # thunder: a sharp crack, then a rolling low rumble
 n = int(2.8 * SR); noise = rng.standard_normal(n)

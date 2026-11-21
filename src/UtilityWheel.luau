@@ -44,7 +44,7 @@ function M.start(E)
 				return nil
 			end,
 			run = function()
-				if inCave() and hook.whistle then hook.whistle() elseif hook.emote then hook.emote("cheer") end
+				if inCave() and hook.whistle then hook.whistle() elseif hook.clink and hook.clink() then return elseif hook.emote then hook.emote("cheer") end -- in town the cheer is the pickaxe clink (directive v13)
 			end },
 		{ name = "WARDROBE", key = "V", x = 0.14, y = 0.5, icon = E.ICON.crew, tint = E.LILAC,
 			-- in the caves this slot is the hearthstone (Shared.Hearth): hold still for 3 s and wake at your camp
@@ -178,6 +178,7 @@ function M.start(E)
 		return false
 	end
 	local function open()
+		if hook.ftueEarly then return end -- directive v13 FTUE: the wheel waits until the Stone Pickaxe is forged (Shared.FtueGate)
 		if isOpen or blocked() then return end
 		isOpen = true
 		origin, sel, openedAt = UIS:GetMouseLocation(), nil, os.clock()

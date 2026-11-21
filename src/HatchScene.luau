@@ -132,9 +132,11 @@ function M.play(opt)
 	end
 	end
 	local NEST = O + Vector3.new(0, 2.25, 0) -- the egg's foot
+	local nestPart -- the woven nest mesh (recoils when the egg bursts and when the pet lands)
 	if artG then -- the egg's foot sits on the floor of the woven bowl, 0.25 below the middle of the Nest part
 		local g = artG:Clone()
 		local nestP = g:FindFirstChild("Nest__Tex", true) -- each MeshPart sits in its own "<name>_Node" model
+		nestPart = nestP
 		if nestP then -- the nest at half height (stills m1: its 0.5-stud twigs hid the egg and the pet); the egg's foot on its woven floor
 			local bottom = nestP.Position - Vector3.new(0, nestP.Size.Y / 2, 0)
 			nestP.Size *= Vector3.new(1, 0.5, 1)
@@ -346,9 +348,10 @@ function M.play(opt)
 	local OMEN = sig and not fast and sig.omen or 0
 	local A2 = AB + OMEN -- the omen plays between the build-up and the hang
 	local ctx = sig and { world = world, egg = egg, NEST = NEST, rc = rc, part = part, light = light, sfx = sfx, rnd = Random.new(11), caption = caption, state = {} }
-	local HANG = fast and 0.2 or (0.35 + k * 0.25)
+	local HANG = fast and 0.2 or (0.95 + k * 0.3) -- directive v13: room for a two-stage coil (anim02: the wind-up before the wind-up)
 	local A3 = A2 + HANG -- the burst
 	local t, last, fired = 0, os.clock(), {}
+	local landed, squashed = false, nil
 	local done, closing, closeAt = false, false, nil
 	local pet, petT, petBig = nil, nil, 1
 	local shards, shock, rays = {}, nil, nil
@@ -435,18 +438,30 @@ function M.play(opt)
 			local hang = t >= A2
 			local amp = hang and 0 or (0.02 + 0.3 * ub ^ 2.5) * (0.7 + k * 0.5)
 			if sig and sig.still and t >= AB then amp = 0 end -- the void: the egg hangs dead still
-			local wob = CFrame.new(NEST) * CFrame.Angles(math.sin(t * (14 + 30 * ub)) * amp * 0.5, 0, math.sin(t * (11 + 34 * ub)) * amp)
-			local sq = hang and smooth(A2, A2 + 0.18, t) * 0.18 or 0 -- the squash before the snap
+			-- directive v13: an asymmetric rock: it tips over fast and settles back slowly at each extreme (a skewed wave), not a sine
+			local function lean(x) return math.sin(x) + 0.32 * math.sin(2 * x + 0.6) end
+			local wob = CFrame.new(NEST) * CFrame.Angles(lean(t * (14 + 30 * ub)) * amp * 0.42, 0, lean(t * (11 + 34 * ub)) * amp * 0.85)
+			-- the two-stage coil (anim02): it sinks, rises a little as if to let go, then crushes down hard before the snap
+			local sq = 0
+			if hang then
+				local h = math.clamp((t - A2) / HANG, 0, 1)
+				if h < 0.35 then sq = 0.17 * (1 - (1 - h / 0.35) ^ 2) -- round 2 (video judge: "the coil is missing" at 4 frames a second): deeper and longer
+				elseif h < 0.55 then sq = 0.17 - 0.27 * smooth(0.35, 0.55, h)
+				else sq = -0.1 + 0.46 * ((h - 0.55) / 0.45) ^ 2 end
+			end
+			-- volume kept (anim01): squash down, bulge out; s_xz = 1 / sqrt(s_y)
+			local sy = 1 - sq
+			local sxz = 1 / math.sqrt(math.max(0.45, sy))
 			for _, c in cells do
 				local r = c.rest
-				c.p.CFrame = wob * CFrame.new(r.X * (1 + sq), r.Y * (1 - sq), r.Z * (1 + sq))
+				c.p.CFrame = wob * CFrame.new(r.X * sxz, r.Y * sy, r.Z * sxz)
 			end
 			if shell then
-				shell.Size = shellSize * Vector3.new(1 + sq, 1 - sq, 1 + sq)
-				shell.CFrame = wob * CFrame.new(0, shellSize.Y * (1 - sq) / 2, 0)
+				shell.Size = shellSize * Vector3.new(sxz, sy, sxz)
+				shell.CFrame = wob * CFrame.new(0, shellSize.Y * sy / 2, 0)
 				if band then
-					band.Size = bandSize * Vector3.new(1 + sq, 1 - sq, 1 + sq)
-					band.CFrame = shell.CFrame * CFrame.new(bandRest * Vector3.new(1 + sq, 1 - sq, 1 + sq))
+					band.Size = bandSize * Vector3.new(sxz, sy, sxz)
+					band.CFrame = shell.CFrame * CFrame.new(bandRest * Vector3.new(sxz, sy, sxz))
 					band.Color = Color3.fromRGB(96, 74, 140):Lerp(climbCol:Lerp(WHITE, 0.2), math.min(1, ub * 1.5)) -- the runes wake in the climbing colour
 				end
 			end
@@ -540,6 +555,7 @@ function M.play(opt)
 			coreL.Brightness, coreL.Range = 4, 16
 			TweenService:Create(coreL, TweenInfo.new(1.2), { Brightness = 0.5, Range = 10 }):Play()
 			pet = opt.build(opt.name)
+			landed, squashed = false, {}
 			if pet then
 				pet:PivotTo(CFrame.new(NEST + Vector3.new(0, 0.92, 0))) -- pets look -Z: at the camera
 				pet.Parent = world
@@ -577,13 +593,58 @@ function M.play(opt)
 
 		-- 5 REVEAL: the pet pops toward the camera and lands, then turns to look about; the name slams in
 		if pet and petT then
-			local u = math.clamp((t - petT) / 0.55, 0, 1)
-			local s = 0.2 + 0.8 * backOut(u)
-			local hop = math.sin(math.min(u, 1) * math.pi) * 1.6
-			local turn = math.sin((t - petT) * 0.9) * 0.35 * smooth(petT + 0.8, petT + 1.6, t) -- it looks about a little after it lands
+			-- directive v13 (anim01-03, First-Person Feel section 2): launch (u 0..0.2) stretched, a true 1:1 hang at the apex,
+			-- a stretched drop (0.68..0.82), a squash on landing that rings out (eps = 0.28 e^-11t cos 22t), and the pet's
+			-- signature act starts on the impact frame, so the tail and wings whip with real drag
+			local D = 1.5 -- round 2: long enough to read at 4 frames a second (launch 0.3 s, hang 0.72 s, drop 0.21 s)
+			local u = math.clamp((t - petT) / D, 0, 1)
+			local s = 0.2 + 0.8 * backOut(math.min(1, u / 0.25))
+			local H = 2.4
+			local hop, eps
+			if u < 0.2 then local a = u / 0.2 hop, eps = H * (1 - (1 - a) ^ 2), -0.3 * (1 - a)
+			elseif u < 0.68 then hop, eps = H + math.sin((u - 0.2) / 0.48 * math.pi) * 0.15, 0
+			elseif u < 0.82 then local a = (u - 0.68) / 0.14 hop, eps = H * (1 - a * a), -0.26 * a
+			else
+				local tau = (t - petT) - 0.82 * D
+				hop, eps = 0, 0.32 * math.exp(-9 * tau) * math.cos(20 * tau)
+				if not landed then
+					landed = true
+					if opt.act then pcall(opt.act, pet) end -- PetVoxels.hero: roar, flap, rear or tailfan right now
+					if nestPart then -- the nest takes the weight: a dip and a spring back
+						local home = nestPart.CFrame
+						nestPart.CFrame = home * CFrame.new(0, -0.18, 0)
+						TweenService:Create(nestPart, TweenInfo.new(0.45, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { CFrame = home }):Play()
+					end
+					for i = 1, 8 do -- twigs and shell bits kick up off the rim
+						local a2 = i / 8 * math.pi * 2
+						local c = part(world, Vector3.new(0.18, 0.18, 0.18) * rnd:NextNumber(0.8, 1.5), CFrame.new(NEST + Vector3.new(math.cos(a2) * 1.1, 0.2, math.sin(a2) * 1.1)), i % 2 == 0 and Color3.fromRGB(120, 84, 56) or rc:Lerp(WHITE, 0.5), {})
+						table.insert(shards, { p = c, v = Vector3.new(math.cos(a2) * 4, rnd:NextNumber(5, 8), math.sin(a2) * 4), spin = Vector3.new(rnd:NextNumber(-8, 8), rnd:NextNumber(-8, 8), 0) })
+					end
+					shake = opt.calm and 0 or 0.22
+				end
+			end
+			local turn = math.sin((t - petT) * 0.9) * 0.35 * smooth(petT + 1.2, petT + 2.0, t) -- it looks about a little after it lands
+			if squashed then for p, sz in squashed do if p.Parent then p.Size = sz end end table.clear(squashed) end
 			pet:ScaleTo(math.max(0.05, s) * 1.15 * petBig)
-			pet:PivotTo(CFrame.new(NEST + Vector3.new(0, 0.92 * s * 1.15 * petBig + hop + 0.6 * u + math.sin((t - petT) * 2.2) * 0.12 * u, -0.4 * (1 - u))) * CFrame.Angles(0, turn, 0)) -- it floats clear of the nest rim (Gemini m5: the limbs blended into the nest)
+			local feet = CFrame.new(NEST + Vector3.new(0, 0.6 * math.min(1, u / 0.2) + hop + (u >= 0.82 and math.sin((t - petT) * 2.2) * 0.1 or 0), -0.4 * (1 - math.min(1, u / 0.2)))) * CFrame.Angles(0, turn, 0)
+			pet:PivotTo(feet * CFrame.new(0, 0.92 * s * 1.15 * petBig, 0)) -- it floats clear of the nest rim (Gemini m5)
 			if opt.animate then opt.animate(pet, now, dt, false) end
+			if not opt.calm and math.abs(eps) > 0.004 then -- volume-preserving squash about the feet (the rig is rebuilt each frame, so only sizes are put back)
+				local sy = 1 - eps
+				local sxz = 1 / math.sqrt(math.max(0.45, sy))
+				local inv = feet:Inverse()
+				for _, p in pet:GetDescendants() do
+					if p:IsA("BasePart") then
+						squashed[p] = p.Size
+						local rel = inv * p.CFrame
+						local q = rel.Position
+						p.CFrame = feet * (CFrame.new(q.X * sxz, q.Y * sy, q.Z * sxz) * rel.Rotation)
+						local R, Up, Bk = rel.RightVector, rel.UpVector, rel.LookVector
+						local function f(v) return math.sqrt((v.X * sxz) ^ 2 + (v.Y * sy) ^ 2 + (v.Z * sxz) ^ 2) end
+						p.Size = p.Size * Vector3.new(f(R), f(Up), f(Bk))
+					end
+				end
+			end
 			local ru = smooth(A3, A3 + 0.9, t)
 			camPos = (NEST + Vector3.new(0.5, 2.7, -8.2)):Lerp(NEST + Vector3.new(-0.6, 2.9, -10.8) + Vector3.new(math.sin((t - A3) * 0.35) * 1.2, 0, 0), ru)
 			look = NEST + Vector3.new(0, 2.75, 0) -- the pet sits low in frame, under its name (stills m6: the floating pet's head was behind the card)

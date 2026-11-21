@@ -112,8 +112,11 @@ function M.start(E)
 		local st = Quests.STORY[q.story]
 		local g, gp = Quests.guide(q) -- a finished quest keeps leading: the next step, plus where the reward waits
 		if g and st and q.sp >= st.n and gp >= g.n then g = nil end -- the next step is done too: only the claim is left to do
-		local keys = game:GetService("UserInputService").KeyboardEnabled -- a phone has no J key: point at the QUESTS button
-		hook.questHint = st and (q.sp >= st.n and (g and (g.hint .. (keys and " (Reward waiting, press J)" or " (Reward waiting in QUESTS)")) or (keys and "Two quests done! Press J to claim your rewards." or "Two quests done! Open QUESTS to claim your rewards.")) or st.hint) or nil
+		local UIS = game:GetService("UserInputService")
+		local keys = UIS.PreferredInput == Enum.PreferredInput.KeyboardAndMouse and not E.plr:GetAttribute("DevTouch") -- a phone or pad has no J key: point at the QUESTS button
+		-- directive v13: one or two crisp lines (34 characters at most); a waiting reward is the one call to action
+		hook.questCave = st ~= nil and st.cave == true and q.sp < st.n -- a cave-only step: in town the card says to ride down instead
+		hook.questHint = st and (q.sp >= st.n and (keys and "Reward ready! Press J to claim" or "Reward ready! Tap QUESTS") or st.hint) or nil
 	end
 	for k, b in tabs do
 		b.Activated:Connect(function()

@@ -28,8 +28,10 @@ function M.start(E)
 	-- hearthstone cools down the pill shows the time left.
 	local home = E.panel(money, UDim2.fromScale(0.07, 1), UDim2.new(), nil, "pillLilac")
 	home.Name, home.LayoutOrder, home.Visible = "HomeButton", 10, false
-	E.new("UIAspectRatioConstraint", home, { AspectRatio = 1.9, DominantAxis = Enum.DominantAxis.Height })
-	local homeWord = E.text(home, "HOME", UDim2.fromScale(0.8, 0.46), UDim2.fromScale(0.5, 0.47), Vector2.new(0.5, 0.5), E.WHITE, 700, false)
+	E.new("UIAspectRatioConstraint", home, { AspectRatio = 2.3, DominantAxis = Enum.DominantAxis.Height })
+	-- directive v13: the jelly home icon sits on the pill, so a cooldown clock reads as "hearthstone recharging", not a second event timer
+	local homeIcon = E.new("ImageLabel", home, { Name = "HomeIcon", Image = E.ICON.home or "", BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.34, 0.7), Position = UDim2.fromScale(0.21, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5 })
+	local homeWord = E.text(home, "HOME", UDim2.fromScale(0.56, 0.46), UDim2.fromScale(0.64, 0.47), Vector2.new(0.5, 0.5), E.WHITE, 700, false)
 	homeWord.Name, homeWord.Font = "Word", E.HEAD or homeWord.Font
 	local homeHit = E.new("TextButton", home, { Name = "Hit", Text = "", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 6 })
 	homeHit.Activated:Connect(function()
@@ -99,6 +101,8 @@ function M.start(E)
 		home.Visible = E.plr:GetAttribute("InCave") == true
 		local why = home.Visible and E.vmHook.homeWhy and E.vmHook.homeWhy()
 		homeWord.Text = why or "HOME"
+		local cooling = type(why) == "string" and why:find(":") ~= nil -- "1:25": the hearthstone is recharging, the pill steps back to 45%
+		homeIcon.ImageTransparency, homeWord.TextTransparency = cooling and 0.55 or 0, cooling and 0.4 or 0
 		if open then
 			local m = UIS:GetMouseLocation() - GuiService:GetGuiInset()
 			local p, s = row.AbsolutePosition, row.AbsoluteSize

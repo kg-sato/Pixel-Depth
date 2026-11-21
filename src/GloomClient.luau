@@ -16,9 +16,12 @@ function M.start(E)
 		if FlareR and plr:GetAttribute("InCave") and (plr:GetAttribute("Flares") or 0) > 0 and not cave.mgBusy then FlareR:FireServer() end
 	end
 	cave.flare = fire
-	UIS.InputBegan:Connect(function(io, gp)
-		if not gp and (io.KeyCode == Enum.KeyCode.R or io.KeyCode == Enum.KeyCode.ButtonY) then fire() end
-	end)
+	local IG = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("InputGate")) -- the Input Action System (directive v13): a key behind an open panel does nothing
+	if not (IG.init(plr) and IG.on("Flare", fire)) then
+		UIS.InputBegan:Connect(function(io, gp)
+			if not gp and (io.KeyCode == Enum.KeyCode.R or io.KeyCode == Enum.KeyCode.ButtonY) then fire() end
+		end)
+	end
 	-- screen layer: the hit flash and the golden shield
 	local layer = new("ScreenGui", plr:WaitForChild("PlayerGui"), { Name = "GloomFx", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 6 })
 	local hitFlash = new("Frame", layer, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 80, 120), BackgroundTransparency = 1, BorderSizePixel = 0 })

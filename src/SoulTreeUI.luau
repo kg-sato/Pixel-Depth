@@ -32,25 +32,35 @@ function M.start(E)
 		new("UIGradient", g, { Rotation = 45, Color = ColorSequence.new(Color3.fromRGB(226, 208, 255), SHARD) })
 		return g
 	end
-	local pill = panel(win, UDim2.fromScale(0.2, 0.1), UDim2.fromScale(0.06, 0.12), nil, "pillLilac")
+	do -- directive v13 round 2 (Gemini: the bright town bled through the glass): an opaque dark core behind the content
+		local backing = new("Frame", win, { Name = "Backing", Size = UDim2.fromScale(0.97, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(14, 8, 28), BackgroundTransparency = 0.12, BorderSizePixel = 0, ZIndex = 2 })
+		new("UICorner", backing, { CornerRadius = UDim.new(0.04, 0) })
+	end
+	local pill = panel(win, UDim2.fromScale(0.16, 0.085), UDim2.fromScale(0.5, 0.155), MID, "pillLilac") -- round 2: centred under the title
 	pill.ZIndex = 6
 	shardGem(pill, 0.46, UDim2.fromScale(0.2, 0.5), 7)
 	local count = text(pill, "0", UDim2.fromScale(0.56, 0.6), UDim2.fromScale(0.64, 0.5), MID, INK, 700, false)
 	count.ZIndex = 7
-	local note = text(win, "Flatten gloomlings with a flare to gather Gloom Shards.", UDim2.fromScale(0.58, 0.05), UDim2.fromScale(0.6, 0.17), MID, MUTED, 700, false)
+	local note = text(win, "Flatten gloomlings with a flare to gather Gloom Shards.", UDim2.fromScale(0.27, 0.075), UDim2.fromScale(0.2, 0.155), MID, Color3.fromRGB(206, 194, 236), 700, false) -- round 3: beside the pill, clear of the crown node
+	note.TextWrapped = true
 	note.ZIndex = 6
 
 	-- the tree: a trunk rising behind the middle card and a bough the three node discs hang on
 	local function wood(size, pos, rot)
-		local f = new("Frame", win, { Size = size, Position = pos, AnchorPoint = MID, Rotation = rot or 0, BackgroundColor3 = BARK, BorderSizePixel = 0, ZIndex = 5 })
+		-- round 2 (Gemini: "a raw brown stick"): a crystal arbor: deep violet limbs with a glowing cyan core line
+		local f = new("Frame", win, { Size = size, Position = pos, AnchorPoint = MID, Rotation = rot or 0, BackgroundColor3 = Color3.fromRGB(70, 40, 128), BorderSizePixel = 0, ZIndex = 5 })
 		new("UICorner", f, { CornerRadius = UDim.new(0.5, 0) })
-		new("UIStroke", f, { Color = INK, Thickness = 2 })
+		new("UIStroke", f, { Color = Color3.fromRGB(110, 225, 255), Thickness = 1.5, Transparency = 0.45 })
+		new("UIGradient", f, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(190, 160, 255), Color3.fromRGB(60, 30, 110)) })
+		local long = size.X.Scale > size.Y.Scale
+		local core = new("Frame", f, { Size = UDim2.fromScale(long and 1 or 0.28, long and 0.28 or 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(150, 240, 255), BackgroundTransparency = 0.35, BorderSizePixel = 0, ZIndex = 5 })
+		new("UICorner", core, { CornerRadius = UDim.new(0.5, 0) })
 		return f
 	end
 	-- (Gemini r1: a straight bough over three cards read as a shop shelf, tree 2.5) a canopy of soft leaf clouds, a trunk
 	-- from the roots and three boughs fanning up to nodes at different heights
 	local canopy = {}
-	for _, c in { { 0.5, 0.36, 0.62 }, { 0.24, 0.44, 0.5 }, { 0.76, 0.44, 0.5 }, { 0.37, 0.3, 0.4 }, { 0.63, 0.3, 0.4 } } do
+	for _, c in {} do -- round 2: the leaf-cloud rings read as a radar; the arbor stands alone
 		local leafCloud = new("Frame", win, { Size = UDim2.fromScale(c[3], c[3]), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(c[1], c[2]), AnchorPoint = MID, BackgroundColor3 = E.MINT, BackgroundTransparency = 0.8, BorderSizePixel = 0, ZIndex = 4 })
 		new("UICorner", leafCloud, { CornerRadius = UDim.new(0.5, 0) })
 		table.insert(canopy, leafCloud)
@@ -66,14 +76,25 @@ function M.start(E)
 		new("UIStroke", leaf, { Color = INK, Thickness = 2 })
 	end
 
+	local PALE, GOLDRIM, CYANRIM, UNLIT = Color3.fromRGB(206, 194, 236), Color3.fromRGB(255, 206, 110), Color3.fromRGB(110, 225, 255), Color3.fromRGB(44, 32, 70)
+	-- directive v13 (Hades crest card, Slay the Spire reward focus): each node is a dark rune-slate plate with a gold outer rule
+	-- and a glowing cyan inner rim, not pale shop paper
+	local function runePlate(parent, size, pos)
+		local f = new("Frame", parent, { Size = size, Position = pos, AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(24, 14, 42), BackgroundTransparency = 0.04, BorderSizePixel = 0, ZIndex = 6 })
+		new("UICorner", f, { CornerRadius = UDim.new(0.08, 0) })
+		new("UIStroke", f, { Color = GOLDRIM, Thickness = 2, Transparency = 0.15 })
+		new("UIGradient", f, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(110, 100, 150)) })
+		local inner = new("Frame", f, { Name = "InnerRim", Size = UDim2.new(1, -10, 1, -10), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 6 })
+		new("UICorner", inner, { CornerRadius = UDim.new(0.075, 0) })
+		new("UIStroke", inner, { Color = CYANRIM, Thickness = 1.5, Transparency = 0.32 })
+		return f
+	end
 	local cards = {}
 	for i, id in T.order do
 		local def, look = T.nodes[id], LOOK[id]
 		local x = 0.19 + (i - 1) * 0.31
 		local top = i == 2 and 0.3 or 0.4 -- the middle node is the crown
-		local card = panel(win, UDim2.fromScale(0.25, 0.44), UDim2.fromScale(x, top + 0.27), MID, "card")
-		card.ZIndex = 6
-		card.Skin.ImageTransparency = 0.06
+		local card = runePlate(win, UDim2.fromScale(0.25, 0.44), UDim2.fromScale(x, top + 0.27))
 		local fruit = {} -- one fruit ripens beside the node for every rank bought: the tree itself shows your growth
 		for k = 1, def.max do
 			local side = (k % 2 == 0) and 1 or -1
@@ -85,18 +106,20 @@ function M.start(E)
 		end
 		local disc = new("Frame", win, { Size = UDim2.fromScale(0.2, 0.2), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(x, top + 0.02), AnchorPoint = MID, BackgroundColor3 = look[1], BorderSizePixel = 0, ZIndex = 7 })
 		new("UICorner", disc, { CornerRadius = UDim.new(0.5, 0) })
-		new("UIStroke", disc, { Color = INK, Thickness = 3 })
-		new("UIGradient", disc, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(226, 220, 236)) })
+		new("UIStroke", disc, { Color = GOLDRIM, Thickness = 3 })
+		new("UIGradient", disc, { Rotation = 45, Color = ColorSequence.new(WHITE, Color3.fromRGB(120, 100, 150)) })
 		new("ImageLabel", disc, { Image = look[2], BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.64, 0.64), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 8 })
-		local name = text(card, string.upper(def.name), UDim2.fromScale(0.9, 0.13), UDim2.fromScale(0.5, 0.3), MID, INK, 700, false)
+		local name = text(card, string.upper(def.name), UDim2.fromScale(0.9, 0.13), UDim2.fromScale(0.5, 0.3), MID, WHITE, 700, false)
+		if E.HEAD then name.Font = E.HEAD end
 		name.ZIndex = 7
-		local what = text(card, def.text, UDim2.fromScale(0.86, 0.1), UDim2.fromScale(0.5, 0.44), MID, MUTED, 700, false)
+		local what = text(card, def.text, UDim2.fromScale(0.86, 0.1), UDim2.fromScale(0.5, 0.44), MID, PALE, 700, false)
 		what.ZIndex = 7
 		local pips = {}
 		for k = 1, def.max do
-			local p = new("Frame", card, { Size = UDim2.fromScale(0.1, 0.1), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(0.5 + (k - (def.max + 1) / 2) * 0.13, 0.59), AnchorPoint = MID, BackgroundColor3 = WHITE, BorderSizePixel = 0, ZIndex = 7 })
-			new("UICorner", p, { CornerRadius = UDim.new(0.5, 0) })
-			new("UIStroke", p, { Color = INK, Thickness = 2 })
+			local p = new("Frame", card, { Rotation = 45, Size = UDim2.fromScale(0.13, 0.13), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(0.5 + (k - (def.max + 1) / 2) * 0.13, 0.59), AnchorPoint = MID, BackgroundColor3 = WHITE, BorderSizePixel = 0, ZIndex = 7 })
+			new("UICorner", p, { CornerRadius = UDim.new(0.22, 0) })
+			new("UIStroke", p, { Color = GOLDRIM, Thickness = 2, Transparency = 0.1 })
+			new("UIGradient", p, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(150, 140, 180)) }) -- a cut gem pip (round 2: hairline circles)
 			pips[k] = p
 		end
 		local buy = button(card, "", UDim2.fromScale(0.78, 0.2), UDim2.fromScale(0.5, 0.82), MID, "mint")
@@ -114,7 +137,7 @@ function M.start(E)
 		for id, c in cards do
 			local rank = soul.nodes[id] or 0
 			for k, f in c.fruit do f.Visible = k <= rank end
-			for k, p in c.pips do p.BackgroundColor3 = k <= rank and c.look[1] or WHITE end
+			for k, p in c.pips do p.BackgroundColor3 = k <= rank and c.look[1] or UNLIT end
 			local cost = c.def.cost[rank + 1]
 			local unit = c.def.unit or ""
 			c.what.Text = rank == 0 and c.def.text -- what you have now and what the next rank gives
@@ -144,6 +167,7 @@ function M.start(E)
 		E.sfx("sparkle", 0.9)
 	end
 	close.Activated:Connect(function() if win.Visible then E.closePanel(win) end end)
+	plr:GetAttributeChangedSignal("DevOpen"):Connect(function() if plr:GetAttribute("DevOpen") == "soul" and game:GetService("RunService"):IsStudio() then open() end end) -- Studio test hook (spike/p1_shots.py)
 	game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt)
 		if prompt:GetAttribute("SoulTree") then open() end
 	end)

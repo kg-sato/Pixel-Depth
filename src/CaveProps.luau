@@ -309,6 +309,126 @@ function M.build(caves)
 	return folder
 end
 
+-- Micro-vignettes (directive v13 phase 4, vault Research/3D and Art/Environmental Storytelling and Cave Craft (2026-11-20),
+-- story01): one small scene per main route in Camp 1's caves, showing who mined here before, never in the way:
+--   * by the Deep Gate: a cracked miner's helmet on its side, its lamp dead
+--   * in the Old Tube: a knocked-over survey tripod and a lantern lying in the dust
+--   * in the Canyon: chalk tally marks scratched on the wall (|||| / and |||)
+--   * at the branch mouths (B1..B5): a boulder with a PeekSpot behind it, where Shared.MuckPeeks lets a light-shy Muck-Pup
+--     peek over and duck when the torch sweeps across it
+-- Display only: nothing collides or can be clicked; bases sink into the floor (no coplanar faces).
+function M.vignettes(caves, C)
+	local folder = Instance.new("Folder")
+	folder.Name = "Vignettes"
+	folder.Parent = caves
+	local rp = RaycastParams.new()
+	rp.FilterType = Enum.RaycastFilterType.Exclude
+	rp.FilterDescendantsInstances = { folder }
+	local function spotAt(name)
+		for _, a in workspace.Terrain:GetChildren() do
+			if a.Name == "Spot_" .. name and a:IsA("Attachment") and (a.WorldPosition - C.CAVE_ORIGIN).Magnitude < 420 then return a.WorldPosition end
+		end
+	end
+	local function floorAt(p)
+		local r = workspace:Raycast(p + Vector3.new(0, 4, 0), Vector3.new(0, -30, 0), rp)
+		return r and r.Position
+	end
+	local function wallNear(p)
+		local best
+		for i = 0, 11 do
+			local a = i / 12 * math.pi * 2
+			local r = workspace:Raycast(p, Vector3.new(math.cos(a), 0, math.sin(a)) * 26, rp)
+			if r and (not best or r.Distance < best.Distance) then best = r end
+		end
+		return best
+	end
+	local function prop(name, size, cf, color, extra)
+		local p = Instance.new("Part")
+		p.Name, p.Size, p.CFrame, p.Color, p.Anchored = name, size, cf, color, true
+		p.CanCollide, p.CanQuery, p.CanTouch, p.TopSurface, p.BottomSurface = false, false, false, Enum.SurfaceType.Smooth, Enum.SurfaceType.Smooth
+		for k, v in extra or {} do p[k] = v end
+		p.Parent = folder
+		return p
+	end
+	local made = 0
+	-- the cracked helmet by the Deep Gate
+	local gate = caves:FindFirstChild("Gate", true)
+	local gp = gate and (gate:IsA("Model") and gate:GetBoundingBox().Position or (gate:IsA("BasePart") and gate.Position)) or spotAt("SumpGate")
+	if gate and gate:IsA("Folder") then
+		local sum, n = Vector3.zero, 0
+		for _, d in gate:GetDescendants() do if d:IsA("BasePart") then sum += d.Position n += 1 end end
+		gp = n > 0 and sum / n or gp
+	end
+	local f = gp and floorAt(gp + Vector3.new(5.5, 2, 3))
+	if f then
+		local base = CFrame.new(f + Vector3.new(0, 0.42, 0)) * CFrame.Angles(0, 0.7, math.rad(70)) -- lying on its side
+		prop("Helmet", Vector3.new(1.3, 0.85, 1.3), base, Color3.fromRGB(214, 168, 64), { Shape = Enum.PartType.Ball, Material = Enum.Material.SmoothPlastic })
+		prop("HelmetBrim", Vector3.new(0.12, 1.7, 1.7), base * CFrame.new(0, -0.32, 0) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(176, 132, 48), { Shape = Enum.PartType.Cylinder })
+		prop("HelmetLamp", Vector3.new(0.18, 0.5, 0.5), base * CFrame.new(0.55, 0.05, 0) * CFrame.Angles(0, math.pi / 2, 0) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(70, 66, 60), { Shape = Enum.PartType.Cylinder })
+		prop("HelmetCrack", Vector3.new(0.06, 0.7, 0.08), base * CFrame.new(0.1, 0.25, 0.62) * CFrame.Angles(0, 0, 0.5), Color3.fromRGB(40, 26, 18))
+		made += 1
+	end
+	-- the fallen tripod and lantern in the Old Tube
+	local ot = spotAt("OldTube")
+	f = ot and floorAt(ot + Vector3.new(-3, 0, 2))
+	if f then
+		local c = CFrame.new(f) * CFrame.Angles(0, 1.1, 0)
+		for k = 0, 2 do -- three legs fallen in a loose sheaf
+			prop("TripodLeg", Vector3.new(0.18, 0.18, 3.4), c * CFrame.new(0, 0.12, 0) * CFrame.Angles(0, k * 0.22 - 0.22, 0) * CFrame.new(0, 0, 1.4), Color3.fromRGB(120, 86, 58))
+		end
+		prop("TripodHead", Vector3.new(0.5, 0.35, 0.5), c * CFrame.new(0, 0.2, -0.3), Color3.fromRGB(176, 140, 70), { Material = Enum.Material.Metal })
+		local lc = c * CFrame.new(1.4, 0.32, 0.8) * CFrame.Angles(0, 0, math.pi / 2) -- the lantern on its side
+		prop("LostLantern", Vector3.new(0.6, 0.8, 0.6), lc, Color3.fromRGB(255, 196, 120), { Material = Enum.Material.Glass, Transparency = 0.35 })
+		prop("LostLanternCap", Vector3.new(0.7, 0.16, 0.7), lc * CFrame.new(0, 0.46, 0), Color3.fromRGB(60, 52, 60), { Material = Enum.Material.Metal })
+		local ember = prop("LostLanternWick", Vector3.new(0.16, 0.16, 0.16), lc, Color3.fromRGB(255, 140, 60), { Material = Enum.Material.Neon })
+		local l = Instance.new("PointLight")
+		l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 160, 80), 7, 0.35, false -- nearly out
+		l.Parent = ember
+		made += 1
+	end
+	-- chalk tallies on the Canyon wall
+	local cy = spotAt("Canyon")
+	local w = cy and wallNear(cy + Vector3.new(0, 1.5, 0))
+	if w then
+		local n = w.Normal
+		local right = n:Cross(Vector3.yAxis).Magnitude > 0.1 and n:Cross(Vector3.yAxis).Unit or Vector3.xAxis
+		local at = w.Position + n * 0.06
+		local chalk = Color3.fromRGB(236, 232, 220)
+		local function mark(off, len, tilt)
+			local p = at + right * off
+			prop("Chalk", Vector3.new(0.08, len, 0.02), CFrame.lookAt(p, p + n) * CFrame.Angles(0, 0, tilt or 0), chalk, { Material = Enum.Material.SmoothPlastic, Transparency = 0.1 })
+		end
+		for k = 0, 3 do mark(-1.2 + k * 0.22, 0.9) end
+		mark(-0.87, 1.15, math.rad(62)) -- the fifth stroke across
+		for k = 0, 2 do mark(0.3 + k * 0.22, 0.9) end
+		made += 1
+	end
+	-- Muck-Pup peek spots at the branch mouths: a boulder to hide behind, the spot behind it (wall side)
+	for _, b in { "B1", "B2", "B3", "B4", "B5" } do
+		local sp = spotAt(b)
+		local fl = sp and floorAt(sp)
+		local wl = sp and wallNear(sp)
+		if fl and wl then
+			local toWall = (wl.Position - sp) * Vector3.new(1, 0, 1)
+			if toWall.Magnitude > 3 then
+				local dir = toWall.Unit
+				local rockAt = fl + dir * math.min(toWall.Magnitude - 2.5, 8)
+				local rockFloor = floorAt(rockAt) or rockAt
+				prop("PeekRock", Vector3.new(2.6, 1.9, 1.8), CFrame.lookAt(rockFloor + Vector3.new(0, 0.75, 0), rockFloor + Vector3.new(0, 0.75, 0) + dir), Color3.fromRGB(46, 30, 60), { Material = Enum.Material.Slate, CanCollide = true })
+				local a = Instance.new("Attachment")
+				a.Name = "PeekSpot"
+				a.WorldPosition = rockFloor + dir * 1.5 + Vector3.new(0, 0.6, 0) -- behind the rock, low
+				a:SetAttribute("Top", rockFloor.Y + 1.7) -- the rock's top: the pup peeks just over it
+				a:SetAttribute("Face", -dir) -- it looks out, away from the wall
+				a.Parent = workspace.Terrain
+				made += 1
+			end
+		end
+	end
+	folder:SetAttribute("Made", made)
+	return folder
+end
+
 do -- self-check: the weighted pick is stable and covers every name
 	assert(M.pick({ a = 1, b = 1 }, 0.1) == "a" and M.pick({ a = 1, b = 1 }, 0.9) == "b", "CaveProps: pick")
 	for theme, mix in M.MIX do assert(M.pick(mix, 0.999), theme) end

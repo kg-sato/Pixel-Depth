@@ -263,7 +263,7 @@ function C.oreName(key) -- "1.2" -> "Ashcoal"
 	local o = layer and layer[4][tonumber(i)]
 	return o and o[1] or key
 end
-C.SAVE_TEMPLATE = { opts = {}, gift = {}, refine = 0, crewDay = 0, rare = {}, codex = { ore = {}, pet = {} }, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, chestDay = 0, streak = 0 }
+C.SAVE_TEMPLATE = { opts = {}, gift = {}, refine = 0, crewDay = 0, rare = {}, codex = { ore = {}, pet = {} }, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, escapes = 0, soul = { shards = 0, nodes = {} }, chestDay = 0, streak = 0 }
 
 -- Layer hazards. Layer 2, Titan's Stir: after you dig, the block above may shake loose and drop one row.
 -- Standing under it stuns you briefly and spills part of the bag (no damage, kid friendly).
@@ -324,6 +324,9 @@ C.TETHER = { value = 0.15, reach = 15, torch = 0.25, max = 5, luck = 0.1 }
 -- `codex` = { ore = set of "layer.ore" keys, pet = set of names }; the directive's ask is taken as the owner's yes). Finding
 -- `at` shares of all of them gives `luck` more Epic-and-better egg luck, added to the friends luck in C.eggOdds.
 C.CODEX = { at = { 0.25, 0.5, 1 }, luck = { 0.05, 0.1, 0.2 } }
+-- Cave audio (directive v13 phase 2): our own synthesised sounds (audio/pd_cave_sfx.py, measured by audio/pd_audit.py), uploaded
+-- 2026-11-20 (ids also in audio/sfx/cave/asset_ids.json and tools/uploads.json). Played by Shared.AudioManager.
+C.CAVE_SFX = { basalt_flint = 84921392667065, clay_kiln_hum = 123955158842161, clay_scrape = 92154171621548, clay_squelch = 140158703989906, clink = 101209098651241, crystal_chime = 74127620664540, crystal_rift = 125624086521282, escape_drum = 134697388949994, glitter_shimmer = 117900817712827, golden_vein = 97252130730503, kiln_surge = 99815605558253, muspell_rumble = 126810641992799, root_thock = 130787438556087, rootholm_wind = 126857845349216, spore_storm = 103245606354260, stalker_skitter = 99162786453967, thump = 107950798985988, town_hearth = 101322104755967 }
 function C.codexTotal()
 	local n = 0
 	for _, layer in C.LAYERS do n += #layer[4] end
@@ -461,7 +464,7 @@ C.BOSS2 = { needTier = 12, knots = 3, zone = 11, period = 0.75, perfects = 2, wi
 C.GLOOM = { clay = { speed = 11, cone = 0.45, see = 80 }, hp = 100, hit = 34, loss = 0.25, shield = 5, flares = 2, flareRange = 30, speed = { 5.5, 8 }, reach = 2.8, stun = 1.5, spawnGap = 6, grab = 3, warn = 0.8 }
 -- cave events (ServerScriptService.CaveEvents): the roots' warning time, the first spore storm after server start, the gap
 -- between storms, a storm's length (all seconds) and what a flawless extraction pays during one
-C.EVENTS = { rootsWarn = 120, sporeFirst = 240, sporeEvery = 600, sporeLen = 180, sporeMult = 1.5, surgeFirst = 420, surgeEvery = 900, surgeLen = 120, goldFirst = 900, goldEvery = 1800, goldLen = 300, goldZone = 2, riftFirst = 1200, riftEvery = 1200, riftLen = 600, riftValue = 3 } -- rift*: the Crystal Rift: every 20 minutes for 10, ore mined in the Clay Caves is worth 3 times as much -- gold*: the Golden Vein Surge: every 30 minutes for 5, the Perfect Strike zone is twice as wide -- surge*: the Kiln Surge of the Clay Caves (CaveEvents)
+C.EVENTS = { rootsWarn = 120, sporeFirst = 240, sporeEvery = 600, sporeLen = 180, sporeMult = 1.5, surgeFirst = 420, surgeEvery = 900, surgeLen = 120, goldFirst = 480, goldEvery = 1800, goldLen = 300, goldZone = 2, riftFirst = 660, riftEvery = 1200, riftLen = 600, riftValue = 3 } -- rift*: the Crystal Rift: every 20 minutes for 10, ore mined in the Clay Caves is worth 3 times as much -- gold*: the Golden Vein Surge: every 30 minutes for 5, the Perfect Strike zone is twice as wide -- surge*: the Kiln Surge of the Clay Caves (CaveEvents) -- directive v13: the first Golden Vein Surge at 8:00 and the first Crystal Rift at 11:00, inside a first 10-minute session (Roblox Creator Rewards count 10 minutes)
 -- the Clay Caves hall (ServerScriptService.ClayCaves, Shared.ClayClient): the two mesa heights in studs, a jar's cooldown per
 -- player (s), its coins, the odds of a relic shard, the least seconds a fossil takes to brush and its gems (once ever), the
 -- steam launch speed (studs/s; 150 rises about 57 studs) and the glide's fall speed

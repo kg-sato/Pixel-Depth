@@ -431,6 +431,14 @@ function Hub.build(parent, origin)
 			t.Texture, t.Face, t.StudsPerTileU, t.StudsPerTileV, t.Transparency = "rbxassetid://102263231288805", N.Top, 6, 6, 0.4
 			t.Parent = w
 			local seg = (c - prev).Magnitude
+			-- directive v13 (A Short Hike #8, DQB2 #1): the bank steps down in bands instead of a hard seam: a damp dark earth skirt
+			-- on the grass outside the stones, a pale pebble shelf and a light shallow-water rim inside them, a thin foam line
+			for _, sd in { -1, 1 } do
+				vox(water, "DampEarth", Vector3.new(1.5, 0.08, seg + 1.2), cf * CFrame.new(sd * (width / 2 + 1.9), -0.02 + (i % 2) * 0.03, 0), Color3.fromRGB(70, 56, 52), { CanCollide = false })
+				vox(water, "Pebbles", Vector3.new(0.75, 0.06, seg + 0.9), cf * CFrame.new(sd * (width / 2 - 0.62), 0.14 + (i % 2) * 0.012, 0), Color3.fromRGB(206, 196, 170), { CanCollide = false, Material = Enum.Material.Pebble, Transparency = 0.15 })
+				vox(water, "Shallows", Vector3.new(0.85, 0.03, seg + 0.85), cf * CFrame.new(sd * (width / 2 - 1.475), 0.125 + (i % 2) * 0.012, 0), Color3.fromRGB(164, 230, 236), { CanCollide = false, Material = Enum.Material.Glass, Transparency = 0.35 })
+				vox(water, "Foam", Vector3.new(0.1, 0.03, seg + 0.7), cf * CFrame.new(sd * (width / 2 - 1.02), 0.21 + (i % 2) * 0.012, 0), Color3.fromRGB(244, 250, 252), { CanCollide = false, Transparency = 0.25 })
+			end
 			for _, sd in { -1, 1 } do
 				local h = hash(i, sd, c.X)
 				vox(water, "BankBed", Vector3.new(1.5 - (i % 3) * 0.04, 0.34, seg + 1.4), cf * CFrame.new(sd * (width / 2 + 0.55), 0.02 + (i % 3) * 0.035, 0), Color3.fromRGB(74, 70, 92), { CanCollide = false })
@@ -541,6 +549,11 @@ function Hub.build(parent, origin)
 			vox(ground, "SteppingStone", Vector3.new(2 + h * 0.4, 0.5, 1.8 + h * 0.4), scf, Color3.fromRGB(220, 212, 192))
 			vox(ground, "StoneTop", Vector3.new(1.6 + h * 0.4, 0.06, 1.3 + h * 0.4), scf * CFrame.new(-0.1, 0.27, -0.1), Color3.fromRGB(240, 234, 216), { CanCollide = false })
 			vox(ground, "StoneBed", Vector3.new(2.8 + h * 0.4, 0.06, 2.6 + h * 0.4), scf * CFrame.new(0, -0.22, 0), Color3.fromRGB(104, 78, 84), { CanCollide = false })
+			for _, e in { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } } do -- a chamfer round the top: four narrow bevel strips a shade darker (directive v13)
+				local sx, sz = (2 + h * 0.4), (1.8 + h * 0.4)
+				local sz3 = e[1] ~= 0 and Vector3.new(0.22, 0.1, sz - 0.3) or Vector3.new(sx - 0.3, 0.1, 0.22)
+				vox(ground, "StoneBevel", sz3, scf * CFrame.new(e[1] * (sx / 2 - 0.08), 0.21, e[2] * (sz / 2 - 0.08)), Color3.fromRGB(196, 186, 166), { CanCollide = false })
+			end
 		end
 	end
 	lane({ P(-13, 3), P(-18, 1), P(-23, 4), P(-28, 3) }, 5, "cobble_lane") -- to the sell stall (the ore cart rails run along it)
@@ -709,7 +722,9 @@ function Hub.build(parent, origin)
 		local sp = group("Signpost")
 		local q = W(11, 1.1, -14)
 		tvox(sp, "Post", Vector3.new(0.6, 5.4, 0.6), CFrame.new(q + Vector3.new(0, 2.7, 0)), "beam", 2)
-		for k, d in { { "QUESTS", -100, 4.6 }, { "TROPHIES", -40, 3.8 }, { "CABINS", 20, 3 } } do
+		-- directive v13 (light = attention, a readable first sightline): each board points at its place: the mine shaft and Bolt's
+		-- forge highest, then the quest board and the crew hearth cabins (angles from the post to each station)
+		for k, d in { { "MINE", -128, 4.8 }, { "FORGE", 166, 4.1 }, { "QUESTS", 100, 3.4 }, { "CREW", -18, 2.7 } } do
 			sign(sp, d[1], CFrame.new(q + Vector3.new(0, d[3], 0)) * CFrame.Angles(0, math.rad(d[2]), 0) * CFrame.new(1.6, 0, 0), 3.4, 0.8, PAL.cream[2])
 		end
 	end
@@ -976,10 +991,13 @@ function Hub.build(parent, origin)
 		smoke.Color, smoke.EmissionDirection = ColorSequence.new(Color3.fromRGB(180, 168, 210)), N.Top
 		smoke.Parent = g:FindFirstChild("ChimneyCap")
 		local sparkle = Instance.new("ParticleEmitter") -- sparks jumping out of the fire
-		sparkle.Rate, sparkle.Lifetime, sparkle.Speed, sparkle.SpreadAngle = 5, NumberRange.new(0.6, 1.2), NumberRange.new(3, 6), Vector2.new(30, 30)
-		sparkle.Color, sparkle.LightEmission, sparkle.EmissionDirection = ColorSequence.new(GOLD, EMBER), 1, N.Front
+		sparkle.Rate, sparkle.Lifetime, sparkle.Speed, sparkle.SpreadAngle = 5, NumberRange.new(0.55, 1.0), NumberRange.new(3, 6), Vector2.new(30, 30)
+		-- directive v13: a soft ember fade: gold to ember to a dark red as each spark tapers from 0.22 to nothing
+		sparkle.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 226, 140)), ColorSequenceKeypoint.new(0.45, EMBER), ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 30, 20)) })
+		sparkle.LightEmission, sparkle.EmissionDirection = 0.8, N.Front
 		sparkle.Acceleration = Vector3.new(0, -12, 0)
-		sparkle.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.25), NumberSequenceKeypoint.new(1, 0) })
+		sparkle.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.22), NumberSequenceKeypoint.new(0.6, 0.12), NumberSequenceKeypoint.new(1, 0) })
+		sparkle.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.7, 0.25), NumberSequenceKeypoint.new(1, 1) })
 		sparkle.Parent = mouth
 		-- out front: anvil on a stump, stone quench trough, tool barrel, lamp post
 		tvox(g, "Stump", Vector3.new(3, 2, 3), at(-1.5, 2.4, 3.6), "logs", 2)
@@ -1177,7 +1195,19 @@ function Hub.build(parent, origin)
 			tvox(g, "KneeBrace", Vector3.new(0.45, 0.45, (a1 - a0).Magnitude), CFrame.lookAt((a0 + a1) / 2, a1), "beam", 1)
 		end
 		vox(g, "Blanket", Vector3.new(1.3, 0.25, 1.1), at(-3.7, 2.97, 2.4), PAL.pink[2])
-		tvox(g, "Stool", Vector3.new(1, 1, 1), at(-0.7, 2.2, 2.8), "logs", 1)
+		-- directive v13 (Valheim cabin, the GUESTS SOON placeholder): each cabin is a Crew Hearth: two oak pedestals on the porch
+		-- show the players in this server (their lead pet, pickaxe and escapes; ServerScriptService.PixelServer fills the
+		-- attributes, Shared.CrewHearth draws them). Empty, a pedestal keeps a traveller's bunk: a rolled bedroll and a lantern.
+		for j, px in { -1.0, 5.7 } do
+			local ped = tvox(g, "CrewPedestal", Vector3.new(1.7, 1.1, 1.7), at(px, 2.25, 3.0), "logs", 1)
+			ped:SetAttribute("Crew", (n - 1) * 2 + j)
+			tvox(g, "CrewPedestalCap", Vector3.new(1.95, 0.22, 1.95), at(px, 2.91, 3.0), "planks", 1)
+			local roll = vox(g, "BunkProp", Vector3.new(1.3, 0.42, 0.42), at(px - 0.1, 3.23, 3.25) * CFrame.Angles(0, 0.3, 0), PAL.pink[2], { CanCollide = false })
+			roll:SetAttribute("Crew", (n - 1) * 2 + j)
+			local lamp = vox(g, "BunkProp", Vector3.new(0.4, 0.5, 0.4), at(px + 0.5, 3.27, 2.65), LAMP, { CanCollide = false, CastShadow = false, Material = Enum.Material.Neon, Transparency = 0.15 })
+			lamp:SetAttribute("Crew", (n - 1) * 2 + j)
+			glow(lamp, LAMP, 8, 0.6)
+		end
 		cubeLantern(g, at(2.6, 5.9, 2.6).Position, 0.4, 0.7)
 		-- outside fieldstone chimney on the far wall: a stepped base and a thick stack
 		tvox(g, "ChimneyBase", Vector3.new(3.8, 6, 4.6), at(7.6, 4.1, -5), "stonebrick", 3)
@@ -1196,7 +1226,7 @@ function Hub.build(parent, origin)
 			for k = 0, 3 do tvox(g, "Firewood", Vector3.new(0.8, 0.8, 3), at(-8 + (k % 2) * 0.85, 1.5 + math.floor(k / 2) * 0.8, -2), "logs", 2) end
 		end
 	end
-	sign(model, "GUESTS SOON", CFrame.new(W(21, 3.2, 12)), 6, 1.6, nil, nil, 3.2)
+	sign(model, "CREW HEARTH", CFrame.new(W(21, 3.2, 12)), 6.4, 1.6, nil, nil, 3.2) -- directive v13: was GUESTS SOON
 	tvox(model, "GuestSignPost", Vector3.new(0.6, 2.2, 0.6), CFrame.new(W(21, 1.5, 12)), "beam", 2)
 
 	-- 7. Egg incubator (south-west; ref art/hub/pdv4_incubator_s61.jpg): a stone base, a warm timber frame with clear glass and a

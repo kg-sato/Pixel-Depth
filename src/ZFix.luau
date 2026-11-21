@@ -32,8 +32,9 @@ local function facesOf(p)
 	return out
 end
 
-local function isVoxel(p) -- a block of a Cave v2 rock or floor (CaveV2 builds them into folders Walls and Floor)
+local function isVoxel(p) -- a block of a Cave v2 rock or floor (CaveV2 builds them into folders Walls and Floor; directive v13: or into a streaming chunk model inside them)
 	local f = p.Parent
+	if f and f:IsA("Model") and f:GetAttribute("CaveChunk") then f = f.Parent end
 	return f ~= nil and ((p.Name == "Rock" and f.Name == "Walls") or (p.Name == "Floor" and f.Name == "Floor")) and p:FindFirstAncestor("Caves") ~= nil
 end
 

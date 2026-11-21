@@ -18,6 +18,7 @@ local PLUM, CREAM, BARK, AMBER = Color3.fromRGB(58, 36, 72), Color3.fromRGB(240,
 local DECO = { CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false }
 local jars, fossils, echoes, chimes = {}, {}, {}, {}
 
+local mushroomPad -- set in M.build (directive v13): a spore-cap mushroom bounce pad
 function M.build(caves)
 	local O = CFrame.new(C.CAVE2_ORIGIN)
 	local folder = Instance.new("Folder")
@@ -323,14 +324,34 @@ function M.build(caves)
 	-- spore bounce pads (the directive's cave traversal): three spongy teal caps that throw you up a step each, to a ledge on the
 	-- north wall with a jar-sized reward of ore. Shared.ClayClient does the bounce.
 	local TEAL = Color3.fromRGB(72, 200, 186)
+	-- directive v13 (Gemini: bright neon slabs pulled the eye): a bounce pad is a glowing amber spore-cap mushroom in a wet stone
+	-- collar: a cream stem, a domed amber cap (two stacked discs) with a softly lit underside of gills and cream spots on top.
+	-- The part named BouncePad keeps its size and attribute (Shared.ClayClient reads them); it is the cap's lower disc.
+	function mushroomPad(x, y, z, power)
+		local UPc = CFrame.Angles(0, 0, math.pi / 2)
+		for k = 0, 9 do -- the wet stone collar round the stem's foot
+			local a = k / 10 * math.pi * 2
+			local st = part("PadCollar", Vector3.new(0.9, 0.55, 0.9), O * CFrame.new(x + math.cos(a) * 1.55, y + 0.2, z + math.sin(a) * 1.55) * CFrame.Angles(0, a, 0.1), Color3.fromRGB(70, 74, 84), { Material = Enum.Material.Slate, CanCollide = false, Shape = Enum.PartType.Ball })
+			st.Reflectance = 0.05
+		end
+		part("PadStem", Vector3.new(1.4, 1.5, 1.5), O * CFrame.new(x, y + 0.72, z) * UPc, CREAM, { CanCollide = false, Shape = Enum.PartType.Cylinder })
+		local cap = part("BouncePad", Vector3.new(5.4, 1.1, 5.4), O * CFrame.new(x, y + 1.95, z), Color3.fromRGB(226, 140, 52), { Material = Enum.Material.SmoothPlastic, CanCollide = false, Transparency = 1 }) -- the pad's box: invisible, the mushroom draws it
+		cap:SetAttribute("BouncePad", power)
+		part("PadCap", Vector3.new(0.7, 5.2, 5.2), O * CFrame.new(x, y + 1.85, z) * UPc, Color3.fromRGB(214, 128, 46), { CanCollide = false, Shape = Enum.PartType.Cylinder })
+		part("PadDome", Vector3.new(0.5, 4.0, 4.0), O * CFrame.new(x, y + 2.42, z) * UPc, Color3.fromRGB(236, 158, 64), { CanCollide = false, Shape = Enum.PartType.Cylinder })
+		local gills = part("PadGills", Vector3.new(0.16, 4.6, 4.6), O * CFrame.new(x, y + 1.42, z) * UPc, Color3.fromRGB(255, 196, 110), { Material = Enum.Material.Neon, CanCollide = false, Transparency = 0.35, Shape = Enum.PartType.Cylinder })
+		local l = Instance.new("PointLight")
+		l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 180, 90), 12, 0.7, false
+		l.Parent = gills
+		for k = 0, 4 do -- cream spots on the dome
+			local a = k / 5 * math.pi * 2 + 0.4
+			part("PadSpot", Vector3.new(0.12, 0.7, 0.7), O * CFrame.new(x + math.cos(a) * 1.3, y + 2.7, z + math.sin(a) * 1.3) * UPc, CREAM, { CanCollide = false, Shape = Enum.PartType.Cylinder })
+		end
+	end
 	part("PadLedge", Vector3.new(26, 2, 10), O * CFrame.new(-34, 21, -49.5), CLAY_L, ROCK)
 	for i, pd in { { -62, 0, -44, 100 }, { -54, 9, -47, 95 } } do
 		if pd[2] > 0 then part("PadStep", Vector3.new(8, pd[2], 8), O * CFrame.new(pd[1], pd[2] / 2, pd[3]), CLAY, ROCK) end
-		part("PadStem", Vector3.new(1.6, 1.4, 1.6), O * CFrame.new(pd[1], pd[2] + 0.7, pd[3]), CREAM, { CanCollide = false })
-		local cap = part("BouncePad", Vector3.new(5.4, 1.1, 5.4), O * CFrame.new(pd[1], pd[2] + 1.95, pd[3]), TEAL, { Material = Enum.Material.Neon, CanCollide = false })
-		cap.Color = TEAL:Lerp(Color3.new(0, 0, 0), 0.3)
-		cap:SetAttribute("BouncePad", pd[4])
-		for k = 0, 3 do part("PadSpot", Vector3.new(0.9, 0.3, 0.9), O * CFrame.new(pd[1] + (k % 2 * 2 - 1) * 1.3, pd[2] + 2.56, pd[3] + (k // 2 * 2 - 1) * 1.3), CREAM, DECO) end
+		mushroomPad(pd[1], pd[2], pd[3], pd[4])
 	end
 	deposit(O * CFrame.new(-30, 22, -51.4), 3)
 	-- the zip line (roadmap i25, traversal): from the pad ledge down across the hall to a post by the path. The server only
@@ -408,7 +429,7 @@ function M.build(caves)
 			gp("GolemFist", Vector3.new(3, 2.2, 3), CFrame.new(x * 5.7, 1.1, -1.2), CLAY_L)
 			gp("GolemLeg", Vector3.new(2.6, 1.8, 2.8), CFrame.new(x * 2.3, 0.9, 0.6), CLAY_D)
 		end
-		for k, at in { { -2, 5.2 }, { 2, 4 }, { 0, 2.8 } } do
+		for k, at in { { -2.3, 6.6 }, { 2.3, 5.6 }, { 0, 4.5 } } do -- directive v13: shoulders and chest (they sat by its knees)
 			local km = Instance.new("Model")
 			km.Name = "Knot" .. k
 			local kn = part("KnotCore", Vector3.new(1.5, 1.5, 1.5), base * CFrame.new(at[1], at[2], -2.9), Color3.fromRGB(255, 130, 50), { Material = Enum.Material.Neon, Shape = Enum.PartType.Ball, CanCollide = false, CastShadow = false })
@@ -438,10 +459,23 @@ function M.build(caves)
 			p.Parent = jar
 			return p
 		end
-		local b = jp("JarBody", Vector3.new(2.2, 2.4, 2.2), CFrame.new(0, 1.2, 0), i % 2 == 0 and CLAY_L or CLAY)
-		jp("JarBand", Vector3.new(2.36, 0.4, 2.36), CFrame.new(0, 1.5, 0), CREAM)
-		jp("JarNeck", Vector3.new(1.3, 0.6, 1.3), CFrame.new(0, 2.7, 0), CLAY_D)
-		jp("JarRim", Vector3.new(1.7, 0.3, 1.7), CFrame.new(0, 3.15, 0), CLAY_L)
+		-- directive v13 (MET amphora DT374582): a tapered amphora, not a cube stack: a narrow foot, a swelling belly, a sloped
+		-- shoulder, a slim neck and a flared lip ring, each a vertical cylinder (about 300 triangles in all)
+		local UP = CFrame.Angles(0, 0, math.pi / 2)
+		local body = i % 2 == 0 and CLAY_L or CLAY
+		local function ring(name, d, h, y, col)
+			local p = jp(name, Vector3.new(h, d, d), CFrame.new(0, y, 0) * UP, col)
+			p.Shape = Enum.PartType.Cylinder
+			return p
+		end
+		ring("JarFoot", 1.05, 0.34, 0.17, CLAY_D)
+		ring("JarBase", 1.55, 0.36, 0.5, body)
+		local b = ring("JarBody", 2.3, 0.95, 1.12, body) -- the belly (the part that collides and that the smash code finds)
+		ring("JarBand", 2.36, 0.22, 1.25, CREAM)
+		ring("JarShoulder", 1.85, 0.42, 1.78, body)
+		ring("JarShoulder2", 1.3, 0.3, 2.13, CLAY_D)
+		ring("JarNeck", 0.95, 0.62, 2.58, CLAY_D)
+		ring("JarRim", 1.45, 0.22, 3.0, CLAY_L)
 		jar.PrimaryPart = b
 		jar:SetAttribute("Jar", i)
 		jar.Parent = folder
@@ -531,10 +565,7 @@ function M.build(caves)
 		sg.Parent = b
 	end
 	local function pad(x, y, z, power)
-		part("PadStem", Vector3.new(1.6, 1.4, 1.6), O * CFrame.new(x, y + 0.7, z), CREAM, { CanCollide = false })
-		local cap = part("BouncePad", Vector3.new(5.4, 1.1, 5.4), O * CFrame.new(x, y + 1.95, z), TEAL:Lerp(Color3.new(0, 0, 0), 0.3), { Material = Enum.Material.Neon, CanCollide = false })
-		cap:SetAttribute("BouncePad", power)
-		for k = 0, 3 do part("PadSpot", Vector3.new(0.9, 0.3, 0.9), O * CFrame.new(x + (k % 2 * 2 - 1) * 1.3, y + 2.56, z + (k // 2 * 2 - 1) * 1.3), CREAM, DECO) end
+		mushroomPad(x, y, z, power)
 	end
 
 	-- THE JAR GALLERY: x -6..28, z -104..-60, 22 high. Four jars on the floor and on three stone steps, bounce pads between them.
@@ -571,7 +602,12 @@ function M.build(caves)
 				part("Shelf", Vector3.new(2.2, 0.5, 9), O * CFrame.new(-4.7, 12 + lv * 3.2, sx), BARK, { Material = Enum.Material.Wood, CanCollide = false })
 				for q = 0, 3 do
 					local h = 1 + ((q + lv + i) % 3) * 0.4
-					part("ShelfPot", Vector3.new(1.2, h, 1.2), O * CFrame.new(-4.7, 12.25 + lv * 3.2 + h / 2, sx - 3.2 + q * 2.1), (q + lv) % 2 == 0 and CLAY_L or TEALG:Lerp(CLAY_D, 0.5), DECO)
+					local pc = (q + lv) % 2 == 0 and CLAY_L or TEALG:Lerp(CLAY_D, 0.5)
+					local base = O * CFrame.new(-4.7, 12.25 + lv * 3.2, sx - 3.2 + q * 2.1) * CFrame.Angles(0, 0, math.pi / 2)
+					for _, r in { { 0.7, 0.18, 0.09 }, { 1.25, h * 0.55, 0.18 + h * 0.275 }, { 0.65, h * 0.3, 0.18 + h * 0.55 + h * 0.15 }, { 0.95, 0.12, 0.18 + h * 0.85 + 0.06 } } do -- foot, belly, neck, lip (directive v13)
+						local p = part("ShelfPot", Vector3.new(r[2], r[1], r[1]), base * CFrame.new(r[3], 0, 0), pc, DECO)
+						p.Shape = Enum.PartType.Cylinder
+					end
 				end
 			end
 		end

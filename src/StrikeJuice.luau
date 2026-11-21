@@ -162,6 +162,15 @@ function M.start(E)
 	end
 
 	-- rock chips with real physics: they fall, bounce on the floor and fade (client parts, nothing sent)
+	-- directive v13 (feel01, environmental permanence): chips stay where they fall for 15 to 25 s, at most 40 at once
+	local debris = {}
+	local function keep(p)
+		table.insert(debris, p)
+		while #debris > 40 do
+			local old = table.remove(debris, 1)
+			if old.Parent then old:Destroy() end
+		end
+	end
 	local function chips(n, col)
 		local core = run and run.dep.PrimaryPart
 		if not core then return end
@@ -177,8 +186,11 @@ function M.start(E)
 			p.AssemblyLinearVelocity = toEye * (6 + math.random() * 6) + Vector3.new(math.random(-5, 5), 8 + math.random() * 6, math.random(-5, 5))
 			p.AssemblyAngularVelocity = Vector3.new(math.random(-12, 12), math.random(-12, 12), math.random(-12, 12))
 			if plr:GetAttribute("DevJuiceHold") then task.delay(0.12, function() p.Anchored = true end) end -- capture hook (see shards)
-			task.delay(1.3, function() TweenService:Create(p, TweenInfo.new(0.4), { Transparency = 1, Size = p.Size * 0.4 }):Play() end)
-			task.delay(1.8, function() p:Destroy() end)
+			keep(p)
+			task.delay(1.4, function() if p.Parent then p.Anchored = true end end) -- settled: it lies there
+			local life = 15 + math.random() * 10
+			task.delay(life, function() if p.Parent then TweenService:Create(p, TweenInfo.new(0.6), { Transparency = 1, Size = p.Size * 0.4 }):Play() end end)
+			task.delay(life + 0.7, function() if p.Parent then p:Destroy() end end)
 		end
 	end
 
@@ -270,7 +282,8 @@ function M.start(E)
 			if perfect then
 				run.streak += 1
 				sfx("ping", 1 + 0.06 * (run.streak - 1))
-				sfx("crack", 1.1)
+				if E.vmHook and E.vmHook.vmHold then E.vmHook.vmHold(0.05) E.vmHook.vmKick(0.8) end -- the pick bites in (directive v13 hit-stop)
+				if E.vmHook and E.vmHook.strikeStem then E.vmHook.strikeStem(true) else sfx("crack", 1.1) end -- the body thump under the biome's ring (Shared.AudioManager)
 				crack(true)
 				jolt(0.32)
 				chips(4, run.col)
@@ -279,8 +292,7 @@ function M.start(E)
 				if n < STRIKES then say(run.streak > 1 and ("PERFECT x" .. run.streak) or "PERFECT!", GOLD) end
 			else
 				run.streak = 0
-				sfx("thud", 0.95)
-				sfx("crack", 0.8)
+				if E.vmHook and E.vmHook.strikeStem then E.vmHook.strikeStem(false) else sfx("thud", 0.95) sfx("crack", 0.8) end -- two elements, not four (aud01)
 				crack(false)
 				jolt(0.14)
 				chips(2, run.col)

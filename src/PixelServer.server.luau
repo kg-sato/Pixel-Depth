@@ -14,7 +14,7 @@ local HubBuilder = require(game:GetService("ServerScriptService"):WaitForChild("
 local CaveBuilder = require(game:GetService("ServerScriptService"):WaitForChild("CaveBuilder"))
 local Retention = require(game:GetService("ServerScriptService"):WaitForChild("Retention")) -- playtime gifts and the Lantern Tether
 local Store = ProfileStore.New(C.SAVE_STORE, C.SAVE_TEMPLATE)
-local SoulTree = require(game:GetService("ServerScriptService"):WaitForChild("SoulTree")) -- behind C.SOUL_TREE.on (false: no saved field, every rank 0)
+local SoulTree = require(game:GetService("ServerScriptService"):WaitForChild("SoulTree")) -- the Soul Tree (C.SOUL_TREE.on, true since 2026-11-11; saved field soul, default in C.SAVE_TEMPLATE)
 
 do -- the forge cutscene (client, ReplicatedStorage.Shared.ForgeCutscene) shows the real pickaxe models: a copy for clients
 	local lib = SS:FindFirstChild("Pickaxes")
@@ -46,13 +46,13 @@ local Wardrobe = require(RS:WaitForChild("Shared"):WaitForChild("WardrobeUI"))
 local Quests = require(RS:WaitForChild("Shared"):WaitForChild("Quests")) -- story (the tutorial chain) and daily quests; menu: Shared.QuestUI
 local QuestR = remote("Quest")
 -- The player's own settings (Shared.ARSettings; the owner said yes to saving them, 2026-11-13): sound volume 0..10, screen
--- shake, key hints, darker nights. They only change what that player sees and hears. Only these four fields, of these types,
+-- shake, key hints, darker nights, fast cutscenes, Dynamic HUD. They only change what that player sees and hears. Only these fields, of these types,
 -- are kept; anything else a client sends is dropped.
 local function cleanOpts(t)
 	local o = {}
 	if type(t) ~= "table" then return o end
 	if type(t.vol) == "number" and t.vol == t.vol then o.vol = math.clamp(math.floor(t.vol + 0.5), 0, 10) end
-	for _, k in { "shake", "hints", "dark", "fast" } do
+	for _, k in { "shake", "hints", "dark", "fast", "hudDynamic" } do
 		if type(t[k]) == "boolean" then o[k] = t[k] end
 	end
 	return o
@@ -95,8 +95,12 @@ if C.CAVES_ON then
 		l2:Destroy()
 	end
 	require(game:GetService("ServerScriptService"):WaitForChild("CaveProps")).build(caves) -- set dressing against the cave walls (crystals, mushrooms, supports, roots)
+	pcall(function() require(game:GetService("ServerScriptService"):WaitForChild("CaveProps")).vignettes(caves, C) end) -- the small stories by the routes (directive v13)
 	if C.CAVE_V2 and C.CAVE_V2_L2 then require(game:GetService("ServerScriptService"):WaitForChild("CaveV2")).tintProps(caves, 2, C.CAVE2_ORIGIN, 320) end -- layer 2's crystals in its own amber
 	if C.CAVE_V2 then caves:SetAttribute("ZFixedProps", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(caves)) end -- the props came after the builder's own pass: a pebble lay flush on a floor
+	if C.CAVE_V2 and (workspace.StreamingEnabled or workspace:GetAttribute("DevCaveChunks")) then -- the streaming foundation (directive v13): rooms stream in whole
+		caves:SetAttribute("CaveChunks", require(game:GetService("ServerScriptService"):WaitForChild("CaveV2")).chunk(caves, 64))
+	end
 	local ids = { CaveNest = 0, CaveShrine = 0 } -- a number per nest and shrine prompt, for the saved cooldown keys
 	for _, d in caves:GetDescendants() do
 		if d:IsA("ProximityPrompt") then
@@ -526,6 +530,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.codex = s.codex -- ores and pets ever found (Shared.CodexUI)
 	d.charms = s.charms -- the forge's charms bought (C.CHARMS ids)
 	d.crewDay = s.crewDay or 0 -- the day the first-crew-ride gem was last paid (C.CREW.gem)
+	d.escapes = s.escapes or 0 -- minecart escapes made (shown on the Crew Hearth pedestal)
 	d.shards, d.fossils, d.geodes = s.shards or 0, s.fossils or {}, s.geodes or 0
 	if C.SOUL_TREE.on then d.soul = s.soul end -- flag off: the field is never written
 	d.cool = {}
@@ -871,7 +876,10 @@ local function finishEscape(plr, report)
 		-- shortcut: dodges, boosts and caught are the client's word, bounded by the run time and the 40-coin cap; replay the seed on the server if the bonus ever grows
 		local dodges = math.clamp(math.floor(tonumber(report.dodges) or 0), 0, math.floor(el))
 		local boosts = math.clamp(math.floor(tonumber(report.boosts) or 0), 0, math.floor(el / 2))
-		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2 + (run and (run.moHit or 0) * C.CREW.moment.coins or 0), C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
+		-- the tail's gold beads (directive v13): the tail's word like dodges and boosts, so bounded by the ride time (one bead
+		-- spawns every 3 s at most) and inside the same capped bonus (Codex review 2026-11-20: outside the cap they added 16 coins)
+		local beads = run and math.clamp(run.beads or 0, 0, math.min(8, math.floor(el / 3))) or 0
+		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2 + beads * 2 + (run and (run.moHit or 0) * C.CREW.moment.coins or 0), C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
 		if report.caught == true then bonus = math.floor(bonus / 2) end -- the Gloom nipped you (playtest 2 pursuer)
 		bonus = math.floor(bonus * (e.mult or 1)) -- a crew's shared bonus (C.CREW.mult)
 		forkGems = math.clamp(math.floor(tonumber(report.risky) or 0), 0, 2) -- the fork's risky side: a gem each, two forks a run (the cart's word, bounded like the bonus)
@@ -884,6 +892,7 @@ local function finishEscape(plr, report)
 		A.event(s, "EscapeSeconds", math.floor(el))
 		A.step(s, "Escaped")
 		quest(s, "escape")
+		s.escapes = (s.escapes or 0) + 1 -- the tally on the player's Crew Hearth pedestal in town (directive v13)
 		local day = math.floor(os.time() / 86400)
 		if run and s.crewDay ~= day then -- the first crew ride of the day
 			s.crewDay, gem = day, C.CREW.gem
@@ -898,7 +907,7 @@ local function finishEscape(plr, report)
 	riding[plr] = trip -- anchored in the town cart until the client's burst out of the shaft ends ("arrived")
 	task.delay(12, function() endRide(plr, trip) end)
 	if s then sendState(s) end -- the bag pill switches back from the cave's unbanked count
-	FxR:FireClient(plr, "escapeDone", bonus, run and { n = e.n or 1, mult = e.mult or 1, hits = run.hits or 0, flares = run.flares or 0, moHit = run.moHit or 0, moN = run.moN or 0, calls = run.calls or 0, gem = gem, gems = forkGems } or (forkGems > 0 and { gems = forkGems } or nil)) -- the crew's numbers and the fork's gems for the result card
+	FxR:FireClient(plr, "escapeDone", bonus, run and { n = e.n or 1, mult = e.mult or 1, hits = run.hits or 0, flares = run.flares or 0, moHit = run.moHit or 0, moN = run.moN or 0, calls = run.calls or 0, beads = run.beads or 0, gem = gem, gems = forkGems } or (forkGems > 0 and { gems = forkGems } or nil)) -- the crew's numbers and the fork's gems for the result card
 end
 local function startEscape(s)
 	local plr = s.player
@@ -1059,6 +1068,10 @@ function crew.job(plr, run, kind)
 		run.last[plr] = now
 		run.calls = (run.calls or 0) + 1
 		if run.host == "bot" then crew.tell(run, kind) else CrewR:FireClient(run.host, string.upper(kind)) end
+	elseif job == "tail" and kind == "b" then -- directive v13: a gold bead grabbed by the tail; at most one a second and eight a ride
+		if now - (run.last[plr] or 0) < 1.0 then return end
+		run.last[plr] = now
+		run.beads = math.min((run.beads or 0) + 1, 8)
 	elseif job == "stoker" and kind == "k" then
 		local S = C.CREW.stoke
 		if now - (run.last[plr] or 0) < S.cool then return end
@@ -1536,9 +1549,9 @@ require(game:GetService("ServerScriptService"):WaitForChild("ClayCaves")).init({
 	end })
 require(game:GetService("ServerScriptService"):WaitForChild("BoonShrine")).init({ data = data, fx = FxR, remote = remote, nearPrompt = nearPrompt, analytics = A,
 	busy = function(plr) return riding[plr] ~= nil or escaping[plr] ~= nil end, apply = function(plr, kind) return Gloom.boon(plr, kind) end })
-require(game:GetService("ServerScriptService"):WaitForChild("PingRelay")).init({ fx = FxR, remote = remote, hrpOf = hrpOf }) -- co-op callouts (Shared.Ping)
+require(game:GetService("ServerScriptService"):WaitForChild("PingRelay")).init({ fx = FxR, remote = remote, hrpOf = hrpOf, torch = function(plr, secs) Gloom.slow(plr, secs) end }) -- co-op callouts (Shared.Ping)
 SoulTree.init({ data = data, fx = FxR, sendState = sendState, remote = remote, coolLeft = coolLeft, coolSet = coolSet, nearPrompt = nearPrompt, analytics = A })
-Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, analytics = A, perks = function(s) return PetJobs.perks(crewOf(s)) end,
+Gloom.init({ data = data, hrpOf = hrpOf, fx = FxR, sendState = sendState, lose = loseShare, analytics = A, coolLeft = coolLeft, coolSet = coolSet, perks = function(s) return PetJobs.perks(crewOf(s)) end,
 	soul = SoulTree.rank, soulEarn = SoulTree.earn,
 	-- gloomlings leave you alone on a ride, in an ore minigame (hands and eyes are busy) and for 2.5 s after it (Gemini loop review, 2026-11-10)
 	busy = function(plr) local s = data[plr] return riding[plr] ~= nil or escaping[plr] ~= nil or (s ~= nil and (s.mg ~= nil or os.clock() < (s.mgSafe or 0))) end })
@@ -1617,6 +1630,7 @@ local function finishMinigame(s)
 	end
 	local L, idx = mg.dep:GetAttribute("Layer"), mg.dep:GetAttribute("Ore")
 	local o = C.LAYERS[L][4][idx]
+	if idx == 3 and mg.dep.PrimaryPart then pcall(function() require(game:GetService("ServerScriptService").PingRelay).auto(s.player, mg.dep.PrimaryPart.Position) end) end -- a rare vein calls itself out to the crew (directive v13)
 	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) * Retention.valueMult(s.player) * CaveEvents.riftMult(mg.dep:GetPivot().Position) + 0.5) -- worth more with a friend in the server (the Lantern Tether) and in the Clay Caves during a Crystal Rift
 	local job = PetJobs.perks(crewOf(s)) -- Kobold +1 ore, Goldbristle +1 on rare, Ninering doubles every 9th deposit
 	count += job.ore + (idx == 3 and job.rareOre or 0)
@@ -1682,6 +1696,39 @@ local function finishMinigame(s)
 	sendState(s)
 end
 local caveDeposits = caveLanding and workspace.Caves:FindFirstChild("Deposits")
+if caveDeposits then -- directive v13 FTUE (ftue01): four sparkling Rootflint veins just inside Camp 1's warm ring, so a new player
+	-- can forge the Stone Pickaxe (4 Rootflint) within the first minute without searching the dark. Copies of a real Rootflint
+	-- deposit, so they mine, pay and come back like any other.
+	local tmpl
+	for _, d in caveDeposits:GetChildren() do
+		if d:GetAttribute("Layer") == 1 and d:GetAttribute("Ore") == 1 and d.PrimaryPart then tmpl = d break end
+	end
+	if tmpl then
+		local rp = RaycastParams.new()
+		rp.FilterType, rp.FilterDescendantsInstances = Enum.RaycastFilterType.Exclude, { caveDeposits }
+		local cf0, size0 = tmpl:GetBoundingBox()
+		local lift = tmpl:GetPivot().Position.Y - (cf0.Position.Y - size0.Y / 2) -- the pivot's height over the deposit's foot
+		local made = 0
+		for _, deg in { 25, 70, 295, 340, 115, 250 } do
+			if made >= 4 then break end
+			local a = math.rad(deg)
+			local at = C.CAVE_ORIGIN + Vector3.new(math.cos(a), 0, math.sin(a)) * (C.CAMP_RING * 0.78)
+			local hit = workspace:Raycast(at + Vector3.new(0, 12, 0), Vector3.new(0, -30, 0), rp)
+			if hit and math.abs(hit.Position.Y - C.CAVE_ORIGIN.Y) < 6 then
+				local d = tmpl:Clone()
+				d:SetAttribute("Starter", true)
+				d:PivotTo(CFrame.lookAt(hit.Position + Vector3.new(0, lift, 0), Vector3.new(C.CAVE_ORIGIN.X, hit.Position.Y + lift, C.CAVE_ORIGIN.Z)) * CFrame.Angles(0, math.pi, 0))
+				local sp = Instance.new("ParticleEmitter") -- a sparkle so the eye finds it from the fire
+				sp.Texture, sp.LightEmission, sp.Rate, sp.Lifetime, sp.Speed = "rbxasset://textures/particles/sparkles_main.dds", 1, 4, NumberRange.new(0.6, 1.1), NumberRange.new(0.5, 1.2)
+				sp.Size, sp.Color = NumberSequence.new(0.35, 0), ColorSequence.new(Color3.fromRGB(255, 226, 160))
+				sp.Parent = d.PrimaryPart
+				d.Parent = caveDeposits
+				made += 1
+			end
+		end
+		caveDeposits:SetAttribute("Starters", made)
+	end
+end
 for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
 	local core = dep.PrimaryPart
 	local pr = Instance.new("ProximityPrompt")
@@ -2273,6 +2320,7 @@ local function onJoin(plr)
 		if v == true and pet and (pet[1] == "Mythic" or pet[1] == "Secret") then s.rare[name] = true end
 	end
 	s.crewDay = (type(d.crewDay) == "number" and d.crewDay == d.crewDay and d.crewDay > 0) and math.floor(d.crewDay) or 0
+	s.escapes = (type(d.escapes) == "number" and d.escapes == d.escapes and d.escapes > 0) and math.floor(d.escapes) or 0
 	if IS_STUDIO and workspace:GetAttribute("DevOpts") then -- Studio test hook: saved settings as JSON (Studio itself saves nothing), to test the load path
 		local ok, t = pcall(function() return game:GetService("HttpService"):JSONDecode(workspace:GetAttribute("DevOpts")) end)
 		if ok then s.opts = cleanOpts(t) end
@@ -2329,6 +2377,30 @@ local function onJoin(plr)
 	task.defer(sendState, s)
 end
 Players.PlayerAdded:Connect(onJoin)
+do -- the Crew Hearth (directive v13): the cabins' four oak pedestals show the players in this server: name, lead pet, pickaxe,
+	-- escapes. Display only (attributes on HubBuilder's CrewPedestal parts; Shared.CrewHearth draws them). Empty: a traveller's bunk.
+	local peds = {}
+	for _, d in hub:GetDescendants() do
+		if d.Name == "CrewPedestal" and d:GetAttribute("Crew") then peds[d:GetAttribute("Crew")] = d end
+	end
+	task.spawn(function()
+		while true do
+			local list = Players:GetPlayers()
+			for i = 1, 4 do
+				local ped, plr = peds[i], list[i]
+				local s = plr and data[plr]
+				if ped then
+					local pick = s and C.PICKS[s.equip]
+					local want = { Who = s and plr.DisplayName or nil, Pet = s and s.pets and s.pets[1] and s.pets[1].name or nil, Pick = pick and pick.name or nil, Escapes = s and (s.escapes or 0) or nil }
+					for _, k in { "Who", "Pet", "Pick", "Escapes" } do -- by name: a nil value is no key in a table, and a left player must clear (Codex 2026-11-20)
+						if ped:GetAttribute(k) ~= want[k] then ped:SetAttribute(k, want[k]) end
+					end
+				end
+			end
+			task.wait(2)
+		end
+	end)
+end
 if C.PULSE and C.PULSE.on and caveLanding then -- the Root Pulse: every C.PULSE.every seconds of server time the roots breathe (vault Briefs/Cave Mining Loops)
 	task.spawn(function()
 		local P = C.PULSE
@@ -2371,6 +2443,15 @@ if C.PULSE and C.PULSE.on and caveLanding then -- the Root Pulse: every C.PULSE.
 end
 for _, plr in Players:GetPlayers() do task.spawn(onJoin, plr) end
 
+-- directive v13 phase 7: a server shutdown mirrors every live session into its profile and ends it, so no coins, ore, shards
+-- or charms changed since the last save are lost between PlayerRemoving and the end of the server (ProfileStore saves on
+-- EndSession; ending an already-ended session does nothing)
+game:BindToClose(function()
+	for _, s in data do
+		pcall(save, s)
+		pcall(function() if s.profile and s.profile:IsActive() then s.profile:EndSession() end end)
+	end
+end)
 Players.PlayerRemoving:Connect(function(plr)
 	local s = data[plr]
 	if not s then return end

@@ -153,12 +153,21 @@ function Cave.build(parent, origin, seed)
 		local exits = { { 11, 0, 0 }, { 0, 11, 1 }, { -11, 0, 2 } } -- (i, j, rot): rot turns a piece's +u to point out of that exit
 		-- campfire: a stone ring, split logs, a neon flame, the warm main light
 		local fire = W(0, 3, 0)
+		-- directive v13: the fire stands on a stepped dark slate hearthstone (a wide low slab, a 0.25 top step) ringed by mossy river
+		-- cobbles, so the ash never floats over the gravel seams
+		part("Camp", "HearthBase", Vector3.new(0.14, 7.6, 7.6), CFrame.new(fire + Vector3.new(0, 0.05, 0)) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(44, 36, 48), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Slate })
+		part("Camp", "Hearthstone", Vector3.new(0.25, 6.2, 6.2), CFrame.new(fire + Vector3.new(0, 0.245, 0)) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(58, 50, 62), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Slate })
+		for k = 0, 13 do
+			local a = k / 14 * math.pi * 2 + 0.11
+			local mossy = k % 3 ~= 1
+			part("Camp", "RiverCobble", Vector3.new(0.95 + (k % 2) * 0.2, 0.5, 0.8), CFrame.new(fire + Vector3.new(math.cos(a) * 4.05, 0.16, math.sin(a) * 4.05)) * CFrame.Angles(0, a + 0.3, 0.06), mossy and Color3.fromRGB(86, 112, 78) or Color3.fromRGB(118, 110, 120), { Shape = Enum.PartType.Ball, CanCollide = false })
+		end
 		for k = 0, 7 do
 			local a = k / 8 * math.pi * 2
-			part("Camp", "FireStone", Vector3.new(1.6, 1, 1.6), CFrame.new(fire + Vector3.new(math.cos(a) * 3, 0.5, math.sin(a) * 3)) * CFrame.Angles(0, a, 0), PAL.rock[3])
+			part("Camp", "FireStone", Vector3.new(1.6, 1, 1.6), CFrame.new(fire + Vector3.new(math.cos(a) * 3, 0.62, math.sin(a) * 3)) * CFrame.Angles(0, a, 0), PAL.rock[3])
 		end
 		for k = 0, 2 do part("Camp", "Log", Vector3.new(0.9, 0.9, 4), CFrame.new(fire + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, k * 2.1, 0.25), PAL.bark) end
-		part("Camp", "Ash", Vector3.new(0.06, 5.2, 5.2), CFrame.new(fire + Vector3.new(0, 0.07, 0)) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(34, 28, 32), { Shape = Enum.PartType.Cylinder, CanCollide = false, CastShadow = false }) -- an ash ring under the logs, 0.04 over the floor (Gemini full1119k)
+		part("Camp", "Ash", Vector3.new(0.06, 5.2, 5.2), CFrame.new(fire + Vector3.new(0, 0.42, 0)) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(34, 28, 32), { Shape = Enum.PartType.Cylinder, CanCollide = false, CastShadow = false }) -- an ash ring under the logs, 0.04 over the floor (Gemini full1119k)
 		local flame = part("Camp", "Flame", Vector3.new(1.8, 2.6, 1.8), CFrame.new(fire + Vector3.new(0, 2, 0)) * CFrame.Angles(0, 0.6, 0), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		part("Camp", "FlameCore", Vector3.new(0.6, 0.9, 0.6), CFrame.new(fire + Vector3.new(0, 1.6, 0)), Color3.fromRGB(255, 240, 190), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		glow(flame, Color3.fromRGB(255, 185, 95), 32, 1.15, true) -- was 3.4 then 1.7: the camp blew out to white (i65, Gemini r2 2026-11-09)
@@ -322,7 +331,7 @@ function Cave.build(parent, origin, seed)
 				wp("WardenKnuckle", Vector3.new(2.5, 0.5, 0.5), CFrame.new(x * 4.9, 1.5, -2.3), TURQ, { Material = Enum.Material.Glass, Transparency = 0.2, CanCollide = false })
 				wp("WardenLeg", Vector3.new(2, 1.6, 2.2), CFrame.new(x * 2, 0.8, 0.6), BASALT_D, STONE)
 			end
-			for k, at in { { -1.8, 4.6 }, { 1.8, 3.4 }, { 0, 2.2 } } do -- the knots: Perfect Strike targets (attributes drive the minigame UI)
+			for k, at in { { -2.2, 6.1 }, { 2.2, 5.2 }, { 0, 4.2 } } do -- the knots: Perfect Strike targets (attributes drive the minigame UI); directive v13: up on the shoulders and chest, so the titan looms behind the reticle
 				local km = Instance.new("Model")
 				km.Name = "Knot" .. k
 				-- directive v10: the knots were three butter-yellow balls. Each is now an amber crystal heart: a small glowing core

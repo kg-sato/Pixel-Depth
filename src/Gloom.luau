@@ -127,6 +127,46 @@ function G.init(c)
 	FlareR = Instance.new("RemoteEvent")
 	FlareR.Name = "Flare"
 	FlareR.Parent = RS:WaitForChild("Remotes")
+	-- directive v13 (coop01, Left 4 Dead): a friend breaks a Gloomling's grab with a flare (below) or a pickaxe strike (remote
+	-- GloomStrike: within 9 studs of the grabbed friend). Freeing a friend says SAVED! to both and pays the rescuer a Savior
+	-- bonus of 5 coins, at most once every 45 s each (it cannot be farmed: the grab itself is the Gloom's doing).
+	local function savior(plr, other)
+		local s = ctx.data[plr]
+		if not s or other == plr then return end
+		if ctx.coolLeft and ctx.coolSet then -- the saved cooldowns: a rejoin does not reset it (Codex review 2026-11-20)
+			if ctx.coolLeft(s, "savior") > 0 then return end
+			ctx.coolSet(s, "savior", 45)
+		else
+			local now = os.clock()
+			if now - (s.saviorAt or 0) < 45 then return end
+			s.saviorAt = now
+		end
+		s.gold += 5
+		if ctx.analytics then pcall(ctx.analytics.earn, s, "Coins", 5, s.gold, "Savior") end
+		ctx.sendState(s)
+		ctx.fx:FireClient(plr, "saviorBonus", other.Name, 5)
+	end
+	local StrikeR = Instance.new("RemoteEvent")
+	StrikeR.Name = "GloomStrike"
+	StrikeR.Parent = RS:WaitForChild("Remotes")
+	StrikeR.OnServerEvent:Connect(function(plr, target)
+		local s, hrp = ctx.data[plr], ctx.hrpOf(plr)
+		if not s or not hrp or typeof(target) ~= "Instance" or not target:IsA("Player") or target == plr then return end
+		if not plr:GetAttribute("InCave") or plr:GetAttribute("GrabbedUntil") or ctx.busy(plr) then return end
+		local os2, ohrp = ctx.data[target], ctx.hrpOf(target)
+		local og = os2 and os2.gloom
+		if not og or not og.grabbedUntil or not ohrp or (ohrp.Position - hrp.Position).Magnitude > 9 then return end
+		og.grabbedUntil = nil
+		og.hp = C.GLOOM.hp
+		og.shieldUntil = serverNow() + shieldFor(os2)
+		target:SetAttribute("GrabbedUntil", nil)
+		publish(target, og)
+		scatter(target)
+		ctx.fx:FireClient(target, "rescued", plr.Name, false)
+		ctx.fx:FireClient(plr, "rescuedFriend", target.Name)
+		if ctx.analytics then ctx.analytics.event(os2, "GloomRescueStrike") end
+		savior(plr, target)
+	end)
 	FlareR.OnServerEvent:Connect(function(plr)
 		local s = ctx.data[plr]
 		local hrp = ctx.hrpOf(plr)
@@ -145,7 +185,7 @@ function G.init(c)
 				scatter(other)
 				ctx.fx:FireClient(other, "rescued", plr.Name, other == plr)
 				if ctx.analytics then ctx.analytics.event(os2, other == plr and "GloomSelfRescue" or "GloomRescue") end
-				if other ~= plr then ctx.fx:FireClient(plr, "rescuedFriend", other.Name) end
+				if other ~= plr then ctx.fx:FireClient(plr, "rescuedFriend", other.Name) savior(plr, other) end
 			end
 		end
 		g.flares -= 1

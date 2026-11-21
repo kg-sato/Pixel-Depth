@@ -4,8 +4,8 @@
 -- M.rank: Thick Hide (softer hits), Spare Flare (more flares per dive), Long Shield (a longer golden shield).
 -- The server owns everything: shards are earned here (capped per hour), a buy is checked for the node, the rank, the
 -- cost and the distance to the campfire prompt.
--- OFF by default (C.SOUL_TREE.on): the feature adds a saved field (profile.Data.soul). While the flag is false the
--- field is never read or written and every rank is 0.
+-- Behind C.SOUL_TREE.on (on since 2026-11-11): the saved field profile.Data.soul ({ shards, nodes }, default in C.SAVE_TEMPLATE
+-- since directive v13). With the flag false the field is never read or written and every rank is 0.
 local Players = game:GetService("Players")
 local CollectionService = game:GetService("CollectionService")
 local C = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Config"))

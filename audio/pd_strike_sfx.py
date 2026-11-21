@@ -4,6 +4,8 @@ tick (approach notch), ping (perfect bell), thud (OK hit), crack (rock splits), 
 flawless (rising sparkle run), aww (soft falling groan on a near miss)."""
 import os, sys, wave
 import numpy as np
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from pd_audit import report  # directive v13: every sound is measured (peak, RMS, rough LUFS, crest, three bands)
 SR = 44100
 out = sys.argv[1]; os.makedirs(out, exist_ok=True)
 rng = np.random.default_rng(11)
@@ -25,7 +27,7 @@ def save(name, x, peak=0.8, loop=False):
     x = x * peak / max(np.abs(x).max(), 1e-9)
     with wave.open(os.path.join(out, name + ".wav"), "wb") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes((x * 32767).astype(np.int16).tobytes())
-    print(name, round(len(x) / SR, 2), "s")
+    report(name, x, SR)
 def bell(f, n, decay, partials=((1, 1), (2.76, 0.4), (5.4, 0.18), (8.9, 0.08))):
     t = np.arange(n) / SR
     return sum(a * np.sin(2 * np.pi * f * k * t) * np.exp(-t / (decay / (1 + k * 0.6))) for k, a in partials)
