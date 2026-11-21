@@ -16,7 +16,7 @@ function M.start(E)
 		hook.ftueEarly = early
 		if not early then return end
 		for _, n in { "HubMinimap", "ToolsButton" } do
-			local o = E.gui:FindFirstChild(n)
+			local o = E.gui:FindFirstChild(n, true) -- ToolsButton sits in LeftColumn.Buttons: a flat lookup never found it
 			if o and o.Visible then o.Visible = false end
 		end
 	end)

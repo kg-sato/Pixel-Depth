@@ -33,7 +33,7 @@ N.play(True); time.sleep(12)
 C("local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('DailyChest') if g then g.Enabled=false end return 1")
 # 1 the cozy forge and the glowing mine arch (Core Keeper capsule): the miner by Bolt's anvil sparks, the lit shaft behind
 S(P + "local a=workspace.Hub:FindFirstChild('Anvil',true) h.CFrame=CFrame.lookAt(a.Position+Vector3.new(3,1,4), Vector3.new(0,a.Position.Y,0)) return 1"); time.sleep(2)
-hold("workspace.Hub:FindFirstChild('Anvil',true).Position + ((Vector3.new(0,0,0)-workspace.Hub:FindFirstChild('Anvil',true).Position)*Vector3.new(1,0,1)).Unit*7.5 + Vector3.new(1.5,2.4,0)", "workspace.Hub:FindFirstChild('Anvil',true).Position+Vector3.new(0,1.3,0)", 52); snap("1_forge_arch")  # close on Bolt's anvil and its sparks (Gemini: the high view made the smith a speck)
+hold("workspace.Hub:FindFirstChild('Anvil',true).Position + ((Vector3.new(0,0,0)-workspace.Hub:FindFirstChild('Anvil',true).Position)*Vector3.new(1,0,1)).Unit*9.5 + Vector3.new(2.5,3.2,0)", "workspace.Hub:FindFirstChild('Anvil',true).Position+Vector3.new(0,1.6,0)", 50); snap("1_forge_arch")  # close on Bolt's anvil and its sparks (Gemini: the high view made the smith a speck)
 # 3 a towering boss silhouette (Dredge + Hades): a small miner before the Root Warden, rim-lit
 C("game.ReplicatedStorage.Remotes.Surface:FireServer('down') return 1"); time.sleep(16)
 S(P + "local w=workspace.Caves:FindFirstChild('Warden',true) local wp=w:GetPivot().Position local f=(wp-require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN)*Vector3.new(1,0,1) h.CFrame=CFrame.lookAt(wp-f.Unit*9+Vector3.new(0,3,0), wp) return 1"); time.sleep(2)
@@ -42,7 +42,7 @@ hold("workspace.Caves:FindFirstChild('Warden',true):GetPivot().Position + Vector
 # 5 the campfire clink at Camp 1's hearth (Valheim capsule): the miner by the fire, gold clink sparks
 S(P + "h.CFrame=CFrame.new(require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN+Vector3.new(-26,3,-14)) return 1"); time.sleep(2.5)  # away from Wick: his line bubble shows only near him
 S(P + "game.ReplicatedStorage.Remotes.Fx:FireClient(p,'clink',p.UserId,require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN+Vector3.new(3.5,0.5,13)) return 1")
-hold("O1+Vector3.new(2.5,4.4,20.5)", "O1+Vector3.new(4.5,1.6,9.5)", 54); snap("5_campfire")  # Wick and the fire, close but not in the flames (Gemini: too far, the floor ate the frame)
+hold("O1+Vector3.new(-1.5,4.8,21)", "O1+Vector3.new(3.6,1.4,10.2)", 52); snap("5_campfire")  # Wick and the fire, close but not in the flames (Gemini: too far, the floor ate the frame)
 # 3 the mythic egg rupture (Slime Rancher 2 + Hollow Knight): a Secret hatch frozen on the burst
 C("for i=1,20 do pcall(function() game:GetService('RunService'):UnbindFromRenderStep('Thumb'..i) end) end for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') then g.Enabled=(g.Name~='DailyChest') end end game.Players.LocalPlayer:SetAttribute('DevHatchFreeze', 8.25) return 1")  # the daily chest pops up again on the way home from the crew ride
 S("game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1], 'hatch', 'Ninering') return 1"); time.sleep(9.2)

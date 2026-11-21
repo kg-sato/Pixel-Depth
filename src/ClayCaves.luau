@@ -185,6 +185,21 @@ function M.build(caves)
 		part("KilnCartBody", Vector3.new(3, 1.8, 3.6), cart * CFrame.new(0, 1.97, 0), OAKC, { Material = Enum.Material.WoodPlanks })
 		part("KilnCartRim", Vector3.new(3.2, 0.25, 3.8), cart * CFrame.new(0, 2.93, 0), IRONC, { Material = Enum.Material.Metal, CanCollide = false })
 		part("KilnCartOre", Vector3.new(2.2, 0.5, 2.6), cart * CFrame.new(0, 2.9, 0), CLAY_L, { CanCollide = false })
+		-- a siding, not a stray rail (Gemini v13 round 4): striped buffer stops at both ends, an ore bin and a tool rack beside it
+		for _, z in { -3.9, 3.9 } do
+			part("KilnBuffer", Vector3.new(2.6, 0.9, 0.5), cart * CFrame.new(0, 0.75, z), BARK, { Material = Enum.Material.Wood })
+			for k = -1, 1 do part("KilnBufferStripe", Vector3.new(0.42, 0.92, 0.52), cart * CFrame.new(k * 0.85, 0.75, z) * CFrame.Angles(0, 0, 0.5), Color3.fromRGB(255, 200, 60), { CanCollide = false, CastShadow = false }) end
+		end
+		local bin = cart * CFrame.new(-2.9, 0, 1.6)
+		part("KilnOreBin", Vector3.new(1.8, 1.2, 1.6), bin * CFrame.new(0, 0.6, 0), OAKC, { Material = Enum.Material.WoodPlanks })
+		for k = 0, 4 do part("KilnBinOre", Vector3.new(0.55, 0.45, 0.5), bin * CFrame.new(-0.5 + (k % 3) * 0.5, 1.32 + (k > 2 and 0.2 or 0), -0.3 + math.floor(k / 3) * 0.5) * CFrame.Angles(0, k, 0.3), k % 2 == 0 and Color3.fromRGB(196, 120, 80) or Color3.fromRGB(240, 200, 120), { CanCollide = false }) end
+		local rack = cart * CFrame.new(-2.7, 0, -2.2)
+		for _, x in { -0.8, 0.8 } do part("KilnRackPost", Vector3.new(0.25, 2.4, 0.25), rack * CFrame.new(x, 1.2, 0), BARK, { Material = Enum.Material.Wood }) end
+		part("KilnRackBar", Vector3.new(1.9, 0.2, 0.25), rack * CFrame.new(0, 2.2, 0), BARK, { Material = Enum.Material.Wood, CanCollide = false })
+		part("KilnToolHandle", Vector3.new(0.15, 1.6, 0.15), rack * CFrame.new(-0.35, 1.45, 0.2) * CFrame.Angles(0, 0, 0.12), Color3.fromRGB(150, 104, 64), { CanCollide = false })
+		part("KilnToolHead", Vector3.new(0.9, 0.18, 0.2), rack * CFrame.new(-0.25, 2.2, 0.22) * CFrame.Angles(0, 0, 0.12), IRONC, { Material = Enum.Material.Metal, CanCollide = false })
+		part("KilnShovel", Vector3.new(0.15, 1.5, 0.15), rack * CFrame.new(0.4, 1.4, 0.2) * CFrame.Angles(0, 0, -0.1), Color3.fromRGB(150, 104, 64), { CanCollide = false })
+		part("KilnShovelBlade", Vector3.new(0.5, 0.6, 0.08), rack * CFrame.new(0.46, 0.55, 0.22), IRONC, { Material = Enum.Material.Metal, CanCollide = false })
 	end
 
 	-- the kiln camp (centre): the kiln, the Kiln Keeper's stall, a ring of butter tiles marking the safe ground

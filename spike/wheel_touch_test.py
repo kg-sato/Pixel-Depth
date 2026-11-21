@@ -7,6 +7,8 @@ def click(path):
     return night.run("user_mouse_input", {"actions": [{"action": "mouseButtonClick", "mouse_button": "left", "instance_path": path}], "datamodel_type": "Client"})[-90:]
 C1 = lambda code: night.lua(code, "Client").splitlines()[-1]
 night.play(True); time.sleep(5)
+# directive v13 (Shared.FtueGate): the TOOLS button and the wheel wait for the Stone Pickaxe; equip it first
+night.lua("game.Players:GetPlayers()[1]:SetAttribute('DevEquip',2) return 1", "Server"); time.sleep(1.5)
 name = C1("game.Players.LocalPlayer:SetAttribute('DevTouch',1) return game.Players.LocalPlayer.Name")
 hud = f"Players.{name}.PlayerGui.PixelHUD"
 print(click(hud + ".LeftColumn.Currency.MenuButton.Hit")); time.sleep(0.8)  # the buttons fold behind MENU (Shared.HudCompact)

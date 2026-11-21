@@ -426,7 +426,7 @@ function Hub.build(parent, origin)
 			local mid = (prev + c) / 2
 			local y = O.Y + 0.68 + (i % 2) * 0.04 -- playtest 2: neighbouring water and bank pieces 0.04 apart (0.01 flickered by the egg garden)
 			local cf = CFrame.lookAt(Vector3.new(mid.X, y, mid.Z), Vector3.new(c.X, y, c.Z))
-			local w = vox(water, "Water", Vector3.new(width, 0.2, (c - prev).Magnitude + 0.8), cf, Color3.fromRGB(120, 206, 226), { CanCollide = false, Transparency = 0.12, Material = Enum.Material.Glass })
+			local w = vox(water, "Water", Vector3.new(width, 0.2, (c - prev).Magnitude + 0.8), cf, Color3.fromRGB(120, 206, 226), { CanCollide = false, Transparency = 0.12, Material = Enum.Material.SmoothPlastic, Reflectance = 0.04 }) -- not Glass: a lantern burned a round specular hot spot into it (Gemini v13 rounds 3 and 4)
 			local t = Instance.new("Texture")
 			t.Texture, t.Face, t.StudsPerTileU, t.StudsPerTileV, t.Transparency = "rbxassetid://102263231288805", N.Top, 6, 6, 0.4
 			t.Parent = w
