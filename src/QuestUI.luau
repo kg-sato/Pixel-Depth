@@ -85,6 +85,11 @@ function M.start(E)
 
 	local btn, dot
 	local readyLine, readySince = nil, nil -- the claim line and when it came due (the caves show it in short bursts)
+	local function readyShown() -- the claim line, or nil while the caves rest from it (12 s when it comes due, then 6 s every 90 s)
+		if not readyLine or not readySince then return nil end
+		local age = os.clock() - readySince
+		return (not E.plr:GetAttribute("InCave") or age < 12 or (age % 90) < 6) and readyLine or nil
+	end
 	local function refresh()
 		for k, b in tabs do setKind(b, k == tab and "tabOn" or "tab") end
 		local list = items()
@@ -120,17 +125,21 @@ function M.start(E)
 		local ready = st ~= nil and q.sp >= st.n
 		readyLine = ready and (keys and "Reward ready! Press J to claim" or "Reward ready! Tap QUESTS") or nil
 		if ready then readySince = readySince or os.clock() else readySince = nil end
-		hook.questHint = st and (ready and readyLine or st.hint) or nil
+		hook.questHint = st and (ready and readyShown() or (not ready and st.hint) or nil) or nil -- state updates come often: the burst rule applies here too
 	end
 	-- directive v13 (Gemini full1121a: "Reward ready" stayed pinned through a whole cave run): in the caves the waiting reward
 	-- shows for 12 s when it comes due, then for 6 s every 90 s; in town it stays until claimed
 	task.spawn(function()
+		local wasIn = nil
 		while true do
 			task.wait(0.5)
+			local inCave = E.plr:GetAttribute("InCave") == true
+			if inCave ~= wasIn then -- down in the caves the 12 s showing starts again
+				wasIn = inCave
+				if inCave and readySince then readySince = os.clock() end
+			end
 			if readyLine and readySince then
-				local age = os.clock() - readySince
-				local show = not E.plr:GetAttribute("InCave") or age < 12 or (age % 90) < 6
-				hook.questHint = show and readyLine or nil
+				hook.questHint = readyShown()
 			end
 		end
 	end)

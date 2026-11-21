@@ -79,7 +79,10 @@ mark("the Codex: found ores and pets, and the luck they give"); key("K", 4); key
 mark("bag"); key("B", 2.5); key("B", 0.8)
 mark("Tab wheel"); key("Tab", 2.5); key("Tab", 0.8)
 mark("settings: middle, left, right"); key("N", 3); key("A", 2); key("D", 1); key("D", 2); key("N", 1.2)
-mark("forge"); key("G", 4); key("G", 1.5)
+# directive v13: G is the pickaxe clink away from Bolt's anvil, and the forge beside it: walk to the anvil first
+S(P + "local a=workspace.Hub:FindFirstChild('Anvil',true) h.CFrame=CFrame.lookAt(a.Position+Vector3.new(3,2,4),Vector3.new(a.Position.X,a.Position.Y+2,a.Position.Z)) return 1"); time.sleep(1.5)
+mark("forge"); key("G", 5); key("G", 1.5)
+mark("a Legendary hatch: Fafnir"); S("game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1], 'hatch', 'Fafnir') return 1"); time.sleep(16.5)  # it closes itself 6 s after the burst
 mark("Q: ride down"); key("Q", 30)
 mark("arrival at Camp 1")
 S(P + "local c=cv.Spot_Camp.Value.WorldPosition h.CFrame=CFrame.lookAt(c+Vector3.new(0,3,14),c+Vector3.new(0,3,0)) return 1"); time.sleep(2)  # Cave v2: the camp spot (zip 1 is in the cathedral now)
