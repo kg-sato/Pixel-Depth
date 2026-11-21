@@ -67,7 +67,7 @@ function M.attach(label)
 		local k = (icon.Size.X.Offset > 0 and icon.AbsoluteSize.X > 0) and icon.AbsoluteSize.X / icon.Size.X.Offset or 1
 		local sAbs = math.clamp(math.max(text * 1.35, h * 0.72), math.min(12, h * 1.15), h * 1.15) -- a little taller than the capitals: an icon reads at the size of the word's line
 		local s = sAbs / k
-		if icon.Size.X.Offset > 0 and math.abs(icon.Size.X.Offset - s) < 1 then s = icon.Size.X.Offset end -- a scaled word's ink height and the icon's padding moved each other by a pixel a pass: keep the old size
+		if icon.Size.X.Offset > 0 and math.abs(icon.Size.X.Offset - s) * k < 1 then s = icon.Size.X.Offset sAbs = s * k end -- a scaled word's ink height and the icon's padding moved each other by a screen pixel a pass: keep the old size (and place by it)
 		icon.Image, icon.Visible, icon.ZIndex = ICON[key], true, label.ZIndex + 2
 		icon.Size = UDim2.fromOffset(s, s)
 		pad.PaddingLeft = UDim.new(base.Scale, base.Offset + s * 1.05)
