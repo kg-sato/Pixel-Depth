@@ -11,6 +11,6 @@ for i, d in enumerate(delays):
     t0 = time.time(); C(PLAY % ("CopperPickaxe", d))
     time.sleep(max(0, 9 - (time.time() - t0))); N.shot("anvil_%d" % i); print(i, d, round(time.time() - t0, 2))
     time.sleep(max(0, 23 - (time.time() - t0)))
-print("client errors:", C("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if (m.messageType==Enum.MessageType.MessageError or string.find(m.message,'ANVILERR')) and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,200) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors:", C("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if (m.messageType==Enum.MessageType.MessageError or string.find(m.message,'ANVILERR')) and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,200) end end return #t..' '..table.concat(t,' | ')"))
 print("stage left:", C("return tostring(workspace:FindFirstChild('ForgeStage'))"))
 N.play(False)

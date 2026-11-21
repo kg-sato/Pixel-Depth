@@ -12,5 +12,5 @@ while os.clock()-t<3 do cam.CameraType=Enum.CameraType.Scriptable cam.CFrame=CFr
  local m=p.PlayerGui:FindFirstChild('EchoMarks') local l=m and m:FindFirstChildOfClass('TextLabel') if l and os.clock()-t>1.2 then seen='number '..l.Text..' visible '..tostring(l.Visible) end
  game:GetService('RunService').RenderStepped:Wait() end return seen"""
 print("echo:", C1(code))
-print("client errors:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False)

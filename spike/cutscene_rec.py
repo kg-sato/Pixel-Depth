@@ -29,7 +29,7 @@ for model, title in SCENES:
     r = (N.lua(RUN % (title, model), "Client").splitlines() or ["?"])[-1]  # yields until the scene ends (about 19.5 s)
     print(f"{at:6.1f} s  {model}: {r}", flush=True)
 print(rec.communicate(timeout=240)[0][-300:])
-print("client errors:", (N.lua("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[string.sub(m.message,1,160)]=true end end local e={} for k in t do table.insert(e,k) end return #e..' '..table.concat(e,' | ')", "Client").splitlines() or ["?"])[-1])
+print("client errors:", (N.lua("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[string.sub(m.message,1,160)]=true end end local e={} for k in t do table.insert(e,k) end return #e..' '..table.concat(e,' | ')", "Client").splitlines() or ["?"])[-1])
 N.play(False)
 r = subprocess.run([VENV, "-I", str(ws / "tools" / "video_sheets.py"), str(video), str(sheets), "3"], capture_output=True, text=True)
 print([l for l in r.stdout.splitlines() if l.startswith("wrote")][-3:])

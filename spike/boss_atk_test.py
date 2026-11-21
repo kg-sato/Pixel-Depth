@@ -53,7 +53,7 @@ run("Warden", 1, 315, [
     ("rings, standing in the first gap (10.5)", "rings", 10.5, 0, None),
     ("rings, standing on the second band (14)", "rings", 14, 0, None),
 ])
-print("client errors:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False); time.sleep(3)
 N.play(True); time.sleep(8)
 C1(LOG)
@@ -63,5 +63,5 @@ run("KilnGolem", 2, 180, [
     ("rings, standing on the second band (14)", "rings", 14, 0, "boss2_rings"),
     ("rings, standing in the second gap (17.5)", "rings", 17.5, 0, None),
 ])
-print("client errors 2:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors 2:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False)

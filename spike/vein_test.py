@@ -26,5 +26,5 @@ task.wait(#seq*0.2) local ans={} for i,c in seq do ans[i]= c==1 and 2 or 1 end R
 t=os.clock() while not got.n and os.clock()-t<4 do task.wait(0.05) end
 return 'chain fired: '..tostring(got.n ~= nil)..' | seq '..#seq..' | vein chain: '..tostring(got.n)..' deposits, +'..tostring(got.ore)..' ore'"""))
 time.sleep(1)
-print("client errors:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False)

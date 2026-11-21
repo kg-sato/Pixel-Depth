@@ -40,38 +40,7 @@ function M.start(E)
 		new("UIStroke", inner, { Color = CYANRIM, Thickness = 1.5, Transparency = 0.3 })
 		return f
 	end
-	-- the three blessings as chunky voxel objects (built here, shown by Shared.ModelCard)
-	local function crestModel(id)
-		local m = Instance.new("Model")
-		local function blk(size, cf, color, mat, shape)
-			local p = Instance.new("Part")
-			p.Size, p.CFrame, p.Color, p.Material, p.Anchored = size, cf, color, mat or Enum.Material.SmoothPlastic, true
-			if shape then p.Shape = shape end
-			p.Parent = m
-			if not m.PrimaryPart then m.PrimaryPart = p end
-			return p
-		end
-		if id == "flare" then -- a red flare stick, a brass cap and a burning neon head
-			blk(Vector3.new(0.7, 3, 0.7), CFrame.new(0, -0.6, 0) * CFrame.Angles(0, 0, math.rad(-18)), Color3.fromRGB(214, 52, 70))
-			blk(Vector3.new(0.85, 0.35, 0.85), CFrame.new(0.32, 0.95, 0) * CFrame.Angles(0, 0, math.rad(-18)), Color3.fromRGB(226, 176, 84), Enum.Material.Metal)
-			blk(Vector3.new(1.1, 1.1, 1.1), CFrame.new(0.5, 1.55, 0), Color3.fromRGB(255, 196, 90), Enum.Material.Neon, Enum.PartType.Ball)
-			blk(Vector3.new(0.6, 0.6, 0.6), CFrame.new(0.62, 2.1, 0), Color3.fromRGB(255, 120, 150), Enum.Material.Neon, Enum.PartType.Ball)
-		elseif id == "shield" then -- a gold voxel shield with a raised boss
-			for y = -2, 2 do
-				local w = y == -2 and 2 or 5
-				for x = -math.floor(w / 2), math.floor(w / 2) do
-					blk(Vector3.new(0.62, 0.62, 0.4), CFrame.new(x * 0.6, y * 0.6, 0), (x + y) % 2 == 0 and Color3.fromRGB(255, 206, 96) or Color3.fromRGB(236, 176, 64), Enum.Material.Metal)
-				end
-			end
-			blk(Vector3.new(1, 1, 0.5), CFrame.new(0, 0.3, -0.3), Color3.fromRGB(255, 240, 180), Enum.Material.Neon)
-		else -- the wind of the deep: a pink voxel heart
-			for _, c in { { -1, 1 }, { 1, 1 }, { -2, 0 }, { -1, 0 }, { 0, 0 }, { 1, 0 }, { 2, 0 }, { -1, -1 }, { 0, -1 }, { 1, -1 }, { 0, -2 }, { -2, 1 }, { 2, 1 } } do
-				blk(Vector3.new(0.62, 0.62, 0.62), CFrame.new(c[1] * 0.6, c[2] * 0.6, 0), Color3.fromRGB(255, 110, 160))
-			end
-			blk(Vector3.new(0.5, 0.5, 0.3), CFrame.new(-0.6, 0.6, -0.35), Color3.fromRGB(255, 220, 236), Enum.Material.Neon)
-		end
-		return m
-	end
+	local crestModel = require(script.Parent:WaitForChild("Crests")).model -- the blessings as chunky voxel objects (Shared.Crests, shown by Shared.ModelCard)
 	local cards = {}
 	for i = 1, 2 do
 		local card = runePlate(win, UDim2.fromScale(0.4, 0.68), UDim2.fromScale(i == 1 and 0.27 or 0.73, 0.59))
@@ -80,7 +49,7 @@ function M.start(E)
 			new("UICorner", ring, { CornerRadius = UDim.new(0.5, 0) })
 			table.insert(halos, { new("UIStroke", ring, { Color = RUNE, Thickness = k == 1 and 3 or 2 }), k, i })
 		end
-		local tag = panel(card, UDim2.fromScale(0.44, 0.11), UDim2.fromScale(0.74, 0.09), MID, "pillLilac")
+		local tag = panel(card, UDim2.fromScale(0.46, 0.09), UDim2.fromScale(0.5, 0.735), MID, "pillLilac") -- under the words, clear of the crest rings (Gemini v13: the tag cut into the crest)
 		tag.ZIndex = 8
 		local tagText = text(tag, "", UDim2.fromScale(0.84, 0.6), UDim2.fromScale(0.5, 0.5), MID, INK, 700, false)
 		tagText.ZIndex = 9
@@ -97,9 +66,9 @@ function M.start(E)
 		local name = text(card, "", UDim2.fromScale(0.9, 0.12), UDim2.fromScale(0.5, 0.52), MID, WHITE, 700, false)
 		if E.HEAD then name.Font = E.HEAD end -- a headline: jelly letters with the glass kit
 		name.ZIndex = 7
-		local what = text(card, "", UDim2.fromScale(0.86, 0.09), UDim2.fromScale(0.5, 0.65), MID, PALE, 700, false)
+		local what = text(card, "", UDim2.fromScale(0.88, 0.1), UDim2.fromScale(0.5, 0.63), MID, PALE, 700, false)
 		what.ZIndex = 7
-		local take = button(card, "ACCEPT", UDim2.fromScale(0.7, 0.17), UDim2.fromScale(0.5, 0.85), MID, "lilac")
+		local take = button(card, "ACCEPT", UDim2.fromScale(0.7, 0.15), UDim2.fromScale(0.5, 0.875), MID, "lilac")
 		take.ZIndex = 7
 		take.Label.ZIndex = 8
 		local cap = E.keyCap(take, tostring(i), UDim2.fromScale(0.2, 0.74), UDim2.fromScale(0.12, 0.46)) -- the key sits on the button it presses

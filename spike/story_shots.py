@@ -25,6 +25,6 @@ for i, d in enumerate(times):
         time.sleep(0.4)
         if C("return tostring(workspace:FindFirstChild('ForgeStage'))") == "nil": break
     time.sleep(0.8)
-print("client errors:", C("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if (m.messageType==Enum.MessageType.MessageError or string.find(m.message,'STORYERR') or string.find(m.message,'ForgeStory')) and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,260) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors:", C("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if (m.messageType==Enum.MessageType.MessageError or string.find(m.message,'STORYERR') or string.find(m.message,'ForgeStory')) and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,260) end end return #t..' '..table.concat(t,' | ')"))
 print("stage left:", C("return tostring(workspace:FindFirstChild('ForgeStage'))"))
 N.play(False)

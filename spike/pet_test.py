@@ -4,7 +4,7 @@ import time
 import night as N
 C1 = lambda code: N.lua(code, "Client").splitlines()[-1]
 S1 = lambda code: N.lua(code, "Server").splitlines()[-1]
-FACES = ("local out={} for _,m in workspace:GetDescendants() do if m:IsA('Model') and m:GetAttribute('Voxel') and m.Parent and m.Parent:IsDescendantOf(workspace) and not m:FindFirstAncestorWhichIsA('ViewportFrame') then out[#out+1]=m.Name end end "
+FACES = ("local out={} for _,m in workspace:GetDescendants() do if m:IsA('Model') and m:GetAttribute('Voxel') and not m:GetAttribute('CrewHearth') and m.Parent and m.Parent:IsDescendantOf(workspace) and not m:FindFirstAncestorWhichIsA('ViewportFrame') then out[#out+1]=m.Name end end "
          "return #out..' voxel pets with heads and their own eyes: '..table.concat(out,',')")  # 2026-11-19: the voxel pets (Shared.PetVoxels) replaced the jelly face SurfaceGui; they carry their own eyes and blink
 N.play(True); time.sleep(8)
 for pet in ("Shinemane", "Tosk", "Kobold"):
@@ -12,12 +12,18 @@ for pet in ("Shinemane", "Tosk", "Kobold"):
 time.sleep(1)
 print("town faces:", C1(FACES))
 N.shot("pet_town")
-N.key("Q"); time.sleep(36)
+for _ in range(3):  # Q is ignored while a new pet's show still holds the input (hatchBusy): press again until we are below
+    N.key("Q"); time.sleep(30)
+    if C1("return tostring(game.Players.LocalPlayer:GetAttribute('InCave'))") == "true": break
+time.sleep(6)
 print("in view:", C1("local cam=workspace.CurrentCamera local n=0 for _,m in workspace:GetDescendants() do if m:IsA('Model') and m:GetAttribute('Voxel') and m.PrimaryPart then local v,on=cam:WorldToViewportPoint(m.PrimaryPart.Position) if on and v.Z>0 then n+=1 end end end return n..' pets on screen with a collar'"))
 N.shot("pet_cave")
 N.key("X"); time.sleep(1.2)
-print("whistle with no ore near:", C1("return 'marks '..tostring(game.Players.LocalPlayer.PlayerGui:FindFirstChild('WhistleMark')~=nil)"))
-time.sleep(5)  # the short cooldown after an empty whistle
+first = C1("return 'marks '..tostring(game.Players.LocalPlayer.PlayerGui:FindFirstChild('WhistleMark')~=nil)")
+print("first whistle at camp:", first)
+# directive v13 put four starter Rootflint veins inside Camp 1's ring, so the first whistle at camp finds one and the full
+# cooldown (C.WHISTLE.cool, 30 s) runs; an empty whistle has a 5 s one
+time.sleep(32 if first.endswith("true") else 7)
 S1("local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart local best,bd for _,d in workspace.Caves.Deposits:GetChildren() do local c=d.PrimaryPart if c and c.Transparency<1 then local m=(c.Position-h.Position).Magnitude if not bd or m<bd then best,bd=c,m end end end local out=-(best.CFrame.LookVector*Vector3.new(1,0,1)).Unit h.CFrame=CFrame.lookAt(best.Position+out*7+Vector3.new(0,3,0),best.Position) return 1"); time.sleep(1.5)
 # a watcher on the client counts the marks and looks for the hurt face for the next 45 s: with a slow Studio a second tool call
 # comes too late to see either (the mark lasts 8 s, the face a few seconds)
@@ -35,5 +41,5 @@ print("hurt faces:", C1(FACES))
 time.sleep(9)
 print("watcher:", C1("return tostring(game.Players.LocalPlayer:GetAttribute('DevPetWatch'))"))
 print("mark gone:", C1("return tostring(game.Players.LocalPlayer.PlayerGui:FindFirstChild('WhistleMark')==nil)"))
-print("errors:", C1("local n,t=0,{} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then n+=1 t[#t+1]=string.sub(m.message,1,300) end end return n..' '..table.concat(t,' || ')"))
+print("errors:", C1("local n,t=0,{} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then n+=1 t[#t+1]=string.sub(m.message,1,300) end end return n..' '..table.concat(t,' || ')"))
 N.play(False)

@@ -66,6 +66,7 @@ function M.start(E)
 				local _, yaw = ped.CFrame:ToEulerAnglesYXZ()
 				m:PivotTo(CFrame.new(ped.Position.X, top + s2.Y / 2, ped.Position.Z) * CFrame.Angles(0, yaw + math.pi, 0)) -- pets look -Z: it faces the plaza
 				for _, d in m:GetDescendants() do if d:IsA("BasePart") then d.Anchored, d.CanCollide, d.CanQuery, d.CanTouch = true, false, false, false end end
+				m:SetAttribute("CrewHearth", true) -- a display pet on a pedestal, not a companion (spike/pet_test.py counts companions)
 				m.Parent = workspace:FindFirstChild("ClientFX") or workspace
 				p.model, p.petName = m, pet
 			end

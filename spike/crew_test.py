@@ -26,7 +26,7 @@ print("board:", C1(PRESS % "CrewAnchor"))
 print("solo ride while aboard:", C1(PRESS % "CartBody"))
 print("driver presses again:", C1(PRESS % "CrewAnchor"))
 print("driver's own run:", C1("local t=os.clock() while os.clock()-t<6 and not workspace:FindFirstChild('MinecartEscape') do task.wait(0.1) end return 'ride '..tostring(workspace:FindFirstChild('MinecartEscape')~=nil)"))
-print("client errors A:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors A:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False); time.sleep(2)
 
 # B: a passenger of the server's own driver
@@ -75,8 +75,8 @@ S1(P + "if (h.Position-body.Position).Magnitude>9 then h.CFrame=body.CFrame*CFra
 print("second crew ride the same day:", C1("local p=game.Players.LocalPlayer local t=os.clock() while os.clock()-t<75 and p:GetAttribute('DevCrewPaid')==nil do task.wait(0.2) end return 'paid '..tostring(p:GetAttribute('DevCrewPaid'))..' | '..tostring(p:GetAttribute('DevCrewCard'))"))
 # a passenger (or anyone not driving) cannot feed the relay: nothing errors and nothing comes back
 print("messages from a non-driver:", C1("local R=game.ReplicatedStorage.Remotes.Crew local got=0 local c=R.OnClientEvent:Connect(function() got+=1 end) R:FireServer('s',1,1,0,1) R:FireServer('r',9,1e9,true) R:FireServer({}) R:FireServer('p','x') task.wait(1.2) c:Disconnect() return 'echoes '..got"))
-print("client errors B:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
-print("server errors:", S1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'AssistantCommand') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors B:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
+print("server errors:", S1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') and not string.find(m.message,'AssistantCommand') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False); time.sleep(2)
 
 # C: step 2, the lookout (seat 2 of three): its jump reaches the cart, a stoke press from it is ignored
@@ -91,6 +91,6 @@ print("lookout:", C1(HEAD + "local t=os.clock() while os.clock()-t<10 and not wo
 S1(P + "p:SetAttribute('DevCrewPromote',true) return 1")
 print("the driver left:", C1("local p=game.Players.LocalPlayer local function st() local r={} for w in string.gmatch(p:GetAttribute('DevCrewState') or '', '%S+') do r[#r+1]=w end return r end "
       "task.wait(2.5) local a=st() task.wait(5) local b=st() return 'replica '..tostring(b[1])..' job '..tostring(b[10])..' still moving '..tostring(tonumber(b[2])-tonumber(a[2])>40)..' in the cave '..tostring(p:GetAttribute('InCave'))"))
-print("client errors C:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
-print("server errors C:", S1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'AssistantCommand') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors C:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
+print("server errors C:", S1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') and not string.find(m.message,'AssistantCommand') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False)

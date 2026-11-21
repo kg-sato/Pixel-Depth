@@ -108,7 +108,18 @@ function M.start(E)
 		new("UICorner", disc, { CornerRadius = UDim.new(0.5, 0) })
 		new("UIStroke", disc, { Color = GOLDRIM, Thickness = 3 })
 		new("UIGradient", disc, { Rotation = 45, Color = ColorSequence.new(WHITE, Color3.fromRGB(120, 100, 150)) })
-		new("ImageLabel", disc, { Image = look[2], BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.64, 0.64), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 8 })
+		local icon = new("ImageLabel", disc, { Image = look[2], BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.64, 0.64), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 8 })
+		do -- directive v13 (Gemini: emoji clipart): the node's voxel crest turning in the disc (Shared.Crests, the boon cards' own)
+			local ok = pcall(function() -- the image icon stays if anything here fails (Codex 2026-11-20)
+				local Cr, MC = script.Parent:WaitForChild("Crests", 5), script.Parent:WaitForChild("ModelCard", 5)
+				local m = Cr and MC and require(Cr).model(id)
+				if not m then error("no crest") end
+				require(MC).attach(disc, disc, { z = 8 }).set(m, look[1])
+			end)
+			if ok then icon.Visible = false else
+				for _, n in { "Card3D", "CardGlow", "CardShine" } do local x = disc:FindFirstChild(n) if x then x:Destroy() end end
+			end
+		end
 		local name = text(card, string.upper(def.name), UDim2.fromScale(0.9, 0.13), UDim2.fromScale(0.5, 0.3), MID, WHITE, 700, false)
 		if E.HEAD then name.Font = E.HEAD end
 		name.ZIndex = 7

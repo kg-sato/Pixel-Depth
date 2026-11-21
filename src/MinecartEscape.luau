@@ -1039,15 +1039,15 @@ function M.play(opt)
 			end
 			if K.crew and K.job == "tail" and phase == "run" and t > 1 then -- directive v13 (open item 1): gold beads hang beside the rails;
 				-- the tail grabs one as it passes (E, F or a tap): +2 coins for every rider, eight at most (the server counts them)
-				K.beads, K.beadAt = K.beads or {}, K.beadAt or 2
-				if t >= K.beadAt and (K.beadN or 0) + #K.beads < 10 then
-					K.beadAt = t + 3 + math.random() * 1.5
+				K.beads, K.beadSeq = K.beads or {}, K.beadSeq or 0
+				if K.beadSeq < C.CREW.beads.n and t >= C.CREW.beads.first + K.beadSeq * C.CREW.beads.every then -- the fixed schedule the server checks (Codex 2026-11-20)
+					K.beadSeq += 1
 					local at = dist + math.max(speed, 20) * 1.7
 					local side = math.random() < 0.5 and -1 or 1
 					local b = part(world, Vector3.new(0.9, 0.9, 0.9), pathCF(at) * CFrame.new(side * 3.2, 2.3, 0), Color3.fromRGB(255, 206, 84), { Shape = Enum.PartType.Ball, Material = Enum.Material.Neon })
 					local bl = Instance.new("PointLight")
 					bl.Color, bl.Range, bl.Brightness, bl.Parent = Color3.fromRGB(255, 206, 84), 8, 1, b
-					table.insert(K.beads, { p = b, at = at })
+					table.insert(K.beads, { p = b, at = at, id = K.beadSeq })
 				end
 				for i = #K.beads, 1, -1 do
 					local bd = K.beads[i]
@@ -1060,7 +1060,7 @@ function M.play(opt)
 							table.remove(K.beads, i)
 							K.beadN = (K.beadN or 0) + 1
 							sfx("coin", 1 + K.beadN * 0.05) -- each grab a step higher
-							K.crew.send("b")
+							K.crew.send("b", bd.id)
 							return
 						end
 					end

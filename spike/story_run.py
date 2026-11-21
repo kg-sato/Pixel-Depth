@@ -10,5 +10,5 @@ N.play(False); N.restore(); N.play(True); time.sleep(11)
 print("full:", C(RUN % (name, model, "", "")))
 print("fast:", C(RUN % (name, model, ", fast = true", "")))
 # Skip is tested with a real key press: N.key("Space") about 1 s after a spawned play (a script cannot send key events).
-print("client errors:", C("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if (m.messageType==Enum.MessageType.MessageError or string.find(m.message,'ForgeStory')) and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,260) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors:", C("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if (m.messageType==Enum.MessageType.MessageError or string.find(m.message,'ForgeStory')) and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,260) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False)

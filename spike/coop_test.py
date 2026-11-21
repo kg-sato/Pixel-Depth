@@ -1,6 +1,6 @@
 """Directive v13 phase 6 checks (one client; starts Play): the five ping kinds and the automatic RARE callout, the clink
 remote and its 15 s cooldown, the four starter Rootflint veins in Camp 1, the event clock (Golden Vein 8:00, Crystal Rift
-11:00), the FTUE gate on the town minimap, the GloomStrike rescue remote's refusals, the escape tally in the save template.
+11:00), the FTUE gate on the town minimap, the GloomStrike rescue remote's refusals, the escape tally in the save template, the Kiln Camp's crew sign.
     python spike/coop_test.py"""
 import sys, time, pathlib
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -16,6 +16,8 @@ cfg = S("local C=require(game.ReplicatedStorage.Shared.Config) return C.EVENTS.g
 check("event clock 480 / 660, escapes and soul in the save template", cfg == "480 660 0 0", cfg)
 st = S("local d=workspace.Caves:FindFirstChild('Deposits') local n=0 for _,x in d:GetChildren() do if x:GetAttribute('Starter') and x.PrimaryPart and x.PrimaryPart:FindFirstChildOfClass('ProximityPrompt') then n+=1 end end return tostring(d:GetAttribute('Starters'))..' '..n")
 check("four starter Rootflint veins with Extract prompts", st == "4 4", st)
+kc = S("local a=workspace.Caves:FindFirstChild('CrewAnchor2',true) if not a then return 'none' end local l=a:FindFirstChild('Line',true) local pr=a:FindFirstChildOfClass('ProximityPrompt') return (l and l.Text or '?')..' | '..tostring(pr and pr:GetAttribute('CrewRide'))")
+check("the Kiln Camp cart has a CREW RIDE sign and a V prompt", "TO CAMP 1" in kc and kc.endswith("true"), kc)
 C("game.ReplicatedStorage.Remotes.Surface:FireServer('down') return 1"); time.sleep(16)
 WATCH = ("local got={} local con=game.ReplicatedStorage.Remotes.Fx.OnClientEvent:Connect(function(k,a,b,c) if k=='ping' then table.insert(got,b) elseif k=='clink' then table.insert(got,'clink') end end) "
          "local R=game.ReplicatedStorage.Remotes local h=game.Players.LocalPlayer.Character.HumanoidRootPart ")

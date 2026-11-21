@@ -935,13 +935,12 @@ function crew.of(plr)
 	return L and table.find(L.members, plr) or nil
 end
 function crew.body() return workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild("CartBody", true) end
-function crew.show() -- the sign over the cart
-	local body = crew.body()
-	local a = body and body.Parent:FindFirstChild("CrewAnchor")
-	local line = a and a:FindFirstChild("Line", true)
+function crew.show() -- the signs over the crew carts: Camp 1's, and the Kiln Camp's (directive v13), which boards the same crew
 	local L = crew.lobby
-	if line then
-		line.Text = L and string.format("CREW RIDE  0:%02d   %d OF %d ABOARD", math.max(0, math.ceil(L.ends - os.clock())), #L.members, C.CREW.max) or "CREW RIDE:  PRESS V TO BOARD"
+	for _, sg in crew.signs or {} do
+		if sg.line.Parent then
+			sg.line.Text = L and string.format("%sCREW RIDE  0:%02d   %d OF %d ABOARD", sg.pre, math.max(0, math.ceil(L.ends - os.clock())), #L.members, C.CREW.max) or (sg.pre .. "CREW RIDE:  PRESS V TO BOARD")
+		end
 	end
 end
 function crew.seat() -- everyone aboard sits in seat order
@@ -1060,7 +1059,7 @@ function crew.tell(run, ...) -- to every rider of a run
 end
 -- Step 2: what a passenger with a job may send. A lookout's jump and duck go to the driver, whose cart makes the move for
 -- everyone. A stoker's press is judged here, on the server's clock, and the steam it leaves is told to the whole crew.
-function crew.job(plr, run, kind)
+function crew.job(plr, run, kind, a)
 	local job = run.jobs[run.seatOf[plr] or 0]
 	local now = os.clock()
 	if job == "lookout" and (kind == "j" or kind == "d") then
@@ -1068,9 +1067,18 @@ function crew.job(plr, run, kind)
 		run.last[plr] = now
 		run.calls = (run.calls or 0) + 1
 		if run.host == "bot" then crew.tell(run, kind) else CrewR:FireClient(run.host, string.upper(kind)) end
-	elseif job == "tail" and kind == "b" then -- directive v13: a gold bead grabbed by the tail; at most one a second and eight a ride
-		if now - (run.last[plr] or 0) < 1.0 then return end
-		run.last[plr] = now
+	elseif job == "tail" and kind == "b" then -- directive v13: a gold bead grabbed by the tail. Beads hang on a fixed schedule
+		-- (C.CREW.beads: bead k at first + (k - 1) * every seconds of ride time); the server takes each id once and never before
+		-- its time (the client's ride clock starts after the countdown and only runs late, so there is no upper bound short of the
+		-- ride's own 150 s limit). Codex 2026-11-20: a bare "b" could be sent once a second whether a bead was there or not.
+		-- shortcut: the grab itself is the client's word (as every rider job is); the schedule caps it at one per real bead
+		local B = C.CREW.beads
+		local k = type(a) == "number" and a == a and a % 1 == 0 and a >= 1 and a <= B.n and a or nil
+		run.beadGot = run.beadGot or {}
+		if not k or run.beadGot[k] then return end
+		local el, due = workspace:GetServerTimeNow() - run.t0, B.first + (k - 1) * B.every
+		if el < due - 0.5 then return end
+		run.beadGot[k] = true
 		run.beads = math.min((run.beads or 0) + 1, 8)
 	elseif job == "stoker" and kind == "k" then
 		local S = C.CREW.stoke
@@ -1150,7 +1158,7 @@ CrewR.OnServerEvent:Connect(function(plr, kind, a, b, c, d)
 	local run = e and e.crew
 	if not run or e.crewDone or type(kind) ~= "string" then return end
 	if kind == "a" then return crew.answer(plr, run) end -- any rider's answer to a crew moment
-	if run.host ~= plr then return crew.job(plr, run, kind) end
+	if run.host ~= plr then return crew.job(plr, run, kind, a) end
 	if kind == "m" then return crew.moment(run, a) end -- the driver's cart calls a crew moment
 	local now = math.floor(os.clock())
 	if run.sec ~= now then run.sec, run.n = now, 0 end
@@ -1163,7 +1171,7 @@ CrewR.OnServerEvent:Connect(function(plr, kind, a, b, c, d)
 		if m ~= plr and escaping[m] and escaping[m].crew == run then CrewR:FireClient(m, kind, table.unpack(args, 1, n)) end
 	end
 end)
-task.spawn(function() -- the sign and its prompt over Camp 1's cart
+task.spawn(function() -- the sign and its prompt over Camp 1's cart, and (directive v13) over the Kiln Camp's parked cart
 	local body
 	for _ = 1, 180 do
 		body = crew.body()
@@ -1171,14 +1179,17 @@ task.spawn(function() -- the sign and its prompt over Camp 1's cart
 		task.wait(1)
 	end
 	if not body or body.Parent:FindFirstChild("CrewAnchor") then return end
+	crew.signs = {}
+	local function sign(over, parent, name, pre)
 	local a = Instance.new("Part")
-	a.Name, a.Size, a.Transparency, a.Anchored, a.CanCollide, a.CanQuery, a.CanTouch = "CrewAnchor", Vector3.new(1, 1, 1), 1, true, false, false, false
-	a.CFrame = body.CFrame * CFrame.new(0, 7, 0) -- above the cart's own Ride up card
+	a.Name, a.Size, a.Transparency, a.Anchored, a.CanCollide, a.CanQuery, a.CanTouch = name, Vector3.new(1, 1, 1), 1, true, false, false, false
+	a.CFrame = over.CFrame * CFrame.new(0, 7, 0) -- above the cart's own Ride up card
 	local bb = Instance.new("BillboardGui")
 	bb.Name, bb.Size, bb.MaxDistance, bb.LightInfluence, bb.StudsOffset = "CrewSign", UDim2.fromScale(10, 1.1), 70, 0, Vector3.new(0, 1.9, 0) -- lifted over its own V prompt card, which sat on the middle of the sign (2026-11-19)
 	local t = Instance.new("TextLabel")
 	t.Name, t.Size, t.BackgroundColor3, t.BackgroundTransparency, t.TextScaled, t.Font = "Line", UDim2.fromScale(1, 1), Color3.fromRGB(36, 17, 56), 0.2, true, Enum.Font.FredokaOne
-	t.TextColor3, t.Text = Color3.fromRGB(255, 214, 107), "CREW RIDE:  PRESS V TO BOARD"
+	t.TextColor3, t.Text = Color3.fromRGB(255, 214, 107), pre .. "CREW RIDE:  PRESS V TO BOARD"
+	table.insert(crew.signs, { line = t, pre = pre })
 	local uc = Instance.new("UICorner")
 	uc.CornerRadius = UDim.new(0.4, 0)
 	uc.Parent = t
@@ -1192,7 +1203,16 @@ task.spawn(function() -- the sign and its prompt over Camp 1's cart
 	pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.HoldDuration, pr.Style = 12, false, 0, Enum.ProximityPromptStyle.Custom
 	pr:SetAttribute("CrewRide", true)
 	pr.Parent = a
-	a.Parent = body.Parent
+	a.Parent = parent
+	end
+	sign(body, body.Parent, "CrewAnchor", "")
+	-- the Kiln Camp's cart (ClayCaves "KilnCartBody"): pressing V there boards the same crew, carried to Camp 1's cart, which
+	-- is where every escape starts (the Clay hall has no tunnel of its own yet)
+	for _ = 1, 60 do
+		local kb = workspace.Caves:FindFirstChild("KilnCartBody", true)
+		if kb then sign(kb, kb.Parent, "CrewAnchor2", "TO CAMP 1 \u{00B7} ") break end
+		task.wait(1)
+	end
 end)
 if IS_STUDIO then -- DevCrewBot: this player rides as a passenger; the server plays a driver that leans, meets rocks and beads and arrives
 	task.spawn(function()

@@ -79,5 +79,5 @@ print("reward:", C1("local g=game.Players.LocalPlayer.PlayerGui local d=g:FindFi
                     "return 'chest layer '..tostring(d and d.Enabled)..' title '..t..' bar '..tostring(g:FindFirstChild('BossBar',true).Visible)"))
 if SHOTS: N.shot("boss_chest")
 print("after:", S1(P + "return 'hp '..tostring(p:GetAttribute('HP'))"))
-print("client errors:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors:", C1("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,140) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False)

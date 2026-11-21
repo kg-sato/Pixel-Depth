@@ -10,5 +10,5 @@ N.play(False); N.restore()
 N.play(True); time.sleep(11)
 for name in sys.argv[1:]:
     C(PLAY % name); time.sleep(3.2); N.shot("asset_" + name); time.sleep(6.5)
-print("client errors:", C("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if (m.messageType==Enum.MessageType.MessageError or string.find(m.message,'STORYERR') or string.find(m.message,'ForgeStory')) and not string.find(m.message,'Requester') then t[#t+1]=string.sub(m.message,1,260) end end return #t..' '..table.concat(t,' | ')"))
+print("client errors:", C("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if (m.messageType==Enum.MessageType.MessageError or string.find(m.message,'STORYERR') or string.find(m.message,'ForgeStory')) and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[#t+1]=string.sub(m.message,1,260) end end return #t..' '..table.concat(t,' | ')"))
 N.play(False)

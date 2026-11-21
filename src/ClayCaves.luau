@@ -173,6 +173,19 @@ function M.build(caves)
 	local land = part("ClayLanding", Vector3.new(4, 1, 4), arrive * CFrame.new(1, 1.7, 0), CLAY, { Transparency = 1, CanCollide = false, CanQuery = false })
 	land.Parent = folder
 	lamp(Vector3.new(-60, 16, 0), 0.7)
+	do -- directive v13 (Group Cart Escape: CREW RIDE at the deeper camps): a parked crew cart on a rail stub by the ledge; the
+		-- server puts a CREW RIDE sign and V prompt over "KilnCartBody" (PixelServer) that boards the same crew as Camp 1's cart
+		local cart = arrive * CFrame.new(3.6, 1.2, -5.6)
+		local IRONC, OAKC = Color3.fromRGB(62, 56, 78), Color3.fromRGB(128, 86, 54)
+		for _, x in { -0.9, 0.9 } do part("KilnRail", Vector3.new(0.25, 0.2, 7.5), cart * CFrame.new(x, 0.1, 0), IRONC, { Material = Enum.Material.Metal, CanCollide = false }) end
+		for z = -3, 3, 1.5 do part("KilnSleeper", Vector3.new(2.8, 0.14, 0.6), cart * CFrame.new(0, 0.03, z), BARK, { Material = Enum.Material.Wood, CanCollide = false }) end
+		for _, w in { { -1.2, -1.1 }, { 1.2, -1.1 }, { -1.2, 1.1 }, { 1.2, 1.1 } } do
+			part("KilnWheel", Vector3.new(0.3, 0.9, 0.9), cart * CFrame.new(w[1], 0.62, w[2]), IRONC, { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Metal, CanCollide = false })
+		end
+		part("KilnCartBody", Vector3.new(3, 1.8, 3.6), cart * CFrame.new(0, 1.97, 0), OAKC, { Material = Enum.Material.WoodPlanks })
+		part("KilnCartRim", Vector3.new(3.2, 0.25, 3.8), cart * CFrame.new(0, 2.93, 0), IRONC, { Material = Enum.Material.Metal, CanCollide = false })
+		part("KilnCartOre", Vector3.new(2.2, 0.5, 2.6), cart * CFrame.new(0, 2.9, 0), CLAY_L, { CanCollide = false })
+	end
 
 	-- the kiln camp (centre): the kiln, the Kiln Keeper's stall, a ring of butter tiles marking the safe ground
 	for k = 0, 23 do

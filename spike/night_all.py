@@ -55,7 +55,7 @@ TESTS = [  # script, [(what, text that must be in the output)]
         ("gifts are paid in order", "two claims at 21 minutes: coins:150 flares:2 gems:10"), ("bad messages pay nothing", "bad messages: coins:150 flares:2 gems:10"), ("golden surge doubles the zone", "zone doubled: True"),
         ("event pill shows the surge", "GOLD SURGE ON"), ("friends are counted", "board: 2/5 FRIENDS HERE / +15% ORE VALUE  +20% EGG LUCK"), ("friends luck keeps the odds at 100", "egg odds, 2 friends: 57.00 25.00 12.00 4.80 1.08 0.12 sum 100.00 | none: 60.00 25.00 10.00 4.00 0.90 0.10 | 99 friends: 0.15 0.10 60.00"), ("the odds panel shows the friends luck", "odds panel, 2 friends: 57% 12% 4.8% 1.08% 0.12% / FRIENDS LUCK ON:  EPIC AND BETTER +20%"), ("rift is off by default", "rift off: 1 in the Clay Caves, 1 in Camp 1"), ("rift triples Clay Caves ore only", "rift on: 3 in the Clay Caves, 1 in Camp 1"), ("rift crystal shows", "crystal: true"), ("refinery refuses without a geode", "refinery, no geode: none"), ("refinery starts once", "refinery, a geode in, pressed again: none start | none start wait"), ("refinery pays once", "refinery, done: none start wait paid"), ("a geode cracked on the seam is perfect", "geode crack, on the seam: done perfect 5 30"), ("a geode cracked at once is bad", "geode crack, pressed at once: done bad 1 15"), ("no geode, no crack", "geode crack, no geode: none nil nil nil"), ("refinery is empty after", "refinery, empty again: none start wait paid none"), ("refinery refuses from far away", "refinery, pressed from far away: none start wait paid none" + chr(10)), ("no client errors", "client errors: 0"), ("no server errors", "server errors: 0")]),
     ("verify_night.py", [("wind-up dodge", "after stepping away 100"), ("way home embers", "(PASS over 0), at camp 0 (PASS 0)")]),
-    ("coop_test.py", [("directive v13 co-op, FTUE and save checks", "7 of 7 checks passed")]),
+    ("coop_test.py", [("directive v13 co-op, FTUE and save checks", "8 of 8 checks passed")]),
 ]
 # which source files each test exercises (src names without .luau); the quick mode picks tests by these
 COVER = {
@@ -67,7 +67,7 @@ COVER = {
     "camp2_test.py": ["ClayCaves", "ClayClient"], "crew_test.py": ["MinecartEscape", "EscapeHUD"], "trophy_test.py": ["Trophies", "HubBuilder"],
     "townfill_test.py": ["TownFill"], "menu_test.py": ["HudCompact", "RetentionTimers", "UpgradeTracker"], "chime_test.py": ["CrystalChimes", "ClayCaves"], "codex_test.py": ["CodexUI"], "marquee_test.py": ["Marquee"], "retention_test.py": ["Retention", "RetentionTimers", "LanternTether", "CaveEvents", "ClayCaves", "GeodeCrack"],
     "verify_night.py": ["MiningReticle", "Juice", "VoxelFractureFX", "CaveBuilder"],
-    "coop_test.py": ["Ping", "PingRelay", "Clink", "Gloom", "FtueGate", "Config", "CaveProps"],
+    "coop_test.py": ["Ping", "PingRelay", "Clink", "Gloom", "FtueGate", "Config", "CaveProps", "ClayCaves"],
 }
 SMOKE = ["load_test.py", "opts_test.py", "marquee_test.py"]  # short, and between them they load every script on both sides
 CORE = {"PixelClient.client", "PixelServer.server", "Config"}  # touch everything: in quick mode they only add the smoke set

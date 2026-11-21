@@ -442,7 +442,15 @@ function Hub.build(parent, origin)
 			for _, sd in { -1, 1 } do
 				local h = hash(i, sd, c.X)
 				vox(water, "BankBed", Vector3.new(1.5 - (i % 3) * 0.04, 0.34, seg + 1.4), cf * CFrame.new(sd * (width / 2 + 0.55), 0.02 + (i % 3) * 0.035, 0), Color3.fromRGB(74, 70, 92), { CanCollide = false })
-				tvox(water, "Bank", Vector3.new(1.3 + h * 0.6, 0.6 + h * 0.6 + (i % 3) * 0.05, 2.6), cf * CFrame.new(sd * (width / 2 + 0.5), 0.2, 0) * CFrame.Angles(0, (h - 0.5) * 0.5, 0), "cobble", 2)
+				-- directive v13 (Gemini round 3: "a rigid straight cobble curb"): lower bank stones of uneven height, and about one in
+				-- four left out so the damp earth, pebbles and foam bands show through as a soft shore between them
+				if hash(i, sd, 77) < 0.27 then
+					for q = -1, 1, 2 do
+						vox(water, "BankPebble", Vector3.new(0.7 + h * 0.3, 0.32 + h * 0.15, 0.6 + h * 0.2), cf * CFrame.new(sd * (width / 2 + 0.35 + q * 0.12), 0.05, q * 0.65) * CFrame.Angles(0, h * 2 + q, 0), Color3.fromRGB(150, 142, 160), { CanCollide = false, Material = Enum.Material.Pebble })
+					end
+				else
+					tvox(water, "Bank", Vector3.new(1.2 + h * 0.6, 0.45 + h * 0.4 + (i % 3) * 0.05, 2.6), cf * CFrame.new(sd * (width / 2 + 0.5), 0.12, 0) * CFrame.Angles(0, (h - 0.5) * 0.5, 0), "cobble", 2)
+				end
 				if i < n then -- the joint: a stone at the bend so the outside edge stays closed
 					local nxt = bez(pts, (i + 1) / n)
 					local jcf = CFrame.lookAt(Vector3.new(c.X, y, c.Z), Vector3.new(c.X, y, c.Z) + Vector3.new(nxt.X - prev.X, 0, nxt.Z - prev.Z))
