@@ -16,27 +16,33 @@ function M.start(E)
 		if n and d.Name == "CrewPedestal" then peds[n] = { part = d }
 		elseif n and d.Name == "BunkProp" then props[n] = props[n] or {} table.insert(props[n], d) end
 	end
-	local GOLD, PALE = Color3.fromRGB(255, 214, 110), Color3.fromRGB(226, 216, 250)
+	local GOLD = Color3.fromRGB(255, 214, 110)
+	-- the name plate is a carved oak plaque hung on the pedestal's plaza face, lit like the world (Gemini v13 round 1: a
+	-- floating billboard broke the cabin's mood); it hides with its pedestal's player
 	local function plate(ped)
-		local bb = Instance.new("BillboardGui")
-		bb.Name, bb.Size, bb.StudsOffsetWorldSpace, bb.AlwaysOnTop, bb.MaxDistance, bb.LightInfluence = "CrewPlate", UDim2.fromScale(5, 1.6), Vector3.new(0, 4.6, 0), false, 90, 0
-		bb.Adornee, bb.Enabled = ped, false
-		local f = Instance.new("Frame")
-		f.Size, f.BackgroundColor3, f.BackgroundTransparency, f.BorderSizePixel = UDim2.fromScale(1, 1), Color3.fromRGB(24, 14, 42), 0.12, 0
-		f.Parent = bb
-		local c = Instance.new("UICorner") c.CornerRadius = UDim.new(0.3, 0) c.Parent = f
-		local s = Instance.new("UIStroke") s.Color, s.Thickness, s.Transparency = GOLD, 1.5, 0.25 s.Parent = f
+		local board = Instance.new("Part")
+		board.Name, board.Anchored, board.CanCollide, board.CanQuery, board.CanTouch, board.CastShadow = "CrewPlaque", true, false, false, false, false
+		board.Size, board.Material, board.Color = Vector3.new(2.5, 1.05, 0.16), Enum.Material.Wood, Color3.fromRGB(122, 78, 44)
+		board.CFrame = ped.CFrame * CFrame.new(0, 0.02, ped.Size.Z / 2 + 0.09) * CFrame.Angles(0, math.pi, 0) * CFrame.Angles(-0.1, 0, 0)
+		local rim = Instance.new("Part") -- a darker frame proud of the board's edge
+		rim.Name, rim.Anchored, rim.CanCollide, rim.CanQuery, rim.CanTouch, rim.CastShadow = "CrewPlaqueRim", true, false, false, false, false
+		rim.Size, rim.Material, rim.Color, rim.CFrame = Vector3.new(2.68, 1.2, 0.1), Enum.Material.Wood, Color3.fromRGB(74, 44, 26), board.CFrame * CFrame.new(0, 0, 0.07)
+		rim.Parent = board
+		local sg = Instance.new("SurfaceGui")
+		sg.Name, sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence, sg.MaxDistance = "CrewPlate", Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 80, 0.6, 90
+		sg.Parent = board
 		local function line(name, y, h, col, font)
 			local l = Instance.new("TextLabel")
-			l.Name, l.BackgroundTransparency, l.Size, l.Position, l.AnchorPoint = name, 1, UDim2.fromScale(0.92, h), UDim2.fromScale(0.5, y), Vector2.new(0.5, 0.5)
+			l.Name, l.BackgroundTransparency, l.Size, l.Position, l.AnchorPoint = name, 1, UDim2.fromScale(0.9, h), UDim2.fromScale(0.5, y), Vector2.new(0.5, 0.5)
 			l.Font, l.TextScaled, l.TextColor3, l.Text = font or Enum.Font.FredokaOne, true, col, ""
-			l.Parent = f
+			local st = Instance.new("UIStroke") st.Color, st.Thickness, st.Transparency = Color3.fromRGB(48, 26, 12), 3, 0.1 st.Parent = l -- the carved groove
+			l.Parent = sg
 			return l
 		end
-		local who = line("Who", 0.3, 0.42, Color3.new(1, 1, 1))
-		local info = line("Info", 0.74, 0.3, PALE, Enum.Font.GothamBold)
-		bb.Parent = E.plr:WaitForChild("PlayerGui")
-		return bb, who, info
+		local who = line("Who", 0.34, 0.46, Color3.fromRGB(255, 232, 176))
+		local info = line("Info", 0.77, 0.26, GOLD, Enum.Font.GothamBold)
+		board.Parent = nil
+		return board, who, info
 	end
 	for n, p in peds do p.bb, p.who, p.info = plate(p.part) end
 
@@ -44,9 +50,10 @@ function M.start(E)
 		local p = peds[n]
 		local ped = p.part
 		local who, pet = ped:GetAttribute("Who"), ped:GetAttribute("Pet")
+		local shown = who ~= nil and pet ~= nil -- the bunk steps aside only for a pet: a player with no pet keeps the lantern lit
 		for _, b in props[n] or {} do
-			b.LocalTransparencyModifier = who and 1 or 0
-			for _, l in b:GetDescendants() do if l:IsA("Light") then l.Enabled = who == nil end end
+			b.LocalTransparencyModifier = shown and 1 or 0
+			for _, l in b:GetDescendants() do if l:IsA("Light") then l.Enabled = not shown end end
 		end
 		if p.model and (not who or p.petName ~= pet) then p.model:Destroy() p.model = nil end
 		if who and pet and not p.model then
@@ -63,7 +70,7 @@ function M.start(E)
 				p.model, p.petName = m, pet
 			end
 		end
-		p.bb.Enabled = who ~= nil
+		p.bb.Parent = who and (workspace:FindFirstChild("ClientFX") or workspace) or nil
 		if who then
 			p.who.Text = who
 			local esc = ped:GetAttribute("Escapes") or 0

@@ -282,6 +282,20 @@ function M.play(opt)
 				end
 			end
 		end
+		if RunService:IsStudio() and plr:GetAttribute("DevCrewFill") and plr.Character then -- Studio only: copies of you fill the empty seats (the four-rider thumbnail, spike/thumbs_v13.py)
+			local taken = { [K.crew.seat or 1] = true }
+			for _, m in K.mates do for i, st in seats do if m[2].X == st[1] and m[2].Z == st[2] then taken[i] = true end end end
+			for i, st in seats do
+				local g = not taken[i] and ghost(plr.Character)
+				if g then -- each copy in its own shirt colour so the crew reads as four miners
+					local tint = ({ Color3.fromRGB(255, 120, 170), Color3.fromRGB(110, 230, 180), Color3.fromRGB(255, 210, 90), Color3.fromRGB(140, 170, 255) })[i]
+					for _, d in g:GetDescendants() do
+						if d:IsA("Shirt") or d:IsA("ShirtGraphic") then d:Destroy() elseif d:IsA("BasePart") and tint and d.Name:find("Torso") then d.Color = tint end
+					end
+					sitDown(g) g.Parent = world table.insert(K.mates, { g, CFrame.new(st[1], riderOff.Y, st[2]), -i })
+				end
+			end
+		end
 	end
 	local hubHidden = {}
 	local lampA = Instance.new("Attachment")

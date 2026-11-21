@@ -361,11 +361,22 @@ function M.vignettes(caves, C)
 	end
 	local f = gp and floorAt(gp + Vector3.new(5.5, 2, 3))
 	if f then
-		local base = CFrame.new(f + Vector3.new(0, 0.42, 0)) * CFrame.Angles(0, 0.7, math.rad(70)) -- lying on its side
-		prop("Helmet", Vector3.new(1.3, 0.85, 1.3), base, Color3.fromRGB(214, 168, 64), { Shape = Enum.PartType.Ball, Material = Enum.Material.SmoothPlastic })
-		prop("HelmetBrim", Vector3.new(0.12, 1.7, 1.7), base * CFrame.new(0, -0.32, 0) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(176, 132, 48), { Shape = Enum.PartType.Cylinder })
-		prop("HelmetLamp", Vector3.new(0.18, 0.5, 0.5), base * CFrame.new(0.55, 0.05, 0) * CFrame.Angles(0, math.pi / 2, 0) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(70, 66, 60), { Shape = Enum.PartType.Cylinder })
-		prop("HelmetCrack", Vector3.new(0.06, 0.7, 0.08), base * CFrame.new(0.1, 0.25, 0.62) * CFrame.Angles(0, 0, 0.5), Color3.fromRGB(40, 26, 18))
+		-- a voxel miner's helmet tipped on its side: a stepped dome (three discs), a wide brim, a dead lamp, a dark crack
+		local base = CFrame.new(f + Vector3.new(0, 0.62, 0)) * CFrame.Angles(0, 0.7, math.rad(72))
+		local UP = CFrame.Angles(0, 0, math.pi / 2)
+		local OCHRE, OCHRE_D = Color3.fromRGB(214, 168, 64), Color3.fromRGB(170, 128, 44)
+		prop("HelmetBrim", Vector3.new(0.14, 1.9, 1.9), base * CFrame.new(0, -0.05, 0) * UP, OCHRE_D, { Shape = Enum.PartType.Cylinder })
+		prop("Helmet", Vector3.new(0.5, 1.4, 1.4), base * CFrame.new(0, 0.26, 0) * UP, OCHRE, { Shape = Enum.PartType.Cylinder })
+		prop("HelmetDome", Vector3.new(0.32, 1.05, 1.05), base * CFrame.new(0, 0.66, 0) * UP, OCHRE, { Shape = Enum.PartType.Cylinder })
+		prop("HelmetCap", Vector3.new(0.18, 0.6, 0.6), base * CFrame.new(0, 0.88, 0) * UP, OCHRE_D, { Shape = Enum.PartType.Cylinder })
+		prop("HelmetLamp", Vector3.new(0.3, 0.42, 0.42), base * CFrame.new(0, 0.34, -0.72) * CFrame.Angles(0, math.pi / 2, 0), Color3.fromRGB(96, 92, 84), { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Glass, Transparency = 0.2 })
+		prop("HelmetCrack", Vector3.new(0.07, 0.75, 0.1), base * CFrame.new(0.2, 0.5, 0.66) * CFrame.Angles(0, 0, 0.5), Color3.fromRGB(40, 26, 18))
+		prop("HelmetCrack", Vector3.new(0.07, 0.4, 0.1), base * CFrame.new(-0.05, 0.62, 0.6) * CFrame.Angles(0, 0, -0.6), Color3.fromRGB(40, 26, 18))
+		-- its owner's pickaxe dropped beside it, the head chipped (Gemini v13 round 1: tell the rest of the story)
+		local pick = CFrame.new(f + Vector3.new(1.6, 0.11, -0.9)) * CFrame.Angles(0, 2.2, 0)
+		prop("PickHandle", Vector3.new(0.2, 0.2, 2.3), pick, Color3.fromRGB(128, 84, 50), { Material = Enum.Material.Wood })
+		prop("PickHead", Vector3.new(1.5, 0.26, 0.3), pick * CFrame.new(0, 0.03, -1.1), Color3.fromRGB(112, 110, 122), { Material = Enum.Material.Metal })
+		prop("PickTip", Vector3.new(0.4, 0.2, 0.22), pick * CFrame.new(-0.88, 0.0, -1.1) * CFrame.Angles(0, 0, 0.35), Color3.fromRGB(92, 90, 102), { Material = Enum.Material.Metal })
 		made += 1
 	end
 	-- the fallen tripod and lantern in the Old Tube

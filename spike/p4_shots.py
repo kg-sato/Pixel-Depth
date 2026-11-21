@@ -13,9 +13,10 @@ def aim(pos, at, fov=70, hud=False):
     nm = f"P4Cam{_n[0]}"  # a fresh name each time: an older view's timed unbind must not end this one
     C(f"local RS=game:GetService('RunService') for i=1,{_n[0]} do pcall(function() RS:UnbindFromRenderStep('P4Cam'..i) end) end "
       f"for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') and g.Name~='CrewPlate' then g.Enabled={'true' if hud else 'false'} end end "
+      "for _,b in workspace:GetDescendants() do if b:IsA('BillboardGui') and b.Name=='CrewSign' then b.Enabled=false end end "
       f"local p, a = {pos}, {at} "
-      "local ch=game.Players.LocalPlayer.Character for _,d in ch:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 end end "
-      f"RS:BindToRenderStep('{nm}', Enum.RenderPriority.Camera.Value+40, function() local cam=workspace.CurrentCamera cam.CameraType=Enum.CameraType.Scriptable cam.FieldOfView={fov} cam.CFrame=CFrame.lookAt(p, a) for _,d in cam:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 end end end) "
+      "local ch=game.Players.LocalPlayer.Character for _,d in ch:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 elseif d:IsA('ParticleEmitter') or d:IsA('BillboardGui') or d:IsA('Light') then d.Enabled=false end end "
+      f"RS:BindToRenderStep('{nm}', Enum.RenderPriority.Camera.Value+40, function() local cam=workspace.CurrentCamera cam.CameraType=Enum.CameraType.Scriptable cam.FieldOfView={fov} cam.CFrame=CFrame.lookAt(p, a) for _,d in cam:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 elseif d:IsA('ParticleEmitter') and d.Enabled then d.Enabled=false d:Clear() end end end) "
       f"task.delay(14, function() pcall(function() RS:UnbindFromRenderStep('{nm}') end) end) return 1")
     time.sleep(1.6)
 def shot(name):
@@ -24,10 +25,10 @@ N.play(True); time.sleep(12)
 C("local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('DailyChest') if g then g.Enabled=false end return 1")
 V = "Vector3.new"
 TOWN = [
-    ("shore", f"{V}(-32,7,36)", f"{V}(-42,0.7,22)", 62),
-    ("sign", f"{V}(22,10,-30)", f"{V}(6,3,-8)", 66),
+    ("shore", f"{V}(-17,7,31)", f"{V}(-9,0.7,40)", 58),  # 2026-11-20: down on the bank over the stream's bend and the bridge
+    ("sign", f"{V}(11,13.5,-6.4)", f"{V}(11,4.2,-14)", 50),  # the town camera's own angle (C.CAM_PITCH 52, from the south): the boards tilt up to it
     ("cabins", f"{V}(37,6.5,3)", f"{V}(47.5,3,-1.5)", 64),
-    ("forge", f"{V}(-26,9,-12)", f"{V}(-38,4.5,-24)", 62),
+    ("forge", f"{V}(-34,17,-6)", f"{V}(-37,4,-22)", 56),  # high from the south like the town camera: the refinery stands in the forge yard (the owner, 2026-11-14)
 ]
 for name, p, a, fov in TOWN:
     if want and name not in want: continue
@@ -35,7 +36,7 @@ for name, p, a, fov in TOWN:
 if not want or want & {"hearth", "vignette", "gallery"}:
     C("for i=1,40 do pcall(function() game:GetService('RunService'):UnbindFromRenderStep('P4Cam'..i) end) end game.ReplicatedStorage.Remotes.Surface:FireServer('down') return 1"); time.sleep(16)
     print("in cave:", C("return tostring(game.Players.LocalPlayer:GetAttribute('InCave'))"))
-    aim("require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN+Vector3.new(7.5,7,8)", "require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN+Vector3.new(0,3.2,0)", 66)
+    aim("require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN+Vector3.new(10,6.5,23)", "require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN+Vector3.new(-0.5,1.4,11)", 58)  # the campfire is at cell (0, 3): 12 studs south of the origin
     shot("hearth")
     print("vignettes:", S("local v=workspace.Caves:FindFirstChild('Vignettes') return v and v:GetAttribute('Made') or 'none'"))
     h = C("for _,d in workspace.Caves.Vignettes:GetChildren() do if d.Name=='Helmet' then return tostring(d.Position) end end return 'none'")

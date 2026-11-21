@@ -18,7 +18,9 @@ def hold(pos, at, fov=60, secs=16):
       "for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') then g.Enabled=false end end "
       f"local p, a = {pos}, {at} "
       f"RS:BindToRenderStep('{nm}', Enum.RenderPriority.Camera.Value+45, function() local cam=workspace.CurrentCamera cam.CameraType=Enum.CameraType.Scriptable cam.FieldOfView={fov} cam.CFrame=CFrame.lookAt(p, a) "
-      "for _,d in cam:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 end end end) "
+      "for _,d in cam:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 elseif d:IsA('ParticleEmitter') and d.Enabled then d.Enabled=false d:Clear() end end "
+      "local ch=game.Players.LocalPlayer.Character if ch then for _,d in ch:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 elseif d:IsA('ParticleEmitter') or d:IsA('BillboardGui') or d:IsA('Light') then d.Enabled=false end end end "
+      "for _,d in workspace:GetChildren() do if d:IsA('Model') and d:GetAttribute('Pet') ~= nil then d:PivotTo(CFrame.new(0,-900,0)) end end end) "
       f"task.delay({secs}, function() pcall(function() RS:UnbindFromRenderStep('{nm}') end) end) return 1")
     time.sleep(1.5)
 def snap(name):
@@ -31,20 +33,36 @@ N.play(True); time.sleep(12)
 C("local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('DailyChest') if g then g.Enabled=false end return 1")
 # 1 the cozy forge and the glowing mine arch (Core Keeper capsule): the miner by Bolt's anvil sparks, the lit shaft behind
 S(P + "local a=workspace.Hub:FindFirstChild('Anvil',true) h.CFrame=CFrame.lookAt(a.Position+Vector3.new(3,1,4), Vector3.new(0,a.Position.Y,0)) return 1"); time.sleep(2)
-hold("workspace.Hub:FindFirstChild('Anvil',true).Position+Vector3.new(-5,3.2,9)", "Vector3.new(0,4,0)", 58); snap("1_forge_arch")
+hold("Vector3.new(-34,17,-6)", "Vector3.new(-36,4,-21)", 56); snap("1_forge_arch")  # the town camera's height over the forge yard (the refinery kiln stands there since 2026-11-14)
 # 3 a towering boss silhouette (Dredge + Hades): a small miner before the Root Warden, rim-lit
 C("game.ReplicatedStorage.Remotes.Surface:FireServer('down') return 1"); time.sleep(16)
 S(P + "local w=workspace.Caves:FindFirstChild('Warden',true) local wp=w:GetPivot().Position local f=(wp-require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN)*Vector3.new(1,0,1) h.CFrame=CFrame.lookAt(wp-f.Unit*9+Vector3.new(0,3,0), wp) return 1"); time.sleep(2)
-hold("workspace.Caves:FindFirstChild('Warden',true):GetPivot().Position - ((workspace.Caves:FindFirstChild('Warden',true):GetPivot().Position-O1)*Vector3.new(1,0,1)).Unit*16 + Vector3.new(2,1.5,0)",
+hold("workspace.Caves:FindFirstChild('Warden',true):GetPivot().Position - ((workspace.Caves:FindFirstChild('Warden',true):GetPivot().Position-O1)*Vector3.new(1,0,1)).Unit*19 + Vector3.new(0,2.5,0)",
      "workspace.Caves:FindFirstChild('Warden',true):GetPivot().Position+Vector3.new(0,6,0)", 62); snap("4_boss")
 # 5 the campfire clink at Camp 1's hearth (Valheim capsule): the miner by the fire, gold clink sparks
 S(P + "h.CFrame=CFrame.lookAt(require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN+Vector3.new(4.5,3,3), require(game.ReplicatedStorage.Shared.Config).CAVE_ORIGIN+Vector3.new(0,3,0)) return 1"); time.sleep(1.5)
 S(P + "game.ReplicatedStorage.Remotes.Fx:FireClient(p,'clink',p.UserId,h.Position) return 1")
 hold("O1+Vector3.new(-6,4.5,-7)", "O1+Vector3.new(2,3,1.5)", 56); snap("5_campfire")
+# 2 the four-rider crew cart (Deep Rock Galactic + Mario Kart capsule): a crew run seen from ahead of the cart, copies of the
+# player fill the empty seats (Studio hooks DevCrewBot: the server drives; DevCrewFill: copies sit in seats 1, 3 and 4)
+C("for i=1,20 do pcall(function() game:GetService('RunService'):UnbindFromRenderStep('Thumb'..i) end) end return 1")
+S(P + "local body=workspace.Caves:FindFirstChild('CartBody',true) h.CFrame=body.CFrame*CFrame.new(0,3,6) p:SetAttribute('DevCrewFill',true) p:SetAttribute('DevCrewBot','lookout') return 1")
+time.sleep(9)
+C("local RS=game:GetService('RunService') RS:BindToRenderStep('ThumbCart', Enum.RenderPriority.Last.Value, function() "
+  "local w=workspace:FindFirstChild('MinecartEscape') if not w then return end local cart "
+  "local best=0 for _,m in w:GetChildren() do if m:IsA('Model') and not m:FindFirstChildOfClass('Humanoid') then local n=0 for _,d in m:GetDescendants() do if d:IsA('BasePart') then n+=1 end end if n>best then best,cart=n,m end end end "
+  "if not cart then return end local cam=workspace.CurrentCamera local c=cart:GetPivot() "
+  "cam.CameraType=Enum.CameraType.Scriptable cam.FieldOfView=58 cam.CFrame=CFrame.lookAt((c*CFrame.new(-4.2,4.2,-10)).Position,(c*CFrame.new(0,3,0.5)).Position) "
+  "for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') then g.Enabled=false end end end) "
+  "task.delay(6, function() pcall(function() RS:UnbindFromRenderStep('ThumbCart') end) end) return 1")
+time.sleep(2.0)
+snap("2_crew_cart")
+S(P + "p:SetAttribute('DevCrewFill',nil) return 1")
+time.sleep(30)  # the run ends and the player is home in town
 # 3 the mythic egg rupture (Slime Rancher 2 + Hollow Knight): a Secret hatch frozen on the burst
 C("for i=1,20 do pcall(function() game:GetService('RunService'):UnbindFromRenderStep('Thumb'..i) end) end for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') then g.Enabled=true end end game.Players.LocalPlayer:SetAttribute('DevHatchFreeze', 8.25) return 1")
 S("game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1], 'hatch', 'Ninering') return 1"); time.sleep(9.2)
 C("for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') then g.Enabled=false end end return 1")
 snap("3_hatch")
 C("game.Players.LocalPlayer:SetAttribute('DevHatchFreeze', nil) for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') then g.Enabled=true end end return 1")
-print("done (2, the four-rider cart, needs a crew of real players: taken from the crew test)")
+print("done")

@@ -286,7 +286,10 @@ function M.build(parent, origin, seed, opt)
 	-- LAYER 2, TITAN'S REST (plan sections 3 to 6): clay country. Wide, low bedding-plane galleries (old floods spread sideways
 	-- between soft clay beds), the Titan's Hall (a huge collapse chamber where a stone giant lies asleep), an upper gallery, a clay
 	-- pool, a lower gallery back under the hall and a footprint drop; the same five branch slots as layer 1.
-	passage({ P(36, 2, 0), P(70, 0, 12), P(104, -2, 6), P(118, -2, 2) }, 16, 5, { flat = 0.8 }) -- the bedding plane east: wide, low, flat
+	passage({ P(36, 2, 0), P(52, 1, 8), P(64, 0, 12) }, 16, 5, { flat = 0.8 }) -- the bedding plane east: wide, low, flat
+	-- directive v13 (story01 12:00): a narrow foggy threshold pinch before the Titan's Hall opens out. The wide plane above ends
+	-- at x 64 (its end slab carves to about x 92), so the throat is narrow from there to the hall's west wall near x 108
+	passage({ P(64, 0, 12), P(90, -2, 7), P(118, -2, 2) }, 4.6, 5.5, { flat = 0.8 })
 	spot("Canyon", P(76, -2, 6))
 	chamber(P(156, 10, 0), 48, 26, 36, { floor = 0.4, slope = 0.08 }) -- the Titan's Hall
 	spot("Cathedral", P(132, 0, 6))
@@ -308,6 +311,14 @@ function M.build(parent, origin, seed, opt)
 	local b3 = J(P(-114, -6, 54)) passage({ b2, b3 }, 5, 4, { flat = 0.85 }) chamber(b3, 12, 7, 10) spot("B3", b3)
 	local b4 = J(P(214, 12, -22)) passage({ P(190, 8, -4), b4 }, 5, 6, { flat = 0.6 }) chamber(b4, 7, 8, 6) spot("B4", b4)
 	local b5 = J(P(180, 0, 62)) passage({ P(160, 2, 28), J(P(170, 2, 46)), b5 }, 5, 4, { flat = 0.9 }) chamber(b5, 9, 5, 8) spot("B5", b5)
+	end
+	if L >= 2 then -- directive v13 (level01 #6, "pure linear backtracking"): the deep layers' branch chambers loop back instead of
+		-- ending: B1 round to B2, B3 back to the swallow hole, B4 round the far side to B5 (spots carry the dip: take it off first)
+		local function raw(q) return q and (q - P(0, dipY(q.X), 0)) end
+		local b1, b2, b3, b4, b5 = raw(spots.B1), raw(spots.B2), raw(spots.B3), raw(spots.B4), raw(spots.B5)
+		if b1 and b2 then passage({ b1, P(-114, 2, -4), b2 }, 4.2, 4.5, { flat = 0.8 }) end
+		if b3 then passage({ b3, P(-82, -2, 46), P(-64, 0, 40) }, 4.2, 4.5, { flat = 0.8 }) end
+		if b4 and b5 then passage({ b4, P(208, 6, 18), b5 }, 4.2, 4.5, { flat = 0.8 }) end
 	end
 	-- THEMES per place, for floor colours and for CaveProps (it dresses Floor parts by their Theme attribute)
 	local REG = {
@@ -726,12 +737,74 @@ function M.build(parent, origin, seed, opt)
 		end
 	end
 
+	if L == 2 then -- directive v13 (story01 12:00): a low warm mist hangs in the threshold throat, lit from the floor by two old dig
+		-- lamps at the hall's mouth, so the Titan's Hall opens out of the fog
+		local mid = floorUnder(P(98, -2, 5))
+		if mid then
+			local fog = part("Landmark", "ThresholdFog", Vector3.new(12, 1, 6), CFrame.new(mid + Vector3.new(0, 2.6, 0)), Color3.new(1, 1, 1), { Transparency = 1, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+			local e = Instance.new("ParticleEmitter")
+			e.Texture, e.Shape = "rbxasset://textures/particles/smoke_main.dds", Enum.ParticleEmitterShape.Box
+			e.Color = ColorSequence.new(Color3.fromRGB(222, 190, 160), Color3.fromRGB(150, 172, 182))
+			e.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 5), NumberSequenceKeypoint.new(1, 9) })
+			e.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.3, 0.8), NumberSequenceKeypoint.new(0.7, 0.85), NumberSequenceKeypoint.new(1, 1) })
+			e.Lifetime, e.Rate, e.Speed, e.SpreadAngle = NumberRange.new(6, 9), 5, NumberRange.new(0.3, 0.8), Vector2.new(180, 20)
+			e.Rotation, e.RotSpeed, e.LightEmission, e.LightInfluence = NumberRange.new(0, 360), NumberRange.new(-8, 8), 0.05, 1
+			e.Acceleration = Vector3.new(0.4, 0.04, 0) -- it drifts toward the hall
+			e.Parent = fog
+		end
+		for _, z in { -1, 7 } do
+			local f = floorUnder(P(110, -2, z))
+			if f then
+				local lamp = part("Landmark", "DigLamp", Vector3.new(0.9, 1.2, 0.9), CFrame.new(f + Vector3.new(0, 0.6, 0)), Color3.fromRGB(255, 190, 110), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false })
+				local sl = Instance.new("SpotLight")
+				sl.Face, sl.Angle, sl.Range, sl.Brightness, sl.Color, sl.Shadows = Enum.NormalId.Top, 75, 26, 1.8, Color3.fromRGB(255, 176, 96), false
+				sl.Parent = lamp
+			end
+		end
+	end
+	-- directive v13 (light01; Graphics Levels 1-3 on phones): thin glowing rims in the layer's own glow on the lip of every drop of
+	-- two voxels (8 studs) or more, dashed (every other cell), so a cliff edge reads on low quality with no light at all. Capped
+	-- at 140; the count is the model's attribute RimGuides.
+	do
+		local made = 0
+		model:SetAttribute("RimGuides", 0)
+		for x = 1, NX - 2 do
+			if made >= 140 then break end
+			for z = 1, NZ - 2 do
+				for y = 2, NY - 3 do
+					if made < 140 and (x + y + z) % 2 == 0 and get(x, y, z) == 1 and get(x, y + 1, z) == 1 and get(x, y - 1, z) == 0 and not inCamp(x, z) then
+						for _, d in { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } } do
+							local nx, nz = x + d[1], z + d[2]
+							if get(nx, y, nz) == 1 and get(nx, y - 1, nz) == 1 and get(nx, y - 2, nz) == 1 then
+								local top = toWorld(x, y, z) - Vector3.new(0, V / 2, 0) + Vector3.new(d[1], 0, d[2]) * (V / 2 - 0.2)
+								part("RimGuides", "RimGuide", d[1] ~= 0 and Vector3.new(0.22, 0.14, V * 0.8) or Vector3.new(V * 0.8, 0.14, 0.22), CFrame.new(top + Vector3.new(0, 0.08, 0)), GLOW,
+									{ Material = Enum.Material.Neon, MaterialVariant = "", Transparency = 0.15, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+								made += 1
+								model:SetAttribute("RimGuides", made)
+								break
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
 	if L == 4 then -- THE MAGMA LAKE under the hall's floor edge and basalt columns round it: hexagon-ish stacks, lit from below
 		local vx, vy, vz = toVox(rootC)
 		local lake = part("Landmark", "MagmaLake", Vector3.new(60, 1, 44), CFrame.new(origin + rootC + P(0, -6, 0)), Color3.fromRGB(255, 96, 40), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false })
 		local ll = Instance.new("PointLight")
 		ll.Color, ll.Range, ll.Brightness, ll.Shadows = Color3.fromRGB(255, 110, 50), 60, 1.2, false
 		ll.Parent = lake
+		do -- directive v13 (Gemini phase 5: a still neon sheet): slow bubbles swell and pop all over the lake's face
+			local b = Instance.new("ParticleEmitter")
+			b.Texture, b.Shape, b.ShapeStyle = "rbxasset://textures/particles/sparkles_main.dds", Enum.ParticleEmitterShape.Box, Enum.ParticleEmitterShapeStyle.Volume
+			b.Color, b.LightEmission, b.Rate = ColorSequence.new(Color3.fromRGB(255, 200, 90), Color3.fromRGB(255, 90, 30)), 0.8, 14
+			b.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(0.8, 1.3), NumberSequenceKeypoint.new(1, 0) })
+			b.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.6), NumberSequenceKeypoint.new(0.8, 0.2), NumberSequenceKeypoint.new(1, 1) })
+			b.Lifetime, b.Speed, b.EmissionDirection = NumberRange.new(0.8, 1.4), NumberRange.new(0.6, 1.4), Enum.NormalId.Top
+			b.Parent = lake
+		end
 		part("Landmark", "MagmaCrust", Vector3.new(64, 0.8, 48), lake.CFrame * CFrame.new(0, -0.2, 0), Color3.fromRGB(24, 18, 22), { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.2, CanCollide = false }) -- the cooled obsidian rim round the glow
 		for k = 1, 3 do -- floating rafts of dark slag
 			part("Landmark", "SlagRaft", Vector3.new(4 + k, 0.8, 3 + k * 0.5), lake.CFrame * CFrame.new((k - 2) * 14, 0.6, (hash(k, seed, 8) - 0.5) * 20) * CFrame.Angles(0, k, 0), Color3.fromRGB(30, 22, 24), { Material = Enum.Material.Basalt, MaterialVariant = "", CanCollide = false })

@@ -338,14 +338,25 @@ function M.build(caves)
 		local cap = part("BouncePad", Vector3.new(5.4, 1.1, 5.4), O * CFrame.new(x, y + 1.95, z), Color3.fromRGB(226, 140, 52), { Material = Enum.Material.SmoothPlastic, CanCollide = false, Transparency = 1 }) -- the pad's box: invisible, the mushroom draws it
 		cap:SetAttribute("BouncePad", power)
 		part("PadCap", Vector3.new(0.7, 5.2, 5.2), O * CFrame.new(x, y + 1.85, z) * UPc, Color3.fromRGB(214, 128, 46), { CanCollide = false, Shape = Enum.PartType.Cylinder })
-		part("PadDome", Vector3.new(0.5, 4.0, 4.0), O * CFrame.new(x, y + 2.42, z) * UPc, Color3.fromRGB(236, 158, 64), { CanCollide = false, Shape = Enum.PartType.Cylinder })
+		-- a fleshy domed cap (an ellipsoid sphere mesh) over the rim disc, with spore motes drifting up off it (Gemini v13 round 1:
+		-- the stacked discs read as a plastic button)
+		local dome = part("PadDome", Vector3.new(4.8, 2.2, 4.8), O * CFrame.new(x, y + 2.1, z), Color3.fromRGB(236, 158, 64), { CanCollide = false })
+		local dm = Instance.new("SpecialMesh")
+		dm.MeshType = Enum.MeshType.Sphere
+		dm.Parent = dome
+		local motes = Instance.new("ParticleEmitter")
+		motes.Texture, motes.Rate, motes.Lifetime, motes.Speed, motes.SpreadAngle = "rbxasset://textures/particles/sparkles_main.dds", 2.5, NumberRange.new(3, 5), NumberRange.new(0.4, 1), Vector2.new(50, 50)
+		motes.Color, motes.LightEmission, motes.Acceleration = ColorSequence.new(Color3.fromRGB(255, 226, 160)), 1, Vector3.new(0, 0.25, 0)
+		motes.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.18), NumberSequenceKeypoint.new(1, 0.05) })
+		motes.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.2, 0.3), NumberSequenceKeypoint.new(1, 1) })
+		motes.Parent = dome
 		local gills = part("PadGills", Vector3.new(0.16, 4.6, 4.6), O * CFrame.new(x, y + 1.42, z) * UPc, Color3.fromRGB(255, 196, 110), { Material = Enum.Material.Neon, CanCollide = false, Transparency = 0.35, Shape = Enum.PartType.Cylinder })
 		local l = Instance.new("PointLight")
 		l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 180, 90), 12, 0.7, false
 		l.Parent = gills
 		for k = 0, 4 do -- cream spots on the dome
 			local a = k / 5 * math.pi * 2 + 0.4
-			part("PadSpot", Vector3.new(0.12, 0.7, 0.7), O * CFrame.new(x + math.cos(a) * 1.3, y + 2.7, z + math.sin(a) * 1.3) * UPc, CREAM, { CanCollide = false, Shape = Enum.PartType.Cylinder })
+			part("PadSpot", Vector3.new(0.6, 0.6, 0.6), O * CFrame.new(x + math.cos(a) * 1.3, y + 3.0, z + math.sin(a) * 1.3), CREAM, { CanCollide = false, Shape = Enum.PartType.Ball }) -- a cream bump half sunk in the dome
 		end
 	end
 	part("PadLedge", Vector3.new(26, 2, 10), O * CFrame.new(-34, 21, -49.5), CLAY_L, ROCK)
@@ -400,7 +411,17 @@ function M.build(caves)
 	deposit(O * CFrame.new(-40, 22, -51.4), 2)
 	-- pale shafts of light through cracks in the roof (the directive's root god-rays): see-through slanted beams, no collision
 	for i, r in { { -30, 10 }, { 8, -30 }, { 30, 28 }, { -8, 40 } } do
-		part("GodRay", Vector3.new(3 + i * 0.6, 76, 0.2), O * CFrame.new(r[1], 34, r[2]) * CFrame.Angles(0, i * 0.9, 0) * CFrame.Angles(0, 0, 0.16), Color3.fromRGB(150, 210, 190), { Material = Enum.Material.Neon, Transparency = 0.955, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+		local mid = O * CFrame.new(r[1], 34, r[2]) * CFrame.Angles(0, i * 0.9, 0) * CFrame.Angles(0, 0, 0.16) -- a soft camera-facing Beam shaft, as Camp 1's (2026-11-20)
+		local anchor = part("GodRay", Vector3.new(0.2, 0.2, 0.2), mid * CFrame.new(0, 38, 0), Color3.fromRGB(150, 210, 190), { Transparency = 1, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+		local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+		a0.Parent, a1.Parent = anchor, anchor
+		a1.WorldPosition = (mid * CFrame.new(0, -38, 0)).Position
+		local bm = Instance.new("Beam")
+		bm.Attachment0, bm.Attachment1, bm.FaceCamera, bm.Segments = a0, a1, true, 1
+		bm.Width0, bm.Width1, bm.Color, bm.LightEmission, bm.LightInfluence = 2.5 + i * 0.4, 5 + i * 0.6, ColorSequence.new(Color3.fromRGB(150, 210, 190)), 0.7, 0
+		bm.Texture, bm.TextureMode, bm.TextureLength, bm.TextureSpeed = "rbxasset://textures/particles/smoke_main.dds", Enum.TextureMode.Stretch, 1, 0.02
+		bm.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.2, 0.86), NumberSequenceKeypoint.new(0.75, 0.9), NumberSequenceKeypoint.new(1, 1) })
+		bm.Parent = anchor
 	end
 	-- common ore along the walls
 	for i, d in { { -40, -52.2, 0 }, { -12, -52.2, 0 }, { 22, -52.2, 0 }, { -44, 52.2, math.pi }, { -8, 52.2, math.pi }, { 26, 52.2, math.pi }, { 72.2, 44, -math.pi / 2 }, { -72.2, 30, math.pi / 2 } } do
@@ -471,11 +492,16 @@ function M.build(caves)
 		ring("JarFoot", 1.05, 0.34, 0.17, CLAY_D)
 		ring("JarBase", 1.55, 0.36, 0.5, body)
 		local b = ring("JarBody", 2.3, 0.95, 1.12, body) -- the belly (the part that collides and that the smash code finds)
-		ring("JarBand", 2.36, 0.22, 1.25, CREAM)
+		ring("JarBand", 2.36, 0.22, 1.25, CREAM:Lerp(CLAY_D, 0.55)) -- a painted band, not a bright stripe (Gemini v13 round 3: it read as a glowing ring)
 		ring("JarShoulder", 1.85, 0.42, 1.78, body)
 		ring("JarShoulder2", 1.3, 0.3, 2.13, CLAY_D)
 		ring("JarNeck", 0.95, 0.62, 2.58, CLAY_D)
 		ring("JarRim", 1.45, 0.22, 3.0, CLAY_L)
+		for _, sx in { -1, 1 } do -- twin loop handles from the neck down to the shoulder (MET #17; Gemini v13 round 1)
+			jp("JarHandle", Vector3.new(0.5, 0.16, 0.22), CFrame.new(sx * 0.66, 2.78, 0), CLAY_D)
+			jp("JarHandle", Vector3.new(0.16, 0.85, 0.22), CFrame.new(sx * 0.92, 2.42, 0) * CFrame.Angles(0, 0, sx * 0.12), CLAY_D)
+			jp("JarHandle", Vector3.new(0.34, 0.16, 0.22), CFrame.new(sx * 0.82, 2.02, 0), CLAY_D)
+		end
 		jar.PrimaryPart = b
 		jar:SetAttribute("Jar", i)
 		jar.Parent = folder
@@ -611,7 +637,14 @@ function M.build(caves)
 				end
 			end
 		end
-		for k = 0, 9 do part("PathTile", Vector3.new(3.2, 0.3, 3.2), O * CFrame.new(11 + math.sin(k) * 1.2, 0.1, -50 - k * 4) * CFrame.Angles(0, k * 0.5, 0), k % 3 == 0 and TEALG:Lerp(CLAY, 0.6) or CREAM:Lerp(CLAY, 0.5), { CanCollide = false }) end
+		for k = 0, 9 do -- chunky flagstones sunk in the clay floor, each set on the floor under it (Gemini v13 round 2: paper-thin stickers)
+			local at = O * CFrame.new(11 + math.sin(k) * 1.2, 0, -50 - k * 4) * CFrame.Angles(0, k * 0.5, 0)
+			local hit = workspace:Raycast(at.Position + Vector3.new(0, 4, 0), Vector3.new(0, -9, 0))
+			local y = hit and (hit.Position.Y - at.Position.Y) or 0.1
+			local col = k % 3 == 0 and TEALG:Lerp(CLAY, 0.6) or CREAM:Lerp(CLAY_D, 0.55)
+			part("PathTile", Vector3.new(3.2, 0.7, 3.2), at * CFrame.new(0, y - 0.2, 0), col, { CanCollide = false, Material = Enum.Material.Sandstone })
+			part("PathTileTop", Vector3.new(2.7, 0.12, 2.7), at * CFrame.new(0, y + 0.19, 0), col:Lerp(Color3.new(1, 1, 1), 0.08), { CanCollide = false, Material = Enum.Material.Sandstone })
+		end
 		lantern(Vector3.new(11, 17.5, -70))
 		lantern(Vector3.new(11, 17.5, -94))
 		for _, x in { 5.2, 16.8 } do part("DoorPost", Vector3.new(1.4, 14.6, 1.4), O * CFrame.new(x, 7.3, -53.2), BARK, { Material = Enum.Material.Wood }) end

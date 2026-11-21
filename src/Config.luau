@@ -324,6 +324,7 @@ C.TETHER = { value = 0.15, reach = 15, torch = 0.25, max = 5, luck = 0.1 }
 -- `codex` = { ore = set of "layer.ore" keys, pet = set of names }; the directive's ask is taken as the owner's yes). Finding
 -- `at` shares of all of them gives `luck` more Epic-and-better egg luck, added to the friends luck in C.eggOdds.
 C.CODEX = { at = { 0.25, 0.5, 1 }, luck = { 0.05, 0.1, 0.2 } }
+C.WEAK = { minOre = 3, period = 2.4, on = 0.9, aim = 9 } -- directive v13: weak-point glints on rare veins (Shared.WeakPoint; the server checks the window, PixelServer)
 -- Cave audio (directive v13 phase 2): our own synthesised sounds (audio/pd_cave_sfx.py, measured by audio/pd_audit.py), uploaded
 -- 2026-11-20 (ids also in audio/sfx/cave/asset_ids.json and tools/uploads.json). Played by Shared.AudioManager.
 C.CAVE_SFX = { basalt_flint = 84921392667065, clay_kiln_hum = 123955158842161, clay_scrape = 92154171621548, clay_squelch = 140158703989906, clink = 101209098651241, crystal_chime = 74127620664540, crystal_rift = 125624086521282, escape_drum = 134697388949994, glitter_shimmer = 117900817712827, golden_vein = 97252130730503, kiln_surge = 99815605558253, muspell_rumble = 126810641992799, root_thock = 130787438556087, rootholm_wind = 126857845349216, spore_storm = 103245606354260, stalker_skitter = 99162786453967, thump = 107950798985988, town_hearth = 101322104755967 }

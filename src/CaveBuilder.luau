@@ -160,14 +160,41 @@ function Cave.build(parent, origin, seed)
 		for k = 0, 13 do
 			local a = k / 14 * math.pi * 2 + 0.11
 			local mossy = k % 3 ~= 1
-			part("Camp", "RiverCobble", Vector3.new(0.95 + (k % 2) * 0.2, 0.5, 0.8), CFrame.new(fire + Vector3.new(math.cos(a) * 4.05, 0.16, math.sin(a) * 4.05)) * CFrame.Angles(0, a + 0.3, 0.06), mossy and Color3.fromRGB(86, 112, 78) or Color3.fromRGB(118, 110, 120), { Shape = Enum.PartType.Ball, CanCollide = false })
+			-- chunky flat river stones half sunk in the floor, a moss cap on two of three (Gemini v13: the balls read as marbles)
+			local h = hash(k, 7, 3)
+			local cc = CFrame.new(fire + Vector3.new(math.cos(a) * 4.05, 0.12, math.sin(a) * 4.05)) * CFrame.Angles(0, a + 0.3 + h, (h - 0.5) * 0.3)
+			part("Camp", "RiverCobble", Vector3.new(0.95 + (k % 2) * 0.25, 0.46, 0.75 + h * 0.2), cc, Color3.fromRGB(80 + math.floor(h * 16), 76, 86), { CanCollide = false })
+			if mossy then part("Camp", "CobbleMoss", Vector3.new(0.7 + (k % 2) * 0.2, 0.1, 0.55), cc * CFrame.new(0.05, 0.27, 0), Color3.fromRGB(92, 126, 78), { CanCollide = false, CastShadow = false }) end
 		end
 		for k = 0, 7 do
 			local a = k / 8 * math.pi * 2
-			part("Camp", "FireStone", Vector3.new(1.6, 1, 1.6), CFrame.new(fire + Vector3.new(math.cos(a) * 3, 0.62, math.sin(a) * 3)) * CFrame.Angles(0, a, 0), PAL.rock[3])
+			local h = hash(k, 5, 9) -- dark slate fire stones, each its own size and tilt (Gemini v13: eight equal purple cubes)
+			part("Camp", "FireStone", Vector3.new(1.35 + h * 0.45, 0.8 + h * 0.4, 1.2 + (1 - h) * 0.4), CFrame.new(fire + Vector3.new(math.cos(a) * 3, 0.5 + h * 0.2, math.sin(a) * 3)) * CFrame.Angles((h - 0.5) * 0.2, a + h * 0.4, (0.5 - h) * 0.16), Color3.fromRGB(62 + math.floor(h * 16), 58, 68), { Material = Enum.Material.Slate })
 		end
 		for k = 0, 2 do part("Camp", "Log", Vector3.new(0.9, 0.9, 4), CFrame.new(fire + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, k * 2.1, 0.25), PAL.bark) end
 		part("Camp", "Ash", Vector3.new(0.06, 5.2, 5.2), CFrame.new(fire + Vector3.new(0, 0.42, 0)) * CFrame.Angles(0, 0, math.pi / 2), Color3.fromRGB(34, 28, 32), { Shape = Enum.PartType.Cylinder, CanCollide = false, CastShadow = false }) -- an ash ring under the logs, 0.04 over the floor (Gemini full1119k)
+		do -- directive v13 (Gemini round 2: a sterile camp): the miners' own corner round the fire: a soot scorch under the ring, a
+			-- log bench, a rolled bedroll on its mat, a supply crate with a smaller one on top, a cooking pot on three stones
+			local DK, WOOD, IRON = Color3.fromRGB(30, 24, 28), Color3.fromRGB(120, 82, 54), Color3.fromRGB(58, 54, 64)
+			local UPc = CFrame.Angles(0, 0, math.pi / 2)
+			part("Camp", "Scorch", Vector3.new(0.04, 10, 10), CFrame.new(fire + Vector3.new(0, 0.03, 0)) * UPc, DK, { Shape = Enum.PartType.Cylinder, CanCollide = false, CastShadow = false, Transparency = 0.35 })
+			for k, b in { { -6.4, 2.8, 0.5, 4.2 }, { -1.8, 6.8, -0.25, 3.2 } } do -- outside the cobble ring (radius 4.6)
+				part("Camp", "BenchLog", Vector3.new(b[4], 0.95, 0.95), CFrame.new(fire + Vector3.new(b[1], 0.47, b[2])) * CFrame.Angles(0, b[3], 0), PAL.bark, { Shape = Enum.PartType.Cylinder, CanCollide = false, Material = Enum.Material.Wood })
+				part("Camp", "BenchLogEnd", Vector3.new(0.06, 0.8, 0.8), CFrame.new(fire + Vector3.new(b[1], 0.47, b[2])) * CFrame.Angles(0, b[3], 0) * CFrame.new(b[4] / 2 + 0.02, 0, 0), Color3.fromRGB(196, 150, 104), { Shape = Enum.PartType.Cylinder, CanCollide = false, CastShadow = false })
+			end
+			local bed = CFrame.new(fire + Vector3.new(-6.8, 0, -4.2)) * CFrame.Angles(0, 0.4, 0)
+			part("Camp", "BedMat", Vector3.new(2.2, 0.12, 3.4), bed * CFrame.new(0, 0.07, 0), Color3.fromRGB(122, 58, 66), { CanCollide = false })
+			part("Camp", "Bedroll", Vector3.new(2.2, 0.75, 0.75), bed * CFrame.new(0, 0.5, -1.25), Color3.fromRGB(196, 96, 112), { Shape = Enum.PartType.Cylinder, CanCollide = false })
+			for _, sx in { -0.6, 0.6 } do part("Camp", "BedStrap", Vector3.new(0.14, 0.82, 0.82), bed * CFrame.new(sx, 0.5, -1.25), Color3.fromRGB(70, 46, 34), { Shape = Enum.PartType.Cylinder, CanCollide = false }) end
+			local crate = CFrame.new(fire + Vector3.new(6.8, 0, 3.8)) * CFrame.Angles(0, -0.35, 0)
+			part("Camp", "SupplyCrate", Vector3.new(1.6, 1.3, 1.4), crate * CFrame.new(0, 0.65, 0), WOOD, { Material = Enum.Material.WoodPlanks })
+			part("Camp", "CrateBand", Vector3.new(1.66, 0.16, 1.46), crate * CFrame.new(0, 1.0, 0), Color3.fromRGB(70, 46, 34), { CanCollide = false })
+			part("Camp", "SupplyCrate", Vector3.new(1.0, 0.8, 0.9), crate * CFrame.new(0.15, 1.71, 0.05) * CFrame.Angles(0, 0.5, 0), WOOD:Lerp(Color3.new(1, 1, 1), 0.08), { Material = Enum.Material.WoodPlanks, CanCollide = false })
+			local pot = fire + Vector3.new(5.6, 0, -3.0)
+			for k = 0, 2 do local a = k * 2.1 part("Camp", "PotStone", Vector3.new(0.5, 0.35, 0.45), CFrame.new(pot + Vector3.new(math.cos(a) * 0.55, 0.17, math.sin(a) * 0.55)) * CFrame.Angles(0, a, 0), Color3.fromRGB(70, 64, 76), { CanCollide = false }) end
+			part("Camp", "CookPot", Vector3.new(0.85, 1.2, 1.2), CFrame.new(pot + Vector3.new(0, 0.75, 0)) * UPc, IRON, { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Metal, CanCollide = false })
+			part("Camp", "PotStew", Vector3.new(0.05, 1.0, 1.0), CFrame.new(pot + Vector3.new(0, 1.2, 0)) * UPc, Color3.fromRGB(176, 104, 52), { Shape = Enum.PartType.Cylinder, CanCollide = false, CastShadow = false })
+		end
 		local flame = part("Camp", "Flame", Vector3.new(1.8, 2.6, 1.8), CFrame.new(fire + Vector3.new(0, 2, 0)) * CFrame.Angles(0, 0.6, 0), PAL.warm, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		part("Camp", "FlameCore", Vector3.new(0.6, 0.9, 0.6), CFrame.new(fire + Vector3.new(0, 1.6, 0)), Color3.fromRGB(255, 240, 190), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
 		glow(flame, Color3.fromRGB(255, 185, 95), 32, 1.15, true) -- was 3.4 then 1.7: the camp blew out to white (i65, Gemini r2 2026-11-09)
@@ -482,7 +509,20 @@ function Cave.build(parent, origin, seed)
 		landing:SetAttribute("Landing", true)
 		-- pale shafts of light over the camp (the directive's root god-rays): thin see-through slanted beams, no collision
 		for i, r in { { 12, -9 }, { -14, 6 }, { 4, 17 } } do
-			part("Camp", "GodRay", Vector3.new(3 + i * 0.6, 60, 0.2), CFrame.new(origin + Vector3.new(r[1], 28, r[2])) * CFrame.Angles(0, i * 1.3, 0) * CFrame.Angles(0, 0, 0.18), Color3.fromRGB(150, 210, 190), { Material = Enum.Material.Neon, Transparency = 0.955, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+			-- a soft light shaft as a camera-facing Beam with a smoky stretched texture: flat panes read as glass sheets and round
+			-- columns as glass cylinders (Gemini v13 rounds 1 and 3)
+			local top = origin + Vector3.new(r[1], 28, r[2]) + Vector3.new(-math.sin(0.18) * 30, math.cos(0.18) * 30, 0)
+			local bot = origin + Vector3.new(r[1], 28, r[2]) - Vector3.new(-math.sin(0.18) * 30, math.cos(0.18) * 30, 0)
+			local anchor = part("Camp", "GodRay", Vector3.new(0.2, 0.2, 0.2), CFrame.new(top), Color3.fromRGB(150, 210, 190), { Transparency = 1, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+			local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+			a0.Parent, a1.Parent = anchor, anchor
+			a1.WorldPosition = bot
+			local bm = Instance.new("Beam")
+			bm.Attachment0, bm.Attachment1, bm.FaceCamera, bm.Segments = a0, a1, true, 1
+			bm.Width0, bm.Width1, bm.Color, bm.LightEmission, bm.LightInfluence = 2.5 + i * 0.4, 5 + i * 0.6, ColorSequence.new(Color3.fromRGB(150, 210, 190)), 0.7, 0
+			bm.Texture, bm.TextureMode, bm.TextureLength, bm.TextureSpeed = "rbxasset://textures/particles/smoke_main.dds", Enum.TextureMode.Stretch, 1, 0.02
+			bm.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.2, 0.86), NumberSequenceKeypoint.new(0.75, 0.9), NumberSequenceKeypoint.new(1, 1) })
+			bm.Parent = anchor
 		end
 		-- the runic boundary ring (CMP-01): glowing mint segments on the floor round the safe zone; inside it you are safe
 		local ringR = 8.6 * CELL

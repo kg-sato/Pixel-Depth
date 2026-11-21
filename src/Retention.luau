@@ -258,6 +258,13 @@ function M.init(c)
 		op.FilterType = Enum.RaycastFilterType.Exclude
 		op.FilterDescendantsInstances = soft
 		local offLane = true -- first try: not on a path
+		local function free(cf, size) -- nothing in the box but characters: a player or NPC standing there at build time moved the kiln from run to run (p4f, 2026-11-20)
+			for _, d in workspace:GetPartBoundsInBox(cf, size, op) do
+				local m = d:FindFirstAncestorOfClass("Model")
+				if not (m and m:FindFirstChildOfClass("Humanoid")) then return false end -- players and NPCs walk about: they do not block
+			end
+			return true
+		end
 		local function clearAt(at)
 			local hit = workspace:Raycast(at + Vector3.new(0, 12, 0), Vector3.new(0, -24, 0), rpm)
 			if hit and offLane and hit.Instance.Name == "Lane" then return nil end
@@ -268,7 +275,7 @@ function M.init(c)
 					if not h2 or math.abs(h2.Position.Y - hit.Position.Y) > 0.35 then return nil end
 				end
 			end
-			if hit and math.abs(hit.Position.Y - cart:GetPivot().Position.Y) < 3 and #workspace:GetPartBoundsInBox(CFrame.new(hit.Position + Vector3.new(0, 4.8, 0)), Vector3.new(9, 8.4, 9), op) == 0 then
+			if hit and math.abs(hit.Position.Y - cart:GetPivot().Position.Y) < 3 and free(CFrame.new(hit.Position + Vector3.new(0, 4.8, 0)), Vector3.new(9, 8.4, 9)) then
 				return CFrame.lookAt(hit.Position, Vector3.new(cart:GetPivot().Position.X, hit.Position.Y, cart:GetPivot().Position.Z)) -- its mouth faces the shaft
 			end
 			return nil

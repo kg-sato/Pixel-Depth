@@ -103,17 +103,21 @@ function M.start(E)
 				local l = Instance.new("PointLight")
 				l.Range, l.Brightness, l.Shadows = 26, 2.2, false
 				l.Parent = rim
+				local sl = Instance.new("SpotLight") -- round 2 (Gemini: "add a strong rim backlight"): a back light aimed past the boss at the player, so its edges glow
+				sl.Name, sl.Face, sl.Angle, sl.Range, sl.Brightness, sl.Shadows = "RimSpot", Enum.NormalId.Front, 70, 44, 5, true
+				sl.Parent = rim
 				rim.Parent = workspace:FindFirstChild("ClientFX") or workspace
 			end
 			local h = E.hrp and E.hrp()
 			local bp = w.PrimaryPart.Position
 			local away = h and (bp - h.Position) * Vector3.new(1, 0, 1) or Vector3.zAxis
 			away = away.Magnitude > 0.1 and away.Unit or Vector3.zAxis
-			rim.Position = bp + away * 7 + Vector3.new(0, 6, 0)
-			rim.PointLight.Color = now == 2 and Color3.fromRGB(255, 120, 50) or Color3.fromRGB(80, 230, 220)
-			rim.PointLight.Enabled = true
+			rim.CFrame = CFrame.lookAt(bp + away * 7 + Vector3.new(0, 7.5, 0), h and h.Position or bp) -- behind and above, facing the player
+			local rc = now == 2 and Color3.fromRGB(255, 120, 50) or Color3.fromRGB(80, 230, 220)
+			rim.PointLight.Color, rim.RimSpot.Color = rc, rc
+			rim.PointLight.Enabled, rim.RimSpot.Enabled = true, true
 		elseif rim then
-			rim.PointLight.Enabled = false
+			rim.PointLight.Enabled, rim.RimSpot.Enabled = false, false
 		end
 	end)
 	local stepped = {}
@@ -204,6 +208,7 @@ function M.start(E)
 		if kind == "bossStart" then
 			local w = warden()
 			base = base or (w and w:GetPivot())
+			if w and base then w:PivotTo(base) end -- up again after a win's slump
 			resetKnots()
 			prompt(false)
 			bar.Visible = true
@@ -367,6 +372,21 @@ function M.start(E)
 						game:GetService("Debris"):AddItem(c, 5)
 						if k % 3 == 0 then c.Material, c.Color = Enum.Material.Glass, Color3.fromRGB(0, 240, 255) end -- a few crystal shards in the spill
 					end
+				end
+			end
+			do -- directive v13 (Gemini round 1: the beaten boss stood as it fought): it sinks and bows forward over 1.4 s, eyes out
+				local w = warden()
+				if w then
+					base = base or w:GetPivot()
+					local from, t0 = base, os.clock()
+					local slump = from * CFrame.new(0, -1.4, 0) * CFrame.Angles(-0.2, 0, 0)
+					local conn
+					conn = game:GetService("RunService").RenderStepped:Connect(function()
+						local k = math.clamp((os.clock() - t0) / 1.4, 0, 1)
+						if not w.Parent then conn:Disconnect() return end
+						w:PivotTo(from:Lerp(slump, 1 - (1 - k) ^ 3))
+						if k >= 1 then conn:Disconnect() end
+					end)
 				end
 			end
 			local won = now

@@ -12,5 +12,5 @@ for pet in sys.argv[2:] or list(AB):
         N.lua(f'''game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1], 'hatch', '{pet}') return 1''', "Server")  # 2026-11-20: the client DevHatch hook went with the old 2D show
         time.sleep(f + 0.9)
         N.shot(f"{pre}_{pet}_{f}")
-        time.sleep(4)
+        time.sleep(14)  # let this hatch finish: a hatch fired while one plays is dropped (2026-11-20, Kirin stills showed the town)
 print("done")

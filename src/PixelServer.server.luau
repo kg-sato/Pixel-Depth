@@ -1619,7 +1619,7 @@ local function finishMinigame(s)
 	if mg.boss then return mg.boss(s, mg) end -- a Root Warden knot (ServerScriptService.Boss), not ore
 	local count, grade
 	if mg.kind == "strike" then
-		count, grade = math.max(mg.swings, 1) * D.chunks + mg.perfects * D.bonus, mg.perfects -- swings made (a timed-out game is not a full one)
+		count, grade = math.max(mg.swings, 1) * D.chunks + mg.perfects * D.bonus + math.min(mg.weak or 0, mg.swings) * D.chunks, mg.perfects -- swings made (a timed-out game is not a full one); weak points add a chunk each
 	else
 		for _, g in D.grades do
 			if (mg.slips or math.huge) <= g[2] then
@@ -1763,7 +1763,7 @@ for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
 		end
 	end)
 end
-ExtractR.OnServerEvent:Connect(function(plr, what, arg)
+ExtractR.OnServerEvent:Connect(function(plr, what, arg, weak)
 	local s = data[plr]
 	local mg = s and s.mg
 	if not mg then return end
@@ -1779,6 +1779,17 @@ ExtractR.OnServerEvent:Connect(function(plr, what, arg)
 		local perfect = math.abs((needle - mg.arc + 180) % 360 - 180) <= mg.zone / 2 + 2
 		mg.swings += 1
 		if perfect then mg.perfects += 1 end
+		-- a weak point (directive v13, Shared.WeakPoint): on a rare vein, a strike inside the server's own shine window (its clock,
+		-- now, not the client's t; 0.3 s of grace for the trip) whose aim ray from the miner's head passes within W.aim + 8 degrees
+		-- of the facet where the server puts it counts one extra chunk, one per swing at most (Codex review 2026-11-20).
+		-- shortcut: the aim ray is the client's camera, checked against server geometry; an aimbot still hits it, the bonus is one chunk
+		local W = C.WEAK
+		local head = plr.Character and plr.Character:FindFirstChild("Head")
+		if typeof(weak) == "Vector3" and W and head and mg.dep and mg.dep.PrimaryPart and (mg.dep:GetAttribute("Ore") or 0) >= W.minOre
+			and math.abs(weak.Magnitude - 1) < 0.05 and (now % W.period) < W.on + 0.3 then
+			local to = require(game:GetService("ReplicatedStorage").Shared.WeakPoint).at(mg.dep.PrimaryPart.Position, now) - head.Position
+			if to.Magnitude < 18 and weak.Unit:Dot(to.Unit) > math.cos(math.rad(W.aim + 8)) then mg.weak = (mg.weak or 0) + 1 end
+		end
 		mg.arc = (mg.arc + 90 + s.rng:NextNumber() * 180) % 360
 		FxR:FireClient(plr, "mgStrike", mg.swings, perfect, mg.arc)
 		if mg.swings >= D.strikes then finishMinigame(s) end
@@ -2346,6 +2357,9 @@ local function onJoin(plr)
 		end
 	end
 	data[plr] = s
+	-- Codex save audit 2026-11-20: ProfileStore's own shutdown save may run before any BindToClose of ours, so the live session is
+	-- mirrored into the profile right before EVERY save it makes (OnSave fires first), the shutdown save included
+	pcall(function() profile.OnSave:Connect(function() if data[plr] == s then pcall(save, s) end end) end)
 	A.step(s, "Joined")
 	local t0 = os.clock()
 	buildStatic(s)

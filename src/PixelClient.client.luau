@@ -1924,7 +1924,7 @@ end
 		mg.cool = os.clock() + 0.28
 		swingT0 = os.clock() -- the held pick chops with the strike
 		cave.strikeOff = (needle.Rotation - arcPivot.Rotation + 180) % 360 - 180 -- < 0: early (Shared.StrikeJuice says TOO EARLY / TOO LATE)
-		ExtractR:FireServer("strike", workspace:GetServerTimeNow())
+		ExtractR:FireServer("strike", workspace:GetServerTimeNow(), forgeUI.weakAim and forgeUI.weakAim() or nil) -- the third: aimed at a shining weak point (Shared.WeakPoint)
 		sfx("swing", 1.2)
 		pop(dial, 1.05, 0.15)
 	end
@@ -2605,7 +2605,7 @@ end)()
 	forgeUI.spatialExtra = forgeUI.spatialExtra or {} -- the small panels built in this script stand in the world too (Shared.SpatialPanels); the forge keeps its own staged screen
 	for _, f in { night, odds, mapP, forge } do table.insert(forgeUI.spatialExtra, { frame = f, home = gui, menu = true, on = function() return f.Visible end }) end
 	E.getState = E.getState or function() return state end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "StrikeJuice", "Charms", "HubMinimap", "JellySkin", "JellyHUD", "GumText", "IconPass", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes", "MiningLoops", "DynamicHud", "InputGate", "TraversalFeel", "CrewHearth", "MuckPeeks", "FtueGate", "Clink" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "StrikeJuice", "Charms", "HubMinimap", "JellySkin", "JellyHUD", "GumText", "IconPass", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes", "MiningLoops", "DynamicHud", "InputGate", "TraversalFeel", "CrewHearth", "MuckPeeks", "FtueGate", "Clink", "WeakPoint" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end

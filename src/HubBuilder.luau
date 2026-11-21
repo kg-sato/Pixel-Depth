@@ -434,10 +434,10 @@ function Hub.build(parent, origin)
 			-- directive v13 (A Short Hike #8, DQB2 #1): the bank steps down in bands instead of a hard seam: a damp dark earth skirt
 			-- on the grass outside the stones, a pale pebble shelf and a light shallow-water rim inside them, a thin foam line
 			for _, sd in { -1, 1 } do
-				vox(water, "DampEarth", Vector3.new(1.5, 0.08, seg + 1.2), cf * CFrame.new(sd * (width / 2 + 1.9), -0.02 + (i % 2) * 0.03, 0), Color3.fromRGB(70, 56, 52), { CanCollide = false })
+				vox(water, "DampEarth", Vector3.new(1.5, 0.08, seg + 1.2), cf * CFrame.new(sd * (width / 2 + 1.9), -0.02 + (i % 2) * 0.03, 0), Color3.fromRGB(70, 74, 50), { CanCollide = false, Transparency = 0.45 }) -- a damp darkening of the grass, not a trench (Gemini round 2)
 				vox(water, "Pebbles", Vector3.new(0.75, 0.06, seg + 0.9), cf * CFrame.new(sd * (width / 2 - 0.62), 0.14 + (i % 2) * 0.012, 0), Color3.fromRGB(206, 196, 170), { CanCollide = false, Material = Enum.Material.Pebble, Transparency = 0.15 })
 				vox(water, "Shallows", Vector3.new(0.85, 0.03, seg + 0.85), cf * CFrame.new(sd * (width / 2 - 1.475), 0.125 + (i % 2) * 0.012, 0), Color3.fromRGB(164, 230, 236), { CanCollide = false, Material = Enum.Material.Glass, Transparency = 0.35 })
-				vox(water, "Foam", Vector3.new(0.1, 0.03, seg + 0.7), cf * CFrame.new(sd * (width / 2 - 1.02), 0.21 + (i % 2) * 0.012, 0), Color3.fromRGB(244, 250, 252), { CanCollide = false, Transparency = 0.25 })
+				vox(water, "Foam", Vector3.new(0.2, 0.03, seg + 0.7), cf * CFrame.new(sd * (width / 2 - 1.02), 0.21 + (i % 2) * 0.012, 0), Color3.fromRGB(244, 250, 252), { CanCollide = false, Transparency = 0.25 })
 			end
 			for _, sd in { -1, 1 } do
 				local h = hash(i, sd, c.X)
@@ -721,10 +721,20 @@ function Hub.build(parent, origin)
 		vox(g, "Rope", Vector3.new(0.12, 0.9, 0.12), CFrame.new(c + Vector3.new(0.4, 3.1, 0.3)), PAL.cream[1], { CanCollide = false })
 		local sp = group("Signpost")
 		local q = W(11, 1.1, -14)
-		tvox(sp, "Post", Vector3.new(0.6, 5.4, 0.6), CFrame.new(q + Vector3.new(0, 2.7, 0)), "beam", 2)
+		tvox(sp, "Post", Vector3.new(0.6, 6.2, 0.6), CFrame.new(q + Vector3.new(0, 3.1, 0)), "beam", 2)
+		-- directive v13 (Gemini round 1: the post stabbed the paving): a stone footing collar with cobbles at its foot, and a small
+		-- hooded lantern on the finial so the boards read at night without a torch beside them
+		vox(sp, "PostFoot", Vector3.new(2.0, 0.7, 2.0), CFrame.new(q + Vector3.new(0, 0.33, 0)) * CFrame.Angles(0, 0.35, 0), PAL.stone[3])
+		vox(sp, "PostFootCap", Vector3.new(1.3, 0.3, 1.3), CFrame.new(q + Vector3.new(0, 0.8, 0)) * CFrame.Angles(0, 1.1, 0), PAL.stone[2], { CanCollide = false })
+		for k = 0, 3 do
+			local a = k * 1.7 + 0.4
+			vox(sp, "PostCobble", Vector3.new(0.8, 0.4, 0.65), CFrame.new(q + Vector3.new(math.cos(a) * 1.35, 0.18, math.sin(a) * 1.35)) * CFrame.Angles(0, a, 0.1), PAL.stone[(k % 2) + 1], { CanCollide = false })
+		end
+		vox(sp, "PostLantern", Vector3.new(0.42, 0.5, 0.42), CFrame.new(q + Vector3.new(0, 6.44, 0)), Color3.fromRGB(255, 206, 120), { CanCollide = false, CastShadow = false, Material = Enum.Material.Neon })
+		vox(sp, "PostLanternHood", Vector3.new(0.72, 0.18, 0.72), CFrame.new(q + Vector3.new(0, 6.78, 0)) * CFrame.Angles(0, 0.785, 0), Color3.fromRGB(58, 44, 40), { CanCollide = false })
 		-- directive v13 (light = attention, a readable first sightline): each board points at its place: the mine shaft and Bolt's
 		-- forge highest, then the quest board and the crew hearth cabins (angles from the post to each station)
-		for k, d in { { "MINE", -128, 4.8 }, { "FORGE", 166, 4.1 }, { "QUESTS", 100, 3.4 }, { "CREW", -18, 2.7 } } do
+		for k, d in { { "QUESTS", 100, 5.55 }, { "FORGE", 166, 4.55 }, { "CREW", -18, 3.55 }, { "MINE", -128, 2.55 } } do -- 1 stud apart (the tilted 1.12-stud boards cut into each other at 0.7); the board pointing most toward the town camera in the south sits lowest so none hides another (Gemini round 2)
 			sign(sp, d[1], CFrame.new(q + Vector3.new(0, d[3], 0)) * CFrame.Angles(0, math.rad(d[2]), 0) * CFrame.new(1.6, 0, 0), 3.4, 0.8, PAL.cream[2])
 		end
 	end
@@ -734,7 +744,15 @@ function Hub.build(parent, origin)
 		local tx, tz = math.cos(a) * rr, math.sin(a) * rr * 1.1
 		local p = W(tx, groundTop(tx, tz), tz)
 		local h = hash(i, 13, 3)
-		if h > 0.55 then
+		for _, w in water:GetChildren() do -- none in the stream or on its banks (Gemini v13 round 2: flower cubes stood in the water)
+			if w.Name == "Water" then
+				local l = w.CFrame:PointToObjectSpace(p)
+				if math.abs(l.X) < w.Size.X / 2 + 3 and math.abs(l.Z) < w.Size.Z / 2 + 0.6 then h = -1 break end
+			end
+		end
+		if h < 0 then
+			-- skipped: by the water
+		elseif h > 0.55 then
 			local fc = ({ PAL.pink[2], GOLD, PAL.cream[2], PAL.lilac[3], PAL.moss[3] })[math.floor(h * 1000) % 5 + 1]
 			vox(ground, "Flower", Vector3.new(0.7, 0.7, 0.7), CFrame.new(p + Vector3.new(0, 0.9, 0)), fc, { CanCollide = false })
 			vox(ground, "Stem", Vector3.new(0.25, 0.9, 0.25), CFrame.new(p + Vector3.new(0, 0.45, 0)), PAL.moss[1], { CanCollide = false })
@@ -999,6 +1017,15 @@ function Hub.build(parent, origin)
 		sparkle.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.22), NumberSequenceKeypoint.new(0.6, 0.12), NumberSequenceKeypoint.new(1, 0) })
 		sparkle.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.7, 0.25), NumberSequenceKeypoint.new(1, 1) })
 		sparkle.Parent = mouth
+		-- directive v13 (Gemini round 1: the sparks read as square crosses): each spark is a tapered streak along its flight, and
+		-- a second stream of embers rises from the chimney flue and drifts with the air
+		sparkle.Rate, sparkle.Orientation = 8, Enum.ParticleOrientation.VelocityParallel
+		pcall(function() sparkle.Squash = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1.6), NumberSequenceKeypoint.new(1, 0.6) }) end)
+		local flue = sparkle:Clone()
+		flue.Name, flue.Rate, flue.EmissionDirection, flue.Speed, flue.SpreadAngle = "FlueEmbers", 5, N.Top, NumberRange.new(4, 7), Vector2.new(18, 18)
+		flue.Lifetime, flue.Acceleration = NumberRange.new(1.2, 2.0), Vector3.new(0.8, -1.5, 0.3)
+		flue.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.18), NumberSequenceKeypoint.new(0.7, 0.1), NumberSequenceKeypoint.new(1, 0) })
+		flue.Parent = g:FindFirstChild("ChimneyCap")
 		-- out front: anvil on a stump, stone quench trough, tool barrel, lamp post
 		tvox(g, "Stump", Vector3.new(3, 2, 3), at(-1.5, 2.4, 3.6), "logs", 2)
 		local anvil = tvox(g, "Anvil", Vector3.new(3.8, 1.3, 1.8), at(-1.5, 4.35, 3.6), "iron", 2)
@@ -1159,6 +1186,9 @@ function Hub.build(parent, origin)
 		local roofTex = n == 1 and "moss_roof" or "shingle_teal"
 		local logTint = Color3.fromRGB(214, 198, 204)
 		tvox(g, "Porch", Vector3.new(14, 0.6, 4), at(0, 1.4, 1.6), "planks_light", 4)
+		-- directive v13 (Valheim #9; Gemini round 1: the porch floated over the lawn): a fieldstone foundation under porch and walls
+		tvox(g, "Foundation", Vector3.new(14.4, 1.2, 4.4), at(0, 0.55, 1.6), "cobble", 2)
+		tvox(g, "Foundation", Vector3.new(12.5, 1.16, 10.5), at(0, 0.55, -5), "cobble", 2)
 		skin(vox(g, "Walls", Vector3.new(12, 7.2, 10), at(0, 4.7, -5), AVG.logs), "logs", 4.8, SIDES, logTint)
 		for _, cx in { -6, 6 } do -- notched log ends: alternate rows poke out along x and along z
 			for _, cz in { 0, -10 } do
@@ -1181,6 +1211,9 @@ function Hub.build(parent, origin)
 		glow(win, LAMP, 14, 0.9)
 		vox(g, "WinBar", Vector3.new(0.25, 2.2, 0.2), at(-3, 5.2, 0.25), INK, { CanCollide = false })
 		vox(g, "WinBar", Vector3.new(2.6, 0.25, 0.2), at(-3, 5.2, 0.25), INK, { CanCollide = false })
+		for _, sd in { -1, 1 } do -- tied-back curtains inside the pane, so the lit window reads as a room, not a lamp block
+			vox(g, "Curtain", Vector3.new(0.62, 2.0, 0.1), at(-3 + sd * 0.95, 5.25, 0.22), PAL.pink[1], { CanCollide = false, CastShadow = false })
+		end
 		tvox(g, "WinFrame", Vector3.new(3.2, 0.4, 0.5), at(-3, 6.45, 0.1), "beam", 2)
 		tvox(g, "FlowerBox", Vector3.new(3.4, 0.8, 0.9), at(-3, 3.7, 0.5), "planks", 2)
 		local flowers = n == 1 and { PAL.pink[2], PAL.pink[3], PAL.cream[3], PAL.pink[1] } or { GOLD, PAL.lilac[3], GOLD, PAL.lilac[2] }
@@ -1677,6 +1710,41 @@ function Hub.build(parent, origin)
 	-- 15. Spawn point south of the shaft, facing it
 	vox(model, "SpawnPoint", Vector3.new(1, 1, 1), CFrame.lookAt(W(0, 3.6, 16), W(0, 3.6, 0)), PAL.wood[1], { Transparency = 1, CanCollide = false, CanQuery = false })
 
+	-- directive v13 (A Short Hike #10, DQB2 #2): a soft dark contact skirt round the foot of each building, so the timber and
+	-- stone sit IN the meadow instead of on it (Gemini full1120x: buildings floated on the flat ground plane)
+	for _, name in { "SellStall", "Forge", "TrophyHouse", "GuestCabin1", "GuestCabin2", "Incubator", "NoticeBoard" } do
+		local g = model:FindFirstChild(name)
+		if g and g:IsA("Model") and #g:GetChildren() > 0 then
+			local cf, size = g:GetBoundingBox()
+			local rot = cf.Rotation
+			-- the footprint of the parts that stand on the ground, not the whole box (a porch roof or a lantern arm made the box
+			-- reach far out over the lawn, and the skirt drew a dark frame there: p4d_cabins 2026-11-20)
+			local lo, hi = Vector3.new(math.huge, 0, math.huge), Vector3.new(-math.huge, 0, -math.huge)
+			for _, p in g:GetDescendants() do
+				if p:IsA("BasePart") and p.Name ~= "ContactSkirt" and p.Size.X * p.Size.Z >= 1 then
+					local gy = O.Y + groundTop(p.Position.X - O.X, p.Position.Z - O.Z)
+					if p.Position.Y - p.Size.Y / 2 < gy + 0.8 and p.Position.Y > gy - 2 then
+						local l = cf:PointToObjectSpace(p.Position)
+						local hx, hz = p.Size.X / 2, p.Size.Z / 2
+						local r = math.max(hx, hz) -- shortcut: a turned part counts by its larger half size; fine for the boxy buildings here
+						lo = Vector3.new(math.min(lo.X, l.X - r), 0, math.min(lo.Z, l.Z - r))
+						hi = Vector3.new(math.max(hi.X, l.X + r), 0, math.max(hi.Z, l.Z + r))
+					end
+				end
+			end
+			if lo.X < hi.X and lo.Z < hi.Z then
+				cf = cf * CFrame.new((lo.X + hi.X) / 2, 0, (lo.Z + hi.Z) / 2)
+				size = Vector3.new(hi.X - lo.X, size.Y, hi.Z - lo.Z)
+			end
+			for _, e in { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } } do
+				local off = rot * Vector3.new(e[1] * size.X / 2, 0, e[2] * size.Z / 2)
+				local c = cf.Position + off
+				local y = O.Y + groundTop(c.X - O.X, c.Z - O.Z) + 0.045
+				local len = e[1] ~= 0 and size.Z or size.X -- the east and west strips run past the corners, the north and south ones stop short of them: no coplanar overlap (Codex 2026-11-20)
+				vox(g, "ContactSkirt", e[1] ~= 0 and Vector3.new(0.9, 0.05, len + 0.9) or Vector3.new(math.max(len - 0.9, 0.2), 0.05, 0.9), CFrame.new(c.X, y, c.Z) * rot, Color3.fromRGB(34, 24, 36), { CanCollide = false, CanQuery = false, CastShadow = false, Transparency = 0.35 })
+			end
+		end
+	end
 	model:SetAttribute("ZFixed", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(model)) -- no z-fighting (the user, 2026-11-08)
 	model.Parent = parent
 	return model
