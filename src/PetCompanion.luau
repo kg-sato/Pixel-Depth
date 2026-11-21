@@ -255,9 +255,15 @@ function M.start(E)
 		local moving = h.AssemblyLinearVelocity.Magnitude > 2
 		local bob = moving and math.abs(math.sin(now * 9 + i * 1.7)) * 0.35 or math.sin(now * 2.2 + i) * 0.12 -- it bounds when you walk, floats when you stand
 		local goal = cam.CFrame:PointToWorldSpace(gloomNear and slot.off + Vector3.new(0, -1, 0) or slot.off + Vector3.new(0, bob + bounce, 0))
+		if E.cave and E.cave.mgBusy then -- directive v13 (Gemini full1121a: a glowing pet crowded the strike dial): while you mine, the pets
+			-- wait a few steps behind you, out of the view, and trot back when the minigame ends
+			local back = cam.CFrame.LookVector * Vector3.new(1, 0, 1)
+			back = back.Magnitude > 0.1 and back.Unit or Vector3.zAxis
+			goal = h.Position - back * (6 + i * 1.5) + cam.CFrame.RightVector * ((i - 2) * 2.5) + Vector3.new(0, 0.5, 0)
+		end
 		local called = i == 1 and whistle.dep and now < whistle.untilT and whistle.dep.PrimaryPart
 		if called then goal = called.Position + Vector3.new(0, 2.6 + math.abs(math.sin(now * 7)) * 0.5, 0) end -- answering the whistle: it stands on the deposit and hops
-		if not called then -- keep it out of the rock: a wall between the eye and its place pulls it in front of the wall (Gemini full1119p: it walked through a clay pillar)
+		if not called and not (E.cave and E.cave.mgBusy) then -- keep it out of the rock: a wall between the eye and its place pulls it in front of the wall (Gemini full1119p: it walked through a clay pillar)
 			petRp.FilterDescendantsInstances = { plr.Character, pet.model, workspace.CurrentCamera }
 			local from = cam.CFrame.Position
 			local hit = workspace:Raycast(from, goal - from, petRp)
