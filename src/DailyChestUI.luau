@@ -79,6 +79,14 @@ function M.start(E)
 	fit(title, 380, 72)
 	local titleT = text(title, "DAILY CHEST", UDim2.fromScale(0.62, 0.52), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), WHITE)
 	titleT.TextStrokeColor3 = DEEP.ribbonPink
+	do -- directive v14 (audit bug 14): white glow on the pale pink ribbon washed out; a dark plum ribbon with gold words
+		local sk = title:FindFirstChild("Skin")
+		if sk then sk.Visible = false end
+		title.BackgroundColor3, title.BackgroundTransparency = Color3.fromRGB(43, 27, 61), 0.05
+		new("UICorner", title, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", title, { Color = Color3.fromRGB(176, 130, 255), Thickness = 2, Transparency = 0.2, ApplyStrokeMode = Enum.ApplyStrokeMode.Border })
+		titleT.TextColor3, titleT.TextStrokeColor3, titleT.TextStrokeTransparency = Color3.fromRGB(255, 214, 107), Color3.fromRGB(24, 12, 34), 0.2
+	end
 	local card = panel(layer, S(640, 210), S(640, 486), Vector2.new(0.5, 0.5), "panel") -- the kit card holding rewards, streak and COLLECT
 	fit(card, 640, 210)
 	card.Visible = false
@@ -149,7 +157,7 @@ function M.start(E)
 		for _, o in { title, reward, track, collect, card } do o.Visible = false end
 		barFill.Size = UDim2.fromScale(0, 1)
 		streakT.Text = streak >= 7 and "7 DAY STREAK! JACKPOT" or (streak .. " DAY STREAK  -  DAY 7 JACKPOT")
-		tween(scrim, 0.25, { BackgroundTransparency = 0.25 })
+		tween(scrim, 0.25, { BackgroundTransparency = 0.12 }) -- directive v14: the town and HUD competed with the reward through 0.25
 		-- drop in
 		chest.Position = S(640, 120)
 		scaler(chest).Scale = 0.8

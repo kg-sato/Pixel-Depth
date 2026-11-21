@@ -36,7 +36,7 @@ function M.start(e)
 			if os.clock() < live.t - (#queue > 0 and 1.2 or 0) and live.seen < 4 then return end -- a waiting line shortens the one on screen
 			local l = live.label
 			live = nil
-			E.tween(l, 0.3, { BackgroundTransparency = 1, Position = UDim2.fromScale(0.5, lane() - 0.05) })
+			E.tween(l, 0.3, { GroupTransparency = 1, Position = UDim2.fromScale(0.5, lane() - 0.05) })
 			for _, w in l:GetChildren() do if w:IsA("TextLabel") then E.tween(w, 0.3, { TextTransparency = 1, TextStrokeTransparency = 1 }) end end
 			task.delay(0.32, function() l:Destroy() end)
 			gap = os.clock() + 0.34 -- the next line waits until this one is gone
@@ -56,7 +56,7 @@ function M.start(e)
 		local t = table.remove(queue, pick)
 		E.sfx("pop", t.big and 0.9 or 1.1)
 		-- a dark pill behind the words: bare text lay across the first-person hands (Gemini, 2026-11-10)
-		local l = Instance.new("Frame")
+		local l = Instance.new("CanvasGroup") -- directive v14: one group fades as a whole (jelly glyphs are images and did not fade)
 		l.Name, l.ZIndex, l.AnchorPoint, l.BorderSizePixel = "Toast", 20, Vector2.new(0.5, 0.5), 0
 		l.Size, l.Position = UDim2.fromScale(math.clamp(0.07 + #t.msg * (t.big and 0.0066 or 0.0054), 0.16, 0.5), t.big and 0.07 or 0.058), UDim2.fromScale(0.5, lane() + 0.06) -- as wide as its words need, never a bar across the screen
 		l.BackgroundColor3, l.BackgroundTransparency = Color3.fromRGB(38, 28, 54), 0.22
@@ -74,12 +74,12 @@ function M.start(e)
 				l.Size = UDim2.fromScale(math.clamp(0.1 + #t.msg * 0.0125, 0.18, 0.5), t.big and 0.1 or 0.082)
 				words.Size = UDim2.fromScale(0.9, 0.7)
 				local jt = JellyText.mirror(words, { color = (t.color or Color3.new(1, 1, 1)):Lerp(Color3.new(1, 1, 1), 0.25), glow = t.big, maxLen = 26 }) -- a toast may come without a colour (that crashed here and the line never showed: found by the touch test, 2026-11-13)
-				if jt then jt.pop(0.025) end
+				local _ = jt -- no per-letter pop (directive v14): mid-stagger the line read "D" or "THE"
 			end
 		end
 		l.Parent = E.gui
 		E.tween(l, 0.35, { Position = UDim2.fromScale(0.5, lane()) }, Enum.EasingStyle.Back)
-		E.pop(l, 0.6, 0.35)
+		E.pop(l, 0.86, 0.3) -- from 0.86, not 0.6: a deep shrink dropped the words under JellyText's 26 px fit and they swapped mid-pop
 		live = { msg = t.msg, label = l, t = os.clock() + 2.5, seen = 0 }
 	end)
 end

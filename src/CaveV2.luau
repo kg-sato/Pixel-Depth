@@ -55,6 +55,7 @@ function M.build(parent, origin, seed, opt)
 
 	-- carve a passage along a path of local points: an oval cross-section rx (half width) by ry (half height) round the axis,
 	-- its bottom cut flat at floorK of ry under the axis so the floor walks; radii breathe along the length with noise
+	local trench = {} -- keyhole slot cells (directive v14): their side ramps are thinned so the slot reads crisp
 	local function passage(pts, rx, ry, opt)
 		opt = opt or {}
 		if (opt.fill or 1) == 1 then -- walkable: at least two voxels of headroom over the flat floor and room to turn (path test, 2026-11-19: crawls one voxel high blocked every branch)
@@ -63,6 +64,9 @@ function M.build(parent, origin, seed, opt)
 		end
 		local floorK = opt.flat or 0.55
 		local fill = opt.fill or 1
+		-- directive v14 (Recipe A): a wide walkable tube gets a keyhole: a narrower meandering slot one voxel deep down its floor,
+		-- with a rock bench left on each side, and a roof cut flat along the bedding plane (a phreatic tube over a vadose trench)
+		local kh = opt.keyhole ~= false and fill == 1 and rx >= 6 and floorK >= 0.3
 		for s = 1, #pts - 1 do
 			local a, b = pts[s], pts[s + 1]
 			local len = (b - a).Magnitude
@@ -85,8 +89,10 @@ function M.build(parent, origin, seed, opt)
 							local w = Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V) - p
 							local h = w:Dot(side)
 							local d = w.Y
-							if d >= -ryi * floorK and (h / rxi) ^ 2 + (d / ryi) ^ 2 <= 1 then
+							if d >= -ryi * floorK and (h / rxi) ^ 2 + (d / ryi) ^ 2 <= 1 and not (kh and d > ryi * 0.86) then
 								if get(x, y, z) == 0 then set(x, y, z, fill) end
+							elseif kh and d < -ryi * floorK and d >= -ryi * floorK - V * 1.05 and math.abs(h - math.sin((p.X + p.Z) * 0.045 + wob) * rxi * 0.22) <= math.max(4.6, rxi * 0.42) and not inCamp(x, z) then
+								if get(x, y, z) == 0 then set(x, y, z, fill) trench[idx(x, y, z)] = true end -- the slot: at least 9 studs wide, one voxel under the benches
 							end
 						end
 					end
@@ -120,6 +126,33 @@ function M.build(parent, origin, seed, opt)
 				local w = Vector3.new((x - CX + 0.5) * V, 0, (z - CZ + 0.5) * V) - Vector3.new(c.X, 0, c.Z)
 				if w.Magnitude <= r * (1 + 0.2 * math.noise(x * 0.3, z * 0.3, wob)) then
 					for y = math.floor(vy), math.ceil(vy + h / V) do if get(x, y, z) == 0 then set(x, y, z, 1) end end
+				end
+			end
+		end
+	end
+	local function noodle(a, b, amp, k) -- directive v14 (Minecraft 1.18 noodle caves): a wandering flank loop, never under 2 voxels wide or high
+		local pts, dir = { a }, (b - a).Unit
+		local side = Vector3.new(-dir.Z, 0, dir.X).Unit
+		for i = 1, 5 do
+			local u = i / 6
+			table.insert(pts, a:Lerp(b, u) + side * math.sin(u * math.pi) * amp * (0.7 + 0.6 * math.noise(u * 3, k, wob)) + Vector3.new(0, math.noise(u * 2.3, k * 1.7, wob) * 3, 0))
+		end
+		table.insert(pts, b)
+		passage(pts, 4.4, 5, { flat = 0.8, keyhole = false })
+	end
+	local function dome(c, ry, r) -- directive v14 (Recipe A3): a corbelled breakdown vault over a chamber: slabs two voxels high, each a voxel narrower
+		c = c + Vector3.new(0, dipY(c.X), 0)
+		local vx, vy, vz = toVox(c + Vector3.new(0, ry * 0.35, 0))
+		for s = 0, 6 do
+			local rr = r - s * V
+			if rr < V * 1.6 then break end
+			local sk = Vector3.new(s * V * 0.6, 0, s * V * 0.35) -- each tier steps off along a fault, not round one centre (Gemini v14p2: a ziggurat)
+			for x = math.floor(vx - rr / V) - 1, math.ceil(vx + rr / V) + 1 + s do
+				for z = math.floor(vz - rr / V) - 1, math.ceil(vz + rr / V) + 1 + s do
+					local wx, wz = (x - CX + 0.5) * V - c.X - sk.X, (z - CZ + 0.5) * V - c.Z - sk.Z
+					if math.sqrt(wx * wx + wz * wz) <= rr * (1 + 0.18 * math.noise(math.atan2(wz, wx) * 2, s + 0.5, wob)) then
+						for y = math.floor(vy) + s * 2, math.floor(vy) + s * 2 + 1 do if get(x, y, z) == 0 then set(x, y, z, 1) end end
+					end
 				end
 			end
 		end
@@ -320,6 +353,16 @@ function M.build(parent, origin, seed, opt)
 		if b3 then passage({ b3, P(-82, -2, 46), P(-64, 0, 40) }, 4.2, 4.5, { flat = 0.8 }) end
 		if b4 and b5 then passage({ b4, P(208, 6, 18), b5 }, 4.2, 4.5, { flat = 0.8 }) end
 	end
+	-- directive v14: a noodle flank loop off the main route, and a stepped vault over each layer's landmark chamber
+	if opt.hall then
+		noodle(P(96, 2, -14), P(150, 4, -30), 14, 2)
+	elseif not opt.camp or L == 1 then
+		noodle(P(52, 0, 34), P(104, -6, 10), 16, 1)
+	end
+	if L == 1 then dome(P(146, 8, 0), 22, 24)
+	elseif L == 2 then dome(P(156, 10, 0), 26, 30)
+	elseif L == 3 then dome(P(150, 14, 0), 32, 22)
+	else dome(P(152, 10, 0), 24, 30) end
 	-- THEMES per place, for floor colours and for CaveProps (it dresses Floor parts by their Theme attribute)
 	local REG = {
 		{ spots.Camp, "camp" }, { spots.Canyon, "chasm" }, { P(112, -6, 2), "chasm" }, { spots.Cathedral, "grotto" }, { P(150, 8, 0), "grotto" },
@@ -432,6 +475,33 @@ function M.build(parent, origin, seed, opt)
 		for _, r in raise do set(r[1], r[2], r[3], 0) end
 	end
 
+	-- STRATA (directive v14, Recipe B): tilted, domain-warped rock beds 8 studs thick sweep across the walls instead of a random
+	-- colour per block; band 4 is a hard limestone bed that juts out one voxel where it meets open air high on a wall
+	local function strata(lx, ly, lz)
+		return math.floor((ly + 0.26 * lx - 0.12 * lz + 7 * math.noise(lx / 48, lz / 48, wob * 0.5 + 0.3)) / 8) % 5 -- about 15 degrees of dip (Gemini v14p2: flat stripes)
+	end
+	do
+		local add = {}
+		for x = 2, NX - 3 do
+			for z = 2, NZ - 3 do
+				if inCamp(x, z) then continue end
+				for y = 7, NY - 3 do
+					if get(x, y, z) == 1 and get(x, y - 1, z) == 1 and get(x, y - 2, z) == 1 and get(x, y - 3, z) == 1
+						and (get(x, y - 4, z) == 0 or get(x, y - 5, z) == 0 or get(x, y - 6, z) == 0) then -- 12+ studs over a floor (not in a deep shaft)
+						for _, dd in { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } } do
+							local wx, wz = x + dd[1], z + dd[2]
+							if get(wx, y, wz) == 0 and get(x - dd[1], y, z - dd[2]) == 1 and get(x - 2 * dd[1], y, z - 2 * dd[2]) == 1
+								and strata((wx - CX + 0.5) * V, (y - CY + 0.5) * V, (wz - CZ + 0.5) * V) == 4 then
+								table.insert(add, { x, y, z })
+								break
+							end
+						end
+					end
+				end
+			end
+		end
+		for _, a in add do set(a[1], a[2], a[3], 0) end
+	end
 	local rootC = P(150, 0, 6) + P(0, dipY(150), 0) -- the cathedral's landmark (built after the mesh: a real trunk, not voxels)
 
 	-- THE SUMP'S WATER fills the chamber's real shape up to one voxel over its lowest floor (Gemini r2: a flat sheet cut off in mid-air)
@@ -498,6 +568,64 @@ function M.build(parent, origin, seed, opt)
 		return false
 	end
 
+	-- ORE SPOTS, chosen before the mesh (directive v14, Recipe F: each deposit sits in a real vug, a niche one voxel deep cut into its
+	-- bed, only where the rock behind is two voxels thick so a niche never opens into another passage).
+	-- ORE DEPOSITS (plan section 5): base ore lines the main route's walls, mid ore sits in the branch rooms, rare ore only at the dead
+	-- ends (B1, B3, B4, B5) and in the cathedral's cracks. Each stands on a reachable floor cell against a wall, 14 studs apart, with
+	-- the attributes the rest of the game reads (Layer, Ore, OreName) and the same shard-and-core look as CaveBuilder's.
+	local C = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Config"))
+	local ORES = C.LAYERS[L][4]
+	local DEAD = { spots.B1, spots.B3, spots.B4, spots.B5 }
+	local BRANCH = { spots.B2, spots.SwallowHole, spots.OldTube }
+	local cands = {}
+	for k in reach do
+		local z = k % NZ
+		local y = math.floor(k / NZ) % NY
+		local x = math.floor(k / (NZ * NY))
+		for _, d in { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } } do
+			if get(x + d[1], y, z + d[2]) == 0 and get(x + d[1], y + 1, z + d[2]) == 0 then
+				local wx, wz = (x + d[1] - CX + 0.5) * V, (z + d[2] - CZ + 0.5) * V
+				table.insert(cands, { x, y, z, d, contact = strata(wx, (y - CY + 0.5) * V, wz) ~= strata(wx, (y - CY + 1.5) * V, wz) }) -- directive v14 (Recipe F): where two beds meet
+				break
+			end
+		end
+	end
+	local function rank(c) -- dead ends first, then branches, then the rest; shuffled within each by a hash
+		local lp = toWorld(c[1], c[2], c[3]) - origin
+		for _, d in DEAD do if (d - lp).Magnitude < 20 then return 0 end end
+		for _, b in BRANCH do if (b - lp).Magnitude < 24 then return 1 end end
+		return 2
+	end
+	for _, c in cands do c.r = rank(c) + hash(c[1], c[3], c[2]) * (c.contact and 0.35 or 1) end -- bed contacts first within each rank
+	table.sort(cands, function(a2, b2) return a2.r < b2.r end)
+	local placed, nDep, chosen = {}, 0, {}
+	local CAP, have = { 22, 9, 5 }, { 0, 0, 0 } -- base, mid, rare: rare stays rare
+	local campW = origin + spots.Camp
+	for _, c in cands do
+		if #chosen >= 36 then break end
+		local w = toWorld(c[1], c[2], c[3]) - Vector3.new(0, V / 2, 0)
+		local lp = w - origin
+		if (w - campW).Magnitude > (opt.camp and 58 or 40) then
+			local free = true
+			for _, q in placed do if (q - w).Magnitude < 10 then free = false break end end
+			if free then
+				local idx2 = 1
+				for _, d in DEAD do if (d - lp).Magnitude < 20 then idx2 = 3 end end
+				if idx2 == 1 then for _, b in BRANCH do if (b - lp).Magnitude < 24 then idx2 = 2 end end end
+				if idx2 == 1 and (spots.Cathedral - lp).Magnitude < 30 and hash(c[1], c[3], 77) > 0.6 then idx2 = 3 end -- a crack in the cathedral
+				if have[idx2] >= CAP[idx2] then continue end
+				have[idx2] += 1
+				table.insert(placed, w)
+				table.insert(chosen, { c = c, idx2 = idx2, w = w })
+				local nx2, nz2 = c[1] + c[4][1], c[3] + c[4][2]
+				if get(nx2 + c[4][1], c[2], nz2 + c[4][2]) == 0 and get(nx2 + c[4][1], c[2] + 1, nz2 + c[4][2]) == 0 and get(nx2, c[2] + 2, nz2) == 0 then
+					set(nx2, c[2], nz2, 1)
+					set(nx2, c[2] + 1, nz2, 1)
+					c.niche = true
+				end
+			end
+		end
+	end
 	-- MESH: every solid voxel that touches air (26 neighbours) is shell; shell voxels merge into boxes per colour key
 	local model = Instance.new("Model")
 	model.Name = "CavesV2"
@@ -547,8 +675,8 @@ function M.build(parent, origin, seed, opt)
 							local f = FLOOR[th]
 							local moss = math.noise(x * 0.15, z * 0.15, wob) > 0.5 - f[3]
 							k = 100 + TI[th] * 10 + (moss and (2 + math.floor(hash(x, z, 3) * 2)) or math.floor(hash(x, z, 4) * 2))
-						else
-							k = 1 + math.clamp(math.floor((y / NY) * 2.6 + hash(x, y, z) * 1.4), 0, 3) -- walls lighter the higher they sit (hue-shifted lilac)
+						else -- a wall or a roof: its rock bed (directive v14), a step lighter high up, darker overhead
+							k = (isAir(get(x, y - 1, z)) and 20 or (ly > 26 and 10 or 0)) + 1 + strata(lx, ly, lz)
 						end
 						key[idx(x, y, z)] = k
 						nShell += 1
@@ -562,9 +690,16 @@ function M.build(parent, origin, seed, opt)
 		or L == 3 and { Color3.fromRGB(20, 22, 48), Color3.fromRGB(32, 36, 72), Color3.fromRGB(48, 54, 100), Color3.fromRGB(70, 76, 132) } -- layer 3: night-blue granite
 		or L == 2 and { Color3.fromRGB(62, 30, 22), Color3.fromRGB(104, 54, 42), Color3.fromRGB(140, 80, 62), Color3.fromRGB(170, 108, 82) } -- the damp foot of the walls darker (Gemini l2r1) -- layer 2: fired clay, darker low, sun-baked high
 		or { Color3.fromRGB(40, 26, 54), Color3.fromRGB(61, 41, 82), Color3.fromRGB(86, 61, 112), Color3.fromRGB(110, 84, 140) } -- deep amethyst slate to soft lavender granite (Gemini r1 palette, a step lighter at the top)
+	local ACCENT = ({ Color3.fromRGB(168, 86, 52), Color3.fromRGB(176, 92, 48), Color3.fromRGB(150, 176, 236), Color3.fromRGB(170, 54, 30) })[L] -- iron stain in the upper layers, frost in Glitterhall, ember in Muspell (Gemini v14p2_r2: no terracotta in the blue layer)
+	local STRATA = { WALL[1], WALL[2]:Lerp(Color3.fromRGB(64, 72, 132), L == 4 and 0 or 0.22), WALL[3]:Lerp(ACCENT, 0.38), WALL[2]:Lerp(WALL[3], 0.5), WALL[4]:Lerp(Color3.fromRGB(236, 222, 236), 0.22) } -- dark shale, a cool bed, an iron-stained bed, mid, and the pale hard limestone (directive v14: the bands must read under the torch)
 	local function colorOf(k)
 		if k == 99 then return ({ Color3.fromRGB(45, 26, 56), Color3.fromRGB(60, 34, 26), Color3.fromRGB(224, 242, 254), Color3.fromRGB(24, 18, 22) })[L] end -- the pool's shore: wet mud, wet clay, frost (Gemini l3r1), cooled obsidian
-		if k < 100 then return WALL[k] end
+		if k == 9 then return PAL.bark end
+		if k < 100 then -- rock beds: ceilings 22% darker, the upper walls lifted toward the top tone (directive v14, Recipe C)
+			local c = STRATA[(k - 1) % 10 + 1]
+			if k >= 20 then return c:Lerp(Color3.new(0, 0, 0), 0.22) elseif k >= 10 then return c:Lerp(WALL[4], 0.22) end
+			return c
+		end
 		local th = THEMES[math.floor((k - 100) / 10)]
 		local v = k % 10
 		local f = FLOOR[th]
@@ -597,8 +732,8 @@ function M.build(parent, origin, seed, opt)
 					local p = part(isFloor and "Floor" or "Walls", isFloor and "Floor" or "Rock", Vector3.new(w * V, h * V, d * V), CFrame.new(c), colorOf(k))
 					if isFloor then
 						p:SetAttribute("Theme", THEMES[math.floor((k - 100) / 10)])
-						p.Material = Enum.Material.Pebble -- packed grit: the floor reads apart from the smooth slate walls (Ground rendered olive: the owner, 2026-11-17, no green floors)
-						p.Color = p.Color:Lerp(({ Color3.fromRGB(160, 120, 132), Color3.fromRGB(160, 120, 132), Color3.fromRGB(150, 160, 210), Color3.fromRGB(110, 84, 80) })[L], 0.35) -- grit in the layer's own light
+						p.Material = Enum.Material.Slate -- directive v14 (audit: the Pebble carpet fought the ore glints): matte slate, lighter and warmer than the walls
+						p.Color = p.Color:Lerp(({ Color3.fromRGB(176, 136, 140), Color3.fromRGB(196, 150, 120), Color3.fromRGB(160, 170, 214), Color3.fromRGB(120, 92, 86) })[L], 0.28)
 					end
 					p.CastShadow = h > 1
 					nParts += 1
@@ -923,16 +1058,21 @@ function M.build(parent, origin, seed, opt)
 				if get(x, y, z) == 1 and get(x, y - 1, z) == 0 and get(x, y + 1, z) == 1 then
 					for _, dd in DIRS do
 						local nx, nz = x + dd[1], z + dd[2]
-						if get(nx, y, nz) == 0 and isAir(get(nx, y + 1, nz)) and isAir(get(nx, y + 2, nz)) then -- every one-voxel step, also in one-wide crawls (walk test 2026-11-19)
+						if get(nx, y, nz) == 0 and isAir(get(nx, y + 1, nz)) and isAir(get(nx, y + 2, nz)) and not (trench[idx(x, y, z)] and hash(x, z, 91) > 0.3) then -- every one-voxel step, also in one-wide crawls (walk test 2026-11-19); a keyhole slot keeps one side ramp in three (directive v14)
 							local c = toWorld(x, y, z)
 							local look = Vector3.new(-dd[1], 0, -dd[2]) -- a WedgePart rises toward its -Z: face it away from the step
 							local w = Instance.new("WedgePart")
 							w.Name, w.Anchored, w.Size = "Ramp", true, Vector3.new(V, V, V)
 							w.CFrame = CFrame.lookAt(c, c + look)
-							w.Color, w.Material = colorOf(100 + TI[themeAt(Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V))] * 10 + 1):Lerp(({ Color3.fromRGB(160, 120, 132), Color3.fromRGB(160, 120, 132), Color3.fromRGB(150, 160, 210), Color3.fromRGB(110, 84, 80) })[L], 0.35), Enum.Material.Pebble -- the step is floor: the floor's own colour and grit
+							w.Color, w.Material = colorOf(100 + TI[themeAt(Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V))] * 10 + 1):Lerp(({ Color3.fromRGB(176, 136, 140), Color3.fromRGB(196, 150, 120), Color3.fromRGB(160, 170, 214), Color3.fromRGB(120, 92, 86) })[L], 0.28), Enum.Material.Slate -- the step is floor: the floor's own colour (matte, directive v14)
 							if VARIANT then w.MaterialVariant = VARIANT end
 							w.Parent = group("Ramps")
 							nRamp += 1
+							if hash(x, z, y + 31) > 0.7 then -- directive v14 (Recipe C3): a pale calcite lip crisps the step's top edge (no collision)
+								local lp = c + Vector3.new(dd[1] * (V / 2 + 0.55), V / 2 + 0.25, dd[2] * (V / 2 + 0.55))
+								part("Ramps", "StepLip", Vector3.new(V, 0.5, 1.1), CFrame.lookAt(lp, lp + Vector3.new(dd[1], 0, dd[2])), w.Color:Lerp(({ PAL.flow, Color3.fromRGB(214, 170, 140), Color3.fromRGB(200, 214, 255), Color3.fromRGB(120, 90, 84) })[L], 0.55), { CanCollide = false, CanQuery = false, CastShadow = false })
+								nRamp += 1
+							end
 							break
 						end
 					end
@@ -957,7 +1097,23 @@ function M.build(parent, origin, seed, opt)
 					while room < 8 and get(x, y - room, z) == 1 do room += 1 end
 					local hsh = hash(x, z, y)
 					local top = toWorld(x, y, z) + Vector3.new(0, V / 2, 0)
-					if room >= 4 and hsh > 0.86 then -- a dripstone, one of three kinds (Gemini r2: every stalactite was the same two-tier block)
+					local fis = math.abs(math.noise((x - CX + 0.5) * V / 22, (z - CZ + 0.5) * V / 22, seed * 0.13 + 0.5)) < 0.09 -- directive v14 (Recipe D): water seeps down the roof's joint lines
+					if fis and room >= 5 and hsh > 0.5 and hsh < 0.6 then -- a curtain drapery hangs from the crack, a sawtooth fringe of drips, lit from behind
+						local cfb = CFrame.new(top) * CFrame.Angles(0, hash(x, z, 61) * math.pi, 0)
+						local len0 = 3 + hash(z, x, 62) * 3
+						local col = FLOW:Lerp(Color3.fromRGB(236, 176, 110), 0.45)
+						local sheet
+						for t = -2, 2 do -- a ribbon of flowstone folded in a tight zigzag, its hem stepping down on a diagonal, banded like cave bacon (Gemini: boards read as lumber)
+							local sl = len0 * (0.45 + 0.14 * (t + 2)) + hash(x + t, z, 63) * 0.6
+							local sp = deco("Curtain", Vector3.new(1.45, sl, 0.95), cfb * CFrame.new(t * 0.85, -sl / 2, t % 2 == 0 and 0.3 or -0.3) * CFrame.Angles(0, t % 2 == 0 and 0.62 or -0.62, 0), t % 2 == 0 and col or col:Lerp(Color3.fromRGB(150, 70, 50), 0.3), NOCOL)
+							if t == 0 then sheet = sp end
+						end
+						if hash(x, z, 64) > 0.85 then
+							local cl = Instance.new("PointLight")
+							cl.Color, cl.Range, cl.Brightness, cl.Shadows = Color3.fromRGB(255, 190, 120), 9, 0.45, false
+							cl.Parent = sheet
+						end
+					elseif room >= 4 and (fis and hsh > 0.55 or hsh > 0.982) then -- a dripstone, one of three kinds (Gemini r2: every stalactite was the same two-tier block); chained along the cracks (directive v14)
 						local kind = math.floor(hash(x, z, 51) * 3)
 						local len = 2 + hash(z, x, 5) * 5
 						local col = ROCK2:Lerp(FLOW, hash(x, z, 52) * 0.4)
@@ -967,20 +1123,18 @@ function M.build(parent, origin, seed, opt)
 								local w2 = 2.8 - t * 0.85
 								deco("Stalactite", Vector3.new(w2, len / 3 + 0.3, w2), CFrame.new(top - Vector3.new(0, len / 6 + t * len / 3, 0)) * turn, col, NOCOL)
 							end
-						elseif kind == 1 then -- twins of different lengths
+						elseif kind == 1 then -- twins of different lengths, each a two-step taper (directive v14: no pale dowel tips)
 							for t = 0, 1 do
 								local l2 = len * (t == 0 and 1 or 0.6)
-								deco("Stalactite", Vector3.new(1.4, l2, 1.4), CFrame.new(top + Vector3.new(t * 1.6 - 0.8, -l2 / 2, (t - 0.5) * 0.8)) * turn, col, NOCOL)
-								deco("Stalactite", Vector3.new(0.7, 1, 0.7), CFrame.new(top + Vector3.new(t * 1.6 - 0.8, -l2 - 0.5, (t - 0.5) * 0.8)), FLOW, NOCOL)
+								local at = top + Vector3.new(t * 1.8 - 0.9, 0, (t - 0.5) * 0.9)
+								deco("Stalactite", Vector3.new(2, l2 * 0.55, 2), CFrame.new(at - Vector3.new(0, l2 * 0.275, 0)) * turn, col, NOCOL)
+								deco("Stalactite", Vector3.new(1.1, l2 * 0.5, 1.1), CFrame.new(at - Vector3.new(0, l2 * 0.75 - 0.1, 0)) * turn * CFrame.Angles(0, 0.785, 0), col:Lerp(FLOW, 0.25), NOCOL)
 							end
-						else -- a single slender spike
-							deco("Stalactite", Vector3.new(1.2, len, 1.2), CFrame.new(top - Vector3.new(0, len / 2, 0)) * turn, col, NOCOL)
-							deco("Stalactite", Vector3.new(0.5, 1.4, 0.5), CFrame.new(top - Vector3.new(0, len + 0.7, 0)), FLOW, NOCOL)
-						end
-					elseif room >= 3 and hsh > 0.8 then -- soda straws: thin pale tubes in a cluster
-						for s = 1, 3 do
-							local l = 0.8 + hash(x + s, z, 6) * 2.2
-							deco("Straw", Vector3.new(0.25, l, 0.25), CFrame.new(top + Vector3.new((hash(s, x, z) - 0.5) * 3, -l / 2, (hash(z, s, x) - 0.5) * 3)), FLOW, NOCOL)
+						else -- a long tooth: three shrinking steps, each turned a little
+							for t = 0, 2 do
+								local w2, seg = 2.4 - t * 0.75, len / 3 + 0.4
+								deco("Stalactite", Vector3.new(w2, seg, w2), CFrame.new(top - Vector3.new(0, seg / 2 + t * (seg - 0.4), 0)) * turn * CFrame.Angles(0, t * 0.6, 0), col:Lerp(FLOW, t * 0.12), NOCOL)
+							end
 						end
 					elseif L == 3 and room >= 5 and hsh > 0.7 and hsh < 0.74 then -- starlight druses: tiny crystals twinkling high in the vaults
 						local dr = deco("Druse", Vector3.new(0.5, 0.9, 0.5), CFrame.new(top - Vector3.new(0, 0.45, 0)) * CFrame.Angles(0.3, hsh * 9, 0.2), Color3.fromRGB(147, 197, 253), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CanQuery = false, CastShadow = false })
@@ -990,7 +1144,7 @@ function M.build(parent, origin, seed, opt)
 							dl.Parent = dr
 						end
 					elseif room >= 4 and hsh > 0.74 and hsh < 0.78 then -- glowing moss cushion
-						local m = deco("CeilMoss", Vector3.new(2.4, 0.5, 2), CFrame.new(top - Vector3.new(0, 0.2, 0)), GLOW, { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
+						local m = deco("CeilMoss", Vector3.new(1.2, 0.3, 1), CFrame.new(top - Vector3.new(0, 0.12, 0)) * CFrame.Angles(0, hsh * 7, 0), GLOW:Lerp(PAL.moss[3], 0.25), { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
 						for q = 1, 3 do -- an irregular patch pressed to the rock, with a thin drip hanging from it
 							local a = q * 2.1 + hsh * 6
 							deco("CeilMoss", Vector3.new(1 + q * 0.3, 0.3, 0.9 + q * 0.2), CFrame.new(top + Vector3.new(math.cos(a) * 1.6, -0.15, math.sin(a) * 1.6)), GLOW:Lerp(PAL.moss[3], 0.4), { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
@@ -1018,19 +1172,35 @@ function M.build(parent, origin, seed, opt)
 					local head = 0
 					while head < 8 and get(x, y + head, z) == 1 do head += 1 end
 					local roomy = get(x + 2, y, z) == 1 and get(x - 2, y, z) == 1 and get(x, y, z + 2) == 1 and get(x, y, z - 2) == 1
+					local skirtD -- directive v14: the wall beside this floor cell (talus and flowstone keep to the wall foot, the lanes stay clear)
+					for _, dd in DIRS do if get(x + dd[1], y, z + dd[2]) == 0 and get(x + dd[1], y + 1, z + dd[2]) == 0 then skirtD = dd break end end
+					local fis = math.abs(math.noise((x - CX + 0.5) * V / 22, (z - CZ + 0.5) * V / 22, seed * 0.13 + 0.5)) < 0.09
 					if head <= 3 and hsh > 0.93 and roomy then -- a column: floor to roof where they nearly meet, only in an open room (never plugging a crawl)
-						deco("Column", Vector3.new(3, head * V, 3), CFrame.new(foot + Vector3.new(0, head * V / 2, 0)), ROCK3, { CastShadow = true })
-						deco("ColumnFoot", Vector3.new(4.4, 1.2, 4.4), CFrame.new(foot + Vector3.new(0, 0.6, 0)), FLOW:Lerp(ROCK2, 0.5), {})
-					elseif head >= 3 and hsh > 0.9 then -- a stalagmite under the drip
+						local hgt, rot = head * V, CFrame.Angles(0, hsh * 3, 0) -- directive v14: flared at floor and roof, not a square post
+						deco("Column", Vector3.new(2.4, hgt, 2.4), CFrame.new(foot + Vector3.new(0, hgt / 2, 0)) * rot, ROCK3, { CastShadow = true })
+						for q, e in { { 4.8, 0.7 }, { 3.6, 2.0 }, { 4.8, hgt - 0.7 }, { 3.6, hgt - 2.0 } } do
+							deco("ColumnFoot", Vector3.new(e[1], 1.4, e[1]), CFrame.new(foot + Vector3.new(0, e[2], 0)) * rot * CFrame.Angles(0, q % 2 == 0 and 0.785 or 0, 0), q % 2 == 0 and ROCK2:Lerp(ROCK3, 0.5) or ROCK2, {})
+						end
+					elseif head >= 3 and (fis and skirtD and hsh > 0.55 or hsh > 0.95) then -- a stalagmite under the drip (under the cracks, by the wall: directive v14)
 						local hgt = 1.6 + hash(x, z, 12) * 3.4
-						deco("Stalagmite", Vector3.new(2.4, hgt, 2.4), CFrame.new(foot + Vector3.new(0, hgt / 2, 0)), ROCK2, { CanCollide = roomy, CanQuery = roomy })
-						deco("Stalagmite", Vector3.new(1.2, 1.4, 1.2), CFrame.new(foot + Vector3.new(0, hgt + 0.7, 0)), FLOW, { CanCollide = false })
+						for t = 0, 2 do -- three shrinking steps (directive v14: no pale cube on top)
+							local w2, seg = 3 - t * 0.85, hgt / 3 + 0.3
+							deco("Stalagmite", Vector3.new(w2, seg, w2), CFrame.new(foot + Vector3.new(0, seg / 2 + t * (seg - 0.3), 0)) * CFrame.Angles(0, t * 0.5 + hsh * 3, 0), ROCK2:Lerp(FLOW, t * 0.12), t == 0 and { CanCollide = roomy, CanQuery = roomy } or NOCOL)
+						end
 					elseif head >= 2 and hsh > 0.8 and hsh < (L == 4 and 0.835 or 0.815) then -- lichen flecks (in Muspell: glowing cracks, more of them) low on the rock: faint teal light so no stretch is a dead zone (Gemini r3)
-						local lf = deco("Lichen", Vector3.new(1.4, 0.25, 1), CFrame.new(foot + Vector3.new(0, 0.12, 0)) * CFrame.Angles(0, hsh * 20, 0), GLOW, { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CanQuery = false, CastShadow = false })
+						local lf = deco("Lichen", Vector3.new(0.6, 0.2, 0.45), CFrame.new(foot + Vector3.new(0, 0.1, 0)) * CFrame.Angles(0, hsh * 20, 0), GLOW, { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CanQuery = false, CastShadow = false })
+						for q = 1, 2 do deco("Lichen", Vector3.new(0.35, 0.16, 0.3), CFrame.new(foot + Vector3.new(math.cos(q * 2.4 + hsh * 9) * 0.8, 0.08, math.sin(q * 2.4 + hsh * 9) * 0.8)), GLOW:Lerp(ROCK2, 0.3), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CanQuery = false, CastShadow = false }) end -- a scatter of flecks, not one arcade button (Gemini v14p2)
 						local ll = Instance.new("PointLight")
 						ll.Color, ll.Range, ll.Brightness, ll.Shadows = GLOW, 8, 0.35, false
 						ll.Parent = lf
-					elseif head >= 2 and hsh > 0.84 then -- a fallen boulder (breakdown), tilted
+					elseif head >= 2 and skirtD and hsh > 0.86 then -- directive v14 (Recipe A3/F): breakdown talus, angular blocks stacked against the wall's foot
+						local into = Vector3.new(skirtD[1], 0, skirtD[2])
+						for q = 0, 1 + math.floor(hash(x, z, 71) * 2) - 1 do
+							local s = (2.6 + hash(x, z, 72 + q) * 1.6) * (1 - q * 0.3)
+							local at = foot + into * (V / 2 - s * 0.35) + Vector3.new((hash(z, x, 73 + q) - 0.5) * 1.6, s * 0.32 + q * s * 0.55, (hash(x, q, 74) - 0.5) * 1.6)
+							deco("Talus", Vector3.new(s, s * 0.62, s * 0.85), CFrame.new(at) * CFrame.Angles(hash(x, z, 75 + q) * 0.5, hash(z, x, 76 + q) * 3, hash(q, x, z) * 0.35), q == 0 and ROCK3 or ROCK2, NOCOL)
+						end
+					elseif head >= 2 and hsh > 0.93 and roomy then -- a fallen boulder (breakdown), tilted
 						local s = 2 + hash(x, z, 13) * 2.6
 						deco("Boulder", Vector3.new(s, s * 0.7, s * 0.9), CFrame.new(foot + Vector3.new(0, s * 0.3, 0)) * CFrame.Angles(hash(x, z, 14) * 0.6, hash(z, x, 15) * 3, 0), ROCK3, { CanCollide = roomy, CanQuery = roomy })
 					end
@@ -1038,6 +1208,44 @@ function M.build(parent, origin, seed, opt)
 			end
 		end
 	end
+	-- RIMSTONE (directive v14, Recipe E): on layers 2 and 3 a short run of travertine dams steps down a gentle floor, each holding a
+	-- shallow glowing pool. Decor only (no collision): the floor under them stays the walk
+	local function rimstone(sp, n)
+		if not sp then return end
+		local raw = sp - Vector3.new(0, dipY(sp.X), 0)
+		local f0 = floorUnder(raw)
+		if not f0 then return end
+		local dir
+		for i = 0, 7 do
+			local d = Vector3.new(math.cos(i * math.pi / 4), 0, math.sin(i * math.pi / 4))
+			local f1 = floorUnder(raw + d * 16)
+			if f1 and math.abs(f1.Y - f0.Y) <= 4.5 then dir = d break end
+		end
+		if not dir then return end
+		local side = Vector3.new(-dir.Z, 0, dir.X)
+		local tint = ({ PAL.flow, Color3.fromRGB(214, 160, 120), Color3.fromRGB(200, 214, 255), Color3.fromRGB(120, 90, 84) })[L]
+		local pool = L == 2 and Color3.fromRGB(255, 176, 96) or GLOW
+		for t = 0, n - 1 do
+			local c = f0 + dir * (t * 5.4)
+			local top, R = (n - t) * 1.1, 3.4 - t * 0.25
+			for q = 0, 2 do -- the basin: three turned blocks make a rounded body (Gemini v14p2_r2: one box read as a water trough)
+				deco("RimBasin", Vector3.new(R * 1.75, top - q * 0.05, R * 1.45), CFrame.lookAt(c + Vector3.new(0, top / 2, 0), c + Vector3.new(0, top / 2, 0) + dir) * CFrame.Angles(0, q * math.pi / 6, 0), tint:Lerp(ROCK2, 0.3 + q * 0.05), NOCOL)
+			end
+			local pl = deco("RimPool", Vector3.new(R * 1.75, 0.2, R * 1.45), CFrame.lookAt(c + Vector3.new(0, top + 0.15, 0), c + Vector3.new(0, top + 0.15, 0) + dir), pool, { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.3, CanCollide = false, CanQuery = false, CastShadow = false })
+			for q = -3, 3 do -- the dam: square blocks stepping round the downhill edge in the voxel grain (Gemini v14p2: a smooth curb clashed)
+				local out = dir * math.cos(q * 0.36) + side * math.sin(q * 0.36)
+				local lp = c + out * R * (0.8 + hash(t, q, 84) * 0.14) + Vector3.new(0, top + 0.2 + hash(q, t, 85) * 0.35, 0)
+				deco("RimLip", Vector3.new(1.2 + hash(t, q, 86) * 0.6, 0.8 + hash(q, t, 87) * 0.5, 1.3), CFrame.lookAt(lp, lp + out) * CFrame.Angles(0, (hash(t, q, 88) - 0.5) * 0.5, 0), (q % 2 == 0) and tint:Lerp(Color3.new(1, 1, 1), 0.2) or tint, NOCOL) -- staggered travertine, not dressed ashlar
+			end
+			if t == 0 then
+				local gl = Instance.new("PointLight")
+				gl.Color, gl.Range, gl.Brightness, gl.Shadows = pool, 14, 0.7, false
+				gl.Parent = pl
+			end
+		end
+	end
+	if L == 2 then rimstone(spots.B2, 3) rimstone(spots.Cathedral, 4)
+	elseif L == 3 then rimstone(spots.B2, 3) rimstone(spots.B3, 2) end
 	-- water: the stream slot and the pools carry a sheet of glassy water on top
 	local nWater = 0
 	for x = 0, NX - 1 do
@@ -1167,48 +1375,10 @@ function M.build(parent, origin, seed, opt)
 		tag.Name, tag.Value = a.Name, a
 		tag.Parent = model
 	end
-	-- ORE DEPOSITS (plan section 5): base ore lines the main route's walls, mid ore sits in the branch rooms, rare ore only at the dead
-	-- ends (B1, B3, B4, B5) and in the cathedral's cracks. Each stands on a reachable floor cell against a wall, 14 studs apart, with
-	-- the attributes the rest of the game reads (Layer, Ore, OreName) and the same shard-and-core look as CaveBuilder's.
-	local C = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Config"))
-	local ORES = C.LAYERS[L][4]
-	local DEAD = { spots.B1, spots.B3, spots.B4, spots.B5 }
-	local BRANCH = { spots.B2, spots.SwallowHole, spots.OldTube }
-	local cands = {}
-	for k in reach do
-		local z = k % NZ
-		local y = math.floor(k / NZ) % NY
-		local x = math.floor(k / (NZ * NY))
-		for _, d in { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } } do
-			if get(x + d[1], y, z + d[2]) == 0 and get(x + d[1], y + 1, z + d[2]) == 0 then table.insert(cands, { x, y, z, d }) break end
-		end
-	end
-	local function rank(c) -- dead ends first, then branches, then the rest; shuffled within each by a hash
-		local lp = toWorld(c[1], c[2], c[3]) - origin
-		for _, d in DEAD do if (d - lp).Magnitude < 20 then return 0 end end
-		for _, b in BRANCH do if (b - lp).Magnitude < 24 then return 1 end end
-		return 2
-	end
-	for _, c in cands do c.r = rank(c) + hash(c[1], c[3], c[2]) end
-	table.sort(cands, function(a2, b2) return a2.r < b2.r end)
-	local placed, nDep = {}, 0
-	local CAP, have = { 22, 9, 5 }, { 0, 0, 0 } -- base, mid, rare: rare stays rare
-	local campW = origin + spots.Camp
-	for _, c in cands do
-		if nDep >= 36 then break end
-		local w = toWorld(c[1], c[2], c[3]) - Vector3.new(0, V / 2, 0)
-		local lp = w - origin
-		if (w - campW).Magnitude > (opt.camp and 58 or 40) then
-			local free = true
-			for _, q in placed do if (q - w).Magnitude < 10 then free = false break end end
-			if free then
-				local idx2 = 1
-				for _, d in DEAD do if (d - lp).Magnitude < 20 then idx2 = 3 end end
-				if idx2 == 1 then for _, b in BRANCH do if (b - lp).Magnitude < 24 then idx2 = 2 end end end
-				if idx2 == 1 and (spots.Cathedral - lp).Magnitude < 30 and hash(c[1], c[3], 77) > 0.6 then idx2 = 3 end -- a crack in the cathedral
-				if have[idx2] >= CAP[idx2] then continue end
-				have[idx2] += 1
-				table.insert(placed, w)
+	for _, ch in chosen do -- the deposits, built into the niches chosen before the mesh
+		local c, idx2, w = ch.c, ch.idx2, ch.w
+		do
+			do
 				nDep += 1
 				local ore = ORES[idx2]
 				local dep = Instance.new("Model")
@@ -1217,7 +1387,7 @@ function M.build(parent, origin, seed, opt)
 				dep:SetAttribute("Ore", idx2)
 				dep:SetAttribute("OreName", ore[1])
 				local wall = Vector3.new(c[4][1], 0, c[4][2])
-				local foot = w + wall * (V / 2 - 0.9)
+				local foot = w + wall * ((c.niche and V or 0) + V / 2 - 0.9) -- at the back of its niche (directive v14)
 				local base = CFrame.lookAt(foot, foot + wall)
 				local k = 0.85 + idx2 * 0.3
 				local dark = ore[2]:Lerp(Color3.new(0, 0, 0), 0.35)
@@ -1257,7 +1427,7 @@ function M.build(parent, origin, seed, opt)
 	local walls = {} -- free wall spots for other builders (CaveBuilder's shrines, nests, altar), best first: dead ends, branches, the rest
 	for _, c in cands do
 		local w = toWorld(c[1], c[2], c[3]) - Vector3.new(0, V / 2, 0)
-		if (w - campW).Magnitude > (opt.camp and 58 or 40) then table.insert(walls, { pos = w, dir = Vector3.new(c[4][1], 0, c[4][2]) }) end
+		if not c.niche and (w - campW).Magnitude > (opt.camp and 58 or 40) then table.insert(walls, { pos = w, dir = Vector3.new(c[4][1], 0, c[4][2]) }) end
 	end
 	model.Parent = parent
 	model:SetAttribute("ZFixed", require(game:GetService("ServerScriptService"):WaitForChild("ZFix")).fix(model)) -- no z-fighting (the user, 2026-11-08)

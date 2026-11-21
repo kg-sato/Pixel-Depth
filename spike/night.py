@@ -17,6 +17,7 @@ def path_of(f):
     n = f.name.split(".")[0]
     if n == "PixelServer": return "ServerScriptService.PixelServer", "Script"
     if n == "PixelClient": return "StarterPlayer.StarterPlayerScripts.PixelClient", "LocalScript"
+    if n == "Splash": return "ReplicatedFirst.Splash", "LocalScript"  # directive v14: the first-frame cover
     if n in SSS: return "ServerScriptService." + n, "ModuleScript"
     return "ReplicatedStorage.Shared." + n, "ModuleScript"
 

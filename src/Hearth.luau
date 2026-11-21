@@ -17,7 +17,11 @@ function M.start(E)
 	local ring = Radial.arc(box, { name = "HoldRing", thick = 0.13, color = MINT, track = Color3.fromRGB(30, 21, 58), trackTransparency = 0.25, z = 41, value = 0 })
 	local label = E.text(box, "HOME", UDim2.fromScale(2.4, 0.42), UDim2.fromScale(0.5, 1.25), Vector2.new(0.5, 0.5), MINT) -- round the crosshair; the label ends over the toast lane (0.655)
 	label.Name, label.Font, label.ZIndex = "Label", E.HEAD or label.Font, 41
-	local flash = new("Frame", E.top or E.gui, { Name = "HearthFlash", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(200, 255, 232), BackgroundTransparency = 1, BorderSizePixel = 0, Visible = false, ZIndex = 90 })
+	local flash = new("CanvasGroup", E.gui, { Name = "HearthFlash", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, GroupTransparency = 1, BorderSizePixel = 0, Visible = false, ZIndex = -1 }) -- directive v14: an edge wash under the HUD (it bleached the top bar at z 90), the middle stays clear
+	for k = 0, 1 do
+		local f = new("Frame", flash, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(200, 255, 232), BackgroundTransparency = 0, BorderSizePixel = 0 })
+		new("UIGradient", f, { Rotation = k * 90, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0), NumberSequenceKeypoint.new(0.22, 1), NumberSequenceKeypoint.new(0.78, 1), NumberSequenceKeypoint.new(1, 0) }) })
+	end
 	local coolUntil, hold = 0, nil -- hold = { t0, secs, p }
 
 	local function stop(tell)
@@ -50,9 +54,9 @@ function M.start(E)
 		elseif what == "done" then
 			stop(false)
 			coolUntil = os.clock() + a
-			flash.BackgroundTransparency, flash.Visible = 0.1, true
-			E.tween(flash, 0.9, { BackgroundTransparency = 1 })
-			task.delay(0.95, function() flash.Visible = false end)
+			flash.GroupTransparency, flash.Visible = 0.62, true -- directive v14: a soft mint wash at the edges (it was a 0.1 full-screen whiteout)
+			E.tween(flash, 0.45, { GroupTransparency = 1 })
+			task.delay(0.5, function() flash.Visible = false end)
 			E.sfx("land", 0.8)
 			E.toast("BACK AT CAMP  ·  ORE IS SAFE HERE", MINT, true) -- says where: HOME SAFE left players unsure if it meant town (Gemini full1120s)
 		elseif what == "no" then

@@ -34,7 +34,7 @@ function M.start(E)
 	-- directive v13 (@uxui_howard.le, Df7IzotS9aH): two more layers give the panel real depth as the head turns: a soft shadow
 	-- plate 0.12 studs behind the menu and a thin glass rim 0.06 studs in front of it, both drawn round the open menu's rectangle
 	local layers = {}
-	for _, d in { { "Back", 0.12 }, { "Front", -0.06 } } do
+	for _, d in { { "Back", 0.12 }, { "Frost", 0.04 }, { "Front", -0.06 } } do -- Frost (directive v14): a dark plate right behind the menu, so nothing in the world shows through its gaps
 		local lp = part:Clone()
 		lp.Name = "SpatialPanel" .. d[1]
 		lp.CanQuery = false
@@ -50,6 +50,8 @@ function M.start(E)
 			local st = Instance.new("UIStroke")
 			st.Color, st.Thickness, st.Transparency = Color3.fromRGB(155, 31, 232), 6, 0.72
 			st.Parent = rect
+		elseif d[1] == "Frost" then
+			rect.BackgroundColor3, rect.BackgroundTransparency = Color3.fromRGB(16, 8, 32), 0.12
 		else -- the front layer: only a fine cyan glass edge, so nothing covers the menu's buttons
 			rect.BackgroundTransparency = 1
 			local st = Instance.new("UIStroke")
@@ -197,8 +199,9 @@ function M.start(E)
 				l.part.Size = part.Size
 				l.part.CFrame = part.CFrame * CFrame.new(0, 0, l.z) -- +z: away from the eye (the front face looks back at it)
 				local off = name == "Back" and Vector2.new(canvas.Y * 0.012, canvas.Y * 0.016) or Vector2.zero
-				l.rect.Position = UDim2.fromOffset(top.AbsolutePosition.X + off.X, top.AbsolutePosition.Y + off.Y)
-				l.rect.Size = UDim2.fromOffset(top.AbsoluteSize.X, top.AbsoluteSize.Y)
+				local pad = name == "Frost" and canvas.Y * 0.006 or 0
+				l.rect.Position = UDim2.fromOffset(top.AbsolutePosition.X + off.X - pad, top.AbsolutePosition.Y + off.Y - pad)
+				l.rect.Size = UDim2.fromOffset(top.AbsoluteSize.X + pad * 2, top.AbsoluteSize.Y + pad * 2)
 			end
 		end
 	end)

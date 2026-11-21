@@ -61,7 +61,7 @@ function M.start(E)
 	local capFill = new("Frame", capTrack, { Size = UDim2.fromScale(0, 1), BackgroundColor3 = MINT, BorderSizePixel = 0, ZIndex = 7 })
 	new("UICorner", capFill, { CornerRadius = UDim.new(0.5, 0) })
 	local grid = new("ScrollingFrame", inv, {
-		Name = "Grid", Size = UDim2.fromScale(0.88, 0.42), Position = UDim2.fromScale(0.5, 0.35), AnchorPoint = Vector2.new(0.5, 0),
+		Name = "Grid", Size = UDim2.fromScale(0.88, 0.40), Position = UDim2.fromScale(0.5, 0.35), AnchorPoint = Vector2.new(0.5, 0), -- 0.40: room above the hint line (directive v14)
 		BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 6, ScrollBarImageColor3 = INK, CanvasSize = UDim2.new(),
 		AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 6,
 	})
@@ -114,9 +114,10 @@ function M.start(E)
 		f.LayoutOrder, f.ZIndex = i, 7
 		local ic = new("ImageLabel", f, { Image = iconImg or "", BackgroundTransparency = 1, Size = UDim2.fromScale(0.52, 0.46), Position = UDim2.fromScale(0.5, 0.33), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 8 })
 		new("UIAspectRatioConstraint", ic, { AspectRatio = 1 })
-		local nm = text(f, name, UDim2.fromScale(0.9, 0.15), UDim2.fromScale(0.5, 0.67), Vector2.new(0.5, 0.5), INK, 700, false)
-		local ct = text(f, count, UDim2.fromScale(0.9, 0.15), UDim2.fromScale(0.5, 0.85), Vector2.new(0.5, 0.5), MUTED, 700, false)
+		local nm = text(f, name, UDim2.fromScale(0.86, 0.14), UDim2.fromScale(0.5, 0.67), Vector2.new(0.5, 0.5), INK, 700, false)
+		local ct = text(f, count, UDim2.fromScale(0.86, 0.14), UDim2.fromScale(0.5, 0.85), Vector2.new(0.5, 0.5), MUTED, 700, false)
 		nm.ZIndex, ct.ZIndex = 8, 8
+		for _, t in { nm, ct } do new("UITextSizeConstraint", t, { MaxTextSize = 28, MinTextSize = 8 }) end -- directive v14: ROOTFLINT ran into the left rim
 		for _, t in { nm, ct } do -- light on the dark glass card: ink text could not be read (full1119d 97 s, 2026-11-19)
 			t.TextColor3, t.TextStrokeColor3, t.TextStrokeTransparency = t == nm and Color3.fromRGB(245, 238, 255) or Color3.fromRGB(200, 186, 232), Color3.fromRGB(22, 8, 30), 0.3
 		end

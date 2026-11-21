@@ -22,7 +22,15 @@ function M.start(E)
 	local sub = new("TextLabel", root, { Text = "", Font = E.HEAD, TextScaled = true, TextColor3 = Color3.new(1, 1, 1), TextStrokeTransparency = 0.3, TextStrokeColor3 = Color3.fromRGB(30, 21, 58), BackgroundTransparency = 1, Size = UDim2.fromScale(0.6, 0.22), Position = UDim2.fromScale(0.5, 0.84), AnchorPoint = MID, TextTransparency = 1, ZIndex = 4 })
 	local token = 0
 
-	local function show(name, line, color)
+	local function giftOpen() -- the gift dropdown under the timer pill (RetentionTimers): the banner waits for it (directive v14, audit bug 15)
+		local pg = game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
+		local t = pg and pg:FindFirstChild("Timers", true)
+		local d = t and t:FindFirstChild("Drop")
+		return d ~= nil and d:IsA("GuiObject") and d.Visible
+	end
+	local function show(name, line, color, waited)
+		waited = waited or 0
+		if waited < 4 and giftOpen() then task.delay(0.25, show, name, line, color, waited + 0.25) return end
 		token += 1
 		local my = token
 		word.tint(color)

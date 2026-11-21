@@ -27,9 +27,9 @@ function M.start(E)
 	local nextScan, rare, gloomNear, hopAt = 0, nil, false, -10
 	-- where each of the first three pets keeps to in the first-person view (camera space), and its size
 	local SLOT = {
-		{ off = Vector3.new(-8.4, -0.9, -13), scale = 1.6 }, -- further out and lower: at -7.4/-10 it filled a third of the left view (Gemini full1119p)
-		{ off = Vector3.new(-10.6, -1.0, -14.5), scale = 1.25 },
-		{ off = Vector3.new(-5.0, -1.1, -15.5), scale = 1.25 },
+		{ off = Vector3.new(-9.0, -1.0, -13.8), scale = 1.6, maxExt = 3.8 }, -- further out and lower: at -7.4/-10 it filled a third of the left view (Gemini full1119p)
+		{ off = Vector3.new(-10.6, -1.0, -14.5), scale = 1.25, maxExt = 3.0 },
+		{ off = Vector3.new(-5.0, -1.1, -15.5), scale = 1.25, maxExt = 3.0 }, -- maxExt: the largest side in studs at view size (directive v14: tall pets walled off the left view)
 	}
 
 	-- moments the whole crew feels for a few seconds
@@ -106,7 +106,7 @@ function M.start(E)
 		light.Parent = bead
 		for _, p in model:GetDescendants() do -- the pet's own back glow is 1.2: this close to the camera it burned out
 			if p:IsA("PointLight") and p ~= light then p.Brightness = 0.25 end
-			if p:IsA("BasePart") and p.Material == Enum.Material.Neon and p ~= bead then p.Color = p.Color:Lerp(Color3.new(0, 0, 0), 0.45) end -- so did its neon back
+			if p:IsA("BasePart") and p.Material == Enum.Material.Neon and p ~= bead then p.Color = p.Color:Lerp(Color3.new(0, 0, 0), 0.6) end -- so did its neon back (0.45 still burned white in first person, directive v14)
 		end
 		d.bead, d.light = bead, light
 		if lead then -- a faint trail of sparkles at its feet: its power shows in the dark (Gemini full1119p)
@@ -225,7 +225,8 @@ function M.start(E)
 		if not d.bead then dress(pet.model, d, i == 1) end
 		if not d.big then -- big enough to read at the edge of the view
 			d.big, d.scale0 = true, d.scale0 or pet.model:GetScale()
-			pet.model:ScaleTo(slot.scale) -- the slot size is absolute: the town crew is scaled up (C.PET_SCALE) and that must not carry into the view
+			local ext = pet.model:GetExtentsSize() / pet.model:GetScale() -- the pet's own size at scale 1
+			pet.model:ScaleTo(math.min(slot.scale, 1.25, slot.maxExt / math.max(ext.X, ext.Y, ext.Z, 0.1))) -- the slot size is absolute: the town crew is scaled up (C.PET_SCALE) and that must not carry into the view; tall pets shrink to the same budget
 		end
 		if i == 1 and now >= nextScan then -- twice a second: the nearest rare deposit and any Gloomling close by
 			nextScan = now + 0.5

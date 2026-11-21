@@ -79,7 +79,7 @@ function M.start(E)
 
 	local function panel(slot, title, tint)
 		local part = new("Part", folder, { Name = title, Size = Vector3.new(PW, PH, 0.05), Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Transparency = 1 })
-		local sg = new("SurfaceGui", pg, { Name = "AR_" .. title, Adornee = part, Face = Enum.NormalId.Front, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = PPS, AlwaysOnTop = false, LightInfluence = 0, Brightness = 1.4, MaxDistance = 1000, ResetOnSpawn = false, Enabled = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
+		local sg = new("SurfaceGui", pg, { Name = "AR_" .. title, Adornee = part, Face = Enum.NormalId.Front, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = PPS, AlwaysOnTop = true, LightInfluence = 0, Brightness = 1.4, MaxDistance = 1000, ResetOnSpawn = false, Enabled = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
 		local root = new("Frame", sg, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1 })
 		local sc = new("UIScale", root, {})
 		local card = new("Frame", root, { Size = UDim2.fromScale(0.94, 0.74), Position = UDim2.fromScale(0.5, 0.61), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.07, BorderSizePixel = 0, ZIndex = 2 }) -- nearly solid: the world behind made the labels hard to read
@@ -128,7 +128,7 @@ function M.start(E)
 	do
 		local _, card = panel(0, "SETTINGS", PINK)
 		local function toggle(i, name, key, act)
-			local y = 0.12 + (i - 1) * 0.13 -- five rows since directive v13 (four, 0.165 apart, since v9); clear of the buttons at 0.84
+			local y = 0.10 + (i - 1) * 0.112 -- directive v14: five rows end at 0.60, well clear of the buttons at 0.87 (row 5 grazed them at 0.13 apart)
 			label(card, name, UDim2.fromScale(0.52, 0.1), UDim2.fromScale(0.33, y), WHITE, E.FONT, true) -- the open sentence font: condensed capitals filled in on a phone
 			local b, jt
 			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and CYAN or DEEP, UDim2.fromScale(0.26, 0.112), UDim2.fromScale(0.8, y), function()
@@ -159,7 +159,7 @@ function M.start(E)
 		toggle(5, "Dynamic HUD", "hudDynamic", function(on) plr:SetAttribute("HudDynamic", on or nil) end)
 		local x = 0.2
 		for _, s in { { "BAG", DEEP, "bag" }, { "QUESTS", DEEP, "quests" }, { "DONE", PINK, nil } } do
-			glassButton(card, s[1], s[2], UDim2.fromScale(0.27, 0.15), UDim2.fromScale(x, 0.84), function()
+			glassButton(card, s[1], s[2], UDim2.fromScale(0.27, 0.14), UDim2.fromScale(x, 0.87), function()
 				shut()
 				if s[3] and hook[s[3]] then task.delay(0.3, hook[s[3]]) end
 			end)
@@ -170,10 +170,10 @@ function M.start(E)
 	-- CONTROLS (right)
 	do
 		local _, card = panel(1, "CONTROLS", LILAC)
-		local KEYS = { { "F", "Use or talk" }, { "E", "Mine ore" }, { "R", "Flare" }, { "T", "Sonar" }, { "Z", "Ping crew" }, { "TAB", "Tool wheel" }, { "B", "Bag" }, { "J", "Quests" }, { "H", "Inspect" }, { "N", "Settings" } }
+		local KEYS = { { "F", "Use or talk" }, { "E", "Mine ore" }, { "R", "Flare" }, { "T", "Sonar" }, { "Z", "Ping crew" }, { "TAB", "Tool wheel" }, { "B", "Bag" }, { "J", "Quests" }, { "H", "Inspect" }, { "N", "Settings" }, { "G", "Clink pickaxes" }, { "X", "Whistle pet" } } -- G and X: directive v14
 		for i, k in KEYS do
 			local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
-			local y = 0.12 + row * 0.185
+			local y = 0.10 + row * 0.155 -- six rows of keys since directive v14 (was five, 0.185 apart)
 			local cap = new("Frame", card, { Size = UDim2.fromScale(0.11, 0.13), Position = UDim2.fromScale(0.085 + col * 0.5, y), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(58, 42, 112), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 4 }) -- a dark cap: pale jelly on a white cap had no contrast
 			new("UICorner", cap, { CornerRadius = UDim.new(0.25, 0) })
 			new("UIStroke", cap, { Color = LILAC, Thickness = 2 })
@@ -215,7 +215,7 @@ function M.start(E)
 	local hintBar = new("Frame", nav, { Size = UDim2.fromScale(0.44, 0.07), Position = UDim2.fromScale(0.5, 0.94), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.3, BorderSizePixel = 0 })
 	new("UICorner", hintBar, { CornerRadius = UDim.new(0.5, 0) })
 	local hintText = label(hintBar, "", UDim2.fromScale(0.9, 0.6), UDim2.fromScale(0.5, 0.5), EDGE, E.HEAD)
-	local function touchNow() return (UIS.TouchEnabled and not UIS.KeyboardEnabled) or plr:GetAttribute("DevTouch") ~= nil end
+	local function touchNow() return UIS.PreferredInput == Enum.PreferredInput.Touch or plr:GetAttribute("DevTouch") ~= nil end -- directive v14: the input the player is using now, not the device's ports
 
 	-- the camera
 	local base, yaw, pitch, blend, closing = nil, 0, 0, 0, false
@@ -273,7 +273,7 @@ function M.start(E)
 		flag.Visible, nav.Enabled = true, true
 		local touch = touchNow()
 		for _, a in arrows do a.Visible = touch end
-		hintText.Text = touch and "DRAG OR TAP THE ARROWS TO LOOK ROUND" or "LOOK LEFT AND RIGHT: MOUSE OR A / D      CLOSE: N"
+		hintText.Text = touch and "DRAG OR TAP THE ARROWS TO LOOK ROUND" or "LOOK ROUND: MOUSE OR A / D   \u{00B7}   CLOSE: N"
 		for slot, p in panels do
 			p.sg.Enabled = true
 			p.part.CanQuery = true -- a SurfaceGui gets no clicks through a part that cannot be queried

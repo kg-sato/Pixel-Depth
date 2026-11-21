@@ -87,7 +87,7 @@ function M.start(E)
 		b.Name = "Tab" .. t[2]
 		tabBtn[t[1]] = b
 		if t[1] ~= "pick" then -- what the tab holds, in a small line under its name: BACKPACKS and CHARMS gave no hint (Gemini full1119p)
-			local sub = text(b, t[1] == "pack" and "MORE ROOM" or (C.CHARMS_ON and "PERKS" or "SOON"), UDim2.fromScale(0.6, 0.2), UDim2.fromScale(0.5, 0.88), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 214, 107), 700, false)
+			local sub = text(b, t[1] == "pack" and "MORE ROOM" or (C.CHARMS_ON and "PERKS" or "SOON"), UDim2.fromScale(0.6, 0.18), UDim2.fromScale(0.5, 0.78), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 214, 107), 700, false) -- directive v14: 0.88 sat on the tab rim
 			sub.ZIndex = 5
 		end
 		if t[1] == "charm" and not C.CHARMS_ON then
@@ -213,7 +213,7 @@ function M.start(E)
 	rarT.ZIndex = 3
 	local rows = {}
 	for k = 1, 2 do
-		local r = panel(det, UDim2.fromScale(0.92, 0.072), UDim2.fromScale(0.5, 0.62 + (k - 1) * 0.08), Vector2.new(0.5, 0.5), "pill")
+		local r = panel(det, UDim2.fromScale(0.92, 0.072), UDim2.fromScale(0.5, 0.625 + (k - 1) * 0.085), Vector2.new(0.5, 0.5), "pill") -- 0.625 / 0.71 (directive v14: 0.58 ran into the rarity pill)
 		local ic = icon(r, k == 1 and "coin" or "star", UDim2.fromScale(0.1, 0.72), UDim2.fromScale(0.035, 0.5), Vector2.new(0, 0.5))
 		new("UIAspectRatioConstraint", ic, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 		local l = text(r, "", UDim2.fromScale(0.46, 0.68), UDim2.fromScale(0.15, 0.5), Vector2.new(0, 0.5), INK, 700, false) -- 0.68: the stat rows were tiny at phone size
@@ -281,15 +281,15 @@ function M.start(E)
 	end
 	-- two lines on the action button: the verb, then the price with its currency (Gemini r3: one line read cramped)
 	act.Label.Visible = false
-	local actTop = text(act, "", UDim2.fromScale(0.86, 0.4), UDim2.fromScale(0.5, 0.33), Vector2.new(0.5, 0.5), WHITE)
-	local actCost = text(act, "", UDim2.fromScale(0.42, 0.32), UDim2.fromScale(0.55, 0.7), Vector2.new(0, 0.5), WHITE)
+	local actTop = text(act, "", UDim2.fromScale(0.86, 0.36), UDim2.fromScale(0.5, 0.30), Vector2.new(0.5, 0.5), WHITE)
+	local actCost = text(act, "", UDim2.fromScale(0.42, 0.28), UDim2.fromScale(0.55, 0.66), Vector2.new(0, 0.5), WHITE) -- directive v14: 0.7 touched the button's bottom lip
 	actCost.TextXAlignment = Enum.TextXAlignment.Left
 	local ai = act:FindFirstChild("Icon")
-	ai.Size, ai.Position, ai.AnchorPoint = UDim2.fromScale(0.2, 0.38), UDim2.fromScale(0.52, 0.7), Vector2.new(1, 0.5)
+	ai.Size, ai.Position, ai.AnchorPoint = UDim2.fromScale(0.2, 0.34), UDim2.fromScale(0.52, 0.66), Vector2.new(1, 0.5)
 	local function splitAct()
 		local a, b = act.Text:match("^(.-)%s%s+(%S+)$")
 		actTop.Text, actCost.Text, actCost.Visible = a or act.Text, b or "", b ~= nil
-		actTop.Position = b and UDim2.fromScale(0.5, 0.33) or UDim2.fromScale(0.5, 0.48)
+		actTop.Position = b and UDim2.fromScale(0.5, 0.30) or UDim2.fromScale(0.5, 0.48)
 		local deep = DEEP[act:GetAttribute("Kind")] or INK
 		actTop.TextStrokeColor3, actCost.TextStrokeColor3 = deep, deep
 	end

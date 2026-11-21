@@ -380,8 +380,10 @@ function M.play(opt)
 	local sg = Instance.new("UIGradient")
 	sg.Rotation, sg.Transparency = 90, NumberSequence.new(0.5, 1)
 	sg.Parent = shine
+	local cap = frame({ Parent = bar, Size = UDim2.fromScale(0.36, 0.86), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.15, ZIndex = 5 }) -- directive v14: white words on the gold fill did not read
+	round(cap)
 	local barText = label(bar, "ESCAPE", UDim2.fromScale(0.5, 0.74), UDim2.fromScale(0.5, 0.5), WHITE, 6)
-	stroke(barText, Color3.fromRGB(60, 24, 90), 2)
+	stroke(barText, Color3.fromRGB(60, 24, 90), 3)
 	local hud = EscapeHUD.start({ gui = gui, calm = calm, keys = UIS.KeyboardEnabled }) -- the stopwatch chip, the gap meter, the warning chevrons
 	local pips = {}
 	for i = 1, 3 do
@@ -889,7 +891,7 @@ function M.play(opt)
 			-- a brass boiler gauge, not a flat bar (Gemini audit 2026-11-18: "unstyled Stoker needle bar"): a half dial with a brass
 			-- rim, notches, a gold arc for the window and a needle that sweeps from left to right as C.stokeAt runs 0 to 1
 			local BRASS, BRASS_D = Color3.fromRGB(214, 160, 78), Color3.fromRGB(120, 78, 34)
-			bar = frame({ Name = "Stoke", Size = UDim2.fromScale(0.15, 0.15), Position = UDim2.fromScale(0.5, 0.86), -- smaller, lower and smoked (full1119d 472 s, 2026-11-19: the big brass dial covered the rails)
+			bar = frame({ Name = "Stoke", Size = UDim2.fromScale(0.15, 0.15), Position = UDim2.fromScale(0.5, 0.78), -- directive v14: 0.78 clears the gloom meter at 0.94; smaller, lower and smoked (full1119d 472 s, 2026-11-19: the big brass dial covered the rails)
 				 AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 3 })
 			local ar = Instance.new("UIAspectRatioConstraint")
 			ar.AspectRatio = 2
@@ -1364,7 +1366,7 @@ function M.play(opt)
 					local st = label(card, "\u{2605}", UDim2.fromScale(0.13, 0.17), UDim2.fromScale(0.36 + (k - 1) * 0.14, 0.05), k <= stars and Color3.fromRGB(255, 196, 70) or Color3.fromRGB(220, 212, 236), 8)
 					stroke(st, INK, 2)
 				end
-				local sub = frame({ Parent = card, Size = UDim2.fromScale(0.86, 0.46), Position = UDim2.fromScale(0.5, 0.56), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(36, 17, 56), BackgroundTransparency = 0.2, ZIndex = 6 })
+				local sub = frame({ Parent = card, Size = UDim2.fromScale(0.86, 0.46), Position = UDim2.fromScale(0.5, 0.53), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(36, 17, 56), BackgroundTransparency = 0.2, ZIndex = 6 })
 				round(sub, 0.12)
 				local go = Instance.new("TextButton")
 				go.Size, go.Position, go.AnchorPoint, go.ZIndex = UDim2.fromScale(0.46, 0.12), UDim2.fromScale(0.5, 0.9), Vector2.new(0.5, 0.5), 8
@@ -1381,15 +1383,15 @@ function M.play(opt)
 					rows = { rows[1], { "CREW", tostring(cr.n or 1) .. " RIDERS  x" .. tostring(cr.mult or 1) }, mine, { "CREW MOVES", tostring(cr.moHit or 0) .. " OF " .. tostring(cr.moN or 0) },
 						{ "BONUS", "+" .. tostring(bonus or 0) .. " COINS" .. ((cr.gem or 0) + (cr.gems or 0) > 0 and "  +" .. tostring((cr.gem or 0) + (cr.gems or 0)) .. " GEM" or "") } }
 				end
-				local step, tall = #rows > 4 and 0.083 or 0.104, #rows > 4 and 0.07 or 0.085
+				local step, tall = #rows > 4 and 0.068 or 0.085, #rows > 4 and 0.06 or 0.075 -- directive v14: from 0.26, so the superlative pill clears CONTINUE at 0.90
 				for i, r in rows do
-					label(card, r[1], UDim2.fromScale(0.4, tall), UDim2.fromScale(0.3, 0.30 + i * step), Color3.fromRGB(196, 160, 255), 7)
-					label(card, r[2], UDim2.fromScale(0.45, tall), UDim2.fromScale(0.7, 0.30 + i * step), i == #rows and Color3.fromRGB(255, 214, 107) or Color3.fromRGB(236, 224, 255), 7)
+					label(card, r[1], UDim2.fromScale(0.4, tall), UDim2.fromScale(0.3, 0.26 + i * step), Color3.fromRGB(196, 160, 255), 7)
+					label(card, r[2], UDim2.fromScale(0.45, tall), UDim2.fromScale(0.7, 0.26 + i * step), i == #rows and Color3.fromRGB(255, 214, 107) or Color3.fromRGB(236, 224, 255), 7)
 				end
 				if K.crew and type(cr) == "table" then -- directive v13 (open item 4): a playful crew superlative for this rider
 					local sup = (K.beadN or 0) >= 3 and "GOLD SNATCHER" or ((cr.flares or 0) >= 2 and K.job == "tail" and "FLARE ACE")
 						or (hits == 0 and "IRON NERVES") or ((cr.calls or 0) >= 4 and K.job == "lookout" and "EAGLE EYE") or ((cr.hits or 0) >= 6 and K.job == "stoker" and "FURNACE HEART") or "TRUE CREW"
-					local pill = frame({ Parent = card, Size = UDim2.fromScale(0.5, 0.075), Position = UDim2.fromScale(0.5, 0.3 + (#rows + 1) * step), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(70, 40, 20), BackgroundTransparency = 0.1, ZIndex = 7 })
+					local pill = frame({ Parent = card, Size = UDim2.fromScale(0.5, 0.075), Position = UDim2.fromScale(0.5, 0.26 + (#rows + 1) * step), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(70, 40, 20), BackgroundTransparency = 0.1, ZIndex = 7 })
 					round(pill, 0.5)
 					stroke(pill, Color3.fromRGB(255, 196, 70), 2)
 					label(pill, "\u{2605} " .. sup .. " \u{2605}", UDim2.fromScale(0.9, 0.7), UDim2.fromScale(0.5, 0.5), Color3.fromRGB(255, 214, 107), 8)

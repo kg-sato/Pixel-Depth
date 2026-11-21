@@ -79,9 +79,9 @@ function M.start(E)
 	local badgeT = E.text(badge, "", UDim2.fromScale(0.88, 0.64), UDim2.fromScale(0.5, 0.5), MID, GOLD, 700, false)
 	badgeT.ZIndex = 8
 	-- the collection meter: found / all, with gold notches where the egg luck steps up (Config.CODEX.at)
-	local status = E.text(insp, "", UDim2.fromScale(0.9, 0.046), UDim2.fromScale(0.5, 0.845), MID, GOLD, 700, false)
+	local status = E.text(insp, "", UDim2.fromScale(0.9, 0.044), UDim2.fromScale(0.5, 0.80), MID, GOLD, 700, false) -- directive v14: was 0.845, on top of the meter
 	status.Name, status.ZIndex = "Status", 7
-	local meter = E.new("Frame", insp, { Name = "Meter", Size = UDim2.fromScale(0.84, 0.03), Position = UDim2.fromScale(0.5, 0.91), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(14, 8, 26), BorderSizePixel = 0, ZIndex = 7 })
+	local meter = E.new("Frame", insp, { Name = "Meter", Size = UDim2.fromScale(0.84, 0.03), Position = UDim2.fromScale(0.5, 0.90), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(14, 8, 26), BorderSizePixel = 0, ZIndex = 7 })
 	E.new("UICorner", meter, { CornerRadius = UDim.new(0.5, 0) })
 	E.new("UIStroke", meter, { Color = VIOLET, Thickness = 1, Transparency = 0.3 })
 	local fill = E.new("Frame", meter, { Name = "Fill", Size = UDim2.fromScale(0, 1), BackgroundColor3 = WHITE, BorderSizePixel = 0, ZIndex = 8 })

@@ -26,8 +26,8 @@ function M.pick(text)
 	return nil
 end
 
-local function hasOwnIcon(label) -- kit buttons already carry their icon beside the label
-	return label.Parent ~= nil and label.Parent:FindFirstChild("Icon") ~= nil
+local function hasOwnIcon(label) -- kit buttons already carry their icon beside the label (or inside it: the QUESTS TextButton was padded flat, directive v14)
+	return label:FindFirstChild("Icon") ~= nil or (label.Parent ~= nil and label.Parent:FindFirstChild("Icon") ~= nil)
 end
 
 local function isShadow(label) -- a drop-shadow copy under the real words (float texts, toasts): one icon is enough

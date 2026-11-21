@@ -1152,7 +1152,7 @@ RunService.RenderStepped:Connect(function()
 		local a = u.adornee
 		local p = (a:IsA("BasePart") and a.Position or (a:IsA("Attachment") and a.WorldPosition or Vector3.zero)) + Vector3.new(0, u.lift, 0)
 		local v, on = cam:WorldToScreenPoint(p)
-		u.bb.Visible = on
+		u.bb.Visible = on and not forgeUI.modalOpen -- directive v14: a bubble shown before a panel opened drew over it (F BUY AN EGG on EGG ODDS)
 		local sz, vp = u.bb.AbsoluteSize, cam.ViewportSize -- kept whole on screen: a bubble over a tall thing was cut by the top edge (Gemini UI review, 2026-11-10)
 		local x, y = math.clamp(v.X, sz.X * 0.62 + 6, math.max(vp.X - sz.X * 0.38 - 6, sz.X * 0.62 + 6)), math.max(v.Y, sz.Y + vp.Y * 0.2) -- below the top strip and the timers pill (directive v10: a boss prompt sat on the pill)
 		if on then
@@ -2073,6 +2073,22 @@ end)()
 	bIcon.ZIndex = 7
 	local bText = text(banner, "", UDim2.fromScale(0.62, 0.4), UDim2.fromScale(0.54, 0.42), Vector2.new(0.5, 0.5), WHITE)
 	bText.TextColor3, bText.TextStrokeTransparency, bText.ZIndex = INK, 1, 7 -- ink on the light ribbon reads at phone size
+	do -- directive v14 (audit bug 8): the pale lilac ribbon glared over the dark cave and the fights; now smoked obsidian glass
+		local sk = banner:FindFirstChild("Skin")
+		if sk then sk.Visible = false end
+		banner.BackgroundColor3, banner.BackgroundTransparency = Color3.fromRGB(26, 16, 44), 0.18
+		new("UICorner", banner, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", banner, { Color = Color3.fromRGB(140, 236, 255), Thickness = 1.5, Transparency = 0.45 })
+		bText.TextColor3, bText.TextStrokeColor3, bText.TextStrokeTransparency = Color3.fromRGB(255, 220, 130), Color3.fromRGB(16, 8, 30), 0.35
+		local ar = banner:FindFirstChildOfClass("UIAspectRatioConstraint")
+		local function fitTip() -- as wide as its words (Gemini v14p1: a wide pill with dead ends blocked the view)
+			local w = math.clamp(150 + #bText.Text * 7.6, 260, 540)
+			banner.Size = S(w, 52)
+			if ar then ar.AspectRatio = w / 52 end
+		end
+		bText:GetPropertyChangedSignal("Text"):Connect(fitTip)
+		fitTip()
+	end
 	local shown, queue, busy = {}, {}, false
 	local function seen(name) return shown[name] or (state and state.tips and state.tips[name]) end
 	local function nextTip()

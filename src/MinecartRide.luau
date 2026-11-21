@@ -414,7 +414,7 @@ function M.play(opt)
 	subText.Text, subText.Size, subText.Position = opt.camp2 and "SIT BACK  ·  NEXT STOP KILN CAMP" or "SIT BACK  ·  NEXT STOP CAMP 1", UDim2.fromScale(0.3, 0.035), UDim2.fromScale(0.5, 0.255)
 	subText.Parent = gui
 	local skip = Instance.new("TextButton")
-	skip.Size, skip.Position, skip.AnchorPoint = UDim2.fromScale(0.09, 0.055), UDim2.fromScale(0.95, 0.06), Vector2.new(1, 0)
+	skip.Size, skip.Position, skip.AnchorPoint = UDim2.fromScale(0.09, 0.055), UDim2.fromScale(0.93, 0.08), Vector2.new(1, 0) -- directive v14: inside the safe inset
 	skip.BackgroundColor3, skip.BackgroundTransparency, skip.Font, skip.TextScaled, skip.Text = Color3.fromRGB(255, 250, 243), 0.1, Enum.Font.FredokaOne, true, "SKIP"
 	skip.TextColor3, skip.ZIndex, skip.Visible = INK, 9, false
 	local corner = Instance.new("UICorner")

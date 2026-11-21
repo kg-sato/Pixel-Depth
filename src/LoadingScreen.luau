@@ -161,10 +161,11 @@ function M.start(E)
 	local pct = new("TextLabel", all, { Text = "0%", Font = Enum.Font.Arcade, TextScaled = true, TextColor3 = LAV, BackgroundTransparency = 1, Size = UDim2.fromScale(0.2, 0.052), Position = UDim2.fromScale(0.5, 0.893), AnchorPoint = MID, ZIndex = 5 })
 	do -- directive v13: the three-word fantasy hook under the line (Deep Rock's "DANGER. DARKNESS. DWARVES."), a quiet lavender
 		-- pill on the plain backdrop (the owner's 2026-11-13 no-stripes rule stands: Config.LOADING.fx)
-		local hookPill = new("Frame", all, { Name = "Hook", Size = UDim2.fromScale(0.34, 0.046), Position = UDim2.fromScale(0.5, 0.952), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(40, 24, 66), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 5 })
+		-- directive v14: the pill was 0.34 x 0.046, too small to read
+		local hookPill = new("Frame", all, { Name = "Hook", Size = UDim2.fromScale(0.48, 0.058), Position = UDim2.fromScale(0.5, 0.95), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(40, 24, 66), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 5 })
 		new("UICorner", hookPill, { CornerRadius = UDim.new(0.5, 0) })
-		new("UIStroke", hookPill, { Color = LAV, Thickness = 1.2, Transparency = 0.45 })
-		new("TextLabel", hookPill, { Name = "Line", Text = "MINE THE DEEP  \u{00B7}  STAY IN THE LIGHT", Font = Enum.Font.GothamBold, TextScaled = true, TextColor3 = LAV, BackgroundTransparency = 1, Size = UDim2.fromScale(0.9, 0.56), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 6 })
+		new("UIStroke", hookPill, { Color = LAV, Thickness = 2, Transparency = 0.25 })
+		new("TextLabel", hookPill, { Name = "Line", Text = "MINE THE DEEP  \u{00B7}  STAY IN THE LIGHT", Font = Enum.Font.GothamBold, TextScaled = true, TextColor3 = LAV, TextStrokeColor3 = Color3.fromRGB(18, 8, 34), TextStrokeTransparency = 0, BackgroundTransparency = 1, Size = UDim2.fromScale(0.92, 0.62), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 6 })
 	end
 
 	do -- the percentage in cyan jelly digits (the plain arcade digits were the last non-jelly text on this screen)
@@ -499,7 +500,7 @@ function M.start(E)
 			end
 		end
 		now = real
-		local loaded = game:IsLoaded() and E.plr.Character ~= nil and clock > slamAt + 1.7 -- the logo always finishes its landing and its bounces
+		local loaded = (game:IsLoaded() and E.plr.Character ~= nil and clock > slamAt + 1.7) or now > 12 -- the logo always finishes its landing and its bounces; directive v14: never more than 12 s
 		local goal = math.min(now / cfg.min, loaded and 1 or 0.9)
 		shown += (goal - shown) * math.min(1, dt * 8)
 		fill.Size = UDim2.fromScale(shown, 1)

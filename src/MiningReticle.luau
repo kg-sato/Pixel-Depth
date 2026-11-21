@@ -145,6 +145,10 @@ function M.start(E)
 		for _, c in copy:GetDescendants() do
 			if isRound(c) then c.BackgroundTransparency = 1 hidden[c] = true end
 			if needleCopy and c:IsDescendantOf(needleCopy) and c:IsA("Frame") then c.BackgroundTransparency = 1 hidden[c] = true end
+			local free = not (needleCopy and c:IsDescendantOf(needleCopy)) and not (arcCopy and (c == arcCopy or c:IsDescendantOf(arcCopy)))
+			if free and c:IsA("ImageLabel") then c.ImageTransparency = 1 hidden[c] = true end -- directive v14: every leftover watch mark goes (the brass hub, glints)
+			if free and c:IsA("Frame") and c.BackgroundTransparency < 1 and c.Size.X.Scale < 0.2 then c.BackgroundTransparency = 1 hidden[c] = true end
+			if free and c:IsA("UIStroke") then c.Transparency = 1 hidden[c] = true end
 		end
 		for _, pr in pairs_ do -- the sync must not paint the hidden case or hand back in
 			if not hidden[pr[2]] then table.insert(keepPairs, pr)
@@ -152,13 +156,16 @@ function M.start(E)
 		end
 		pairs_ = keepPairs
 		local CY, GOLDC = Color3.fromRGB(140, 236, 255), Color3.fromRGB(255, 214, 110)
-		for i = 0, 7 do -- the octagon: eight bevelled glass bars, a gap at each corner (an open bracket, not a closed ring)
-			local piv = new("Frame", copy, { Name = "Oct", Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, Rotation = i * 45 + 22.5, ZIndex = 11 })
-			local bar = new("Frame", piv, { Size = UDim2.fromScale(0.3, 0.026), Position = UDim2.fromScale(0.5, 0.045), AnchorPoint = MID, BackgroundColor3 = CY, BackgroundTransparency = 0.15, BorderSizePixel = 0, ZIndex = 11 })
-			new("UIGradient", bar, { Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), CY) })
-			new("UIStroke", bar, { Color = CY, Thickness = 2, Transparency = 0.55 })
-			local gem = new("Frame", piv, { Size = UDim2.fromScale(0.03, 0.03), Position = UDim2.fromScale(0.5, 0.045), AnchorPoint = MID, Rotation = 45, BackgroundColor3 = i % 2 == 0 and GOLDC or Color3.fromRGB(255, 255, 255), BorderSizePixel = 0, ZIndex = 12 })
-			gem.Position = UDim2.fromScale(0.5 + 0.17, 0.045) -- at the corner gap
+		local VIO = Color3.fromRGB(190, 140, 255)
+		for i = 0, 11 do -- directive v14 ("still a watch"): a crown of twelve faceted crystal shards round the rim, cyan and violet, each with a gem tip
+			local col = i % 2 == 0 and CY or VIO
+			local long = i % 3 == 0
+			local piv = new("Frame", copy, { Name = "Shard", Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, Rotation = i * 30 + 15, ZIndex = 11 })
+			local sh = new("Frame", piv, { Size = UDim2.fromScale(long and 0.05 or 0.04, long and 0.13 or 0.095), Position = UDim2.fromScale(0.5, 0.035), AnchorPoint = Vector2.new(0.5, 0), Rotation = (i % 2 == 0) and 6 or -6, BackgroundColor3 = col, BackgroundTransparency = 0.1, BorderSizePixel = 0, ZIndex = 11 })
+			new("UIGradient", sh, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), col), Transparency = NumberSequence.new(0, 0.35) }) -- lit at the outer end, the facet fades inward
+			new("UIStroke", sh, { Color = col, Thickness = 1.5, Transparency = 0.4 })
+			local tip = new("Frame", piv, { Size = UDim2.fromScale(long and 0.05 or 0.04, long and 0.05 or 0.04), Position = UDim2.fromScale(0.5, 0.035), AnchorPoint = MID, Rotation = 45, BackgroundColor3 = long and GOLDC or Color3.fromRGB(255, 255, 255), BorderSizePixel = 0, ZIndex = 12 })
+			new("UIStroke", tip, { Color = col, Thickness = 1.5, Transparency = 0.3 })
 		end
 		local function spark(parent, k, tr)
 			local s = new("Frame", parent, { Size = UDim2.fromScale(0.07 * k, 0.07 * k), Position = UDim2.fromScale(0.5, 0.11), AnchorPoint = MID, Rotation = 45, BackgroundColor3 = Color3.fromRGB(255, 246, 200), BackgroundTransparency = tr, BorderSizePixel = 0, ZIndex = 13 })
@@ -175,9 +182,9 @@ function M.start(E)
 		local twin = new("Frame", copy, { Name = "Twin", Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 12 })
 		spark(twin, 0.85, 0.1).BackgroundColor3 = Color3.fromRGB(200, 250, 255)
 		local back = new("Frame", copy, { Name = "Back", Size = UDim2.fromScale(0.94, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.38, BorderSizePixel = 0, ZIndex = 9 }) -- obsidian glass behind the needle: the rock behind a clear face swallowed it
-		new("UICorner", back, { CornerRadius = UDim.new(0.5, 0) })
-		back.BackgroundTransparency = 0.55 -- a soft dark disc only behind the arc and sparks, not a watch face
-		back.Size = UDim2.fromScale(0.72, 0.72)
+		back.BackgroundTransparency, back.Rotation, back.Size = 0.5, 45, UDim2.fromScale(0.6, 0.6) -- directive v14: a diamond plate of obsidian glass behind the arc and sparks, never a round watch face
+		new("UICorner", back, { CornerRadius = UDim.new(0.08, 0) })
+		new("UIStroke", back, { Color = Color3.fromRGB(150, 110, 230), Thickness = 1.5, Transparency = 0.45 })
 		mirror = { copy = copy, pairs = pairs_, twin = twin, needleO = dial:FindFirstChild("Needle"), arcO = dial:FindFirstChild("Arc") }
 	end
 	local function mirrorStop()

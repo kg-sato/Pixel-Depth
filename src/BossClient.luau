@@ -35,7 +35,7 @@ function M.start(E)
 		new("UIGradient", spur, { Rotation = 90, Color = ColorSequence.new(Color3.new(1, 1, 1), Color3.fromRGB(120, 200, 200)) })
 	end
 	-- the name lands big when the boss wakes
-	local banner = text(gui, "ROOT WARDEN", S(520, 80), S(640, 150), Vector2.new(0.5, 0.5), AMBER, 700, false) -- top third, smaller: centred it covered the fight (full1119d 221 s, 2026-11-19)
+	local banner = text(gui, "ROOT WARDEN", S(520, 80), S(640, 182), Vector2.new(0.5, 0.5), AMBER, 700, false) -- top third, smaller: centred it covered the fight (full1119d 221 s, 2026-11-19)
 	banner.Name, banner.Visible, banner.Font = "BossBanner", false, Enum.Font.FredokaOne
 	local bannerScale = new("UIScale", banner, { Scale = 1 })
 	game:GetService("RunService").Heartbeat:Connect(function() -- beside the dial while a Perfect Strike is up: at the top it lay on the strike's title
@@ -221,7 +221,8 @@ function M.start(E)
 			eyes(true)
 			shake(0.6)
 			sfx("breakRock", 0.5)
-			toast(now == 2 and "THE KILN GOLEM WAKES!  SEAL ITS 3 VENTS" or "THE ROOT WARDEN WAKES!  CRACK ITS 3 KNOTS", AMBER, true)
+			local n = now
+			task.delay(1.6, function() toast(n == 2 and "THE KILN GOLEM WAKES!  SEAL ITS 3 VENTS" or "THE ROOT WARDEN WAKES!  CRACK ITS 3 KNOTS", AMBER, true) end) -- directive v14: after the banner, so bar, banner and toast never stack
 		elseif kind == "bossKnot" then
 			pips[3 - a].BackgroundColor3 = Color3.fromRGB(90, 80, 110)
 			if b and b.PrimaryPart then

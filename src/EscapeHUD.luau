@@ -56,7 +56,7 @@ function M.start(E)
 	local timeText = label(chip, "0.0", UDim2.fromScale(0.56, 0.72), UDim2.fromScale(0.66, 0.5), INK, 5)
 
 	-- the gap meter: bottom centre, just above the cart's rim, where the eye already is
-	local box = frame(gui, { Size = UDim2.fromScale(0.24, 0.085), Position = UDim2.fromScale(0.5, 0.925), BackgroundTransparency = 1, ZIndex = 3 })
+	local box = frame(gui, { Size = UDim2.fromScale(0.24, 0.085), Position = UDim2.fromScale(0.5, 0.94), BackgroundTransparency = 1, ZIndex = 3 })
 	local track = frame(box, { Size = UDim2.fromScale(0.9, 0.34), Position = UDim2.fromScale(0.5, 0.72), BackgroundColor3 = Color3.fromRGB(22, 14, 34), ZIndex = 3 }) -- obsidian glass, not a flat cream pill (Gemini cp2 2026-11-18)
 	round(track)
 	track.BackgroundTransparency = 0.3

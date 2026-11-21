@@ -16,8 +16,8 @@ function M.start(E)
 	if not row or not money then return end
 	local menu = E.panel(money, UDim2.fromScale(0.07, 1), UDim2.new(), nil, "pillLilac")
 	menu.Name, menu.LayoutOrder = "MenuButton", 9
-	E.new("UIAspectRatioConstraint", menu, { AspectRatio = 1.75, DominantAxis = Enum.DominantAxis.Height })
-	local word = E.text(menu, "MENU", UDim2.fromScale(0.78, 0.46), UDim2.fromScale(0.5, 0.47), Vector2.new(0.5, 0.5), E.WHITE, 700, false)
+	E.new("UIAspectRatioConstraint", menu, { AspectRatio = 2.3, DominantAxis = Enum.DominantAxis.Height }) -- directive v14: 1.75 left no room for the book icon beside the M
+	local word = E.text(menu, "MENU", UDim2.fromScale(0.6, 0.46), UDim2.fromScale(0.56, 0.47), Vector2.new(0.5, 0.5), E.WHITE, 700, false)
 	word.Name, word.Font = "Word", E.HEAD or word.Font
 	local hit = E.new("TextButton", menu, { Name = "Hit", Text = "", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 6 })
 	local dot = E.new("Frame", menu, { Name = "Dot", Size = UDim2.fromScale(0.2, 0.2), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(0.97, 0.05), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 0, 127), BorderSizePixel = 0, Visible = false, ZIndex = 7 })
