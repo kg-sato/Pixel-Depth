@@ -42,7 +42,7 @@ function M.attach(label)
 	label:SetAttribute("IconPass", true)
 	local icon, pad, base, size0, watched
 	local queue
-	local passT, passes = 0, 0 -- the re-place passes in the last half second (bounded: see below)
+	local passT, passes, retry = 0, 0, false -- the re-place passes in the last half second (bounded: see queue)
 	local function place()
 		local key = M.pick(label.Text)
 		if not key then
@@ -67,6 +67,7 @@ function M.attach(label)
 		local k = (icon.Size.X.Offset > 0 and icon.AbsoluteSize.X > 0) and icon.AbsoluteSize.X / icon.Size.X.Offset or 1
 		local sAbs = math.clamp(math.max(text * 1.35, h * 0.72), math.min(12, h * 1.15), h * 1.15) -- a little taller than the capitals: an icon reads at the size of the word's line
 		local s = sAbs / k
+		if icon.Size.X.Offset > 0 and math.abs(icon.Size.X.Offset - s) < 1 then s = icon.Size.X.Offset end -- a scaled word's ink height and the icon's padding moved each other by a pixel a pass: keep the old size
 		icon.Image, icon.Visible, icon.ZIndex = ICON[key], true, label.ZIndex + 2
 		icon.Size = UDim2.fromOffset(s, s)
 		pad.PaddingLeft = UDim.new(base.Scale, base.Offset + s * 1.05)
@@ -103,15 +104,23 @@ function M.attach(label)
 			-- a label whose ink width and icon place keep moving each other chained deferred passes until Roblox stopped it
 			-- ("Maximum re-entrancy depth (80) exceeded calling task.defer", crew and Camp 2 tests, 2026-11-21)
 			icon.Position = want
-			local now = os.clock()
-			if now - passT > 0.5 then passT, passes = now, 0 end
-			passes += 1
-			if passes <= 6 then queue() end
+			queue()
 		end
 		icon.ImageTransparency = label.TextTransparency
 	end
 	local queued = false
-	function queue() if not queued then queued = true task.defer(function() queued = false if label.Parent then place() end end) end end
+	function queue()
+		if queued then return end
+		local now = os.clock()
+		if now - passT > 0.5 then passT, passes = now, 0 end
+		passes += 1
+		if passes > 8 then -- the label's own signals (its size, ink width, jelly row) re-queue too: the bound sits here, with one late pass
+			if not retry then retry = true task.delay(0.5, function() retry = false if label.Parent then queue() end end) end
+			return
+		end
+		queued = true
+		task.defer(function() queued = false if label.Parent then place() end end)
+	end
 	for _, p in { "Text", "AbsoluteSize", "TextBounds", "TextXAlignment", "TextTransparency" } do label:GetPropertyChangedSignal(p):Connect(queue) end
 	label:GetAttributeChangedSignal("GumWidth"):Connect(queue)
 	label:GetAttributeChangedSignal("GumBox"):Connect(queue)
