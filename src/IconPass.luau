@@ -42,6 +42,7 @@ function M.attach(label)
 	label:SetAttribute("IconPass", true)
 	local icon, pad, base, size0, watched
 	local queue
+	local passT, passes = 0, 0 -- the re-place passes in the last half second (bounded: see below)
 	local function place()
 		local key = M.pick(label.Text)
 		if not key then
@@ -98,7 +99,15 @@ function M.attach(label)
 			inkX = padded + (xa == Enum.TextXAlignment.Left and 0 or (xa == Enum.TextXAlignment.Right and inner - w or (inner - w) / 2))
 		end
 		local want = UDim2.new(0, (inkX - sAbs * 0.6 - padded) / k, 0.5, 0) -- just left of where the text starts
-		if (icon.Position.X.Offset - want.X.Offset) ^ 2 > 0.25 then icon.Position = want queue() end -- one more pass once the new place has been drawn
+		if (icon.Position.X.Offset - want.X.Offset) ^ 2 > 0.25 then -- one more pass once the new place has been drawn, but a few at most:
+			-- a label whose ink width and icon place keep moving each other chained deferred passes until Roblox stopped it
+			-- ("Maximum re-entrancy depth (80) exceeded calling task.defer", crew and Camp 2 tests, 2026-11-21)
+			icon.Position = want
+			local now = os.clock()
+			if now - passT > 0.5 then passT, passes = now, 0 end
+			passes += 1
+			if passes <= 6 then queue() end
+		end
 		icon.ImageTransparency = label.TextTransparency
 	end
 	local queued = false
