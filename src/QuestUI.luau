@@ -84,6 +84,7 @@ function M.start(E)
 	end
 
 	local btn, dot
+	local readyLine, readySince = nil, nil -- the claim line and when it came due (the caves show it in short bursts)
 	local function refresh()
 		for k, b in tabs do setKind(b, k == tab and "tabOn" or "tab") end
 		local list = items()
@@ -116,8 +117,23 @@ function M.start(E)
 		local keys = UIS.PreferredInput == Enum.PreferredInput.KeyboardAndMouse and not E.plr:GetAttribute("DevTouch") -- a phone or pad has no J key: point at the QUESTS button
 		-- directive v13: one or two crisp lines (34 characters at most); a waiting reward is the one call to action
 		hook.questCave = st ~= nil and st.cave == true and q.sp < st.n -- a cave-only step: in town the card says to ride down instead
-		hook.questHint = st and (q.sp >= st.n and (keys and "Reward ready! Press J to claim" or "Reward ready! Tap QUESTS") or st.hint) or nil
+		local ready = st ~= nil and q.sp >= st.n
+		readyLine = ready and (keys and "Reward ready! Press J to claim" or "Reward ready! Tap QUESTS") or nil
+		if ready then readySince = readySince or os.clock() else readySince = nil end
+		hook.questHint = st and (ready and readyLine or st.hint) or nil
 	end
+	-- directive v13 (Gemini full1121a: "Reward ready" stayed pinned through a whole cave run): in the caves the waiting reward
+	-- shows for 12 s when it comes due, then for 6 s every 90 s; in town it stays until claimed
+	task.spawn(function()
+		while true do
+			task.wait(0.5)
+			if readyLine and readySince then
+				local age = os.clock() - readySince
+				local show = not E.plr:GetAttribute("InCave") or age < 12 or (age % 90) < 6
+				hook.questHint = show and readyLine or nil
+			end
+		end
+	end)
 	for k, b in tabs do
 		b.Activated:Connect(function()
 			tab = k
