@@ -8,12 +8,12 @@ want = set(sys.argv[2:])
 S = lambda code: (N.lua(code, "Server").splitlines() or ["?"])[-1]
 C = lambda code: (N.lua(code, "Client").splitlines() or ["?"])[-1]
 _n = [0]
-def aim(pos, at, fov=70, hud=False):
+def aim(pos, at, fov=70, hud=False, signs=False):
     _n[0] += 1
     nm = f"P4Cam{_n[0]}"  # a fresh name each time: an older view's timed unbind must not end this one
     C(f"local RS=game:GetService('RunService') for i=1,{_n[0]} do pcall(function() RS:UnbindFromRenderStep('P4Cam'..i) end) end "
       f"for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') and g.Name~='CrewPlate' then g.Enabled={'true' if hud else 'false'} end end "
-      "for _,b in workspace:GetDescendants() do if b:IsA('BillboardGui') and b.Name=='CrewSign' then b.Enabled=false end end "
+      + ("" if signs else "for _,b in workspace:GetDescendants() do if b:IsA('BillboardGui') and b.Name=='CrewSign' then b.Enabled=false end end ") +
       f"local p, a = {pos}, {at} "
       "local ch=game.Players.LocalPlayer.Character for _,d in ch:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 elseif d:IsA('ParticleEmitter') or d:IsA('BillboardGui') or d:IsA('Light') then d.Enabled=false end end "
       f"RS:BindToRenderStep('{nm}', Enum.RenderPriority.Camera.Value+40, function() local cam=workspace.CurrentCamera cam.CameraType=Enum.CameraType.Scriptable cam.FieldOfView={fov} cam.CFrame=CFrame.lookAt(p, a) for _,d in cam:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 elseif d:IsA('ParticleEmitter') and d.Enabled then d.Enabled=false d:Clear() end end end) "
@@ -46,5 +46,11 @@ if not want or want & {"hearth", "vignette", "gallery"}:
     S("local p=game.Players:GetPlayers()[1] local C=require(game.ReplicatedStorage.Shared.Config) local O=C.CAVE2_ORIGIN p.Character:PivotTo(CFrame.new(O+Vector3.new(11,6,-62))) return 1"); time.sleep(3)
     aim("require(game.ReplicatedStorage.Shared.Config).CAVE2_ORIGIN+Vector3.new(24,13,-56)", "require(game.ReplicatedStorage.Shared.Config).CAVE2_ORIGIN+Vector3.new(8,4,-88)", 70)
     shot("gallery")
+    if not want or "kilncart" in want:  # directive v13: the Kiln Camp's crew cart and its CREW RIDE sign
+        kb = C("local b=workspace.Caves:FindFirstChild('KilnCartBody',true) return b and tostring(b.Position) or 'none'")
+        if kb != "none":
+            S(f"local p=game.Players:GetPlayers()[1] p.Character:PivotTo(CFrame.new(Vector3.new({kb})+Vector3.new(14,3,10))) return 1"); time.sleep(3)
+            C("for _,b in workspace:GetDescendants() do if b:IsA('BillboardGui') and b.Name=='CrewSign' then b.Enabled=true end end return 1")
+            aim(f"Vector3.new({kb})+Vector3.new(9,5.5,7)", f"Vector3.new({kb})+Vector3.new(0,3.2,0)", 60, signs=True); shot("kilncart")
 C("for i=1,40 do pcall(function() game:GetService('RunService'):UnbindFromRenderStep('P4Cam'..i) end) end for _,g in game.Players.LocalPlayer.PlayerGui:GetChildren() do if g:IsA('ScreenGui') then g.Enabled=true end end return 1")
 print("done")

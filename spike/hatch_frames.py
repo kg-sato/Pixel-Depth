@@ -2,7 +2,8 @@
 recorder): the hatch scene is replayed once per frame, held at moment t with its freeze hook, and captured by Studio itself.
     python spike/hatch_frames.py <name> [pet] [fps] [end]   (Play running)  -> captures/video/<name>.mp4 at the given fps
 then: python ../../tools/video_judge.py captures/video/<name>.mp4 "<intent>" --name <label>
-Works like spike/hatch_shots.py (the Lua call stays open for the scene: a returned call gives the view back to the plugin)."""
+Works like spike/hatch_shots.py (the Lua call stays open for the scene: a returned call gives the view back to the plugin).
+Run it WITHOUT NIGHT_SERIAL=1: the serial lock holds the capture until the open call returns, and every frame showed the town."""
 import subprocess, sys, threading, time
 import night as N
 name = sys.argv[1]
@@ -22,5 +23,7 @@ while f <= end + 1e-6:
     time.sleep(0.6)
     n += 1
     f += 1.0 / fps
+from PIL import Image  # Studio's captures do not always decode as PNG in ffmpeg: write them back as plain PNG first
+for p in sorted(d.glob("f*.png")): Image.open(p).convert("RGB").save(p, format="PNG")
 subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-framerate", str(fps), "-i", str(d / "f%04d.png"), "-vf", "scale=1280:-2", "-pix_fmt", "yuv420p", str(d.parent / f"{name}.mp4")], check=True)
 print("frames", n, "->", d.parent / f"{name}.mp4")
