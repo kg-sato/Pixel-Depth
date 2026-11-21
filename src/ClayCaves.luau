@@ -170,7 +170,8 @@ function M.build(caves)
 	local back = part("ArchDark", Vector3.new(0.6, 11, 8), arrive * CFrame.new(-5.6, 6.7, 0), Color3.fromRGB(14, 8, 22))
 	prompt(back, "Climb back", "Camp 1", "ClayPortal", 1, 10)
 	if C.CAVE_V2_L2 then back.CanCollide, back.Transparency = false, 0.7 end -- the arch is a real way out now: the west gallery of Cave v2 layer 2 lies behind it
-	local land = part("ClayLanding", Vector3.new(4, 1, 4), arrive * CFrame.new(1, 1.7, 0), CLAY, { Transparency = 1, CanCollide = false, CanQuery = false })
+	local land = part("ClayLanding", Vector3.new(4, 1, 4), arrive * CFrame.new(1, 1.7, 0) * CFrame.Angles(0, -math.pi / 2, 0), CLAY, -- faces east into the hall: the lift set riders down facing the crew cart's tool rack (Gemini full1121c)
+		 { Transparency = 1, CanCollide = false, CanQuery = false })
 	land.Parent = folder
 	lamp(Vector3.new(-60, 16, 0), 0.7)
 	do -- directive v13 (Group Cart Escape: CREW RIDE at the deeper camps): a parked crew cart on a rail stub by the ledge; the

@@ -88,7 +88,8 @@ function M.start(E)
 	local function readyShown() -- the claim line, or nil while the caves rest from it (12 s when it comes due, then 6 s every 90 s)
 		if not readyLine or not readySince then return nil end
 		local age = os.clock() - readySince
-		return (not E.plr:GetAttribute("InCave") or age < 12 or (age % 90) < 6) and readyLine or nil
+		if age < 2.5 then return nil end -- the QUEST COMPLETE toast says it first; the card waits so the two never stack (Gemini full1121c)
+		return (not E.plr:GetAttribute("InCave") or age < 14.5 or (age % 90) < 6) and readyLine or nil
 	end
 	local function refresh()
 		for k, b in tabs do setKind(b, k == tab and "tabOn" or "tab") end
