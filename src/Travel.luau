@@ -121,6 +121,7 @@ function M.init(ctx)
 		line(c + Vector3.new(-8, -10, -12), c + Vector3.new(40, -10, -12), 10, 6)
 		line(c + Vector3.new(40, -10, 12), c + Vector3.new(-8, -10, 12), 10, 6)
 		-- across the camp's room, both ways (rope 3, prompts 3 and 4: the old grotto line's numbers)
+		zipN = math.max(zipN, 2) -- the camp line keeps prompts 3 and 4 even when an hour's seed leaves a Cathedral end without floor (travel_test found no handle 4, 2026-11-21)
 		line(o + Vector3.new(-38, 0, -22), o + Vector3.new(38, 0, -22), 9, 9, true)
 	end
 

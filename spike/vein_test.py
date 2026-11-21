@@ -10,6 +10,10 @@ N.key("Q"); time.sleep(30)
 pick = S1("""local deps=workspace.Caves.Deposits:GetChildren() local best
 for _,a in deps do if a:GetAttribute('Ore')>=3 and a:GetAttribute('OreName')~='Root Knot' and a:GetAttribute('OreName')~='Kiln Vent' and a.PrimaryPart and a.PrimaryPart.Transparency<1 then for _,b in deps do
  if b~=a and b:GetAttribute('Layer')==a:GetAttribute('Layer') and b:GetAttribute('Ore')==a:GetAttribute('Ore') and (a:GetPivot().Position-b:GetPivot().Position).Magnitude<=16 then best=a break end end end if best then break end end
+if not best then -- 2026-11-21: some hours' seeds have no same-ore pair within 16 studs: bring one rare deposit's twin beside it
+ for _,a in deps do if not best and a:GetAttribute('Ore')>=3 and a:GetAttribute('OreName')~='Root Knot' and a:GetAttribute('OreName')~='Kiln Vent' and a.PrimaryPart and a.PrimaryPart.Transparency<1 then for _,b in deps do
+  if not best and b~=a and b:GetAttribute('Layer')==a:GetAttribute('Layer') and b:GetAttribute('OreName')==a:GetAttribute('OreName') and b.PrimaryPart then b:PivotTo(a:GetPivot()*CFrame.new(7,0,0)) best=a end end end end
+end
 if not best then return 'none' end
 local p=game.Players:GetPlayers()[1] local c=best.PrimaryPart local rp=RaycastParams.new() rp.FilterDescendantsInstances={p.Character,best}
 local at=c.Position+Vector3.new(0,3,0) for i=0,15 do local a=i*math.pi/8 local q=c.Position+Vector3.new(math.cos(a)*5,3,math.sin(a)*5) local fl=workspace:Raycast(q,Vector3.new(0,-8,0),rp) if fl and not workspace:Raycast(q,c.Position-q,rp) then at=fl.Position+Vector3.new(0,3,0) break end end
