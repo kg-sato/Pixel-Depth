@@ -25,7 +25,7 @@ function M.start(E)
 	local close = E.closeButton(win, "CodexClose")
 	do -- directive v13 round 2 (Gemini: the bright town bled through the glass): an opaque dark core behind the content
 		local backing = E.new("Frame", win, { Name = "Backing", Size = UDim2.fromScale(0.97, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(14, 8, 28), BackgroundTransparency = 0.12, BorderSizePixel = 0, ZIndex = 2 })
-		E.new("UICorner", backing, { CornerRadius = UDim.E.new(0.04, 0) })
+		E.new("UICorner", backing, { CornerRadius = UDim.new(0.04, 0) })
 	end
 
 	local function sheet(name, pos, size) -- a dark rune-slate sheet with a violet rim and a faint top shine

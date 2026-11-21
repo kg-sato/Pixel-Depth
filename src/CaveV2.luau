@@ -711,7 +711,7 @@ function M.build(parent, origin, seed, opt)
 			local vx, vy, vz = toVox(at)
 			local x, z = math.floor(vx), math.floor(vz)
 			local roof
-			for y = math.floor(vy), NY - 2 do if get(x, y, z) == 0 and get(x, y + 1, z) == 1 then roof = toWorld(x, y, z) + Vector3.new(0, V / 2, 0) break end end
+			for y = math.floor(vy), NY - 2 do if get(x, y, z) == 1 and get(x, y + 1, z) == 0 then roof = toWorld(x, y, z) + Vector3.new(0, V / 2, 0) break end end -- air under rock: the vault (it looked for rock under air and never found one)
 			if roof then
 				local len = 3 + hash(k, seed, 22) * 7
 				for q = 0, 2 do -- each curtain: three overlapping tapered blades
@@ -730,7 +730,7 @@ function M.build(parent, origin, seed, opt)
 				local dir = (home - at) * Vector3.new(1, 0, 1)
 				dir = dir.Magnitude > 1 and dir.Unit or Vector3.xAxis
 				for k = 0, 4 do
-					local f = floorUnder(at + dir * (k * 2.2))
+					local f = floorUnder(at - P(0, dipY(at.X), 0) + dir * (k * 2.2)) -- the spots carry the dip; floorUnder adds it
 					if f then part("Landmark", "GlowPebble", Vector3.new(0.5, 0.3, 0.5), CFrame.new(f + Vector3.new(0, 0.12, 0)) * CFrame.Angles(0, k, 0), Color3.fromRGB(120, 255, 200), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false }) end
 				end
 			end
@@ -865,13 +865,13 @@ function M.build(parent, origin, seed, opt)
 		-- over still, dark obsidian pools that mirror their light; the walkways stay clear between them
 		for k = 1, 3 do
 			local a = k * 2.1 + seed
-			local foot = floorUnder(rootC + P(math.cos(a) * 20, 0, math.sin(a) * 15))
+			local foot = floorUnder(rootC - P(0, dipY(rootC.X), 0) + P(math.cos(a) * 20, 0, math.sin(a) * 15)) -- floorUnder adds the dip itself: rootC carries it already
 			if foot then
 				local cf = CFrame.new(foot) * CFrame.Angles(0, a + math.pi, 0) * CFrame.Angles(math.rad(52), 0, 0) * CFrame.new(0, 24, 0)
 				part("Landmark", "CrystalRib", Vector3.new(4.5, 52, 4.5), cf, Color3.fromRGB(200, 220, 255), { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.35, CanCollide = false })
 				part("Landmark", "CrystalRibCore", Vector3.new(1.2, 48, 1.2), cf, Color3.fromRGB(170, 210, 255), { Material = Enum.Material.Neon, MaterialVariant = "", Transparency = 0.45, CanCollide = false, CastShadow = false })
 			end
-			local pool = floorUnder(rootC + P(math.cos(a + 1) * 12, 0, math.sin(a + 1) * 9))
+			local pool = floorUnder(rootC - P(0, dipY(rootC.X), 0) + P(math.cos(a + 1) * 12, 0, math.sin(a + 1) * 9))
 			if pool then
 				part("Landmark", "ObsidianPool", Vector3.new(9, 0.2, 6.5), CFrame.new(pool + Vector3.new(0, 0.13, 0)) * CFrame.Angles(0, a, 0), Color3.fromRGB(12, 10, 24), { Material = Enum.Material.Glass, MaterialVariant = "", Reflectance = 0.45, CanCollide = false })
 				part("Landmark", "PoolRim", Vector3.new(9.8, 0.14, 7.3), CFrame.new(pool + Vector3.new(0, 0.05, 0)) * CFrame.Angles(0, a, 0), Color3.fromRGB(120, 150, 255), { Material = Enum.Material.Neon, MaterialVariant = "", Transparency = 0.55, CanCollide = false, CastShadow = false })

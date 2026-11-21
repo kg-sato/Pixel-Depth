@@ -6,7 +6,7 @@ import sys, time
 import night as N
 tag = sys.argv[1] if len(sys.argv) > 1 else "lm"
 seed = sys.argv[2] if len(sys.argv) > 2 else "7"
-LM = {2: [("TitanFace", 26, 10), ("Drapery", 14, -4), ("GlowPebble", 9, 4)], 3: [("CrystalRib", 30, 6), ("ObsidianPool", 13, 6)], 4: [("GrateSlat", 22, 9), ("CausewayStep", 14, 6), ("MagmaLake", 34, 14)]}
+LM = {2: [("TitanFace", 26, 10), ("Drapery", 14, -4), ("GlowPebble", 9, 4), ("ThresholdFog", 12, 2)], 3: [("CrystalRib", 30, 6), ("ObsidianPool", 13, 6)], 4: [("GrateSlat", 22, 9), ("CausewayStep", 14, 6), ("MagmaLake", 34, 14)]}
 _n = [0]
 for L, marks in LM.items():
     print(N.lua("local C=require(game.ReplicatedStorage.Shared.Config) local o=workspace:FindFirstChild('CavesV2') if o then o:Destroy() end "
@@ -24,7 +24,7 @@ for L, marks in LM.items():
                   "local torch=workspace:FindFirstChild('LMTorch') or Instance.new('Part') torch.Name='LMTorch' torch.Anchored=true torch.CanCollide=false torch.Transparency=1 torch.Size=Vector3.one torch.Parent=workspace "
                   "local tl=torch:FindFirstChildOfClass('PointLight') or Instance.new('PointLight', torch) tl.Color=Color3.fromRGB(255,190,120) tl.Range=40 tl.Brightness=1 tl.Shadows=true torch.Position=p "
                   f"RS:BindToRenderStep('{nm}', Enum.RenderPriority.Camera.Value+40, function() local cam=workspace.CurrentCamera cam.CameraType=Enum.CameraType.Scriptable cam.FieldOfView=75 cam.CFrame=CFrame.lookAt(p, a) "
-                  "for _,d in cam:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 end end end) "
+                  "for _,d in cam:GetDescendants() do if d:IsA('BasePart') then d.LocalTransparencyModifier=1 elseif d:IsA('ParticleEmitter') and d.Enabled then d.Enabled=false d:Clear() end end end) "
                   f"task.delay(10, function() pcall(function() RS:UnbindFromRenderStep('{nm}') end) end) return tostring(t.Position)", "Client").splitlines()[-1]
         print(L, name, r)
         if r == "none": continue

@@ -71,6 +71,7 @@ for _ in range(40):
     log = C1("return tostring(game.Players.LocalPlayer:GetAttribute('DevBossLog'))")
     if "bossWin" in log or "bossLose" in log: break
 print("fight:", log.strip())
+if SHOTS and "bossWin" in log: time.sleep(0.6); N.shot("boss_win")  # the beaten boss sinks and bows (directive v13)
 # a knot may hold when Studio is slow (the autopilot swings late): the order then has more attacks, the result must be the same
 print("fight summary: won %s, hits %d, slam %s, sweep %s, rings %s" % ("bossWin" in log, log.count("bossHit"), "bossSlam" in log, "bossSweep" in log, "bossRings" in log))
 time.sleep(4.2)
