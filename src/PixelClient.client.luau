@@ -1084,7 +1084,7 @@ PPS.PromptShown:Connect(function(prompt, inputType)
 	if prompt.Style ~= Enum.ProximityPromptStyle.Custom or promptUI[prompt] then return end
 	local k = promptScale()
 	local adornee = prompt.Parent
-	local lift = adornee:IsA("BasePart") and adornee.Size.Y / 2 + 2 or 2
+	local lift = prompt:GetAttribute("BubbleLift") or (adornee:IsA("BasePart") and adornee.Size.Y / 2 + 2 or 2) -- BubbleLift: a prompt's own height over its part
 	-- drawn in screen space and moved to the object every frame, so it shares the HUD's pixel scale
 	local bb = new("Frame", gui, { Name = "PromptUI", BackgroundTransparency = 1, Size = UDim2.fromOffset(260 * k, 96 * k), AnchorPoint = Vector2.new(0.62, 1), ZIndex = 2 })
 	local root = new("TextButton", bb, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "", AutoButtonColor = false })

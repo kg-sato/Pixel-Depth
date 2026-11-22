@@ -876,7 +876,7 @@ function Hub.build(parent, origin)
 		vox(cart, "WheelHub", Vector3.new(0.46, 0.34, 0.34), wcf, RIVET, { Shape = Enum.PartType.Cylinder, CanCollide = false, Material = Enum.Material.Metal })
 		vox(cart, "BrakeShoe", Vector3.new(0.34, 0.44, 0.3), base * CFrame.new(w[1], 0.72, w[2] + (w[2] > 0 and -0.68 or 0.68)), PAL.wood[1], { CanCollide = false })
 	end
-	prompt(floor, "Ride down", "To the mine", "enter") -- not "Ride the minecart / Minecart" under the step card that says the same (Gemini full1122e town clutter)
+	prompt(floor, "Ride down", "To the mine", "enter"):SetAttribute("BubbleLift", -0.5) -- low on the cart, clear of the MINE sign above it (views full1122g 02); not "Ride the minecart / Minecart" under the step card that says the same (Gemini full1122e town clutter)
 
 	-- a store frame at (x, z) with its front (+Z) turned toward the point (fx, fz); store parts are laid out for a ground top of
 	-- 1.1, so the frame sits at the real ground top (meadow 0.6, rise 2, terrace 4) minus 1.1

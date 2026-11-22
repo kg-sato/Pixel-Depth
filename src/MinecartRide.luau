@@ -415,6 +415,34 @@ function M.play(opt)
 	local subText = cardText:Clone() -- under the name: a ride to sit back and watch (Gemini full1120s: new players reached for the keys)
 	subText.Text, subText.Size, subText.Position = opt.camp2 and "SIT BACK  ·  NEXT STOP KILN CAMP" or "SIT BACK  ·  NEXT STOP CAMP 1", UDim2.fromScale(0.3, 0.035), UDim2.fromScale(0.5, 0.255)
 	subText.Parent = gui
+	-- a repeat ride's transit card (tour grades full1122e-g: "a pitch-black void with an orphaned SKIP"): after the town cut the far
+	-- stage draws black for its first seconds (the same far-jump light delay GlassLift works round), so a repeat ride shows its
+	-- destination over a dark glass card with a little cart running along a rail, and the card lifts for the arrival at Camp 1
+	local transit
+	if not opt.full then
+		local tf = frame({ Size = UDim2.fromScale(1, 1), BackgroundColor3 = DARK, BackgroundTransparency = 1, ZIndex = 6 })
+		local g = Instance.new("UIGradient")
+		g.Rotation, g.Color = 90, ColorSequence.new(Color3.fromRGB(58, 32, 86), DARK)
+		g.Parent = tf
+		local function word(t, size, y, col)
+			local l = Instance.new("TextLabel")
+			l.BackgroundTransparency, l.Font, l.TextScaled, l.Text, l.TextColor3, l.TextTransparency, l.ZIndex = 1, Enum.Font.FredokaOne, true, t, col, 1, 7
+			l.Size, l.Position, l.AnchorPoint = size, UDim2.fromScale(0.5, y), Vector2.new(0.5, 0.5)
+			local s = Instance.new("UIStroke")
+			s.Color, s.Thickness, s.Transparency = INK, 3, 1
+			s.Parent = l
+			l.Parent = gui
+			return l, s
+		end
+		local title, ts = word(opt.camp2 and "KILN CAMP" or "CAMP 1", UDim2.fromScale(0.4, 0.1), 0.42, Color3.fromRGB(255, 214, 107))
+		local sub = word(opt.camp2 and "CLAY CAVES  ·  DOWN THE OLD TUNNEL" or "ROOT CAVES  ·  DOWN THE OLD TUNNEL", UDim2.fromScale(0.36, 0.034), 0.505, Color3.fromRGB(214, 196, 255))
+		local rail = frame({ Size = UDim2.fromScale(0.36, 0.006), Position = UDim2.fromScale(0.5, 0.6), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(176, 136, 84), BackgroundTransparency = 1, ZIndex = 7 })
+		local cart = frame({ Size = UDim2.fromScale(0.026, 0.03), Position = UDim2.fromScale(0.32, 0.585), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 214, 107), BackgroundTransparency = 1, ZIndex = 7 })
+		local cc = Instance.new("UICorner")
+		cc.CornerRadius = UDim.new(0.25, 0)
+		cc.Parent = cart
+		transit = { f = tf, title = title, ts = ts, sub = sub, rail = rail, cart = cart }
+	end
 	local skip = Instance.new("TextButton")
 	skip.Size, skip.Position, skip.AnchorPoint = UDim2.fromScale(0.09, 0.055), UDim2.fromScale(0.93, 0.08), Vector2.new(1, 0) -- directive v14: inside the safe inset
 	skip.BackgroundColor3, skip.BackgroundTransparency, skip.Font, skip.TextScaled, skip.Text = Color3.fromRGB(255, 250, 243), 0.1, Enum.Font.FredokaOne, true, "SKIP"
@@ -560,6 +588,15 @@ function M.play(opt)
 		cardText.TextTransparency = 1 - smooth(4.75, 5.05, T) * (1 - smooth(5.8, 6.1, T))
 		cardStroke.Transparency = cardText.TextTransparency
 		subText.TextTransparency = cardText.TextTransparency
+		if transit then -- up just before the town cut, down for the arrival on Camp 1's real rails (a Kiln Camp ride ends in the dark)
+			local k = smooth(1.95, 2.15, T) * (opt.camp2 and 1 or (1 - smooth(CUT2 - 0.1, CUT2 + 0.25, T)))
+			cardText.TextTransparency, subText.TextTransparency, cardStroke.Transparency = 1, 1, 1
+			transit.f.BackgroundTransparency = 1 - k
+			transit.title.TextTransparency, transit.ts.Transparency, transit.sub.TextTransparency = 1 - k, 1 - k, 1 - k
+			transit.rail.BackgroundTransparency, transit.cart.BackgroundTransparency = 1 - k * 0.8, 1 - k
+			local p = math.clamp((T - 2) / math.max(0.1, (opt.camp2 and CUT2 or T_END) - 2), 0, 1)
+			transit.cart.Position = UDim2.fromScale(0.32 + 0.36 * p, 0.585 + math.sin(T * 9) * 0.002)
+		end
 		subText.UIStroke.Transparency = cardText.TextTransparency
 		local braking = T > 7.6 and T < 9.25 and speed > 3
 		for _, e in sparks do e.Rate = (braking and 60) or (speed > 42 and 25) or 0 end
