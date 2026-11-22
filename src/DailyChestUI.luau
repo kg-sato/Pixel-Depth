@@ -120,7 +120,7 @@ function M.start(E)
 		end
 		days[d] = { c = c, st = st, l = l }
 	end
-	local collect = button(layer, "COLLECT", S(220, 64), S(640, 560), Vector2.new(0.5, 0.5), "mint", "coin")
+	local collect = button(layer, "COLLECT", S(220, 64), S(640, 560), Vector2.new(0.5, 0.5), "mint", "check") -- a tick, not a coin: the coin read as a price (Gemini views_full1122c)
 	fit(collect, 220, 64)
 	local busy, spin = false, nil
 	local flyLayer = new("ScreenGui", gui.Parent, { Name = "RewardFly", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 13 })

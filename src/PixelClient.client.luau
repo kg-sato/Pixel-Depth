@@ -1845,7 +1845,7 @@ end
 			task.delay(0.5, function() r:Destroy() end)
 		end)
 	end
-	local strikeBtn = button(ps, "STRIKE!", S(204, 62), S(640, 540), Vector2.new(0.5, 0.5), "pink", "hammer") -- under the dial (kit round 4)
+	local strikeBtn = button(ps, UIS.KeyboardEnabled and "SPACE  STRIKE!" or "STRIKE!", S(204, 62), S(640, 540), Vector2.new(0.5, 0.5), "pink", "hammer") -- under the dial (kit round 4)
 	strikeBtn.ZIndex = 12
 
 	local VR -- Vein Rush (EXT-02) lives in Shared.VeinRushUI: a crystal spire in the world, started below once its helpers exist

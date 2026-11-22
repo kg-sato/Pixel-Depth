@@ -891,7 +891,7 @@ function M.play(opt)
 			-- a brass boiler gauge, not a flat bar (Gemini audit 2026-11-18: "unstyled Stoker needle bar"): a half dial with a brass
 			-- rim, notches, a gold arc for the window and a needle that sweeps from left to right as C.stokeAt runs 0 to 1
 			local BRASS, BRASS_D = Color3.fromRGB(214, 160, 78), Color3.fromRGB(120, 78, 34)
-			bar = frame({ Name = "Stoke", Size = UDim2.fromScale(0.15, 0.15), Position = UDim2.fromScale(0.5, 0.78), -- directive v14: 0.78 clears the gloom meter at 0.94; smaller, lower and smoked (full1119d 472 s, 2026-11-19: the big brass dial covered the rails)
+			bar = frame({ Name = "Stoke", Size = UDim2.fromScale(0.15, 0.15), Position = UDim2.fromScale(0.16, 0.78), -- directive v14: bottom left, off the track line (Gemini views_full1122c), clear of the gloom meter at 0.94; smaller, lower and smoked (full1119d 472 s, 2026-11-19: the big brass dial covered the rails)
 				 AnchorPoint = Vector2.new(0.5, 1), BackgroundTransparency = 1, ClipsDescendants = true, ZIndex = 3 })
 			local ar = Instance.new("UIAspectRatioConstraint")
 			ar.AspectRatio = 2

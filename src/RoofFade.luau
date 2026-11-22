@@ -40,6 +40,13 @@ function M.start(E)
 					from = hit.Position + dir.Unit * 0.3
 				end
 			end
+			-- directive v14 (tour grade full1122c, town 5.4: "dark pitched roofs slice through the lower viewport"): roof pieces close in front
+			-- of the high camera fade too, even when they do not cover the miner
+			local camCF = workspace.CurrentCamera.CFrame
+			for _, p in workspace:GetPartBoundsInRadius(cam, 26) do
+				if p:IsDescendantOf(hub) and p.Transparency < 1 and p.Position.Y - p.Size.Y / 2 > h.Position.Y + 3
+					and camCF.LookVector:Dot(p.Position - cam) > 0 and (faded[p] or p.LocalTransparencyModifier < 0.01) then want[p] = true end
+			end
 		end
 		for p in faded do
 			if not want[p] then
