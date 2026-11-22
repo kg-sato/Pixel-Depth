@@ -31,9 +31,9 @@ function M.start(E)
 					if dir.Magnitude < 1 then break end
 					local hit = workspace:Raycast(from, dir, rp)
 					if not hit then break end
-					if hit.Position.Y > h.Position.Y + 2.5 then -- above the head: a roof, an awning, a beam, a crown of leaves
+					if hit.Position.Y > h.Position.Y + 1 then -- above the chest: a roof, an awning, a beam, a crown of leaves, or a tall post or wall (directive v14 tour: a trophy-house post hid 60% of the view)
 						for _, p in workspace:GetPartBoundsInRadius(hit.Position, RADIUS) do
-							if p:IsDescendantOf(hub) and p.Position.Y > h.Position.Y + 2.5 and p.Transparency < 1
+							if p:IsDescendantOf(hub) and p.Position.Y + p.Size.Y / 2 > h.Position.Y + 2.5 and p.Position.Y - p.Size.Y / 2 > h.Position.Y - 6 and p.Transparency < 1
 								and (faded[p] or p.LocalTransparencyModifier < 0.01) then want[p] = true end -- a piece another script hides (NearFade, the Crew Hearth) is left alone
 						end
 					end

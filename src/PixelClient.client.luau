@@ -838,6 +838,7 @@ local function syncPets()
 	local h = hrp()
 	for i, n in names do
 		local m = petModel(n)
+		m:SetAttribute("Pet", n) -- directive v14: lets the escape card and the stills tools find the crew
 		m.Parent = fx
 		petObjs[i] = { model = m, pos = h and h.Position or Vector3.zero, digUntil = 0, digPos = Vector3.zero, hop = 0 }
 	end
