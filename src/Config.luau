@@ -480,7 +480,7 @@ C.CAVE_ROCK_VARIANT = false
 -- shrine per dive; nothing is saved. shield = seconds of golden shield. list: name, the line on the card.
 C.BOON = { shield = 30, order = { "flare", "shield", "wind" }, list = {
 	flare = { "Spare Flare", "One more flare for this dive" },
-	shield = { "Golden Shield", "30 s the Gloom cannot touch you" },
+	shield = { "Golden Shield", "The Gloom cannot touch you" }, -- the card's tag already says 30 SECONDS (Gemini v14p1_r2)
 	wind = { "Second Wind", "Full hearts and a fresh torch" },
 } }
 -- Soul Tree (ServerScriptService.SoulTree, Shared.SoulTreeUI; brief: vault Briefs/Soul Tree (2026-11-11).md): gloomlings

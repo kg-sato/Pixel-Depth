@@ -89,10 +89,10 @@ function M.start(E)
 		local PINK, CYAN = Color3.fromRGB(255, 130, 200), Color3.fromRGB(120, 220, 255)
 		local LIT = { Material = Enum.Material.SmoothPlastic } -- Neon turns white in a viewport: glowing things are plain saturated colour
 		local UP = CFrame.Angles(0, 0, math.pi / 2) -- a cylinder's long axis is X
-		for r = 0, DEPTH // 18 - 1 do -- directive v14: a warm lantern on an iron bracket every 18 studs, turning round the shaft (the old roots
+		for r = 0, DEPTH // 12 - 1 do -- directive v14: a warm lantern on an iron bracket every 18 studs, turning round the shaft (the old roots
 			-- and neon veins clipped through the new ledges); a viewport has no point lights, so a soft glow plate sits on the rock behind it
 			local face = CFrame.Angles(0, (r % 4) * math.pi / 2, 0)
-			local x, y = ((r * 37) % 13) - 6, -r * 18 - 9
+			local x, y = ((r * 37) % 13) - 6, -r * 12 - 6
 			sp(Vector3.new(0.2, 0.2, 2.4), face * CFrame.new(x, y + 2.3, -8.4), Color3.fromRGB(60, 54, 70), { Material = Enum.Material.Metal })
 			sp(Vector3.new(0.9, 1.1, 0.9), face * CFrame.new(x, y + 1.6, -7.3), WARM, LIT)
 			sp(Vector3.new(5, 5, 0.1), face * CFrame.new(x, y + 1.6, -9.45), WARM, { Material = LIT.Material, Transparency = 0.74 })
@@ -151,7 +151,7 @@ function M.start(E)
 					fade(0, 0.35)
 				end
 				local e = t * t * (3 - 2 * t) -- eases off the top and onto the floor
-				vp.Ambient = Color3.fromRGB(140, 140, 200):Lerp(Color3.fromRGB(205, 150, 120), e) -- cool slate up top, the kiln's warm glow as you near the Clay Caves
+				vp.Ambient = Color3.fromRGB(178, 172, 228):Lerp(Color3.fromRGB(236, 182, 146), e) -- brighter since directive v14 (tour grade: the shaft read near black) -- cool slate up top, the kiln's warm glow as you near the Clay Caves
 				vp.LightColor = Color3.fromRGB(220, 230, 255):Lerp(Color3.fromRGB(255, 200, 150), e)
 				local floor = top * CFrame.new(0, -14 - e * dist, 0)
 				cage:PivotTo(floor)

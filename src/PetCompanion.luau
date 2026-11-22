@@ -262,6 +262,8 @@ function M.start(E)
 			back = back.Magnitude > 0.1 and back.Unit or Vector3.zAxis
 			goal = h.Position - back * (6 + i * 1.5) + cam.CFrame.RightVector * ((i - 2) * 2.5) + Vector3.new(0, 0.5, 0)
 		end
+		local spk = i == 1 and pet.model:FindFirstChild("PowerSparkle", true)
+		if spk then spk.Enabled = not (E.cave and E.cave.mgBusy) end -- directive v14 (tour grade: sparkles drifted over the strike zone)
 		local called = i == 1 and whistle.dep and now < whistle.untilT and whistle.dep.PrimaryPart
 		if called then goal = called.Position + Vector3.new(0, 2.6 + math.abs(math.sin(now * 7)) * 0.5, 0) end -- answering the whistle: it stands on the deposit and hops
 		if not called and not (E.cave and E.cave.mgBusy) then -- keep it out of the rock: a wall between the eye and its place pulls it in front of the wall (Gemini full1119p: it walked through a clay pillar)

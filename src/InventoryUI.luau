@@ -179,7 +179,7 @@ function M.start(E)
 				local blocks = (st.bag or 0) - ore
 				if blocks > 0 then
 					n += 1
-					slot(n, E.ICON and E.ICON.pick, "Mine blocks", "x" .. commas(blocks))
+					slot(n, E.ICON and E.ICON.pick, "Blocks", "x" .. commas(blocks)) -- one word: "Mine blocks" wrapped and read as a quest line (Gemini v14p1_r2)
 				end
 			end
 			emptyT.Text = ui.tab == "bag" and "Your bag is empty. Mine a glowing vein!" or "No banked ore yet. Bank at the camp fire."

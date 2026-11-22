@@ -36,7 +36,7 @@ function M.start(E)
 		word.tint(color)
 		word.set(name)
 		sub.Text, sub.TextTransparency = line, 1
-		root.Visible, root.Position, root.Rotation = true, UDim2.fromScale(0.5, 0.22), 0 -- under the timer pill and above the player and the world prompts (Gemini audit 2026-11-18: at 0.33 it piled onto RIDE THE MINECART and the MINE sign)
+		root.Visible, root.Position, root.Rotation = true, UDim2.fromScale(0.5, 0.26), 0 -- 0.26 since directive v14: at 0.22 the jelly word still clipped the gift pill -- under the timer pill and above the player and the world prompts (Gemini audit 2026-11-18: at 0.33 it piled onto RIDE THE MINECART and the MINE sign)
 		for _, g in word.glyphs do g.img.ImageTransparency = 0 if g.glow then g.glow.ImageTransparency = 0.62 end end
 		if calm then
 			scale.Scale = 1
@@ -47,9 +47,9 @@ function M.start(E)
 			task.delay(n * 0.07 + 0.1, function() -- the shake as the last letter lands: thrown right, sprung back
 				if my ~= token then return end
 				word.pop(0) -- every letter wobbles together
-				root.Position = UDim2.fromScale(0.53, 0.225)
+				root.Position = UDim2.fromScale(0.53, 0.265)
 				root.Rotation = 2
-				TweenService:Create(root, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Position = UDim2.fromScale(0.5, 0.22), Rotation = 0 }):Play()
+				TweenService:Create(root, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Position = UDim2.fromScale(0.5, 0.26), Rotation = 0 }):Play()
 				scale.Scale = 1.06
 				TweenService:Create(scale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 				pcall(E.sfx, "land", 1.1)
