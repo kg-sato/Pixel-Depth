@@ -390,7 +390,7 @@ C.FP_FOV = 80
 
 -- Caves (cave exploration rework; vault Projects/Pixel-_/Briefs/Cave Exploration Rework.md and Cave Rework Reference Board)
 C.CAVES_ON = true -- the lift goes to the shared caves; false brings back the private block mines
-C.TORCH = { time = 300, range = 32, minRange = 16 } -- minRange 8 to 16 on 2026-11-11: a Gemini A/B of the burnt-out torch (Overnight/judge/torch_ab.jpg) gave 8 studs readability 3 and mood 7, 16 studs readability 6 and mood 7, 22 studs readability 8 and mood 3.
+C.TORCH = { time = 300, range = 38, minRange = 16 } -- range 32 to 38 in directive v14 (tour grade: past 10-15 studs the cave went muddy); -- minRange 8 to 16 on 2026-11-11: a Gemini A/B of the burnt-out torch (Overnight/judge/torch_ab.jpg) gave 8 studs readability 3 and mood 7, 16 studs readability 6 and mood 7, 22 studs readability 8 and mood 3.
 -- full light to the dimmest glow in 5 minutes (the user, 2026-11-08); wooden torch radius 18 studs (LGT-02). range 26 to 32 on 2026-11-10 night: the light now hangs 2.5 studs behind the head, and Gemini could not read the far end of the bridge
 -- the minecart escape on the ride up (MinecartEscape): track length (studs), base speed (studs/s), coin bonus range;
 -- the server pays only when the run took at least dist / (speed * 1.6) seconds (every boost stacked the whole way)
