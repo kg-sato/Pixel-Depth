@@ -72,7 +72,7 @@ local function buildPiece(f, k, rng)
 			part(m, Vector3.new(1.0, 0.7, 0.92), cf * CFrame.new(s * 4, 8.2, 0), Color3.fromRGB(58, 52, 72), { Material = Enum.Material.Metal }) -- an iron bracket plate
 		end
 		part(m, Vector3.new(9, 0.9, 0.9), cf * CFrame.new(0, 8.9, 0), BARK_LT, { Material = Enum.Material.Wood })
-		CartFX.lantern(part(m, Vector3.new(0.7, 0.9, 0.7), cf * CFrame.new(0, 7.2, 0), Color3.fromRGB(255, 212, 160))) -- a glass lantern, not a bare neon block (audit 09)
+		CartFX.lantern(part(m, Vector3.new(0.7, 0.9, 0.7), cf * CFrame.new(k % 4 == 0 and -2.7 or 2.7, 7.4, 0), Color3.fromRGB(255, 212, 160))) -- a glass lantern, not a bare neon block (audit 09); off to one side, turn about: in the middle it hung on the line of sight (views full1122g 12)
 	elseif rng:NextNumber() < 0.6 then
 		local s = rng:NextNumber() < 0.5 and -1 or 1
 		local col = CRYSTAL[rng:NextInteger(1, #CRYSTAL)]
