@@ -31,7 +31,7 @@ function M.start(E)
 					if dir.Magnitude < 1 then break end
 					local hit = workspace:Raycast(from, dir, rp)
 					if not hit then break end
-					if hit.Position.Y > h.Position.Y + 1 then -- above the chest: a roof, an awning, a beam, a crown of leaves, or a tall post or wall (directive v14 tour: a trophy-house post hid 60% of the view)
+					if hit.Position.Y > h.Position.Y - 2 then -- anything in the line above the knees (directive v14: trophy-room pillars still blocked the view); a roof, an awning, a beam, a crown of leaves, or a tall post or wall (directive v14 tour: a trophy-house post hid 60% of the view)
 						for _, p in workspace:GetPartBoundsInRadius(hit.Position, RADIUS) do
 							if p:IsDescendantOf(hub) and p.Position.Y + p.Size.Y / 2 > h.Position.Y + 2.5 and p.Position.Y - p.Size.Y / 2 > h.Position.Y - 6 and p.Transparency < 1
 								and (faded[p] or p.LocalTransparencyModifier < 0.01) then want[p] = true end -- a piece another script hides (NearFade, the Crew Hearth) is left alone
@@ -43,6 +43,20 @@ function M.start(E)
 			-- directive v14 (tour grade full1122c, town 5.4: "dark pitched roofs slice through the lower viewport"): roof pieces close in front
 			-- of the high camera fade too, even when they do not cover the miner
 			local camCF = workspace.CurrentCamera.CFrame
+			local reach = (h.Position - cam).Magnitude * 0.85 -- directive v14 (tour full1122d: the refinery roof still covered the lower left): rays through the lower
+			for _, sy in { 0.62, 0.78, 0.93 } do -- screen; whatever they hit in front of the miner fades with its neighbours
+				for _, sx in { 0.1, 0.3, 0.5, 0.7, 0.9 } do
+					local vp = workspace.CurrentCamera.ViewportSize
+					local ray = workspace.CurrentCamera:ViewportPointToRay(vp.X * sx, vp.Y * sy)
+					local hit = workspace:Raycast(ray.Origin, ray.Direction * reach, rp)
+					if hit and hit.Position.Y > h.Position.Y + 1.5 then
+						for _, p in workspace:GetPartBoundsInRadius(hit.Position, RADIUS) do
+							if p:IsDescendantOf(hub) and p.Transparency < 1 and p.Position.Y - p.Size.Y / 2 > h.Position.Y - 6 and p.Position.Y + p.Size.Y / 2 > h.Position.Y + 2.5
+								and (faded[p] or p.LocalTransparencyModifier < 0.01) then want[p] = true end
+						end
+					end
+				end
+			end
 			for _, p in workspace:GetPartBoundsInRadius(cam, 26) do
 				if p:IsDescendantOf(hub) and p.Transparency < 1 and p.Position.Y - p.Size.Y / 2 > h.Position.Y + 3
 					and camCF.LookVector:Dot(p.Position - cam) > 0 and (faded[p] or p.LocalTransparencyModifier < 0.01) then want[p] = true end

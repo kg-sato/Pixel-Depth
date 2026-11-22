@@ -6,6 +6,7 @@ import night as N
 tag = sys.argv[1] if len(sys.argv) > 1 else "a"
 P = "local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart local O=require(game.ReplicatedStorage.Shared.Config).CAVE2_ORIGIN "
 # the ride: down to Camp 1 first (Q), then ask for the Clay Caves trip and catch the lift on the way down
+N.lua("local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('DailyChest') if g then g.Enabled=false end return 1", "Client")
 N.key("Q"); time.sleep(26)
 N.lua(P + "p:SetAttribute('DevClay',2) return 1", "Server")
 for t in (2.5, 5.0, 7.5):
@@ -14,6 +15,8 @@ for t in (2.5, 5.0, 7.5):
 time.sleep(10)
 VIEWS = [("hall", "-58,8,4", "30,14,-6"), ("vault", "-10,6,10", "6,80,-4"), ("north", "-20,10,30", "-10,40,-56"),
          ("kiln", "-30,9,-24", "20,6,10"), ("east", "50,9,20", "-20,18,-30"), ("portal", "-40,7,6", "-72,7,0")]
+N.lua("workspace:SetAttribute('SporeStorm', nil) return 1", "Server")  # a spore storm tints the whole hall blue: not the hall's own look
+time.sleep(2)
 for name, eye, at in VIEWS:
     N.lua(P + f"h.CFrame=CFrame.new(O+Vector3.new({eye})) return 1", "Server")
     time.sleep(1.5)
