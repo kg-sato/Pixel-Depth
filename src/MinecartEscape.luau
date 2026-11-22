@@ -1309,10 +1309,16 @@ function M.play(opt)
 			end
 		elseif phase == "wait" then
 			flash.BackgroundTransparency = 0
+			if not K.waitText then -- directive v14 (tour grade: "a blank purple screen" while the server answers): say what is happening
+				K.waitText = label(flash, "SURFACING", UDim2.fromScale(0.36, 0.07), UDim2.fromScale(0.5, 0.5), Color3.fromRGB(255, 214, 107), 9)
+				stroke(K.waitText, Color3.fromRGB(20, 8, 30), 3)
+			end
+			K.waitText.Visible, K.waitText.Text = true, "SURFACING" .. string.rep(".", math.floor(t * 3) % 4)
 			bonus = opt.result and opt.result()
 			if bonus or t - resultAt > 4 then
 				phase = "town"
 				resultAt = t
+				if K.waitText then K.waitText.Visible = false end
 				bar.Visible, hint.Visible, hintPlate.Visible, pipWord.Visible = false, false, false, false
 				hud.hide()
 				for _, f in soot do f.BackgroundTransparency = 1 end

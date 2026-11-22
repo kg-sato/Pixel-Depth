@@ -504,16 +504,27 @@ end
 local odds = panel(gui, S(380, 400), S(640, 300), Vector2.new(0.5, 0.5), "panel")
 fit(odds, 380, 400)
 odds.Visible, odds.Name = false, "Odds"
-ribbonTitle(odds, "EGG ODDS", "ribbonLilac", 0.62)
+do -- directive v14 (tour grade: "an unstyled EGG ODDS modal"): the smoked obsidian ribbon of the ritual screens
+	local rb, rbT = ribbonTitle(odds, "EGG ODDS", "ribbonLilac", 0.62)
+	local sk = rb:FindFirstChild("Skin")
+	if sk then sk.Visible = false end
+	rb.BackgroundColor3, rb.BackgroundTransparency = Color3.fromRGB(28, 16, 46), 0.04
+	new("UICorner", rb, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", rb, { Color = Color3.fromRGB(255, 214, 107), Thickness = 1.5, Transparency = 0.35 })
+	rbT.TextStrokeColor3 = Color3.fromRGB(20, 10, 34)
+end
 deco(odds, "wisteria", nil, UDim2.fromScale(0.02, 0.05), -12)
 local oddsClose = closeButton(odds, "OddsClose")
 for i, t in C.RARITIES do
 	local y = 0.18 + (i - 1) * 0.1
-	local sw = new("Frame", odds, { Size = UDim2.fromScale(0.06, 0.06), Position = UDim2.fromScale(0.07, y + 0.005), BackgroundColor3 = t[3], BorderSizePixel = 0, ZIndex = 2 })
-	new("UIStroke", sw, { Color = INK, Thickness = 2 })
+	local row = new("Frame", odds, { Size = UDim2.fromScale(0.9, 0.082), Position = UDim2.fromScale(0.5, y + 0.033), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = t[3]:Lerp(Color3.fromRGB(20, 12, 34), 0.8), BackgroundTransparency = 0.1, BorderSizePixel = 0, ZIndex = 1 }) -- a jelly pill per rarity (directive v14)
+	new("UICorner", row, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", row, { Color = t[3], Thickness = 1.5, Transparency = 0.45 })
+	local sw = new("Frame", odds, { Size = UDim2.fromScale(0.05, 0.05), Position = UDim2.fromScale(0.085, y + 0.033), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = 45, BackgroundColor3 = t[3], BorderSizePixel = 0, ZIndex = 2 }) -- a gem, not a square swatch
+	new("UIStroke", sw, { Color = Color3.fromRGB(255, 255, 255), Thickness = 1.5, Transparency = 0.4 })
 	local nameT = text(odds, t[1]:upper(), UDim2.fromScale(0.5, 0.065), UDim2.fromScale(0.17, y), nil, t[3], 700)
 	nameT.TextXAlignment = Enum.TextXAlignment.Left
-	local pct = text(odds, "", UDim2.fromScale(0.3, 0.065), UDim2.fromScale(0.93, y), Vector2.new(1, 0), INK, 700, false)
+	local pct = text(odds, "", UDim2.fromScale(0.3, 0.065), UDim2.fromScale(0.91, y), Vector2.new(1, 0), Color3.fromRGB(236, 224, 255), 700, false)
 	pct.TextXAlignment, pct.Name = Enum.TextXAlignment.Right, "Pct" .. i
 end
 local pityText = text(odds, "", UDim2.fromScale(0.86, 0.055), UDim2.fromScale(0.5, 0.765), Vector2.new(0.5, 0), Color3.fromRGB(63, 156, 132), 500, false)
@@ -2711,7 +2722,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	caveHud.Visible = inCave and not modal -- the cave HUD and its tip ribbon step back behind a modal
 	layerPill.Visible, goldPill.Parent.Parent.Visible = not (modal or cave.mgBusy or forgeUI.cardUp) and os.clock() < layerShowUntil, not (modal or cave.mgBusy) -- so do the location pill and the left column (Gemini r2: they floated over the blur)
 	if PPS.Enabled ~= promptsOn then PPS.Enabled = promptsOn end
-	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and not cave.mgBusy and not (card and card.Visible) and (not inCave or ((forgeUI.questHint ~= nil or (forgeUI.caveUrgent ~= nil and forgeUI.caveUrgent() ~= nil)))) -- prompt bubbles step below the card (see the prompt placement loop)
+	stepCard.Visible = not modal and stepShown ~= "" and not stepExpired and not (caveHud.Visible and caveHud.TipBanner.Visible) and not cave.mgBusy and not (card and card.Visible) and (not inCave or ((forgeUI.questHint ~= nil or (forgeUI.caveUrgent ~= nil and forgeUI.caveUrgent() ~= nil)))) -- prompt bubbles step below the card (see the prompt placement loop)
 	if modal ~= scrim.Visible then
 		scrim.Visible = true
 		tween(scrim, 0.25, { BackgroundTransparency = (modal and not forgeUI.arOpen and not (forgeUI.noScrim and forgeUI.noScrim())) and 0.34 or 1 }) -- no dim behind the look-around settings: its panels stand in the world
