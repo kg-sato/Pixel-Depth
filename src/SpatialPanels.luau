@@ -48,14 +48,14 @@ function M.start(E)
 		if d[1] == "Back" then -- a dark violet plate a little down and right of the menu, like a card lifted off the page
 			rect.BackgroundColor3, rect.BackgroundTransparency = Color3.fromRGB(14, 6, 30), 0.42
 			local st = Instance.new("UIStroke")
-			st.Color, st.Thickness, st.Transparency = Color3.fromRGB(155, 31, 232), 6, 0.72
+			st.Color, st.Thickness, st.Transparency = Color3.fromRGB(155, 31, 232), 6, 0.86 -- fainter: read as a bounding box round the menu (Gemini views full1122f 04)
 			st.Parent = rect
 		elseif d[1] == "Frost" then
 			rect.BackgroundColor3, rect.BackgroundTransparency = Color3.fromRGB(16, 8, 32), 0.12
 		else -- the front layer: only a fine cyan glass edge, so nothing covers the menu's buttons
 			rect.BackgroundTransparency = 1
 			local st = Instance.new("UIStroke")
-			st.Color, st.Thickness, st.Transparency = Color3.fromRGB(150, 232, 255), 2, 0.55
+			st.Color, st.Thickness, st.Transparency = Color3.fromRGB(150, 232, 255), 2, 0.72
 			st.Parent = rect
 		end
 		local rc = Instance.new("UICorner")

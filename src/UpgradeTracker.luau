@@ -20,6 +20,7 @@ function M.start(E)
 	local INK, WHITE, MINT, BUTTER = E.INK, E.WHITE, E.MINT, E.BUTTER
 	local MUTED, CORAL, DEEP_MINT = Color3.fromRGB(84, 66, 108), Color3.fromRGB(224, 96, 110), Color3.fromRGB(32, 156, 92)
 	local HEAD = Color3.fromRGB(96, 68, 150)
+	local PILL_NAME, PILL_SUM = Color3.fromRGB(236, 224, 255), Color3.fromRGB(200, 180, 255) -- light words: the pill is dark smoked glass now, ink read dark on dark (Gemini views full1122f 08)
 	local Radial = require(script.Parent:WaitForChild("Radial"))
 	local WHERE = { -- where each layer's ore lives (C.DEPOSIT.layer: tunnel/squeeze 1, chasm/grotto 2, mush 3)
 		[1] = "the tunnels near camp", [2] = "the chasm and the grotto lake", [3] = "the mushroom hall",
@@ -73,9 +74,9 @@ function M.start(E)
 	new("UIAspectRatioConstraint", ringBox, { AspectRatio = 1 })
 	local ring = Radial.arc(ringBox, { thick = 0.2, color = Color3.fromRGB(255, 184, 0), track = Color3.fromRGB(53, 29, 69), trackTransparency = 0.1, z = 3, value = 0 }) -- amber on a dark track: the progress reads without the numbers
 	new("UIAspectRatioConstraint", new("ImageLabel", ringBox, { Image = E.ICON and E.ICON.pick or "", BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.56, 0.56), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4 }), { AspectRatio = 1 })
-	local nameT = text(pill, "", UDim2.fromScale(0.74, 0.4), UDim2.fromScale(0.2, 0.1), nil, INK, 700, false)
+	local nameT = text(pill, "", UDim2.fromScale(0.74, 0.4), UDim2.fromScale(0.2, 0.1), nil, PILL_NAME, 700, false)
 	nameT.TextXAlignment = Enum.TextXAlignment.Left
-	local sumT = text(pill, "", UDim2.fromScale(0.74, 0.3), UDim2.fromScale(0.2, 0.56), nil, HEAD, 700, false)
+	local sumT = text(pill, "", UDim2.fromScale(0.74, 0.3), UDim2.fromScale(0.2, 0.56), nil, PILL_SUM, 700, false)
 	sumT.TextXAlignment = Enum.TextXAlignment.Left
 
 	local card = panel(cardRow, UDim2.fromScale(1, 1), UDim2.new(), nil, "card")
@@ -206,7 +207,7 @@ function M.start(E)
 			setKind(pill, "pillMint")
 		else
 			local before = sumT.Text
-			sumT.Text, sumT.TextColor3 = (want > 0 and ("ORE " .. got .. "/" .. want .. "   ") or "") .. "COINS " .. commas(math.min(s.gold or 0, nxt.cost)) .. "/" .. commas(nxt.cost), HEAD
+			sumT.Text, sumT.TextColor3 = (want > 0 and ("ORE " .. got .. "/" .. want .. "   ") or "") .. "COINS " .. commas(math.min(s.gold or 0, nxt.cost)) .. "/" .. commas(nxt.cost), PILL_SUM
 			if sumT.Text ~= before then showUntil = os.clock() + 8 end
 			head.Text, head.TextColor3 = "NEXT UPGRADE NEEDS", HEAD
 			setKind(pill, "card")

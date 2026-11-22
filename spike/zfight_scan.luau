@@ -11,7 +11,7 @@ local cell = 16
 local grid, faces = {}, {}
 local function axisOf(v)
 	local ax, ay, az = math.abs(v.X), math.abs(v.Y), math.abs(v.Z)
-	if ax > 0.999 then return 1, math.sign(v.X) elseif ay > 0.999 then return 2, math.sign(v.Y) elseif az > 0.999 then return 3, math.sign(v.Z) end
+	if ax > 0.99999 then return 1, math.sign(v.X) elseif ay > 0.99999 then return 2, math.sign(v.Y) elseif az > 0.99999 then return 3, math.sign(v.Z) end -- 0.99999 (0.26 degrees): at 0.999 a zip rope tilted 1.5 degrees counted as square, and its faces, 0.5 studs off over its length, met the handle's (2026-11-22 false pair)
 end
 local skipped = 0
 for _, root in roots do

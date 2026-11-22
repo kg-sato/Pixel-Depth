@@ -989,7 +989,7 @@ function Hub.build(parent, origin)
 		tvox(g, "Bench", Vector3.new(5, 0.6, 2), at(3.4, 3.8, -4), "planks", 2)
 		for _, x in { 1.4, 5.4 } do tvox(g, "BenchLeg", Vector3.new(0.5, 2.4, 1.6), at(x, 2.6, -4), "beam", 2) end
 		local bulb = vox(g, "AlcoveLamp", Vector3.new(0.8, 0.8, 0.8), at(3.4, 4.5, -4.4), LAMP, { CanCollide = false })
-		glow(bulb, LAMP, 12, 0.9)
+		glow(bulb, LAMP, 18, 1.6) -- brighter: the Geode Timing Crack at this bench read as a black void from the town camera (Gemini full1122f 61 s)
 		tvox(g, "ToolRack", Vector3.new(6, 0.5, 0.5), at(-3, 5.4, -4.8), "beam", 2)
 		for _, o in { { 2.4, -4 }, { 3.7, -3.7 } } do vox(g, "Ingot", Vector3.new(1.2, 0.45, 0.6), at(o[1], 4.33, o[2]), EMBER, { Material = Enum.Material.Neon, CanCollide = false }) end
 		skin(vox(g, "YardWall", Vector3.new(1, 4.5, 7), at(-11, 3.65, 2), PAL.stone[2]), "stonebrick", 4, SIDES, cool) -- the yard's side wall behind the trough
