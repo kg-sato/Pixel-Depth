@@ -1878,7 +1878,7 @@ end
 		oreIcon.set(col)
 		swGlow.ImageColor3 = col
 		rOre.Text = "+" .. count .. " " .. string.upper(oreName)
-		rGold.Text = commas(value) .. " GOLD"
+		rGold.Text = commas(value) .. " COINS" -- one name for the money everywhere (tour grade v14: GOLD here, COINS on the gift)
 		rGrade.Text = gradeText
 		for i, st in rStars do
 			st.Image = i <= nStars and SPRITE.star or SPRITE.starOff
@@ -2340,7 +2340,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		if newBest then toast("NEW BEST!  " .. combo .. " COMBO", PINK, true, 1.3) end
 	elseif kind == "sold" then
 		local gold, _, moved = ...
-		if gold > 0 then toast("+" .. commas(gold) .. " GOLD", GOLD, true) end
+		if gold > 0 then toast("+" .. commas(gold) .. " COINS", GOLD, true) end
 		local parts = {}
 		for k, n in moved or {} do if n > 0 then table.insert(parts, n .. " " .. C.oreName(k)) end end
 		if #parts > 0 then toast("ORE BANK  +" .. table.concat(parts, "  +"), MINT, false, 0.6) end
@@ -2399,7 +2399,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 	elseif kind == "night" then
 		local mins, gold, crew = ...
 		nightInfo.Text = "Your crew of " .. crew .. " dug for " .. (mins >= 60 and (mins // 60 .. " h " .. mins % 60 .. " m") or (mins .. " m"))
-		nightGold.Text = "+" .. commas(gold) .. " GOLD"
+		nightGold.Text = "+" .. commas(gold) .. " COINS"
 		openPanel(night)
 	elseif kind == "hatch" then
 		sfx("hatch")
@@ -2429,7 +2429,7 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 				task.delay(C.DEPOSIT.shrines.regrow, function() if pr.Parent then pr.Enabled = true end end)
 			end
 		end
-		toast("SHRINE CHEST  +" .. commas(gold) .. " GOLD", GOLD, true)
+		toast("SHRINE CHEST  +" .. commas(gold) .. " COINS", GOLD, true)
 		if forgeUI.fly then forgeUI.fly("coin", UDim2.fromOffset(cam.ViewportSize.X / 2, cam.ViewportSize.Y / 2), goldPill, 8, 0.05) end
 	elseif kind == "shrine" then
 		toast("A HIDDEN SHRINE!", LILAC, true)

@@ -29,7 +29,7 @@ M.MAX_LIGHTS = 24
 -- crude voxel steps). Loaded once from the owner's uploads; if a load fails, that prop falls back to the part-built version.
 M.MESH = { crystal = { 104563237686070, 101580352907109, 80182315006407 }, mushrooms = { 74992751047015, 139797019027904 }, rubble = { 118720837194462, 115340167637774 } }
 M.HEIGHT = { crystal = 8.5, mushrooms = 6.2, rubble = 2.8 } -- studs tall once placed (the cave's 4-stud cells)
-M.SCALE = { crystal = 1.9, mushrooms = 1.8, rubble = 1.7, pebbles = 1.4 } -- roots, supports and carts are built to the room's own size
+M.SCALE = { crystal = 1.55, mushrooms = 1.8, rubble = 1.7, pebbles = 1.4 } -- roots, supports and carts are built to the room's own size
 
 function M.pick(mix, r) -- weighted pick, r in [0, 1)
 	local total = 0
@@ -192,7 +192,7 @@ function M.build(caves)
 	end
 	local LOOK = { -- each mesh part's look by its name (the roles in design3d/cave_props.py)
 		Shell = function(p, c) p.Material, p.Color, p.Transparency, p.Reflectance = Enum.Material.Glass, c:Lerp(OBSIDIAN, 0.12), 0.3, 0.15 end,
-		Core = function(p, c) p.Material, p.Color = Enum.Material.Neon, c end, -- full neon (at 0.25 see-through the crystals went dull teal)
+		Core = function(p, c) p.Material, p.Color = Enum.Material.Neon, c:Lerp(Color3.new(0, 0, 0), 0.3) end, -- full neon (at 0.25 see-through the crystals went dull teal); 30% darker since directive v14 (Gemini: blinding crystal bloom)
 		Rock = function(p) p.Material, p.Color = Enum.Material.Slate, PLUM:Lerp(VIOLET, 0.12) end,
 		Cap = function(p, c) p.Material, p.Color = Enum.Material.SmoothPlastic, c end,
 		Gill = function(p, c) p.Material, p.Color = Enum.Material.Neon, c:Lerp(Color3.new(1, 1, 1), 0.2) end,
