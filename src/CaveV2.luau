@@ -1205,6 +1205,11 @@ function M.build(parent, origin, seed, opt)
 						local ll = Instance.new("PointLight")
 						ll.Color, ll.Range, ll.Brightness, ll.Shadows = GLOW, 8, 0.35, false
 						ll.Parent = lf
+					elseif head >= 3 and roomy and not skirtD and hsh > 0.88 and hsh < 0.92 then -- directive v14 (Gemini: dead-flat floors): a low stepped sediment shelf, two worn plates
+						local s = 3 + hash(x, z, 91) * 3
+						local fc = colorOf(100 + TI[themeAt(Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V))] * 10 + 1):Lerp(Color3.new(0, 0, 0), 0.12)
+						deco("SedimentSlab", Vector3.new(s, 0.5, s * 0.8), CFrame.new(foot + Vector3.new(0, 0.2, 0)) * CFrame.Angles(0, hsh * 9, 0), fc, {})
+						deco("SedimentSlab", Vector3.new(s * 0.6, 0.4, s * 0.5), CFrame.new(foot + Vector3.new(0.4, 0.62, 0.3)) * CFrame.Angles(0, hsh * 13, 0), fc:Lerp(Color3.new(1, 1, 1), 0.08), {})
 					elseif head >= 2 and skirtD and hsh > 0.93 then -- directive v14 (Recipe A3/F): breakdown talus, angular blocks stacked against the wall's foot
 						local into = Vector3.new(skirtD[1], 0, skirtD[2])
 						for q = 0, 1 + math.floor(hash(x, z, 71) * 2) - 1 do

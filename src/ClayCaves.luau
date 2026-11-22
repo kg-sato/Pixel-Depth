@@ -766,6 +766,33 @@ function M.build(caves)
 		part("BreachLintel", Vector3.new(20.6, 2, 2.2), O * CFrame.new(52.5, 35.6, -53), BARK, { Material = Enum.Material.Wood, CanCollide = false })
 		sign("FOSSIL DIG", O * CFrame.new(52.5, 38.6, -53.4) * CFrame.Angles(0, math.pi, 0))
 	end
+	do -- directive v14 (Gemini: "a dead-flat ballroom floor"): clay sediment mounds along the wall feet, two stepped blocks each, only where
+		-- nothing else of the hall stands (doors, stalls, echo walls, crystals and ore keep their space); decor, no collision
+		local qp = OverlapParams.new()
+		qp.FilterType = Enum.RaycastFilterType.Include
+		qp.FilterDescendantsInstances = { folder, depF }
+		local spots, n = {}, 0
+		for x = -66, 66, 7 do table.insert(spots, { x, -50.5, 0 }) table.insert(spots, { x, 50.5, math.pi }) end
+		for z = -44, 44, 7 do table.insert(spots, { -70.5, z, math.pi / 2 }) table.insert(spots, { 70.5, z, -math.pi / 2 }) end
+		for i, sp in spots do
+			local door = (math.abs(sp[1]) > 69 and math.abs(sp[2]) < 13) or (sp[2] < 0 and math.abs(sp[1]) < 70 and ((sp[1] > 2 and sp[1] < 21) or (sp[1] > 40 and sp[1] < 66)))
+			local s = 3.2 + ((i * 37) % 10) / 5
+			local cf = O * CFrame.new(sp[1], 0.6, sp[2]) * CFrame.Angles(0, sp[3] + ((i * 13) % 7 - 3) * 0.08, 0)
+			local clear = not door
+			if clear then
+				for _, p in workspace:GetPartBoundsInBox(cf * CFrame.new(0, 1.2, 0), Vector3.new(s + 1.5, 2.6, s * 0.8 + 1.5), qp) do
+					if p.Name ~= "Floor" and p.Name ~= "CaveRock" then clear = false break end
+				end
+			end
+			if clear then
+				local tone = ({ CLAY_D, Color3.fromRGB(176, 120, 72), CLAY, Color3.fromRGB(150, 70, 50) })[i % 4 + 1]
+				part("ClayMound", Vector3.new(s, 1.2, s * 0.8), cf, tone, DECO)
+				part("ClayMound", Vector3.new(s * 0.6, 1, s * 0.5), cf * CFrame.new(0.3, 1, -0.4) * CFrame.Angles(0, 0.5, 0), tone:Lerp(CREAM, 0.12), DECO)
+				n += 1
+			end
+		end
+		folder:SetAttribute("Mounds", n)
+	end
 	return folder
 end
 

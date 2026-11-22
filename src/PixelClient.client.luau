@@ -2869,7 +2869,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		pet.model:PivotTo(CFrame.lookAt(pet.pos, pet.pos + Vector3.new(look.X, 0, look.Z)))
 		require(RS.Shared.PetVoxels).animate(pet.model, now, dt)
 		do -- a pet right at the lens fades out instead of filling the view (Gemini audit 2026-11-18: big pets clipped the first-person camera)
-			local fade = math.clamp(1 - ((cam.CFrame.Position - pet.pos).Magnitude - 1.5 * ps) / (2 * ps), 0, 0.85)
+			local fade = os.clock() < (plr:GetAttribute("HidePetsUntil") or 0) and 1 or math.clamp(1 - ((cam.CFrame.Position - pet.pos).Magnitude - 1.5 * ps) / (2 * ps), 0, 0.85) -- HidePetsUntil: a cutscene or result card wants the crew out of shot (directive v14)
 			if math.abs(fade - (pet.fade or 0)) > 0.02 then
 				pet.fade = fade
 				for _, d in pet.model:GetDescendants() do if d:IsA("BasePart") then d.LocalTransparencyModifier = fade end end

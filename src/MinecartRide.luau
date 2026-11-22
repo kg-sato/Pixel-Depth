@@ -296,12 +296,8 @@ function M.play(opt)
 	local calm = opt.reduceMotion == true
 	if not opt.cart or not opt.cart.PrimaryPart then return end
 	M.prepare()
-	local petHid = {} -- directive v14 (tour: a giant glowing crew pet filled half the ride's first shot): the crew sits the ride out of view
-	for _, d in workspace:GetDescendants() do
-		if d:IsA("Model") and d:GetAttribute("Pet") ~= nil then
-			for _, p in d:GetDescendants() do if p:IsA("BasePart") and p.LocalTransparencyModifier < 1 then p.LocalTransparencyModifier = 1 table.insert(petHid, p) end end
-		end
-	end
+	local petHide = os.clock() + 30 -- directive v14 (tour: a giant glowing crew pet filled half the ride's first shot): the crew sits the ride out of view (PixelClient reads HidePetsUntil; it lapses by itself)
+	plr:SetAttribute("HidePetsUntil", math.max(plr:GetAttribute("HidePetsUntil") or 0, petHide))
 	local world = Instance.new("Folder")
 	world.Name = "MinecartRide"
 	world.Parent = workspace
@@ -654,7 +650,7 @@ function M.play(opt)
 	for _, o in snd do o:Destroy() end
 	world:Destroy()
 	gui:Destroy()
-	for _, p in petHid do if p.Parent then p.LocalTransparencyModifier = 0 end end
+	if plr:GetAttribute("HidePetsUntil") == petHide then plr:SetAttribute("HidePetsUntil", 0) end -- only if no later sequence took it over
 	if opt.arrived then opt.arrived() end
 end
 

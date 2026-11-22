@@ -1353,15 +1353,8 @@ function M.play(opt)
 			shakeAmp = math.max(0, shakeAmp - dt * 1.2)
 			cam.CFrame = CFrame.lookAt(eye, cf.Position + Vector3.new(0, 1.5, 0)) * CFrame.Angles((math.random() - 0.5) * shakeAmp * 0.06, (math.random() - 0.5) * shakeAmp * 0.06, 0)
 			if u > 0.85 and not card then
-				do -- directive v14 (tour grade: the town crew pets stood between the camera and the result card): hide pets near the cart for the card
-					local hid = {}
-					for _, d in workspace:GetDescendants() do
-						if d:IsA("Model") and d:GetAttribute("Pet") ~= nil and (d:GetPivot().Position - cf.Position).Magnitude < 40 then
-							for _, p in d:GetDescendants() do if p:IsA("BasePart") and p.LocalTransparencyModifier < 1 then p.LocalTransparencyModifier = 1 table.insert(hid, p) end end
-						end
-					end
-					task.delay(10, function() for _, p in hid do if p.Parent then p.LocalTransparencyModifier = 0 end end end)
-				end
+				K.petHide = os.clock() + 15 -- directive v14 (tour grade: the town crew pets stood between the camera and the result card): the crew stays out of shot for the card (PixelClient reads HidePetsUntil)
+				plr:SetAttribute("HidePetsUntil", math.max(plr:GetAttribute("HidePetsUntil") or 0, K.petHide))
 				card = frame({ Size = UDim2.fromScale(0.34, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.1, ZIndex = 6 }) -- obsidian jelly glass (Gemini, loop v10n: "a stark white box after a dark ride")
 				round(card, 0.1)
 				stroke(card, Color3.fromRGB(155, 31, 232), 3)
@@ -1422,6 +1415,7 @@ function M.play(opt)
 	for _, o in snd do o:Destroy() end
 	world:Destroy()
 	gui:Destroy()
+	if K.petHide and plr:GetAttribute("HidePetsUntil") == K.petHide then plr:SetAttribute("HidePetsUntil", 0) end
 	if opt.restore then opt.restore() end
 	if opt.arrived then opt.arrived() end
 end
