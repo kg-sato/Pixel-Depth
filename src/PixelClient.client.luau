@@ -2716,6 +2716,8 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		for _, m in forgeUI.modals do if m.Visible then return true end end
 		local tipB = caveHud.Visible and caveHud:FindFirstChild("TipBanner") -- Wick is talking: a toast waits its turn (Gemini r8: both at once)
 		if tipB and tipB.Visible then return true end
+		forgeUI.arrivalUI = forgeUI.arrivalUI or plr.PlayerGui:FindFirstChild("Arrival", true) -- the place name lands alone (tour views full1122f 12: name, bonus toast and pills all at once)
+		if forgeUI.arrivalUI and forgeUI.arrivalUI.Visible then return true end
 		return false
 	end end
 	local promptsOn = not (modal or cave.mgBusy or forgeUI.cardUp or (card and card.Visible) or forgeUI.homeHolding or os.clock() < (forgeUI.promptsQuietUntil or 0)) -- audit 05: no world prompt over a modal or a loot card; none during the hearthstone hold or the first moments off the cart (Gemini full1119l)

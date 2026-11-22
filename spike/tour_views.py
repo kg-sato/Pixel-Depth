@@ -7,15 +7,20 @@ here = pathlib.Path(__file__).resolve().parent
 src = here.parent / "captures" / "loop" / name
 dest = here.parent.parent.parent / "Overnight" / "judge" / f"views_{name}"
 dest.mkdir(parents=True, exist_ok=True)
-# view name, tour second (loop_rec5's step times), what the grader should judge
-WANT = [("loading splash", 13), ("town HUD", 25), ("settings", 110), ("forge", 122), ("boss fight and strike reticle", 242),
-        ("boss reward chest", 278), ("glass lift ride", 286), ("Clay Caves hall", 310), ("crew escape HUD", 486), ("escape result card", 501),
-        ("town arrival", 505)]
-files = sorted(int(f[:4]) for f in os.listdir(src) if f.endswith(".png"))
+# view name, the tour step label it belongs to, which still of that step (0 = its first; -1 = its last). By label, not by second:
+# the tour's timing drifts from run to run (full1122e: every view landed one step late)
+WANT = [("loading splash", "loading logo", 1), ("town HUD", "town HUD", 1), ("settings", "settings:", 1), ("forge", "forge", 2),
+        ("Camp 1 arrival", "arrival at Camp 1", 1), ("mining strike", "minigames", 3), ("boss fight and strike reticle", "Root Warden: the whole fight", 6),
+        ("boss reward chest", "fight over", 1), ("glass lift ride", "glass lift", 2), ("Clay Caves hall", "Camp 2: the hall", 2),
+        ("crew escape HUD", "crew ride from the stoker", 5), ("escape result card", "crew ride from the stoker", -3), ("town arrival", "crew ride from the stoker", -1)]
+rows = [l.split("	") for l in (src / "labels.txt").read_text(encoding="utf-8").splitlines() if l.count("	") >= 2]
 lines = []
-for i, (view, t) in enumerate(WANT, 1):
-    f = min(files, key=lambda x: abs(x - t))
-    shutil.copy(src / f"{f:04d}.png", dest / f"{i:02d}.png")
+for i, (view, key, k) in enumerate(WANT, 1):
+    hits = [r[0] for r in rows if key in r[2]]
+    if not hits:
+        print("no still for", view); continue
+    f = hits[max(-len(hits), min(k, len(hits) - 1))]
+    shutil.copy(src / f, dest / f"{i:02d}.png")
     lines.append(f"{i:02d} {view}")
 (dest / "map.txt").write_text("\n".join(lines), encoding="utf-8")
 (dest / "brief.md").write_text(

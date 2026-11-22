@@ -227,6 +227,8 @@ function M.init(c)
 			t.Parent = sg
 		end
 		sg.Parent = board
+		local back = sg:Clone() -- the board's back read as a blank purple slab from the cart (Gemini full1122f 157 s): the same words on both faces
+		back.Name, back.Face, back.Parent = "PartyGuiBack", Enum.NormalId.Back, board
 		local pr = Instance.new("ProximityPrompt")
 		pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.GamepadKeyCode = "Invite", "Friends", Enum.KeyCode.F, Enum.KeyCode.ButtonX
 		pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.Style, pr.HoldDuration = 9, false, Enum.ProximityPromptStyle.Custom, 0

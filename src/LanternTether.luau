@@ -40,8 +40,7 @@ function M.start(E)
 		local n = plr:GetAttribute("Friends") or 0
 		local hub = workspace:FindFirstChild("Hub")
 		local b = hub and hub:FindFirstChild("PartyBoard")
-		local sg = b and b:FindFirstChild("PartyGui")
-		if sg then
+		for _, sg in { b and b:FindFirstChild("PartyGui"), b and b:FindFirstChild("PartyGuiBack") } do -- both faces of the board
 			sg.Line2.Text = n .. "/" .. C.TETHER.max .. " FRIENDS HERE"
 			local luck = math.floor(C.TETHER.luck * 100 + 0.5) -- friends luck on eggs (Config.eggOdds)
 			sg.Line3.Text = n > 0 and ("+" .. math.floor(C.TETHER.value * 100 + 0.5) .. "% ORE VALUE  +" .. luck * math.min(n, C.TETHER.max) .. "% EGG LUCK") or ("+" .. math.floor(C.TETHER.value * 100 + 0.5) .. "% ORE VALUE, +" .. luck .. "% EGG LUCK PER FRIEND")

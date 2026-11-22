@@ -694,6 +694,11 @@ function M.build(parent, origin, seed, opt)
 							local f = FLOOR[th]
 							local moss = math.noise(x * 0.15, z * 0.15, wob) > 0.5 - f[3]
 							k = 100 + TI[th] * 10 + (moss and 2 or 1) -- one matte tone per place and one for the damp hollows (directive v14, Recipe C: no per-block floor noise; the floors merge into big slabs)
+							if not moss then -- a ledge lip (tour grades 6.7-6.8: "path boundaries and drop-offs dissolve into murk"): a floor block over a drop of 2+ voxels
+								for _, d in { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } } do
+									if isAir(get(x + d[1], y, z + d[2])) and isAir(get(x + d[1], y - 1, z + d[2])) and isAir(get(x + d[1], y + 1, z + d[2])) then k = 100 + TI[th] * 10 + 4 break end
+								end
+							end
 						else -- a wall or a roof: its rock bed (directive v14), a step lighter high up, darker overhead
 							k = (isAir(get(x, y - 1, z)) and 20 or (ly > 26 and 10 or 0)) + 1 + strata(lx, ly, lz)
 						end
@@ -722,6 +727,7 @@ function M.build(parent, origin, seed, opt)
 		local th = THEMES[math.floor((k - 100) / 10)]
 		local v = k % 10
 		local f = FLOOR[th]
+		if v == 4 then return f[2]:Lerp(Color3.fromRGB(255, 240, 222), 0.32) end -- a ledge lip: the walking edge over a drop, a step paler than its floor
 		if v >= 2 then return L == 4 and (v == 2 and Color3.fromRGB(236, 80, 40) or Color3.fromRGB(255, 140, 60)) or L == 3 and (v == 2 and Color3.fromRGB(120, 130, 200) or Color3.fromRGB(170, 180, 230)) or L == 2 and (v == 2 and Color3.fromRGB(70, 150, 140) or Color3.fromRGB(96, 176, 160)) or PAL.moss[v == 2 and 1 or 2] end -- layer 2: teal glass seams, not moss
 		return v == 0 and f[1] or f[2]
 	end

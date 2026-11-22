@@ -781,7 +781,7 @@ function M.play(opt)
 	end
 	if K.crew then -- step 3: flares at the Gloom and crew moments, on every rider's screen
 		local F, Mo = C.CREW.flare, C.CREW.moment
-		local call = label(gui, "", UDim2.fromScale(0.6, 0.085), UDim2.fromScale(0.5, 0.3), WHITE, 6)
+		local call = label(gui, "", UDim2.fromScale(0.5, 0.07), UDim2.fromScale(0.5, 0.21), WHITE, 6) -- above the rails' vanishing point (tour views full1122f 11: "CREW MOVE! over the track")
 		local callStroke = stroke(call, Color3.fromRGB(60, 24, 90), 3)
 		call.TextTransparency = 1
 		if callStroke then callStroke.Transparency = 1 end
@@ -1312,13 +1312,23 @@ function M.play(opt)
 			if not K.waitText then -- directive v14 (tour grade: "a blank purple screen" while the server answers): say what is happening
 				K.waitText = label(flash, "SURFACING", UDim2.fromScale(0.36, 0.07), UDim2.fromScale(0.5, 0.5), Color3.fromRGB(255, 214, 107), 9)
 				stroke(K.waitText, Color3.fromRGB(20, 8, 30), 3)
+				-- tour grade full1122f (445 s: "a bare flat purple screen"): daylight from above and a line under the word
+				K.waitGlow = frame({ Parent = flash, Size = UDim2.fromScale(0.6, 0.75), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0), BackgroundColor3 = Color3.fromRGB(255, 220, 150), BackgroundTransparency = 0.55, ZIndex = 8 })
+				local g = Instance.new("UIGradient")
+				g.Rotation, g.Transparency = 90, NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(0.55, 0.85), NumberSequenceKeypoint.new(1, 1) })
+				g.Parent = K.waitGlow
+				K.waitSub = label(flash, "THE GLOOM FALLS BEHIND  ·  DAYLIGHT AHEAD", UDim2.fromScale(0.42, 0.032), UDim2.fromScale(0.5, 0.575), Color3.fromRGB(214, 196, 255), 9)
 			end
 			K.waitText.Visible, K.waitText.Text = true, "SURFACING" .. string.rep(".", math.floor(t * 3) % 4)
+			if K.waitGlow then K.waitGlow.Visible, K.waitGlow.BackgroundTransparency = true, 0.55 - 0.12 * math.sin(t * 2.4) end
+			if K.waitSub then K.waitSub.Visible = true end
 			bonus = opt.result and opt.result()
 			if bonus or t - resultAt > 4 then
 				phase = "town"
 				resultAt = t
 				if K.waitText then K.waitText.Visible = false end
+				if K.waitGlow then K.waitGlow.Visible = false end
+				if K.waitSub then K.waitSub.Visible = false end
 				bar.Visible, hint.Visible, hintPlate.Visible, pipWord.Visible = false, false, false, false
 				hud.hide()
 				for _, f in soot do f.BackgroundTransparency = 1 end

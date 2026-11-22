@@ -135,10 +135,10 @@ function M.build(caves)
 		end
 	end end end
 	folder:SetAttribute("ShellParts", nShell)
-	for _, c in { { -60, -40 }, { -60, 40 }, { 60, -40 }, { 60, 40 }, { 0, -44 }, { 0, 44 } } do -- warm uplights grazing the vault tiers (Gemini v14p3_r2: a murky black crown)
+	for i, c in { { -60, -40 }, { -60, 40 }, { 60, -40 }, { 60, 40 }, { 0, -44 }, { 0, 44 } } do -- warm uplights grazing the vault tiers (Gemini v14p3_r2: a murky black crown)
 		local up = part("VaultUplight", Vector3.new(0.4, 0.4, 0.4), O * CFrame.new(c[1], 56, c[2]), AMBER, { Transparency = 1, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
 		local sl = Instance.new("SpotLight")
-		sl.Face, sl.Angle, sl.Range, sl.Brightness, sl.Color, sl.Shadows = Enum.NormalId.Top, 75, 40, 1.1, Color3.fromRGB(255, 186, 120), false
+		sl.Face, sl.Angle, sl.Range, sl.Brightness, sl.Color, sl.Shadows = Enum.NormalId.Top, 75, 40, 1.1, i % 2 == 0 and Color3.fromRGB(110, 214, 206) or Color3.fromRGB(255, 186, 120), false -- every other one cool teal (Gemini full1122f: "everything one ochre wash")
 		sl.Parent = up
 	end
 	roofAt = function(x, z) -- the underside of the rock over a point of the floor

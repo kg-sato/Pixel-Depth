@@ -120,6 +120,24 @@ function M.start(E)
 	end
 
 	local riding = false
+	local gauge -- (ZIndex 53 like the picture: the HUD layer sorts globally, so a lower one drew under it) tour views full1122f 09 ("no depth meter, no destination"): a brass depth rail on the right of the picture
+	local function makeGauge()
+		local rail = new("Frame", vp, { Name = "DepthRail", Size = UDim2.fromScale(0.008, 0.46), Position = UDim2.fromScale(0.935, 0.27), BackgroundColor3 = Color3.fromRGB(40, 26, 60), BorderSizePixel = 0, ZIndex = 53 })
+		new("UICorner", rail, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", rail, { Color = BRASS, Thickness = 2 })
+		local function word(t, y, col, h)
+			local l = new("TextLabel", vp, { Text = t, Size = UDim2.fromScale(0.14, h), Position = UDim2.fromScale(0.935, y), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Font = Enum.Font.FredokaOne, TextScaled = true, TextColor3 = col, ZIndex = 53 })
+			new("UIStroke", l, { Color = Color3.fromRGB(20, 10, 30), Thickness = 2 })
+			return l
+		end
+		word("CAMP 1", 0.24, Color3.fromRGB(214, 196, 255), 0.03)
+		word("KILN CAMP", 0.76, WARM, 0.034)
+		local dot = new("Frame", rail, { Size = UDim2.fromScale(2.6, 0.05), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = WARM, BorderSizePixel = 0, ZIndex = 53 })
+		new("UICorner", dot, { CornerRadius = UDim.new(0.5, 0) })
+		local depth = new("TextLabel", vp, { Text = "0 m", Size = UDim2.fromScale(0.08, 0.03), Position = UDim2.fromScale(0.915, 0.27), AnchorPoint = Vector2.new(1, 0.5), BackgroundTransparency = 1, Font = Enum.Font.FredokaOne, TextScaled = true, TextColor3 = Color3.new(1, 1, 1), ZIndex = 53 })
+		new("UIStroke", depth, { Color = Color3.fromRGB(20, 10, 30), Thickness = 2 })
+		return { dot = dot, depth = depth }
+	end
 	-- secs: how long the server holds the character. Returns false when the view is not free (then the fade alone covers the move).
 	hook.glassLift = function(secs, fade) -- fade(transparency, seconds): the caller's black cover
 		if riding or workspace.CurrentCamera.CameraType == Enum.CameraType.Scriptable then return false end
@@ -155,6 +173,9 @@ function M.start(E)
 				vp.LightColor = Color3.fromRGB(220, 230, 255):Lerp(Color3.fromRGB(255, 200, 150), e)
 				local floor = top * CFrame.new(0, -14 - e * dist, 0)
 				cage:PivotTo(floor)
+				gauge = gauge or makeGauge()
+				gauge.dot.Position = UDim2.fromScale(0.5, e)
+				gauge.depth.Position, gauge.depth.Text = UDim2.fromScale(0.915, 0.27 + 0.46 * e), "-" .. math.floor(e * dist / 4 + 0.5) .. " m"
 				local speed = 6 * t * (1 - t) -- 0 at both ends, 1.5 in the middle
 				vcam.CFrame = floor * CFrame.new(0, 4.6 + math.sin(os.clock() * 17) * 0.02 * speed, 0) * CFrame.Angles(0, 0.5 + t * 2.4, 0) * CFrame.Angles(-0.42 - math.sin(t * math.pi) ^ 2 * 0.5, 0, 0) -- a slow look round, always partly down the shaft (level, the first frames faced the rock 8 studs away: Gemini full1122e 313 s)
 				if os.clock() >= nextTick then

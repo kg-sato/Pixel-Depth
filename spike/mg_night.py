@@ -33,9 +33,9 @@ if "InCave" not in N.lua("return game.Players:GetPlayers()[1]:GetAttribute('InCa
 if "strike" in want:
     print("common:", go_to("d:GetAttribute('Ore')<3")); time.sleep(1.2); face()
     N.key("E"); time.sleep(0.8); N.shot(pre + "_strike")
-    print(N.lua("local hud=game.Players.LocalPlayer.PlayerGui.PixelHUD.CaveHud.PerfectStrike local nd,ar=hud:FindFirstChild('Needle',true),hud:FindFirstChild('Arc',true) "
+    print(N.lua("task.wait(3.5) local hud=game.Players.LocalPlayer.PlayerGui.PixelHUD.CaveHud.PerfectStrike local nd,ar=hud:FindFirstChild('Needle',true),hud:FindFirstChild('Arc',true) "
                 "local R=game.ReplicatedStorage.Remotes.Extract local t0=os.clock() while os.clock()-t0<3 do if math.abs((nd.Rotation-ar.Rotation+180)%360-180)<5 then break end task.wait() end "
-                "R:FireServer('strike',workspace:GetServerTimeNow()) return 'struck'", "Client").splitlines()[-1])
+                "R:FireServer('strike',workspace:GetServerTimeNow()) return 'struck'", "Client").splitlines()[-1:] or [""])
     time.sleep(0.12); N.shot(pre + "_strike_hit")
     for _ in range(2):
         time.sleep(0.6)
@@ -47,7 +47,7 @@ if "strike" in want:
 if "rush" in want:
     print("rare:", go_to("d:GetAttribute('Ore')==3")); time.sleep(1.2); face()
     N.key("E"); time.sleep(0.9); N.shot(pre + "_rush_start")
-    seq = N.lua("return game.Players.LocalPlayer.PlayerGui.PixelHUD.CaveHud.VeinRush:GetAttribute('Seq') or ''", "Client").splitlines()[-1].strip()
+    seq = (N.lua("return game.Players.LocalPlayer.PlayerGui.PixelHUD.CaveHud.VeinRush:GetAttribute('Seq') or ''", "Client").splitlines() or [""])[-1].strip()
     print("seq", seq)
     for i, c in enumerate(seq):
         N.key("D" if c == "1" else "A")  # chisel the side without the fissure

@@ -49,7 +49,7 @@ function M.start(E)
 					local vp = workspace.CurrentCamera.ViewportSize
 					local ray = workspace.CurrentCamera:ViewportPointToRay(vp.X * sx, vp.Y * sy)
 					local hit = workspace:Raycast(ray.Origin, ray.Direction * reach, rp)
-					if hit and hit.Position.Y > h.Position.Y + 1.5 then
+					if hit and hit.Position.Y > h.Position.Y - 1 then -- from the waist: tree trunks and tall posts in front of the miner (full1122f 37-57 s) are hit low
 						for _, p in workspace:GetPartBoundsInRadius(hit.Position, RADIUS) do
 							if p:IsDescendantOf(hub) and p.Transparency < 1 and p.Position.Y - p.Size.Y / 2 > h.Position.Y - 6 and p.Position.Y + p.Size.Y / 2 > h.Position.Y + 2.5
 								and (faded[p] or p.LocalTransparencyModifier < 0.01) then want[p] = true end
