@@ -110,6 +110,8 @@ function M.start(E)
 		holder.Visible = not (boss and boss.Visible) and not (chest and chest.Enabled) and not (E.vmHook and (E.vmHook.arOpen or E.vmHook.modalOpen)) and not (E.isBusy and E.isBusy()) -- a minigame owns the top (it hid the Vein Rush quality bar, 2026-11-17); a reward chest has the top of the screen to itself
 		local st = E.getState and E.getState()
 		if st and st.tips and not st.tips.ride and not E.plr:GetAttribute("DevRidden") then holder.Visible = false end -- before the first ride down the pill only adds noise (Gemini full1120r: "storm panic at spawn")
+		local roots = gui:FindFirstChild("RootsRibbon")
+		if roots and roots.Visible then holder.Visible = false end -- one timer at a time: the RETURN TO CAMP ribbon wins over the event pill (Gemini views_full1122e 08: "contradictory countdowns")
 		if not holder.Visible then return end
 		do -- narrow screens: keep the pill clear of the coin strip (at 874 wide it sat on HOME, 2026-11-20)
 			local col = gui:FindFirstChild("LeftColumn")

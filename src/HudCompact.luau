@@ -30,7 +30,7 @@ function M.start(E)
 	home.Name, home.LayoutOrder, home.Visible = "HomeButton", 10, false
 	E.new("UIAspectRatioConstraint", home, { AspectRatio = 2.3, DominantAxis = Enum.DominantAxis.Height })
 	-- directive v13: the jelly home icon sits on the pill, so a cooldown clock reads as "hearthstone recharging", not a second event timer
-	local homeIcon = E.new("ImageLabel", home, { Name = "HomeIcon", Image = E.ICON.home or "", BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.34, 0.7), Position = UDim2.fromScale(0.21, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5 })
+	local homeIcon = E.new("ImageLabel", home, { Name = "Icon", Image = E.ICON.home or "", BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.34, 0.7), Position = UDim2.fromScale(0.21, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 5 }) -- named "Icon": IconPass then adds no second house (tour views full1122e: two houses before HOME)
 	local homeWord = E.text(home, "HOME", UDim2.fromScale(0.56, 0.46), UDim2.fromScale(0.64, 0.47), Vector2.new(0.5, 0.5), E.WHITE, 700, false)
 	homeWord.Name, homeWord.Font = "Word", E.HEAD or homeWord.Font
 	local homeHit = E.new("TextButton", home, { Name = "Hit", Text = "", BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 6 })

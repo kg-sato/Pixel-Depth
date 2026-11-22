@@ -1239,7 +1239,7 @@ function M.play(opt)
 			end
 			vignette.BackgroundTransparency = math.min(1, vignette.BackgroundTransparency + dt * 1.2)
 			if t > 0 then -- the Gloom: falls back slowly, faster on boosts; at 0 it nips you once
-				gloom.gap = math.min(1, gloom.gap + dt * (live > 0 and 0.1 or 0.045) * (K.crew and C.CREW.flare.slowGloom or 1)) -- a crew's Gloom falls back slowly: the flares do that work
+				gloom.gap = math.clamp(gloom.gap + dt * ((live > 0 and 0.1 or 0.045) * (K.crew and C.CREW.flare.slowGloom or 1) - (K.crew and C.CREW.flare.creep or 0)), 0, 1) -- never below 0: the server drops a state packet with a gap outside 0..1 (Codex) -- a crew's Gloom falls back slowly: the flares do that work
 				if gloom.gap <= 0.02 and not gloom.caught then
 					gloom.caught = true
 					big.Text, big.TextTransparency, big.TextColor3 = "THE GLOOM NIPPED YOU!", 0, Color3.fromRGB(190, 150, 240)
@@ -1361,6 +1361,7 @@ function M.play(opt)
 			if u > 0.85 and not card then
 				K.petHide = os.clock() + 15 -- directive v14 (tour grade: the town crew pets stood between the camera and the result card): the crew stays out of shot for the card (PixelClient reads HidePetsUntil)
 				plr:SetAttribute("HidePetsUntil", math.max(plr:GetAttribute("HidePetsUntil") or 0, K.petHide))
+				frame({ Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(10, 4, 18), BackgroundTransparency = 0.5, ZIndex = 5 }) -- a dim scrim, so the card does not float over the bright town (Gemini full1122e 545 s); gone with the gui
 				card = frame({ Size = UDim2.fromScale(0.34, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.1, ZIndex = 6 }) -- obsidian jelly glass (Gemini, loop v10n: "a stark white box after a dark ride")
 				round(card, 0.1)
 				stroke(card, Color3.fromRGB(155, 31, 232), 3)

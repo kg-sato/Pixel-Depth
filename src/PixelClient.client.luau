@@ -527,10 +527,10 @@ for i, t in C.RARITIES do
 	local pct = text(odds, "", UDim2.fromScale(0.3, 0.065), UDim2.fromScale(0.91, y), Vector2.new(1, 0), Color3.fromRGB(236, 224, 255), 700, false)
 	pct.TextXAlignment, pct.Name = Enum.TextXAlignment.Right, "Pct" .. i
 end
-local pityText = text(odds, "", UDim2.fromScale(0.86, 0.055), UDim2.fromScale(0.5, 0.765), Vector2.new(0.5, 0), Color3.fromRGB(63, 156, 132), 500, false)
-text(odds, "AN EGG IS " .. C.EGG_COINS .. " COINS  ·  BUY AT MARIBEL'S STALL [F]", UDim2.fromScale(0.8, 0.045), UDim2.fromScale(0.5, 0.885), Vector2.new(0.5, 0), GOLD, 700, false).Name = "Price" -- the price on the odds card (Gemini full1120r-t asked three times)
+local pityText = text(odds, "", UDim2.fromScale(0.86, 0.06), UDim2.fromScale(0.5, 0.76), Vector2.new(0.5, 0), Color3.fromRGB(150, 240, 210), 600, false) -- brighter and bolder: Gemini full1122e read the footers as dark on dark
+text(odds, "EGG: " .. C.EGG_COINS .. " COINS AT MARIBEL'S STALL", UDim2.fromScale(0.8, 0.055), UDim2.fromScale(0.5, 0.885), Vector2.new(0.5, 0), GOLD, 700, false).Name = "Price" -- the price on the odds card (Gemini full1120r-t asked three times)
 do -- in a block: this script is at its limit of 200 locals
-local luckText = text(odds, "", UDim2.fromScale(0.86, 0.05), UDim2.fromScale(0.5, 0.83), Vector2.new(0.5, 0), GOLD, 600, false)
+local luckText = text(odds, "", UDim2.fromScale(0.86, 0.055), UDim2.fromScale(0.5, 0.826), Vector2.new(0.5, 0), GOLD, 600, false)
 luckText.Name = "Luck"
 local function oddsNow() -- the odds the server rolls from, with the friends luck of the friends who are here (Config.eggOdds)
 	local n = plr:GetAttribute("Friends") or 0

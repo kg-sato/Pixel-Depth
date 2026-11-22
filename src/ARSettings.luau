@@ -316,6 +316,7 @@ function M.start(E)
 		end
 	end)
 
+	local nearHid = {} -- world parts hidden from the head while the panels are up
 	RunService:BindToRenderStep("PixelARSettings", Enum.RenderPriority.Camera.Value + 2, function(dt)
 		if not isOpen then return end
 		local cam = workspace.CurrentCamera
@@ -328,11 +329,19 @@ function M.start(E)
 		for _, d in ch and ch:GetDescendants() or {} do -- the view sits in the player's head: hide the body from its owner
 			if d:IsA("BasePart") or d:IsA("Decal") then d.LocalTransparencyModifier = 1 end
 		end
+		if not closing then -- pets and anything within 5 studs of the head stood in front of the panels (Gemini full1122d 126 s)
+			if (plr:GetAttribute("HidePetsUntil") or 0) < now + 0.3 then plr:SetAttribute("HidePetsUntil", now + 0.6) end
+			for _, p in workspace:GetPartBoundsInRadius(base.Position, 5) do
+				if not p:IsDescendantOf(folder) and not (ch and p:IsDescendantOf(ch)) and p.LocalTransparencyModifier < 0.01 then nearHid[p] = true p.LocalTransparencyModifier = 1 end -- only parts no other fade (RoofFade) owns, so restoring 0 is right
+			end
+		end
 		if closing and blend <= 0 then
 			isOpen, closing = false, false
 			flag.Visible = false
 			hook.arOpen = false
 			if hook.blur then hook.blur.Enabled = true end
+			for p in nearHid do p.LocalTransparencyModifier = 0 end
+			table.clear(nearHid)
 			if not plr:GetAttribute("InCave") then
 				for _, d in ch and ch:GetDescendants() or {} do
 					if d:IsA("BasePart") or d:IsA("Decal") then d.LocalTransparencyModifier = 0 end

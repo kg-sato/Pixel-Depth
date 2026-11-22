@@ -315,7 +315,7 @@ C.GIFTS = { { 300, "coins", 150 }, { 600, "flares", 2 }, { 1200, "gems", 10 }, {
 -- the torch burns `torch` slower; at most `max` friends count.
 -- The Surface Refinery (ServerScriptService.Retention; directive v9): a furnace in town cracks one geode in the background in `secs`
 -- seconds and pays the gems and coins a geode cracked by hand pays (C.CLAY.geodeGems, geodeGold). One job at a time.
-C.REFINE = { secs = 300 }
+C.REFINE = { secs = 300, first = 45 } -- first: a player's first job only (saved count refineN), so the idle option is shown working in the first minutes (four tour grades flagged the 5 min wait)
 C.TETHER = { value = 0.15, reach = 15, torch = 0.25, max = 5, luck = 0.1 }
 -- Friends luck on eggs (the owner, 2026-11-14): each friend in the server makes Epic and better `luck` more likely (5 friends at
 -- most); what those tiers gain, Common loses, so the six still add up to 100. The server rolls from this table and the odds
@@ -434,7 +434,7 @@ C.CREW.stoke = { period = 2, zone = 0.24, late = 0.14, cool = 0.35, hit = 0.25, 
 -- Step 4: the first crew ride of a day pays `gem` gems to each rider (saved: profile field crewDay, the day it was last paid;
 -- the owner's yes, 2026-11-14).
 C.CREW.gem = 1
-C.CREW.flare = { stock = 8, cool = 1.5, push = 0.175, slowGloom = 0.5 }
+C.CREW.flare = { stock = 8, cool = 1.5, push = 0.175, slowGloom = 0.5, creep = 0.04 } -- creep: a crew's Gloom also gains this share a second, so its meter moves and flares matter (Gemini full1122d: frozen at 30 m)
 C.CREW.beads = { n = 8, first = 4, every = 3.5 } -- directive v13: the tail's gold beads hang on this schedule of ride seconds; the server takes each bead id once near its time (Codex 2026-11-20)
 C.CREW.moment = { at = { 0.35, 0.75 }, window = 1.6, late = 0.25, boost = 2, coins = 3 }
 function C.stokeAt(t0, t) -- where the needle is (0 to 1) at server time t in a run that began at t0

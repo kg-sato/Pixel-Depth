@@ -472,7 +472,7 @@ function M.play(opt)
 			for _, k in { "tip", "drop", "brake", "bump", "cave" } do fired[k] = true end
 			dipUntil = now + 0.3
 		end
-		skip.Visible = not opt.full and now - playStart > 0.5 and T < 9.5
+		skip.Visible = not opt.full and now - playStart > 0.5 and T < 9.5 and dip.BackgroundTransparency > 0.5 -- not over a dark dip: a lone SKIP on black read as a broken screen (Gemini full1122e 397 s)
 		for _, g in pg:GetChildren() do -- the game turns its cave HUD on when the server moves us; keep every other layer off
 			if g ~= gui and g:IsA("ScreenGui") and g.Enabled then g.Enabled = false table.insert(guiHidden, g) end
 		end

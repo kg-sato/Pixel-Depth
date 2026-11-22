@@ -37,6 +37,8 @@ function M.start(e)
 			local l = live.label
 			live = nil
 			E.tween(l, 0.3, { GroupTransparency = 1, Position = UDim2.fromScale(0.5, lane() - 0.05) })
+			local edge = l:FindFirstChildOfClass("UIStroke") -- a CanvasGroup's own stroke is drawn outside the group: it stayed as an empty ring (Gemini full1122e 28-32 s)
+			if edge then E.tween(edge, 0.3, { Transparency = 1 }) end
 			for _, w in l:GetChildren() do if w:IsA("TextLabel") then E.tween(w, 0.3, { TextTransparency = 1, TextStrokeTransparency = 1 }) end end
 			task.delay(0.32, function() l:Destroy() end)
 			gap = os.clock() + 0.34 -- the next line waits until this one is gone
@@ -54,6 +56,7 @@ function M.start(e)
 			if not pick then return end
 		end
 		local t = table.remove(queue, pick)
+		if lane() ~= LANE then t.big = false end -- in a boss fight every notice is the small pill: a big one covered the boss (Gemini views_full1122e 06)
 		E.sfx("pop", t.big and 0.9 or 1.1)
 		-- a dark pill behind the words: bare text lay across the first-person hands (Gemini, 2026-11-10)
 		local l = Instance.new("CanvasGroup") -- directive v14: one group fades as a whole (jelly glyphs are images and did not fade)

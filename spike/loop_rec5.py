@@ -72,7 +72,7 @@ mark("the trophy cases, all empty; a Secret hatch fills one and everyone in the 
 S(P + "local g for _,d in workspace.Hub.TrophyHouse:GetChildren() do if d.Name=='TrophyGlass' and d:GetAttribute('Trophy')=='gate1' then g=d end end h.CFrame=g.CFrame*CFrame.new(6.9,0,12) return 1"); time.sleep(1.5)
 C("local g for _,d in workspace.Hub.TrophyHouse:GetChildren() do if d.Name=='TrophyGlass' and d:GetAttribute('Trophy')=='gate1' then g=d end end local cam=workspace.CurrentCamera local t=os.clock() local cur local RS=game:GetService('RunService') "
   "RS:BindToRenderStep('tourcam',2000,function() local u=os.clock()-t if u>11 then RS:UnbindFromRenderStep('tourcam') return end "
-  "local far=u<4 cur=(cur or cam.CFrame):Lerp(CFrame.lookAt((g.CFrame*CFrame.new(far and 6.9 or 14.6,far and 5 or 1.5,far and 20 or 5.5)).Position,(g.CFrame*CFrame.new(far and 6.9 or 18.1,far and -0.6 or 0.1,0)).Position),0.1) cam.CFrame=cur end) return 1"); time.sleep(4)
+  "local far=u<4 cur=(cur or cam.CFrame):Lerp(CFrame.lookAt((g.CFrame*CFrame.new(far and 6.9 or 18.1,far and 5 or 1.6,far and 20 or 6.5)).Position,(g.CFrame*CFrame.new(far and 6.9 or 18.1,far and -0.6 or 0.1,0)).Position),0.1) cam.CFrame=cur end) return 1"); time.sleep(4)
 S(P + "p:SetAttribute('DevMarquee','Ninering') return 1"); time.sleep(8)
 S(P + "p:SetAttribute('DevCodex',12) return 1"); time.sleep(1.5)
 mark("the Codex: found ores and pets, and the luck they give"); key("K", 4); key("K", 0.8)
@@ -97,7 +97,9 @@ C(ZIP + "local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.P
 S("workspace:SetAttribute('DevGold',70) return 1"); mark("Golden Vein Surge: the gold zone is twice as wide")
 mark("minigames (mg_night.py: strike, then rush)")
 S(P + "h.CFrame=cv:FindFirstChild('LiftLanding',true).CFrame+Vector3.new(0,3,0) return 1"); time.sleep(1.5)
-subprocess.run([sys.executable, str(here / "mg_night.py"), "loop_" + name], capture_output=True, text=True, cwd=here)
+r = subprocess.run([sys.executable, str(here / "mg_night.py"), "loop_" + name], capture_output=True, text=True, cwd=here)
+print("mg_night:", r.stdout[-400:].replace("
+", " | "), r.stderr[-300:])  # full1122e: the strike never showed and nothing said why
 time.sleep(2)
 mark("Root Warden: the whole fight by autopilot")
 S(P + "p:SetAttribute('DevEquip',6) local w=cv:FindFirstChild('Warden',true) local o=w.PrimaryPart.Position local t=cv:FindFirstChild('TentSide',true) local away=((o-t.Position)*Vector3.new(1,0,1)).Unit "

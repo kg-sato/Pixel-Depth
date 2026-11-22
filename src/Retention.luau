@@ -51,8 +51,10 @@ local function refinery(plr, prompt)
 		ctx.fx:FireClient(plr, "refine", "paid", gems, C.CLAY.geodeGold)
 	elseif (s.geodes or 0) > 0 then
 		s.geodes -= 1
-		s.refine = os.time() + C.REFINE.secs
-		ctx.fx:FireClient(plr, "refine", "start", C.REFINE.secs)
+		local secs = (s.refineN or 0) == 0 and C.REFINE.first or C.REFINE.secs
+		s.refineN = (s.refineN or 0) + 1
+		s.refine = os.time() + secs
+		ctx.fx:FireClient(plr, "refine", "start", secs)
 	else
 		return ctx.fx:FireClient(plr, "refine", "none")
 	end

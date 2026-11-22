@@ -61,6 +61,19 @@ function M.start(E)
 				if p:IsDescendantOf(hub) and p.Transparency < 1 and p.Position.Y - p.Size.Y / 2 > h.Position.Y + 3
 					and camCF.LookVector:Dot(p.Position - cam) > 0 and (faded[p] or p.LocalTransparencyModifier < 0.01) then want[p] = true end
 			end
+		elseif h and plr:GetAttribute("InCave") then -- tour views full1122e (Camp 1 crew station, 3/10): a rope or beam passing within
+			-- 3 studs of the first-person eye sliced the screen edge to edge; thin long pieces that close fade out of the way
+			local cam = workspace.CurrentCamera.CFrame.Position
+			local camera = workspace.CurrentCamera
+			for _, p in workspace:GetPartBoundsInRadius(cam, 3) do
+				local s = p.Size
+				if p.Transparency < 1 and math.min(s.X, s.Y, s.Z) <= 1.5 and math.max(s.X, s.Y, s.Z) >= 3 and not p:IsDescendantOf(ch) and not p:IsDescendantOf(camera)
+					and (faded[p] or p.LocalTransparencyModifier < 0.01) then
+					local lp = p.CFrame:PointToObjectSpace(cam)
+					local c = Vector3.new(math.clamp(lp.X, -s.X / 2, s.X / 2), math.clamp(lp.Y, -s.Y / 2, s.Y / 2), math.clamp(lp.Z, -s.Z / 2, s.Z / 2))
+					if (lp - c).Magnitude < 2.6 then want[p] = true end -- its own nearest point, not its bounding box (a long diagonal rope's box is huge)
+				end
+			end
 		end
 		for p in faded do
 			if not want[p] then

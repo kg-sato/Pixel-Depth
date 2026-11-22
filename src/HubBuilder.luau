@@ -876,7 +876,7 @@ function Hub.build(parent, origin)
 		vox(cart, "WheelHub", Vector3.new(0.46, 0.34, 0.34), wcf, RIVET, { Shape = Enum.PartType.Cylinder, CanCollide = false, Material = Enum.Material.Metal })
 		vox(cart, "BrakeShoe", Vector3.new(0.34, 0.44, 0.3), base * CFrame.new(w[1], 0.72, w[2] + (w[2] > 0 and -0.68 or 0.68)), PAL.wood[1], { CanCollide = false })
 	end
-	prompt(floor, "Ride the minecart", "Minecart", "enter")
+	prompt(floor, "Ride down", "To the mine", "enter") -- not "Ride the minecart / Minecart" under the step card that says the same (Gemini full1122e town clutter)
 
 	-- a store frame at (x, z) with its front (+Z) turned toward the point (fx, fz); store parts are laid out for a ground top of
 	-- 1.1, so the frame sits at the real ground top (meadow 0.6, rise 2, terrace 4) minus 1.1
@@ -1343,7 +1343,7 @@ function Hub.build(parent, origin)
 		end
 		tvox(g, "SignPost", Vector3.new(0.5, 3.2, 0.5), at(3.8, 2.7, 3.4), "beam", 2)
 		sign(g, "EGGS", CFrame.new(at(3.8, 4.8, 3.4).Position), 3.4, 1.3, PAL.pink[3])
-		prompt(g:FindFirstChild("SignPost"), "Egg odds", "Incubator", "odds") -- the odds moved off the HUD rail (the user, 2026-11-08)
+		prompt(g:FindFirstChild("SignPost"), "Egg odds", "Incubator", "odds").MaxActivationDistance = 7 -- the odds moved off the HUD rail (the user, 2026-11-08); 7 studs: at 14 it popped up beside Buy an egg, two F prompts at once (Gemini full1122e 72 s)
 		prompt(g:FindFirstChild("Base"), "Hatch an egg", "Incubator", "hatch")
 		local maribel = villager("Maribel", at(-4.8, 1.1, 4.6), Color3.fromRGB(140, 227, 192), Color3.fromRGB(201, 184, 242))
 		prompt(maribel:FindFirstChild("Body"), "Buy an egg", "Maribel", "buyEgg") -- playtest 2: starter eggs for coins

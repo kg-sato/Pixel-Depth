@@ -40,7 +40,10 @@ print("hearth held 3 s:", home("home", 0.1, "home", 3.05, "homeEnd"), "| studs f
 again = home("home")
 print("hearth again at once:", again, "| cooldown on:", again.split("no:")[-1].strip().isdigit())  # the seconds left: any number (a slow Studio takes a while between two calls)
 print("ziplines built:", S1("local n,p=0,0 for _,d in workspace.Caves.Ziplines:GetChildren() do if d.Name=='ZipRope' then n+=1 end if d.Name=='ZipHandle' then p+=1 end end return n..' ropes '..p..' handles'"))
-print("zip from camp, grip moved on the client:", zip_(1, 1, 1.0, "true"), "rides")
+z = zip_(1, 1, 1.0, "true")
+if z.startswith("prompt fired 0"):  # the prompt was not shown yet just after the hearth (a slow Studio): try once more
+    time.sleep(2); z = zip_(1, 1, 1.0, "true")
+print("zip from camp, grip moved on the client:", z, "rides")
 S1(AT % 1); time.sleep(1.5)
 S1(P + "p:SetAttribute('GrabbedUntil',1) return 1")
 print("zip while grabbed:", zip_(1, 1, 1.0), "rides")

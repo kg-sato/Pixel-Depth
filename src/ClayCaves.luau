@@ -61,7 +61,12 @@ function M.build(caves)
 	-- rock buttresses, and the roof rises from 70 in a corbelled vault, two tiers each a step narrower, to 86. Every block is
 	-- cut from tilted clay strata (terracotta, ochre, red clay, cream, plum shale), darker overhead. Rimstone slip pools and
 	-- breakdown talus are set along the wall feet at the end of build (decor, no collision).
-	part("Floor", Vector3.new(166, 6, 126), O * CFrame.new(0, -3, 0), Color3.fromRGB(88, 50, 58), ROCK) -- a plum-brown floor under terracotta walls: one colour everywhere read as soup
+	do -- a plum-brown floor under terracotta walls: one colour everywhere read as soup
+		local fl = part("Floor", Vector3.new(166, 6, 126), O * CFrame.new(0, -3, 0), Color3.fromRGB(88, 50, 58), ROCK)
+		local cr = Instance.new("Texture") -- dried-clay crack plates (art/tex/clay_cracks.png; Gemini full1122d: "large expanses of flat floor lack detail"), no parts
+		cr.Name, cr.Texture, cr.Face, cr.StudsPerTileU, cr.StudsPerTileV, cr.Transparency = "ClayCracks", "rbxassetid://126454815185079", Enum.NormalId.Top, 26, 26, 0.15
+		cr.Parent = fl
+	end
 	local OPEN = { { 6, 16, 14 }, { 45, 60, 34 } } -- the north openings: x from, x to, height (the Jar Gallery door, the Fossil Dig breach)
 	local VX, X0, Y0, Z0, NXc, NYc, NZc = 4, -82, -2, -62, 41, 23, 31 -- cells: x -82..82, y -2..90, z -62..62
 	local KEEP = { { -48, -32, -54, 30 }, { 36, 66, -54, 44 }, { -10, 14, 54, 30 }, { 36, 56, 54, 30 }, { -74, -74, -44, 30 } } -- x0, x1, wall z (or x for -74), top: wall-hung things stay on a flat face
@@ -685,10 +690,14 @@ function M.build(caves)
 			for lv = 0, 1 do
 				part("Shelf", Vector3.new(2.2, 0.5, 9), O * CFrame.new(-4.7, 12 + lv * 3.2, sx), BARK, { Material = Enum.Material.Wood, CanCollide = false })
 				for q = 0, 3 do
+					local v = (q * 3 + lv * 5 + i * 7) % 5 -- directive v14 round 5 (Gemini full1122e: "a hall of duplicated props"): one gap a shelf, three belly widths, squat and tall
+					if v == 4 and q > 0 then continue end
 					local h = 1 + ((q + lv + i) % 3) * 0.4
+					local belly = ({ 1.05, 1.45, 1.25, 1.6 })[v + 1] or 1.25
 					local pc = (q + lv) % 2 == 0 and CLAY_L or TEALG:Lerp(CLAY_D, 0.5)
+					if v == 1 then pc = CREAM:Lerp(CLAY_L, 0.4) end
 					local base = O * CFrame.new(-4.7, 12.25 + lv * 3.2, sx - 3.2 + q * 2.1) * CFrame.Angles(0, 0, math.pi / 2)
-					for _, r in { { 0.7, 0.18, 0.09 }, { 1.25, h * 0.55, 0.18 + h * 0.275 }, { 0.65, h * 0.3, 0.18 + h * 0.55 + h * 0.15 }, { 0.95, 0.12, 0.18 + h * 0.85 + 0.06 } } do -- foot, belly, neck, lip (directive v13)
+					for _, r in { { 0.7, 0.18, 0.09 }, { belly, h * 0.55, 0.18 + h * 0.275 }, { 0.65, h * 0.3, 0.18 + h * 0.55 + h * 0.15 }, { 0.95, 0.12, 0.18 + h * 0.85 + 0.06 } } do -- foot, belly, neck, lip (directive v13)
 						local p = part("ShelfPot", Vector3.new(r[2], r[1], r[1]), base * CFrame.new(r[3], 0, 0), pc, DECO)
 						p.Shape = Enum.PartType.Cylinder
 					end

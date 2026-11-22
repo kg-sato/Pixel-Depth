@@ -379,7 +379,7 @@ function M.start(E)
 		end
 		-- the word: its spread, the slam and the shake after it
 		frames += 1
-		if ready and frames > 4 then clock += math.min(dt, 1 / 30) end
+		if ready and frames > 4 then clock += math.min(dt, now > 8 and 0.2 or 1 / 15) end -- never a jump after one slow frame, but a slow join (5 fps) no longer crawls: at 1/30 a tour still showed only "PI" at 13 s (Gemini full1122e)
 		local real = now
 		now = clock -- from here to the end of the letters, time is the logo's own clock
 		if clock > 0 and not sparked then
@@ -501,7 +501,7 @@ function M.start(E)
 		end
 		now = real
 		local loaded = (game:IsLoaded() and E.plr.Character ~= nil and clock > slamAt + 1.7) or (now > 12 and game:IsLoaded()) or now > 30 -- the logo always finishes its landing and its bounces; directive v14: after 12 s the world alone is enough (Codex: never drop the cover on an unloaded world), 30 s at most
-		local goal = math.min(now / cfg.min, loaded and 1 or 0.9)
+		local goal = math.min(now / cfg.min, loaded and 1 or 0.9 + 0.08 * (1 - math.exp(-math.max(0, now - cfg.min) / 5))) -- still creeping while it waits, below the 0.985 finish (Gemini full1122e: "frozen at 90% for 12 s")
 		shown += (goal - shown) * math.min(1, dt * 8)
 		fill.Size = UDim2.fromScale(shown, 1)
 		pct.Text = math.floor(shown * 100 + 0.5) .. "%"

@@ -156,7 +156,7 @@ function M.start(E)
 				local floor = top * CFrame.new(0, -14 - e * dist, 0)
 				cage:PivotTo(floor)
 				local speed = 6 * t * (1 - t) -- 0 at both ends, 1.5 in the middle
-				vcam.CFrame = floor * CFrame.new(0, 4.6 + math.sin(os.clock() * 17) * 0.02 * speed, 0) * CFrame.Angles(0, 0.5 + t * 2.4, 0) * CFrame.Angles(-0.1 - math.sin(t * math.pi) ^ 2 * 0.75, 0, 0) -- a slow look round, and down the shaft in the middle
+				vcam.CFrame = floor * CFrame.new(0, 4.6 + math.sin(os.clock() * 17) * 0.02 * speed, 0) * CFrame.Angles(0, 0.5 + t * 2.4, 0) * CFrame.Angles(-0.42 - math.sin(t * math.pi) ^ 2 * 0.5, 0, 0) -- a slow look round, always partly down the shaft (level, the first frames faced the rock 8 studs away: Gemini full1122e 313 s)
 				if os.clock() >= nextTick then
 					nextTick = os.clock() + 0.5 - speed * 0.2
 					E.sfx("step", 0.4 + speed * 0.12)
