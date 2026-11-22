@@ -261,7 +261,7 @@ function M.start(E)
 			done = true
 		end)
 		local t = os.clock()
-		while not done and os.clock() - t < 6 do task.wait() end -- never hold the screen for more than six seconds
+		while not done and os.clock() - t < 3 do task.wait() end -- never hold the logo back more than three seconds (six left a lone spark on black until 10 s in a slow join, Gemini full1122h 4 s); a late picture swaps in for its plain letter
 		for _, l in letters do -- a picture that did not arrive: the plain letter stands in
 			local face = l.jelly and (bodies[l.jelly] and bodies[l.jelly][1].strips[1] or l.jelly) -- a slime letter draws through its strips: ask a strip
 			if face and not face.IsLoaded then

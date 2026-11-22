@@ -273,12 +273,14 @@ function M.start(E)
 			if word then tagText.Text = word end
 			if dot and dot.Visible and btn.Visible then pop(dot, 1.35, 0.4) end -- the claim dot keeps beating
 		end
-		local busy = E.isBusy and E.isBusy() or plr:GetAttribute("Seated") == true or hook.wheelOpen == true or hook.arOpen == true or (hook.noScrim ~= nil and hook.noScrim()) -- not in a minigame, a cart ride, or under the wheel or the settings
+		local busy = E.isBusy and E.isBusy() or plr:GetAttribute("Seated") == true or hook.wheelOpen == true or hook.arOpen == true or hook.homeHolding == true or (hook.noScrim ~= nil and hook.noScrim()) -- (homeHolding: the hearthstone ring sits mid-screen, wheel_test 2026-11-22) not in a minigame, a cart ride, or under the wheel or the settings
 		for _, m in hook.modals or {} do if m.Visible then busy = true end end
 		local h = E.hrp()
 		local far = pos and h and (pos - h.Position).Magnitude or 0
 		-- a sign near its place, not a pill hanging in the air all through the caves (the user, 2026-11-10)
-		marker.Visible = pos ~= nil and not busy and far <= (tagText.Text == "RIDE UP" and 14 or 60)
+		hook.bossBarUI = hook.bossBarUI or gui:FindFirstChild("BossBar", true) -- found once, not searched every frame
+		local boss = hook.bossBarUI
+		marker.Visible = pos ~= nil and not busy and far <= (tagText.Text == "RIDE UP" and 14 or 60) and not (tagText.Text == "MINE" and far < 9) and not (boss and boss.Visible) -- at the ore or in a boss fight the sign only clutters (views full1122h 06, 07)
 		if not marker.Visible then return end
 		local cam = workspace.CurrentCamera
 		local v = cam:WorldToViewportPoint(pos)

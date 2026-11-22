@@ -526,6 +526,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.opts = s.opts or {}
 	d.gift = s.gift -- the playtime gift ladder of today (ServerScriptService.Retention)
 	d.refine = s.refine or 0 -- when the geode in the refinery is done (0 = empty)
+	d.refineN = s.refineN or 0 -- refinery jobs ever started (the first one is short, C.REFINE.first)
 	d.rare = s.rare or {} -- Mythic and Secret pets ever hatched (the trophy cases)
 	d.codex = s.codex -- ores and pets ever found (Shared.CodexUI)
 	d.charms = s.charms -- the forge's charms bought (C.CHARMS ids)
@@ -2344,6 +2345,7 @@ local function onJoin(plr)
 	s.opts = cleanOpts(d.opts)
 	s.gift = Retention.cleanGift(d.gift)
 	s.refine = Retention.cleanRefine(d.refine)
+	s.refineN = math.clamp(math.floor(tonumber(d.refineN) or 0), 0, 1e6) -- saved since 2026-11-22 (Codex: it reset every session); a save from before has 0, so its next job is short once
 	s.charms = {}
 	for _, ch in C.CHARMS do if type(d.charms) == "table" and d.charms[ch.id] == true then s.charms[ch.id] = true end end
 	for _, ch in C.CHARMS do plr:SetAttribute("Charm_" .. ch.id, C.CHARMS_ON and s.charms[ch.id] == true or nil) end -- the client widens prompts from this

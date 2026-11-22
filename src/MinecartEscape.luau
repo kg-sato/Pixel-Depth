@@ -781,7 +781,7 @@ function M.play(opt)
 	end
 	if K.crew then -- step 3: flares at the Gloom and crew moments, on every rider's screen
 		local F, Mo = C.CREW.flare, C.CREW.moment
-		local call = label(gui, "", UDim2.fromScale(0.5, 0.07), UDim2.fromScale(0.5, 0.21), WHITE, 6) -- above the rails' vanishing point (tour views full1122f 11: "CREW MOVE! over the track")
+		local call = label(gui, "", UDim2.fromScale(0.42, 0.065), UDim2.fromScale(0.5, 0.275), WHITE, 6) -- above the rails' vanishing point (tour views full1122f 11: "CREW MOVE! over the track")
 		local callStroke = stroke(call, Color3.fromRGB(60, 24, 90), 3)
 		call.TextTransparency = 1
 		if callStroke then callStroke.Transparency = 1 end

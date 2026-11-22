@@ -69,7 +69,7 @@ C("local o=game.Players.LocalPlayer.PlayerGui:FindFirstChild('Odds',true) o.Visi
 C("game.Players.LocalPlayer.PlayerGui:FindFirstChild('Odds',true).Visible=false return 1"); time.sleep(1)
 S(P + "p:SetAttribute('DevFriends',nil) return 1")
 mark("the trophy cases, all empty; a Secret hatch fills one and everyone in the server is told")
-S(P + "local g for _,d in workspace.Hub.TrophyHouse:GetChildren() do if d.Name=='TrophyGlass' and d:GetAttribute('Trophy')=='gate1' then g=d end end h.CFrame=g.CFrame*CFrame.new(6.9,0,12) return 1"); time.sleep(1.5)
+S(P + "local g for _,d in workspace.Hub.TrophyHouse:GetChildren() do if d.Name=='TrophyGlass' and d:GetAttribute('Trophy')=='gate1' then g=d end end h.CFrame=g.CFrame*CFrame.new(14,0,9) return 1"); time.sleep(1.5)  # full1122h: standing at (6.9, 0, 12) the miner's back filled the trophy shot
 C("local g for _,d in workspace.Hub.TrophyHouse:GetChildren() do if d.Name=='TrophyGlass' and d:GetAttribute('Trophy')=='gate1' then g=d end end local cam=workspace.CurrentCamera local t=os.clock() local cur local RS=game:GetService('RunService') "
   "RS:BindToRenderStep('tourcam',2000,function() local u=os.clock()-t if u>11 then RS:UnbindFromRenderStep('tourcam') return end "
   "local far=true cur=(cur or cam.CFrame):Lerp(CFrame.lookAt((g.CFrame*CFrame.new(far and 6.9 or 18.1,far and 5 or 1.6,far and 20 or 6.5)).Position,(g.CFrame*CFrame.new(far and 6.9 or 18.1,far and -0.6 or 0.1,0)).Position),0.1) cam.CFrame=cur end) return 1"); time.sleep(4)

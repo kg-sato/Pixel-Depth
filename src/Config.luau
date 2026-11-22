@@ -263,7 +263,7 @@ function C.oreName(key) -- "1.2" -> "Ashcoal"
 	local o = layer and layer[4][tonumber(i)]
 	return o and o[1] or key
 end
-C.SAVE_TEMPLATE = { opts = {}, gift = {}, refine = 0, crewDay = 0, rare = {}, codex = { ore = {}, pet = {} }, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, escapes = 0, soul = { shards = 0, nodes = {} }, chestDay = 0, streak = 0 }
+C.SAVE_TEMPLATE = { opts = {}, gift = {}, refine = 0, refineN = 0, crewDay = 0, rare = {}, codex = { ore = {}, pet = {} }, gold = 0, gems = 0, lv = {}, equip = 0, tips = {}, ores = {}, pick = 1, pack = 1, pets = {}, best = 0, hatched = 0, pity = 0, step = 1, eggs = 0, lastSeen = 0, deepest = 0, escapes = 0, soul = { shards = 0, nodes = {} }, chestDay = 0, streak = 0 }
 
 -- Layer hazards. Layer 2, Titan's Stir: after you dig, the block above may shake loose and drop one row.
 -- Standing under it stuns you briefly and spills part of the bag (no damage, kid friendly).
