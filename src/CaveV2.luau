@@ -89,7 +89,7 @@ function M.build(parent, origin, seed, opt)
 							local w = Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V) - p
 							local h = w:Dot(side)
 							local d = w.Y
-							if d >= -ryi * floorK and (h / rxi) ^ 2 + (d / ryi) ^ 2 <= 1 and not (kh and d > ryi * 0.86) then
+							if d >= -ryi * floorK and (h / rxi) ^ 2 + (d / ryi) ^ 2 <= 1 then
 								if get(x, y, z) == 0 then set(x, y, z, fill) end
 							elseif kh and d < -ryi * floorK and d >= -ryi * floorK - V * 1.05 and math.abs(h - math.sin((p.X + p.Z) * 0.045 + wob) * rxi * 0.22) <= math.max(4.6, rxi * 0.42) and not inCamp(x, z) then
 								if get(x, y, z) == 0 then set(x, y, z, fill) trench[idx(x, y, z)] = true end -- the slot: at least 9 studs wide, one voxel under the benches
@@ -478,7 +478,7 @@ function M.build(parent, origin, seed, opt)
 	-- STRATA (directive v14, Recipe B): tilted, domain-warped rock beds 8 studs thick sweep across the walls instead of a random
 	-- colour per block; band 4 is a hard limestone bed that juts out one voxel where it meets open air high on a wall
 	local function strata(lx, ly, lz)
-		return math.floor((ly + 0.26 * lx - 0.12 * lz + 7 * math.noise(lx / 48, lz / 48, wob * 0.5 + 0.3)) / 8) % 5 -- about 15 degrees of dip (Gemini v14p2: flat stripes)
+		return math.floor((ly + 0.3 * lx + 0.22 * lz + 7 * math.noise(lx / 56, lz / 56, wob * 0.5 + 0.3)) / 12) % 5 -- 12-stud beds dipping on both axes, about 20 degrees (Gemini v14p2_r3: horizontal stripes, checkerboard)
 	end
 	do
 		local add = {}
@@ -1066,13 +1066,12 @@ function M.build(parent, origin, seed, opt)
 							w.CFrame = CFrame.lookAt(c, c + look)
 							w.Color, w.Material = colorOf(100 + TI[themeAt(Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V))] * 10 + 1):Lerp(({ Color3.fromRGB(176, 136, 140), Color3.fromRGB(196, 150, 120), Color3.fromRGB(160, 170, 214), Color3.fromRGB(120, 92, 86) })[L], 0.28), Enum.Material.Slate -- the step is floor: the floor's own colour (matte, directive v14)
 							if VARIANT then w.MaterialVariant = VARIANT end
+							w.Transparency, w.CastShadow = 1, false -- directive v14 (Gemini v14p2_r4: smooth wedges): the slope is walked but not seen
 							w.Parent = group("Ramps")
 							nRamp += 1
-							if hash(x, z, y + 31) > 0.7 then -- directive v14 (Recipe C3): a pale calcite lip crisps the step's top edge (no collision)
-								local lp = c + Vector3.new(dd[1] * (V / 2 + 0.55), V / 2 + 0.25, dd[2] * (V / 2 + 0.55))
-								part("Ramps", "StepLip", Vector3.new(V, 0.5, 1.1), CFrame.lookAt(lp, lp + Vector3.new(dd[1], 0, dd[2])), w.Color:Lerp(({ PAL.flow, Color3.fromRGB(214, 170, 140), Color3.fromRGB(200, 214, 255), Color3.fromRGB(120, 90, 84) })[L], 0.55), { CanCollide = false, CanQuery = false, CastShadow = false })
-								nRamp += 1
-							end
+							local sc = c + Vector3.new(dd[1] * V / 4, -V / 4, dd[2] * V / 4) -- a half-height step against the rise: two 2-stud stairs
+							part("Ramps", "RampStep", Vector3.new(V, V / 2, V / 2), CFrame.lookAt(sc, sc + Vector3.new(dd[1], 0, dd[2])), w.Color, { CanCollide = false, CanQuery = false })
+							nRamp += 1
 							break
 						end
 					end
@@ -1143,18 +1142,12 @@ function M.build(parent, origin, seed, opt)
 							dl.Color, dl.Range, dl.Brightness, dl.Shadows = Color3.fromRGB(147, 197, 253), 6, 0.25, false
 							dl.Parent = dr
 						end
-					elseif room >= 4 and hsh > 0.74 and hsh < 0.78 then -- glowing moss cushion
-						local m = deco("CeilMoss", Vector3.new(1.2, 0.3, 1), CFrame.new(top - Vector3.new(0, 0.12, 0)) * CFrame.Angles(0, hsh * 7, 0), GLOW:Lerp(PAL.moss[3], 0.25), { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
-						for q = 1, 3 do -- an irregular patch pressed to the rock, with a thin drip hanging from it
-							local a = q * 2.1 + hsh * 6
-							deco("CeilMoss", Vector3.new(1 + q * 0.3, 0.3, 0.9 + q * 0.2), CFrame.new(top + Vector3.new(math.cos(a) * 1.6, -0.15, math.sin(a) * 1.6)), GLOW:Lerp(PAL.moss[3], 0.4), { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
-						end
-						deco("CeilMossDrip", Vector3.new(0.2, 1.2, 0.2), CFrame.new(top + Vector3.new(0.5, -0.8, 0.3)), GLOW, { Material = Enum.Material.Neon, CanCollide = false, CanQuery = false, CastShadow = false })
-						if hash(z, x, 9) > 0.6 then
-							local l = Instance.new("PointLight")
-							l.Color, l.Range, l.Brightness, l.Shadows = GLOW, 18, 0.9, false
-							l.Parent = m
-						end
+					elseif room >= 4 and hsh > 0.74 and hsh < 0.76 then -- a dim glow seeping from a crack in the roof (Gemini v14p2_r3: moss tufts
+						-- and drips read as ceiling fixtures and pendant lamps): only the light, from a hidden point in the rock
+						local m = deco("RoofGlow", Vector3.new(0.4, 0.4, 0.4), CFrame.new(top + Vector3.new(0, 0.3, 0)), GLOW, { Transparency = 1, CanCollide = false, CanQuery = false, CastShadow = false })
+						local l = Instance.new("PointLight")
+						l.Color, l.Range, l.Brightness, l.Shadows = GLOW, 16, 0.7, false
+						l.Parent = m
 					elseif L == 1 and room >= 5 and hsh > 0.7 and hsh < 0.74 and (x - CX) * V < 60 then -- a hanging root (layer 1: the tree is above)
 						local at = top
 						local thick = 1.4
@@ -1193,7 +1186,7 @@ function M.build(parent, origin, seed, opt)
 						local ll = Instance.new("PointLight")
 						ll.Color, ll.Range, ll.Brightness, ll.Shadows = GLOW, 8, 0.35, false
 						ll.Parent = lf
-					elseif head >= 2 and skirtD and hsh > 0.86 then -- directive v14 (Recipe A3/F): breakdown talus, angular blocks stacked against the wall's foot
+					elseif head >= 2 and skirtD and hsh > 0.9 then -- directive v14 (Recipe A3/F): breakdown talus, angular blocks stacked against the wall's foot
 						local into = Vector3.new(skirtD[1], 0, skirtD[2])
 						for q = 0, 1 + math.floor(hash(x, z, 71) * 2) - 1 do
 							local s = (2.6 + hash(x, z, 72 + q) * 1.6) * (1 - q * 0.3)
@@ -1353,6 +1346,25 @@ function M.build(parent, origin, seed, opt)
 			rope.Name, rope.Anchored, rope.Size, rope.Color, rope.Material = "RopeLadder", true, Vector3.new(2, h, 2), Color3.fromRGB(196, 160, 110), Enum.Material.Fabric
 			rope.CFrame = CFrame.new(bottom + Vector3.new(0, h / 2, 0))
 			rope.Parent = group("Moss")
+		end
+	end
+	if L >= 3 and not opt.camp and not opt.hall then -- directive v14 phase 4: CREW RIDE at Camps 3 and 4, a parked crew cart on a
+		-- siding by the camp (the Kiln Camp's look); PixelServer signs every "CampCartBody" and its V prompt boards the shared crew
+		local f = floorUnder(Vector3.new(14, 0, 9))
+		if f then
+			local cart = CFrame.new(f) * CFrame.Angles(0, math.pi / 2, 0)
+			local IRONC, OAKC = Color3.fromRGB(62, 56, 78), Color3.fromRGB(128, 86, 54)
+			local MET, WOOD = { Material = Enum.Material.Metal, MaterialVariant = "", CanCollide = false }, { Material = Enum.Material.Wood, MaterialVariant = "", CanCollide = false }
+			for _, x in { -0.9, 0.9 } do part("Camp", "CampRail", Vector3.new(0.25, 0.2, 7.5), cart * CFrame.new(x, 0.1, 0), IRONC, MET) end
+			for z = -3, 3, 1.5 do part("Camp", "CampSleeper", Vector3.new(2.8, 0.14, 0.6), cart * CFrame.new(0, 0.03, z), PAL.barkDark, WOOD) end
+			for _, w in { { -1.2, -1.1 }, { 1.2, -1.1 }, { -1.2, 1.1 }, { 1.2, 1.1 } } do
+				part("Camp", "CampWheel", Vector3.new(0.3, 0.9, 0.9), cart * CFrame.new(w[1], 0.62, w[2]), IRONC, { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Metal, MaterialVariant = "", CanCollide = false })
+			end
+			part("Camp", "CampCartBody", Vector3.new(3, 1.8, 3.6), cart * CFrame.new(0, 1.97, 0), OAKC, { Material = Enum.Material.WoodPlanks, MaterialVariant = "" })
+			part("Camp", "CampCartRim", Vector3.new(3.2, 0.25, 3.8), cart * CFrame.new(0, 2.93, 0), IRONC, MET)
+			part("Camp", "CampCartOre", Vector3.new(2.2, 0.5, 2.6), cart * CFrame.new(0, 2.9, 0), GLOW:Lerp(Color3.new(1, 1, 1), 0.3), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false })
+			for _, z in { -3.9, 3.9 } do part("Camp", "CampBuffer", Vector3.new(2.6, 0.9, 0.5), cart * CFrame.new(0, 0.75, z), PAL.barkDark, { Material = Enum.Material.Wood, MaterialVariant = "" }) end
+			nDecor += 17
 		end
 	end
 	-- FIREFLIES over the cathedral, the canyon and the glow pool: slow warm specks (plan: critters)

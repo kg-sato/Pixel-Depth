@@ -43,89 +43,98 @@ function M.build(caves)
 		pr.Parent = p
 		return pr
 	end
+	local roofAt = function() return 71 end -- set once the shell is built (directive v14: the roof is a vault now)
 	local function lamp(pos, b) -- a hanging clay lamp: a warm wick in a pot, well over head height
 		part("LampPot", Vector3.new(1.6, 1.2, 1.6), O * CFrame.new(pos), CLAY_D, DECO)
 		local wick = part("LampWick", Vector3.new(0.5, 0.5, 0.5), O * CFrame.new(pos + Vector3.new(0, 0.75, 0)), AMBER, { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
-		part("LampChain", Vector3.new(0.2, 69 - pos.Y, 0.2), O * CFrame.new(pos.X, (71 + pos.Y) / 2, pos.Z), PLUM, DECO) -- from the wick up to the roof
+		local top = roofAt(pos.X, pos.Z) + 1
+		part("LampChain", Vector3.new(0.2, top - 2 - pos.Y, 0.2), O * CFrame.new(pos.X, (top + pos.Y) / 2, pos.Z), PLUM, DECO) -- from the wick up to the roof
 		local l = Instance.new("PointLight")
 		l.Color, l.Range, l.Brightness, l.Shadows = AMBER:Lerp(CREAM, 0.4), 60, b or 0.9, false
 		l.Parent = wick
 		l:SetAttribute("Fixture", true)
 	end
 
-	-- the shell: floor, four walls, roof (the hall is 150 x 110, 70 high; x runs east, the arrival ledge is at the west end)
+	-- the shell (directive v14 phase 3; Gemini and the 2026-11-21 audit: "a flat 166 x 126 x 70 cuboid with house moulding"): a
+	-- cavern of 4-stud voxels round the same playable floor (x -74..74, z -54..54, flat at y 0). Below 26 studs the walls keep
+	-- the old planes, so every prop, prompt and echo wall along them keeps its place; above that they recede into alcoves between
+	-- rock buttresses, and the roof rises from 70 in a corbelled vault, two tiers each a step narrower, to 86. Every block is
+	-- cut from tilted clay strata (terracotta, ochre, red clay, cream, plum shale), darker overhead. Rimstone slip pools and
+	-- breakdown talus are set along the wall feet at the end of build (decor, no collision).
 	part("Floor", Vector3.new(166, 6, 126), O * CFrame.new(0, -3, 0), Color3.fromRGB(88, 50, 58), ROCK) -- a plum-brown floor under terracotta walls: one colour everywhere read as soup
-	part("Roof", Vector3.new(164, 6, 124), O * CFrame.new(0, 73, 0), PLUM, ROCK)
-	part("Wall", Vector3.new(158, 76, 6), O * CFrame.new(0, 35, 57), CLAY, ROCK)
-	-- the north wall has two openings since 2026-11-13 (Next Systems Plan, phase D): a door to the Jar Gallery and a tall
-	-- breach to the Fossil Dig (both rooms are built at the end of this function)
-	local OPEN = { { 6, 16, 14 }, { 45, 60, 34 } } -- x from, x to, height
-	local SOLID = { { -79, 6 }, { 16, 45 }, { 60, 79 } }
-	for _, s in SOLID do part("Wall", Vector3.new(s[2] - s[1], 76, 6), O * CFrame.new((s[1] + s[2]) / 2, 35, -57), CLAY, ROCK) end
-	for _, o in OPEN do part("Wall", Vector3.new(o[2] - o[1], 73 - o[3], 6), O * CFrame.new((o[1] + o[2]) / 2, (73 + o[3]) / 2, -57), CLAY_D, ROCK) end
-	do -- rock strata across the long walls: ochre, slate and red clay bands, so the hall is not one mud colour (Gemini full1120u)
-		local BANDS = { { 22, 2.4, Color3.fromRGB(176, 120, 72) }, { 31, 1.2, Color3.fromRGB(70, 52, 72) }, { 44, 3, Color3.fromRGB(150, 70, 50) }, { 58, 1.6, Color3.fromRGB(176, 120, 72) } }
-		for _, b in BANDS do
-			part("Strata", Vector3.new(156, b[2], 0.3), O * CFrame.new(0, b[1], 53.8), b[3], ROCK) -- 0.05 in front of the wall's face
-			for _, seg in SOLID do part("Strata", Vector3.new(seg[2] - seg[1] - 0.4, b[2], 0.3), O * CFrame.new((seg[1] + seg[2]) / 2, b[1], -53.8), b[3], ROCK) end
-			for _, o in OPEN do if b[1] > o[3] + 1 then part("Strata", Vector3.new(o[2] - o[1] - 0.4, b[2], 0.3), O * CFrame.new((o[1] + o[2]) / 2, b[1], -53.8), b[3], ROCK) end end
-		end
-	end
-	if C.CAVE_V2_L2 then -- Cave v2 layer 2 round the hall (2026-11-19): a door in each side wall, z -9..9, 16 high, onto the v2 galleries
-		for _, x in { -77, 77 } do
-			part("Wall", Vector3.new(6, 76, 46), O * CFrame.new(x, 35, -32), CLAY, ROCK)
-			part("Wall", Vector3.new(6, 76, 46), O * CFrame.new(x, 35, 32), CLAY, ROCK)
-			part("Wall", Vector3.new(6, 57, 18), O * CFrame.new(x, 44.5, 0), CLAY_D, ROCK) -- the lintel over the door
-		end
-	else
-		for _, x in { -77, 77 } do part("Wall", Vector3.new(6, 76, 110), O * CFrame.new(x, 35, 0), CLAY, ROCK) end
-	end
-	part("Dado", Vector3.new(146, 1.4, 0.5), O * CFrame.new(0, 9, 53.8), CREAM:Lerp(CLAY, 0.35), ROCK) -- a pale painted band round the hall at head height
-	for _, s in SOLID do
-		local a, b = math.max(s[1] + 0.06, -73), math.min(s[2] - 0.06, 73) -- 0.06 back from an opening's edge: flush with the wall's cut face it z-fights
-		local da, db = a == -73 and a or a + 0.2, b == 73 and b or b - 0.2 -- the band ends a little before the wainscot does: equal ends z-fight
-		part("Dado", Vector3.new(db - da, 1.4, 0.5), O * CFrame.new((da + db) / 2, 9, -53.8), CREAM:Lerp(CLAY, 0.35), ROCK)
-		part("Wainscot", Vector3.new(b - a + (a == -73 and 0.5 or 0) + (b == 73 and 0.5 or 0), 8.7, 0.54), O * CFrame.new((a + b) / 2 + (a == -73 and -0.25 or 0) + (b == 73 and 0.25 or 0), 4.15, -53.93), CREAM:Lerp(CLAY, 0.5), ROCK)
-	end
-	for _, x in { -73.8, 73.8 } do
-		if C.CAVE_V2_L2 then -- the side doors cut the band (z -9..9)
-			for _, zz in { { -53, -9.2 }, { 9.2, 53 } } do part("Dado", Vector3.new(0.5, 1.4, zz[2] - zz[1]), O * CFrame.new(x, 9, (zz[1] + zz[2]) / 2), CREAM:Lerp(CLAY, 0.35), ROCK) end
-		else
-			part("Dado", Vector3.new(0.5, 1.4, 106), O * CFrame.new(x, 9, 0), CREAM:Lerp(CLAY, 0.35), ROCK)
-		end
-	end
-	-- a pale plastered wainscot below the band: at eye level the walls now part from the floor (the hall graded 4.5 as one-colour soup)
-	part("Wainscot", Vector3.new(147, 8.7, 0.54), O * CFrame.new(0, 4.15, 53.93), CREAM:Lerp(CLAY, 0.5), ROCK)
-	for _, x in { -73.93, 73.93 } do
-		if C.CAVE_V2_L2 then
-			for _, zz in { { -53.3, -9.3 }, { 9.3, 53.3 } } do part("Wainscot", Vector3.new(0.54, 8.7, zz[2] - zz[1]), O * CFrame.new(x, 4.15, (zz[1] + zz[2]) / 2), CREAM:Lerp(CLAY, 0.5), ROCK) end
-		else
-			part("Wainscot", Vector3.new(0.54, 8.7, 106.6), O * CFrame.new(x, 4.15, 0), CREAM:Lerp(CLAY, 0.5), ROCK)
-		end
-	end
-	for i = 1, 26 do -- clay strata: long ledges of a lighter band stepping round the walls, so the box reads as dug rock
-		local side, y = i % 4, 6 + rng:NextNumber() * 52
-		local len, deep = rng:NextNumber(18, 44), rng:NextNumber(1.2, 3)
-		if side < 2 then
-			local z = (side == 0 and -1 or 1) * (54 - deep / 2 + 0.05 + i * 0.05) -- each ledge's hidden back face at its own depth in the wall
-			local h, x = rng:NextNumber(2, 5), rng:NextNumber(-55, 55)
-			local clear = true -- no ledge across an opening of the north wall
-			for _, o in OPEN do
-				if side == 0 and x - len / 2 < o[2] + 1 and x + len / 2 > o[1] - 1 and y - h / 2 < o[3] + 1 then clear = false end
+	local OPEN = { { 6, 16, 14 }, { 45, 60, 34 } } -- the north openings: x from, x to, height (the Jar Gallery door, the Fossil Dig breach)
+	local VX, X0, Y0, Z0, NXc, NYc, NZc = 4, -82, -2, -62, 41, 23, 31 -- cells: x -82..82, y -2..90, z -62..62
+	local KEEP = { { -48, -32, -54, 30 }, { 36, 66, -54, 44 }, { -10, 14, 54, 30 }, { 36, 56, 54, 30 }, { -74, -74, -44, 30 } } -- x0, x1, wall z (or x for -74), top: wall-hung things stay on a flat face
+	local function open(cx, cy, cz)
+		if cy < 0 or cy >= 86 then return false end
+		local ax, az = math.abs(cx), math.abs(cz)
+		if ax < 74 and az < 54 and cy < 70 then return true end
+		if C.CAVE_V2_L2 and ax < 82 and az < 10 and cy < 18 then return true end -- the side doors onto the Cave v2 galleries
+		if cz < -50 then for _, o in OPEN do if cx > o[1] and cx < o[2] + 2 and cy < o[3] then return true end end end
+		if cy > 26 and cy < 70 and ((az >= 54 and az < 58 and ax < 74) or (ax >= 74 and ax < 78 and az < 54)) then -- alcoves between buttresses
+			for _, k in KEEP do
+				if cy < k[4] and ((k[1] == -74 and ax >= 74 and cx < 0 and math.abs(cz - k[3]) < 10) or (k[1] ~= -74 and az >= 54 and (cz < 0) == (k[3] < 0) and cx > k[1] and cx < k[2])) then return false end
 			end
-			if clear then part("Strata", Vector3.new(len, h, deep), O * CFrame.new(x, y, z), i % 3 == 0 and CLAY_L or CLAY_D, ROCK) end
-		else
-			local x = (side == 2 and -1 or 1) * (74 - deep / 2 + 0.05 + i * 0.05)
-			local sh, sz = rng:NextNumber(2, 5), rng:NextNumber(-36, 36)
-			if not (C.CAVE_V2_L2 and y - sh / 2 < 18 and math.abs(sz) < len / 2 + 10) then -- no ledge across a side door
-				part("Strata", Vector3.new(deep, sh, len), O * CFrame.new(x, y, sz), i % 3 == 0 and CLAY_L or CLAY_D, ROCK)
-			end
+			return math.noise((ax >= 74 and cz or cx) / 22, cy / 26, ax >= 74 and 5.3 or 2.1) > -0.08
 		end
+		if cy >= 70 then -- the corbelled vault, its tiers stepping off toward the kiln (east) a little
+			local t = math.floor((cy - 70) / 8) + 1
+			local w = math.noise(cx / 30, cz / 30, t + 0.5) * 6
+			return math.abs(cx - t * 6) < 74 - t * 13 + w and az < 54 - t * 11 + w
+		end
+		return false
 	end
-	for i = 0, 29 do -- floor slabs of baked clay on a loose grid (one per 24 x 20 cell, so no two overlap), sunk 0.05 into the floor
-		local s, k = rng:NextNumber(6, 10), i % 4
-		part("Slab", Vector3.new(s, 0.24 + k * 0.12, s * rng:NextNumber(0.8, 1.1)), O * CFrame.new(-60 + (i % 6) * 24 + rng:NextNumber(-3, 3), 0.07 + k * 0.06, -40 + (i // 6) * 20 + rng:NextNumber(-2, 2)) * CFrame.Angles(0, rng:NextNumber(0, 3), 0), i % 2 == 0 and CLAY or CLAY_D:Lerp(CLAY, 0.5), { Material = Enum.Material.Sandstone, CanCollide = false })
+	local cell = {}
+	for i = 0, NXc - 1 do for j = 0, NYc - 1 do for k = 0, NZc - 1 do
+		cell[(i * NYc + j) * NZc + k] = open(X0 + VX * i + 2, Y0 + VX * j + 2, Z0 + VX * k + 2)
+	end end end
+	local function isOpen(i, j, k)
+		if i < 0 or j < 0 or k < 0 or i >= NXc or j >= NYc or k >= NZc then return false end
+		return cell[(i * NYc + j) * NZc + k]
 	end
+	local SB = { CLAY, Color3.fromRGB(176, 120, 72), Color3.fromRGB(150, 70, 50), CREAM:Lerp(CLAY, 0.45), Color3.fromRGB(86, 58, 80) } -- terracotta, ochre, red clay, cream, plum shale
+	local function band(cx, cy, cz) return math.floor((cy + 0.24 * cx - 0.1 * cz + 5 * math.noise(cx / 40, cz / 40, 1.3)) / 10) % 5 + 1 end
+	local ck = {}
+	for i = 0, NXc - 1 do for j = 0, NYc - 1 do for k = 0, NZc - 1 do
+		local cx, cy, cz = X0 + VX * i + 2, Y0 + VX * j + 2, Z0 + VX * k + 2
+		if cy >= 0 and not isOpen(i, j, k) then
+			local touch = false
+			for dx = -1, 1 do for dy = -1, 1 do for dz = -1, 1 do if not touch and isOpen(i + dx, j + dy, k + dz) then touch = true end end end end
+			if not touch and k == 0 and cy < 54 and ((cx > -8 and cx < 30) or (cx > 32 and cx < 76)) then touch = true end -- the back of the north wall, seen from the gallery rooms behind it
+			if touch then ck[(i * NYc + j) * NZc + k] = isOpen(i, j - 1, k) and 10 + (cy >= 70 and 5 or band(cx, cy, cz)) or band(cx, cy, cz) end -- the vault's undersides share one shadowed shale tone, so they merge into big slabs (part budget)
+		end
+	end end end
+	local used, nShell = {}, 0
+	local function cid(i, j, k) return (i * NYc + j) * NZc + k end
+	for j = 0, NYc - 1 do for i = 0, NXc - 1 do for k = 0, NZc - 1 do
+		local kk = ck[cid(i, j, k)]
+		if kk and not used[cid(i, j, k)] then
+			local w, d, h = 1, 1, 1
+			while i + w < NXc and ck[cid(i + w, j, k)] == kk and not used[cid(i + w, j, k)] and w < 10 do w += 1 end
+			local ok = true
+			while ok and k + d < NZc and d < 10 do
+				for q = 0, w - 1 do local c2 = cid(i + q, j, k + d) if ck[c2] ~= kk or used[c2] then ok = false break end end
+				if ok then d += 1 end
+			end
+			ok = true
+			while ok and j + h < NYc and h < 8 do
+				for q = 0, w - 1 do for r = 0, d - 1 do local c2 = cid(i + q, j + h, k + r) if ck[c2] ~= kk or used[c2] then ok = false end end end
+				if ok then h += 1 end
+			end
+			for q = 0, w - 1 do for r = 0, d - 1 do for l = 0, h - 1 do used[cid(i + q, j + l, k + r)] = true end end end
+			local col = SB[kk % 10]
+			if kk >= 10 then col = col:Lerp(PLUM, 0.3) end -- the vault overhead sits in shadow
+			part("CaveRock", Vector3.new(w * VX, h * VX, d * VX), O * CFrame.new(X0 + VX * (i + w / 2), Y0 + VX * (j + h / 2), Z0 + VX * (k + d / 2)), col, ROCK)
+			nShell += 1
+		end
+	end end end
+	folder:SetAttribute("ShellParts", nShell)
+	roofAt = function(x, z) -- the underside of the rock over a point of the floor
+		local i, k = math.floor((x - X0) / VX), math.floor((z - Z0) / VX)
+		for j = math.floor((70 - Y0) / VX), NYc - 1 do if not isOpen(i, j, k) then return Y0 + VX * j end end
+		return 86
+	end
+	-- (the floor slabs went in directive v14: Gemini read the thin plates as debris glitches)
 
 	-- dressing, so the hall reads as a dug and lived-in cavern and not a box (Gemini, 2026-11-10: flat walls, props not grounded):
 	-- clay columns along both long walls with timber beams across the roof between them, a tiled path from the arrival ledge
@@ -133,13 +142,25 @@ function M.build(caves)
 	-- column places are picked by hand per wall, clear of the ore, fossils, echo walls, shelves, crystals and the Titan's hand
 	for z, xs in { [-51] = { -66, -21, 1, 64.5 }, [51] = { -64, -38, -15, 32, 60 } } do
 		for k, x in xs do
-			part("Column", Vector3.new(5, 70.2, 5), O * CFrame.new(x, 34.9, z), k % 2 == 0 and CLAY or CLAY_D, ROCK)
-			part("ColumnFoot", Vector3.new(7, 2.6, 7), O * CFrame.new(x, 1.2, z), CREAM:Lerp(CLAY, 0.28), ROCK) -- pale feet and caps: the hall graded as one-colour soup three times
-			part("ColumnCap", Vector3.new(7, 2, 7), O * CFrame.new(x, 66.4, z), CREAM:Lerp(CLAY, 0.28), ROCK)
-			part("ColumnBand", Vector3.new(5.5, 1.2, 5.5), O * CFrame.new(x, 12 + (k % 3) * 2, z), CREAM:Lerp(CLAY, 0.4), ROCK)
+			local turn = CFrame.Angles(0, (k % 2) * 0.785 + 0.2, 0) -- directive v14: a flowstone buttress flared at floor and roof, not a plastered pillar
+			part("Column", Vector3.new(5.2, 70.2, 5.2), O * CFrame.new(x, 34.9, z) * turn, k % 2 == 0 and CLAY or CLAY_D, ROCK)
+			for q, e in { { 8.6, 1.4, 2.8 }, { 7, 4.2, 2.8 }, { 8.6, 68.6, 2.8 }, { 7, 65.8, 2.8 } } do
+				part("ColumnFoot", Vector3.new(e[1], e[3], e[1]), O * CFrame.new(x, e[2], z) * turn * CFrame.Angles(0, q % 2 == 0 and 0.785 or 0, 0), (q % 2 == 0) and Color3.fromRGB(176, 120, 72) or CLAY_D, ROCK)
+			end
 		end
 	end
-	for k = 0, 5 do part("RoofBeam", Vector3.new(2.4, 2.4, 98), O * CFrame.new(-62 + k * 24.5, 67.6, 0), BARK, { Material = Enum.Material.Wood, CanCollide = false }) end
+	do -- directive v14: the vault's crown, a cluster of warm clay-glass crystals with a light, so the top of the vault is not a black hole
+		local crown = roofAt(6, 0)
+		for q = 0, 4 do
+			local a = q * 1.26
+			local cr = part("CrownCrystal", Vector3.new(1.6, 5 - q % 2 * 1.5, 1.6), O * CFrame.new(6 + math.cos(a) * 3, crown - 2.2, math.sin(a) * 3) * CFrame.Angles(math.pi + math.cos(a) * 0.4, a, math.sin(a) * 0.4), Color3.fromRGB(255, 170, 96), { Material = Enum.Material.Glass, Transparency = 0.2, CanCollide = false, CastShadow = false })
+			if q == 0 then
+				local l = Instance.new("PointLight")
+				l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 176, 110), 40, 0.8, false
+				l.Parent = cr
+			end
+		end
+	end
 	for k = 0, 11 do -- the path: worn cream tiles from the ledge toward the kiln ring
 		part("PathTile", Vector3.new(3.4, 0.3, 3.4), O * CFrame.new(-55 + k * 4.2, 0.35, math.sin(k * 0.9) * 1.6) * CFrame.Angles(0, k * 0.4, 0), k % 3 == 0 and CREAM:Lerp(CLAY, 0.3) or CREAM:Lerp(CLAY, 0.55), { Material = Enum.Material.Sandstone, CanCollide = false })
 	end
@@ -155,7 +176,8 @@ function M.build(caves)
 	end
 	for k = 1, 12 do -- roots through the roof
 		local len = rng:NextNumber(8, 22)
-		part("HangingRoot", Vector3.new(0.9, len, 0.9), O * CFrame.new(rng:NextNumber(-66, 66), 70 - len / 2 + 0.4, rng:NextNumber(-44, 44)) * CFrame.Angles(rng:NextNumber(-0.08, 0.08), rng:NextNumber(0, 3), rng:NextNumber(-0.08, 0.08)), BARK:Lerp(PLUM, 0.3), { Material = Enum.Material.Wood, CanCollide = false, CastShadow = false })
+		local rx, rz = rng:NextNumber(-66, 66), rng:NextNumber(-44, 44)
+		part("HangingRoot", Vector3.new(0.9, len, 0.9), O * CFrame.new(rx, roofAt(rx, rz) - len / 2 + 0.4, rz) * CFrame.Angles(rng:NextNumber(-0.08, 0.08), rng:NextNumber(0, 3), rng:NextNumber(-0.08, 0.08)), BARK:Lerp(PLUM, 0.3), { Material = Enum.Material.Wood, CanCollide = false, CastShadow = false })
 	end
 	for k = 1, 18 do -- rubble at the wall feet
 		local side = k % 2 == 0 and 1 or -1

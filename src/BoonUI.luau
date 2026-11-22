@@ -17,7 +17,15 @@ function M.start(E)
 	fit(win, 620, 340)
 	win.Name, win.Visible = "Boon", false
 	if E.addModal then E.addModal(win) end
-	E.ribbonTitle(win, "THE RUNE WHISPERS", "ribbonLilac", 0.56)
+	local rb, rbT = E.ribbonTitle(win, "THE RUNE WHISPERS", "ribbonLilac", 0.56)
+	do -- directive v14 (audit: pale lilac ribbons on the ritual screens): a smoked obsidian ribbon with a gold rim
+		local sk = rb:FindFirstChild("Skin")
+		if sk then sk.Visible = false end
+		rb.BackgroundColor3, rb.BackgroundTransparency = Color3.fromRGB(28, 16, 46), 0.04
+		new("UICorner", rb, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", rb, { Color = Color3.fromRGB(255, 214, 107), Thickness = 1.5, Transparency = 0.35 })
+		rbT.TextStrokeColor3 = Color3.fromRGB(20, 10, 34)
+	end
 	local close = E.closeButton(win, "BoonClose")
 	do -- directive v13 round 2 (Gemini: the bright town bled through the glass): an opaque dark core behind the content
 		local backing = new("Frame", win, { Name = "Backing", Size = UDim2.fromScale(0.97, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(14, 8, 28), BackgroundTransparency = 0.12, BorderSizePixel = 0, ZIndex = 2 })

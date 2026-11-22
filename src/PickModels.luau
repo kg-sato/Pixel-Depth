@@ -10,6 +10,9 @@ local RS = game:GetService("ReplicatedStorage")
 local DATA = require(script.Parent:WaitForChild("PickModelsData"))
 local M = {}
 local SPARK = "rbxasset://textures/particles/sparkles_main.dds"
+-- directive v14 phase 4: two baked textures inside the uploaded models were not ours to load ("User is not authorized to access
+-- Asset."); re-uploaded from design3d/picks/out_h3/*_tex.png on 2026-11-21 (tools/uploads.json) and set here on the Tex parts
+local TEX_FIX = { AuroraPickaxe = "rbxassetid://115445753413316", FireglassPickaxe = "rbxassetid://75458630642894" }
 
 function M.serverLoad(C)
 	local SS = game:GetService("ServerStorage")
@@ -43,6 +46,7 @@ function M.serverLoad(C)
 					role = role or "Head"
 					if role == "Tex" then -- round 2: one baked texture (colour, occlusion, edge light) on all the solid parts; keep it
 						p.Material = Enum.Material.SmoothPlastic
+						if TEX_FIX[name] and p:IsA("MeshPart") then p.TextureID = TEX_FIX[name] end
 						head = head or p
 					else
 						p.Color = d.palette[role] or p.Color

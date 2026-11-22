@@ -167,6 +167,21 @@ function G.init(c)
 		if ctx.analytics then ctx.analytics.event(os2, "GloomRescueStrike") end
 		savior(plr, target)
 	end)
+	if game:GetService("RunService"):IsStudio() then -- Studio test hook (spike/coop2_server.luau, directive v14): player attribute DevGrab grabs this player as a Gloomling does
+		local function watchGrab(p)
+			p:GetAttributeChangedSignal("DevGrab"):Connect(function()
+				local s = ctx.data[p]
+				local g = s and s.gloom
+				if not p:GetAttribute("DevGrab") or not g or g.grabbedUntil then return end
+				g.hp, g.grabbedUntil = 0, serverNow() + C.GLOOM.grab
+				p:SetAttribute("GrabbedUntil", g.grabbedUntil)
+				publish(p, g)
+				ctx.fx:FireClient(p, "grabbed", C.GLOOM.grab)
+			end)
+		end
+		for _, p in Players:GetPlayers() do watchGrab(p) end
+		Players.PlayerAdded:Connect(watchGrab)
+	end
 	FlareR.OnServerEvent:Connect(function(plr)
 		local s = ctx.data[plr]
 		local hrp = ctx.hrpOf(plr)

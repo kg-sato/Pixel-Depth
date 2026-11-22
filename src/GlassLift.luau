@@ -27,46 +27,75 @@ function M.start(E)
 			for k, v in props or {} do p[k] = v end
 			return p
 		end
-		for k = 0, 3 do -- four rock walls, a guide rail on each, a timber rib every 20 studs (they give the speed)
+		-- directive v14 phase 3 (audit: "four flat walls with thin strips"): each wall is a column of 4-stud rock blocks set at
+		-- different depths: a shelf juts out every 20 studs (a timber brace lies on it), niches sink back between, the strata seams
+		-- dip across the blocks, and the rock changes on the way down: violet slate, iron-stained limestone with crystal vugs, then
+		-- terracotta warmed by the kiln below. Every block runs back to z -16, so no gap shows the void behind.
+		local function zone(y)
+			if y > -100 then return { Color3.fromRGB(46, 34, 72), Color3.fromRGB(66, 50, 98), Color3.fromRGB(92, 70, 128), Color3.fromRGB(58, 44, 88) }
+			elseif y > -220 then return { Color3.fromRGB(112, 98, 110), Color3.fromRGB(146, 128, 126), Color3.fromRGB(150, 90, 62), Color3.fromRGB(96, 82, 100) }
+			else return { Color3.fromRGB(136, 72, 54), Color3.fromRGB(172, 106, 68), Color3.fromRGB(196, 132, 84), Color3.fromRGB(108, 58, 48) } end
+		end
+		local ROWS = DEPTH // 4
+		local vugs = {}
+		for k = 0, 3 do
 			local face = CFrame.Angles(0, k * math.pi / 2, 0)
-			sp(Vector3.new(19, DEPTH, 1), face * CFrame.new(0, -DEPTH / 2, -9), ROCK:Lerp(Color3.fromRGB(58, 44, 88), (k % 2) * 0.35))
-			sp(Vector3.new(0.4, DEPTH, 0.4), face * CFrame.new(k % 2 == 0 and 3.9 or -3.9, -DEPTH / 2, -8.3), Color3.fromRGB(138, 128, 168), { Material = Enum.Material.Metal })
-			for r = 0, DEPTH // 20 - 1 do
-				local rib = face * CFrame.new(0, -r * 20 - (k % 2) * 10, -8.2)
-				sp(Vector3.new(18, 0.9, 0.7), rib, BARK, { Material = Enum.Material.Wood })
-				for _, bx in { -6, 0, 6 } do sp(Vector3.new(0.35, 0.35, 0.2), rib * CFrame.new(bx, 0, 0.42), Color3.fromRGB(120, 110, 140), { Material = Enum.Material.Metal }) end -- iron bolt heads (Gemini full1120u: "a greybox shaft")
+			sp(Vector3.new(0.4, DEPTH, 0.4), face * CFrame.new(k % 2 == 0 and 3.9 or -3.9, -DEPTH / 2, -5.4), Color3.fromRGB(138, 128, 168), { Material = Enum.Material.Metal }) -- the guide rail, clear of the shelves
+			for c = 0, 4 do
+				local x = -8 + c * 4
+				local r0, runD, runCol = 0, nil, nil
+				local function flush(r1)
+					if not runD then return end
+					local n = r1 - r0
+					sp(Vector3.new(4, n * 4, runD + 16), face * CFrame.new(x, -r0 * 4 - n * 2, (runD - 16) / 2), runCol)
+				end
+				for r = 0, ROWS - 1 do
+					local y = -r * 4 - 2
+					local ledge = (r + k * 2) % 5 == 0
+					local nz = math.noise(x / 9 + k * 3.1, y / 14, 0.7)
+					local d = ledge and (-5.8 - (c % 2) * 0.6) or (nz > 0.22 and -13 or (nz < -0.22 and -7.6 or -9.6))
+					if ledge and (c + r) % 4 == 2 then d = -12 end -- a gap in the shelf
+					local pal = zone(y + math.noise(x / 7 + k, y / 30, 2.2) * 26) -- a ragged boundary between the rock zones, not a straight cut
+					local col = pal[math.floor((-y + x * 0.18 + k * 3) / 8) % 4 + 1] -- the seams dip about 10 degrees across the wall
+					if d <= -12 then col = col:Lerp(Color3.new(0, 0, 0), 0.35) end -- a niche sits in shadow
+					if d == -13 and y < -100 and (r * 7 + c + k) % 3 == 0 then table.insert(vugs, { face = face, x = x, y = y, warm = y < -220 }) end
+					if d ~= runD or col ~= runCol then
+						flush(r)
+						r0, runD, runCol = r, d, col
+					end
+				end
+				flush(ROWS)
+			end
+			for r = 0, ROWS - 1 do -- a timber brace lies on each shelf, bolted, spanning its gap
+				if (r + k * 2) % 5 == 0 and r > 0 then
+					local rib = face * CFrame.new(0, -r * 4 + 0.45, -6.3)
+					sp(Vector3.new(18, 0.9, 0.9), rib, BARK, { Material = Enum.Material.Wood })
+					for _, bx in { -6, 0, 6 } do sp(Vector3.new(0.35, 0.35, 0.2), rib * CFrame.new(bx, 0, 0.52), Color3.fromRGB(120, 110, 140), { Material = Enum.Material.Metal }) end
+				end
 			end
 		end
-		for k = 0, 3 do -- strata: a lighter band of rock every 16 studs, so the walls are not one flat colour
-			local face = CFrame.Angles(0, k * math.pi / 2, 0)
-			for r = 0, DEPTH // 16 - 1 do
-				sp(Vector3.new(18.6, 5 + (r * 7 + k) % 4, 0.3), face * CFrame.new(0, -r * 16 - k * 4, -8.45), Color3.fromRGB(58, 44, 88):Lerp(Color3.fromRGB(96, 70, 120), ((r + k) % 3) / 3))
+		for _, cx in { -1, 1 } do for _, cz in { -1, 1 } do sp(Vector3.new(7, DEPTH, 7), CFrame.new(cx * 12.5, -DEPTH / 2, cz * 12.5), Color3.fromRGB(30, 22, 44)) end end -- the corners
+		for i, v in vugs do -- crystals deep in the niches (cyan and violet), and in the kiln zone a warm glow on the niche walls
+			local base = v.face * CFrame.new(v.x, v.y - 1, -12.6)
+			if v.warm then
+				sp(Vector3.new(3.6, 3.6, 0.1), v.face * CFrame.new(v.x, v.y, -12.85), Color3.fromRGB(255, 160, 90), { Material = Enum.Material.SmoothPlastic, Transparency = 0.55 })
+			else
+				for q = 0, 2 do
+					sp(Vector3.new(0.7, 1.8 - q * 0.4, 0.7), base * CFrame.new(q * 0.8 - 0.8, 0.6, 0.4) * CFrame.Angles(0.5, i + q, (q - 1) * 0.4), q == 1 and Color3.fromRGB(196, 120, 255) or Color3.fromRGB(120, 220, 255), { Material = Enum.Material.Glass, Transparency = 0.15 })
+				end
+				sp(Vector3.new(3.4, 3.4, 0.1), v.face * CFrame.new(v.x, v.y, -12.85), Color3.fromRGB(120, 220, 255), { Material = Enum.Material.SmoothPlastic, Transparency = 0.72 })
 			end
 		end
 		local PINK, CYAN = Color3.fromRGB(255, 130, 200), Color3.fromRGB(120, 220, 255)
 		local LIT = { Material = Enum.Material.SmoothPlastic } -- Neon turns white in a viewport: glowing things are plain saturated colour
 		local UP = CFrame.Angles(0, 0, math.pi / 2) -- a cylinder's long axis is X
-		for r = 0, DEPTH // 6 - 1 do -- round roots winding down the walls with a glowing vein each; rock blocks, crystals and lanterns between them
-			local face = CFrame.Angles(0, (r * 3 % 4) * math.pi / 2, 0)
-			local x, y = ((r * 37) % 15) - 7, -r * 6 - 4
-			local lean = CFrame.Angles(0, 0, ((r * 53) % 11 - 5) * 0.12)
-			local w = 1.8 + (r % 3) * 0.8
-			local at = face * CFrame.new(x, y, -8.1) * lean
-			sp(Vector3.new(26, w, w), at * UP, BARK:Lerp(Color3.fromRGB(132, 92, 66), (r % 4) / 4), { Material = Enum.Material.Wood, Shape = Enum.PartType.Cylinder })
-			sp(Vector3.new(15, w * 0.5, w * 0.5), at * CFrame.new(w * 0.7, 3, 0.3) * CFrame.Angles(0, 0, 0.35) * UP, BARK:Lerp(Color3.fromRGB(104, 70, 54), 0.5), { Material = Enum.Material.Wood, Shape = Enum.PartType.Cylinder }) -- a side shoot
-			local glow = r % 3 == 0 and VIOLET or MINT
-			sp(Vector3.new(21, 0.42, 0.42), at * CFrame.new(0, 0, w / 2 + 0.02) * UP, glow, { Material = LIT.Material, Shape = Enum.PartType.Cylinder })
-			sp(Vector3.new(w + 5, 24, 0.1), face * CFrame.new(x, y, -8.38) * lean, glow, { Material = LIT.Material, Transparency = 0.78 }) -- the vein's glow on the rock (a viewport has no point lights)
-			sp(Vector3.new(3 + (r * 5) % 4, 2 + (r * 3) % 3, 1 + (r % 3) * 0.5), face * CFrame.new(-x * 0.8 + 2, y - 3, -8.3), ROCK:Lerp(Color3.fromRGB(86, 64, 118), ((r * 7) % 5) / 5)) -- a block of rock standing out of the wall
-			if r % 3 == 1 then
-				for q = 0, 2 do
-					sp(Vector3.new(1.5 - q * 0.3, 5.5 - q * 1.3, 1.5 - q * 0.3), face * CFrame.new(-x + q * 1.3 - 1.3, y + 5, -7.8) * CFrame.Angles(0.5 + q * 0.2, r + q, 0.45 - q * 0.4), q == 1 and PINK or (r % 2 == 0 and VIOLET or CYAN), { Material = Enum.Material.Glass, Transparency = 0.2 })
-				end
-			elseif r % 3 == 2 then
-				sp(Vector3.new(0.12, 3, 0.12), face * CFrame.new(-x, y + 3.5, -6.6), BARK)
-				sp(Vector3.new(0.9, 1.1, 0.9), face * CFrame.new(-x, y + 1.6, -6.6), WARM, LIT)
-				sp(Vector3.new(3.6, 3.6, 0.1), face * CFrame.new(-x, y + 1.6, -8.36), WARM, { Material = LIT.Material, Transparency = 0.7 })
-			end
+		for r = 0, DEPTH // 18 - 1 do -- directive v14: a warm lantern on an iron bracket every 18 studs, turning round the shaft (the old roots
+			-- and neon veins clipped through the new ledges); a viewport has no point lights, so a soft glow plate sits on the rock behind it
+			local face = CFrame.Angles(0, (r % 4) * math.pi / 2, 0)
+			local x, y = ((r * 37) % 13) - 6, -r * 18 - 9
+			sp(Vector3.new(0.2, 0.2, 2.4), face * CFrame.new(x, y + 2.3, -8.4), Color3.fromRGB(60, 54, 70), { Material = Enum.Material.Metal })
+			sp(Vector3.new(0.9, 1.1, 0.9), face * CFrame.new(x, y + 1.6, -7.3), WARM, LIT)
+			sp(Vector3.new(5, 5, 0.1), face * CFrame.new(x, y + 1.6, -9.45), WARM, { Material = LIT.Material, Transparency = 0.74 })
 		end
 		sp(Vector3.new(19, 1, 19), CFrame.new(0, -DEPTH + 2, 0), Color3.fromRGB(255, 170, 90), { Material = Enum.Material.SmoothPlastic }) -- the kiln glow of the Clay Caves far below
 		cage = new("Model", set, { Name = "Cage" })

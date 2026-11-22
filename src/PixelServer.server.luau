@@ -1213,6 +1213,12 @@ task.spawn(function() -- the sign and its prompt over Camp 1's cart, and (direct
 		if kb then sign(kb, kb.Parent, "CrewAnchor2", "TO CAMP 1 \u{00B7} ") break end
 		task.wait(1)
 	end
+	-- directive v14 phase 4: the deeper camps (Cave v2 layers 3 and 4) park a "CampCartBody"; each gets the same sign and V prompt
+	local function deep(d)
+		if d.Name == "CampCartBody" and d:IsA("BasePart") and d.Parent and not d.Parent:FindFirstChild("CrewAnchorDeep") then sign(d, d.Parent, "CrewAnchorDeep", "TO CAMP 1 \u{00B7} ") end
+	end
+	for _, d in workspace:GetDescendants() do deep(d) end
+	workspace.DescendantAdded:Connect(function(d) if d.Name == "CampCartBody" then task.defer(deep, d) end end)
 end)
 if IS_STUDIO then -- DevCrewBot: this player rides as a passenger; the server plays a driver that leans, meets rocks and beads and arrives
 	task.spawn(function()
@@ -1332,6 +1338,11 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	if s and prompt:GetAttribute("RideUp") and plr:GetAttribute("InCave") and not riding[plr] and not escaping[plr] and not crew.of(plr) then startEscape(s) end
 	if s and prompt:GetAttribute("CrewRide") and nearPrompt(plr, prompt) then crew.board(plr) end
 end)
+if game:GetService("RunService"):IsStudio() then -- Studio test hook (spike/coop2_server.luau, directive v14): player attribute DevBoard boards the crew cart as the V prompt does
+	local function watchBoard(p) p:GetAttributeChangedSignal("DevBoard"):Connect(function() if p:GetAttribute("DevBoard") then crew.board(p) end end) end
+	for _, p in Players:GetPlayers() do watchBoard(p) end
+	Players.PlayerAdded:Connect(watchBoard)
+end
 game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt, plr) -- a cave egg nest: one free egg, once an hour per nest
 	if not prompt:GetAttribute("CaveNest") then return end
 	local s = data[plr]

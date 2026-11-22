@@ -18,11 +18,22 @@ function M.start(E)
 	local soul = { shards = 0, nodes = {} }
 
 	local win = panel(gui, S(760, 430), S(640, 300), MID, "panel")
-	if E.blueprint then E.blueprint(win) end -- a plan on blueprint paper, like the forge
+	do -- directive v14 (audit: blueprint paper behind the rune plates): an opaque obsidian core, as the Boon stone has
+		local backing = new("Frame", win, { Name = "Backing", Size = UDim2.fromScale(0.97, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(14, 8, 28), BackgroundTransparency = 0.06, BorderSizePixel = 0, ZIndex = 1 })
+		new("UICorner", backing, { CornerRadius = UDim.new(0.04, 0) })
+	end
 	fit(win, 760, 430)
 	win.Name, win.Visible = "SoulTree", false
 	if E.addModal then E.addModal(win) end
-	E.ribbonTitle(win, "SOUL TREE", "ribbonLilac", 0.4)
+	local rb, rbT = E.ribbonTitle(win, "SOUL TREE", "ribbonLilac", 0.4)
+	do -- directive v14 (audit: pale lilac ribbons on the ritual screens): a smoked obsidian ribbon with a gold rim
+		local sk = rb:FindFirstChild("Skin")
+		if sk then sk.Visible = false end
+		rb.BackgroundColor3, rb.BackgroundTransparency = Color3.fromRGB(28, 16, 46), 0.04
+		new("UICorner", rb, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", rb, { Color = Color3.fromRGB(255, 214, 107), Thickness = 1.5, Transparency = 0.35 })
+		rbT.TextStrokeColor3 = Color3.fromRGB(20, 10, 34)
+	end
 	local close = E.closeButton(win, "SoulClose")
 
 	local function shardGem(parent, k, pos, z)
