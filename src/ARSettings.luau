@@ -79,7 +79,7 @@ function M.start(E)
 
 	local function panel(slot, title, tint)
 		local part = new("Part", folder, { Name = title, Size = Vector3.new(PW, PH, 0.05), Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Transparency = 1 })
-		local sg = new("SurfaceGui", pg, { Name = "AR_" .. title, Adornee = part, Face = Enum.NormalId.Front, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = PPS, AlwaysOnTop = true, LightInfluence = 0, Brightness = 1.4, MaxDistance = 1000, ResetOnSpawn = false, Enabled = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
+		local sg = new("SurfaceGui", pg, { Name = "AR_" .. title, Adornee = part, Face = Enum.NormalId.Front, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = PPS, AlwaysOnTop = false, LightInfluence = 0, Brightness = 1.4, MaxDistance = 1000, ResetOnSpawn = false, Enabled = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
 		local root = new("Frame", sg, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1 })
 		local sc = new("UIScale", root, {})
 		local card = new("Frame", root, { Size = UDim2.fromScale(0.94, 0.74), Position = UDim2.fromScale(0.5, 0.61), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.07, BorderSizePixel = 0, ZIndex = 2 }) -- nearly solid: the world behind made the labels hard to read

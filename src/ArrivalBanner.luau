@@ -28,11 +28,11 @@ function M.start(E)
 		local d = t and t:FindFirstChild("Drop")
 		return d ~= nil and d:IsA("GuiObject") and d.Visible
 	end
-	local function show(name, line, color, waited)
+	local function show(name, line, color, waited, my)
+		if not my then token += 1 my = token end -- the request's own token: a newer arrival cancels an older one still waiting (Codex v14)
+		if my ~= token then return end
 		waited = waited or 0
-		if waited < 4 and giftOpen() then task.delay(0.25, show, name, line, color, waited + 0.25) return end
-		token += 1
-		local my = token
+		if waited < 4 and giftOpen() then task.delay(0.25, show, name, line, color, waited + 0.25, my) return end
 		word.tint(color)
 		word.set(name)
 		sub.Text, sub.TextTransparency = line, 1

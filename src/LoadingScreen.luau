@@ -500,7 +500,7 @@ function M.start(E)
 			end
 		end
 		now = real
-		local loaded = (game:IsLoaded() and E.plr.Character ~= nil and clock > slamAt + 1.7) or now > 12 -- the logo always finishes its landing and its bounces; directive v14: never more than 12 s
+		local loaded = (game:IsLoaded() and E.plr.Character ~= nil and clock > slamAt + 1.7) or (now > 12 and game:IsLoaded()) or now > 30 -- the logo always finishes its landing and its bounces; directive v14: after 12 s the world alone is enough (Codex: never drop the cover on an unloaded world), 30 s at most
 		local goal = math.min(now / cfg.min, loaded and 1 or 0.9)
 		shown += (goal - shown) * math.min(1, dt * 8)
 		fill.Size = UDim2.fromScale(shown, 1)

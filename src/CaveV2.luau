@@ -502,6 +502,25 @@ function M.build(parent, origin, seed, opt)
 		end
 		for _, a in add do set(a[1], a[2], a[3], 0) end
 	end
+	do -- CEILING POCKETS (directive v14, Gemini v14p2_r5: "flat parking-garage ceilings"): over 3+ voxels of headroom, noise lifts patches
+		-- of a flat roof one or two voxels, only where solid rock stays above, so roofs step up into pockets and corbels
+		local lift = {}
+		for x = 2, NX - 3 do
+			for z = 2, NZ - 3 do
+				if inCamp(x, z) then continue end
+				for y = 4, NY - 5 do
+					if get(x, y, z) == 1 and get(x, y + 1, z) == 0 and get(x, y - 1, z) == 1 and get(x, y - 2, z) == 1 and get(x, y - 3, z) == 1 and get(x, y + 2, z) == 0 and get(x, y + 3, z) == 0 then
+						local n = math.noise(x * 0.18 + wob, z * 0.18, y * 0.1 + 0.5)
+						if n > 0.2 then table.insert(lift, { x, y + 1, z, n > 0.36 and get(x, y + 4, z) == 0 }) end -- part budget: about a quarter of each flat roof
+					end
+				end
+			end
+		end
+		for _, l in lift do
+			set(l[1], l[2], l[3], 1)
+			if l[4] then set(l[1], l[2] + 1, l[3], 1) end
+		end
+	end
 	local rootC = P(150, 0, 6) + P(0, dipY(150), 0) -- the cathedral's landmark (built after the mesh: a real trunk, not voxels)
 
 	-- THE SUMP'S WATER fills the chamber's real shape up to one voxel over its lowest floor (Gemini r2: a flat sheet cut off in mid-air)
@@ -674,7 +693,7 @@ function M.build(parent, origin, seed, opt)
 							local th = themeAt(Vector3.new((x - CX + 0.5) * V, (y - CY + 0.5) * V, (z - CZ + 0.5) * V))
 							local f = FLOOR[th]
 							local moss = math.noise(x * 0.15, z * 0.15, wob) > 0.5 - f[3]
-							k = 100 + TI[th] * 10 + (moss and (2 + math.floor(hash(x, z, 3) * 2)) or math.floor(hash(x, z, 4) * 2))
+							k = 100 + TI[th] * 10 + (moss and 2 or 1) -- one matte tone per place and one for the damp hollows (directive v14, Recipe C: no per-block floor noise; the floors merge into big slabs)
 						else -- a wall or a roof: its rock bed (directive v14), a step lighter high up, darker overhead
 							k = (isAir(get(x, y - 1, z)) and 20 or (ly > 26 and 10 or 0)) + 1 + strata(lx, ly, lz)
 						end
@@ -1112,7 +1131,7 @@ function M.build(parent, origin, seed, opt)
 							cl.Color, cl.Range, cl.Brightness, cl.Shadows = Color3.fromRGB(255, 190, 120), 9, 0.45, false
 							cl.Parent = sheet
 						end
-					elseif room >= 4 and (fis and hsh > 0.55 or hsh > 0.982) then -- a dripstone, one of three kinds (Gemini r2: every stalactite was the same two-tier block); chained along the cracks (directive v14)
+					elseif room >= 4 and (fis and hsh > 0.62 or hsh > 0.99) then -- a dripstone, one of three kinds (Gemini r2: every stalactite was the same two-tier block); chained along the cracks (directive v14)
 						local kind = math.floor(hash(x, z, 51) * 3)
 						local len = 2 + hash(z, x, 5) * 5
 						local col = ROCK2:Lerp(FLOW, hash(x, z, 52) * 0.4)
@@ -1174,7 +1193,7 @@ function M.build(parent, origin, seed, opt)
 						for q, e in { { 4.8, 0.7 }, { 3.6, 2.0 }, { 4.8, hgt - 0.7 }, { 3.6, hgt - 2.0 } } do
 							deco("ColumnFoot", Vector3.new(e[1], 1.4, e[1]), CFrame.new(foot + Vector3.new(0, e[2], 0)) * rot * CFrame.Angles(0, q % 2 == 0 and 0.785 or 0, 0), q % 2 == 0 and ROCK2:Lerp(ROCK3, 0.5) or ROCK2, {})
 						end
-					elseif head >= 3 and (fis and skirtD and hsh > 0.55 or hsh > 0.95) then -- a stalagmite under the drip (under the cracks, by the wall: directive v14)
+					elseif head >= 3 and (fis and skirtD and hsh > 0.65 or hsh > 0.96) then -- a stalagmite under the drip (under the cracks, by the wall: directive v14)
 						local hgt = 1.6 + hash(x, z, 12) * 3.4
 						for t = 0, 2 do -- three shrinking steps (directive v14: no pale cube on top)
 							local w2, seg = 3 - t * 0.85, hgt / 3 + 0.3
@@ -1186,7 +1205,7 @@ function M.build(parent, origin, seed, opt)
 						local ll = Instance.new("PointLight")
 						ll.Color, ll.Range, ll.Brightness, ll.Shadows = GLOW, 8, 0.35, false
 						ll.Parent = lf
-					elseif head >= 2 and skirtD and hsh > 0.9 then -- directive v14 (Recipe A3/F): breakdown talus, angular blocks stacked against the wall's foot
+					elseif head >= 2 and skirtD and hsh > 0.93 then -- directive v14 (Recipe A3/F): breakdown talus, angular blocks stacked against the wall's foot
 						local into = Vector3.new(skirtD[1], 0, skirtD[2])
 						for q = 0, 1 + math.floor(hash(x, z, 71) * 2) - 1 do
 							local s = (2.6 + hash(x, z, 72 + q) * 1.6) * (1 - q * 0.3)

@@ -65,6 +65,7 @@ function M.build(caves)
 	local OPEN = { { 6, 16, 14 }, { 45, 60, 34 } } -- the north openings: x from, x to, height (the Jar Gallery door, the Fossil Dig breach)
 	local VX, X0, Y0, Z0, NXc, NYc, NZc = 4, -82, -2, -62, 41, 23, 31 -- cells: x -82..82, y -2..90, z -62..62
 	local KEEP = { { -48, -32, -54, 30 }, { 36, 66, -54, 44 }, { -10, 14, 54, 30 }, { 36, 56, 54, 30 }, { -74, -74, -44, 30 } } -- x0, x1, wall z (or x for -74), top: wall-hung things stay on a flat face
+	local function bandA(cx, cy, cz) return math.floor((cy + 0.24 * cx - 0.1 * cz + 5 * math.noise(cx / 40, cz / 40, 1.3)) / 10) % 5 + 1 end
 	local function open(cx, cy, cz)
 		if cy < 0 or cy >= 86 then return false end
 		local ax, az = math.abs(cx), math.abs(cz)
@@ -75,7 +76,7 @@ function M.build(caves)
 			for _, k in KEEP do
 				if cy < k[4] and ((k[1] == -74 and ax >= 74 and cx < 0 and math.abs(cz - k[3]) < 10) or (k[1] ~= -74 and az >= 54 and (cz < 0) == (k[3] < 0) and cx > k[1] and cx < k[2])) then return false end
 			end
-			return math.noise((ax >= 74 and cz or cx) / 22, cy / 26, ax >= 74 and 5.3 or 2.1) > -0.08
+			return bandA(cx, cy, cz) % 2 == 1 and math.noise((ax >= 74 and cz or cx) / 22, cy / 26, ax >= 74 and 5.3 or 2.1) > -0.45 -- the soft beds erode back, the hard beds stand out (Gemini v14p3_r2: no relief)
 		end
 		if cy >= 70 then -- the corbelled vault, its tiers stepping off toward the kiln (east) a little
 			local t = math.floor((cy - 70) / 8) + 1
@@ -129,6 +130,12 @@ function M.build(caves)
 		end
 	end end end
 	folder:SetAttribute("ShellParts", nShell)
+	for _, c in { { -60, -40 }, { -60, 40 }, { 60, -40 }, { 60, 40 }, { 0, -44 }, { 0, 44 } } do -- warm uplights grazing the vault tiers (Gemini v14p3_r2: a murky black crown)
+		local up = part("VaultUplight", Vector3.new(0.4, 0.4, 0.4), O * CFrame.new(c[1], 56, c[2]), AMBER, { Transparency = 1, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false })
+		local sl = Instance.new("SpotLight")
+		sl.Face, sl.Angle, sl.Range, sl.Brightness, sl.Color, sl.Shadows = Enum.NormalId.Top, 75, 40, 1.1, Color3.fromRGB(255, 186, 120), false
+		sl.Parent = up
+	end
 	roofAt = function(x, z) -- the underside of the rock over a point of the floor
 		local i, k = math.floor((x - X0) / VX), math.floor((z - Z0) / VX)
 		for j = math.floor((70 - Y0) / VX), NYc - 1 do if not isOpen(i, j, k) then return Y0 + VX * j end end

@@ -15,14 +15,14 @@ local WOOD, CREAM, AMBER = Color3.fromRGB(92, 58, 44), Color3.fromRGB(240, 222, 
 
 -- which props each cave theme gets, as weights
 local MIX = {
-	grotto = { crystal = 5, pebbles = 3, rubble = 2, roots = 1 },
+	grotto = { crystal = 2, pebbles = 3, rubble = 3, roots = 1 }, -- directive v14 (Gemini: crystal spam on the walking floor): fewer crystals
 	mush = { mushrooms = 6, pebbles = 2, roots = 2 },
 	tunnel = { support = 4, rubble = 3, cart = 1, crystal = 1 },
 	squeeze = { rubble = 3, roots = 3, crystal = 2, pebbles = 1 },
-	chasm = { crystal = 4, roots = 2, rubble = 1 },
+	chasm = { crystal = 2, roots = 2, rubble = 2 },
 }
 M.MIX = MIX
-M.CHANCE = 0.85 -- of a floor slab getting a prop (when it has a wall near one edge)
+M.CHANCE = 0.6 -- of a floor slab getting a prop (when it has a wall near one edge); 0.85 cluttered the floor (Gemini v14p2_r5)
 M.KEEP_OUT = 11 -- studs from deposits, shrines, nests, gates and the camp
 M.MAX_LIGHTS = 24
 -- low-poly meshes (design3d/cave_props.py, ids in design3d/out/props/ids.txt; Gemini n17_r1: the block-built props read as
@@ -257,7 +257,7 @@ function M.build(caves)
 		local mix = MIX[f:GetAttribute("Theme") or ""]
 		local layer = caves:GetAttribute("Layer") or 1
 		if mix and layer >= 3 then -- deeper layers have no World Tree roots and no timber: crystals, rubble and pebbles only (Cave v2, 2026-11-19)
-			mix = { crystal = 5, rubble = 3, pebbles = 2 }
+			mix = { crystal = 2, rubble = 4, pebbles = 2 }
 		end
 		if mix and f:IsA("BasePart") and rng:NextNumber() < M.CHANCE then
 			local topY = f.Position.Y + f.Size.Y / 2
