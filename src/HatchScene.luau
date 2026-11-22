@@ -414,10 +414,12 @@ function M.play(opt)
 				sfx("upgrade", 1.1 + step * 0.12)
 				local rar = RARITIES[step] -- the caption names each rung as it climbs (Gemini m13: no readable tier ramp in the stills)
 				if rar then
-					caption.Text, caption.TextColor3 = string.upper(rar[1]) .. (step < tier and "..." or "!"), climbCol:Lerp(WHITE, 0.35)
+					local word = string.upper(rar[1]) .. (step < tier and "..." or "!")
+					if step == tier then caption.Text = word end -- the big rung names each tier; the caption only the last (tour v14: "EPIC..." twice on screen)
+					caption.TextColor3 = climbCol:Lerp(WHITE, 0.35)
 					local sc = caption:FindFirstChildOfClass("UIScale")
 					if sc then sc.Scale = 1.35 TweenService:Create(sc, TweenInfo.new(0.3, Enum.EasingStyle.Back), { Scale = 1 }):Play() end
-					rung.Text, rung.TextColor3, rung.UIStroke.Color = caption.Text, climbCol:Lerp(WHITE, 0.25), climbCol:Lerp(INK, 0.6)
+					rung.Text, rung.TextColor3, rung.UIStroke.Color = word, climbCol:Lerp(WHITE, 0.25), climbCol:Lerp(INK, 0.6)
 					rung.TextTransparency, rung.UIStroke.Transparency = 0, 0
 					local rs = rung:FindFirstChildOfClass("UIScale")
 					if rs then rs.Scale = 1.6 TweenService:Create(rs, TweenInfo.new(0.25, Enum.EasingStyle.Back), { Scale = 1 }):Play() end
