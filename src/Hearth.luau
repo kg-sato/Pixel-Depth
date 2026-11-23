@@ -25,9 +25,9 @@ function M.start(E)
 	local coolUntil, hold = 0, nil -- hold = { t0, secs, p }
 
 	local function stop(tell)
+		hook.homeHolding = false -- always: after a full ring hold is already nil, and an early return left every world prompt off for good (2026-11-23: the tour could not open a deposit after HOME)
 		if not hold then return end
 		hold = nil
-		hook.homeHolding = false
 		box.Visible = false
 		if tell then R:FireServer("homeStop") end
 	end
@@ -82,7 +82,7 @@ function M.start(E)
 		if k >= 1 then
 			hold = nil -- the ring stays full until the server answers
 			R:FireServer("homeEnd")
-			task.delay(1.5, function() if not hold then box.Visible = false end end)
+			task.delay(1.5, function() if not hold then box.Visible = false hook.homeHolding = false end end) -- and the prompts come back even if no answer arrives
 		end
 	end)
 end

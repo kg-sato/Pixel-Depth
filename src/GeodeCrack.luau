@@ -59,9 +59,9 @@ function M.start(E)
 			local top = an.CFrame * CFrame.new(0, an.Size.Y / 2 + 0.55, 0)
 			bit(folder, Vector3.new(1.1, 1, 1.1), top * CFrame.Angles(0.2, 0.6, 0.1), Color3.fromRGB(92, 84, 112), Enum.Material.Slate)
 			bit(folder, Vector3.new(0.16, 0.9, 0.16), top * CFrame.new(0, 0.1, 0) * CFrame.Angles(0.5, 0.3, 0.9), Color3.fromRGB(200, 140, 255), Enum.Material.Neon)
-			local holder = bit(folder, Vector3.new(0.2, 0.2, 0.2), top * CFrame.new(0, 2.4, 0), WHITE, Enum.Material.SmoothPlastic, 1)
+			local holder = bit(folder, Vector3.new(0.2, 0.2, 0.2), top * CFrame.new(0, 3.6, 0), WHITE, Enum.Material.SmoothPlastic, 1)
 			local bb = Instance.new("BillboardGui")
-			bb.Name, bb.Size, bb.LightInfluence, bb.MaxDistance = "CrackRing", UDim2.fromScale(4.6, 4.6), 0, 80
+			bb.Name, bb.Size, bb.LightInfluence, bb.MaxDistance = "CrackRing", UDim2.fromScale(7.5, 7.5), 0, 80 -- 7.5 studs: at 4.6 the ring was a speck from the high town camera (Orchestrator 2026-11-23)
 			local function ring(scale, color, thick)
 				local f = Instance.new("Frame")
 				f.Size, f.Position, f.AnchorPoint, f.BackgroundTransparency = UDim2.fromScale(scale, scale), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), 1
@@ -74,9 +74,9 @@ function M.start(E)
 				f.Parent = bb
 				return f, st
 			end
-			local _, seamStroke = ring(K.seam, GOLD, 5) -- the seam: where the closing ring must be
+			local _, seamStroke = ring(K.seam, GOLD, 7) -- the seam: where the closing ring must be
 			local lastTick -- (2026-11-17, Shared.StrikeJuice's recipe: a cue before the hit) ticks rising in pitch as the ring nears the seam, and the seam heats up
-			local closing, stroke = ring(1, Color3.fromRGB(0, 240, 255), 4)
+			local closing, stroke = ring(1, Color3.fromRGB(0, 240, 255), 6)
 			local word = Instance.new("TextLabel")
 			word.Size, word.Position, word.AnchorPoint, word.BackgroundTransparency = UDim2.fromScale(1.6, 0.16), UDim2.fromScale(0.5, -0.06), Vector2.new(0.5, 0.5), 1
 			word.Text, word.TextScaled, word.Font, word.TextColor3 = (UIS.TouchEnabled and not UIS.KeyboardEnabled) and "TAP ON THE GOLD RING" or "SPACE ON THE GOLD RING", true, Enum.Font.FredokaOne, WHITE

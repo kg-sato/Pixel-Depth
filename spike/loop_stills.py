@@ -22,7 +22,7 @@ src = src.replace('subprocess.run([VENV, "-I", str(ws / "tools" / "video_sheets.
 assert "STOP.set()" in src and "stills_sheets" in src and "rec = None" in src, SCRIPT + " changed: update the patterns"
 src = src.replace('def mark(what): print(', 'def mark(what): STATE["step"] = what; print(')
 
-STOP, STATE = threading.Event(), {"step": "start"}
+STOP, STATE, FORCE = threading.Event(), {"step": "start"}, threading.Event()
 outdir = here.parent / "captures" / "loop" / name
 outdir.mkdir(parents=True, exist_ok=True)
 labels = open(outdir / "labels.txt", "w", encoding="utf-8")
@@ -39,10 +39,11 @@ def snap():
             labels.write(f"{dst.name}\t{t:.0f}\t{STATE['step']}\n"); labels.flush()
         except Exception as e:
             print("still failed:", e, flush=True)
-        time.sleep(max(0, STEP - (time.time() - t0 - t)))
+        FORCE.wait(max(0, STEP - (time.time() - t0 - t)))  # the tour can ask for a still now (FORCE.set()) for a moment shorter than STEP
+        FORCE.clear()
 
 
 threading.Thread(target=snap, daemon=True).start()
 sys.argv = [str(here / SCRIPT), name]
-exec(compile(src, str(here / SCRIPT), "exec"), {"__name__": "__main__", "__file__": str(here / SCRIPT), "STOP": STOP, "STATE": STATE, "STEP": STEP})
+exec(compile(src, str(here / SCRIPT), "exec"), {"__name__": "__main__", "__file__": str(here / SCRIPT), "STOP": STOP, "STATE": STATE, "STEP": STEP, "FORCE": FORCE})
 labels.close()
