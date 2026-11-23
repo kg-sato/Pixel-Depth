@@ -29,12 +29,20 @@ def face():
     time.sleep(0.5)
 
 
+def open_mg(kind):  # 2026-11-23: press the nearest deposit's prompt in one call (the E key missed on a slow Studio: the first-person camera turned away from the ore)
+    return (N.lua("local h=game.Players.LocalPlayer.Character.HumanoidRootPart local best,bd for _,d in workspace.Caves.Deposits:GetChildren() do if d.PrimaryPart and d.PrimaryPart.Transparency<1 then local m=(d.PrimaryPart.Position-h.Position).Magnitude if not bd or m<bd then best,bd=d,m end end end "
+                  "local pr=best and best.PrimaryPart:FindFirstChildOfClass('ProximityPrompt',true) or (best and best:FindFirstChildWhichIsA('ProximityPrompt',true)) if not pr then return 'no prompt' end "
+                  "local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.Position,best.PrimaryPart.Position) task.wait(0.4) pr:InputHoldBegin() task.wait(0.1) pr:InputHoldEnd() "
+                  "local hud=game.Players.LocalPlayer.PlayerGui.PixelHUD.CaveHud local t0=os.clock() while os.clock()-t0<3 do "
+                  "if (%s) then return 'open' end task.wait(0.1) end return 'not open'" % ("hud.PerfectStrike.Visible" if kind == "strike" else "(hud.VeinRush:GetAttribute('Seq') or '')~=''"), "Client").splitlines() or ["?"])[-1]
+
+
 if "InCave" not in N.lua("return game.Players:GetPlayers()[1]:GetAttribute('InCave') and 'InCave' or 'town'"):
     N.key("Q"); time.sleep(15)
 
 if "strike" in want:
     print("common:", go_to("d:GetAttribute('Ore')<3")); time.sleep(1.2); face()
-    N.key("E"); time.sleep(0.8); N.shot(pre + "_strike")
+    print("strike:", open_mg("strike")); time.sleep(0.4); N.shot(pre + "_strike")
     print(N.lua("task.wait(" + DWELL + ") local hud=game.Players.LocalPlayer.PlayerGui.PixelHUD.CaveHud.PerfectStrike local nd,ar=hud:FindFirstChild('Needle',true),hud:FindFirstChild('Arc',true) "
                 "local R=game.ReplicatedStorage.Remotes.Extract local t0=os.clock() while os.clock()-t0<3 do if math.abs((nd.Rotation-ar.Rotation+180)%360-180)<5 then break end task.wait() end "
                 "R:FireServer('strike',workspace:GetServerTimeNow()) return 'struck'", "Client").splitlines()[-1:] or [""])
@@ -48,7 +56,7 @@ if "strike" in want:
 
 if "rush" in want:
     print("rare:", go_to("d:GetAttribute('Ore')==3")); time.sleep(1.2); face()
-    N.key("E"); time.sleep(0.9); N.shot(pre + "_rush_start")
+    print("rush:", open_mg("rush")); time.sleep(0.4); N.shot(pre + "_rush_start")
     seq = (N.lua("return game.Players.LocalPlayer.PlayerGui.PixelHUD.CaveHud.VeinRush:GetAttribute('Seq') or ''", "Client").splitlines() or [""])[-1].strip()
     print("seq", seq)
     for i, c in enumerate(seq):
