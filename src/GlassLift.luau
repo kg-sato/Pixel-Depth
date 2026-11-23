@@ -33,7 +33,7 @@ function M.start(E)
 		-- terracotta warmed by the kiln below. Every block runs back to z -16, so no gap shows the void behind.
 		local function zone(y)
 			if y > -100 then return { Color3.fromRGB(46, 34, 72), Color3.fromRGB(66, 50, 98), Color3.fromRGB(92, 70, 128), Color3.fromRGB(58, 44, 88) }
-			elseif y > -220 then return { Color3.fromRGB(112, 98, 110), Color3.fromRGB(146, 128, 126), Color3.fromRGB(150, 90, 62), Color3.fromRGB(96, 82, 100) }
+			elseif y > -220 then return { Color3.fromRGB(92, 70, 84), Color3.fromRGB(168, 124, 78), Color3.fromRGB(150, 84, 52), Color3.fromRGB(70, 58, 88) } -- ochre sediment with dark plum seams: the grey-tan read as bare boxes (Orchestrator 2026-11-23)
 			else return { Color3.fromRGB(136, 72, 54), Color3.fromRGB(172, 106, 68), Color3.fromRGB(196, 132, 84), Color3.fromRGB(108, 58, 48) } end
 		end
 		local ROWS = DEPTH // 4

@@ -170,6 +170,17 @@ function M.start(E)
 		local hum = plr.Character and plr.Character:FindFirstChildOfClass("Humanoid")
 		if not h or not hum then return end
 		local now, t = os.clock(), workspace:GetServerTimeNow()
+		do -- a Kiln Surge warms the hall: the screen takes an ember tint while it lasts (Orchestrator 2026-11-23: "no visible change in a surge")
+			local surge = (workspace:GetAttribute("KilnSurge") or 0) > t and (h.Position - C.CAVE2_ORIGIN).Magnitude < 140
+			local cc = game:GetService("Lighting"):FindFirstChild("KilnSurgeTint")
+			if surge and not cc then
+				cc = Instance.new("ColorCorrectionEffect")
+				cc.Name, cc.TintColor, cc.Saturation, cc.Brightness = "KilnSurgeTint", Color3.fromRGB(255, 226, 200), 0.12, 0.02
+				cc.Parent = game:GetService("Lighting")
+			elseif cc and not surge then
+				cc:Destroy()
+			end
+		end
 		for _, v in vents do
 			local on = (workspace:GetAttribute("KilnSurge") or 0) > t or (t + v.i * 3) % 6 < 3.2 -- in a Kiln Surge the vents never rest
 			if on ~= v.on then

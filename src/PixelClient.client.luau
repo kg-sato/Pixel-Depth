@@ -2506,8 +2506,8 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 			task.delay(0.35, function() -- step out looking level at the camp fire: the ride left the view on the cart floor (arrival captures, 2026-11-11)
 				local cam2 = workspace.CurrentCamera
 				local eye = cam2.CFrame.Position
-				if camp2 then return end
-				local at = Vector3.new(C.CAVE_ORIGIN.X, eye.Y, C.CAVE_ORIGIN.Z)
+				local o = camp2 and C.CAVE2_ORIGIN or C.CAVE_ORIGIN -- the Kiln Camp too: it stepped out looking down at the cart bin (Orchestrator 2026-11-23)
+				local at = Vector3.new(o.X, eye.Y, o.Z)
 				if plr:GetAttribute("InCave") and (at - eye).Magnitude > 3 and (at - eye).Magnitude < 80 then -- a 0.3 s turn, not a cut (Gemini full1119h)
 					local from, t0 = cam2.CFrame, os.clock()
 					local turn
