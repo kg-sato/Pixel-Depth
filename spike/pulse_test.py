@@ -27,6 +27,8 @@ task.wait(#seq*0.2) local ans={} for i,c in seq do ans[i]= c==1 and 2 or 1 end R
 t=os.clock() while not got.n and os.clock()-t<4 do task.wait(0.05) end
 return 'chain fired: '..tostring(got.n ~= nil)..' | seq '..#seq..' | vein chain: '..tostring(got.n)..' deposits, +'..tostring(got.ore)..' ore'"""))
 time.sleep(2)
+# the rush above does not always leave ore in the bag (full suite 2026-11-22: "chain fired: false", bag empty, the breath cost 0): top it up
+S1("game.Players:GetPlayers()[1]:SetAttribute('DevBag', 20) return 1"); time.sleep(1.5)  # 20: the breath takes floor(20 * C.PULSE.loss 0.15) = 3 (6 rounded down to 0)
 print("moved:", S1("local p=game.Players:GetPlayers()[1] local c=workspace.Caves.Spot_Cathedral.Value.WorldPosition p.Character.HumanoidRootPart.CFrame=CFrame.new(c+Vector3.new(0,3,0)) return math.floor((c-workspace.Caves:FindFirstChild('LiftLanding',true).Position).Magnitude)"))
 time.sleep(1)
 print("bag before:", S1("local p=game.Players:GetPlayers()[1] return tostring(p:GetAttribute('InCave'))"))

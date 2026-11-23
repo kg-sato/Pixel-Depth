@@ -5,6 +5,8 @@ import sys, time
 import night as N
 
 pre = sys.argv[1]
+import os
+DWELL = os.environ.get("MG_DWELL", "0")  # seconds the strike dial stays up before the strike: loop_rec5 sets 3.5 so a tour still catches it; tests keep 0 (verify_night's wind-up check failed with the dwell)
 want = sys.argv[2:] or ["strike", "rush"]
 P = 'local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart '
 
@@ -33,7 +35,7 @@ if "InCave" not in N.lua("return game.Players:GetPlayers()[1]:GetAttribute('InCa
 if "strike" in want:
     print("common:", go_to("d:GetAttribute('Ore')<3")); time.sleep(1.2); face()
     N.key("E"); time.sleep(0.8); N.shot(pre + "_strike")
-    print(N.lua("task.wait(3.5) local hud=game.Players.LocalPlayer.PlayerGui.PixelHUD.CaveHud.PerfectStrike local nd,ar=hud:FindFirstChild('Needle',true),hud:FindFirstChild('Arc',true) "
+    print(N.lua("task.wait(" + DWELL + ") local hud=game.Players.LocalPlayer.PlayerGui.PixelHUD.CaveHud.PerfectStrike local nd,ar=hud:FindFirstChild('Needle',true),hud:FindFirstChild('Arc',true) "
                 "local R=game.ReplicatedStorage.Remotes.Extract local t0=os.clock() while os.clock()-t0<3 do if math.abs((nd.Rotation-ar.Rotation+180)%360-180)<5 then break end task.wait() end "
                 "R:FireServer('strike',workspace:GetServerTimeNow()) return 'struck'", "Client").splitlines()[-1:] or [""])
     time.sleep(0.12); N.shot(pre + "_strike_hit")

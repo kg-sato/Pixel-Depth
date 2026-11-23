@@ -15,7 +15,7 @@ DevSurge, DevRift, DevGold, DevGiftSecs, DevGeodes, DevFriends, DevMarquee, DevC
 script, the geode press and the chime strikes timed by script, the sale shown by firing its effect by
 hand, the reward chest closed by script. The crew ride has ONE real player: the server plays the driver, and a script presses
 the stoker's key when the needle is in the gold, throws two flares and answers the crew moments."""
-import pathlib, re, subprocess, sys, time
+import os, pathlib, re, subprocess, sys, time
 here = pathlib.Path(__file__).resolve().parent
 game, ws = here.parent, here.parent.parent.parent
 sys.path.insert(0, str(here))
@@ -98,7 +98,7 @@ C(ZIP + "local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.P
 S("workspace:SetAttribute('DevGold',70) return 1"); mark("Golden Vein Surge: the gold zone is twice as wide")
 mark("minigames (mg_night.py: strike, then rush)")
 S(P + "h.CFrame=cv:FindFirstChild('LiftLanding',true).CFrame+Vector3.new(0,3,0) return 1"); time.sleep(1.5)
-r = subprocess.run([sys.executable, str(here / "mg_night.py"), "loop_" + name], capture_output=True, text=True, cwd=here)
+r = subprocess.run([sys.executable, str(here / "mg_night.py"), "loop_" + name], capture_output=True, text=True, cwd=here, env={**os.environ, "MG_DWELL": "3.5"})
 print("mg_night:", " | ".join(r.stdout.splitlines()[-6:]), r.stderr[-300:])  # full1122e: the strike never showed and nothing said why
 time.sleep(2)
 mark("Root Warden: the whole fight by autopilot")
