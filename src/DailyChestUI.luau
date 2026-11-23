@@ -45,6 +45,10 @@ function M.start(E)
 		box(Vector3.new(0.8, 0.9, 0.2), CFrame.new(0, 1.75, 1.56), BRASS, Enum.Material.Metal) -- the lock plate
 		box(Vector3.new(0.26, 0.34, 0.24), CFrame.new(0, 1.66, 1.6), Color3.fromRGB(60, 36, 26))
 		local glowIn = box(Vector3.new(3.9, 0.3, 2.5), CFrame.new(0, 2.14, 0), Color3.fromRGB(255, 226, 130), Enum.Material.Neon) -- the light of the treasure, seen when the lid is up
+		for k, g in { { -1.2, 0.2, Color3.fromRGB(255, 70, 170), 45 }, { -0.3, -0.5, Color3.fromRGB(80, 230, 255), 20 }, { 0.6, 0.3, Color3.fromRGB(255, 200, 70), 60 }, { 1.3, -0.4, Color3.fromRGB(170, 110, 255), 35 }, { 0.1, 0.6, Color3.fromRGB(255, 200, 70), 10 } } do -- treasure heaped in the mouth: a bare glowing plate read as a blank white box (Orchestrator round 2, 2026-11-23)
+			local big = k % 2 == 1 and 0.62 or 0.5
+			box(Vector3.new(big, big * (g[3].G > 0.7 and 0.35 or 1), big), CFrame.new(g[1], 2.42 + big * 0.3, g[2]) * CFrame.Angles(0.4, math.rad(g[4]), 0.3), g[3], Enum.Material.Neon)
+		end
 		glowIn.Transparency = 1
 		local hinge = CFrame.new(0, 2.24, -1.5)
 		local lid = {}
@@ -120,7 +124,7 @@ function M.start(E)
 		end
 		days[d] = { c = c, st = st, l = l }
 	end
-	local collect = button(layer, "COLLECT", S(220, 64), S(640, 628), Vector2.new(0.5, 0.5), "mint", "check") -- under the card: at 560 it sat on its bottom border (Orchestrator 2026-11-23); -- a tick, not a coin: the coin read as a price (Gemini views_full1122c)
+	local collect = button(layer, "COLLECT", S(220, 58), S(640, 556), Vector2.new(0.5, 0.5), "mint", "check") -- inside the card: at 628 it fell off the bottom of the screen (Orchestrator round 2, 2026-11-23); -- a tick, not a coin: the coin read as a price (Gemini views_full1122c)
 	fit(collect, 220, 64)
 	local busy, spin = false, nil
 	local flyLayer = new("ScreenGui", gui.Parent, { Name = "RewardFly", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 13 })
@@ -271,6 +275,9 @@ function M.start(E)
 		end)
 	end
 	collect.Activated:Connect(hide)
+	game:GetService("RunService").Heartbeat:Connect(function() -- world prompts step back while the chest shows (Orchestrator round 2: F CHALLENGE behind the lid); re-armed each frame, so a disabled layer frees them at once
+		if layer.Enabled and E.vmHook then E.vmHook.promptsQuietUntil = math.max(E.vmHook.promptsQuietUntil or 0, os.clock() + 0.25) end
+	end)
 	scrim.Activated:Connect(hide)
 
 	return { show = show, fly = fly }
