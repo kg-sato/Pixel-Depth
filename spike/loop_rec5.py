@@ -104,9 +104,9 @@ r = subprocess.run([sys.executable, str(here / "mg_night.py"), "loop_" + name], 
 print("mg_night:", " | ".join(r.stdout.splitlines()[-6:]), r.stderr[-300:])  # full1122e: the strike never showed and nothing said why
 time.sleep(2)
 mark("Root Warden: the whole fight by autopilot")
-S(P + "p:SetAttribute('DevEquip',6) local w=cv:FindFirstChild('Warden',true) local o=w.PrimaryPart.Position local t=cv:FindFirstChild('TentSide',true) local away=((o-t.Position)*Vector3.new(1,0,1)).Unit "
+S(P + "p:SetAttribute('DevEquip',6) local w=cv:FindFirstChild('Warden',true) local o=w.PrimaryPart.Position local away=(w:GetPivot().LookVector*Vector3.new(1,0,1)).Unit "
       "local rp=RaycastParams.new() rp.FilterDescendantsInstances={w,p.Character} rp.FilterType=Enum.RaycastFilterType.Exclude local best "
-      "for _,deg in {35,-35,60,-60,0,90,-90,120,-120,150,-150,180} do local d=CFrame.Angles(0,math.rad(deg),0):VectorToWorldSpace(away) local hit=workspace:Raycast(o+d*13+Vector3.new(0,6,0),Vector3.new(0,-14,0),rp) "
+      "for _,deg in {0,15,-15,30,-30,45,-45,60,-60,90,-90,180} do local d=CFrame.Angles(0,math.rad(deg),0):VectorToWorldSpace(away) local hit=workspace:Raycast(o+d*13+Vector3.new(0,6,0),Vector3.new(0,-14,0),rp) "
       "if hit and math.abs(hit.Position.Y-(o.Y-4))<4 then local eye=hit.Position+Vector3.new(0,4.5,0) local see=workspace:Raycast(eye,(o-eye),rp) local roof=workspace:Raycast(eye,Vector3.new(0,5,0),rp) "
       "local back=workspace:Raycast(eye,d*5,rp) local box=#workspace:GetPartBoundsInBox(CFrame.new(hit.Position+Vector3.new(0,3.2,0)),Vector3.new(3,5,3)) "
       "if not see and not roof and not back and box==0 then best=hit.Position break end end end "  # open floor, a clear line to the boss, head room and nothing behind: the first try stood inside the rock

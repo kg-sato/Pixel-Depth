@@ -1387,10 +1387,7 @@ do
 			if cave.dof then cave.dof:Destroy() cave.dof = nil end
 		end
 	end
-	local function inCamp(pos)
-		local o = C.CAVE_ORIGIN
-		return Vector2.new(pos.X - o.X, pos.Z - o.Z).Magnitude < C.CAMP_RING and math.abs(pos.Y - o.Y) < 30
-	end
+	local function inCamp(pos) return C.campAt(pos) ~= nil end -- every camp, as the server counts it: Camp 1 only let the torch die at the Kiln Camp (Orchestrator round 2)
 	caveStep = function(now)
 		local h = hrp()
 		if not h then return end
