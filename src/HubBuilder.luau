@@ -1691,7 +1691,12 @@ function Hub.build(parent, origin)
 				local p = W(mx, groundTop(mx, mz), mz)
 				vox(props, "MushStem", Vector3.new(0.7, h, 0.7), CFrame.new(p + Vector3.new(0, h / 2, 0)), PAL.cream[2], { CanCollide = false })
 				local cap = vox(props, "MushCap", Vector3.new(h * 1.2, 0.8, h * 1.2), CFrame.new(p + Vector3.new(0, h + 0.3, 0)), tint, { CanCollide = false })
-				if k == 2 then glow(cap, tint, 14, 0.8) end
+				if k == 2 then -- a lit cap, not a neon one: from the town camera the big flat neon cap read as a stray cyan slab (Orchestrator rounds 3-4)
+					local mat = cap.Material
+					glow(cap, tint, 14, 0.8)
+					cap.Material = mat
+					vox(props, "MushCapTop", Vector3.new(h * 0.72, 0.5, h * 0.72), CFrame.new(p + Vector3.new(0, h + 0.9, 0)), tint:Lerp(Color3.new(1, 1, 1), 0.18), { CanCollide = false }) -- a domed second step, so it reads as a mushroom
+				end
 			end
 		end
 	end
