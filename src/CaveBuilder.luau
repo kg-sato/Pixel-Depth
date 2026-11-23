@@ -388,10 +388,10 @@ function Cave.build(parent, origin, seed)
 			local base = CFrame.new(W(i, j, 0)) * CFrame.Angles(0, turn, 0)
 			local S = 1.45
 			for _, s in { -1, 1 } do
-				part("Camp", "TentSide", Vector3.new(7, 0.6, 5.6) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, 0) * CFrame.Angles(0, 0, s * 0.9), col)
-				part("Camp", "TentStripe", Vector3.new(7.12, 0.72, 1.2) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, 0) * CFrame.Angles(0, 0, s * 0.9), PAL.cream, DECO)
+				part("Camp", "TentSide", Vector3.new(7, 0.6, 5.6) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, 0) * CFrame.Angles(0, 0, -s * 0.9), col) -- -s: the panels lean in to a ridge (s made a V, Orchestrator 2026-11-23)
+				part("Camp", "TentStripe", Vector3.new(7.12, 0.72, 1.2) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, 0) * CFrame.Angles(0, 0, -s * 0.9), PAL.cream, DECO)
 			end
-			part("Camp", "TentBack", Vector3.new(6.4, 4.6, 0.4) * S, base * CFrame.new(0, 2.1 * S, -2.7 * S), col:Lerp(Color3.new(0, 0, 0), 0.25))
+			part("Camp", "TentBack", Vector3.new(2.4, 3.6, 0.4) * S, base * CFrame.new(0, 1.8 * S, -2.7 * S), col:Lerp(Color3.new(0, 0, 0), 0.25)) -- narrow: a wide back stuck out of the A-frame's slopes
 			part("Camp", "Bedroll", Vector3.new(2.2, 0.6, 4) * S, base * CFrame.new(0, 0.3, 0), PAL.lilac, DECO)
 			part("Camp", "Door", Vector3.new(2, 3, 0.2) * S, base * CFrame.new(0, 1.5 * S, 2.7 * S), Color3.fromRGB(40, 28, 52), DECO)
 			part("Camp", "Pole", Vector3.new(0.3, 2, 0.3), base * CFrame.new(0, 5.4 * S, 2.4 * S), PAL.bark, DECO)

@@ -65,13 +65,22 @@ function M.start(E)
 			-- 3 studs of the first-person eye sliced the screen edge to edge; thin long pieces that close fade out of the way
 			local cam = workspace.CurrentCamera.CFrame.Position
 			local camera = workspace.CurrentCamera
-			for _, p in workspace:GetPartBoundsInRadius(cam, 3) do
+			local near = workspace:GetPartBoundsInRadius(cam, 7)
+			local caves = workspace:FindFirstChild("Caves")
+			for _, f in { caves and caves:FindFirstChild("Ziplines"), caves and caves:FindFirstChild("Decor") } do -- decor and zip ropes have CanQuery off: spatial queries never return them
+				for _, p in f and f:GetChildren() or {} do
+					if p:IsA("BasePart") and (p.Position - cam).Magnitude < 7 + math.max(p.Size.X, p.Size.Y, p.Size.Z) / 2 then table.insert(near, p) end
+				end
+			end
+			for _, p in near do
 				local s = p.Size
-				if p.Transparency < 1 and math.min(s.X, s.Y, s.Z) <= 1.5 and math.max(s.X, s.Y, s.Z) >= 3 and not p:IsDescendantOf(ch) and not p:IsDescendantOf(camera)
-					and (faded[p] or p.LocalTransparencyModifier < 0.01) then
+				if p.Transparency < 1 and not p:IsDescendantOf(ch) and not p:IsDescendantOf(camera) and (faded[p] or p.LocalTransparencyModifier < 0.01) then
 					local lp = p.CFrame:PointToObjectSpace(cam)
 					local c = Vector3.new(math.clamp(lp.X, -s.X / 2, s.X / 2), math.clamp(lp.Y, -s.Y / 2, s.Y / 2), math.clamp(lp.Z, -s.Z / 2, s.Z / 2))
-					if (lp - c).Magnitude < 2.6 then want[p] = true end -- its own nearest point, not its bounding box (a long diagonal rope's box is huge)
+					local d = (lp - c).Magnitude -- its own nearest point, not its bounding box (a long diagonal rope's box is huge)
+					local thin = math.min(s.X, s.Y, s.Z) <= 1.5 and math.max(s.X, s.Y, s.Z) >= 3
+					if (thin or p.Name == "ZipFlag") and (d < 2.6 or (d < 7 and p.CFrame:PointToWorldSpace(c).Y > cam.Y + 1.2)) then want[p] = true -- a rope or beam close above the eye (Orchestrator 2026-11-23: a beam slices the Camp 1 view)
+					elseif (p.Material == Enum.Material.Neon or p.Material == Enum.Material.Glass) and d < 2.2 and not (p.Parent and p.Parent.Name == "Deposit") then want[p] = true end -- a glowing crystal at the lens filled 65% of the view on the zipline
 				end
 			end
 		end
@@ -81,9 +90,10 @@ function M.start(E)
 				faded[p] = nil
 			end
 		end
+		local fadeTo = plr:GetAttribute("InCave") and 0.92 or FADE -- in first person a ghost rope across the view still read as a beam
 		for p in want do
 			if not faded[p] then
-				p.LocalTransparencyModifier = FADE
+				p.LocalTransparencyModifier = fadeTo
 				faded[p] = true
 			end
 		end
