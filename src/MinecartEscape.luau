@@ -926,7 +926,7 @@ function M.play(opt)
 			stroke(hub, BRASS, 3)
 			needle:SetAttribute("Arm", true)
 			K.stokeArm = needleArm
-			word = label(gui, touch and "STOKER:  TAP IN THE GOLD" or "STOKER:  SPACE IN THE GOLD", UDim2.fromScale(0.3, 0.03), UDim2.fromScale(0.5, 0.705), WHITE, 4) -- over the gauge (under it, it ran into THE GLOOM label), until the first hit
+			word = label(gui, touch and "STOKER:  TAP IN THE GOLD" or "STOKER:  SPACE IN THE GOLD", UDim2.fromScale(0.24, 0.028), UDim2.fromScale(0.16, 0.89), WHITE, 4) -- (0.16, 0.89): under the stoker dial at the bottom left, not mid-screen over the cart (Orchestrator round 2) -- over the gauge (under it, it ran into THE GLOOM label), until the first hit
 			local lastPress = 0
 			K.stoke = function()
 				if t <= 0 or os.clock() - lastPress < S.cool then return end

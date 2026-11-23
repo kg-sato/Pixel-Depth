@@ -394,7 +394,7 @@ function M.init(c)
 		rg.Parent = sign
 		local rp = Instance.new("ProximityPrompt")
 		rp.ActionText, rp.ObjectText, rp.KeyboardKeyCode, rp.GamepadKeyCode = "Refine", "A geode", Enum.KeyCode.F, Enum.KeyCode.ButtonX
-		rp.MaxActivationDistance, rp.RequiresLineOfSight, rp.Style, rp.HoldDuration = 9, false, Enum.ProximityPromptStyle.Custom, 0
+		rp.MaxActivationDistance, rp.RequiresLineOfSight, rp.Style, rp.HoldDuration = 6, false, Enum.ProximityPromptStyle.Custom, 0 -- 6: at 9 its bubble covered the minecart at spawn (Orchestrator round 2)
 		rp:SetAttribute("Refinery", true)
 		rp.Parent = mouth
 		rp.Triggered:Connect(function(plr) refinery(plr, rp) end)

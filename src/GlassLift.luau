@@ -97,6 +97,16 @@ function M.start(E)
 			sp(Vector3.new(0.9, 1.1, 0.9), face * CFrame.new(x, y + 1.6, -7.3), WARM, LIT)
 			sp(Vector3.new(5, 5, 0.1), face * CFrame.new(x, y + 1.6, -9.45), WARM, { Material = LIT.Material, Transparency = 0.74 })
 		end
+		for r = 0, DEPTH // 20 - 1 do -- glowing root vines hanging down the walls, teal above and violet lower (Orchestrator round 2: "plain tan panels")
+			local face = CFrame.Angles(0, ((r + 2) % 4) * math.pi / 2, 0)
+			local x, y = ((r * 53) % 15) - 7, -r * 20 - 4
+			local col = y > -160 and Color3.fromRGB(70, 230, 210) or Color3.fromRGB(190, 120, 255)
+			local len = 5 + (r % 3) * 2
+			for s = 0, 2 do -- a few links that swing a little sideways, so it reads as a vine, not a pipe
+				sp(Vector3.new(0.35, len / 3 + 0.2, 0.35), face * CFrame.new(x + math.sin(s * 1.7 + r) * 0.35, y - len / 6 - s * len / 3, -8.6) * CFrame.Angles(0, 0, math.sin(s + r) * 0.18), col, LIT)
+			end
+			sp(Vector3.new(0.8, 0.8, 0.8), face * CFrame.new(x, y - len - 0.2, -8.6) * CFrame.Angles(0.6, 0.6, 0), col:Lerp(Color3.new(1, 1, 1), 0.3), LIT) -- a glowing bud at the tip
+		end
 		sp(Vector3.new(19, 1, 19), CFrame.new(0, -DEPTH + 2, 0), Color3.fromRGB(255, 170, 90), { Material = Enum.Material.SmoothPlastic }) -- the kiln glow of the Clay Caves far below
 		cage = new("Model", set, { Name = "Cage" })
 		local function cp(size, cf, color, props)

@@ -39,6 +39,8 @@ end
 
 function M.attach(label)
 	if label:GetAttribute("IconPass") or hasOwnIcon(label) or isShadow(label) then return end
+	local sg = label:FindFirstAncestorWhichIsA("SurfaceGui")
+	if sg and string.sub(sg.Name, 1, 3) == "AR_" then return end -- the look-around controls list has its own key caps: a star beside "J Quests" read as stray (Orchestrator round 2)
 	label:SetAttribute("IconPass", true)
 	local icon, pad, base, size0, watched
 	local queue

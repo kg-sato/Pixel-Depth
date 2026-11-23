@@ -196,11 +196,12 @@ function M.start(E)
 
 	local petRp = RaycastParams.new()
 	petRp.FilterType = Enum.RaycastFilterType.Exclude
-	local chimes, chimeAt, nearChime = nil, 0, false -- the Clay Caves' chime crystals: pets keep back while you play them (Orchestrator 2026-11-23: a pet stood on the puzzle)
+	local chimes, chimeAt, nearChime, chimesAt = nil, 0, false, 0 -- the Clay Caves' chime crystals: pets keep back while you play them (Orchestrator 2026-11-23: a pet stood on the puzzle)
 	local function chimeNear(h, now)
 		if now - chimeAt < 0.5 then return nearChime end
 		chimeAt = now
-		if not chimes then
+		if not chimes or (#chimes < 3 and now - (chimesAt or 0) > 5) then -- rebuilt until all three have replicated (Codex)
+			chimesAt = now
 			local clay = workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild("Clay")
 			if not clay then return false end
 			chimes = {}
@@ -286,6 +287,13 @@ function M.start(E)
 			local from = cam.CFrame.Position
 			local hit = workspace:Raycast(from, goal - from, petRp)
 			if hit and hit.Distance > 7 then goal = hit.Position - (goal - from).Unit * math.max(1.6, slot.maxExt * 0.65) end -- half its size off the wall: 1.6 left a big pet half inside a clay pillar -- a wall close to the eye (a stall beside you) would pull it onto the lens: then it keeps its place
+			if hit and hit.Distance <= 7 then -- a pillar right beside the eye: its slot is inside the rock, so it trots a step behind you instead (Orchestrator round 2: a pet half inside a Clay column)
+				local back = cam.CFrame.LookVector * Vector3.new(1, 0, 1)
+				back = back.Magnitude > 0.1 and back.Unit or Vector3.zAxis
+				goal = h.Position - back * (4 + i * 1.5) + Vector3.new(0, 0.5, 0)
+				local behind = workspace:Raycast(h.Position, goal - h.Position, petRp)
+				if behind then goal = behind.Position - (goal - h.Position).Unit * math.max(1.6, slot.maxExt * 0.65) end -- rock behind too: the open side of that wall (Codex)
+			end
 		end
 		pet.pos = pet.pos:Lerp(goal, 1 - math.exp(-dt * (called and 4 or (gloomNear and 12 or 7))))
 		local face = called and cam.CFrame.Position or (rare and not gloomNear and rare.PrimaryPart.Position) or pet.pos + cam.CFrame.LookVector * (moving and 3 or -4) + cam.CFrame.RightVector * 8 -- walking: it trots ahead, half turned; standing: it turns its face to you

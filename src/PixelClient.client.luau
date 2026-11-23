@@ -1306,7 +1306,7 @@ end)()
 
 	-- the daily chest show lives in ReplicatedStorage.Shared.DailyChestUI (directive v8: a glass card with a real 3D chest)
 	local Daily = require(RS.Shared:WaitForChild("DailyChestUI")).start({
-		gui = gui, new = new, S = S, panel = panel, fit = fit, text = text, icon = icon, button = button, tween = tween, pop = pop, sfx = sfx, shake = shake,
+		gui = gui, new = new, S = S, panel = panel, fit = fit, text = text, icon = icon, button = button, tween = tween, pop = pop, sfx = sfx, shake = shake, vmHook = forgeUI,
 		commas = commas, ICON = ICON, DEEP = DEEP, goldPill = goldPill, gemPill = gemPill, WHITE = WHITE, BUTTER = BUTTER, PLUM_SOFT = PLUM_SOFT, DEEP_GEM = DEEP_GEM, GLASS = GLASS,
 	})
 	local show, fly = Daily.show, Daily.fly

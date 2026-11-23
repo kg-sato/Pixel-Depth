@@ -317,6 +317,7 @@ function G.step(dt)
 		if s.boss and m.state ~= "flee" then -- a boss fight began: the gloomlings already out scatter
 			m.state, m.t0 = "flee", nowC
 			p:SetAttribute("State", "flee")
+			age = 0 -- the flee starts now: an old mob was destroyed on the spot instead of scattering (Codex)
 		end
 		local pos = p.Position
 		local to = hrp.Position + Vector3.new(0, 0.5, 0) - pos

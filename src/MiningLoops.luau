@@ -88,7 +88,7 @@ function M.start(E)
 		for _, d in deposits() do
 			local h = Instance.new("Highlight")
 			h.FillColor, h.FillTransparency, h.OutlineColor, h.OutlineTransparency = color, 0.75, color, 0.1
-			h.DepthMode, h.Adornee, h.Parent = Enum.HighlightDepthMode.AlwaysOnTop, d, fx
+			h.DepthMode, h.Adornee, h.Parent = Enum.HighlightDepthMode.Occluded, d, fx -- Occluded: through the rock a dozen pink outlines crossed the boss fight and the camp walls (Orchestrator round 2)
 			task.delay(seconds, function()
 				TweenService:Create(h, TweenInfo.new(0.6), { FillTransparency = 1, OutlineTransparency = 1 }):Play()
 				task.delay(0.65, function() h:Destroy() end)

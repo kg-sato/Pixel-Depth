@@ -10,6 +10,7 @@ local RADIUS = 6.5 -- studs round each blocking hit that fade with it (a roof is
 function M.start(E)
 	local plr = E.plr
 	local faded = {} -- [part] = true while faded this pass
+	local decor, decorAt = {}, -10
 	local rp = RaycastParams.new()
 	rp.FilterType = Enum.RaycastFilterType.Include
 	local last = 0
@@ -66,11 +67,15 @@ function M.start(E)
 			local cam = workspace.CurrentCamera.CFrame.Position
 			local camera = workspace.CurrentCamera
 			local near = workspace:GetPartBoundsInRadius(cam, 7)
-			local caves = workspace:FindFirstChild("Caves")
-			for _, f in { caves and caves:FindFirstChild("Ziplines"), caves and caves:FindFirstChild("Decor") } do -- decor and zip ropes have CanQuery off: spatial queries never return them
-				for _, p in f and f:GetChildren() or {} do
-					if p:IsA("BasePart") and (p.Position - cam).Magnitude < 7 + math.max(p.Size.X, p.Size.Y, p.Size.Z) / 2 then table.insert(near, p) end
+			if now - decorAt > 5 then -- decor and zip ropes have CanQuery off (spatial queries never return them): a list of them, refreshed every 5 s
+				decorAt, decor = now, {}
+				local caves = workspace:FindFirstChild("Caves")
+				for _, f in { caves and caves:FindFirstChild("Ziplines"), caves and caves:FindFirstChild("Decor") } do
+					for _, p in f and f:GetChildren() or {} do if p:IsA("BasePart") then table.insert(decor, { p, math.max(p.Size.X, p.Size.Y, p.Size.Z) / 2 }) end end
 				end
+			end
+			for _, d in decor do
+				if d[1].Parent and (d[1].Position - cam).Magnitude < 7 + d[2] then table.insert(near, d[1]) end
 			end
 			for _, p in near do
 				local s = p.Size
