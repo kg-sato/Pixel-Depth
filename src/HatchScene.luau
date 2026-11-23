@@ -416,7 +416,7 @@ function M.play(opt)
 				if rar then
 					local word = string.upper(rar[1]) .. (step < tier and "..." or "!")
 					if step == tier then caption.Text = word end -- the big rung names each tier; the caption only the last (tour v14: "EPIC..." twice on screen)
-					caption.TextColor3 = climbCol:Lerp(WHITE, 0.35)
+					caption.TextColor3 = climbCol:Lerp(WHITE, 0.55) -- brighter: the Legendary gold read muddy on the dark letterbox
 					local sc = caption:FindFirstChildOfClass("UIScale")
 					if sc then sc.Scale = 1.35 TweenService:Create(sc, TweenInfo.new(0.3, Enum.EasingStyle.Back), { Scale = 1 }):Play() end
 					rung.Text, rung.TextColor3, rung.UIStroke.Color = word, climbCol:Lerp(WHITE, 0.25), climbCol:Lerp(INK, 0.6)
@@ -710,7 +710,7 @@ function M.play(opt)
 			if (opt.odds or "") ~= "" then table.insert(words, "·") for w in string.gmatch(opt.odds, "%S+") do table.insert(words, w) end end
 			for i, w in words do
 				local l = Instance.new("TextLabel")
-				l.BackgroundTransparency, l.Font, l.TextSize, l.Text, l.AutomaticSize, l.Size = 1, Enum.Font.FredokaOne, px, w, Enum.AutomaticSize.XY, UDim2.new()
+				l.BackgroundTransparency, l.Font, l.TextSize, l.Text, l.AutomaticSize, l.Size = 1, Enum.Font.GothamBlack, px, w, Enum.AutomaticSize.XY, UDim2.new() -- GothamBlack, not FredokaOne: JellyHUD turned some words into jelly glyphs and the line came out in mixed sizes (Orchestrator 2026-11-23)
 				l.TextColor3, l.TextTransparency, l.LayoutOrder, l.ZIndex = i == 1 and rc:Lerp(WHITE, 0.15) or Color3.fromRGB(232, 222, 250), 1, i, 7
 				local st = Instance.new("UIStroke")
 				st.Color, st.Thickness, st.Transparency = INK, 2.5, 1
