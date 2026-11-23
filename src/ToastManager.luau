@@ -68,6 +68,13 @@ function M.start(e)
 		corner.Parent = l
 		local words = E.text(l, t.msg, UDim2.fromScale(0.92, 0.62), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), t.color, 700)
 		words.ZIndex = 21
+		if #t.msg > 26 then -- v15: a long line gets a taller, wider pill and a floor on its letter size (Orchestrator: KILN CAMP · ORE IS SAFE HERE squeezed onto one hairline)
+			l.Size = UDim2.fromScale(math.clamp(0.08 + #t.msg * (t.big and 0.0088 or 0.0072), 0.2, 0.56), t.big and 0.088 or 0.072)
+			words.Size = UDim2.fromScale(0.9, 0.66)
+			local cap = Instance.new("UITextSizeConstraint")
+			cap.MinTextSize, cap.MaxTextSize = 15, 40
+			cap.Parent = words
+		end
 		if GLASS then -- cut-glass kit: a smoked glass pill with a light edge; a short line is spelled in jelly letters and lands with a wobble
 			local edge = Instance.new("UIStroke")
 			edge.Color, edge.Thickness, edge.Transparency = Color3.fromRGB(236, 226, 255), 1.5, 0.2

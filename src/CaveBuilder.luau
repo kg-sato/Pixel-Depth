@@ -193,7 +193,12 @@ function Cave.build(parent, origin, seed)
 			for _, sk in { { -3.6, 1.6, 1.0 }, { -0.6, 3.9, 1.25 } } do -- two toasting sticks over the stones, a mallow on each (the reference camp CMP-01)
 				local from, to = fire + Vector3.new(sk[1], 0.35, sk[2]), fire + Vector3.new(sk[1] * 0.35, sk[3] + 0.6, sk[2] * 0.35)
 				part("Camp", "ToastStick", Vector3.new(0.1, 0.1, (to - from).Magnitude), CFrame.lookAt((from + to) / 2, to), Color3.fromRGB(150, 104, 66), { CanCollide = false, CastShadow = false })
-				part("Camp", "Mallow", Vector3.new(0.42, 0.42, 0.5), CFrame.lookAt(to, to + (to - from)), Color3.fromRGB(236, 196, 140), { CanCollide = false, CastShadow = false })
+				local mallow = part("Camp", "Mallow", Vector3.new(0.42, 0.42, 0.5), CFrame.lookAt(to, to + (to - from)), Color3.fromRGB(236, 196, 140), { CanCollide = false, CastShadow = false })
+				local spit = Instance.new("ParticleEmitter") -- v15: now and then the toasting mallow spits a warm ember (about one in 16 s each)
+				spit.Texture, spit.Rate, spit.Lifetime, spit.Speed, spit.SpreadAngle = "rbxasset://textures/particles/sparkles_main.dds", 0.065, NumberRange.new(0.9, 1.4), NumberRange.new(1.5, 2.6), Vector2.new(30, 30)
+				spit.Size, spit.LightEmission, spit.Acceleration, spit.EmissionDirection = NumberSequence.new(0.16, 0), 1, Vector3.new(0, -4, 0), Enum.NormalId.Top
+				spit.Color = ColorSequence.new(Color3.fromRGB(255, 220, 140), Color3.fromRGB(255, 110, 40))
+				spit.Parent = mallow
 			end
 			local pot = fire + Vector3.new(5.6, 0, -3.0)
 			for k = 0, 2 do local a = k * 2.1 part("Camp", "PotStone", Vector3.new(0.5, 0.35, 0.45), CFrame.new(pot + Vector3.new(math.cos(a) * 0.55, 0.17, math.sin(a) * 0.55)) * CFrame.Angles(0, a, 0), Color3.fromRGB(70, 64, 76), { CanCollide = false }) end

@@ -38,6 +38,7 @@ R.Fx.OnClientEvent:Connect(function(kind, a, b, c)
 			while hud and not hud.Visible and os.clock() - t0 < 4 do task.wait() end
 			local nd, ar = hud and hud:FindFirstChild("Needle", true), hud and hud:FindFirstChild("Arc", true)
 			if not nd or not ar then return note("no-dial") end
+			task.wait(tonumber(p:GetAttribute("DevPilotWait")) or 0) -- the tour holds the open dial a moment for its still (v15: view 07 kept landing on KNOT CRACKED)
 			for n = 1, 6 do
 				local t1 = os.clock()
 				while hud.Visible and os.clock() - t1 < 3 do

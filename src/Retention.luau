@@ -32,7 +32,22 @@ end
 function M.cleanRefine(t) return (type(t) == "number" and t == t and t > 0) and math.floor(t) or 0 end -- the saved finishing time (os.time), 0 = nothing in the furnace
 local function tellRefine(plr, s) -- nil = empty; otherwise the server-clock time the job is done
 	plr:SetAttribute("RefineAt", s.refine > 0 and workspace:GetServerTimeNow() + (s.refine - os.time()) or nil)
+	plr:SetAttribute("RefineStirred", (s.refine > 0 and s.refineStir == s.refineN) or nil) -- v15: this job was stirred (Shared.RefineryFX hides the prompt)
 end
+-- v15 (Master Directive, @marctgamer's in-world cooking pot): STIR CRUCIBLE, once per refine job (the job's number refineN,
+-- saved as refineStir): 5 s off the wait and a burst of sparks. The server checks the job is running and not stirred yet.
+local function stir(plr, prompt)
+	local s = ctx.data[plr]
+	if not s or s.refine == nil or not ctx.nearPrompt(plr, prompt) or os.clock() < (s.refineCool or 0) then return end
+	s.refineCool = os.clock() + 0.5
+	local left = s.refine - os.time()
+	if s.refine <= 0 or left <= 1 or s.refineStir == s.refineN then return ctx.fx:FireClient(plr, "refine", "nostir") end
+	s.refineStir = s.refineN
+	s.refine = math.max(os.time() + 1, s.refine - C.REFINE.stir)
+	tellRefine(plr, s)
+	ctx.fx:FireClient(plr, "refine", "stir", s.refine - os.time())
+end
+M.stir = stir -- for the security test (spike/stir_test.py)
 local function refinery(plr, prompt)
 	local s = ctx.data[plr]
 	if not s or s.refine == nil or not ctx.nearPrompt(plr, prompt) or os.clock() < (s.refineCool or 0) then return end
@@ -335,12 +350,38 @@ function M.init(c)
 		local copper = Color3.fromRGB(214, 128, 72)
 		part("RefineryBand", Vector3.new(4.6, 0.35, 4.2), fat * CFrame.new(0, 3.3, 0), copper, Enum.Material.Metal)
 		part("RefineryBandLow", Vector3.new(4.56, 0.22, 4.16), fat * CFrame.new(0, 0.86, 0.02), copper, Enum.Material.Metal)
-		part("RefineryTop", Vector3.new(3.8, 0.7, 3.4), fat * CFrame.new(0, 3.825, 0), stoneD, SL)
-		part("RefineryTop2", Vector3.new(3, 0.7, 2.6), fat * CFrame.new(0, 4.525, 0), stone, SL)
-		part("RefineryChimney", Vector3.new(1.4, 2.6, 1.4), fat * CFrame.new(0.5, 6.175, 0.3), stoneD, SL)
-		part("RefineryChimneyRim", Vector3.new(1.8, 0.35, 1.8), fat * CFrame.new(0.5, 7.65, 0.3), copper, Enum.Material.Metal)
-		part("RefineryChimneyTip", Vector3.new(1.1, 0.7, 1.1), fat * CFrame.new(0.5, 8.175, 0.3), stoneD, SL) -- a narrower top: its own outline against the forge's chimney
-		local glow = part("RefineryChimneyGlow", Vector3.new(0.7, 0.12, 0.7), fat * CFrame.new(0.5, 8.585, 0.3), Color3.fromRGB(255, 190, 90), Enum.Material.Neon)
+		-- v15 (Master Directive, @marctgamer's in-world pot): an open-top stone crucible with iron hoops sits on the kiln, so you
+		-- watch your geode melt in it (Shared.RefineryFX colours the melt, bubbles it and works the paddle on each player's own
+		-- screen); cold, it holds a dark bed of ash slag and a pair of tongs rests across the rim. The chimney moved to the back corner.
+		local CZ = -0.3 -- the crucible's middle, front to back
+		for _, w in { { Vector3.new(3.4, 1.5, 0.4), Vector3.new(0, 4.15, CZ - 1.2) }, { Vector3.new(3.4, 1.5, 0.4), Vector3.new(0, 4.15, CZ + 1.2) },
+			{ Vector3.new(0.4, 1.46, 2.4), Vector3.new(-1.5, 4.15, CZ) }, { Vector3.new(0.4, 1.46, 2.4), Vector3.new(1.5, 4.15, CZ) } } do -- the side walls run into the end walls and stop short of their tops: no shared faces
+			part("CrucibleWall", w[1], fat * CFrame.new(w[2]), stoneD, SL)
+		end
+		for k, y in { 3.75, 4.75 } do -- two iron hoops round the bowl, a little proud of the stone
+			for _, w in { { Vector3.new(3.56, 0.22, 0.1), Vector3.new(0, y, CZ - 1.4 - k * 0.01) }, { Vector3.new(3.56, 0.22, 0.1), Vector3.new(0, y, CZ + 1.4 + k * 0.01) },
+				{ Vector3.new(0.1, 0.22, 3.1), Vector3.new(-1.7 - k * 0.01, y, CZ) }, { Vector3.new(0.1, 0.22, 3.1), Vector3.new(1.7 + k * 0.01, y, CZ) } } do -- each hoop straddles the stone face it wraps
+				part("CrucibleHoop", w[1], fat * CFrame.new(w[2]), iron, Enum.Material.Metal)
+			end
+		end
+		local melt = part("CrucibleMelt", Vector3.new(2.56, 0.3, 1.96), fat * CFrame.new(0, 4.25, CZ), Color3.fromRGB(58, 48, 62), Enum.Material.Slate)
+		melt.CanCollide = false
+		for k, a in { -0.5, 0.42 } do -- the tongs, resting across the rim
+			part("CrucibleTongs", Vector3.new(0.14, 0.14, 3.3), fat * CFrame.new(-0.55 + k * 0.32, 5.0 + k * 0.03, CZ) * CFrame.Angles(0, a, 0), iron, Enum.Material.Metal).CanCollide = false
+		end
+		local stirPt = part("CrucibleStirPoint", Vector3.new(0.4, 0.4, 0.4), fat * CFrame.new(0, 5.6, CZ), stone, Enum.Material.SmoothPlastic)
+		stirPt.Transparency, stirPt.CanCollide, stirPt.CanQuery, stirPt.CanTouch = 1, false, false, false
+		local sp = Instance.new("ProximityPrompt")
+		sp.ActionText, sp.ObjectText, sp.KeyboardKeyCode, sp.GamepadKeyCode = "Stir crucible", "5 s faster", Enum.KeyCode.E, Enum.KeyCode.ButtonY
+		sp.MaxActivationDistance, sp.RequiresLineOfSight, sp.Style, sp.HoldDuration = 8, false, Enum.ProximityPromptStyle.Custom, 0
+		sp:SetAttribute("RefineryStir", true)
+		sp.Enabled = false -- each player's own screen turns it on while that player's job runs unstirred (Shared.RefineryFX)
+		sp.Parent = stirPt
+		sp.Triggered:Connect(function(plr) stir(plr, sp) end)
+		part("RefineryChimney", Vector3.new(1.0, 3.6, 1.0), fat * CFrame.new(1.6, 5.2, 1.55), stoneD, SL)
+		part("RefineryChimneyRim", Vector3.new(1.4, 0.35, 1.4), fat * CFrame.new(1.6, 7.175, 1.55), copper, Enum.Material.Metal)
+		part("RefineryChimneyTip", Vector3.new(0.8, 0.6, 0.8), fat * CFrame.new(1.6, 7.65, 1.55), stoneD, SL) -- a narrower top: its own outline against the forge's chimney
+		local glow = part("RefineryChimneyGlow", Vector3.new(0.5, 0.12, 0.5), fat * CFrame.new(1.6, 8.01, 1.55), Color3.fromRGB(255, 190, 90), Enum.Material.Neon)
 		part("RefineryShelf", Vector3.new(3.4, 0.2, 0.9), fat * CFrame.new(0, 0.6, -2.45), stoneL, SL)
 		-- the firebox (Gemini, 2026-11-14: "a flat black box with four yellow stripes"): a deep iron porch, so the fire sits back in
 		-- shadow; a dark red back wall, ember blocks of three heats in front of it, a flame, and two thin bars only
@@ -383,8 +424,8 @@ function M.init(c)
 		ml.Color, ml.Range, ml.Brightness, ml.Shadows = Color3.fromRGB(255, 150, 70), 18, 2.4, false
 		ml.Parent = mouth
 		-- the name on an iron plate on the hood, over the firebox (a wooden board on posts cut across the chimney)
-		local sign = part("RefinerySign", Vector3.new(3.5, 0.95, 0.2), fat * CFrame.new(0, 4.02, -1.78) * CFrame.Angles(math.rad(-8), 0, 0), iron, Enum.Material.Metal)
-		part("RefinerySignFrame", Vector3.new(3.86, 1.3, 0.16), fat * CFrame.new(0, 4.02, -1.78) * CFrame.Angles(math.rad(-8), 0, 0) * CFrame.new(0, 0, 0.07), copper, Enum.Material.Metal) -- a copper frame round the plate
+		local sign = part("RefinerySign", Vector3.new(3.2, 0.8, 0.2), fat * CFrame.new(0, 4.25, -2.05), iron, Enum.Material.Metal) -- v15: on the crucible's front wall (the hood it hung on is gone)
+		part("RefinerySignFrame", Vector3.new(3.5, 1.05, 0.16), fat * CFrame.new(0, 4.25, -1.96), copper, Enum.Material.Metal) -- a copper frame round the plate
 		local rg = Instance.new("SurfaceGui")
 		rg.Name, rg.Face, rg.SizingMode, rg.PixelsPerStud, rg.LightInfluence = "RefineryGui", Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 50, 0
 		local rt = Instance.new("TextLabel")

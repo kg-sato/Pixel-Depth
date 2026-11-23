@@ -10,6 +10,8 @@ local WATCH = { clink = true, clinkPair = true, ping = true, saviorBonus = true,
 rem:WaitForChild("Fx").OnClientEvent:Connect(function(kind, a, b, c)
 	if WATCH[kind] then R:FireServer("fx_" .. kind, kind == "ping" and (tostring(b) .. " by " .. tostring(c)) or nil) end
 end)
+local lastG = "none"
+rem:WaitForChild("Crew").OnClientEvent:Connect(function(kind, a) if kind == "G" then lastG = string.format("%.3f", a) end end) -- v15: the server's crew Gloom gap
 R.OnClientEvent:Connect(function(cmd, arg)
 	local h = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
 	if cmd == "clink" then rem:WaitForChild("Clink"):FireServer()
@@ -17,6 +19,8 @@ R.OnClientEvent:Connect(function(cmd, arg)
 	elseif cmd == "ping" and h then rem:WaitForChild("Ping"):FireServer(h.Position, "help")
 	elseif cmd == "strike" then rem:WaitForChild("GloomStrike"):FireServer(arg)
 	elseif cmd == "crewdbg" then plr:SetAttribute("DevCrew", true)
+	elseif cmd == "flare" then rem:WaitForChild("Crew"):FireServer("f")
+	elseif cmd == "gap" then R:FireServer("gap", lastG)
 	elseif cmd == "state" then R:FireServer("state", tostring(plr:GetAttribute("DevCrewState")))
 	elseif cmd == "card" then -- the escape's result card: is everything above CONTINUE clear of it?
 		local found = "none"

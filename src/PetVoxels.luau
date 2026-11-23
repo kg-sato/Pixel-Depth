@@ -147,6 +147,87 @@ local function addFx(m, name, d, rig)
 	end
 end
 
+-- Master Directive v15 (@snackdragonstudio's Oakheart, vault Social References Review (2026-11-23)): rare and better pets
+-- show thin glowing seams in the cracks between their body plates (two short jagged cracks on each flank of the body, flush
+-- on its faces) and a prop that makes their back silhouette their own. Every piece is a rig piece of the Body, so it
+-- breathes, sways and rears with it. Neon at a darkened tint and seam-thin: full Neon bloomed manes white (lineup2).
+local SEAM = {
+	Shinemane = { col = C3(255, 222, 130), prop = "lantern" }, Goldbristle = { col = C3(150, 255, 90), prop = "canopy" },
+	Pixiu = { col = C3(255, 196, 80), prop = "ore" }, Fafnir = { col = C3(255, 120, 40), prop = "crest", tint = C3(255, 120, 70) },
+	Kirin = { col = C3(110, 230, 255), prop = "crest", tint = C3(150, 230, 255) }, Ouro = { col = C3(205, 120, 255), prop = "crest", tint = C3(190, 120, 255) },
+	Ninering = { col = C3(130, 230, 255) },
+}
+local function seams(m, name, rig)
+	local def = SEAM[name]
+	if not def then return end
+	local body, vol = nil, 0 -- the body plate that carries the cracks: the baked body, else the largest main-coat piece
+	for _, g in rig.pieces do
+		if g.part == "Body" and (g.role == "Tex" or g.role == "Main") then
+			local v = g.size.X * g.size.Y * g.size.Z * (g.role == "Tex" and 10 or 1)
+			if v > vol then body, vol = g, v end
+		end
+	end
+	if not body then return end
+	local c, h = body.rest.Position, body.size / 2
+	local H = h.Y * 2
+	local rnd = Random.new(#name * 131 + 7)
+	local function piece(size, cf, color, mat, tr)
+		local q = Instance.new("Part")
+		q.Name, q.Size, q.Color, q.Material, q.Transparency = "Body_Seam", size, color, mat or Enum.Material.Neon, tr or 0
+		q.Anchored, q.CanCollide, q.CanQuery, q.CanTouch, q.CastShadow = true, false, false, false, false
+		q.CFrame = cf
+		q.Parent = m
+		table.insert(rig.pieces, { p = q, part = "Body", role = "Seam", rest = cf, piv = rig.piv.Body or Vector3.zero, size = size })
+		return q
+	end
+	local glow = def.col:Lerp(Color3.new(0, 0, 0), 0.3)
+	local w = math.max(0.045, H * 0.03)
+	for side = -1, 1, 2 do
+		local x = c.X + side * (h.X + 0.012)
+		for _ = 1, 2 do
+			local y, z = c.Y + rnd:NextNumber(-0.35, 0.3) * h.Y, c.Z + rnd:NextNumber(-0.5, 0.5) * h.Z
+			local ang = rnd:NextNumber(-1.1, 1.1)
+			for k = 1, 3 do -- a jagged crack of three pieces, the last one thinner
+				local len = H * rnd:NextNumber(0.13, 0.22)
+				local y1, z1 = y + math.sin(ang) * len, z + math.cos(ang) * len
+				if math.abs(y1 - c.Y) > h.Y * 0.78 or math.abs(z1 - c.Z) > h.Z * 0.85 then break end
+				local a, b = Vector3.new(x, y, z), Vector3.new(x, y1, z1)
+				piece(Vector3.new(0.02, k == 3 and w * 0.6 or w, len + w * 0.5), CFrame.lookAt((a + b) / 2, b), glow)
+				y, z, ang = y1, z1, ang + rnd:NextNumber(-1.0, 1.0)
+			end
+		end
+	end
+	local top, bz = c.Y + h.Y, c.Z + h.Z * 0.1
+	if def.prop == "crest" then -- a row of crystal spines down the back, tallest in the middle, each with a glowing core
+		for i = 1, 4 do
+			local hh = H * (0.42 - math.abs(i - 2.5) * 0.09)
+			local zz = c.Z + (i - 2.5) * h.Z * 0.42
+			local cf = CFrame.new(c.X, top + hh * 0.32, zz) * CFrame.Angles(0.32, 0, (i % 2 == 0 and 1 or -1) * 0.08)
+			piece(Vector3.new(H * 0.13, hh, H * 0.13), cf, def.tint, Enum.Material.Glass, 0.12)
+			piece(Vector3.new(H * 0.04, hh * 0.72, H * 0.04), cf, def.col:Lerp(Color3.new(0, 0, 0), 0.35))
+		end
+	elseif def.prop == "canopy" then -- a little grove on the back: a stub of trunk and three leafy clumps, lighter on top
+		local LEAF, LIGHT, BARK = C3(84, 150, 60), C3(132, 200, 84), C3(110, 72, 44)
+		piece(Vector3.new(H * 0.1, H * 0.22, H * 0.1), CFrame.new(c.X, top + H * 0.1, bz), BARK, Enum.Material.SmoothPlastic)
+		for i, q in { { 0, 0.3, 0, 0.42, 0.22 }, { -0.12, 0.42, 0.08, 0.28, 0.18 }, { 0.1, 0.5, -0.06, 0.24, 0.16 } } do
+			piece(Vector3.new(H * q[4], H * q[5], H * q[4]), CFrame.new(c.X + H * q[1], top + H * q[2], bz + H * q[3]) * CFrame.Angles(0, i * 0.5, 0), i == 1 and LEAF or LIGHT, Enum.Material.SmoothPlastic)
+		end
+		piece(Vector3.new(H * 0.07, H * 0.07, H * 0.07), CFrame.new(c.X + H * 0.16, top + H * 0.34, bz - H * 0.1), def.col:Lerp(Color3.new(0, 0, 0), 0.3)) -- a glowing bud
+	elseif def.prop == "lantern" or def.prop == "ore" then -- a pack strapped on: a dark crate, and a glowing lantern or a heap of ore on it
+		local WOOD, IRON = C3(96, 64, 42), C3(60, 54, 76)
+		piece(Vector3.new(H * 0.34, H * 0.22, H * 0.3), CFrame.new(c.X, top + H * 0.1, bz), WOOD, Enum.Material.WoodPlanks)
+		piece(Vector3.new(h.X * 2 + 0.05, H * 0.05, H * 0.06), CFrame.new(c.X, top - H * 0.02, bz), IRON, Enum.Material.Metal) -- the strap over the back
+		if def.prop == "lantern" then
+			piece(Vector3.new(H * 0.16, H * 0.2, H * 0.16), CFrame.new(c.X, top + H * 0.31, bz), def.col:Lerp(Color3.new(0, 0, 0), 0.3))
+			piece(Vector3.new(H * 0.22, H * 0.04, H * 0.22), CFrame.new(c.X, top + H * 0.43, bz), IRON, Enum.Material.Metal)
+		else
+			for i, q in { { -0.06, 0.04 }, { 0.07, -0.03 }, { 0, 0.02 } } do
+				piece(Vector3.new(H * 0.11, H * 0.11, H * 0.11), CFrame.new(c.X + H * q[1], top + H * (0.24 + i * 0.03), bz + H * q[2]) * CFrame.Angles(i, i * 0.7, 0), def.col:Lerp(Color3.new(0, 0, 0), 0.3))
+			end
+		end
+	end
+end
+
 -- client: a fresh, painted model for this pet, or nil while its meshes have not arrived
 function M.build(name)
 	local d = DATA[name]
@@ -201,6 +282,7 @@ function M.build(name)
 			rig.light = l
 		end
 	end
+	seams(m, name, rig)
 	addFx(m, name, d, rig)
 	m:SetAttribute("Voxel", true)
 	M.rigs[m] = rig
@@ -283,12 +365,22 @@ ACT.spin = { dur = 2.2, fn = function(u)
 	local f = key(u, { { 0, 0 }, { 0.2, 1 }, { 0.8, 1 }, { 1, 0 } })
 	return { ring = f * 6, root = { lift = f * 0.25 }, head = CFrame.Angles(f * 0.15, 0, 0) }
 end, burst = 0.5 }
+ACT.hero = { dur = 1.65, fn = function(u) -- v15 (Oakheart's hatch showcase): beat 1 (0 to 0.75 s) gathers: a crouch, wings and fins drawn in,
+	-- head down, a long inhale; beat 2 (0.75 to 1.65 s) rears onto the hind feet with wings flared wide and a roar, then drops onto the front feet in a burst of dust
+	local c = key(u, { { 0, 0 }, { 0.3, 1 }, { 0.44, 1 }, { 0.5, 0 } })
+	local r = key(u, { { 0.44, 0 }, { 0.58, 1 }, { 0.8, 1 }, { 0.9, -0.12 }, { 1, 0 } })
+	local land = key(u, { { 0.86, 0 }, { 0.9, 1 }, { 1, 0 } })
+	local j = math.sin(u * 120) * 0.045 * key(u, { { 0.56, 0 }, { 0.6, 1 }, { 0.78, 1 }, { 0.82, 0 } })
+	return { root = { pitch = r * 0.45 - c * 0.08 + j, lift = -c * 0.14 - land * 0.1, pivotBack = true }, head = CFrame.Angles(r * 0.55 - c * 0.35 + j, 0, j),
+		wing = c * 0.45 - r * 0.85, tail = CFrame.Angles(-r * 0.35 + c * 0.2, 0, 0), legF = CFrame.Angles(-r * 0.9 + math.sin(u * 30) * 0.3 * r, 0, 0), squash = c * 0.1 + land * 0.12 - r * 0.05, charge = c, flare = r }
+end, burst = 0.58, impact = 0.9 }
 -- the sound of each action on its beat (impact or burst): { name, pitch } from PixelClient's bank (M.sfx); pets far from the
 -- camera stay quiet, and a big pet sounds deeper
 local ACT_SFX = {
 	roar = { { "thud", 0.45 }, { "swing", 0.55 } }, stomp = { { "thud", 0.8 } }, rear = { { "thud", 0.7 }, { "step", 0.8 } },
 	armflex = { { "hit", 0.85 }, { "breakRock", 1.2 } }, flap = { { "swing", 1.25 }, { "land", 0.9 } }, hop = { { "land", 1.1 } },
 	tailfan = { { "sparkle", 0.9 } }, spin = { { "sparkle", 1.2 } }, shake = { { "step", 1.3 } },
+	hero = { { "thud", 0.6 }, { "land", 0.8 } }, heroBurst = { { "swing", 0.5 }, { "sparkle", 0.8 } }, -- v15: the roar sting on the rear-up, the thud on the landing
 }
 local function actSound(m, act)
 	local list = M.sfx and ACT_SFX[act]
@@ -307,9 +399,16 @@ local ACTS = {
 
 -- every frame, after the model was pivoted: pose the parts. now: os.clock(); moving: overrides the speed guess
 -- directive v13: start the pet's signature act now (the hatch fires it on the landing frame instead of after 2 to 6 s)
+local HERO = { Rare = true, Epic = true, Legendary = true, Mythic = true, Secret = true }
 function M.hero(m)
 	local rig = M.rigs[m]
 	if not rig then return end
+	local okC, Cfg = pcall(require, script.Parent:FindFirstChild("Config"))
+	local info = okC and Cfg.PETS and Cfg.PETS[m.Name]
+	if info and HERO[info[1]] then -- v15: rare and better pets land with the two-beat showcase (gather, then rear up and roar)
+		rig.act, rig.actT, rig.burst, rig.hit = "hero", os.clock(), false, false
+		return
+	end
 	local list = ACTS[m.Name] or { "look" }
 	local pick = list[1]
 	for _, a in list do
@@ -359,7 +458,7 @@ function M.animate(m, now, dt, moving)
 			end
 			if a.burst and not rig.burst and u >= a.burst then -- a puff from every effect on the pet on the beat
 				rig.burst = true
-				if not a.impact then actSound(m, rig.act) end
+				if not a.impact then actSound(m, rig.act) elseif ACT_SFX[rig.act .. "Burst"] then actSound(m, rig.act .. "Burst") end
 				for _, e in m:GetDescendants() do
 					if e:IsA("ParticleEmitter") and not e.LockedToPart and e.Parent.Name ~= "Fx_dust" then e:Emit(8) end
 				end

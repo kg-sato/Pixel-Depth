@@ -316,7 +316,7 @@ function M.start(E)
 		end
 	end)
 
-	local nearHid = {} -- world parts hidden from the head while the panels are up
+	local nearHid = {} -- [part] = its LocalTransparencyModifier before the panels hid it (world parts hidden from the head while the panels are up)
 	RunService:BindToRenderStep("PixelARSettings", Enum.RenderPriority.Camera.Value + 2, function(dt)
 		if not isOpen then return end
 		local cam = workspace.CurrentCamera
@@ -332,7 +332,7 @@ function M.start(E)
 		if not closing then -- pets and anything within 5 studs of the head stood in front of the panels (Gemini full1122d 126 s)
 			if (plr:GetAttribute("HidePetsUntil") or 0) < now + 0.3 then plr:SetAttribute("HidePetsUntil", now + 0.6) end
 			for _, p in workspace:GetPartBoundsInRadius(base.Position, 5) do
-				if not p:IsDescendantOf(folder) and not (ch and p:IsDescendantOf(ch)) and p.LocalTransparencyModifier < 0.01 then nearHid[p] = true p.LocalTransparencyModifier = 1 end -- only parts no other fade (RoofFade) owns, so restoring 0 is right
+				if not p:IsDescendantOf(folder) and not (ch and p:IsDescendantOf(ch)) and p.LocalTransparencyModifier < 0.01 then nearHid[p] = p.LocalTransparencyModifier p.LocalTransparencyModifier = 1 end -- only parts no other fade (RoofFade) owns, so restoring 0 is right
 			end
 		end
 		if closing and blend <= 0 then
@@ -340,7 +340,9 @@ function M.start(E)
 			flag.Visible = false
 			hook.arOpen = false
 			if hook.blur then hook.blur.Enabled = true end
-			for p in nearHid do p.LocalTransparencyModifier = 0 end
+			for p, was in nearHid do -- v15 (Codex): give back only what is still ours; a part another flow faded meanwhile (RoofFade, BossClient, DeathScreen) keeps its value
+				if p.Parent and p.LocalTransparencyModifier > 0.999 then p.LocalTransparencyModifier = was end
+			end
 			table.clear(nearHid)
 			if not plr:GetAttribute("InCave") then
 				for _, d in ch and ch:GetDescendants() or {} do

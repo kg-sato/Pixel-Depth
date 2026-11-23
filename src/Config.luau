@@ -315,7 +315,9 @@ C.GIFTS = { { 300, "coins", 150 }, { 600, "flares", 2 }, { 1200, "gems", 10 }, {
 -- the torch burns `torch` slower; at most `max` friends count.
 -- The Surface Refinery (ServerScriptService.Retention; directive v9): a furnace in town cracks one geode in the background in `secs`
 -- seconds and pays the gems and coins a geode cracked by hand pays (C.CLAY.geodeGems, geodeGold). One job at a time.
-C.REFINE = { secs = 300, first = 45 } -- first: a player's first job only (saved count refineN), so the idle option is shown working in the first minutes (four tour grades flagged the 5 min wait)
+C.HEAT = { secs = 2.4, period = 1.2, band = 0.09, late = 0.25, rebate = 0.05, life = 25 } -- v15 HEAT & BLOW at the forge: the gauge runs secs; a press is judged over the last `late` s; PERFECT pays rebate x the pickaxe's price; the token dies `life` s after the purchase (12 was too short: the story scenes reach their beat about 13 s in)
+function C.heatAt(t) return 0.5 - 0.48 * math.cos(t * 2 * math.pi / C.HEAT.period) end -- the heat needle, 0..1, from cold (t = 0) through the gold middle twice a sweep
+C.REFINE = { secs = 300, first = 45, stir = 5 } -- first: a player's first job only (saved count refineN), so the idle option is shown working in the first minutes (four tour grades flagged the 5 min wait)
 C.TETHER = { value = 0.15, reach = 15, torch = 0.25, max = 5, luck = 0.1 }
 -- Friends luck on eggs (the owner, 2026-11-14): each friend in the server makes Epic and better `luck` more likely (5 friends at
 -- most); what those tiers gain, Common loses, so the six still add up to 100. The server rolls from this table and the odds

@@ -38,11 +38,14 @@ function M.start(E)
 		end
 		local ROWS = DEPTH // 4
 		local vugs = {}
+		local dep = {} -- [k][c][r] = the z of that wall block's face (v15: lower-shaft dressing sits flush on it)
 		for k = 0, 3 do
+			dep[k] = {}
 			local face = CFrame.Angles(0, k * math.pi / 2, 0)
 			sp(Vector3.new(0.4, DEPTH, 0.4), face * CFrame.new(k % 2 == 0 and 3.9 or -3.9, -DEPTH / 2, -5.4), Color3.fromRGB(138, 128, 168), { Material = Enum.Material.Metal }) -- the guide rail, clear of the shelves
 			for c = 0, 4 do
 				local x = -8 + c * 4
+				dep[k][c] = {}
 				local r0, runD, runCol = 0, nil, nil
 				local function flush(r1)
 					if not runD then return end
@@ -55,6 +58,7 @@ function M.start(E)
 					local nz = math.noise(x / 9 + k * 3.1, y / 14, 0.7)
 					local d = ledge and (-5.8 - (c % 2) * 0.6) or (nz > 0.22 and -13 or (nz < -0.22 and -7.6 or -9.6))
 					if ledge and (c + r) % 4 == 2 then d = -12 end -- a gap in the shelf
+					dep[k][c][r] = d
 					local pal = zone(y + math.noise(x / 7 + k, y / 30, 2.2) * 26) -- a ragged boundary between the rock zones, not a straight cut
 					local col = pal[math.floor((-y + x * 0.18 + k * 3) / 8) % 4 + 1] -- the seams dip about 10 degrees across the wall
 					if d <= -12 then col = col:Lerp(Color3.new(0, 0, 0), 0.35) end -- a niche sits in shadow
@@ -115,6 +119,26 @@ function M.start(E)
 			local y = -230 - r * 18
 			sp(Vector3.new(7 + (r % 3) * 2, 0.9, 0.1), face * CFrame.new(((r * 37) % 9) - 4, y, -5.6) * CFrame.Angles(0, 0, (r % 2 == 0 and 1 or -1) * 0.12), Color3.fromRGB(255, 150 - r * 8, 70), { Material = Enum.Material.SmoothPlastic, Transparency = 0.25 })
 			sp(Vector3.new(10, 4, 0.1), face * CFrame.new(((r * 37) % 9) - 4, y, -5.7), Color3.fromRGB(255, 140, 70), { Material = Enum.Material.SmoothPlastic, Transparency = 0.8 }) -- its glow on the rock
+		end
+		for k = 0, 3 do -- v15: the lower shaft (-50 to -85 m) on all four walls, one piece every 12 studs: a violet root vine, a crystal
+			-- cluster growing out of the face, or a warm kiln seam flush on it (Orchestrator final grade: at -65 m the left and upper-right walls still read bare tan)
+			local face = CFrame.Angles(0, k * math.pi / 2, 0)
+			for r = 50, ROWS - 2, 3 do
+				local c = (r * 3 + k * 2) % 5
+				local d, x, y = dep[k][c][r], -8 + c * 4, -r * 4 - 2
+				local pick = (r // 3 + k) % 3
+				if pick == 0 then
+					local len = 6 + (r % 2) * 2
+					for q = 0, 2 do sp(Vector3.new(0.35, len / 3 + 0.2, 0.35), face * CFrame.new(x + math.sin(q * 1.7 + r + k) * 0.35, y + 2 - len / 6 - q * len / 3, -5.3) * CFrame.Angles(0, 0, math.sin(q + r + k) * 0.18), Color3.fromRGB(190, 120, 255), LIT) end
+					sp(Vector3.new(0.8, 0.8, 0.8), face * CFrame.new(x, y + 1.8 - len, -5.3) * CFrame.Angles(0.6, 0.6, 0), Color3.fromRGB(225, 190, 255), LIT)
+				elseif pick == 1 then
+					for q = 0, 2 do sp(Vector3.new(0.8, 2.4 - q * 0.5, 0.8), face * CFrame.new(x + q * 0.9 - 0.9, y - 0.6, d + 0.7) * CFrame.Angles(1.0, (q - 1) * 0.5, (q - 1) * 0.45), q == 1 and Color3.fromRGB(196, 120, 255) or CYAN, { Material = Enum.Material.Glass, Transparency = 0.1 }) end
+					sp(Vector3.new(3.8, 3.8, 0.1), face * CFrame.new(x, y, d + 0.07), Color3.fromRGB(150, 170, 255), { Material = LIT.Material, Transparency = 0.76 }) -- its glow on the rock
+				else
+					sp(Vector3.new(3.8, 0.7, 0.1), face * CFrame.new(x, y, d + 0.08) * CFrame.Angles(0, 0, (r % 2 == 0 and 1 or -1) * 0.12), Color3.fromRGB(255, 160, 80), { Material = LIT.Material, Transparency = 0.2 })
+					sp(Vector3.new(3.8, 3, 0.1), face * CFrame.new(x, y, d + 0.05), Color3.fromRGB(255, 140, 70), { Material = LIT.Material, Transparency = 0.82 })
+				end
+			end
 		end
 		cage = new("Model", set, { Name = "Cage" })
 		local function cp(size, cf, color, props)

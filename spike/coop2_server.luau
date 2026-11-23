@@ -70,14 +70,27 @@ L("board: A seat=" .. tostring(A:GetAttribute("CrewSeat")) .. " B seat=" .. tost
 A:SetAttribute("DevBoard", nil)
 task.wait(0.3)
 A:SetAttribute("DevBoard", true) -- the driver presses again: go now
-task.wait(14)
+task.wait(8)
+-- v15: the crew's Gloom runs on the server (DevCrewGap is its gap, set 4x a second in Studio): it creeps in, B's flare pushes it back,
+-- and both clients hold the server's number ("G")
+local g1 = A:GetAttribute("DevCrewGap")
+task.wait(3)
+local g2 = A:GetAttribute("DevCrewGap")
+R:FireClient(B, "flare")
+task.wait(0.7)
+local g3 = A:GetAttribute("DevCrewGap")
+R:FireAllClients("gap")
+task.wait(1.2)
+L(("crew gloom: server %s -> %s (creep) -> %s (flare) | A sees %s, B sees %s | creeps=%s pushed=%s"):format(tostring(g1), tostring(g2), tostring(g3), g(A, "gap="), g(B, "gap="),
+	tostring(type(g1) == "number" and type(g2) == "number" and g2 < g1), tostring(type(g2) == "number" and type(g3) == "number" and g3 > g2)))
+task.wait(3)
 R:FireAllClients("state")
 task.wait(2)
 L("ride: A=" .. g(A, "state=") .. " | B=" .. g(B, "state="))
-for _ = 1, 10 do -- the result card, as soon as it is up on both
-	task.wait(6)
+for _ = 1, 60 do -- the result card, as soon as it is up on both (v15: every 1.5 s; the card shows about 6 s, so a 7.5 s probe could miss it)
+	task.wait(1)
 	R:FireAllClients("card")
-	task.wait(1.5)
+	task.wait(0.5)
 	local ca, cb = got[A.Name .. ":card="], got[B.Name .. ":card="]
 	if ca and ca ~= "none" and cb and cb ~= "none" then break end
 end

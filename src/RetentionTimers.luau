@@ -68,7 +68,9 @@ function M.start(E)
 			if a == "start" then E.toast("GEODE IN THE REFINERY:  DONE IN " .. clock(b), GOLD, true) E.sfx("open", 0.7)
 			elseif a == "wait" then E.toast("THE REFINERY NEEDS " .. clock(b) .. " MORE", WHITE)
 			elseif a == "paid" then E.toast("REFINED!  +" .. tostring(b) .. " GEMS  +" .. tostring(c) .. " COINS", GOLD, true) E.sfx("upgrade", 1.2)
-			elseif a == "none" then E.toast("NO GEODE TO REFINE.  JARS IN THE CLAY CAVES HOLD THEM", WHITE) end
+			elseif a == "none" then E.toast("NO GEODE TO REFINE.  JARS IN THE CLAY CAVES HOLD THEM", WHITE)
+			elseif a == "stir" then E.toast("STIRRED!  READY IN " .. clock(b), GOLD, true) E.sfx("upgrade", 1.4) -- v15: the crucible's one stir a job (Shared.RefineryFX bursts the sparks)
+			elseif a == "nostir" then E.toast("THE CRUCIBLE IS STIRRED.  LET IT MELT", WHITE) end
 		elseif kind == "crystalRift" then -- a tall violet crystal of light stands over the kiln while the rift is open
 			E.toast("CRYSTAL RIFT IN THE CLAY CAVES!  ORE THERE IS WORTH " .. C.EVENTS.riftValue .. "X", Color3.fromRGB(200, 140, 255), true)
 			E.sfx("upgrade", 0.6)

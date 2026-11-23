@@ -658,7 +658,7 @@ function M.start(E)
 		end)
 	end)
 	local function row(label, a, b) return label .. "  " .. a .. '  <font color="' .. hex(PLUM_SOFT) .. '">></font>  <font color="' .. hex(DEEP_MINT) .. '">' .. b .. " \u{25B2}</font>" end
-	forgeUI.fx = function(kind, a, b)
+	forgeUI.fx = function(kind, a, b, c)
 		if kind == "upgraded" then -- a = tier, b = new level: a quick anvil scene (ForgeCutscene, opt.quick), then the overlay
 			local function show() celebrate("LEVEL UP!", PICK_ART[a] or ICON.pick, "LV " .. (b - 1) .. "  >  LV " .. b, row("Ore Value", val(a, b - 1), val(a, b)), row("Strike Zone", zone(b - 1), zone(b))) end
 			local fc = RS.Shared:FindFirstChild("ForgeCutscene")
@@ -686,7 +686,7 @@ function M.start(E)
 				if fc and C.PICKS[i] and not game:GetService("Players").LocalPlayer:GetAttribute("FastCine") then
 					task.spawn(function()
 						local ok, err = pcall(function()
-							local o = { name = a, model = C.PICKS[i].model, rarity = rarityOf("pick", i), sfx = sfx }
+							local o = { name = a, model = C.PICKS[i].model, rarity = rarityOf("pick", i), sfx = sfx, heat = type(c) == "string" and c or nil } -- heat: the HEAT & BLOW token (v15)
 							local story = RS.Shared:FindFirstChild("ForgeStory") and require(RS.Shared.ForgeStory) -- its own biography scene when it has one
 							if not (story and story.has(o.model) and story.play(o)) then require(fc).play(o) end
 						end)

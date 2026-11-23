@@ -753,15 +753,17 @@ function M.play(opt)
 				K.net("d")
 			elseif kind == "k" and type(b) == "number" then
 				K.heat, K.heatAt, K.hits = b, os.clock(), tonumber(c) or K.hits
+			elseif kind == "G" and type(a) == "number" then K.gapSrv = a -- v15: the server runs the crew's Gloom
 			end
 		end))
 	elseif K.replica then -- a passenger builds what the driver sends (the server has checked every value)
 		table.insert(cons, K.crew.on(function(kind, a, b, c, d, e, f)
 			local ok, err = pcall(function()
 				if K.said then K.said(kind, a, b, c, d, e, f) end
+				if kind == "G" and type(a) == "number" then K.gapSrv = a end -- v15: the server runs the crew's Gloom
 				if kind == "s" then
 					K.d, K.v, K.want, K.at = a, b, c, os.clock()
-					gloom.gap = d
+					if not K.gapSrv then gloom.gap = d end
 				elseif kind == "r" then spawnRock(a, b, c)
 				elseif kind == "o" then spawnOrb(a, b)
 				elseif kind == "b" then spawnBeam(a)
@@ -1232,7 +1234,7 @@ function M.play(opt)
 				if K.replica then struck = K.out[h.id] end -- a passenger shows what happened to the driver, never its own guess
 				if ((K.replica and struck ~= nil) or (not K.replica and gap < 0.8)) and not h.passed then
 					h.passed = true
-					if K.host and h.id then K.net("p", h.id, struck == true) end
+					if K.host and h.id then K.net("p", h.id, struck == true, h.kind == "orb") end -- v15: the server's Gloom needs to know a boost bead from a stumble
 					if struck then
 						if h.kind ~= "orb" then
 							hits += 1
@@ -1265,7 +1267,9 @@ function M.play(opt)
 			end
 			vignette.BackgroundTransparency = math.min(1, vignette.BackgroundTransparency + dt * 1.2)
 			if t > 0 then -- the Gloom: falls back slowly, faster on boosts; at 0 it nips you once
-				gloom.gap = math.clamp(gloom.gap + dt * ((live > 0 and 0.1 or 0.045) * (K.crew and C.CREW.flare.slowGloom or 1) - (K.crew and C.CREW.flare.creep or 0)), 0, 1) -- never below 0: the server drops a state packet with a gap outside 0..1 (Codex) -- a crew's Gloom falls back slowly: the flares do that work
+				if K.crew and K.gapSrv then gloom.gap += (math.clamp(K.gapSrv, 0, 1) - gloom.gap) * math.min(1, dt * 6) else -- v15: a crew's gap eases toward the server's word (stumbles and flares only lead it a moment)
+					gloom.gap = math.clamp(gloom.gap + dt * ((live > 0 and 0.1 or 0.045) * (K.crew and C.CREW.flare.slowGloom or 1) - (K.crew and C.CREW.flare.creep or 0)), 0, 1) -- never below 0: the server drops a state packet with a gap outside 0..1 (Codex) -- a crew's Gloom falls back slowly: the flares do that work
+				end
 				if gloom.gap <= 0.02 and not gloom.caught then
 					gloom.caught = true
 					big.Text, big.TextTransparency, big.TextColor3 = "THE GLOOM NIPPED YOU!", 0, Color3.fromRGB(190, 150, 240)

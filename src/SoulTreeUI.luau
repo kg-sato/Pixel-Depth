@@ -1,7 +1,13 @@
 -- SoulTreeUI (ReplicatedStorage.Shared.SoulTreeUI), started by PixelClient. The Soul Tree panel at Camp 1's campfire
--- (prompt attribute SoulTree): the Gloom Shards you hold and three nodes on a bough, each with its ranks, what the next
--- rank does and what it costs. Display and requests only: ServerScriptService.SoulTree counts shards and checks every
--- buy. Does nothing while C.SOUL_TREE.on is false (the feature is behind the flag because it adds a saved field).
+-- (prompt attribute SoulTree): the Gloom Shards you hold and three nodes, each with its ranks, what the next rank does and
+-- what it costs. Display and requests only: ServerScriptService.SoulTree counts shards and checks every buy. Does nothing
+-- while C.SOUL_TREE.on is false (the feature is behind the flag because it adds a saved field).
+-- Master Directive v15 (after @spmovesets' constellation skill trees, vault Social References Review (2026-11-23)): the top
+-- of the panel is a starlit sky where each node is a constellation round a central shard star (The Veiled Lantern, The
+-- Sunburst Flare, The Aegis Crown); every rank bought lights a star and the lines to it, and a full constellation wears a
+-- small gold crown. The bottom is a dark inspector for the picked node: its crest, name, ACTIVE / FULL, RANK k / MAX, the
+-- number now and next, one tip and the INVEST button. The server protocol (Soul remote: "sync", "buy" id) is unchanged.
+local RunService = game:GetService("RunService")
 local M = {}
 
 function M.start(E)
@@ -11,185 +17,280 @@ function M.start(E)
 	local SoulR = R:WaitForChild("Soul", 20)
 	if not SoulR then return end
 	local INK, WHITE, MID = E.INK, E.WHITE, Vector2.new(0.5, 0.5)
-	local MUTED, SHARD, BARK = Color3.fromRGB(107, 90, 128), Color3.fromRGB(150, 110, 230), Color3.fromRGB(150, 104, 78)
-	local LOOK = { -- per node: tint, icon
-		hide = { E.MINT, C.HUD_ICON.heart }, flare = { E.PINK, C.HUD_ICON.flare }, shield = { E.BUTTER, E.ICON.star },
+	local SHARD, GOLD, PALE = Color3.fromRGB(150, 110, 230), Color3.fromRGB(255, 214, 107), Color3.fromRGB(206, 194, 236)
+	local UNLIT, LINE_OFF = Color3.fromRGB(58, 46, 92), Color3.fromRGB(70, 58, 110)
+	-- per node: the constellation's name, its glow, the HUD icon (fallback when the crest cannot draw), one tip line, and the
+	-- stars of its figure in sky coordinates: `rank` = the stars a rank lights (in order), `deco` = outline stars, `links` = lines
+	local LOOK = {
+		hide = { sky = "THE VEILED LANTERN", tint = Color3.fromRGB(120, 255, 196), icon = C.HUD_ICON.heart, tip = "Each rank: gloomlings hit 8 softer.",
+			rank = { { 0.2, 0.47 }, { 0.2, 0.17 }, { 0.2, 0.79 } }, deco = { { 0.135, 0.32 }, { 0.265, 0.32 }, { 0.135, 0.64 }, { 0.265, 0.64 } },
+			links = { { "r1", "r2" }, { "r1", "r3" }, { "r2", "d1" }, { "r2", "d2" }, { "d1", "d3" }, { "d2", "d4" }, { "d3", "r3" }, { "d4", "r3" } } },
+		flare = { sky = "THE SUNBURST FLARE", tint = Color3.fromRGB(255, 160, 176), icon = C.HUD_ICON.flare, tip = "Each rank: +1 flare every dive.",
+			rank = { { 0.5, 0.42 }, { 0.5, 0.15 } }, deco = { { 0.405, 0.29 }, { 0.595, 0.29 }, { 0.415, 0.55 }, { 0.585, 0.55 } },
+			links = { { "r1", "r2" }, { "r1", "d1" }, { "r1", "d2" }, { "r1", "d3" }, { "r1", "d4" }, { "d1", "r2" }, { "d2", "r2" } } },
+		shield = { sky = "THE AEGIS CROWN", tint = Color3.fromRGB(255, 200, 96), icon = E.ICON.star, tip = "Each rank: golden shield +2 s.",
+			rank = { { 0.8, 0.45 }, { 0.8, 0.15 }, { 0.8, 0.8 } }, deco = { { 0.71, 0.28 }, { 0.89, 0.28 }, { 0.73, 0.6 }, { 0.87, 0.6 } },
+			links = { { "r1", "r2" }, { "r1", "r3" }, { "r2", "d1" }, { "r2", "d2" }, { "d1", "d3" }, { "d2", "d4" }, { "d3", "r3" }, { "d4", "r3" } } },
 	}
+	local CORE = { 0.5, 0.8 }
 	local soul = { shards = 0, nodes = {} }
+	local pick = T.order[1]
 
-	local win = panel(gui, S(760, 430), S(640, 300), MID, "panel")
-	do -- directive v14 (audit: blueprint paper behind the rune plates): an opaque obsidian core, as the Boon stone has
-		local backing = new("Frame", win, { Name = "Backing", Size = UDim2.fromScale(0.97, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(14, 8, 28), BackgroundTransparency = 0.06, BorderSizePixel = 0, ZIndex = 1 })
+	local win = panel(gui, S(780, 480), S(640, 300), MID, "panel")
+	do -- an opaque obsidian core (directive v14: blueprint paper showed through)
+		local backing = new("Frame", win, { Name = "Backing", Size = UDim2.fromScale(0.97, 0.95), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(12, 7, 24), BackgroundTransparency = 0.03, BorderSizePixel = 0, ZIndex = 2 })
 		new("UICorner", backing, { CornerRadius = UDim.new(0.04, 0) })
 	end
-	fit(win, 760, 430)
+	fit(win, 780, 480)
 	win.Name, win.Visible = "SoulTree", false
 	if E.addModal then E.addModal(win) end
 	local rb, rbT = E.ribbonTitle(win, "SOUL TREE", "ribbonLilac", 0.4)
-	do -- directive v14 (audit: pale lilac ribbons on the ritual screens): a smoked obsidian ribbon with a gold rim
+	do -- a smoked obsidian ribbon with a gold rim (directive v14)
 		local sk = rb:FindFirstChild("Skin")
 		if sk then sk.Visible = false end
 		rb.BackgroundColor3, rb.BackgroundTransparency = Color3.fromRGB(28, 16, 46), 0.04
 		new("UICorner", rb, { CornerRadius = UDim.new(0.5, 0) })
-		new("UIStroke", rb, { Color = Color3.fromRGB(255, 214, 107), Thickness = 1.5, Transparency = 0.35 })
+		new("UIStroke", rb, { Color = GOLD, Thickness = 1.5, Transparency = 0.35 })
 		rbT.TextStrokeColor3 = Color3.fromRGB(20, 10, 34)
 	end
 	local close = E.closeButton(win, "SoulClose")
 
-	local function shardGem(parent, k, pos, z)
-		local g = new("Frame", parent, { Size = UDim2.fromScale(k, k), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = pos, AnchorPoint = MID, Rotation = 45, BackgroundColor3 = SHARD, BorderSizePixel = 0, ZIndex = z })
-		new("UICorner", g, { CornerRadius = UDim.new(0.22, 0) })
-		new("UIStroke", g, { Color = INK, Thickness = 2 })
-		new("UIGradient", g, { Rotation = 45, Color = ColorSequence.new(Color3.fromRGB(226, 208, 255), SHARD) })
-		return g
-	end
-	do -- directive v13 round 2 (Gemini: the bright town bled through the glass): an opaque dark core behind the content
-		local backing = new("Frame", win, { Name = "Backing", Size = UDim2.fromScale(0.97, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(14, 8, 28), BackgroundTransparency = 0.12, BorderSizePixel = 0, ZIndex = 2 })
-		new("UICorner", backing, { CornerRadius = UDim.new(0.04, 0) })
-	end
-	local pill = panel(win, UDim2.fromScale(0.16, 0.085), UDim2.fromScale(0.5, 0.155), MID, "pillLilac") -- round 2: centred under the title
-	pill.ZIndex = 6
-	shardGem(pill, 0.46, UDim2.fromScale(0.2, 0.5), 7)
-	local count = text(pill, "0", UDim2.fromScale(0.56, 0.6), UDim2.fromScale(0.64, 0.5), MID, INK, 700, false)
-	count.ZIndex = 7
-	local note = text(win, "Flatten gloomlings with a flare to gather Gloom Shards.", UDim2.fromScale(0.27, 0.075), UDim2.fromScale(0.2, 0.155), MID, Color3.fromRGB(206, 194, 236), 700, false) -- round 3: beside the pill, clear of the crown node
-	note.TextWrapped = true
-	note.ZIndex = 6
-
-	-- the tree: a trunk rising behind the middle card and a bough the three node discs hang on
-	local function wood(size, pos, rot)
-		-- round 2 (Gemini: "a raw brown stick"): a crystal arbor: deep violet limbs with a glowing cyan core line
-		local f = new("Frame", win, { Size = size, Position = pos, AnchorPoint = MID, Rotation = rot or 0, BackgroundColor3 = Color3.fromRGB(70, 40, 128), BorderSizePixel = 0, ZIndex = 5 })
-		new("UICorner", f, { CornerRadius = UDim.new(0.5, 0) })
-		new("UIStroke", f, { Color = Color3.fromRGB(110, 225, 255), Thickness = 1.5, Transparency = 0.45 })
-		new("UIGradient", f, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(190, 160, 255), Color3.fromRGB(60, 30, 110)) })
-		local long = size.X.Scale > size.Y.Scale
-		local core = new("Frame", f, { Size = UDim2.fromScale(long and 1 or 0.28, long and 0.28 or 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(150, 240, 255), BackgroundTransparency = 0.35, BorderSizePixel = 0, ZIndex = 5 })
-		new("UICorner", core, { CornerRadius = UDim.new(0.5, 0) })
-		return f
-	end
-	-- (Gemini r1: a straight bough over three cards read as a shop shelf, tree 2.5) a canopy of soft leaf clouds, a trunk
-	-- from the roots and three boughs fanning up to nodes at different heights
-	local canopy = {}
-	for _, c in {} do -- round 2: the leaf-cloud rings read as a radar; the arbor stands alone
-		local leafCloud = new("Frame", win, { Size = UDim2.fromScale(c[3], c[3]), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(c[1], c[2]), AnchorPoint = MID, BackgroundColor3 = E.MINT, BackgroundTransparency = 0.8, BorderSizePixel = 0, ZIndex = 4 })
-		new("UICorner", leafCloud, { CornerRadius = UDim.new(0.5, 0) })
-		table.insert(canopy, leafCloud)
-	end
-	wood(UDim2.fromScale(0.04, 0.5), UDim2.fromScale(0.5, 0.74)) -- trunk
-	wood(UDim2.fromScale(0.3, 0.03), UDim2.fromScale(0.36, 0.5), 32) -- left bough
-	wood(UDim2.fromScale(0.3, 0.03), UDim2.fromScale(0.64, 0.5), -32) -- right bough
-	wood(UDim2.fromScale(0.12, 0.035), UDim2.fromScale(0.43, 0.95), -12) -- roots
-	wood(UDim2.fromScale(0.12, 0.035), UDim2.fromScale(0.57, 0.95), 12)
-	for _, l in { { 0.3, 0.47, -30 }, { 0.41, 0.6, 30 }, { 0.7, 0.47, 30 }, { 0.59, 0.6, -30 }, { 0.46, 0.4, -40 }, { 0.54, 0.4, 40 } } do -- leaves on the boughs
-		local leaf = new("Frame", win, { Size = UDim2.fromScale(0.035, 0.045), Position = UDim2.fromScale(l[1], l[2]), AnchorPoint = MID, Rotation = l[3], BackgroundColor3 = E.MINT, BorderSizePixel = 0, ZIndex = 5 })
-		new("UICorner", leaf, { CornerRadius = UDim.new(0.5, 0) })
-		new("UIStroke", leaf, { Color = INK, Thickness = 2 })
-	end
-
-	local PALE, GOLDRIM, CYANRIM, UNLIT = Color3.fromRGB(206, 194, 236), Color3.fromRGB(255, 206, 110), Color3.fromRGB(110, 225, 255), Color3.fromRGB(44, 32, 70)
-	-- directive v13 (Hades crest card, Slay the Spire reward focus): each node is a dark rune-slate plate with a gold outer rule
-	-- and a glowing cyan inner rim, not pale shop paper
-	local function runePlate(parent, size, pos)
-		local f = new("Frame", parent, { Size = size, Position = pos, AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(24, 14, 42), BackgroundTransparency = 0.04, BorderSizePixel = 0, ZIndex = 6 })
-		new("UICorner", f, { CornerRadius = UDim.new(0.08, 0) })
-		new("UIStroke", f, { Color = GOLDRIM, Thickness = 2, Transparency = 0.15 })
-		new("UIGradient", f, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(110, 100, 150)) })
-		local inner = new("Frame", f, { Name = "InnerRim", Size = UDim2.new(1, -10, 1, -10), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 6 })
-		new("UICorner", inner, { CornerRadius = UDim.new(0.075, 0) })
-		new("UIStroke", inner, { Color = CYANRIM, Thickness = 1.5, Transparency = 0.32 })
-		return f
-	end
-	local cards = {}
-	for i, id in T.order do
-		local def, look = T.nodes[id], LOOK[id]
-		local x = 0.19 + (i - 1) * 0.31
-		local top = i == 2 and 0.3 or 0.4 -- the middle node is the crown
-		local card = runePlate(win, UDim2.fromScale(0.25, 0.44), UDim2.fromScale(x, top + 0.27))
-		local fruit = {} -- one fruit ripens beside the node for every rank bought: the tree itself shows your growth
-		for k = 1, def.max do
-			local side = (k % 2 == 0) and 1 or -1
-			local f = new("Frame", win, { Size = UDim2.fromScale(0.065, 0.065), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(x + side * (0.085 + 0.012 * k), top - 0.07 + 0.045 * k), AnchorPoint = MID, BackgroundColor3 = look[1], BorderSizePixel = 0, ZIndex = 7, Visible = false })
-			new("UICorner", f, { CornerRadius = UDim.new(0.5, 0) })
-			new("UIStroke", f, { Color = INK, Thickness = 2 })
-			new("UIGradient", f, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(214, 206, 226)) })
-			fruit[k] = f
-		end
-		local disc = new("Frame", win, { Size = UDim2.fromScale(0.2, 0.2), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(x, top + 0.02), AnchorPoint = MID, BackgroundColor3 = look[1], BorderSizePixel = 0, ZIndex = 7 })
-		new("UICorner", disc, { CornerRadius = UDim.new(0.5, 0) })
-		new("UIStroke", disc, { Color = GOLDRIM, Thickness = 3 })
-		new("UIGradient", disc, { Rotation = 45, Color = ColorSequence.new(WHITE, Color3.fromRGB(120, 100, 150)) })
-		local icon = new("ImageLabel", disc, { Image = look[2], BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.64, 0.64), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 8 })
-		do -- directive v13 (Gemini: emoji clipart): the node's voxel crest turning in the disc (Shared.Crests, the boon cards' own)
-			local ok = pcall(function() -- the image icon stays if anything here fails (Codex 2026-11-20)
-				local Cr, MC = script.Parent:WaitForChild("Crests", 5), script.Parent:WaitForChild("ModelCard", 5)
-				local m = Cr and MC and require(Cr).model(id)
-				if not m then error("no crest") end
-				require(MC).attach(disc, disc, { z = 8 }).set(m, look[1])
-			end)
-			if ok then icon.Visible = false else
-				for _, n in { "Card3D", "CardGlow", "CardShine" } do local x = disc:FindFirstChild(n) if x then x:Destroy() end end
+	-- the sky: about 58% of the panel under the ribbon
+	local sky = new("Frame", win, { Name = "Sky", Size = UDim2.fromScale(0.93, 0.52), Position = UDim2.fromScale(0.5, 0.375), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(8, 5, 20), BorderSizePixel = 0, ClipsDescendants = true, ZIndex = 3 })
+	new("UICorner", sky, { CornerRadius = UDim.new(0.05, 0) })
+	new("UIStroke", sky, { Color = Color3.fromRGB(120, 96, 180), Thickness = 1.5, Transparency = 0.35 })
+	new("UIGradient", sky, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(150, 130, 230), Color3.fromRGB(70, 50, 120)) })
+	local far, near, twinkle = {}, {}, {}
+	do -- two layers of pinpoint stars that drift at different speeds (a slow parallax while the panel is open)
+		local rng = Random.new(7)
+		for layer = 1, 2 do
+			local holder = new("Frame", sky, { Name = layer == 1 and "Far" or "Near", Size = UDim2.fromScale(2, 1), BackgroundTransparency = 1, ZIndex = 3 })
+			for _ = 1, layer == 1 and 70 or 34 do
+				local k = layer == 1 and rng:NextNumber(0.008, 0.014) or rng:NextNumber(0.014, 0.022)
+				local st = new("Frame", holder, { Size = UDim2.fromScale(k, k), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(rng:NextNumber(0, 1), rng:NextNumber(0.03, 0.97)), AnchorPoint = MID,
+					BackgroundColor3 = rng:NextNumber() < 0.25 and Color3.fromRGB(200, 190, 255) or WHITE, BackgroundTransparency = rng:NextNumber(0.25, 0.7), BorderSizePixel = 0, ZIndex = 3 })
+				if layer == 2 then new("UICorner", st, { CornerRadius = UDim.new(0.5, 0) }) end
+				local twin = new("Frame", holder, { Size = st.Size, SizeConstraint = st.SizeConstraint, Position = st.Position + UDim2.fromScale(1, 0), AnchorPoint = MID, BackgroundColor3 = st.BackgroundColor3, BackgroundTransparency = st.BackgroundTransparency, BorderSizePixel = 0, ZIndex = 3 }) -- the wrap copy one width over
+				table.insert(twinkle, { st, twin, st.BackgroundTransparency, rng:NextNumber(0, 6.28), rng:NextNumber(0.8, 2.2) })
 			end
+			if layer == 1 then far = holder else near = holder end
 		end
-		local name = text(card, string.upper(def.name), UDim2.fromScale(0.9, 0.13), UDim2.fromScale(0.5, 0.3), MID, WHITE, 700, false)
-		if E.HEAD then name.Font = E.HEAD end
-		name.ZIndex = 7
-		local what = text(card, def.text, UDim2.fromScale(0.86, 0.1), UDim2.fromScale(0.5, 0.44), MID, PALE, 700, false)
-		what.ZIndex = 7
-		local pips = {}
-		for k = 1, def.max do
-			local p = new("Frame", card, { Rotation = 45, Size = UDim2.fromScale(0.13, 0.13), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(0.5 + (k - (def.max + 1) / 2) * 0.13, 0.59), AnchorPoint = MID, BackgroundColor3 = WHITE, BorderSizePixel = 0, ZIndex = 7 })
-			new("UICorner", p, { CornerRadius = UDim.new(0.22, 0) })
-			new("UIStroke", p, { Color = GOLDRIM, Thickness = 2, Transparency = 0.1 })
-			new("UIGradient", p, { Rotation = 90, Color = ColorSequence.new(Color3.fromRGB(255, 255, 255), Color3.fromRGB(150, 140, 180)) }) -- a cut gem pip (round 2: hairline circles)
-			pips[k] = p
-		end
-		local buy = button(card, "", UDim2.fromScale(0.78, 0.2), UDim2.fromScale(0.5, 0.82), MID, "mint")
-		buy.ZIndex = 7
-		buy.Label.ZIndex = 8
-		buy.Activated:Connect(function() SoulR:FireServer("buy", id) end)
-		cards[id] = { def = def, look = look, pips = pips, buy = buy, disc = disc, what = what, fruit = fruit }
+		new("Frame", sky, { Name = "Haze", Size = UDim2.fromScale(0.7, 0.9), Position = UDim2.fromScale(0.5, 0.62), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(110, 70, 190), BackgroundTransparency = 0.82, BorderSizePixel = 0, ZIndex = 3 }) -- a faint nebula behind the core
 	end
 
-	local function refresh()
+	-- lines between sky points: a thin frame turned to the angle the two points make on screen (the sky is wide, not square)
+	local lines = {}
+	local function line(a, b, color, z)
+		local f = new("Frame", sky, { AnchorPoint = MID, BackgroundColor3 = color, BorderSizePixel = 0, ZIndex = z or 4 })
+		local l = { f = f, a = a, b = b }
+		table.insert(lines, l)
+		return l
+	end
+	local function layout()
+		local W, H = sky.AbsoluteSize.X, sky.AbsoluteSize.Y
+		if W < 2 or H < 2 then return end
+		for _, l in lines do
+			local dx, dy = (l.b[1] - l.a[1]) * W, (l.b[2] - l.a[2]) * H
+			local len = math.sqrt(dx * dx + dy * dy)
+			l.f.Position = UDim2.fromScale((l.a[1] + l.b[1]) / 2, (l.a[2] + l.b[2]) / 2)
+			l.f.Size = UDim2.new(0, len, 0, math.max(2, math.floor(H * 0.012 + 0.5)))
+			l.f.Rotation = math.deg(math.atan2(dy, dx))
+		end
+	end
+	sky:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
+
+	local function star(pos, size, color, z) -- a four-point star: a diamond, a thin cross for the points and a soft halo
+		local holder = new("Frame", sky, { Size = UDim2.fromScale(size, size), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(pos[1], pos[2]), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = z })
+		local halo = new("Frame", holder, { Name = "Halo", Size = UDim2.fromScale(1.9, 1.9), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = color, BackgroundTransparency = 0.82, BorderSizePixel = 0, ZIndex = z })
+		new("UICorner", halo, { CornerRadius = UDim.new(0.5, 0) })
+		local h1 = new("Frame", holder, { Name = "RayH", Size = UDim2.fromScale(1.5, 0.1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = color, BorderSizePixel = 0, ZIndex = z + 1 })
+		local v1 = new("Frame", holder, { Name = "RayV", Size = UDim2.fromScale(0.1, 1.5), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = color, BorderSizePixel = 0, ZIndex = z + 1 })
+		new("UICorner", h1, { CornerRadius = UDim.new(0.5, 0) })
+		new("UICorner", v1, { CornerRadius = UDim.new(0.5, 0) })
+		local gem = new("Frame", holder, { Name = "Gem", Size = UDim2.fromScale(0.58, 0.58), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, Rotation = 45, BackgroundColor3 = color, BorderSizePixel = 0, ZIndex = z + 2 })
+		new("UICorner", gem, { CornerRadius = UDim.new(0.18, 0) })
+		local edge = new("UIStroke", gem, { Color = WHITE, Thickness = 1.5, Transparency = 0.5 })
+		local core = new("Frame", gem, { Name = "Core", Size = UDim2.fromScale(0.42, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = WHITE, BorderSizePixel = 0, ZIndex = z + 3 })
+		new("UICorner", core, { CornerRadius = UDim.new(0.3, 0) })
+		return { holder = holder, halo = halo, rays = { h1, v1 }, gem = gem, edge = edge, core = core }
+	end
+	local function paintStar(s, color, lit, bright)
+		s.gem.BackgroundColor3 = lit and color or UNLIT
+		s.core.BackgroundTransparency = lit and 0.05 or 0.85
+		s.edge.Color, s.edge.Transparency = lit and WHITE or color, lit and 0.35 or 0.55
+		s.halo.BackgroundColor3, s.halo.BackgroundTransparency = color, lit and (bright and 0.6 or 0.78) or 0.94
+		for _, r in s.rays do r.BackgroundColor3, r.BackgroundTransparency = lit and color or UNLIT, lit and 0.1 or 0.6 end
+	end
+
+	-- the central shard star: the anchor every constellation grows from; it holds your shard count
+	local core = star(CORE, 0.3, SHARD, 9)
+	paintStar(core, Color3.fromRGB(196, 160, 255), true, true)
+	core.gem.Size = UDim2.fromScale(0.62, 0.62)
+	local count = text(core.holder, "0", UDim2.fromScale(0.5, 0.32), UDim2.fromScale(0.5, 0.46), MID, Color3.fromRGB(40, 18, 70), 700, false)
+	count.ZIndex = 14
+	local shardsWord = text(core.holder, "SHARDS", UDim2.fromScale(0.9, 0.16), UDim2.fromScale(0.5, 0.9), MID, Color3.fromRGB(230, 214, 255), 700, false) -- under the core star (a word in the bottom row ran into the constellation names)
+	shardsWord.ZIndex = 14
+
+	local figs = {}
+	for _, id in T.order do
+		local look = LOOK[id]
+		local fig = { id = id, look = look, ranks = {}, deco = {}, links = {}, crown = nil }
+		local P = {}
+		for k, p in look.rank do P["r" .. k] = p end
+		for k, p in look.deco do P["d" .. k] = p end
+		fig.branch = line(CORE, look.rank[1], LINE_OFF, 4)
+		for _, ln in look.links do table.insert(fig.links, line(P[ln[1]], P[ln[2]], LINE_OFF, 4)) end
+		for k, p in look.deco do fig.deco[k] = star(p, 0.07, look.tint, 5) end
+		for k, p in look.rank do fig.ranks[k] = star(p, 0.13, look.tint, 6) end
+		local top = look.rank[2] or look.rank[1]
+		local crown = new("Frame", sky, { Name = "Crown", Size = UDim2.fromScale(0.09, 0.07), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(top[1] + 0.045, top[2] - 0.03), AnchorPoint = MID, BackgroundTransparency = 1, Visible = false, ZIndex = 10 })
+		for c = 0, 2 do -- a small gold crown: three points on a band
+			local pt = new("Frame", crown, { Size = UDim2.fromScale(0.22, 0.5), Position = UDim2.fromScale(0.2 + c * 0.3, c == 1 and 0.28 or 0.36), AnchorPoint = MID, Rotation = 45, BackgroundColor3 = GOLD, BorderSizePixel = 0, ZIndex = 10 })
+			new("UIStroke", pt, { Color = Color3.fromRGB(120, 70, 20), Thickness = 1 })
+		end
+		local band = new("Frame", crown, { Size = UDim2.fromScale(1, 0.34), Position = UDim2.fromScale(0.5, 0.78), AnchorPoint = MID, BackgroundColor3 = GOLD, BorderSizePixel = 0, ZIndex = 11 })
+		new("UIStroke", band, { Color = Color3.fromRGB(120, 70, 20), Thickness = 1 })
+		fig.crown = crown
+		local xs = look.rank[1][1]
+		local name = text(sky, look.sky, UDim2.fromScale(0.3, 0.075), UDim2.fromScale(xs, 0.955), MID, look.tint, 700, false)
+		name.ZIndex = 6
+		if id == "flare" then name.Visible = false end -- the middle row is the shard count's; the flare's name is in the inspector and on its pick ring
+		fig.name = name
+		local hit = new("TextButton", sky, { Name = "Pick_" .. id, Text = "", AutoButtonColor = false, BackgroundTransparency = 1, Size = UDim2.fromScale(0.24, id == "flare" and 0.6 or 0.86), Position = UDim2.fromScale(xs, id == "flare" and 0.35 or 0.48), AnchorPoint = MID, ZIndex = 12 })
+		hit.Activated:Connect(function()
+			pick = id
+			if E.sfxClick then pcall(E.sfxClick) else pcall(E.sfx, "click", 1.2) end
+			M.refresh()
+		end)
+		local ring = new("Frame", sky, { Name = "PickRing", Size = UDim2.fromScale(0.25, 0.25), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(look.rank[1][1], look.rank[1][2]), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 5 })
+		new("UICorner", ring, { CornerRadius = UDim.new(0.5, 0) })
+		fig.ring = new("UIStroke", ring, { Color = look.tint, Thickness = 2, Transparency = 1 })
+		figs[id] = fig
+	end
+	layout()
+
+	-- the inspector: the picked node's crest, name, state, rank, numbers, tip and the INVEST button
+	local insp = new("Frame", win, { Name = "Inspector", Size = UDim2.fromScale(0.93, 0.33), Position = UDim2.fromScale(0.5, 0.81), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(20, 12, 36), BorderSizePixel = 0, ZIndex = 3 })
+	new("UICorner", insp, { CornerRadius = UDim.new(0.1, 0) })
+	local inspEdge = new("UIStroke", insp, { Color = GOLD, Thickness = 1.5, Transparency = 0.3 })
+	local crestBox = new("Frame", insp, { Name = "Crest", Size = UDim2.fromScale(0.78, 0.78), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(0.085, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(32, 20, 56), BorderSizePixel = 0, ZIndex = 4 })
+	new("UICorner", crestBox, { CornerRadius = UDim.new(0.5, 0) })
+	local crestEdge = new("UIStroke", crestBox, { Color = GOLD, Thickness = 2, Transparency = 0.2 })
+	local crestIcon = new("ImageLabel", crestBox, { BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.62, 0.62), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, ZIndex = 6 })
+	local crest
+	pcall(function() -- the node's live voxel crest (Shared.Crests, the boon cards' own); the icon stays if this fails (Codex 2026-11-20)
+		local MC = script.Parent:WaitForChild("ModelCard", 5)
+		crest = MC and require(MC).attach(crestBox, crestBox, { z = 5 })
+	end)
+	local Crests = script.Parent:FindFirstChild("Crests") and require(script.Parent.Crests)
+	local nameL = text(insp, "", UDim2.fromScale(0.29, 0.27), UDim2.fromScale(0.19, 0.22), Vector2.new(0, 0.5), WHITE, 700, false)
+	nameL.TextXAlignment, nameL.ZIndex = Enum.TextXAlignment.Left, 5
+	if E.HEAD then nameL.Font = E.HEAD end
+	local pillState = new("Frame", insp, { Size = UDim2.fromScale(0.12, 0.2), Position = UDim2.fromScale(0.545, 0.22), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(40, 110, 80), BorderSizePixel = 0, ZIndex = 5 })
+	new("UICorner", pillState, { CornerRadius = UDim.new(0.5, 0) })
+	local stateL = text(pillState, "ACTIVE", UDim2.fromScale(0.84, 0.72), UDim2.fromScale(0.5, 0.5), MID, WHITE, 700, false)
+	stateL.ZIndex = 6
+	local pillRank = new("Frame", insp, { Size = UDim2.fromScale(0.13, 0.2), Position = UDim2.fromScale(0.68, 0.22), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(46, 30, 78), BorderSizePixel = 0, ZIndex = 5 })
+	new("UICorner", pillRank, { CornerRadius = UDim.new(0.5, 0) })
+	new("UIStroke", pillRank, { Color = GOLD, Thickness = 1.5, Transparency = 0.3 })
+	local rankL = text(pillRank, "RANK 0 / 3", UDim2.fromScale(0.86, 0.7), UDim2.fromScale(0.5, 0.5), MID, GOLD, 700, false)
+	rankL.ZIndex = 6
+	local statL = text(insp, "", UDim2.fromScale(0.56, 0.25), UDim2.fromScale(0.19, 0.52), Vector2.new(0, 0.5), PALE, 700, false)
+	statL.TextXAlignment, statL.ZIndex, statL.RichText = Enum.TextXAlignment.Left, 5, true
+	local tipL = text(insp, "", UDim2.fromScale(0.78, 0.2), UDim2.fromScale(0.19, 0.83), Vector2.new(0, 0.5), Color3.fromRGB(170, 156, 206), 700, false) -- under the button too: at a phone's 2.16:1 the tip ran out of a narrower box
+	tipL.TextXAlignment, tipL.ZIndex, tipL.TextWrapped = Enum.TextXAlignment.Left, 5, true
+	for _, l in { nameL, statL, tipL } do new("UITextSizeConstraint", l, { MinTextSize = 14 }) end
+	local buy = button(insp, "", UDim2.fromScale(0.2, 0.5), UDim2.fromScale(0.875, 0.38), MID, "mint")
+	buy.Name, buy.ZIndex = "Invest", 5
+	buy.Label.ZIndex = 6
+	buy.Activated:Connect(function() SoulR:FireServer("buy", pick) end)
+
+	function M.refresh()
 		count.Text = tostring(soul.shards)
-		local grown = 0
-		for _, r in soul.nodes do grown += r end
-		for _, cl in canopy do cl.BackgroundTransparency = math.max(0.45, 0.8 - grown * 0.045) end -- the canopy fills in as the tree grows
-		for id, c in cards do
+		for id, fig in figs do
+			local look, def = fig.look, T.nodes[id]
 			local rank = soul.nodes[id] or 0
-			for k, f in c.fruit do f.Visible = k <= rank end
-			for k, p in c.pips do p.BackgroundColor3 = k <= rank and c.look[1] or UNLIT end
-			local cost = c.def.cost[rank + 1]
-			local unit = c.def.unit or ""
-			c.what.Text = rank == 0 and c.def.text -- what you have now and what the next rank gives
-				or (rank >= c.def.max and ("Now " .. rank * c.def.each .. unit .. " (full)") or ("Now " .. rank * c.def.each .. ", next " .. (rank + 1) * c.def.each .. unit))
-			if rank >= c.def.max or not cost then
-				c.buy.Text = "FULL"
-				E.setKind(c.buy, "off")
-			else
-				c.buy.Text = cost .. (cost == 1 and " SHARD" or " SHARDS")
-				E.setKind(c.buy, soul.shards >= cost and "mint" or "off")
+			local full = rank >= def.max
+			local chosen = id == pick
+			for k, s in fig.ranks do paintStar(s, look.tint, k <= rank, chosen) end
+			for _, s in fig.deco do paintStar(s, look.tint, full, chosen) end
+			fig.branch.f.BackgroundColor3, fig.branch.f.BackgroundTransparency = rank > 0 and look.tint or LINE_OFF, rank > 0 and 0.15 or 0.35
+			for i, l in fig.links do -- a rank line lights when both its stars are lit; the outline lights when the figure is full
+				local la, lb = look.links[i][1], look.links[i][2]
+				local function lit(n) return (n:sub(1, 1) == "r" and tonumber(n:sub(2)) <= rank) or (n:sub(1, 1) == "d" and full) end
+				local on = lit(la) and lit(lb)
+				l.f.BackgroundColor3, l.f.BackgroundTransparency = on and look.tint or LINE_OFF, on and 0.2 or (chosen and 0.3 or 0.5)
 			end
+			fig.crown.Visible = full
+			fig.ring.Transparency = chosen and 0.15 or 1
 		end
+		-- the inspector
+		local look, def = LOOK[pick], T.nodes[pick]
+		local rank = soul.nodes[pick] or 0
+		local full = rank >= def.max
+		local cost = def.cost[rank + 1]
+		nameL.Text = string.upper(def.name)
+		nameL.TextColor3 = look.tint:Lerp(WHITE, 0.55)
+		stateL.Text = full and "FULL" or (rank > 0 and "ACTIVE" or "DORMANT")
+		pillState.BackgroundColor3 = full and Color3.fromRGB(150, 110, 30) or (rank > 0 and Color3.fromRGB(34, 110, 80) or Color3.fromRGB(60, 48, 90))
+		rankL.Text = "RANK " .. rank .. " / " .. def.max
+		local unit = def.unit or ""
+		local gold = "<font color=\"#FFD66B\">"
+		statL.Text = full and ("Now " .. gold .. rank * def.each .. unit .. "</font>  (full)")
+			or ("Now " .. (rank > 0 and (rank * def.each .. unit) or "nothing") .. "   \u{2192}   Next " .. gold .. (rank + 1) * def.each .. unit .. "</font>")
+		tipL.Text = (not full and cost and soul.shards < cost) and ("Need " .. (cost - soul.shards) .. " more: flare gloomlings for shards.") or look.tip
+		inspEdge.Color, crestEdge.Color = look.tint:Lerp(GOLD, 0.5), look.tint
+		if full or not cost then
+			buy.Text = "FULL"
+			E.setKind(buy, "off")
+		else
+			buy.Text = "INVEST " .. cost .. (cost == 1 and " SHARD" or " SHARDS")
+			E.setKind(buy, soul.shards >= cost and "mint" or "off")
+		end
+		local shown = false
+		if crest and Crests then shown = pcall(function() crest.set(Crests.model(pick), look.tint) end) end
+		crestIcon.Image, crestIcon.Visible = look.icon, not shown
 	end
 	local function take(s)
 		if type(s) == "table" and type(s.soul) == "table" then
 			soul = { shards = s.soul.shards or 0, nodes = s.soul.nodes or {} }
-			if win.Visible then refresh() end
+			if win.Visible then M.refresh() end
 		end
 	end
 	R.State.OnClientEvent:Connect(take)
 
+	local drift
 	local function open()
 		if win.Visible or (E.isBusy and E.isBusy()) then return end
 		SoulR:FireServer("sync")
-		refresh()
+		for _, id in T.order do -- open on the first node that can still grow
+			if (soul.nodes[id] or 0) < T.nodes[id].max then pick = id break end
+		end
+		M.refresh()
 		E.openPanel(win)
 		E.sfx("sparkle", 0.9)
+		task.defer(layout)
+		if drift then drift:Disconnect() end
+		local t0 = os.clock()
+		drift = RunService.Heartbeat:Connect(function() -- the stars drift and twinkle only while the panel is up
+			if not win.Visible then drift:Disconnect() drift = nil return end
+			local t = os.clock() - t0
+			far.Position = UDim2.fromScale(-((t * 0.006) % 1), 0)
+			near.Position = UDim2.fromScale(-((t * 0.014) % 1), 0)
+			for _, s in twinkle do
+				local v = math.clamp(s[3] + math.sin(t * s[5] + s[4]) * 0.22, 0, 0.95)
+				s[1].BackgroundTransparency, s[2].BackgroundTransparency = v, v
+			end
+			local pulse = 0.55 + math.sin(t * 2.4) * 0.08 -- the core breathes
+			core.halo.BackgroundTransparency = pulse
+		end)
 	end
 	close.Activated:Connect(function() if win.Visible then E.closePanel(win) end end)
 	plr:GetAttributeChangedSignal("DevOpen"):Connect(function() if plr:GetAttribute("DevOpen") == "soul" and game:GetService("RunService"):IsStudio() then open() end end) -- Studio test hook (spike/p1_shots.py)
+	plr:GetAttributeChangedSignal("DevSoulPick"):Connect(function() -- Studio test hook: pick a node in the open panel (spike/soul_test.py)
+		local id = plr:GetAttribute("DevSoulPick")
+		if id and figs[id] and game:GetService("RunService"):IsStudio() then pick = id M.refresh() end
+	end)
 	game:GetService("ProximityPromptService").PromptTriggered:Connect(function(prompt)
 		if prompt:GetAttribute("SoulTree") then open() end
 	end)
@@ -197,9 +298,15 @@ function M.start(E)
 		if kind == "soulShard" then
 			E.toast("+" .. tostring(a) .. " Gloom Shard" .. (a == 1 and "" or "s") .. "  (" .. tostring(b) .. ")", nil, false, 2.5)
 			pcall(E.sfx, "sparkle", 1.4)
-		elseif kind == "soulBought" and cards[a] then
+		elseif kind == "soulBought" and figs[a] then
 			pcall(E.sfx, "upgrade", 1)
-			pcall(E.pop, cards[a].disc)
+			pick = a
+			task.delay(0.15, function() -- the star the rank lit pops once the new state has arrived
+				local fig = figs[a]
+				local rank = soul.nodes[a] or 0
+				local s = fig and fig.ranks[math.max(1, rank)]
+				if s then pcall(E.pop, s.holder) end
+			end)
 			if E.vmHook.emote then E.vmHook.emote("cheer") end
 		elseif kind == "soulNo" then
 			pcall(E.sfx, "error", 1)

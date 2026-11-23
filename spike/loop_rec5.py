@@ -76,7 +76,7 @@ C("game.Players.LocalPlayer.PlayerGui:FindFirstChild('Odds',true).Visible=false 
 S(P + "p:SetAttribute('DevFriends',nil) return 1")
 mark("the trophy cases, all empty; a Secret hatch fills one and everyone in the server is told")
 S(P + "local g for _,d in workspace.Hub.TrophyHouse:GetChildren() do if d.Name=='TrophyGlass' and d:GetAttribute('Trophy')=='gate1' then g=d end end h.CFrame=g.CFrame*CFrame.new(14,0,9) return 1"); time.sleep(1.5)  # full1122h: standing at (6.9, 0, 12) the miner's back filled the trophy shot
-C("local g for _,d in workspace.Hub.TrophyHouse:GetChildren() do if d.Name=='TrophyGlass' and d:GetAttribute('Trophy')=='gate1' then g=d end end local cam=workspace.CurrentCamera local t=os.clock() local cur local RS=game:GetService('RunService') "
+C("local g for _,d in workspace.Hub.TrophyHouse:GetChildren() do if d.Name=='TrophyGlass' and d:GetAttribute('Trophy')=='gate1' then g=d end end local cam=workspace.CurrentCamera local t=os.clock() local cur local RS=game:GetService('RunService') game.Players.LocalPlayer:SetAttribute('HidePetsUntil',os.clock()+12) "  # v15: this camera is bound after PixelClient's, whose town pet ghosting measures its own high camera, so the crew stood opaque 9 studs from this lens (full1123e 267s); the game's cutscenes hide the crew the same way
   "RS:BindToRenderStep('tourcam',2000,function() local u=os.clock()-t if u>11 then RS:UnbindFromRenderStep('tourcam') return end "
   "local far=true cur=(cur or cam.CFrame):Lerp(CFrame.lookAt((g.CFrame*CFrame.new(far and 6.9 or 18.1,far and 5 or 1.6,far and 20 or 6.5)).Position,(g.CFrame*CFrame.new(far and 6.9 or 18.1,far and -0.6 or 0.1,0)).Position),0.1) cam.CFrame=cur end) return 1"); time.sleep(4)
 S(P + "p:SetAttribute('DevMarquee','Ninering') return 1"); time.sleep(8)
@@ -123,9 +123,12 @@ C("local RS=game:GetService('RunService') local w=workspace.Caves:FindFirstChild
   "local to=w.PrimaryPart.Position+Vector3.new(0,0.5,0) local cf=CFrame.lookAt(cam.CFrame.Position,to) cam.CFrame=cam.CFrame:Lerp(cf,0.08) end) return 1")
 S(P + "p:SetAttribute('DevBoss',1) return 1")
 reticle_seen = False
+C("game.Players.LocalPlayer:SetAttribute('DevPilotWait',1.8) return 1")  # v15: the pilot waits 1.8 s on an open knot dial so the still lands before KNOT CRACKED
 for _ in range(45):
-    time.sleep(2)
-    if not reticle_seen and C("local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('StrikeReticle') return tostring(g~=nil and g.Enabled and g.Adornee~=nil)") == "true":
+    for _q in range(1 if reticle_seen else 5):
+        time.sleep(2 if reticle_seen else 0.4)
+        if not reticle_seen and C("local pg=game.Players.LocalPlayer.PlayerGui local g=pg:FindFirstChild('StrikeReticle') local ps=pg:FindFirstChild('PerfectStrike',true) return tostring((g~=nil and g.Enabled and g.Adornee~=nil) or (ps~=nil and ps.Visible))") == "true": break
+    if not reticle_seen and C("local pg=game.Players.LocalPlayer.PlayerGui local g=pg:FindFirstChild('StrikeReticle') local ps=pg:FindFirstChild('PerfectStrike',true) return tostring((g~=nil and g.Enabled and g.Adornee~=nil) or (ps~=nil and ps.Visible))") == "true":
         reticle_seen = True  # a still while the dial sits on a knot (Orchestrator round 3: view 07 never showed the live reticle)
         mark("Root Warden: strike reticle on a knot")
         if globals().get("FORCE"): FORCE.set()
@@ -150,7 +153,8 @@ def strike(k):
     C("local c for _,d in workspace.Caves:GetDescendants() do if d:IsA('BasePart') and d:GetAttribute('ChimeCrystal')==%d then c=d end end local pr=c:FindFirstChildOfClass('ProximityPrompt') local cam=workspace.CurrentCamera "
       "cam.CFrame=CFrame.lookAt(cam.CFrame.Position,c.Position) task.wait(0.35) pr:InputHoldBegin() task.wait(0.1) pr:InputHoldEnd() return 1" % k); time.sleep(0.9)
 S("workspace:SetAttribute('DevChimeSlow', 4) return 1")  # as chime_test: a slow Studio needs ~4 s a scripted strike, or the window shut before the badges were seen (full1123c)
-strike(2); time.sleep(0.6)
+strike(2); time.sleep(0.4)
+S(P + "h.CFrame=CFrame.lookAt((O*CFrame.new(17,3,23)).Position,(O*CFrame.new(17,3,12)).Position) return 1"); time.sleep(0.4); look("O+Vector3.new(17,2.5,12)"); time.sleep(0.5)  # v15: step back so all three numbered crystals are in the still
 if globals().get("FORCE"): FORCE.set()  # a still of the woken chimes with their numbers
 order = C("return tostring(game.Players.LocalPlayer:GetAttribute('DevChime'))")
 print("chime order:", order, "| refused:", S("return tostring(game.Players:GetPlayers()[1]:GetAttribute('DevChimeWhy'))"), flush=True)
@@ -192,6 +196,10 @@ for _ in range(35):
     time.sleep(2)
     if "home" in C("local p=game.Players.LocalPlayer return (not workspace:FindFirstChild('MinecartEscape') and p:GetAttribute('InCave')~=true) and 'home' or 'riding'"): break
 mark("crew ride over")
+time.sleep(2.5)
+mark("back in town after the escape card")  # v15: view 13 is this still (it duplicated the result card while it was the crew step's last)
+if globals().get("FORCE"): FORCE.set()
+time.sleep(3)
 left = SECS - (time.time() - t0)
 mark(f"{left:.0f} s of recording left")
 time.sleep(max(left + 4, 4))

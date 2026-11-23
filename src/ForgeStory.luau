@@ -444,16 +444,22 @@ function M.play(opt)
 		for k in fired do fired[k] = nil end
 		ctx.skipped = true
 	end
-	skip.Activated:Connect(doSkip)
+	-- v15 HEAT & BLOW (Master Directive): the scene holds just before the name card for the HEARTH HEAT gauge (Shared.HeatBeat)
+	local beat = opt.heat and not opt.fast and require(script.Parent:WaitForChild("HeatBeat")).new(gui, opt.heat, sfx)
+	local beatFired = false
+	if beat then beat.onPerfect = function() ctx.shake(0.8) ctx.kick(6) end end
+	skip.Activated:Connect(function() if beat then beat:stop() end doSkip() end)
 	local UIS = game:GetService("UserInputService")
-	local skipConn = UIS.InputBegan:Connect(function(i) if i.KeyCode == Enum.KeyCode.Space or i.KeyCode == Enum.KeyCode.ButtonB then if t >= 0.5 then doSkip() end end end)
+	local skipConn = UIS.InputBegan:Connect(function(i) if beat and beat.on then return end if i.KeyCode == Enum.KeyCode.Space or i.KeyCode == Enum.KeyCode.ButtonB then if t >= 0.5 then doSkip() end end end) -- Space strikes while the gauge is up
 
 	local last = os.clock()
 	RunService:BindToRenderStep("ForgeStory", Enum.RenderPriority.Camera.Value + 2, function()
 		local now = os.clock()
 		local dt = math.min(now - last, 0.1)
 		last = now
-		if now >= holdUntil then t += dt * pace end
+		if beat and not beatFired and not skipped and t >= scene.named - 0.45 and t < scene.named then beatFired = true beat:start() end
+		if beat and beat.on then beat:step() end
+		if now >= holdUntil and not (beat and beat.on) then t += dt * pace end
 		if opt.freeze then -- test hook (spike/story_shots.py): stop at a story second and say where the clock is
 			t = math.min(t, opt.freeze)
 			workspace:SetAttribute("ForgeStoryT", t)
@@ -490,6 +496,7 @@ function M.play(opt)
 	while not done and os.clock() - started < (opt.freeze and (opt.freezeFor or 30) or T_END / pace + 8) do task.wait() end -- never hang the player in the scene
 	RunService:UnbindFromRenderStep("ForgeStory")
 	skipConn:Disconnect()
+	if beat then beat:stop() end
 	-- put everything back: lighting, effects, viewmodel, HUD, camera
 	for k, v in saved do Lighting[k] = v end
 	for _, o in off do if o[1].Parent then o[1][o[2]] = o[3] end end

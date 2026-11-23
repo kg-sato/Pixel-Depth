@@ -1349,6 +1349,62 @@ function Hub.build(parent, origin)
 		prompt(maribel:FindFirstChild("Body"), "Buy an egg", "Maribel", "buyEgg") -- playtest 2: starter eggs for coins
 	end
 
+	-- Master Directive v15 (@neochampy's Monument of Life, vault Social References Review (2026-11-23)): the Deep Chronicle, a
+	-- stepped obsidian monolith on mossy granite footings on the north terrace beside the quest board, with a lantern sconce on
+	-- each side. Its face lists the miners in this server: deepest camp, escapes and bosses beaten (PixelServer writes the
+	-- model's attribute Rows; Shared.TownChronicle fills the face on each player's screen and marks that player's own line).
+	do
+		local g, at = group("Chronicle"), stationAt(-12, -39, -4, 0, 4)
+		local GRAN, GRAN_D, MOSS, OBS, OBS_E, IRON = Color3.fromRGB(104, 106, 114), Color3.fromRGB(82, 84, 94), Color3.fromRGB(86, 124, 72), Color3.fromRGB(26, 20, 38), Color3.fromRGB(64, 50, 92), Color3.fromRGB(58, 52, 74)
+		for k, d in { { 11, 7.6 }, { 9.4, 6.2 }, { 8, 5 } } do -- three stepped granite footings, moss creeping over each front lip
+			vox(g, "ChronicleStep", Vector3.new(d[1], 0.8, d[2]), at(0, 1.1 + 0.4 + (k - 1) * 0.8, 0), k % 2 == 1 and GRAN or GRAN_D, { Material = Enum.Material.Slate })
+			vox(g, "ChronicleMoss", Vector3.new(d[1] * 0.5, 0.12, 0.8), at((k - 2) * 1.3, 1.1 + k * 0.8 + 0.07, d[2] / 2 - 0.42), MOSS, { Material = Enum.Material.Grass, CanCollide = false })
+		end
+		local top = 1.1 + 2.4 -- the top step
+		local slab = vox(g, "ChronicleSlab", Vector3.new(5.8, 10, 1.4), at(0, top + 5, -0.3), OBS, { Material = Enum.Material.SmoothPlastic, Reflectance = 0.06 }) -- polished obsidian (Basalt's texture read brown under the lamps)
+		for _, e in { { Vector3.new(5.5, 0.22, 0.1), Vector3.new(0, top + 9.6, 0.44) }, { Vector3.new(5.5, 0.22, 0.1), Vector3.new(0, top + 0.4, 0.44) }, -- a carved border round the face (the side bars stop inside the top and bottom bars: no shared faces)
+			{ Vector3.new(0.22, 9.3, 0.1), Vector3.new(-2.6, top + 5, 0.44) }, { Vector3.new(0.22, 9.3, 0.1), Vector3.new(2.6, top + 5, 0.44) } } do
+			vox(g, "ChronicleRim", e[1], at(e[2].X, e[2].Y, e[2].Z), OBS_E, { Material = Enum.Material.Basalt })
+		end
+		vox(g, "ChronicleCap", Vector3.new(6.6, 0.8, 2.2), at(0, top + 10.4, -0.3), OBS_E, { Material = Enum.Material.Basalt })
+		vox(g, "ChronicleCap2", Vector3.new(4.6, 0.8, 1.8), at(0, top + 11.2, -0.3), OBS, { Material = Enum.Material.Basalt })
+		vox(g, "ChronicleTip", Vector3.new(2.2, 1, 1.4), at(0, top + 12.1, -0.3), OBS_E, { Material = Enum.Material.Basalt })
+		vox(g, "ChronicleGem", Vector3.new(0.9, 0.9, 0.9), at(0, top + 13.05, -0.3) * CFrame.Angles(0, math.rad(45), math.rad(35)), Color3.fromRGB(255, 200, 96), { Material = Enum.Material.Metal })
+		for _, sx in { -1, 1 } do -- a lantern sconce each side: a stone post, the lantern and a stone hood over it
+			vox(g, "ChronicleSconce", Vector3.new(0.9, 2.8, 0.9), at(sx * 3.52, top + 1.4, 0.6), GRAN_D, { Material = Enum.Material.Slate })
+			local lamp = vox(g, "ChronicleLamp", Vector3.new(0.62, 0.7, 0.62), at(sx * 3.52, top + 3.15, 0.6), Color3.fromRGB(255, 196, 120), { CanCollide = false })
+			local l = Instance.new("PointLight")
+			l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 180, 110), 11, 0.42, false -- 0.42: a lamp you can walk up to (Realistic burns surfaces white above ~0.45)
+			l.Parent = lamp
+			for _, bx in { -0.33, 0.33 } do vox(g, "ChronicleLampBar", Vector3.new(0.08, 0.8, 0.08), at(sx * 3.52 + bx, top + 3.15, 0.96), IRON, { Material = Enum.Material.Metal, CanCollide = false }) end
+			vox(g, "ChronicleHood", Vector3.new(1.3, 0.3, 1.24), at(sx * 3.52, top + 3.66, 0.62), GRAN, { Material = Enum.Material.Slate })
+		end
+		local sg = Instance.new("SurfaceGui") -- the face: gold and ivory lines etched into the stone (lit by the scene, never drawn over it)
+		sg.Name, sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence, sg.AlwaysOnTop = "ChronicleGui", N.Back, Enum.SurfaceGuiSizingMode.PixelsPerStud, 40, 0.2, false
+		local function etch(name, txt, y, h, color, font, xa)
+			local t = Instance.new("TextLabel")
+			t.Name, t.Text, t.BackgroundTransparency, t.TextScaled, t.Font, t.TextColor3 = name, txt, 1, true, font or Enum.Font.GothamBold, color
+			t.Size, t.Position, t.AnchorPoint = UDim2.fromScale(0.84, h), UDim2.fromScale(0.5, y), Vector2.new(0.5, 0.5)
+			t.TextXAlignment = xa or Enum.TextXAlignment.Center
+			t.TextStrokeTransparency, t.TextStrokeColor3 = 0.55, Color3.fromRGB(10, 6, 18)
+			t.Parent = sg
+			return t
+		end
+		local GOLDE, IVORY = Color3.fromRGB(255, 206, 110), Color3.fromRGB(236, 226, 204)
+		etch("Title", "DEEP CHRONICLE", 0.075, 0.07, GOLDE, Enum.Font.FredokaOne)
+		etch("Sub", "MINERS OF THIS SERVER", 0.13, 0.03, Color3.fromRGB(188, 176, 214))
+		local rule = Instance.new("Frame")
+		rule.Name, rule.Size, rule.Position, rule.AnchorPoint, rule.BackgroundColor3, rule.BorderSizePixel = "Rule", UDim2.fromScale(0.7, 0.005), UDim2.fromScale(0.5, 0.162), Vector2.new(0.5, 0.5), GOLDE, 0
+		rule.Parent = sg
+		for i = 1, 6 do
+			etch("Name" .. i, "", 0.2 + (i - 1) * 0.105, 0.045, IVORY, Enum.Font.GothamBold, Enum.TextXAlignment.Left)
+			etch("Stat" .. i, "", 0.243 + (i - 1) * 0.105, 0.032, GOLDE, Enum.Font.Gotham, Enum.TextXAlignment.Left)
+		end
+		etch("Mine", "", 0.885, 0.07, Color3.fromRGB(150, 236, 210), Enum.Font.GothamBold)
+		sg.Parent = slab
+		g:SetAttribute("Rows", "[]")
+	end
+
 	-- 8. Quest notice board, treasure map and the daily relic chest (north, behind the shaft; ref art/hub/pdv4_notice_s61.jpg)
 	do
 		local g, at = group("NoticeBoard"), stationAt(6, -42, 6, 0, 4)

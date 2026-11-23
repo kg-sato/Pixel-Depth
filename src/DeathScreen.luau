@@ -36,6 +36,69 @@ function M.start(E)
 			task.delay(2, function() p:Destroy() end)
 		end
 	end
+	-- Master Directive v15 (@neochampy DgEHgjvNcDm, frame 5): on a fall, a faint, a grab or a catch, sharp crimson-plum
+	-- fracture lines creep in from the four edges as if the screen's glass cracks (behind the card at 63; HatchSignature's
+	-- edge-crack segments, thinner and with side branches). With reduced motion they are simply there, no creep.
+	local shatter = new("CanvasGroup", layer, { Name = "Shatter", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, GroupTransparency = 1, Visible = false, ZIndex = 62 })
+	local segs = {}
+	do
+		local rnd = Random.new(23)
+		local function seg(a, b, k, w, branch)
+			local f = new("Frame", shatter, { AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = branch and Color3.fromRGB(236, 120, 150) or Color3.fromRGB(255, 92, 124), BorderSizePixel = 0, Visible = false, ZIndex = 62 })
+			new("UIStroke", f, { Color = Color3.fromRGB(110, 16, 56), Thickness = branch and 1 or 1.5, Transparency = 0.25 })
+			table.insert(segs, { a = a, b = b, k = k, w = w, f = f })
+		end
+		for e = 1, 16 do -- sixteen cracks, four from each edge, each a jagged chain toward the middle that stops short of the card
+			local side = (e - 1) % 4 + 1
+			local p = ({ Vector2.new(0, rnd:NextNumber(0.06, 0.94)), Vector2.new(1, rnd:NextNumber(0.06, 0.94)), Vector2.new(rnd:NextNumber(0.05, 0.95), 0), Vector2.new(rnd:NextNumber(0.05, 0.95), 1) })[side]
+			local dir = (Vector2.new(0.5, 0.5) - p).Unit
+			local steps = rnd:NextInteger(4, 6)
+			for k = 1, steps do
+				local ang = math.atan2(dir.Y, dir.X) + rnd:NextNumber(-0.65, 0.65)
+				local q = p + Vector2.new(math.cos(ang), math.sin(ang)) * rnd:NextNumber(0.025, 0.05)
+				seg(p, q, (k - 1) / steps, math.max(1.2, 4.2 - k * 0.6))
+				if (k == 2 or k == 3) and rnd:NextNumber() < 0.7 then -- a thin side branch
+					local b0, ba = q, ang + (rnd:NextNumber() < 0.5 and -1 or 1) * rnd:NextNumber(0.8, 1.3)
+					for j = 1, 2 do
+						local b1 = b0 + Vector2.new(math.cos(ba), math.sin(ba)) * rnd:NextNumber(0.018, 0.032)
+						seg(b0, b1, (k - 0.5 + j * 0.25) / steps, 1.2, true)
+						b0, ba = b1, ba + rnd:NextNumber(-0.5, 0.5)
+					end
+				end
+				p = q
+			end
+		end
+	end
+	local crackT0, crackOn = 0, false
+	local function placeCracks(u)
+		local vp = layer.AbsoluteSize
+		for _, sg in segs do
+			local on = u > sg.k * 0.92
+			sg.f.Visible = on
+			if on then
+				local a, b = sg.a * vp, sg.b * vp
+				sg.f.Position = UDim2.fromOffset((a.X + b.X) / 2, (a.Y + b.Y) / 2)
+				sg.f.Size = UDim2.fromOffset((b - a).Magnitude + 1, sg.w)
+				sg.f.Rotation = math.deg(math.atan2(b.Y - a.Y, b.X - a.X))
+			end
+		end
+	end
+	RunService.Heartbeat:Connect(function()
+		if not crackOn then return end
+		local u = calm and 1 or math.clamp((os.clock() - crackT0) / 0.65, 0, 1)
+		placeCracks(u)
+		if u >= 1 then crackOn = false end
+	end)
+	local function cracks(on)
+		if on then
+			shatter.Visible, shatter.GroupTransparency = true, 0.05
+			crackT0, crackOn = os.clock(), true
+			placeCracks(calm and 1 or 0)
+		else
+			crackOn = false
+			tween(shatter, 0.35, { GroupTransparency = 1 })
+		end
+	end
 	-- one card for all three screens: a dark glass plate with a soft edge, an icon, a title, a big line, a note and a bar
 	local card = new("Frame", layer, { Size = UDim2.fromScale(0.36, 0.4), Position = UDim2.fromScale(0.5, 0.48), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = PLUM, BackgroundTransparency = 0.06, BorderSizePixel = 0, Visible = false, ZIndex = 63 })
 	new("UIAspectRatioConstraint", card, { AspectRatio = 1.75 })
@@ -60,7 +123,8 @@ function M.start(E)
 	local big = text(card, "", UDim2.fromScale(0.8, 0.17), UDim2.fromScale(0.5, 0.63), Vector2.new(0.5, 0.5), PINK, 700, false)
 	local note = text(card, "", UDim2.fromScale(0.84, 0.13), UDim2.fromScale(0.5, 0.785), Vector2.new(0.5, 0.5), E.CREAM, 700, false) -- 0.1 (was 0.085) and the grab cards at scale 0.7 (was 0.62): their note read as micro-text (Orchestrator round 2)
 	title.ZIndex, big.ZIndex, note.ZIndex = 64, 64, 64
-	for _, l in { title, note } do new("UITextSizeConstraint", l, { MinTextSize = 14 }) end
+	local caps = {}
+	for _, l in { title, note } do caps[l] = new("UITextSizeConstraint", l, { MinTextSize = 14 }) end
 	note.TextWrapped = true -- the hint may take two lines instead of one squeezed hairline (Orchestrator final grade) -- never micro-text on the grab cards (Orchestrator round 3)
 	if E.GLASS then -- cut-glass kit: the big line is jelly, taking each screen's own colour and landing with a pop
 		big.Size = UDim2.fromScale(0.86, 0.22)
@@ -76,16 +140,19 @@ function M.start(E)
 		token += 1
 		local my = token
 		layer.Visible, card.Visible = true, true
+		cracks(opts.shatter == true)
 		E.vmHook.cardUp = true
 		if opts.hud == false then E.gui.Enabled = false end
 		title.Text, title.TextColor3 = opts.title, opts.titleColor or E.LILAC
 		big.Text, big.TextColor3 = opts.big or "", opts.bigColor or PINK
 		note.Text = opts.note or ""
+		local short = workspace.CurrentCamera.ViewportSize.Y < 520 -- a phone in landscape (~390 px tall): 14 px could not fit the note in the small grab card and it ran out of it (v15 text scan); 12 there, 14 on bigger screens
+		caps[note].MinTextSize, caps[title].MinTextSize = short and 12 or 14, short and 12 or 14
 		stroke.Color, fill.BackgroundColor3 = opts.edge or EDGE, opts.bar or GOLD
 		wick.BackgroundColor3, wick.Size = opts.lit and GOLD or Color3.fromRGB(86, 80, 96), opts.lit and UDim2.fromScale(0.34, 0.5) or UDim2.fromScale(0.2, 0.2)
 		card.Position = UDim2.fromScale(0.5, opts.y or 0.48)
 		scale.Scale = 0.8
-		tween(scale, 0.3, { Scale = opts.scale or 1 }, Enum.EasingStyle.Back)
+		tween(scale, 0.3, { Scale = short and math.max(opts.scale or 1, 0.95) or opts.scale or 1 }, Enum.EasingStyle.Back) -- a phone gets the small cards near full size
 		fill.Size = UDim2.fromScale(opts.drain and 1 or 0, 1)
 		tween(fill, opts.secs, { Size = UDim2.fromScale(opts.drain and 0 or 1, 1) }, Enum.EasingStyle.Linear)
 		tween(layer, 0.4, { BackgroundTransparency = opts.dark or 1 })
@@ -97,6 +164,7 @@ function M.start(E)
 	end
 	local function hide(my, after)
 		if my ~= token then return end
+		cracks(false)
 		tween(scale, 0.2, { Scale = 0.85 })
 		tween(layer, after or 0.5, { BackgroundTransparency = 1 })
 		for _, f in edges do tween(f, after or 0.5, { BackgroundTransparency = 1 }) end
@@ -126,7 +194,7 @@ function M.start(E)
 		tumbleAt = os.clock()
 		E.sfx("land", 0.6)
 		soot(28)
-		local my = show({ title = why == "fell" and "LOST TO THE GLOOM" or "THE LAKE TOOK YOU", big = lost > 0 and ("-" .. E.commas(lost) .. " ORE") or "NOTHING LOST",
+		local my = show({ shatter = true, title = why == "fell" and "LOST TO THE GLOOM" or "THE LAKE TOOK YOU", big = lost > 0 and ("-" .. E.commas(lost) .. " ORE") or "NOTHING LOST",
 			note = "Waking by the campfire...", secs = 2.6, dark = 0, edges = 0 })
 		task.delay(0.4, function() if playing then E.gui.Enabled = false end end) -- the HUD showed through the dark
 		task.delay(0.35, function()
@@ -157,7 +225,7 @@ function M.start(E)
 		if kind == "grabbed" then
 			local secs = a or C.GLOOM.grab
 			soot(16)
-			local my = show({ title = "GRABBED!", titleColor = PINK, big = touch and "TAP THE FLARE!" or "FLARE NOW   [ R ]", bigColor = GOLD, note = "or a friend can flare you free", secs = secs, drain = true,
+			local my = show({ shatter = true, title = "GRABBED!", titleColor = PINK, big = touch and "TAP THE FLARE!" or "FLARE NOW   [ R ]", bigColor = GOLD, note = "a friend can free you", secs = secs, drain = true,
 				bar = PINK, edge = PINK, lit = true, y = 0.62, scale = 0.7, dark = 0.82, edges = 0.15, hud = false }) -- low and small: centred it hid the Gloomling and the boss arena (Gemini full1119h)
 			task.spawn(function() -- the plate shivers while it holds you
 				while my == token and layer.Visible do
@@ -171,8 +239,8 @@ function M.start(E)
 			soot(20)
 			local hr = E.hrp()
 			local who = (hr and (hr.Position - E.C.CAVE2_ORIGIN).Magnitude < 130) and "CLAYLING" or "GLOOMLING" -- the Clay Caves hall has claylings (server: Gloom kind 2)
-			local my = show({ title = a > 0 and ("A " .. who .. " GOT YOUR ORE") or ("A " .. who .. " GOT YOU"), titleColor = PINK, big = a > 0 and ("-" .. E.commas(a) .. " ORE") or "NOTHING LOST",
-				note = "Golden shield: RUN to the light!", secs = C.GLOOM.shield, drain = true, bar = GOLD, edge = GOLD, y = 0.62, scale = 0.7, dark = 0.9, edges = 0.86, edgeColor = GOLD, hud = false }) -- edges 0.86 (was 0.74): in the amber Clay hall the gold edges washed the whole view out (Gemini full1121b) -- golden edges: the shield the card promises
+			local my = show({ shatter = true, title = a > 0 and ("A " .. who .. " GOT YOUR ORE") or ("A " .. who .. " GOT YOU"), titleColor = PINK, big = a > 0 and ("-" .. E.commas(a) .. " ORE") or "NOTHING LOST",
+				note = "Shield up: RUN to light!", secs = C.GLOOM.shield, drain = true, bar = GOLD, edge = GOLD, y = 0.62, scale = 0.7, dark = 0.9, edges = 0.86, edgeColor = GOLD, hud = false }) -- edges 0.86 (was 0.74): in the amber Clay hall the gold edges washed the whole view out (Gemini full1121b) -- golden edges: the shield the card promises
 			task.delay(2.4, function() hide(my) end)
 		elseif kind == "rescued" then
 			local my = show({ title = b and "FLARED FREE!" or "RESCUED!", titleColor = MINT, big = "NOTHING LOST", bigColor = MINT, note = b and "" or ("by " .. tostring(a)), secs = 1.2,

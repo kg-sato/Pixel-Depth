@@ -368,6 +368,11 @@ function M.play(opt)
 	skipCorner.Parent = skip
 	skip.Parent = gui
 
+	-- v15 HEAT & BLOW (Master Directive, @neochampy's anvil heat window): right before the slam the scene holds for the HEARTH
+	-- HEAT gauge (Shared.HeatBeat); a PERFECT FORGE adds this scene's sparks and a camera kick
+	local beat = opt.heat and require(RS.Shared:WaitForChild("HeatBeat")).new(gui, opt.heat, sfx)
+	local function heatEnd() if beat then beat:stop() end end
+
 	-- lighting: night or dusk for the theme, restored after; blur and depth of field off while the scene plays
 	local camSaved = { CameraType = cam.CameraType, CameraSubject = cam.CameraSubject, FieldOfView = cam.FieldOfView }
 	local saved = { ClockTime = Lighting.ClockTime, Brightness = Lighting.Brightness, Ambient = Lighting.Ambient, OutdoorAmbient = Lighting.OutdoorAmbient, ExposureCompensation = Lighting.ExposureCompensation }
@@ -407,6 +412,7 @@ function M.play(opt)
 		end
 	end
 	skip.Activated:Connect(function()
+		heatEnd()
 		if t < 7.3 then
 			for _, k in { "wipe1", "act2", "rise", "sq1", "sq2", "sq3", "slam", "reveal" } do fired[k] = true end
 			t = 7.3
@@ -418,7 +424,17 @@ function M.play(opt)
 		local now = os.clock()
 		local dt = math.min(now - last, 0.1)
 		last = now
-		if now >= holdUntil then
+		if beat and not fired.heat and not qOn and t >= 5.74 and t < 5.85 then -- v15: HEAT & BLOW before the slam
+			fired.heat = true
+			beat.onPerfect = function()
+				bursts:Emit(70)
+				embers:Emit(50)
+				kick, shake = 6, 0.8
+			end
+			beat:start()
+		end
+		if beat and beat.on then beat:step() end -- the scene holds on the raised hammer while the gauge sweeps
+		if now >= holdUntil and not (beat and beat.on) then
 			if not qOn then t += dt elseif now >= qHold then q += dt end
 		end
 		if qOn and opt.freeze then q = math.min(q, opt.freeze) end -- test hook (spike/anvil_shots.py): hold the anvil sequence at one moment for a capture
@@ -682,6 +698,7 @@ function M.play(opt)
 	local started = os.clock()
 	while not done and os.clock() - started < 20 do task.wait() end -- never hang the player in the scene
 	RunService:UnbindFromRenderStep("ForgeCut")
+	heatEnd()
 	-- put everything back: lighting, effects, viewmodel, HUD, camera
 	for k, v in saved do Lighting[k] = v end
 	if cc and ccSaved then for k, v in ccSaved do cc[k] = v end end

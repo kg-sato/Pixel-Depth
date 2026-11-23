@@ -527,6 +527,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.gift = s.gift -- the playtime gift ladder of today (ServerScriptService.Retention)
 	d.refine = s.refine or 0 -- when the geode in the refinery is done (0 = empty)
 	d.refineN = s.refineN or 0 -- refinery jobs ever started (the first one is short, C.REFINE.first)
+	d.refineStir = s.refineStir or 0 -- v15: the number (refineN) of the last job stirred at the crucible: one stir a job
 	d.rare = s.rare or {} -- Mythic and Secret pets ever hatched (the trophy cases)
 	d.codex = s.codex -- ores and pets ever found (Shared.CodexUI)
 	d.charms = s.charms -- the forge's charms bought (C.CHARMS ids)
@@ -881,7 +882,9 @@ local function finishEscape(plr, report)
 		-- spawns every 3 s at most) and inside the same capped bonus (Codex review 2026-11-20: outside the cap they added 16 coins)
 		local beads = run and math.clamp(run.beads or 0, 0, math.min(8, math.floor(el / 3))) or 0
 		bonus = math.clamp(C.ESCAPE.bonus[1] + dodges * 2 + boosts * 2 + beads * 2 + (run and (run.moHit or 0) * C.CREW.moment.coins or 0), C.ESCAPE.bonus[1], C.ESCAPE.bonus[2])
-		if report.caught == true then bonus = math.floor(bonus / 2) end -- the Gloom nipped you (playtest 2 pursuer)
+		local caught = report.caught == true
+		if run and run.tick then run.tick(run, workspace:GetServerTimeNow()) caught = run.caught == true end -- v15: a crew's catch is the server's own (run.tick = crew.gloomTo, declared below)
+		if caught then bonus = math.floor(bonus / 2) end -- the Gloom nipped you (playtest 2 pursuer)
 		bonus = math.floor(bonus * (e.mult or 1)) -- a crew's shared bonus (C.CREW.mult)
 		forkGems = math.clamp(math.floor(tonumber(report.risky) or 0), 0, 2) -- the fork's risky side: a gem each, two forks a run (the cart's word, bounded like the bonus)
 		if forkGems > 0 then
@@ -967,6 +970,7 @@ function crew.launch()
 	local seed = math.random(1, 1e6)
 	local jobs = C.CREW.jobs[#m] or {}
 	local run = { members = m, host = m[1], sec = 0, n = 0, seed = seed, t0 = workspace:GetServerTimeNow(), jobs = jobs, seatOf = {}, last = {}, heat = 0, heatAt = os.clock(), hits = 0 }
+	crew.gloom(run)
 	local ids = {}
 	for i, p in m do ids[i] = p.UserId end
 	for i, p in m do
@@ -1058,6 +1062,33 @@ function crew.tell(run, ...) -- to every rider of a run
 		if escaping[m] and escaping[m].crew == run then CrewR:FireClient(m, ...) end
 	end
 end
+-- v15 (Codex 2026-11-22, Backlog: the crew's Gloom gap was the driver's word): the server runs a crew's Gloom on its own clock.
+-- It creeps in from the end of the 3.2 s countdown, a flare the server accepts pushes it back, a stumble the driver reports
+-- pulls it in (at most one a second), and the catch is judged here. Every rider gets the gap 4x a second ("G").
+function crew.gloomTo(run, now)
+	if not run.gapAt or now <= run.gapAt then return end
+	local F = C.CREW.flare
+	run.gap = math.clamp(run.gap + math.min(now - run.gapAt, 1) * (0.045 * F.slowGloom - F.creep), 0, 1)
+	run.gapAt = now
+	if run.gap <= 0.02 then run.caught = true end
+end
+function crew.gloom(run)
+	run.gap, run.gapAt, run.tick = 1, run.t0 + 3.2, crew.gloomTo
+	task.spawn(function()
+		while true do
+			task.wait(0.25)
+			local live = false
+			for _, m in run.members do
+				local e = escaping[m]
+				if e and e.crew == run and not e.crewDone then live = true break end
+			end
+			if not live then return end
+			crew.gloomTo(run, workspace:GetServerTimeNow())
+			crew.tell(run, "G", run.gap, run.caught == true)
+			if IS_STUDIO then for _, m in run.members do m:SetAttribute("DevCrewGap", math.floor(run.gap * 1000 + 0.5) / 1000) end end -- for spike/coop2_test.py
+		end
+	end)
+end
 -- Step 2: what a passenger with a job may send. A lookout's jump and duck go to the driver, whose cart makes the move for
 -- everyone. A stoker's press is judged here, on the server's clock, and the steam it leaves is told to the whole crew.
 function crew.job(plr, run, kind, a)
@@ -1106,6 +1137,8 @@ function crew.job(plr, run, kind, a)
 		local F = C.CREW.flare
 		if now - (run.lastF or 0) < F.cool or (run.flares or 0) >= F.stock then return end
 		run.lastF, run.flares = now, (run.flares or 0) + 1
+		crew.gloomTo(run, workspace:GetServerTimeNow())
+		if run.gap then run.gap = math.min(1, run.gap + F.push) end -- v15: the push happens here, not on the driver's cart
 		crew.tell(run, "t", F.stock - run.flares) -- the driver's cart pushes the Gloom back; everyone sees the throw
 	end
 end
@@ -1151,7 +1184,7 @@ local function crewOk(kind, a, b, c, d)
 	elseif kind == "c" then return num(a, 0, far) and lane(b, 1), 2 -- a parked cart: where, lane
 	elseif kind == "f" then return (a == 1 or a == 3) and num(b, 0, far), 2 -- a fork's signpost: the gold side, where
 	elseif kind == "j" or kind == "d" then return true, 0 -- jump, duck
-	elseif kind == "p" then return num(a, 1, 5000) and a % 1 == 0 and type(b) == "boolean", 2 end -- hazard number, struck
+	elseif kind == "p" then return num(a, 1, 5000) and a % 1 == 0 and type(b) == "boolean" and (c == nil or type(c) == "boolean"), 3 end -- hazard number, struck, a boost bead (v15)
 	return false, 0
 end
 CrewR.OnServerEvent:Connect(function(plr, kind, a, b, c, d)
@@ -1168,6 +1201,14 @@ CrewR.OnServerEvent:Connect(function(plr, kind, a, b, c, d)
 	local ok, n = crewOk(kind, a, b, c, d)
 	if not ok then return end
 	local args = table.pack(a, b, c, d)
+	if kind == "s" and run.gap then args[4] = run.gap end -- v15: riders see the server's gap, never the driver's
+	if kind == "p" and b == true and c ~= true and run.gap and os.clock() - (run.stumbleAt or 0) > 1 then -- a stumble lets the Gloom close in
+		-- shortcut: that the cart hit something is the driver's word (as every hazard is); one a second at most, and it only ever costs the crew
+		run.stumbleAt = os.clock()
+		crew.gloomTo(run, workspace:GetServerTimeNow())
+		run.gap = math.max(0, run.gap - 0.35)
+		if run.gap <= 0.02 then run.caught = true end
+	end
 	for _, m in run.members do
 		if m ~= plr and escaping[m] and escaping[m].crew == run then CrewR:FireClient(m, kind, table.unpack(args, 1, n)) end
 	end
@@ -1221,6 +1262,33 @@ task.spawn(function() -- the sign and its prompt over Camp 1's cart, and (direct
 	for _, d in workspace:GetDescendants() do deep(d) end
 	workspace.DescendantAdded:Connect(function(d) if d.Name == "CampCartBody" then task.defer(deep, d) end end)
 end)
+task.spawn(function() -- v15: the Deep Chronicle in town (HubBuilder's monolith, Shared.TownChronicle writes its face): the miners in this server,
+	-- deepest camp first (2 = the Kiln Camp, 1 = Camp 1), then bosses beaten, then escapes; names cut to letters, digits and spaces
+	local HS = game:GetService("HttpService")
+	while true do
+		task.wait(6)
+		local m = workspace:FindFirstChild("Hub") and workspace.Hub:FindFirstChild("Chronicle")
+		if m then
+			local rows = {}
+			for plr, s in data do
+				if plr.Parent and type(s) == "table" and type(s.tips) == "table" then
+					local deep = s.tips.clay and 2 or ((s.tips.banked or s.tips.gate1 or (s.escapes or 0) > 0) and 1 or 0)
+					local name = string.sub(string.upper((string.gsub(plr.DisplayName, "[^%w_ ]", ""))), 1, 14)
+					table.insert(rows, { u = plr.UserId, n = name ~= "" and name or "MINER", d = deep, e = math.floor(s.escapes or 0), b = (s.tips.gate1 and 1 or 0) + (s.tips.gate2 and 1 or 0) })
+				end
+			end
+			table.sort(rows, function(a, b)
+				if a.d ~= b.d then return a.d > b.d end
+				if a.b ~= b.b then return a.b > b.b end
+				if a.e ~= b.e then return a.e > b.e end
+				return a.u < b.u
+			end)
+			while #rows > 6 do table.remove(rows) end
+			local j = HS:JSONEncode(rows)
+			if m:GetAttribute("Rows") ~= j then m:SetAttribute("Rows", j) end
+		end
+	end
+end)
 if IS_STUDIO then -- DevCrewBot: this player rides as a passenger; the server plays a driver that leans, meets rocks and beads and arrives
 	task.spawn(function()
 		while true do
@@ -1233,6 +1301,7 @@ if IS_STUDIO then -- DevCrewBot: this player rides as a passenger; the server pl
 					local run = { members = { plr }, host = "bot", sec = 0, n = 0, seed = 4242, t0 = workspace:GetServerTimeNow(), jobs = jobs, seatOf = { [plr] = 2 }, last = {}, heat = 0, heatAt = os.clock(), hits = 0 }
 					local e = { t0 = os.clock(), crew = run }
 					escaping[plr] = e
+					crew.gloom(run)
 					local body = crew.body()
 					if body then standIn(plr, body.CFrame * CFrame.new(0, -1.65, 0), 2) end
 					FxR:FireClient(plr, "escape", 4242, { host = false, seat = 2, riders = { plr.UserId }, job = jobs[2], seed = 4242, t0 = run.t0, stoker = true, lookout = bot == "lookout", flare = jobs[2] == "stoker" })
@@ -1252,7 +1321,7 @@ if IS_STUDIO then -- DevCrewBot: this player rides as a passenger; the server pl
 							end
 							local t = os.clock() - t0
 							dist += 32 * dt
-							CrewR:FireClient(plr, "s", dist, 32, math.sin(t * 0.8), 1)
+							CrewR:FireClient(plr, "s", dist, 32, math.sin(t * 0.8), run.gap or 1)
 							if dist > 520 and not run.bot1 then -- two crew moments, as a driver's cart would call them
 								run.bot1 = true
 								crew.moment(run, "left")
@@ -2098,8 +2167,47 @@ BuyR.OnServerEvent:Connect(function(plr, what, arg)
 	end
 	if s.step == 4 then s.step = #s.pets > 0 and 6 or 5 end
 	if what == "pick" then quest(s, "buy") end
-	FxR:FireClient(plr, "bought", nxt.name, what)
+	local heatId -- v15: a one-use token for the HEAT & BLOW beat in the forging scene (HeatR below)
+	if what == "pick" then
+		heatId = game:GetService("HttpService"):GenerateGUID(false)
+		s.heatTok = { id = heatId, tier = s.pick, at = workspace:GetServerTimeNow() }
+	end
+	FxR:FireClient(plr, "bought", nxt.name, what, heatId)
 	sendState(s)
+end)
+
+-- v15 (Master Directive, @neochampy's anvil heat window): HEAT & BLOW. The forging scene of a new pickaxe asks "start" with the
+-- purchase's token; the server notes its own clock and answers it, so the needle (C.heatAt) runs on the server's time. One
+-- "press" is judged here over the last C.HEAT.late s: inside the gold band pays C.HEAT.rebate of that pickaxe's price back.
+-- A token is single-use (any press uses it, a press before start too), only the newest one counts, and it dies after C.HEAT.life s.
+local HeatR = remote("Heat")
+HeatR.OnServerEvent:Connect(function(plr, kind, id)
+	local s = data[plr]
+	local tok = s and s.heatTok
+	if not tok or type(id) ~= "string" or id ~= tok.id or tok.used then return end
+	local H, now = C.HEAT, workspace:GetServerTimeNow()
+	if now - tok.at > H.life then s.heatTok = nil return end
+	if kind == "start" then
+		if tok.start then return end
+		tok.start = now
+		HeatR:FireClient(plr, "start", id, now)
+	elseif kind == "press" then
+		tok.used = true
+		if not tok.start or now - tok.start > H.secs + H.late then return HeatR:FireClient(plr, "miss", id) end
+		local ok = false
+		for k = 0, 6 do
+			local t = now - tok.start - H.late + k * H.late / 6
+			if t >= 0 and math.abs(C.heatAt(t) - 0.5) <= H.band then ok = true break end
+		end
+		local def = C.PICKS[tok.tier]
+		local rebate = (ok and def) and math.floor(def.cost * H.rebate) or 0
+		if rebate > 0 then
+			s.gold += rebate
+			A.earn(s, "Coins", rebate, s.gold, "PerfectForge")
+			sendState(s)
+		end
+		HeatR:FireClient(plr, ok and "perfect" or "miss", id, rebate)
+	end
 end)
 
 local function texture(p, face, tex, studs, tint)
@@ -2345,6 +2453,7 @@ local function onJoin(plr)
 	s.opts = cleanOpts(d.opts)
 	s.gift = Retention.cleanGift(d.gift)
 	s.refine = Retention.cleanRefine(d.refine)
+	s.refineStir = math.clamp(math.floor(tonumber(d.refineStir) or 0), 0, 1e6) -- v15; a save from before has 0
 	s.refineN = math.clamp(math.floor(tonumber(d.refineN) or 0), 0, 1e6) -- saved since 2026-11-22 (Codex: it reset every session); a save from before has 0, so its next job is short once
 	s.charms = {}
 	for _, ch in C.CHARMS do if type(d.charms) == "table" and d.charms[ch.id] == true then s.charms[ch.id] = true end end

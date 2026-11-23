@@ -200,6 +200,14 @@ function M.start(E)
 
 	local petRp = RaycastParams.new()
 	petRp.FilterType = Enum.RaycastFilterType.Exclude
+	local clrOp = OverlapParams.new()
+	clrOp.FilterType = Enum.RaycastFilterType.Exclude
+	local function clearAt(p, r) -- a flat box the pet's width and half its height: the floor under it never counts as rock
+		for _, q in workspace:GetPartBoundsInBox(CFrame.new(p), Vector3.new(r * 2, r * 1.1, r * 2), clrOp) do
+			if q.CanCollide and q.Transparency < 1 then return false end
+		end
+		return true
+	end
 	local chimes, chimeAt, nearChime, chimesAt = nil, 0, false, 0 -- the Clay Caves' chime crystals: pets keep back while you play them (Orchestrator 2026-11-23: a pet stood on the puzzle)
 	local function chimeNear(h, now)
 		if now - chimeAt < 0.5 then return nearChime end
@@ -292,13 +300,26 @@ function M.start(E)
 			local from = cam.CFrame.Position
 			local hit = workspace:Raycast(from, goal - from, petRp)
 			if hit and hit.Distance > 7 then goal = hit.Position - (goal - from).Unit * math.max(1.6, slot.maxExt * 0.9) end -- half its size off the wall: 1.6 left a big pet half inside a clay pillar -- a wall close to the eye (a stall beside you) would pull it onto the lens: then it keeps its place
-			local buried = false
-			if hit and hit.Distance <= 7 then -- a pillar right beside the eye: is its slot actually inside the rock? (most walls that close leave the slot clear)
-				local op = OverlapParams.new()
-				op.FilterType, op.FilterDescendantsInstances = Enum.RaycastFilterType.Exclude, { plr.Character, pet.model, workspace.CurrentCamera }
-				for _, q in workspace:GetPartBoundsInRadius(goal, slot.maxExt * 0.4, op) do if q.CanCollide and q.Transparency < 1 then buried = true break end end
+			if now >= (d.clearAt or 0) then -- v15: a body-sized flat box round its spot, 4x a second; if rock is in it, the nearest open spot on a ring round it that the eye can see (Orchestrator final grade: a pet half inside a Clay pillar, view 10)
+				d.clearAt = now + 0.25
+				clrOp.FilterDescendantsInstances = { plr.Character, pet.model, cam }
+				local r = slot.maxExt * 0.55
+				d.shift = nil
+				if not clearAt(goal, r) then
+					local best, bestD
+					for ring = 1, 3 do
+						for a = 0, 7 do
+							local c = goal + Vector3.new(math.cos(a * math.pi / 4), 0, math.sin(a * math.pi / 4)) * (r * 0.9 * ring)
+							local m = (c - goal).Magnitude
+							if (not bestD or m < bestD) and clearAt(c, r) and not workspace:Raycast(from, c - from, petRp) then best, bestD = c, m end
+						end
+						if best then break end
+					end
+					d.shift = best and best - goal or false
+				end
 			end
-			if buried then -- its slot is inside the rock, so it trots a step behind you instead (Orchestrator round 2: a pet half inside a Clay column)
+			if d.shift then goal += d.shift end
+			if d.shift == false then -- no open spot near its slot, so it trots a step behind you instead (Orchestrator round 2: a pet half inside a Clay column)
 				local back = cam.CFrame.LookVector * Vector3.new(1, 0, 1)
 				back = back.Magnitude > 0.1 and back.Unit or Vector3.zAxis
 				goal = h.Position - back * (4 + i * 1.5) + Vector3.new(0, 0.5, 0)
