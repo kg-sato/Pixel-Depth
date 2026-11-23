@@ -217,7 +217,7 @@ function M.init(c)
 		for _, x in { -2.6, 2.6 } do part("PartyPost", Vector3.new(0.5, 5.2, 0.5), at * CFrame.new(x, -0.9, 0.1), wood) end
 		local board = part("PartyBoard", Vector3.new(6, 3, 0.3), at, Color3.fromRGB(36, 17, 56), Enum.Material.Glass)
 		board.Transparency = 0.15
-		part("PartyBoardRim", Vector3.new(6.4, 3.4, 0.16), at * CFrame.new(0, 0, 0.14), Color3.fromRGB(150, 110, 220), Enum.Material.Glass) -- Neon glared white in the town view
+		local rim = part("PartyBoardRim", Vector3.new(6.4, 3.4, 0.16), at * CFrame.new(0, 0, 0.14), Color3.fromRGB(150, 110, 220), Enum.Material.Glass) -- Neon glared white in the town view
 		local sg = Instance.new("SurfaceGui")
 		sg.Name, sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence = "PartyGui", Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 50, 0
 		for i, d in { { "PARTY", 0.3, 0.2, Color3.fromRGB(255, 214, 107) }, { "0/5 FRIENDS HERE", 0.2, 0.52, Color3.new(1, 1, 1) }, { "+15% ORE VALUE WITH A FRIEND", 0.16, 0.8, Color3.fromRGB(0, 240, 255) } } do
@@ -228,7 +228,7 @@ function M.init(c)
 		end
 		sg.Parent = board
 		local back = sg:Clone() -- the board's back read as a blank purple slab from the cart (Gemini full1122f 157 s): the same words on both faces
-		back.Name, back.Face, back.Parent = "PartyGuiBack", Enum.NormalId.Back, board
+		back.Name, back.Face, back.Adornee, back.Parent = "PartyGuiBack", Enum.NormalId.Back, rim, board -- drawn on the rim plate: from behind the rim covers the board (Orchestrator 2026-11-23: a blank purple board by the mine)
 		local pr = Instance.new("ProximityPrompt")
 		pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.GamepadKeyCode = "Invite", "Friends", Enum.KeyCode.F, Enum.KeyCode.ButtonX
 		pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.Style, pr.HoldDuration = 9, false, Enum.ProximityPromptStyle.Custom, 0
@@ -348,8 +348,8 @@ function M.init(c)
 		part("RefineryLintel", Vector3.new(3, 0.4, 0.8), fat * CFrame.new(0, 2.8, -2.33), iron, Enum.Material.Metal)
 		for _, x in { -0.42, 0.42 } do part("RefineryBar", Vector3.new(0.2, 1.9, 0.2), fat * CFrame.new(x, 1.65, -2.58), iron, Enum.Material.Metal) end
 		local mouth = part("RefineryMouth", Vector3.new(2.2, 1.9, 0.2), fat * CFrame.new(0, 1.65, -2), Color3.fromRGB(120, 34, 28), Enum.Material.Slate)
-		for _, e in { { -0.7, 0.5, 0.6, Color3.fromRGB(255, 96, 40), -2.2 }, { -0.1, 0.8, 0.7, Color3.fromRGB(255, 150, 50), -2.26 }, { 0.55, 0.42, 0.62, Color3.fromRGB(255, 208, 90), -2.32 }, { 0.2, 0.3, 0.4, Color3.fromRGB(255, 120, 44), -2.38 } } do
-			part("RefineryEmber", Vector3.new(e[3], e[2], 0.3), fat * CFrame.new(e[1], 0.7 + e[2] / 2, e[5]), e[4], Enum.Material.Neon) -- each at its own depth: no shared planes
+		for k, e in { { -0.7, 0.5, 0.6, Color3.fromRGB(255, 96, 40), -2.2 }, { -0.1, 0.8, 0.7, Color3.fromRGB(255, 150, 50), -2.26 }, { 0.55, 0.42, 0.62, Color3.fromRGB(255, 208, 90), -2.32 }, { 0.2, 0.3, 0.4, Color3.fromRGB(255, 120, 44), -2.38 } } do
+			part("RefineryEmber", Vector3.new(e[3], e[2], 0.16), fat * CFrame.new(e[1] + k * 0.013, 0.7 + k * 0.035 + e[2] / 2, e[5]), e[4], Enum.Material.Neon) -- each at its own depth: no shared planes
 		end
 		local flame = Instance.new("ParticleEmitter")
 		flame.Texture, flame.Rate, flame.Lifetime, flame.Speed, flame.SpreadAngle = "rbxasset://textures/particles/fire_main.dds", 14, NumberRange.new(0.5, 0.9), NumberRange.new(1.2, 2), Vector2.new(12, 12)

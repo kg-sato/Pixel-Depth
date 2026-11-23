@@ -2840,7 +2840,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	-- tutorial
 	local msg = stepMessage()
 	-- top games keep the HUD small (Research/UI/Viral Game HUDs (2026-11-10)): eight seconds after it last changed, the card shrinks
-	local small = inCave and now - stepSince > 8
+	local small = now - stepSince > (inCave and 8 or 30) -- town too, after 30 s (Orchestrator 2026-11-23: the card dominated 8 minutes of town)
 	if small ~= stepSmall then
 		stepSmall = small
 		tween(scaler(stepCard), 0.35, { Scale = small and 0.74 or 1 })
