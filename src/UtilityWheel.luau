@@ -112,7 +112,7 @@ function M.start(E)
 		s.lock = new("ImageLabel", d, { Image = E.ICON.lock, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.3, 0.3), Position = UDim2.fromScale(0.86, 0.14), AnchorPoint = MID, ZIndex = 44, Visible = false }) -- a small badge on the rim, so the dimmed icon still reads (Gemini stills 2026-11-18: the lock hid the icon)
 		s.disc, s.rim, s.scale = d, new("UIStroke", d, { Color = INK, Thickness = 3 }), new("UIScale", d, { Scale = 1 })
 		if s.icon then
-			s.img = new("ImageLabel", d, { Image = s.icon, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(G and 0.7 or 0.56, G and 0.7 or 0.56), Position = UDim2.fromScale(0.5, G and 0.38 or 0.4), AnchorPoint = MID, ZIndex = 42 })
+			s.img = new("ImageLabel", d, { Image = s.icon, BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(G and 0.58 or 0.56, G and 0.58 or 0.56), Position = UDim2.fromScale(0.5, G and 0.36 or 0.4), AnchorPoint = MID, ZIndex = 42 })
 		else -- the sonar has no icon in the kit: three mint rings
 			s.rings = {}
 			for i, k in { 0.16, 0.32, 0.48 } do

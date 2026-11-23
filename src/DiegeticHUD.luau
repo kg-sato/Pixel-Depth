@@ -69,6 +69,8 @@ function M.start(E)
 	vital.icon.Position, vital.icon.Size = UDim2.fromScale(0.5, 0.4), UDim2.fromScale(0.36, 0.36)
 	local hpText = text(vital.root, "", UDim2.fromScale(0.5, 0.3), UDim2.fromScale(0.5, 0.68), MID, Color3.new(1, 1, 1), 700)
 	hpText.Font, hpText.ZIndex, hpText.TextStrokeColor3 = E.HEAD, 6, Color3.fromRGB(96, 20, 56)
+	local fuelText = text(lantern.root, "", UDim2.fromScale(0.62, 0.28), UDim2.fromScale(0.5, 0.7), MID, Color3.new(1, 1, 1), 700) -- the torch fuel as a number, like the HP beside it (Orchestrator 2026-11-23: "no clear fill or %")
+	fuelText.Font, fuelText.ZIndex, fuelText.TextStrokeColor3 = E.HEAD, 6, Color3.fromRGB(90, 48, 12)
 
 	-- the hex hotbar between the orbs (keyboard and gamepad; phones have their own thumb buttons)
 	local slots = {}
@@ -156,6 +158,7 @@ function M.start(E)
 		local now = os.clock()
 		local fuel = cave.fuel or 1
 		lantern.fill = fuel
+		fuelText.Text = math.ceil(math.clamp(fuel, 0, 1) * 100) .. "%"
 		lantern.tint(VIOLET:Lerp(AMBER, math.clamp(fuel * 2.2, 0, 1)))
 		lantern.step(dt, now, 34)
 		lantern.icon.ImageTransparency = fuel < 0.2 and 0.25 + 0.25 * math.sin(now * 9) or 0
