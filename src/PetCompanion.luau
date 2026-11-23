@@ -109,7 +109,7 @@ function M.start(E)
 		light.Range, light.Brightness, light.Color, light.Shadows = lead and 12 or 6, 0.3, WARM, false
 		light.Parent = bead
 		for _, p in model:GetDescendants() do -- the pet's own back glow is 1.2: this close to the camera it burned out
-			if p:IsA("PointLight") and p ~= light then p.Brightness = 0.25 end
+			if p:IsA("PointLight") and p ~= light then p.Enabled = false end -- off (was 0.25): with the collar light a white pet burned to a white blob at the edge of the view (Orchestrator rounds 2-3, zipline)
 			if p:IsA("BasePart") and p.Material == Enum.Material.Neon and p ~= bead then p.Color = p.Color:Lerp(Color3.new(0, 0, 0), 0.6) end -- so did its neon back (0.45 still burned white in first person, directive v14)
 		end
 		d.bead, d.light = bead, light
@@ -315,7 +315,7 @@ function M.start(E)
 		local cf = CFrame.new(aim.Position) * d.rot
 		local c = gloomNear and RED:Lerp(WARM, math.noise(now * 14, 5 + i) * 0.5 + 0.5) or WARM
 		d.bead.Color, d.light.Color = c, c
-		d.light.Brightness = gloomNear and 0.2 + math.abs(math.noise(now * 18, 9 + i)) * 0.5 or (i == 1 and 0.4 or 0.3) -- the lead lights the tunnel round it (Gemini full1119p: "an inert block in the dark")
+		d.light.Brightness = gloomNear and 0.2 + math.abs(math.noise(now * 18, 9 + i)) * 0.5 or (i == 1 and 0.22 or 0.16) -- 0.22 (was 0.4): a white pet burned out; the lead still lights the tunnel round it (Gemini full1119p: "an inert block in the dark")
 		if d.mood then
 			local wantM = gloomNear and "scared" or ((rare and now - hopAt < 2.2) and "found" or "")
 			if wantM ~= d.mood.state then
@@ -328,7 +328,7 @@ function M.start(E)
 				end
 			end
 		end
-		local fade = math.clamp(1 - ((cam.CFrame.Position - pet.pos).Magnitude - 2.2) / 2, 0, 0.9) -- a pet at the lens ghosts out (Orchestrator round 2: a lit pet filled the corner as a white blob on the zipline)
+		local fade = math.clamp((7.5 - (cam.CFrame.Position - pet.pos).Magnitude) / 3.5, 0, 0.85) -- a pet pulled close by a wall ghosts out from 7.5 studs (tour 3: the lead pet filled the left of most cave frames; round 2: a white blob on the zipline)
 		if math.abs(fade - (d.fade or 0)) > 0.02 then setFade(pet, d, fade) end
 		return cf
 	end

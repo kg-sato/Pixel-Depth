@@ -713,8 +713,8 @@ function M.build(parent, origin, seed, opt)
 	local WALL = L == 4 and { Color3.fromRGB(26, 18, 20), Color3.fromRGB(42, 28, 30), Color3.fromRGB(62, 40, 40), Color3.fromRGB(88, 52, 48) } -- layer 4: basalt, warmer where the glow reaches
 		or L == 3 and { Color3.fromRGB(20, 22, 48), Color3.fromRGB(32, 36, 72), Color3.fromRGB(48, 54, 100), Color3.fromRGB(70, 76, 132) } -- layer 3: night-blue granite
 		or L == 2 and { Color3.fromRGB(62, 30, 22), Color3.fromRGB(104, 54, 42), Color3.fromRGB(140, 80, 62), Color3.fromRGB(170, 108, 82) } -- the damp foot of the walls darker (Gemini l2r1) -- layer 2: fired clay, darker low, sun-baked high
-		or { Color3.fromRGB(40, 26, 54), Color3.fromRGB(61, 41, 82), Color3.fromRGB(86, 61, 112), Color3.fromRGB(110, 84, 140) } -- deep amethyst slate to soft lavender granite (Gemini r1 palette, a step lighter at the top)
-	local ACCENT = ({ Color3.fromRGB(168, 86, 52), Color3.fromRGB(176, 92, 48), Color3.fromRGB(150, 176, 236), Color3.fromRGB(170, 54, 30) })[L] -- iron stain in the upper layers, frost in Glitterhall, ember in Muspell (Gemini v14p2_r2: no terracotta in the blue layer)
+		or { Color3.fromRGB(38, 23, 56), Color3.fromRGB(52, 32, 72), Color3.fromRGB(71, 46, 94), Color3.fromRGB(96, 70, 124) } -- deep plum-slate to mauve-indigo (Orchestrator round 3: #261738 / #342048 / #472E5E; the old amethyst read brown under the torch)
+	local ACCENT = ({ Color3.fromRGB(132, 74, 124), Color3.fromRGB(176, 92, 48), Color3.fromRGB(150, 176, 236), Color3.fromRGB(170, 54, 30) })[L] -- iron stain in the upper layers, frost in Glitterhall, ember in Muspell (Gemini v14p2_r2: no terracotta in the blue layer)
 	local STRATA = { WALL[1], WALL[2]:Lerp(Color3.fromRGB(64, 72, 132), L == 4 and 0 or 0.22), WALL[3]:Lerp(ACCENT, 0.38), WALL[2]:Lerp(WALL[3], 0.5), WALL[4]:Lerp(Color3.fromRGB(236, 222, 236), 0.22) } -- dark shale, a cool bed, an iron-stained bed, mid, and the pale hard limestone (directive v14: the bands must read under the torch)
 	local function colorOf(k)
 		if k == 99 then return ({ Color3.fromRGB(45, 26, 56), Color3.fromRGB(60, 34, 26), Color3.fromRGB(224, 242, 254), Color3.fromRGB(24, 18, 22) })[L] end -- the pool's shore: wet mud, wet clay, frost (Gemini l3r1), cooled obsidian
@@ -758,7 +758,7 @@ function M.build(parent, origin, seed, opt)
 					if isFloor then
 						p:SetAttribute("Theme", THEMES[math.floor((k - 100) / 10)])
 						p.Material = Enum.Material.Slate -- directive v14 (audit: the Pebble carpet fought the ore glints): matte slate, lighter and warmer than the walls
-						p.Color = p.Color:Lerp(({ Color3.fromRGB(176, 136, 140), Color3.fromRGB(196, 150, 120), Color3.fromRGB(160, 170, 214), Color3.fromRGB(120, 92, 86) })[L], 0.28)
+						p.Color = p.Color:Lerp(({ Color3.fromRGB(104, 78, 132), Color3.fromRGB(196, 150, 120), Color3.fromRGB(160, 170, 214), Color3.fromRGB(120, 92, 86) })[L], 0.28)
 					end
 					p.CastShadow = h > 1
 					nParts += 1
@@ -1445,7 +1445,7 @@ function M.build(parent, origin, seed, opt)
 					local a = (sI / (1 + idx2) - 0.5) * 2.4
 					local h = 1 + hash(c[1], c[3], sI + 40) * 1.1
 					local quartz = idx2 == 1 -- the common ore's prongs are warm quartz, not dark rock: Rootflint read as unlit rubble (Orchestrator round 2)
-					shard(Vector3.new(0.7, h, 0.7), base * CFrame.new(math.sin(a) * 0.8, h * 0.45 * k, math.cos(a) * 0.3 - 0.4) * CFrame.Angles(0.35, 0, -a * 0.4), quartz and ore[2]:Lerp(Color3.fromRGB(255, 190, 110), 0.55) or dark:Lerp(ore[2], hash(c[1], sI, 41) * 0.6), { CastShadow = false, Material = quartz and Enum.Material.Glass or nil })
+					shard(Vector3.new(0.7, h, 0.7), base * CFrame.new(math.sin(a) * 0.8, h * 0.45 * k, math.cos(a) * 0.3 - 0.4) * CFrame.Angles(0.35, 0, -a * 0.4), quartz and ore[2]:Lerp(Color3.fromRGB(255, 190, 110), 0.55) or dark:Lerp(ore[2], hash(c[1], sI, 41) * 0.6), { CastShadow = false, Material = quartz and Enum.Material.Glass or nil, Transparency = quartz and 0.25 or nil })
 				end
 				local l = Instance.new("PointLight") -- a faint glint in the ore's colour: a vein reads in the dark from about 30 studs
 				l.Name, l.Color, l.Range, l.Brightness, l.Shadows = "Glint", ore[2], 9, 0.6, false

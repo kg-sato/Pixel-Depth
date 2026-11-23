@@ -394,8 +394,8 @@ function Cave.build(parent, origin, seed)
 			local S = 1.45
 			for _, s in { -1, 1 } do
 				part("Camp", "TentSide", Vector3.new(7, 0.6, 5.6) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, 0) * CFrame.Angles(0, 0, -s * 0.9), col) -- -s: the panels lean in to a ridge (s made a V, Orchestrator 2026-11-23)
-				for _, z in { -1.9, 0, 1.9 } do -- three stripes a panel: the reference camp's tents are candy-striped canvas (CMP-01)
-					part("Camp", "TentStripe", Vector3.new(7.12, 0.72, 1.0) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, z * S) * CFrame.Angles(0, 0, -s * 0.9), PAL.cream, DECO)
+				for _, z in { -1.4, 1.4 } do -- two narrow stripes a panel: the reference camp's tents are candy-striped canvas (CMP-01); three wide ones turned the tent cream
+					part("Camp", "TentStripe", Vector3.new(7.12, 0.72, 0.8) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, z * S) * CFrame.Angles(0, 0, -s * 0.9), PAL.cream, DECO)
 				end
 			end
 			part("Camp", "TentBack", Vector3.new(2.4, 3.6, 0.4) * S, base * CFrame.new(0, 1.8 * S, -2.7 * S), col:Lerp(Color3.new(0, 0, 0), 0.25)) -- narrow: a wide back stuck out of the A-frame's slopes
@@ -548,24 +548,11 @@ function Cave.build(parent, origin, seed)
 		zone.Size = Vector3.new(30, ringR * 2, ringR * 2)
 		zone:SetAttribute("SafeZone", true)
 		-- lantern posts round the ring
-		local tops = {}
-		for k = 0, 5 do
+		for k = 0, 5 do -- (string lights between these posts sagged to eye height and cut across the first-person view: removed 2026-11-23)
 			local a = k / 6 * math.pi * 2 + 0.3
 			local p = origin + Vector3.new(math.cos(a) * (ringR + 3), 0, math.sin(a) * (ringR + 3))
 			part("Camp", "LanternPost", Vector3.new(0.6, 6, 0.6), p + Vector3.new(0, 3, 0), PAL.bark)
 			lantern("Camp", "Lantern", p + Vector3.new(0, 6.9, 0), PAL.warm, 30, 1.3)
-			tops[k + 1] = p + Vector3.new(0, 5.8, 0)
-		end
-		for k = 1, 6 do -- string lights: a sagging rope from post to post with two small lamps (the reference camp CMP-01); no lights of their own
-			local a, b = tops[k], tops[k % 6 + 1]
-			local pts = { a, a:Lerp(b, 1 / 3) - Vector3.new(0, 1.3, 0), a:Lerp(b, 2 / 3) - Vector3.new(0, 1.3, 0), b }
-			for q = 1, 3 do
-				local u, v = pts[q], pts[q + 1]
-				part("Camp", "StringRope", Vector3.new(0.12, 0.12, (v - u).Magnitude), CFrame.lookAt((u + v) / 2, v), Color3.fromRGB(70, 52, 44), { CanCollide = false, CastShadow = false })
-			end
-			for q = 2, 3 do
-				part("Camp", "StringLamp", Vector3.new(0.42, 0.55, 0.42), CFrame.new(pts[q] - Vector3.new(0, 0.42, 0)), (k + q) % 2 == 0 and PAL.warm or Color3.fromRGB(255, 160, 190), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
-			end
 		end
 		local fill = part("Camp", "WarmFill", Vector3.new(1, 1, 1), W(0, 0, 22), PAL.warm, { Transparency = 1, CanCollide = false, CanQuery = false })
 		glow(fill, Color3.fromRGB(255, 200, 150), 70, 0.5)

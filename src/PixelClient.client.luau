@@ -531,6 +531,7 @@ local pityText = text(odds, "", UDim2.fromScale(0.86, 0.06), UDim2.fromScale(0.5
 text(odds, "EGG: " .. C.EGG_COINS .. " COINS AT MARIBEL'S STALL", UDim2.fromScale(0.8, 0.055), UDim2.fromScale(0.5, 0.885), Vector2.new(0.5, 0), GOLD, 700, false).Name = "Price" -- the price on the odds card (Gemini full1120r-t asked three times)
 do -- in a block: this script is at its limit of 200 locals
 local luckText = text(odds, "", UDim2.fromScale(0.86, 0.055), UDim2.fromScale(0.5, 0.826), Vector2.new(0.5, 0), GOLD, 600, false)
+for _, l in { pityText, luckText } do new("UITextSizeConstraint", l, { MinTextSize = 13 }) end -- the odds footers stay readable (Orchestrator round 3)
 luckText.Name = "Luck"
 local function oddsNow() -- the odds the server rolls from, with the friends luck of the friends who are here (Config.eggOdds)
 	local n = plr:GetAttribute("Friends") or 0
@@ -1164,7 +1165,7 @@ RunService.RenderStepped:Connect(function()
 		local a = u.adornee
 		local p = (a:IsA("BasePart") and a.Position or (a:IsA("Attachment") and a.WorldPosition or Vector3.zero)) + Vector3.new(0, u.lift, 0)
 		local v, on = cam:WorldToScreenPoint(p)
-		u.bb.Visible = on and not forgeUI.modalOpen -- directive v14: a bubble shown before a panel opened drew over it (F BUY AN EGG on EGG ODDS)
+		u.bb.Visible = on and not forgeUI.modalOpen and not (a.Name == "RefineryMouth" and (state and state.geodes or 0) <= 0 and plr:GetAttribute("RefineAt") == nil) -- the refinery's bubble only with a geode or a job: at spawn it sat on the minecart (Orchestrator rounds 2-3); directive v14: a bubble shown before a panel opened drew over it (F BUY AN EGG on EGG ODDS)
 		local sz, vp = u.bb.AbsoluteSize, cam.ViewportSize -- kept whole on screen: a bubble over a tall thing was cut by the top edge (Gemini UI review, 2026-11-10)
 		local x, y = math.clamp(v.X, sz.X * 0.62 + 6, math.max(vp.X - sz.X * 0.38 - 6, sz.X * 0.62 + 6)), math.max(v.Y, sz.Y + vp.Y * 0.2) -- below the top strip and the timers pill (directive v10: a boss prompt sat on the pill)
 		if on then
@@ -2082,6 +2083,7 @@ end)()
 	bIcon.ZIndex = 7
 	local bText = text(banner, "", UDim2.fromScale(0.7, 0.4), UDim2.fromScale(0.585, 0.42), Vector2.new(0.5, 0.5), WHITE) -- 0.7 wide (was 0.62) and the pill 9 px a letter (was 7.6): long WICK tips shrank to micro-text (Orchestrator round 2)
 	bText.TextColor3, bText.TextStrokeTransparency, bText.ZIndex = INK, 1, 7 -- ink on the light ribbon reads at phone size
+	new("UITextSizeConstraint", bText, { MinTextSize = 14 }) -- Orchestrator round 3: the Wick tip was still read as micro-text
 	do -- directive v14 (audit bug 8): the pale lilac ribbon glared over the dark cave and the fights; now smoked obsidian glass
 		local sk = banner:FindFirstChild("Skin")
 		if sk then sk.Visible = false end
@@ -2884,7 +2886,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 				local cp = cam.CFrame.Position
 				local seg = h.Position - cp
 				local tt = math.clamp((pet.pos - cp):Dot(seg) / seg:Dot(seg), 0, 1)
-				if tt < 0.95 and (cp + seg * tt - pet.pos).Magnitude < 1.6 * ps then fade = math.max(fade, 0.7) end
+				if (tt < 0.95 and (cp + seg * tt - pet.pos).Magnitude < math.max(6.5, 1.6 * ps)) or (pet.pos - cp).Magnitude < 22 then fade = math.max(fade, 0.85) end -- round 3: a 6.5-stud cylinder round the view line, and anything within 22 studs of the lens
 			end
 			if math.abs(fade - (pet.fade or 0)) > 0.02 then
 				pet.fade = fade

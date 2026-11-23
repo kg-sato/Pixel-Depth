@@ -200,8 +200,14 @@ function M.start(E)
 				l.part.CFrame = part.CFrame * CFrame.new(0, 0, l.z) -- +z: away from the eye (the front face looks back at it)
 				local off = name == "Back" and Vector2.new(canvas.Y * 0.012, canvas.Y * 0.016) or Vector2.zero
 				local pad = name == "Frost" and canvas.Y * 0.006 or 0
-				l.rect.Position = UDim2.fromOffset(top.AbsolutePosition.X + off.X - pad, top.AbsolutePosition.Y + off.Y - pad)
-				l.rect.Size = UDim2.fromOffset(top.AbsoluteSize.X + pad * 2, top.AbsoluteSize.Y + pad * 2)
+				-- a layer nearer or farther than the menu looks bigger or smaller from 0.7 studs: scale its rectangle about the canvas
+				-- middle so it lines up with the menu (Orchestrator round 3: the front rim floated ~30 px outside the forge); the Back
+				-- plate keeps its look of a card lifted off the page
+				local k = name == "Back" and 1 or (DIST + l.z) / DIST
+				local mid = canvas / 2
+				local p0 = mid + (Vector2.new(top.AbsolutePosition.X + off.X - pad, top.AbsolutePosition.Y + off.Y - pad) - mid) * k
+				l.rect.Position = UDim2.fromOffset(p0.X, p0.Y)
+				l.rect.Size = UDim2.fromOffset((top.AbsoluteSize.X + pad * 2) * k, (top.AbsoluteSize.Y + pad * 2) * k)
 			end
 		end
 	end)

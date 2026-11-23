@@ -924,7 +924,10 @@ function M.init(ctx)
 	for k, pr in chimes do
 		pr.Triggered:Connect(function(plr)
 			local s = ctx.data[plr]
-			if not s or s.mg or ctx.busy(plr) or not near(plr, pr.Parent, 12) then return end
+			if not s or s.mg or ctx.busy(plr) or not near(plr, pr.Parent, 12) then
+				if game:GetService("RunService"):IsStudio() then plr:SetAttribute("DevChimeWhy", not s and "nodata" or s.mg and ("mg " .. tostring(s.mg.kind)) or ctx.busy(plr) and "busy" or "far") end -- why a scripted strike did nothing (tour 3)
+				return
+			end
 			local H = C.CHIMES
 			local g = chime[plr]
 			if not g or os.clock() > g.till then

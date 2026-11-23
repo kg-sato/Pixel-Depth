@@ -26,7 +26,7 @@ function M.start(E)
 	})
 	local wipe = new("Frame", E.top, { Name = "RootsWipe", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(46, 34, 44), BackgroundTransparency = 1, Visible = false, ZIndex = 55 })
 
-	local ribbon = new("Frame", E.gui, { Size = E.S(560, 42), Position = E.S(640, 462), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = Color3.fromRGB(36, 18, 54), BorderSizePixel = 0 }) -- 2026-11-18: obsidian amethyst with a pulsing rose rim (Gemini UI round 1: the hot magenta slab fought the cave light); was warning red (Gemini, 2026-11-10: a pale pink pill had no urgency)
+	local ribbon = new("Frame", E.gui, { Size = E.S(560, 42), Position = E.S(640, 436), AnchorPoint = Vector2.new(0.5, 1), BackgroundColor3 = Color3.fromRGB(36, 18, 54), BorderSizePixel = 0 }) -- 2026-11-18: obsidian amethyst with a pulsing rose rim (Gemini UI round 1: the hot magenta slab fought the cave light); was warning red (Gemini, 2026-11-10: a pale pink pill had no urgency) -- 436 (was 462): its bottom touched the toast lane and the two bars stacked (Orchestrator round 3)
 	E.fit(ribbon, 560, 42)
 	new("UICorner", ribbon, { CornerRadius = UDim.new(0.5, 0) })
 	local rstroke = new("UIStroke", ribbon, { Color = Color3.fromRGB(255, 107, 151), Thickness = 2.5 })

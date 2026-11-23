@@ -183,9 +183,12 @@ function M.start(E)
 		local twin = new("Frame", copy, { Name = "Twin", Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 12 })
 		spark(twin, 0.85, 0.1).BackgroundColor3 = Color3.fromRGB(200, 250, 255)
 		local back = new("Frame", copy, { Name = "Back", Size = UDim2.fromScale(0.94, 0.94), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.38, BorderSizePixel = 0, ZIndex = 9 }) -- obsidian glass behind the needle: the rock behind a clear face swallowed it
-		back.BackgroundTransparency, back.Rotation, back.Size = 0.5, 45, UDim2.fromScale(0.6, 0.6) -- directive v14: a diamond plate of obsidian glass behind the arc and sparks, never a round watch face
-		new("UICorner", back, { CornerRadius = UDim.new(0.08, 0) })
+		back.BackgroundTransparency, back.Rotation, back.Size = 0.5, 0, UDim2.fromScale(0.84, 0.84) -- a round smoked aperture (Orchestrator round 3, REWORK-EXT-01: the diamond plate read as "a tilted brown diamond"; directive v14 had made it a diamond)
+		new("UICorner", back, { CornerRadius = UDim.new(0.5, 0) })
 		new("UIStroke", back, { Color = Color3.fromRGB(226, 208, 255), Thickness = 3, Transparency = 0.1 }) -- a bright rim: on the boss's dark bark the plate melted in (views full1122g 07)
+		local ring = new("Frame", copy, { Name = "Ring", Size = UDim2.fromScale(0.92, 0.92), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 9 })
+		new("UICorner", ring, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", ring, { Color = Color3.fromRGB(22, 8, 30), Thickness = 7, Transparency = 0.15 }) -- the dark outer ring frames the gold slice as a timing window
 		mirror = { copy = copy, pairs = pairs_, twin = twin, needleO = dial:FindFirstChild("Needle"), arcO = dial:FindFirstChild("Arc") }
 	end
 	local function mirrorStop()

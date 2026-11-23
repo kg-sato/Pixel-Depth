@@ -115,7 +115,7 @@ local function buildStage()
 	f.Name = "MinecartStage"
 	lamps = {}
 	local rng = Random.new(7)
-	local ROCK = { Material = Enum.Material.Slate, MaterialVariant = "PixelCaveRock" }
+	local ROCK = { Material = Enum.Material.Slate, MaterialVariant = "" } -- plain matte slate (Orchestrator round 3: the PixelCaveRock tile read as a stretched dark polka-dot slab at speed; Gemini r1 said the same of the caves)
 	local cavFrom, cavTo
 	for d = 0, DN - 4, 4 do
 		local mid, sec = pathAt(d + 2), section(d + 2)

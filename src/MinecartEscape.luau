@@ -250,6 +250,17 @@ function M.play(opt)
 	end
 	K.dbg = plr:GetAttribute("DevCrew") -- a test asks for the run's state as the player attribute DevCrewState
 	if K.dbg and K.crew then plr:SetAttribute("DevCrewT0", K.crew.t0) end
+	local function headlamp(g) -- a warm miner's lamp on each crewmate's brow, so the front rider reads in the dark tunnel (Orchestrator round 3)
+		local head = g:FindFirstChild("Head")
+		if not head then return end
+		local lamp = Instance.new("Part")
+		lamp.Name, lamp.Size, lamp.CFrame, lamp.Color, lamp.Material = "Headlamp", Vector3.new(0.45, 0.35, 0.2), head.CFrame * CFrame.new(0, 0.35, -0.62), Color3.fromRGB(255, 214, 140), Enum.Material.Neon
+		lamp.Anchored, lamp.CanCollide, lamp.CanQuery, lamp.CanTouch, lamp.CastShadow = true, false, false, false, false
+		local l = Instance.new("SpotLight")
+		l.Face, l.Range, l.Angle, l.Brightness, l.Color, l.Shadows = Enum.NormalId.Front, 18, 50, 1.2, Color3.fromRGB(255, 205, 140), false
+		l.Parent = lamp
+		lamp.Parent = g
+	end
 	if K.crew then
 		local seats = C.CREW.seats
 		local mine = seats[K.crew.seat] or seats[1]
@@ -261,6 +272,7 @@ function M.play(opt)
 			local g = oc and seats[i] and ghost(oc)
 			if g then
 				sitDown(g)
+				headlamp(g)
 				g.Parent = world
 				table.insert(K.mates, { g, CFrame.new(seats[i][1], riderOff.Y, seats[i][2]), id })
 				-- directive v13 (Group Cart Escape open item 2): a jelly job badge over each rider's head
@@ -292,7 +304,7 @@ function M.play(opt)
 					for _, d in g:GetDescendants() do
 						if d:IsA("Shirt") or d:IsA("ShirtGraphic") then d:Destroy() elseif d:IsA("BasePart") and tint and d.Name:find("Torso") then d.Color = tint end
 					end
-					sitDown(g) g.Parent = world table.insert(K.mates, { g, CFrame.new(st[1], riderOff.Y, st[2]), -i })
+					sitDown(g) headlamp(g) g.Parent = world table.insert(K.mates, { g, CFrame.new(st[1], riderOff.Y, st[2]), -i })
 				end
 			end
 		end
@@ -813,6 +825,7 @@ function M.play(opt)
 				pill.Parent = gui
 				round(pill)
 				stroke(pill, Color3.fromRGB(255, 190, 120), 2)
+				K.flarePill = pill
 			end
 			local lastThrow = 0
 			K.flare = function()
@@ -883,7 +896,7 @@ function M.play(opt)
 					say("IN TIME!", WHITE, 0.6)
 				end
 			end
-			if stock then stock.Visible = phase == "run" and t > 0 and K.crew.flare == true end
+			if stock then stock.Visible = phase == "run" and t > 0 and K.crew.flare == true if K.flarePill then K.flarePill.Visible = stock.Visible end end -- the pill goes with its words (Orchestrator round 3: an empty pill stayed on the result card)
 		end
 	end
 	if K.crew and K.crew.stoker then -- the steam gauge, for every rider of a crew with a stoker; and the stoker's own bar

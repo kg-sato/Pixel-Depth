@@ -943,9 +943,9 @@ function Hub.build(parent, origin)
 		-- the SELL sign hangs from an arm on the front post, turned to face the camera (south)
 		tvox(g, "SignArm", Vector3.new(7.2, 0.5, 0.5), at(11.2, 11.8, 4.2), "beam", 2) -- out past the corner post: behind it the post and awning cut SELL to ELL (Orchestrator 2026-11-23)
 		do -- the SELL sign hangs off the front post on an arm, turned to face the camera (pairwise round 3 vs 5)
-			local sp = at(13.2, 9.4, 4.2).Position
+			local sp = at(13.2, 7.6, 4.2).Position -- 7.6 (was 9.4): from the cart it hid the FORGE sign behind it ("GE", Orchestrator round 3)
 			sign(g, "SELL", CFrame.new(sp), 5, 2, GOLD)
-			for _, dx in { -1.6, 1.6 } do vox(g, "SignChain", Vector3.new(0.15, 1.3, 0.15), CFrame.new(sp + Vector3.new(dx, 1.65, 0)), PAL.stone[1], { CanCollide = false }) end
+			for _, dx in { -1.6, 1.6 } do vox(g, "SignChain", Vector3.new(0.15, 3.1, 0.15), CFrame.new(sp + Vector3.new(dx, 2.55, 0)), PAL.stone[1], { CanCollide = false }) end
 		end
 		barrel(g, at(-10.6, 1.1, 3).Position)
 		barrel(g, at(-10.4, 1.1, 0.2).Position, 0.85)

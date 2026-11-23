@@ -122,8 +122,13 @@ C(PILOT)
 C("local RS=game:GetService('RunService') local w=workspace.Caves:FindFirstChild('Warden',true) local cam=workspace.CurrentCamera _G.BossLook=RS.RenderStepped:Connect(function() "
   "local to=w.PrimaryPart.Position+Vector3.new(0,0.5,0) local cf=CFrame.lookAt(cam.CFrame.Position,to) cam.CFrame=cam.CFrame:Lerp(cf,0.08) end) return 1")
 S(P + "p:SetAttribute('DevBoss',1) return 1")
+reticle_seen = False
 for _ in range(45):
     time.sleep(2)
+    if not reticle_seen and C("local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('StrikeReticle') return tostring(g~=nil and g.Enabled and g.Adornee~=nil)") == "true":
+        reticle_seen = True  # a still while the dial sits on a knot (Orchestrator round 3: view 07 never showed the live reticle)
+        mark("Root Warden: strike reticle on a knot")
+        if globals().get("FORCE"): FORCE.set()
     log = C("return tostring(game.Players.LocalPlayer:GetAttribute('DevBossLog'))")
     if "bossWin" in log or "bossLose" in log: break
 mark("fight over: " + log.strip()[-60:])
@@ -148,6 +153,7 @@ S("workspace:SetAttribute('DevChimeSlow', 4) return 1")  # as chime_test: a slow
 strike(2); time.sleep(0.6)
 if globals().get("FORCE"): FORCE.set()  # a still of the woken chimes with their numbers
 order = C("return tostring(game.Players.LocalPlayer:GetAttribute('DevChime'))")
+print("chime order:", order, "| refused:", S("return tostring(game.Players:GetPlayers()[1]:GetAttribute('DevChimeWhy'))"), flush=True)
 for ch in order if order.isdigit() else "": strike(int(ch))
 time.sleep(2.5)
 S("workspace:SetAttribute('DevChimeSlow', nil) return 1")

@@ -10,13 +10,19 @@ dest.mkdir(parents=True, exist_ok=True)
 # view name, the tour step label it belongs to, which still of that step (0 = its first; -1 = its last). By label, not by second:
 # the tour's timing drifts from run to run (full1122e: every view landed one step late)
 WANT = [("loading splash", "loading logo", 2), ("town HUD", "town HUD", 1), ("settings", "settings:", 1), ("forge", "forge", 2),
-        ("Camp 1 arrival", "arrival at Camp 1", 1), ("mining strike", "minigames", 3), ("boss fight and strike reticle", "Root Warden: the whole fight", 6),
+        ("Camp 1 arrival", "arrival at Camp 1", 1), ("mining strike", "minigames", 3), ("boss fight and strike reticle", "strike reticle on a knot|Root Warden: the whole fight", 0),
         ("boss reward chest", "fight over", 1), ("glass lift ride", "glass lift", 2), ("Clay Caves hall", "Camp 2: the hall", 2),
-        ("crew escape HUD", "crew ride from the stoker", 5), ("escape result card", "crew ride from the stoker", -3), ("town arrival", "crew ride from the stoker", -1)]
+        ("crew escape HUD", "crew ride from the stoker", 1), ("escape result card", "crew ride from the stoker", -2), ("town arrival", "crew ride from the stoker", -1)]
 rows = [l.split("	") for l in (src / "labels.txt").read_text(encoding="utf-8").splitlines() if l.count("	") >= 2]
 lines = []
 for i, (view, key, k) in enumerate(WANT, 1):
-    hits = [r[0] for r in rows if key in r[2]]
+    hits = []
+    for alt in key.split("|"):  # the first label that has stills wins
+        hits = hits or [r[0] for r in rows if alt in r[2]]
+    if view == "mining strike" and (here.parent / "captures" / "night" / f"loop_{name}_strike.png").exists():  # mg_night's own shot right as the dial opens (Orchestrator round 3)
+        shutil.copy(here.parent / "captures" / "night" / f"loop_{name}_strike.png", dest / f"{i:02d}.png")
+        lines.append(f"{i:02d} {view}")
+        continue
     if not hits:
         print("no still for", view); continue
     f = hits[max(-len(hits), min(k, len(hits) - 1))]

@@ -1186,7 +1186,7 @@ task.spawn(function() -- the sign and its prompt over Camp 1's cart, and (direct
 	a.Name, a.Size, a.Transparency, a.Anchored, a.CanCollide, a.CanQuery, a.CanTouch = name, Vector3.new(1, 1, 1), 1, true, false, false, false
 	a.CFrame = over.CFrame * CFrame.new(0, 5.4, 0) -- above the cart's own Ride up card; 5.4 (was 7): from beside the cart the sign was cut by the top of the screen (Gemini full1121c)
 	local bb = Instance.new("BillboardGui")
-	bb.Name, bb.Size, bb.MaxDistance, bb.LightInfluence, bb.StudsOffset = "CrewSign", UDim2.fromScale(10, 1.1), 70, 0, Vector3.new(0, 1.9, 0) -- lifted over its own V prompt card, which sat on the middle of the sign (2026-11-19)
+	bb.Name, bb.Size, bb.MaxDistance, bb.LightInfluence, bb.StudsOffset = "CrewSign", UDim2.fromScale(10, 1.1), 40, 0, Vector3.new(0, 1.9, 0) -- lifted over its own V prompt card, which sat on the middle of the sign (2026-11-19) -- MaxDistance 40 (was 70): from the deposits round camp it hung cut off at the top edge (Orchestrator tour 3)
 	local t = Instance.new("TextLabel")
 	t.Name, t.Size, t.BackgroundColor3, t.BackgroundTransparency, t.TextScaled, t.Font = "Line", UDim2.fromScale(1, 1), Color3.fromRGB(36, 17, 56), 0.2, true, Enum.Font.FredokaOne
 	t.TextColor3, t.Text = Color3.fromRGB(255, 214, 107), pre .. "CREW RIDE:  PRESS V TO BOARD"

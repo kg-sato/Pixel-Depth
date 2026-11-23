@@ -171,6 +171,13 @@ function M.start(E)
 		local pr = w and w.PrimaryPart and w.PrimaryPart:FindFirstChildOfClass("ProximityPrompt")
 		if pr then pr.Enabled = on end
 	end
+	local TENT = { TentSide = true, TentStripe = true, TentBack = true, Door = true, Bedroll = true }
+	local function tents(fade) -- Camp 1's tents step back while a fight runs: from the arena a tent roof cut across a quarter of the view (Orchestrator round 3)
+		local cv = workspace:FindFirstChild("Caves")
+		for _, d in cv and cv:GetDescendants() or {} do
+			if d:IsA("BasePart") and TENT[d.Name] then d.LocalTransparencyModifier = fade and 0.85 or 0 end
+		end
+	end
 	local function resetKnots()
 		local w = warden()
 		if not w then return end
@@ -211,6 +218,7 @@ function M.start(E)
 			if w and base then w:PivotTo(base) end -- up again after a win's slump
 			resetKnots()
 			prompt(false)
+			tents(true)
 			bar.Visible = true
 			banner.Text, banner.Visible, bannerScale.Scale = TITLES[now], true, 1.7
 			tween(bannerScale, 0.45, { Scale = 1 }, Enum.EasingStyle.Back)
@@ -353,6 +361,7 @@ function M.start(E)
 			toast("DODGED!", MINT, false)
 		elseif kind == "bossWin" then
 			bar.Visible = false
+			tents(false)
 			eyes(false)
 			prompt(true)
 			openDoor(true)
@@ -400,6 +409,7 @@ function M.start(E)
 			task.delay(4.4, function() toast(won == 2 and "The road past the kiln opens with the next camp." or "LANTERN FOUND! Old Gran's first lost lantern", MINT, true) end)
 		elseif kind == "bossLose" then
 			bar.Visible = false
+			tents(false)
 			eyes(false)
 			prompt(true)
 			local w = warden()
