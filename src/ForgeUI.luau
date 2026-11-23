@@ -124,13 +124,13 @@ function M.start(E)
 		nm.ZIndex = 6
 		local halo = new("ImageLabel", face, { Name = "Halo", Image = FX_GLOW, BackgroundTransparency = 1, ImageTransparency = 0.25, Size = UDim2.fromScale(0.9, 0.7), Position = UDim2.fromScale(0.5, 0.53), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4 }) -- a soft rarity glow behind the art, so dark heads (Ashcoal, Bog-Iron) stand off the card (Gemini full1119p)
 		local art = new("ImageLabel", face, { Name = "Art", BackgroundTransparency = 1, Size = UDim2.fromScale(0.94, 0.7), Position = UDim2.fromScale(0.5, 0.53), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 5 })
-		local lvBox = panel(face, UDim2.fromScale(0.38, 0.17), UDim2.fromScale(0.04, 0.96), Vector2.new(0, 1), "dark")
+		local lvBox = panel(face, UDim2.fromScale(0.32, 0.17), UDim2.fromScale(0.04, 0.96), Vector2.new(0, 1), "dark") -- 0.32 and EQUIPPED 0.52: they touched at 0.41 (Orchestrator 2026-11-23)
 		lvBox.ZIndex = 6
 		local lv = text(lvBox, "LV 1", UDim2.fromScale(0.8, 0.62), UDim2.fromScale(0.5, 0.48), Vector2.new(0.5, 0.5), WHITE, 700, false)
 		lv.ZIndex = 7
 		local ok = check(face, UDim2.fromScale(0.22, 0.22), UDim2.fromScale(0.95, 0.96), Vector2.new(1, 1))
 		ok.ZIndex = 7
-		local eq = panel(face, UDim2.fromScale(0.56, 0.17), UDim2.fromScale(0.97, 0.96), Vector2.new(1, 1), "mint")
+		local eq = panel(face, UDim2.fromScale(0.52, 0.17), UDim2.fromScale(0.97, 0.96), Vector2.new(1, 1), "mint")
 		eq.Name, eq.ZIndex = "Equipped", 7
 		text(eq, "EQUIPPED", UDim2.fromScale(0.86, 0.56), UDim2.fromScale(0.5, 0.46), Vector2.new(0.5, 0.5), WHITE).ZIndex = 8
 		local price = panel(face, UDim2.fromScale(0.62, 0.18), UDim2.fromScale(0.96, 0.96), Vector2.new(1, 1), "butter")
@@ -326,7 +326,7 @@ function M.start(E)
 			big.ImageTransparency = src and 1 or 0
 		end
 		dName.Text = def.name
-		rar.BackgroundColor3, rarT.Text = rim, r[1]:upper()
+		rar.BackgroundColor3, rarT.Text = rim:Lerp(Color3.new(0, 0, 0), 0.5), r[1]:upper() -- a dark fill in the rarity hue: white on the pale COMMON grey did not read (Orchestrator 2026-11-23)
 		local cur = tab == "charm" and 0 or getState()[tab]
 		local own, nxt = i <= cur, i == cur + 1
 		if tab == "charm" then own = (getState().charms or {})[def.id] == true nxt = not own end
