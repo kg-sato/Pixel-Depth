@@ -58,9 +58,10 @@ function M.start(E)
 	local wick = block(glass, UDim2.fromScale(0.34, 0.5), UDim2.fromScale(0.5, 0.58), GOLD, 65)
 	local title = text(card, "", UDim2.fromScale(0.88, 0.17), UDim2.fromScale(0.5, 0.45), Vector2.new(0.5, 0.5), E.LILAC, 700)
 	local big = text(card, "", UDim2.fromScale(0.8, 0.17), UDim2.fromScale(0.5, 0.63), Vector2.new(0.5, 0.5), PINK, 700, false)
-	local note = text(card, "", UDim2.fromScale(0.84, 0.1), UDim2.fromScale(0.5, 0.78), Vector2.new(0.5, 0.5), E.CREAM, 700, false) -- 0.1 (was 0.085) and the grab cards at scale 0.7 (was 0.62): their note read as micro-text (Orchestrator round 2)
+	local note = text(card, "", UDim2.fromScale(0.84, 0.13), UDim2.fromScale(0.5, 0.785), Vector2.new(0.5, 0.5), E.CREAM, 700, false) -- 0.1 (was 0.085) and the grab cards at scale 0.7 (was 0.62): their note read as micro-text (Orchestrator round 2)
 	title.ZIndex, big.ZIndex, note.ZIndex = 64, 64, 64
-	for _, l in { title, note } do new("UITextSizeConstraint", l, { MinTextSize = 14 }) end -- never micro-text on the grab cards (Orchestrator round 3)
+	for _, l in { title, note } do new("UITextSizeConstraint", l, { MinTextSize = 14 }) end
+	note.TextWrapped = true -- the hint may take two lines instead of one squeezed hairline (Orchestrator final grade) -- never micro-text on the grab cards (Orchestrator round 3)
 	if E.GLASS then -- cut-glass kit: the big line is jelly, taking each screen's own colour and landing with a pop
 		big.Size = UDim2.fromScale(0.86, 0.22)
 		require(script.Parent:WaitForChild("JellyText")).mirror(big, { color = PINK, followColor = true, popOnChange = true, glow = true, maxLen = 26 })

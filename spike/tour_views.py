@@ -17,8 +17,10 @@ rows = [l.split("	") for l in (src / "labels.txt").read_text(encoding="utf-8").s
 lines = []
 for i, (view, key, k) in enumerate(WANT, 1):
     hits = []
-    for alt in key.split("|"):  # the first label that has stills wins
-        hits = hits or [r[0] for r in rows if alt in r[2]]
+    for n_alt, alt in enumerate(key.split("|")):  # the first label that has stills wins; a fallback label takes its own still (6: mid-fight)
+        if not hits:
+            hits = [r[0] for r in rows if alt in r[2]]
+            if hits and n_alt > 0: k = 6
     if view == "mining strike" and (here.parent / "captures" / "night" / f"loop_{name}_strike.png").exists():  # mg_night's own shot right as the dial opens (Orchestrator round 3)
         shutil.copy(here.parent / "captures" / "night" / f"loop_{name}_strike.png", dest / f"{i:02d}.png")
         lines.append(f"{i:02d} {view}")

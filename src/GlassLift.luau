@@ -98,14 +98,16 @@ function M.start(E)
 			sp(Vector3.new(5, 5, 0.1), face * CFrame.new(x, y + 1.6, -9.45), WARM, { Material = LIT.Material, Transparency = 0.74 })
 		end
 		for r = 0, DEPTH // 10 - 1 do -- glowing root vines hanging down the walls, teal above and violet lower (Orchestrator round 2: "plain tan panels"); every 10 studs and in front of the ledges (round 3: at z -8.6 most hung inside the rock)
-			local face = CFrame.Angles(0, ((r + 2) % 4) * math.pi / 2, 0)
-			local x, y = ((r * 53) % 15) - 7, -r * 10 - 4
+			for side = 0, 1 do -- two walls a row (Orchestrator final grade: at -65 m the left and upper-right walls were still bare)
+			local face = CFrame.Angles(0, ((r + 2 + side * 2) % 4) * math.pi / 2, 0)
+			local x, y = ((r * 53 + side * 29) % 15) - 7, -r * 10 - 4 - side * 5
 			local col = y > -160 and Color3.fromRGB(70, 230, 210) or Color3.fromRGB(190, 120, 255)
 			local len = 5 + (r % 3) * 2
 			for s = 0, 2 do -- a few links that swing a little sideways, so it reads as a vine, not a pipe
 				sp(Vector3.new(0.35, len / 3 + 0.2, 0.35), face * CFrame.new(x + math.sin(s * 1.7 + r) * 0.35, y - len / 6 - s * len / 3, -5.4) * CFrame.Angles(0, 0, math.sin(s + r) * 0.18), col, LIT)
 			end
 			sp(Vector3.new(0.8, 0.8, 0.8), face * CFrame.new(x, y - len - 0.2, -5.4) * CFrame.Angles(0.6, 0.6, 0), col:Lerp(Color3.new(1, 1, 1), 0.3), LIT) -- a glowing bud at the tip
+			end
 		end
 		sp(Vector3.new(19, 1, 19), CFrame.new(0, -DEPTH + 2, 0), Color3.fromRGB(255, 170, 90), { Material = Enum.Material.SmoothPlastic }) -- the kiln glow of the Clay Caves far below
 		for r = 0, 5 do -- molten seams glowing in the kiln zone's walls, warmer the deeper (Orchestrator round 3: "warm kiln rim light down to -85 m")

@@ -291,7 +291,7 @@ function M.start(E)
 			petRp.FilterDescendantsInstances = { plr.Character, pet.model, workspace.CurrentCamera }
 			local from = cam.CFrame.Position
 			local hit = workspace:Raycast(from, goal - from, petRp)
-			if hit and hit.Distance > 7 then goal = hit.Position - (goal - from).Unit * math.max(1.6, slot.maxExt * 0.65) end -- half its size off the wall: 1.6 left a big pet half inside a clay pillar -- a wall close to the eye (a stall beside you) would pull it onto the lens: then it keeps its place
+			if hit and hit.Distance > 7 then goal = hit.Position - (goal - from).Unit * math.max(1.6, slot.maxExt * 0.9) end -- half its size off the wall: 1.6 left a big pet half inside a clay pillar -- a wall close to the eye (a stall beside you) would pull it onto the lens: then it keeps its place
 			local buried = false
 			if hit and hit.Distance <= 7 then -- a pillar right beside the eye: is its slot actually inside the rock? (most walls that close leave the slot clear)
 				local op = OverlapParams.new()
