@@ -379,7 +379,7 @@ function M.start(E)
 		end
 		-- the word: its spread, the slam and the shake after it
 		frames += 1
-		if ready and frames > 4 then clock += math.min(dt, now > 8 and 0.2 or 1 / 15) end -- never a jump after one slow frame, but a slow join (5 fps) no longer crawls: at 1/30 a tour still showed only "PI" at 13 s (Gemini full1122e)
+		if ready and frames > 4 then clock += math.min(dt, now > 8 and 0.2 or 1 / 30) end -- never a jump after one slow frame; 1/30 not 1/15: at 1/15 a slow join landed the letters together (load_test 'one by one: NO', 2026-11-23); after 8 s the 0.2 step finishes a crawling logo
 		local real = now
 		now = clock -- from here to the end of the letters, time is the logo's own clock
 		if clock > 0 and not sparked then

@@ -540,7 +540,7 @@ local function oddsNow() -- the odds the server rolls from, with the friends luc
 		odds["Pct" .. i].Text = s .. "%"
 	end
 	local per = math.floor(C.TETHER.luck * 100 + 0.5)
-	luckText.Text = (n > 0 and ("FRIENDS LUCK ON:  EPIC AND BETTER +" .. per * math.min(n, C.TETHER.max) .. "%") or ("FRIENDS LUCK:  EPIC AND BETTER +" .. per .. "% PER FRIEND HERE")) .. (cx > 0 and ("   CODEX +" .. math.floor(cx * 100 + 0.5) .. "%") or "")
+	luckText.Text = (n > 0 and ("FRIENDS: EPIC+ LUCK +" .. per * math.min(n, C.TETHER.max) .. "%") or ("EACH FRIEND HERE: EPIC+ LUCK +" .. per .. "%")) .. (cx > 0 and ("  \u{00B7}  CODEX +" .. math.floor(cx * 100 + 0.5) .. "%") or "") -- short: the 60-letter line was micro-text (Orchestrator round 2)
 end
 plr:GetAttributeChangedSignal("Friends"):Connect(oddsNow)
 plr:GetAttributeChangedSignal("CodexLuck"):Connect(oddsNow)
@@ -2080,7 +2080,7 @@ end)()
 	local bIcon = icon(banner, "camp", UDim2.fromScale(0.08, 0.7), UDim2.fromScale(0.17, 0.42), Vector2.new(0.5, 0.5))
 	new("UIAspectRatioConstraint", bIcon, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 	bIcon.ZIndex = 7
-	local bText = text(banner, "", UDim2.fromScale(0.62, 0.4), UDim2.fromScale(0.54, 0.42), Vector2.new(0.5, 0.5), WHITE)
+	local bText = text(banner, "", UDim2.fromScale(0.7, 0.4), UDim2.fromScale(0.585, 0.42), Vector2.new(0.5, 0.5), WHITE) -- 0.7 wide (was 0.62) and the pill 9 px a letter (was 7.6): long WICK tips shrank to micro-text (Orchestrator round 2)
 	bText.TextColor3, bText.TextStrokeTransparency, bText.ZIndex = INK, 1, 7 -- ink on the light ribbon reads at phone size
 	do -- directive v14 (audit bug 8): the pale lilac ribbon glared over the dark cave and the fights; now smoked obsidian glass
 		local sk = banner:FindFirstChild("Skin")
@@ -2091,7 +2091,7 @@ end)()
 		bText.TextColor3, bText.TextStrokeColor3, bText.TextStrokeTransparency = Color3.fromRGB(255, 220, 130), Color3.fromRGB(16, 8, 30), 0.35
 		local ar = banner:FindFirstChildOfClass("UIAspectRatioConstraint")
 		local function fitTip() -- as wide as its words (Gemini v14p1: a wide pill with dead ends blocked the view)
-			local w = math.clamp(150 + #bText.Text * 7.6, 260, 540)
+			local w = math.clamp(150 + #bText.Text * 9, 260, 600)
 			banner.Size = S(w, 52)
 			if ar then ar.AspectRatio = w / 52 end
 		end
@@ -2152,8 +2152,8 @@ end)()
 
 	-- how-to cards beside the minigames, first run of each
 	local HOWTO = {
-		strike = { "PERFECT STRIKE", { { "hammer", "The needle spins round the dial" }, { "star", "Strike when it crosses the GOLD" }, { "gem", "3 swings: each PERFECT gives bonus ore" } } },
-		rush = { "VEIN RUSH", { { "chisel", "A red crack shows on one side" }, { "chisel", "Chisel the OTHER side, fast!" }, { "star", "No slips = FLAWLESS, 3 stars" } } },
+		strike = { "PERFECT STRIKE", { { "hammer", "Needle spins round" }, { "star", "Strike on the GOLD" }, { "gem", "PERFECT = bonus ore" } } }, -- one short line each: two wrapped lines were micro-text (Orchestrator round 2)
+		rush = { "VEIN RUSH", { { "chisel", "A red crack shows" }, { "chisel", "Chisel the OTHER side" }, { "star", "No slips = FLAWLESS" } } },
 	}
 	local card = panel(caveHud, S(250, 190), S(28, 300), nil, "panel") -- 2026-11-19: smaller and lower (Gemini live audit: the first-run card filled the left of the view)
 	fit(card, 250, 190)
@@ -2880,6 +2880,12 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		require(RS.Shared.PetVoxels).animate(pet.model, now, dt)
 		do -- a pet right at the lens fades out instead of filling the view (Gemini audit 2026-11-18: big pets clipped the first-person camera)
 			local fade = os.clock() < (plr:GetAttribute("HidePetsUntil") or 0) and 1 or math.clamp(1 - ((cam.CFrame.Position - pet.pos).Magnitude - 1.5 * ps) / (2 * ps), 0, 0.85) -- HidePetsUntil: a cutscene or result card wants the crew out of shot (directive v14)
+			if not fp then -- town: a pet between the high camera and you ghosts (Orchestrator round 2: a big pet blocked 40% of the view at the trophy cases)
+				local cp = cam.CFrame.Position
+				local seg = h.Position - cp
+				local tt = math.clamp((pet.pos - cp):Dot(seg) / seg:Dot(seg), 0, 1)
+				if tt < 0.95 and (cp + seg * tt - pet.pos).Magnitude < 1.6 * ps then fade = math.max(fade, 0.7) end
+			end
 			if math.abs(fade - (pet.fade or 0)) > 0.02 then
 				pet.fade = fade
 				for _, d in pet.model:GetDescendants() do if d:IsA("BasePart") then d.LocalTransparencyModifier = fade end end

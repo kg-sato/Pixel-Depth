@@ -63,7 +63,15 @@ function M.start(E)
 	local pager, pagerT, refreshPage -- the page pill under the grid (set below)
 
 	-- frame: ribbon, close, coin and gem pills
-	local ribbon = ribbonTitle(forge, "FORGE", "ribbonPink", 0.3)
+	local ribbon, ribbonT = ribbonTitle(forge, "FORGE", "ribbonPink", 0.3)
+	do -- the smoked obsidian ribbon of EGG ODDS and the ritual screens (Orchestrator round 2: the pastel pink ribbon clashed with the violet glass shell)
+		local sk = ribbon:FindFirstChild("Skin")
+		if sk then sk.Visible = false end
+		ribbon.BackgroundColor3, ribbon.BackgroundTransparency = Color3.fromRGB(28, 16, 46), 0.04
+		new("UICorner", ribbon, { CornerRadius = UDim.new(0.5, 0) })
+		new("UIStroke", ribbon, { Color = Color3.fromRGB(255, 214, 107), Thickness = 1.5, Transparency = 0.35 })
+		if ribbonT then ribbonT.TextStrokeColor3 = Color3.fromRGB(20, 10, 34) end
+	end
 	for _, x in { 0.17, 0.83 } do
 		new("ImageLabel", ribbon, { Name = "Star", BackgroundTransparency = 1, Image = SPRITE.star, Size = UDim2.fromScale(0.13, 0.62), Position = UDim2.fromScale(x, 0.4), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit, ZIndex = 5 })
 	end

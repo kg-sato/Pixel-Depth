@@ -283,9 +283,10 @@ function M.start(E)
 			local at = hit and hit.Position or core.Position
 			local v = (eye - at).Unit
 			local n = hit and hit.Normal or v
-			for _ = 1, 3 do if n:Dot(v) < 0.65 then n = (n + v).Unit end end
+			local ns = n -- the rock's own facing: a plate turned toward the eye must stand off it or half the dial sinks into the rock
+			for _ = 1, 4 do if n:Dot(v) < 0.96 then n = (n + v).Unit end end -- at most about 16 degrees off the eye (was 50: Orchestrator round 2 saw the gold slice as a tilted splinter on a steep rock)
 			local dist = (at - eye).Magnitude
-			local k = math.clamp(dist * 0.27, 1.6, 3.3) -- studs across the dial: about a quarter of the view high (Gemini audit 2026-11-18: at a third it read as a 2D clock hijacking the screen)
+			local k = math.clamp(dist * 0.31, 1.8, 3.6) -- 0.31 (was 0.27): the reference board's strike dial (REWORK-EXT-01) fills far more of the view; Orchestrator rounds 1-2 could not read ours -- studs across the dial: about a quarter of the view high (Gemini audit 2026-11-18: at a third it read as a 2D clock hijacking the screen)
 			-- the owner, 2026-11-17: "the wheel is covered by the gemstone itself". The ray met the rock behind the crystals, so
 			-- gems standing out of the deposit poked through the plate. Now the plate sits just in front of the nearest corner of
 			-- any deposit part inside the dial's circle, facing the eye, so nothing of the gem can cover it.
@@ -299,13 +300,13 @@ function M.start(E)
 					if along > 1 and along < near and (rel - dir * along).Magnitude < k * 1.45 + 0.5 then near = along end -- wide enough that no deposit block covers the smaller dial
 				end
 			end
-			if near < (at - eye):Dot(dir) - 0.05 then at, n = eye + dir * (near - 0.15), v end
+			if near < (at - eye):Dot(dir) - 0.05 then at, n, ns = eye + dir * (near - 0.15), v, v end
 			anchor.Size = Vector3.new(k * 1.38, k * 1.66, 0.05) -- 15% larger: the Orchestrator (2026-11-23) could not find the dial in the tour
 			local glow = anchor:FindFirstChild("RockGlow") or new("PointLight", anchor, { Name = "RockGlow", Color = Color3.fromRGB(255, 200, 90), Shadows = false }) -- the dial lights the rock it sits on, so it reads as part of the world
 			glow.Range, glow.Brightness = k * 1.6, 0.5 + math.sin(os.clock() * 6) * 0.15 -- softer: up close the rock under the dial blew out (Gemini full1119i)
 			lock.Size = UDim2.fromScale(k * 1.25, k * 1.25) -- the brackets hug the smaller dial instead of framing half the view
 			local up = math.abs(n.Y) > 0.9 and cam.CFrame.UpVector or Vector3.yAxis
-			local pos = at + n * 0.12 + up * (k * 0.05)
+			local pos = at + n * 0.12 + up * (k * 0.05) + v * (k * 0.83 * math.sqrt(math.max(0, 1 - n:Dot(ns) ^ 2)))
 			anchor.CFrame = CFrame.lookAt(pos, pos + n, up)
 			dial.Position = UDim2.fromOffset(-4 * px, -4 * px) -- parked off screen: the needle still turns for the tests and the autopilot
 			for _, pr in mirror.pairs do

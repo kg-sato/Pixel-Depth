@@ -806,6 +806,14 @@ function M.play(opt)
 			stock.Parent = gui
 			round(stock)
 			stroke(stock, Color3.fromRGB(255, 190, 120), 2)
+			do -- a pill of its own behind the words: the jelly text pass clears the button's box (Orchestrator round 2: "FLARE (R) x7 lacks a pill")
+				local pill = Instance.new("Frame")
+				pill.Name, pill.Size, pill.Position, pill.AnchorPoint = "FlarePill", UDim2.fromScale(0.15, 0.075), stock.Position, stock.AnchorPoint
+				pill.BackgroundColor3, pill.BackgroundTransparency, pill.ZIndex = Color3.fromRGB(36, 17, 56), 0.15, 3
+				pill.Parent = gui
+				round(pill)
+				stroke(pill, Color3.fromRGB(255, 190, 120), 2)
+			end
 			local lastThrow = 0
 			K.flare = function()
 				if not K.crew.flare or t <= 0 or K.left <= 0 or os.clock() - lastThrow < F.cool then return end

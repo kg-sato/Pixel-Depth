@@ -1444,7 +1444,8 @@ function M.build(parent, origin, seed, opt)
 				for sI = 1, 1 + idx2 do -- shards lean out from the wall, tallest in the middle
 					local a = (sI / (1 + idx2) - 0.5) * 2.4
 					local h = 1 + hash(c[1], c[3], sI + 40) * 1.1
-					shard(Vector3.new(0.7, h, 0.7), base * CFrame.new(math.sin(a) * 0.8, h * 0.45 * k, math.cos(a) * 0.3 - 0.4) * CFrame.Angles(0.35, 0, -a * 0.4), dark:Lerp(ore[2], hash(c[1], sI, 41) * 0.6), { CastShadow = false })
+					local quartz = idx2 == 1 -- the common ore's prongs are warm quartz, not dark rock: Rootflint read as unlit rubble (Orchestrator round 2)
+					shard(Vector3.new(0.7, h, 0.7), base * CFrame.new(math.sin(a) * 0.8, h * 0.45 * k, math.cos(a) * 0.3 - 0.4) * CFrame.Angles(0.35, 0, -a * 0.4), quartz and ore[2]:Lerp(Color3.fromRGB(255, 190, 110), 0.55) or dark:Lerp(ore[2], hash(c[1], sI, 41) * 0.6), { CastShadow = false, Material = quartz and Enum.Material.Glass or nil })
 				end
 				local l = Instance.new("PointLight") -- a faint glint in the ore's colour: a vein reads in the dark from about 30 studs
 				l.Name, l.Color, l.Range, l.Brightness, l.Shadows = "Glint", ore[2], 9, 0.6, false

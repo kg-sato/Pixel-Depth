@@ -190,6 +190,11 @@ function Cave.build(parent, origin, seed)
 			part("Camp", "SupplyCrate", Vector3.new(1.6, 1.3, 1.4), crate * CFrame.new(0, 0.65, 0), WOOD, { Material = Enum.Material.WoodPlanks })
 			part("Camp", "CrateBand", Vector3.new(1.66, 0.16, 1.46), crate * CFrame.new(0, 1.0, 0), Color3.fromRGB(70, 46, 34), { CanCollide = false })
 			part("Camp", "SupplyCrate", Vector3.new(1.0, 0.8, 0.9), crate * CFrame.new(0.15, 1.71, 0.05) * CFrame.Angles(0, 0.5, 0), WOOD:Lerp(Color3.new(1, 1, 1), 0.08), { Material = Enum.Material.WoodPlanks, CanCollide = false })
+			for _, sk in { { -3.6, 1.6, 1.0 }, { -0.6, 3.9, 1.25 } } do -- two toasting sticks over the stones, a mallow on each (the reference camp CMP-01)
+				local from, to = fire + Vector3.new(sk[1], 0.35, sk[2]), fire + Vector3.new(sk[1] * 0.35, sk[3] + 0.6, sk[2] * 0.35)
+				part("Camp", "ToastStick", Vector3.new(0.1, 0.1, (to - from).Magnitude), CFrame.lookAt((from + to) / 2, to), Color3.fromRGB(150, 104, 66), { CanCollide = false, CastShadow = false })
+				part("Camp", "Mallow", Vector3.new(0.42, 0.42, 0.5), CFrame.lookAt(to, to + (to - from)), Color3.fromRGB(236, 196, 140), { CanCollide = false, CastShadow = false })
+			end
 			local pot = fire + Vector3.new(5.6, 0, -3.0)
 			for k = 0, 2 do local a = k * 2.1 part("Camp", "PotStone", Vector3.new(0.5, 0.35, 0.45), CFrame.new(pot + Vector3.new(math.cos(a) * 0.55, 0.17, math.sin(a) * 0.55)) * CFrame.Angles(0, a, 0), Color3.fromRGB(70, 64, 76), { CanCollide = false }) end
 			part("Camp", "CookPot", Vector3.new(0.85, 1.2, 1.2), CFrame.new(pot + Vector3.new(0, 0.75, 0)) * UPc, IRON, { Shape = Enum.PartType.Cylinder, Material = Enum.Material.Metal, CanCollide = false })
@@ -389,7 +394,9 @@ function Cave.build(parent, origin, seed)
 			local S = 1.45
 			for _, s in { -1, 1 } do
 				part("Camp", "TentSide", Vector3.new(7, 0.6, 5.6) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, 0) * CFrame.Angles(0, 0, -s * 0.9), col) -- -s: the panels lean in to a ridge (s made a V, Orchestrator 2026-11-23)
-				part("Camp", "TentStripe", Vector3.new(7.12, 0.72, 1.2) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, 0) * CFrame.Angles(0, 0, -s * 0.9), PAL.cream, DECO)
+				for _, z in { -1.9, 0, 1.9 } do -- three stripes a panel: the reference camp's tents are candy-striped canvas (CMP-01)
+					part("Camp", "TentStripe", Vector3.new(7.12, 0.72, 1.0) * S, base * CFrame.new(s * 1.7 * S, 2.5 * S, z * S) * CFrame.Angles(0, 0, -s * 0.9), PAL.cream, DECO)
+				end
 			end
 			part("Camp", "TentBack", Vector3.new(2.4, 3.6, 0.4) * S, base * CFrame.new(0, 1.8 * S, -2.7 * S), col:Lerp(Color3.new(0, 0, 0), 0.25)) -- narrow: a wide back stuck out of the A-frame's slopes
 			part("Camp", "Bedroll", Vector3.new(2.2, 0.6, 4) * S, base * CFrame.new(0, 0.3, 0), PAL.lilac, DECO)
@@ -406,7 +413,12 @@ function Cave.build(parent, origin, seed)
 		part("Camp", "CounterTop", Vector3.new(8.4, 0.4, 3), stall * CFrame.new(0, 3.6, 0), Color3.fromRGB(210, 160, 120))
 		for _, x in { -3.8, 3.8 } do part("Camp", "Post", Vector3.new(0.5, 7, 0.5), stall * CFrame.new(x, 3.5, -1), PAL.bark) end
 		for k = 0, 4 do part("Camp", "Awning", Vector3.new(1.7, 0.3, 4), stall * CFrame.new(-3.4 + k * 1.7, 7.2, 0.4) * CFrame.Angles(-0.35, 0, 0), k % 2 == 0 and PAL.pink or PAL.cream) end
-		for k = 0, 2 do part("Camp", "Crate", Vector3.new(2, 2, 2), stall * CFrame.new(-2.6 + k * 2.6, 4.8, 0) * CFrame.Angles(0, k * 0.3, 0), Color3.fromRGB(196, 150, 110)) end
+		for k = 0, 2 do -- plank crates with an iron band and ore heaped in the open ones (Orchestrator round 2: "two bare untextured peach cubes")
+			local cf = stall * CFrame.new(-2.6 + k * 2.6, 4.8, 0) * CFrame.Angles(0, k * 0.3, 0)
+			part("Camp", "Crate", Vector3.new(2, 2, 2), cf, Color3.fromRGB(150, 102, 70), { Material = Enum.Material.WoodPlanks })
+			part("Camp", "CrateBand", Vector3.new(2.06, 0.22, 2.06), cf * CFrame.new(0, 0.45, 0), Color3.fromRGB(64, 52, 60), { Material = Enum.Material.Metal, CanCollide = false })
+			if k ~= 1 then part("Camp", "CrateOre", Vector3.new(1.3, 0.5, 1.3), cf * CFrame.new(0, 1.15, 0) * CFrame.Angles(0, 0.6, 0.1), k == 0 and PAL.teal or Color3.fromRGB(255, 196, 90), { Material = Enum.Material.Glass, Transparency = 0.15, CanCollide = false, CastShadow = false }) end
+		end
 		lantern("Camp", "Lamp", stall * CFrame.new(3.2, 6.2, 1.2), PAL.warm, 24, 1.1)
 		-- the rail station on the south side (feedback batch phase 4, 2026-11-08: the minecart ride replaces the lift): rails run
 		-- out of a timbered tunnel mouth in the south wall to buffers, a parked cart, a plank platform where riders step off
@@ -536,11 +548,24 @@ function Cave.build(parent, origin, seed)
 		zone.Size = Vector3.new(30, ringR * 2, ringR * 2)
 		zone:SetAttribute("SafeZone", true)
 		-- lantern posts round the ring
+		local tops = {}
 		for k = 0, 5 do
 			local a = k / 6 * math.pi * 2 + 0.3
 			local p = origin + Vector3.new(math.cos(a) * (ringR + 3), 0, math.sin(a) * (ringR + 3))
 			part("Camp", "LanternPost", Vector3.new(0.6, 6, 0.6), p + Vector3.new(0, 3, 0), PAL.bark)
 			lantern("Camp", "Lantern", p + Vector3.new(0, 6.9, 0), PAL.warm, 30, 1.3)
+			tops[k + 1] = p + Vector3.new(0, 5.8, 0)
+		end
+		for k = 1, 6 do -- string lights: a sagging rope from post to post with two small lamps (the reference camp CMP-01); no lights of their own
+			local a, b = tops[k], tops[k % 6 + 1]
+			local pts = { a, a:Lerp(b, 1 / 3) - Vector3.new(0, 1.3, 0), a:Lerp(b, 2 / 3) - Vector3.new(0, 1.3, 0), b }
+			for q = 1, 3 do
+				local u, v = pts[q], pts[q + 1]
+				part("Camp", "StringRope", Vector3.new(0.12, 0.12, (v - u).Magnitude), CFrame.lookAt((u + v) / 2, v), Color3.fromRGB(70, 52, 44), { CanCollide = false, CastShadow = false })
+			end
+			for q = 2, 3 do
+				part("Camp", "StringLamp", Vector3.new(0.42, 0.55, 0.42), CFrame.new(pts[q] - Vector3.new(0, 0.42, 0)), (k + q) % 2 == 0 and PAL.warm or Color3.fromRGB(255, 160, 190), { Material = Enum.Material.Neon, CanCollide = false, CastShadow = false })
+			end
 		end
 		local fill = part("Camp", "WarmFill", Vector3.new(1, 1, 1), W(0, 0, 22), PAL.warm, { Transparency = 1, CanCollide = false, CanQuery = false })
 		glow(fill, Color3.fromRGB(255, 200, 150), 70, 0.5)

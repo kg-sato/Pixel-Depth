@@ -9,7 +9,7 @@ dest = here.parent.parent.parent / "Overnight" / "judge" / f"views_{name}"
 dest.mkdir(parents=True, exist_ok=True)
 # view name, the tour step label it belongs to, which still of that step (0 = its first; -1 = its last). By label, not by second:
 # the tour's timing drifts from run to run (full1122e: every view landed one step late)
-WANT = [("loading splash", "loading logo", 1), ("town HUD", "town HUD", 1), ("settings", "settings:", 1), ("forge", "forge", 2),
+WANT = [("loading splash", "loading logo", 2), ("town HUD", "town HUD", 1), ("settings", "settings:", 1), ("forge", "forge", 2),
         ("Camp 1 arrival", "arrival at Camp 1", 1), ("mining strike", "minigames", 3), ("boss fight and strike reticle", "Root Warden: the whole fight", 6),
         ("boss reward chest", "fight over", 1), ("glass lift ride", "glass lift", 2), ("Clay Caves hall", "Camp 2: the hall", 2),
         ("crew escape HUD", "crew ride from the stoker", 5), ("escape result card", "crew ride from the stoker", -3), ("town arrival", "crew ride from the stoker", -1)]

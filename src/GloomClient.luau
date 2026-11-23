@@ -58,7 +58,7 @@ function M.start(E)
 		new("Highlight", m, { FillTransparency = clay and 1 or 0.84, FillColor = Color3.fromRGB(120, 90, 200), OutlineColor = clay and AMBER or Color3.fromRGB(176, 140, 255), OutlineTransparency = 0.1,
 			DepthMode = clay and Enum.HighlightDepthMode.Occluded or Enum.HighlightDepthMode.AlwaysOnTop }) -- a gloomling slips through rock: its ghost shows through the wall, so you see it coming (a sliver of fluff in the rock read as a glitch)
 		new("PointLight", body, { Color = clay and AMBER or Color3.fromRGB(150, 110, 255), Range = 8, Brightness = 0.28, Shadows = false }) -- its own dim glow: with the torch out it was two red dots in the black
-		local mesh = new("SpecialMesh", body, { MeshType = Enum.MeshType.Sphere })
+		local mesh = new("SpecialMesh", body, { MeshType = clay and Enum.MeshType.Sphere or Enum.MeshType.Brick }) -- the soot pup is a voxel block (REWORK-GLM-01 Muck-Pup), the clayling a pot
 		m.PrimaryPart = body
 		local fluff = {}
 		if clay then -- a round pot with a lid and knob, two ball arms, two feet, a mint slip band, pink cheeks (every piece an ellipsoid)
@@ -74,17 +74,36 @@ function M.start(E)
 				table.insert(fluff, { part = f, off = f.CFrame, arm = k <= 2 })
 			end
 		end
-		for k = 1, clay and 0 or 7 do
-			local a = k / 7 * math.pi * 2
-			local f = p(Vector3.new(0.7, 0.7, 0.7), CFrame.new(math.cos(a) * 1.05, math.sin(a * 2) * 0.5, math.sin(a) * 1.05) * CFrame.Angles(a, a * 2, 0), SOOT:Lerp(Color3.new(0, 0, 0), 0.3))
-			table.insert(fluff, { part = f, off = f.CFrame })
+		if not clay then -- the Muck-Pup (reference board REWORK-GLM-01): a stepped voxel body, cat ears, a smoke-wisp tail, smoky paws and huge amber ring eyes
+			local DARK, SMOKE = SOOT:Lerp(Color3.new(0, 0, 0), 0.25), SOOT:Lerp(Color3.fromRGB(120, 100, 160), 0.25)
+			for _, d in {
+				{ Vector3.new(1.8, 0.4, 1.8), CFrame.new(0, 1.2, 0), SOOT }, { Vector3.new(1.8, 0.3, 1.8), CFrame.new(0, -1.15, 0), SOOT }, -- caps round the block's top and bottom
+				{ Vector3.new(0.35, 1.6, 1.6), CFrame.new(-1.2, 0, 0), SOOT }, { Vector3.new(0.35, 1.6, 1.6), CFrame.new(1.2, 0, 0), SOOT },
+				{ Vector3.new(0.5, 0.6, 0.45), CFrame.new(-0.62, 1.55, 0) * CFrame.Angles(0, 0, 0.25), DARK }, { Vector3.new(0.5, 0.6, 0.45), CFrame.new(0.62, 1.55, 0) * CFrame.Angles(0, 0, -0.25), DARK }, -- ears
+				{ Vector3.new(0.26, 0.3, 0.26), CFrame.new(-0.74, 1.95, 0) * CFrame.Angles(0, 0, 0.25), DARK }, { Vector3.new(0.26, 0.3, 0.26), CFrame.new(0.74, 1.95, 0) * CFrame.Angles(0, 0, -0.25), DARK },
+				{ Vector3.new(0.5, 0.5, 0.5), CFrame.new(-0.9, 0.1, 1.15), SMOKE, 0.15 }, { Vector3.new(0.38, 0.38, 0.38), CFrame.new(-1.25, 0.55, 1.4), SMOKE, 0.3 }, { Vector3.new(0.26, 0.26, 0.26), CFrame.new(-1.45, 1.0, 1.55), SMOKE, 0.45 }, -- the tail curls up as smoke
+				{ Vector3.new(0.55, 0.35, 0.55), CFrame.new(-0.6, -1.3, -0.55), SMOKE, 0.25 }, { Vector3.new(0.55, 0.35, 0.55), CFrame.new(0.6, -1.3, -0.55), SMOKE, 0.25 }, -- smoky paws
+				{ Vector3.new(0.55, 0.35, 0.55), CFrame.new(-0.6, -1.3, 0.55), SMOKE, 0.35 }, { Vector3.new(0.55, 0.35, 0.55), CFrame.new(0.6, -1.3, 0.55), SMOKE, 0.35 },
+			} do
+				local f = p(d[1], d[2], d[3], { Transparency = d[4] or 0 })
+				table.insert(fluff, { part = f, off = f.CFrame, still = true })
+			end
 		end
 		local eyes = {}
-		for _, x in { -0.4, 0.4 } do -- two round eyes, each with a dark pupil
-			local e = p(Vector3.new(0.12, clay and 0.78 or 0.68, clay and 0.78 or 0.68), CFrame.new(x, 0.15, clay and -1.0 or -1.06) * CFrame.Angles(0, math.pi / 2, 0), clay and Color3.fromRGB(196, 118, 40) or EYE, { Material = Enum.Material.Neon, Shape = Enum.PartType.Cylinder })
-			table.insert(eyes, { part = e, off = e.CFrame })
-			local pu = p(Vector3.new(0.1, clay and 0.44 or 0.32, clay and 0.44 or 0.32), CFrame.new(x + 0.03, 0.12, clay and -1.06 or -1.12) * CFrame.Angles(0, math.pi / 2, 0), Color3.fromRGB(26, 18, 40), { Shape = Enum.PartType.Cylinder })
-			table.insert(eyes, { part = pu, off = pu.CFrame })
+		for _, x in { -0.48, 0.48 } do -- two round eyes, each with a dark pupil (the soot pup's are big amber rings with a glint)
+			if clay then
+				local e = p(Vector3.new(0.12, 0.78, 0.78), CFrame.new(x * 0.83, 0.15, -1.0) * CFrame.Angles(0, math.pi / 2, 0), Color3.fromRGB(196, 118, 40), { Material = Enum.Material.Neon, Shape = Enum.PartType.Cylinder })
+				table.insert(eyes, { part = e, off = e.CFrame })
+				local pu = p(Vector3.new(0.1, 0.44, 0.44), CFrame.new(x * 0.83 + 0.03, 0.12, -1.06) * CFrame.Angles(0, math.pi / 2, 0), Color3.fromRGB(26, 18, 40), { Shape = Enum.PartType.Cylinder })
+				table.insert(eyes, { part = pu, off = pu.CFrame })
+			else
+				local e = p(Vector3.new(0.12, 0.95, 0.95), CFrame.new(x, 0.2, -1.12) * CFrame.Angles(0, math.pi / 2, 0), Color3.fromRGB(255, 150, 40), { Material = Enum.Material.Neon, Shape = Enum.PartType.Cylinder })
+				table.insert(eyes, { part = e, off = e.CFrame })
+				local iris = p(Vector3.new(0.1, 0.68, 0.68), CFrame.new(x, 0.2, -1.17) * CFrame.Angles(0, math.pi / 2, 0), Color3.fromRGB(74, 36, 22), { Shape = Enum.PartType.Cylinder })
+				table.insert(eyes, { part = iris, off = iris.CFrame })
+				local glint = p(Vector3.new(0.18, 0.18, 0.06), CFrame.new(x + 0.14, 0.36, -1.22), Color3.new(1, 1, 1), { Material = Enum.Material.Neon })
+				table.insert(eyes, { part = glint, off = glint.CFrame })
+			end
 		end
 		local puff = new("ParticleEmitter", body, { Rate = 6, Lifetime = NumberRange.new(0.8, 1.4), Speed = NumberRange.new(0.5, 1.2), SpreadAngle = Vector2.new(180, 180),
 			Size = NumberSequence.new(0.5, 1.1), Transparency = NumberSequence.new(0.45, 1), Color = ColorSequence.new(clay and CLAY or Color3.fromRGB(96, 80, 130)), LightInfluence = 0.3 }) -- soot puffs
@@ -143,11 +162,11 @@ function M.start(E)
 				local base = v.cf * CFrame.new(0, bob - (1 - sy) * 1.1, 0) * CFrame.Angles(pose and pose[2] or 0, 0, tilt + (pose and pose[1] or 0))
 				v.body.CFrame = base
 				v.mesh.Scale = Vector3.new(sxz, sy, sxz)
-				for _, f in v.fluff do f.part.CFrame = base * CFrame.new(f.off.Position * Vector3.new(sxz, sy, sxz) + ((f.arm and pose and pose[3] == 1) and Vector3.new(0, 0.8, -1.0) or Vector3.zero)) * f.off.Rotation * CFrame.Angles(0, v.clay and 0 or now * 0.8, 0) end
+				for _, f in v.fluff do f.part.CFrame = base * CFrame.new(f.off.Position * Vector3.new(sxz, sy, sxz) + ((f.arm and pose and pose[3] == 1) and Vector3.new(0, 0.8, -1.0) or Vector3.zero)) * f.off.Rotation * CFrame.Angles(0, (v.clay or f.still) and 0 or now * 0.8, 0) end
 				local shut = now > v.blink and now < v.blink + 0.12
 				if now > v.blink + 0.12 then v.blink = now + 2 + math.random() * 2 end
 				for _, e in v.eyes do
-					e.part.CFrame = base * CFrame.new(e.off.Position * Vector3.new(sxz, sy, 1)) * e.off.Rotation
+					e.part.CFrame = base * CFrame.new(e.off.Position * Vector3.new(sxz, sy, sxz)) * e.off.Rotation -- z too: a rearing box body swallowed the eyes (Codex)
 					e.part.Transparency = ((shut and state ~= "windup") or state == "flee") and 1 or 0
 					e.col = e.col or e.part.Color
 					e.part.Color = (state == "windup" and e.part.Material == Enum.Material.Neon) and WARN or e.col

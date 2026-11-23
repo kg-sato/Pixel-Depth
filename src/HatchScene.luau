@@ -147,8 +147,8 @@ function M.play(opt)
 			if p:IsA("BasePart") then
 				local role = p.Name:match("__(%w+)$")
 				if role == "Crystal" then
-					local c = CYAN:Lerp(INK, 0.5) -- the fat mesh crystals bloomed into white blobs at full cyan (stills m1)
-					p.Material, p.Color, p.Transparency = Enum.Material.Neon, c, 0.2
+					local c = CYAN:Lerp(INK, 0.68) -- the fat mesh crystals bloomed into white blobs at full cyan (stills m1); 0.68 not 0.5: flat bright blue read as holes to the sky (Orchestrator round 2)
+					p.Material, p.Color, p.Transparency = Enum.Material.Neon, c, 0.3
 					p:SetAttribute("Base", c)
 					table.insert(crystals, p)
 					table.insert(glows, { l = light(p, CYAN, 12, 0.9), base = CYAN })
@@ -700,11 +700,11 @@ function M.play(opt)
 		end)
 		once("sub", A3 + 0.75, function()
 			-- word by word, the rarity word in its colour (Oly's reveals: one keyword lit, the rest calm)
-			local row = frame({ Size = UDim2.fromScale(0.8, 0.04), Position = UDim2.fromScale(0.5, 0.228), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 7 })
+			local row = frame({ Size = UDim2.fromScale(0.8, 0.05), Position = UDim2.fromScale(0.5, 0.232), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 7 })
 			local lay = Instance.new("UIListLayout")
 			lay.FillDirection, lay.HorizontalAlignment, lay.VerticalAlignment, lay.Padding = Enum.FillDirection.Horizontal, Enum.HorizontalAlignment.Center, Enum.VerticalAlignment.Center, UDim.new(0, 10)
 			lay.Parent = row
-			local px = math.max(14, math.floor(gui.AbsoluteSize.Y * 0.027))
+			local px = math.max(16, math.floor(gui.AbsoluteSize.Y * 0.034)) -- 3.4% (was 2.7%): the rarity/role/odds line read as micro-text in the tour (Orchestrator round 2)
 			local words = { string.upper(opt.rarity or "") }
 			for w in string.gmatch(string.upper(opt.role or ""), "%S+") do table.insert(words, w) end
 			if (opt.odds or "") ~= "" then table.insert(words, "·") for w in string.gmatch(opt.odds, "%S+") do table.insert(words, w) end end

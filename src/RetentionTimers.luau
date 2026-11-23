@@ -17,7 +17,7 @@ function M.start(E)
 	-- Directive v10 (2026-11-14: "merge the top timers into one expandable pill"): ONE pill at the top centre shows the most
 	-- urgent line (a gift to take, an event that is on, a refinery that is done, else whatever comes soonest). Pointing at it
 	-- or clicking it drops down every line: Gift (click it to claim), Event, Refine.
-	local holder = E.new("Frame", gui, { Name = "Timers", Size = E.S(210, 36), Position = E.S(606, 34), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 3 }) -- 4 px lower: it sat tight under the Roblox top bar (Gemini full1119k)
+	local holder = E.new("Frame", gui, { Name = "Timers", Size = E.S(210, 36), Position = E.S(606, 40), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, ZIndex = 3 }) -- 4 px lower: it sat tight under the Roblox top bar (Gemini full1119k); 40 (was 34): GIFT READY still touched the top edge of the stills (Orchestrator round 2)
 	local function pill(parent, name, size, pos, kind)
 		local p = E.panel(parent, size, pos, Vector2.new(0.5, 0.5), kind)
 		p.Name = name

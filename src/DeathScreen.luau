@@ -58,7 +58,7 @@ function M.start(E)
 	local wick = block(glass, UDim2.fromScale(0.34, 0.5), UDim2.fromScale(0.5, 0.58), GOLD, 65)
 	local title = text(card, "", UDim2.fromScale(0.88, 0.17), UDim2.fromScale(0.5, 0.45), Vector2.new(0.5, 0.5), E.LILAC, 700)
 	local big = text(card, "", UDim2.fromScale(0.8, 0.17), UDim2.fromScale(0.5, 0.63), Vector2.new(0.5, 0.5), PINK, 700, false)
-	local note = text(card, "", UDim2.fromScale(0.84, 0.085), UDim2.fromScale(0.5, 0.78), Vector2.new(0.5, 0.5), E.CREAM, 700, false)
+	local note = text(card, "", UDim2.fromScale(0.84, 0.1), UDim2.fromScale(0.5, 0.78), Vector2.new(0.5, 0.5), E.CREAM, 700, false) -- 0.1 (was 0.085) and the grab cards at scale 0.7 (was 0.62): their note read as micro-text (Orchestrator round 2)
 	title.ZIndex, big.ZIndex, note.ZIndex = 64, 64, 64
 	if E.GLASS then -- cut-glass kit: the big line is jelly, taking each screen's own colour and landing with a pop
 		big.Size = UDim2.fromScale(0.86, 0.22)
@@ -156,7 +156,7 @@ function M.start(E)
 			local secs = a or C.GLOOM.grab
 			soot(16)
 			local my = show({ title = "GRABBED!", titleColor = PINK, big = touch and "TAP THE FLARE!" or "FLARE NOW   [ R ]", bigColor = GOLD, note = "or a friend can flare you free", secs = secs, drain = true,
-				bar = PINK, edge = PINK, lit = true, y = 0.62, scale = 0.62, dark = 0.82, edges = 0.15, hud = false }) -- low and small: centred it hid the Gloomling and the boss arena (Gemini full1119h)
+				bar = PINK, edge = PINK, lit = true, y = 0.62, scale = 0.7, dark = 0.82, edges = 0.15, hud = false }) -- low and small: centred it hid the Gloomling and the boss arena (Gemini full1119h)
 			task.spawn(function() -- the plate shivers while it holds you
 				while my == token and layer.Visible do
 					card.Rotation = calm and 0 or math.noise(os.clock() * 16, 4) * 5
@@ -170,7 +170,7 @@ function M.start(E)
 			local hr = E.hrp()
 			local who = (hr and (hr.Position - E.C.CAVE2_ORIGIN).Magnitude < 130) and "CLAYLING" or "GLOOMLING" -- the Clay Caves hall has claylings (server: Gloom kind 2)
 			local my = show({ title = a > 0 and ("A " .. who .. " GOT YOUR ORE") or ("A " .. who .. " GOT YOU"), titleColor = PINK, big = a > 0 and ("-" .. E.commas(a) .. " ORE") or "NOTHING LOST",
-				note = "Golden shield: RUN to the light!", secs = C.GLOOM.shield, drain = true, bar = GOLD, edge = GOLD, y = 0.62, scale = 0.62, dark = 0.9, edges = 0.86, edgeColor = GOLD, hud = false }) -- edges 0.86 (was 0.74): in the amber Clay hall the gold edges washed the whole view out (Gemini full1121b) -- golden edges: the shield the card promises
+				note = "Golden shield: RUN to the light!", secs = C.GLOOM.shield, drain = true, bar = GOLD, edge = GOLD, y = 0.62, scale = 0.7, dark = 0.9, edges = 0.86, edgeColor = GOLD, hud = false }) -- edges 0.86 (was 0.74): in the amber Clay hall the gold edges washed the whole view out (Gemini full1121b) -- golden edges: the shield the card promises
 			task.delay(2.4, function() hide(my) end)
 		elseif kind == "rescued" then
 			local my = show({ title = b and "FLARED FREE!" or "RESCUED!", titleColor = MINT, big = "NOTHING LOST", bigColor = MINT, note = b and "" or ("by " .. tostring(a)), secs = 1.2,

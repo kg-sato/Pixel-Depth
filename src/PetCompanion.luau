@@ -87,6 +87,10 @@ function M.start(E)
 		end
 	end
 
+	local function setFade(pet, d, v) -- pet.fade is PixelClient's own copy: kept in step so its town fade starts from the truth
+		d.fade, pet.fade = v, v
+		for _, q in pet.model:GetDescendants() do if q:IsA("BasePart") then q.LocalTransparencyModifier = v end end
+	end
 	local function dress(model, d, lead) -- the collar lantern: a dark band under the head and a small glowing bead
 		local root = model.PrimaryPart
 		local function cube(size, off, color, neon)
@@ -230,6 +234,7 @@ function M.start(E)
 		local blink = want == "calm" and (now + d.seed) % 4.2 < 0.13
 		show(d, blink and "sleepy" or want, blink or d.face == "sleepy" and want == "calm")
 		if not view then
+			if (d.fade or 0) > 0 then setFade(pet, d, 0) end
 			if d.big then -- back in town, or a ride owns the view: its own size again
 				d.big = false
 				pet.model:ScaleTo(d.scale0)
@@ -287,7 +292,13 @@ function M.start(E)
 			local from = cam.CFrame.Position
 			local hit = workspace:Raycast(from, goal - from, petRp)
 			if hit and hit.Distance > 7 then goal = hit.Position - (goal - from).Unit * math.max(1.6, slot.maxExt * 0.65) end -- half its size off the wall: 1.6 left a big pet half inside a clay pillar -- a wall close to the eye (a stall beside you) would pull it onto the lens: then it keeps its place
-			if hit and hit.Distance <= 7 then -- a pillar right beside the eye: its slot is inside the rock, so it trots a step behind you instead (Orchestrator round 2: a pet half inside a Clay column)
+			local buried = false
+			if hit and hit.Distance <= 7 then -- a pillar right beside the eye: is its slot actually inside the rock? (most walls that close leave the slot clear)
+				local op = OverlapParams.new()
+				op.FilterType, op.FilterDescendantsInstances = Enum.RaycastFilterType.Exclude, { plr.Character, pet.model, workspace.CurrentCamera }
+				for _, q in workspace:GetPartBoundsInRadius(goal, slot.maxExt * 0.4, op) do if q.CanCollide and q.Transparency < 1 then buried = true break end end
+			end
+			if buried then -- its slot is inside the rock, so it trots a step behind you instead (Orchestrator round 2: a pet half inside a Clay column)
 				local back = cam.CFrame.LookVector * Vector3.new(1, 0, 1)
 				back = back.Magnitude > 0.1 and back.Unit or Vector3.zAxis
 				goal = h.Position - back * (4 + i * 1.5) + Vector3.new(0, 0.5, 0)
@@ -317,6 +328,8 @@ function M.start(E)
 				end
 			end
 		end
+		local fade = math.clamp(1 - ((cam.CFrame.Position - pet.pos).Magnitude - 2.2) / 2, 0, 0.9) -- a pet at the lens ghosts out (Orchestrator round 2: a lit pet filled the corner as a white blob on the zipline)
+		if math.abs(fade - (d.fade or 0)) > 0.02 then setFade(pet, d, fade) end
 		return cf
 	end
 end

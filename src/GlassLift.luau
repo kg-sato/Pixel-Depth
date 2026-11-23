@@ -34,7 +34,7 @@ function M.start(E)
 		local function zone(y)
 			if y > -100 then return { Color3.fromRGB(46, 34, 72), Color3.fromRGB(66, 50, 98), Color3.fromRGB(92, 70, 128), Color3.fromRGB(58, 44, 88) }
 			elseif y > -220 then return { Color3.fromRGB(92, 70, 84), Color3.fromRGB(168, 124, 78), Color3.fromRGB(150, 84, 52), Color3.fromRGB(70, 58, 88) } -- ochre sediment with dark plum seams: the grey-tan read as bare boxes (Orchestrator 2026-11-23)
-			else return { Color3.fromRGB(136, 72, 54), Color3.fromRGB(172, 106, 68), Color3.fromRGB(196, 132, 84), Color3.fromRGB(108, 58, 48) } end
+			else return { Color3.fromRGB(128, 66, 54), Color3.fromRGB(176, 104, 64), Color3.fromRGB(204, 138, 86), Color3.fromRGB(78, 42, 62) } end -- a dark plum seam in the kiln zone too: the bottom still read as plain tan boxes (Orchestrator round 2, views 09)
 		end
 		local ROWS = DEPTH // 4
 		local vugs = {}

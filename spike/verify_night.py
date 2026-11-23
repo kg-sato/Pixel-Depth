@@ -28,6 +28,7 @@ EMB = "local n=0 for _,d in workspace.WayHome:GetChildren() do if d.Transparency
 PC = P + "local C=require(game.ReplicatedStorage.Shared.Config) "
 T.night("lua", "Server", PC + "h.CFrame=CFrame.new(C.CAVE_ORIGIN+Vector3.new(48,3,0)) task.wait(0.4) p:SetAttribute('DevTorchAge',C.TORCH.time*0.73) return 1"); time.sleep(5)
 out = T.night("lua", "Client", EMB)
+print("fuel ring:", T.night("lua", "Client", "local r=game.Players.LocalPlayer.PlayerGui:FindFirstChild('FuelRing',true) return tostring(r~=nil)"))  # the lantern orb's burn arc (2026-11-23)
 T.night("lua", "Server", PC + "h.CFrame=CFrame.new(C.CAVE_ORIGIN+Vector3.new(4,3,4)) return 1"); time.sleep(3.5)
 print("way home embers: low torch outside camp", out, "(PASS over 0), at camp", T.night("lua", "Client", EMB), "(PASS 0)")
 ERR = "local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError then t[string.sub(m.message,1,150)]=true end end local e={} for k in t do table.insert(e,k) end return #e..' '..table.concat(e,' ## ')"

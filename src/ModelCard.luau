@@ -77,7 +77,7 @@ function M.attach(host, hover, opts)
 	function h.set(model, color, dim)
 		if h.model then h.model:Destroy() h.model = nil end
 		if color then glow.ImageColor3 = color end
-		vp.ImageColor3 = dim and Color3.fromRGB(120, 105, 150) or Color3.new(1, 1, 1)
+		vp.ImageColor3 = dim and (color and color:Lerp(Color3.new(1, 1, 1), 0.3) or Color3.fromRGB(120, 105, 150)) or Color3.new(1, 1, 1) -- a locked model takes its rarity tint, not one grey (Orchestrator round 2: ten locked pickaxes read as identical grey silhouettes)
 		if not model then return end
 		for _, d in model:GetDescendants() do
 			if d:IsA("BasePart") then d.Anchored = true elseif d:IsA("Script") or d:IsA("LocalScript") then d:Destroy() end

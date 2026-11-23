@@ -37,6 +37,18 @@ function M.start(E)
 		return bb, t
 	end
 	local run = 0
+	local order, nextN = {}, 1
+	local function mark(cs) -- the crystal to strike next wears a bigger gold badge; struck ones dim (Orchestrator round 2: "chimes lack order feedback")
+		for n, k in order do
+			local p = cs[k]
+			if p then
+				local bb, t = badge(p) -- (not `p and badge(p)`: an `and` keeps only the first value)
+				bb.Size = n == nextN and UDim2.fromOffset(62, 62) or UDim2.fromOffset(40, 40)
+				t.UIStroke.Color, t.UIStroke.Thickness = n == nextN and GOLD or Color3.fromRGB(224, 176, 255), n == nextN and 4 or 2
+				t.TextTransparency = n < nextN and 0.45 or 0
+			end
+		end
+	end
 	local function hideAll()
 		for _, p in chimes() do
 			local bb = p:FindFirstChild("ChimeNumber")
@@ -67,6 +79,8 @@ function M.start(E)
 					ring(p, 0.8 + n * 0.1)
 				end
 			end
+			order, nextN = a, 1
+			mark(cs)
 			E.toast("THE CHIMES WAKE!  STRIKE 1, 2, 3 IN ORDER", GOLD, true)
 			task.delay(tonumber(b) or C.CHIMES.secs, function() if run == me then hideAll() end end)
 		elseif what == "hit" then
@@ -76,6 +90,8 @@ function M.start(E)
 				local bb, t = badge(p)
 				t.TextColor3 = GOLD
 			end
+			nextN = (tonumber(b) or 0) + 1
+			mark(cs)
 		elseif what == "miss" then
 			run += 1
 			hideAll()

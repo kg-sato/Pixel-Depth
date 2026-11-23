@@ -71,6 +71,9 @@ function M.start(E)
 	hpText.Font, hpText.ZIndex, hpText.TextStrokeColor3 = E.HEAD, 6, Color3.fromRGB(96, 20, 56)
 	local fuelText = text(lantern.root, "", UDim2.fromScale(0.62, 0.28), UDim2.fromScale(0.5, 0.7), MID, Color3.new(1, 1, 1), 700) -- the torch fuel as a number, like the HP beside it (Orchestrator 2026-11-23: "no clear fill or %")
 	fuelText.Font, fuelText.ZIndex, fuelText.TextStrokeColor3 = E.HEAD, 6, Color3.fromRGB(90, 48, 12)
+	-- a burn arc on the lantern's rim (Orchestrator round 2: "zero visual fill difference between 100% and 17%"): it shrinks clockwise and pulses coral under 25%
+	local fuelRing = require(script.Parent:WaitForChild("Radial")).arc(lantern.root, { name = "FuelRing", thick = 0.075, color = AMBER, track = Color3.fromRGB(48, 28, 40), trackTransparency = 0.25, z = 5 })
+	local CORAL = Color3.fromRGB(255, 110, 90)
 
 	-- the hex hotbar between the orbs (keyboard and gamepad; phones have their own thumb buttons)
 	local slots = {}
@@ -159,6 +162,8 @@ function M.start(E)
 		local fuel = cave.fuel or 1
 		lantern.fill = fuel
 		fuelText.Text = math.ceil(math.clamp(fuel, 0, 1) * 100) .. "%"
+		fuelRing.set(fuel)
+		fuelRing.color(fuel < 0.25 and AMBER:Lerp(CORAL, 0.5 + 0.5 * math.sin(now * 7)) or AMBER)
 		lantern.tint(VIOLET:Lerp(AMBER, math.clamp(fuel * 2.2, 0, 1)))
 		lantern.step(dt, now, 34)
 		lantern.icon.ImageTransparency = fuel < 0.2 and 0.25 + 0.25 * math.sin(now * 9) or 0

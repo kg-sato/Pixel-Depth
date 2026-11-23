@@ -8,10 +8,10 @@ tag = sys.argv[1] if len(sys.argv) > 1 else "a"
 C = lambda code: (N.lua(code, "Client").splitlines() or ["?"])[-1]
 S = lambda code: (N.lua(code, "Server").splitlines() or ["?"])[-1]
 # variant: Lighting props, ColorCorrection props, torch brightness factor
-VARIANTS = {
+VARIANTS = {  # target: the reference board's REWORK-LGT-01 (a golden torch pool, plum-mauve rock outside it, not black, not brown)
     "A": None,
-    "B": ("Ambient=Color3.fromRGB(28,20,48) L.OutdoorAmbient=Color3.fromRGB(24,18,44) L.EnvironmentDiffuseScale=0.06", "Contrast=0.3 cc.Saturation=0.2", 1.0),
-    "C": ("Ambient=Color3.fromRGB(28,20,48) L.OutdoorAmbient=Color3.fromRGB(24,18,44) L.EnvironmentDiffuseScale=0.06", "Contrast=0.3 cc.Saturation=0.2", 1.45),
+    "B": ("Ambient=Color3.fromRGB(64,38,96) L.OutdoorAmbient=Color3.fromRGB(52,30,82) L.EnvironmentDiffuseScale=0.05", "Contrast=0.24 cc.Saturation=0.16", 1.35),
+    "C": ("Ambient=Color3.fromRGB(52,30,84) L.OutdoorAmbient=Color3.fromRGB(44,26,72) L.EnvironmentDiffuseScale=0.04", "Contrast=0.3 cc.Saturation=0.22", 1.6),
 }
 N.play(False); time.sleep(2); N.play(); time.sleep(10)
 C("local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('DailyChest') if g then g.Enabled=false end return 1")

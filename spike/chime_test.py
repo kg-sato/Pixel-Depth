@@ -21,6 +21,7 @@ def order(log):
     return [int(ch) for ch in log.split("start:")[-1].strip().split()[0]]
 log = strike(1); o = order(log)
 print("woken:", "start" in log, "| three crystals in the order:", sorted(o) == [1, 2, 3])
+print("next badge big:", C1("local big,small=0,0 for _,d in workspace.Caves:GetDescendants() do if d.Name=='ChimeNumber' and d.Enabled then if d.Size.X.Offset==62 then big+=1 elseif d.Size.X.Offset==40 then small+=1 end end end return big..' big '..small..' small'"))  # the crystal to strike next wears the big gold badge (2026-11-23)
 log = strike(o[1])
 print("the second crystal first:", log.split()[-1])
 time.sleep(41)
