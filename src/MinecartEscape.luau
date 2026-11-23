@@ -469,7 +469,7 @@ function M.play(opt)
 	end
 
 	-- camera and HUD: saved here, put back at the end
-	local vmSeen, hiddenChar = {}, {}
+	local vmSeen, hiddenChar, vmFx = {}, {}, {}
 	local amb = { a = Lighting.Ambient, o = Lighting.OutdoorAmbient }
 	local AMB_UP, OAMB_UP = Color3.fromRGB(96, 80, 132), Color3.fromRGB(86, 72, 120)
 
@@ -934,7 +934,7 @@ function M.play(opt)
 				K.crew.send("k")
 			end
 			K.stokeSaid = function(hit) -- the server's verdict on the last press
-				if hit then K.stokeLearned = true end -- the hint has done its job
+				if hit and not K.stokeLearned then K.stokeLearned = true word.Text = touch and "TAP: STOKE" or "SPACE: STOKE" end -- the long hint has done its job; a short key reminder stays (Orchestrator 2026-11-23)
 				needle.BackgroundColor3 = hit and MINT or PINK
 				sfx(hit and "sparkle" or "click", hit and 1.2 or 0.7)
 				task.delay(0.25, function() if needle.Parent then needle.BackgroundColor3 = WHITE end end)
@@ -948,7 +948,7 @@ function M.play(opt)
 				local z0 = C.stokeZone(K.crew.seed or 1, K.hits)
 				for i, a in zone do a.Rotation = -90 + 180 * (z0 + S.zone * (i - 0.5) / #zone) end
 				local on = t > 0 and phase == "run" and K.job == "stoker"
-				bar.Visible, word.Visible = on, on and not K.stokeLearned
+				bar.Visible, word.Visible = on, on
 			end
 			gauge.Visible = phase == "run" and K.crew.stoker == true
 		end
@@ -983,7 +983,12 @@ function M.play(opt)
 		end
 		for _, m in cam:GetChildren() do
 			for _, p in m:GetDescendants() do
-				if p:IsA("BasePart") and p.LocalTransparencyModifier < 1 then vmSeen[p] = true p.LocalTransparencyModifier = 1 end
+				if p:IsA("BasePart") and p.LocalTransparencyModifier < 1 then vmSeen[p] = true p.LocalTransparencyModifier = 1
+				elseif (p:IsA("ParticleEmitter") or p:IsA("Light") or p:IsA("Beam") or p:IsA("Trail")) and p.Enabled then -- the torch's PixelFire kept burning in mid-air (Orchestrator 2026-11-23: every escape frame)
+					vmFx[p] = true
+					p.Enabled = false
+					if p:IsA("ParticleEmitter") then p:Clear() end
+				end
 			end
 		end
 		if plr.Character then
@@ -1410,7 +1415,7 @@ function M.play(opt)
 				if K.crew and type(cr) == "table" then -- directive v13 (open item 4): a playful crew superlative for this rider
 					local sup = (K.beadN or 0) >= 3 and "GOLD SNATCHER" or ((cr.flares or 0) >= 2 and K.job == "tail" and "FLARE ACE")
 						or (hits == 0 and "IRON NERVES") or ((cr.calls or 0) >= 4 and K.job == "lookout" and "EAGLE EYE") or ((cr.hits or 0) >= 6 and K.job == "stoker" and "FURNACE HEART") or "TRUE CREW"
-					local pill = frame({ Parent = card, Size = UDim2.fromScale(0.5, 0.075), Position = UDim2.fromScale(0.5, 0.26 + (#rows + 1) * step), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(70, 40, 20), BackgroundTransparency = 0.1, ZIndex = 7 })
+					local pill = frame({ Parent = card, Size = UDim2.fromScale(0.5, 0.075), Position = UDim2.fromScale(0.5, 0.26 + (#rows + 1.45) * step), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(70, 40, 20), BackgroundTransparency = 0.1, ZIndex = 7 })
 					round(pill, 0.5)
 					stroke(pill, Color3.fromRGB(255, 196, 70), 2)
 					label(pill, "\u{2605} " .. sup .. " \u{2605}", UDim2.fromScale(0.9, 0.7), UDim2.fromScale(0.5, 0.5), Color3.fromRGB(255, 214, 107), 8)
@@ -1426,6 +1431,7 @@ function M.play(opt)
 	if phase == "run" then Lighting.Ambient, Lighting.OutdoorAmbient = amb.a, amb.o end
 	if atmo and atmoDensity then atmo.Density = atmoDensity end
 	for p in vmSeen do if p.Parent then p.LocalTransparencyModifier = 0 end end
+	for p in vmFx do if p.Parent then p.Enabled = true end end
 	for p in hiddenChar do if p.Parent then p.LocalTransparencyModifier = 0 end end
 	for p, v in hubHidden do if p.Parent then p.LocalTransparencyModifier = v end end
 	for _, g in guiHidden do if g.Parent then g.Enabled = true end end
