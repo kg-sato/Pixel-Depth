@@ -196,6 +196,20 @@ function M.start(E)
 
 	local petRp = RaycastParams.new()
 	petRp.FilterType = Enum.RaycastFilterType.Exclude
+	local chimes, chimeAt, nearChime = nil, 0, false -- the Clay Caves' chime crystals: pets keep back while you play them (Orchestrator 2026-11-23: a pet stood on the puzzle)
+	local function chimeNear(h, now)
+		if now - chimeAt < 0.5 then return nearChime end
+		chimeAt = now
+		if not chimes then
+			local clay = workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild("Clay")
+			if not clay then return false end
+			chimes = {}
+			for _, p in clay:GetDescendants() do if p:IsA("BasePart") and p:GetAttribute("ChimeCrystal") then table.insert(chimes, p) end end
+		end
+		nearChime = false
+		for _, p in chimes do if p.Parent and (p.Position - h.Position).Magnitude < 14 then nearChime = true break end end
+		return nearChime
+	end
 	hook.petPose = function(i, pet, h, now, dt)
 		local d = rec(pet.model)
 		if i == 1 then
@@ -256,7 +270,8 @@ function M.start(E)
 		local moving = h.AssemblyLinearVelocity.Magnitude > 2
 		local bob = moving and math.abs(math.sin(now * 9 + i * 1.7)) * 0.35 or math.sin(now * 2.2 + i) * 0.12 -- it bounds when you walk, floats when you stand
 		local goal = cam.CFrame:PointToWorldSpace(gloomNear and slot.off + Vector3.new(0, -1, 0) or slot.off + Vector3.new(0, bob + bounce, 0))
-		if E.cave and E.cave.mgBusy then -- directive v13 (Gemini full1121a: a glowing pet crowded the strike dial): while you mine, the pets
+		local quiet = (E.cave and E.cave.mgBusy) or chimeNear(h, now)
+		if quiet then -- directive v13 (Gemini full1121a: a glowing pet crowded the strike dial): while you mine, the pets
 			-- wait a few steps behind you, out of the view, and trot back when the minigame ends
 			local back = cam.CFrame.LookVector * Vector3.new(1, 0, 1)
 			back = back.Magnitude > 0.1 and back.Unit or Vector3.zAxis
@@ -266,11 +281,11 @@ function M.start(E)
 		if spk then spk.Enabled = not (E.cave and E.cave.mgBusy) end -- directive v14 (tour grade: sparkles drifted over the strike zone)
 		local called = i == 1 and whistle.dep and now < whistle.untilT and whistle.dep.PrimaryPart
 		if called then goal = called.Position + Vector3.new(0, 2.6 + math.abs(math.sin(now * 7)) * 0.5, 0) end -- answering the whistle: it stands on the deposit and hops
-		if not called and not (E.cave and E.cave.mgBusy) then -- keep it out of the rock: a wall between the eye and its place pulls it in front of the wall (Gemini full1119p: it walked through a clay pillar)
+		if not called and not quiet then -- keep it out of the rock: a wall between the eye and its place pulls it in front of the wall (Gemini full1119p: it walked through a clay pillar)
 			petRp.FilterDescendantsInstances = { plr.Character, pet.model, workspace.CurrentCamera }
 			local from = cam.CFrame.Position
 			local hit = workspace:Raycast(from, goal - from, petRp)
-			if hit and hit.Distance > 7 then goal = hit.Position - (goal - from).Unit * 1.6 end -- a wall close to the eye (a stall beside you) would pull it onto the lens: then it keeps its place
+			if hit and hit.Distance > 7 then goal = hit.Position - (goal - from).Unit * math.max(1.6, slot.maxExt * 0.65) end -- half its size off the wall: 1.6 left a big pet half inside a clay pillar -- a wall close to the eye (a stall beside you) would pull it onto the lens: then it keeps its place
 		end
 		pet.pos = pet.pos:Lerp(goal, 1 - math.exp(-dt * (called and 4 or (gloomNear and 12 or 7))))
 		local face = called and cam.CFrame.Position or (rare and not gloomNear and rare.PrimaryPart.Position) or pet.pos + cam.CFrame.LookVector * (moving and 3 or -4) + cam.CFrame.RightVector * 8 -- walking: it trots ahead, half turned; standing: it turns its face to you
