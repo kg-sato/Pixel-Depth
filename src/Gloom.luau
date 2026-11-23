@@ -284,6 +284,7 @@ function G.step(dt)
 			g.inCamp = here
 			local fear = fearOf(s, g)
 			local want = (not here and fear >= 0.6 and 2) or (not here and fear >= 0.25 and 1) or 0
+			if s.boss then want = 0 end -- no gloomlings in a boss fight (Orchestrator 2026-11-23: a gloomling grab broke the Root Warden fight)
 			local have = 0
 			for _, m in mobs do if m.target == plr and m.state ~= "flee" then have += 1 end end
 			if have < want and nowC >= g.nextSpawn then
@@ -313,6 +314,10 @@ function G.step(dt)
 			continue
 		end
 		local g = st(s)
+		if s.boss and m.state ~= "flee" then -- a boss fight began: the gloomlings already out scatter
+			m.state, m.t0 = "flee", nowC
+			p:SetAttribute("State", "flee")
+		end
 		local pos = p.Position
 		local to = hrp.Position + Vector3.new(0, 0.5, 0) - pos
 		local dist = to.Magnitude

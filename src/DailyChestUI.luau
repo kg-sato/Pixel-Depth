@@ -23,15 +23,15 @@ function M.start(E)
 	-- the daily chest show, in its own layer above everything
 	local layer = new("ScreenGui", gui.Parent, { Name = "DailyChest", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 12, ZIndexBehavior = Enum.ZIndexBehavior.Sibling, Enabled = false })
 	local scrim = new("TextButton", layer, { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(26, 18, 40), BackgroundTransparency = 1, Text = "", AutoButtonColor = false })
-	local rays = new("ImageLabel", layer, { Image = FX_RAYS, ImageColor3 = Color3.fromRGB(255, 226, 150), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(560, 560), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
+	local rays = new("ImageLabel", layer, { Image = FX_RAYS, ImageColor3 = Color3.fromRGB(255, 226, 150), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(560, 560), Position = S(640, 290), AnchorPoint = Vector2.new(0.5, 0.5) })
 	new("UIAspectRatioConstraint", rays, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-	local glow = new("ImageLabel", layer, { Image = FX_GLOW, ImageColor3 = Color3.fromRGB(255, 220, 160), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(420, 420), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5) })
+	local glow = new("ImageLabel", layer, { Image = FX_GLOW, ImageColor3 = Color3.fromRGB(255, 220, 160), BackgroundTransparency = 1, ImageTransparency = 1, Size = S(420, 420), Position = S(640, 290), AnchorPoint = Vector2.new(0.5, 0.5) })
 	new("UIAspectRatioConstraint", glow, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
 	-- the chest: with the cut-glass kit a real 3D chest in a ViewportFrame whose lid swings open on its hinge; otherwise the painted picture
 	local chest, lidOpen = nil, false
 	local setLid
 	if GLASS then
-		chest = new("ViewportFrame", layer, { BackgroundTransparency = 1, Size = S(280, 280), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5), Ambient = Color3.fromRGB(150, 130, 190), LightColor = Color3.fromRGB(255, 240, 215), LightDirection = Vector3.new(-0.5, -1, -0.6) })
+		chest = new("ViewportFrame", layer, { BackgroundTransparency = 1, Size = S(280, 280), Position = S(640, 290), AnchorPoint = Vector2.new(0.5, 0.5), Ambient = Color3.fromRGB(150, 130, 190), LightColor = Color3.fromRGB(255, 240, 215), LightDirection = Vector3.new(-0.5, -1, -0.6) })
 		local cam = new("Camera", chest, { FieldOfView = 34, CFrame = CFrame.lookAt(Vector3.new(5.2, 4.6, 8.4), Vector3.new(0, 1.5, 0)) })
 		chest.CurrentCamera = cam
 		local WOOD, WOOD_D, BRASS, BRASS_D = Color3.fromRGB(156, 100, 60), Color3.fromRGB(104, 64, 40), Color3.fromRGB(240, 196, 96), Color3.fromRGB(176, 124, 40)
@@ -68,14 +68,14 @@ function M.start(E)
 			if open then tween(angle, 0.22, { Value = math.rad(112) }, Enum.EasingStyle.Back) else angle.Value = 0 end
 		end
 	else
-		chest = new("ImageLabel", layer, { Image = CHEST.closed, BackgroundTransparency = 1, Size = S(250, 250), Position = S(640, 268), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit })
+		chest = new("ImageLabel", layer, { Image = CHEST.closed, BackgroundTransparency = 1, Size = S(250, 250), Position = S(640, 290), AnchorPoint = Vector2.new(0.5, 0.5), ScaleType = Enum.ScaleType.Fit })
 		setLid = function(open)
 			lidOpen = open
 			chest.Image = open and CHEST.open or CHEST.closed
 		end
 	end
 	new("UIAspectRatioConstraint", chest, { AspectRatio = 1, DominantAxis = Enum.DominantAxis.Height })
-	local title = panel(layer, S(380, 72), S(600, 100), Vector2.new(0.5, 0.5), "ribbonPink") -- narrower and a little left: it ran under the NEXT UP card; 100 not 64: its top was cut off on wide screens (full1119o)
+	local title = panel(layer, S(380, 72), S(600, 84), Vector2.new(0.5, 0.5), "ribbonPink") -- narrower and a little left: it ran under the NEXT UP card; 100 not 64: its top was cut off on wide screens (full1119o)
 	fit(title, 380, 72)
 	local titleT = text(title, "DAILY CHEST", UDim2.fromScale(0.62, 0.52), UDim2.fromScale(0.5, 0.42), Vector2.new(0.5, 0.5), WHITE)
 	titleT.TextStrokeColor3 = DEEP.ribbonPink
@@ -120,7 +120,7 @@ function M.start(E)
 		end
 		days[d] = { c = c, st = st, l = l }
 	end
-	local collect = button(layer, "COLLECT", S(220, 64), S(640, 560), Vector2.new(0.5, 0.5), "mint", "check") -- a tick, not a coin: the coin read as a price (Gemini views_full1122c)
+	local collect = button(layer, "COLLECT", S(220, 64), S(640, 628), Vector2.new(0.5, 0.5), "mint", "check") -- under the card: at 560 it sat on its bottom border (Orchestrator 2026-11-23); -- a tick, not a coin: the coin read as a price (Gemini views_full1122c)
 	fit(collect, 220, 64)
 	local busy, spin = false, nil
 	local flyLayer = new("ScreenGui", gui.Parent, { Name = "RewardFly", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 13 })
@@ -161,7 +161,7 @@ function M.start(E)
 		-- drop in
 		chest.Position = S(640, 120)
 		scaler(chest).Scale = 0.8
-		tween(chest, 0.45, { Position = S(640, 268) }, Enum.EasingStyle.Bounce)
+		tween(chest, 0.45, { Position = S(640, 290) }, Enum.EasingStyle.Bounce)
 		tween(scaler(chest), 0.45, { Scale = 1 }, Enum.EasingStyle.Back)
 		title.Visible = true
 		pop(title, 0.6, 0.35)
