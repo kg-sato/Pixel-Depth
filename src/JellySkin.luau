@@ -71,6 +71,7 @@ function M.dress(o)
 end
 
 function M.start(E)
+	if require(game:GetService("ReplicatedStorage").Shared:WaitForChild("Config")).uiText() ~= "jelly" then return end -- the flat and plain looks skip the bevel and dome shine
 	local gui = E.plr:WaitForChild("PlayerGui") -- the whole PlayerGui: the look-around settings panels are SurfaceGuis there
 	for _, d in gui:GetDescendants() do M.dress(d) end
 	gui.DescendantAdded:Connect(function(d) task.defer(function() if d.Parent then M.dress(d) end end) end)

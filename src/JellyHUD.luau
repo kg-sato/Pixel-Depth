@@ -13,9 +13,10 @@ function M.start(E)
 	local gui, pg = E.gui, E.plr:WaitForChild("PlayerGui")
 	local function firstLabel(o) return o and o:FindFirstChildWhichIsA("TextLabel") end
 	local gold = firstLabel(E.goldPill)
-	if gold then JellyText.mirror(gold, { color = Color3.fromRGB(255, 226, 130), sway = false }) end
+	-- flatColor: the flat look keeps the jelly counts' colours (the owner, 2026-11-24), measured on the jelly digits in captures/night/uiab_jelly_town.png
+	if gold then JellyText.mirror(gold, { color = Color3.fromRGB(255, 226, 130), flatColor = Color3.fromRGB(255, 228, 92), sway = false }) end
 	local gem = firstLabel(gui:FindFirstChild("GemPill", true))
-	if gem then JellyText.mirror(gem, { sway = false }) end
+	if gem then JellyText.mirror(gem, { flatColor = Color3.fromRGB(246, 128, 232), sway = false }) end
 	local function adopt(d)
 		if not d:IsA("TextLabel") then return end
 		local kind = d.Parent and d.Parent:GetAttribute("Kind")
@@ -53,11 +54,18 @@ function M.start(E)
 	local function sign(d)
 		if d:IsA("TextLabel") and d.Name == "Label" and d.Parent and d.Parent:IsA("SurfaceGui") and d.Parent.Parent and d.Parent.Parent.Name == "Sign" then
 			local t = JellyText.mirror(d, { color = Color3.fromRGB(255, 205, 80), sway = false, maxLen = 20 })
-			if t then -- the board's old pixel letters are pictures inside the label: they go while the jelly shows
-				local function hide(c) if c:IsA("GuiObject") and c ~= t.frame then c.Visible = not t.frame.Visible end end
-				for _, c in d:GetChildren() do hide(c) end
-				d.ChildAdded:Connect(hide)
-				t.frame:GetPropertyChangedSignal("Visible"):Connect(function() for _, c in d:GetChildren() do hide(c) end end)
+			if t then -- the board's old pixel letters are pictures inside the label: they go while the jelly or Gumdrop shows
+				local function drawn() return t.frame.Visible or (t.gum ~= nil and t.gum.holder.Visible) end -- 2026-11-24: in the flat look Gumdrop draws the word, and the pixel letters doubled it
+				local function hide(c) if c:IsA("GuiObject") and c ~= t.frame and c.Name ~= "Gum" then c.Visible = not drawn() end end
+				local function all() for _, c in d:GetChildren() do hide(c) end end
+				all()
+				d.ChildAdded:Connect(function(c)
+					hide(c)
+					if c.Name == "Gum" then c:GetPropertyChangedSignal("Visible"):Connect(all) end
+				end)
+				local g = d:FindFirstChild("Gum")
+				if g then g:GetPropertyChangedSignal("Visible"):Connect(all) end
+				t.frame:GetPropertyChangedSignal("Visible"):Connect(all)
 			end
 		end
 	end

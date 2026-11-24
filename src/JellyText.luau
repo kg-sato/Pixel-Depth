@@ -14,6 +14,11 @@ local SlimeBody = require(script.Parent:WaitForChild("SlimeBody")) -- 2026-11-16
 local C = require(script.Parent:WaitForChild("Config"))
 local GumText = require(script.Parent:WaitForChild("GumText")) -- 2026-11-18: what the jelly cannot draw (long, small) goes to Gumdrop, not back to a plain font
 local M = {}
+local MODE = C.uiText() -- 2026-11-24: "flat" draws headlines in flat Gumdrop: no wobble, no glints
+local GG = require(script.Parent:WaitForChild("GumGlyphs"))
+local GK = G.cap / GG.cap -- a Gumdrop cell scaled so its capitals stand as tall as the jelly ones in the same row
+local GY = 0.5 + (0.5 - (GG.base - GG.cap / 2)) * GK -- the cell's centre in row heights that puts the capitals' middle on the row's middle
+local FLAT_BODY = { s = 0, kick = function() end, step = function() end, tint = function() end, alpha = function() end } -- the flat letter draws itself
 
 local MID = Vector2.new(0.5, 0.5)
 local SPACE = 0.34
@@ -77,13 +82,42 @@ function M.new(parent, str, opt)
 	local z = opt.z or 3
 	local row = make("Frame", parent, { Name = "Jelly", Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(opt.align == "left" and 0 or (opt.align == "right" and 1 or 0.5), 0.5), AnchorPoint = Vector2.new(opt.align == "left" and 0 or (opt.align == "right" and 1 or 0.5), 0.5), BackgroundTransparency = 1, ZIndex = z })
 	local ratio = make("UIAspectRatioConstraint", row, { AspectRatio = 1 })
-	local self = { frame = row, glyphs = {}, color = opt.color, born = os.clock(), sway = opt.sway ~= false, text = nil, glow = opt.glow == true }
+	local self = { frame = row, glyphs = {}, color = opt.color, born = os.clock(), sway = opt.sway ~= false and MODE == "jelly", text = nil, glow = opt.glow == true and MODE == "jelly" }
+
+	-- shortcut: a word made before the flat atlas has streamed in is blank until it does (GumText preloads it at start, the jelly had the same gap); add a plain fallback if a first-seconds headline shows blank
+	local function buildFlat(s) -- the flat look: one picture per letter from the flat Gumdrop atlas
+		local total, n = 0, 0
+		for i = 1, #s do
+			local g = GG.glyphs[s:sub(i, i)]
+			total += (g and g[2] or GG.space) * GK
+		end
+		total = math.max(total, 0.2)
+		ratio.AspectRatio = total
+		local col = self.color or TONES.pink
+		local x = 0
+		for i = 1, #s do
+			local g = GG.glyphs[s:sub(i, i)]
+			local a = (g and g[2] or GG.space) * GK
+			if g then
+				n += 1
+				local pos = UDim2.fromScale((x + a / 2) / total, GY)
+				local img = make("ImageLabel", row, { Image = C.GUM.flat, ImageRectOffset = Vector2.new((g[1] % GG.cols) * GG.cell, math.floor(g[1] / GG.cols) * GG.cell), ImageRectSize = Vector2.new(GG.cell, GG.cell), ImageColor3 = col, BackgroundTransparency = 1, Size = UDim2.fromScale(GK / total, GK), Position = pos, AnchorPoint = MID, ZIndex = z + 1 })
+				table.insert(self.glyphs, { img = img, body = FLAT_BODY, sc = make("UIScale", img, {}), pos = pos, w = a / total, i = n })
+			end
+			x += a
+		end
+	end
 
 	local function build(s)
 		for _, g in self.glyphs do g.img:Destroy() if g.glow then g.glow:Destroy() end end
 		table.clear(self.glyphs)
 		self.raw = string.upper(s)
 		s = self.raw:gsub("%[ ?", "("):gsub(" ?%]", ")"):gsub("  +", " ") -- square brackets have no glyph; runs of spaces close up
+		if MODE ~= "jelly" then
+			buildFlat(s)
+			self.text = s
+			return
+		end
 		local total = 0
 		for i = 1, #s do
 			local g = G.glyphs[s:sub(i, i)]
@@ -205,7 +239,7 @@ function M.mirror(label, opt)
 	local function fit()
 		if not label.Parent then return end
 		local h = label.AbsoluteSize.Y
-		local long = (opt.maxLen ~= nil and #label.Text > opt.maxLen) or (h > 0 and h < 26) or not M.covers(label.Text) -- jelly letters under 26 px read flat (2026-11-18: SPORE STORM, MENU looked like a plain font): Gumdrop draws those; and a string the font cannot spell would have gaps: such a label stays plain text
+		local long = MODE ~= "jelly" or (opt.maxLen ~= nil and #label.Text > opt.maxLen) or (h > 0 and h < 26) or not M.covers(label.Text) -- jelly letters under 26 px read flat (2026-11-18: SPORE STORM, MENU looked like a plain font): Gumdrop draws those; and a string the font cannot spell would have gaps: such a label stays plain text
 		local ok = ready[(M.pick(t.color))] == true
 		local gumOn = false
 		if long or not ok then
@@ -223,7 +257,10 @@ function M.mirror(label, opt)
 			for _, g in t.glyphs do g.img.ImageTransparency = label.TextTransparency end
 		end
 	end
-	if ready[(M.pick(t.color))] ~= true then table.insert(waiting, fit) end -- run again when its atlas finishes loading
+	if MODE == "flat" and (opt.flatColor or opt.color) then label.TextColor3 = opt.flatColor or opt.color end -- the flat look draws in the label's colour: the jelly's own colour (gold coins, pink gems) carries over
+	if MODE == "flat" then
+		GumText.whenReady(fit) -- the flat look draws with Gumdrop: try again once its atlas is in
+	elseif ready[(M.pick(t.color))] ~= true then table.insert(waiting, fit) end -- run again when its atlas finishes loading
 	fit()
 	alpha(label.TextTransparency)
 	label:GetPropertyChangedSignal("AbsoluteSize"):Connect(fit)

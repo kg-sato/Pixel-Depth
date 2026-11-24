@@ -361,7 +361,16 @@ C.UI_GLASS.smoked = { card = "rbxassetid://123788880833023", keycap = "rbxasseti
 -- UI_JELLY = false brings the cut-glass and smoked ones back.
 C.UI_JELLY = true
 -- Gumdrop (2026-11-18): our own small-text font, an image atlas (art/pd_gum_font.py, Shared.GumText). on = false gives the plain fonts back.
-C.GUM = { on = true, body = "rbxassetid://102284460186875", gloss = "rbxassetid://94855332318137" }
+C.GUM = { on = true, body = "rbxassetid://102284460186875", gloss = "rbxassetid://94855332318137", flat = "rbxassetid://75055810101070" }
+-- UI text look (2026-11-24, the owner: "rework UI and HUD to be a little more generic, use the font without the 3D effects"):
+-- "jelly" = 3D jelly headlines, Gumdrop with its bevel and gloss, jelly bevel and dome shine on buttons;
+-- "flat"  = Gumdrop flat everywhere (art/pd_gum_font.py --flat: a plain fill in a dark rim), headlines included, no button shine;
+-- In Studio the workspace attribute DevUIText overrides it for A/B captures (spike/ui_text_ab.py).
+C.UI_TEXT = "flat" -- shipped 2026-11-24 after a counterbalanced blind A/B (spike/ui_text_ab.py, vault brief Generic UI Text AB)
+function C.uiText()
+	local v = game:GetService("RunService"):IsStudio() and workspace:GetAttribute("DevUIText")
+	return (v == "jelly" or v == "flat") and v or C.UI_TEXT
+end
 C.UI_GLASS.jelly = { orbShell = "rbxassetid://91481062363506", butter = "rbxassetid://82722958965216", hex = "rbxassetid://87686358893136", hexOn = "rbxassetid://75293938644821", lilac = "rbxassetid://83610146800339", mint = "rbxassetid://80108985332313", off = "rbxassetid://134880782343072", pill = "rbxassetid://127721842367915", pillButter = "rbxassetid://99208125217300", pillLilac = "rbxassetid://123145393975518", pillMint = "rbxassetid://135134308692883", pillPink = "rbxassetid://77519248895436", pink = "rbxassetid://130777996955576", sky = "rbxassetid://106257324109473" } -- 2026-11-18: the lit gel skins v2 (art/pd_ui_gel.py, art/ui_gel); v1 ids in art/ui_jelly/asset_ids.json
 if C.UI_KIT == "glass" then for k, v in C.UI_GLASS.hud do C.HUD_ICON[k] = v end end
 C.EGG_COINS = 75

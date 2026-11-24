@@ -6,7 +6,11 @@ Jelly look in 2D: a dark rim, a body lit from the top (bright top, deeper bottom
 Two layers per glyph: BODY (rim + shaded body, tinted by the game with ImageColor3) and GLOSS (white bevel light, never
 tinted, so coloured text keeps its shine).
     python art/pd_gum_font.py            -> art/gum_font/gum_atlas.png, gum_preview.png, src/GumGlyphs.luau
+    python art/pd_gum_font.py --flat     -> art/gum_font/gum_flat.png, gum_flat_preview.png (2026-11-24, the owner: "use the font
+                                            without the 3D effects"): the same glyphs and cells, a flat fill inside the dark rim,
+                                            no top light, no bevel, no gloss layer; GumGlyphs is unchanged
 """
+import sys
 import math, pathlib
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
@@ -158,9 +162,14 @@ def shifted(img, dx, dy):
     return m
 
 
-def render(strokes, w):
+def render(strokes, w, flat=False):
     outer = strokes_mask(strokes, w, RIM)
     body = strokes_mask(strokes, w, 0)
+    if flat:  # a plain fill inside the rim: the tint shows as one flat colour
+        a_out, a_body = down(outer), down(body)
+        rim = np.array([34, 18, 52], np.float32) / 255
+        rgb = rim[None, None, :] * (1 - a_body[..., None]) + a_body[..., None]
+        return np.dstack([rgb, a_out]), None
     b = np.asarray(body, np.float32)
     sh = int(U * SS * 0.5)  # the bevel: the body minus itself moved down-right = the lit top-left edge
     lit = Image.fromarray(np.clip(b - np.asarray(shifted(body, sh, sh), np.float32), 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(SS * 0.8))
@@ -175,6 +184,23 @@ def render(strokes, w):
     wash = np.clip((0.52 - yy) / 0.3, 0, 1) * 0.22 * a_body  # a soft white wash over the top of the letters, like light on a gum drop
     gloss = np.dstack([np.ones_like(a_lit)] * 3 + [np.clip(a_lit * 1.35 + wash, 0, 1)])
     return body_rgba, gloss
+
+
+def main_flat():
+    chars = list(G.keys())
+    cols = 10
+    rows = math.ceil(len(chars) / cols)
+    atlas = np.zeros((rows * CELL, cols * CELL, 4), np.float32)
+    meta = {}
+    for i, ch in enumerate(chars):
+        w, st = G[ch]
+        r, c = divmod(i, cols)
+        atlas[r * CELL:(r + 1) * CELL, c * CELL:(c + 1) * CELL] = render(st, w, flat=True)[0]
+        meta[ch] = (i, round((w + 2 * PAD + 2 * BEAR) * U / CELL, 4))
+    img = Image.fromarray((np.clip(atlas, 0, 1) * 255).astype(np.uint8), "RGBA")
+    img.save(OUT / "gum_flat.png")
+    preview(img, meta, cols, rows, "gum_flat_preview.png", gloss=False)
+    print("flat glyphs", len(chars), "atlas", img.size)
 
 
 def main():
@@ -208,7 +234,7 @@ def main():
     print("glyphs", len(chars), "atlas", img.size)
 
 
-def preview(img, meta, cols, rows, name="gum_preview.png"):
+def preview(img, meta, cols, rows, name="gum_preview.png", gloss=True):
     """Text set at several sizes on the game's dark glass, in white, gold, pink, mint and lilac, to judge readability."""
     lines = [("PIXEL DEPTH  0123456789", (255, 255, 255)), ("Walk to the minecart and ride down into the mine!", (255, 255, 255)),
              ("SPORE STORM IN 03:47   ×12   +250   99%", (255, 205, 80)), ("Daily relic chest: OPEN (F)  Quests  Pets  Shop", (255, 140, 200)),
@@ -226,12 +252,13 @@ def preview(img, meta, cols, rows, name="gum_preview.png"):
                 i, adv = meta[ch]
                 r, c = divmod(i, cols)
                 b = img.crop((c * CELL, r * CELL, (c + 1) * CELL, (r + 1) * CELL)).resize((cs, cs), Image.LANCZOS)
-                g = img.crop((c * CELL, (rows + r) * CELL, (c + 1) * CELL, (rows + r + 1) * CELL)).resize((cs, cs), Image.LANCZOS)
+                g = gloss and img.crop((c * CELL, (rows + r) * CELL, (c + 1) * CELL, (rows + r + 1) * CELL)).resize((cs, cs), Image.LANCZOS)
                 bt = np.asarray(b, np.float32).copy(); bt[..., :3] *= np.array(col, np.float32) / 255
                 b = Image.fromarray(np.clip(bt, 0, 255).astype(np.uint8), "RGBA")
                 ox = x + round(cs * adv / 2) - cs // 2
                 if ox >= 0 and ox + cs < W:
-                    can.alpha_composite(b, (ox, y)); can.alpha_composite(g, (ox, y))
+                    can.alpha_composite(b, (ox, y))
+                    if g: can.alpha_composite(g, (ox, y))
                 x += round(cs * adv)
             y += int(s * 1.3)
         y += 16
@@ -239,4 +266,4 @@ def preview(img, meta, cols, rows, name="gum_preview.png"):
 
 
 if __name__ == "__main__":
-    main()
+    main_flat() if "--flat" in sys.argv else main()

@@ -16,12 +16,14 @@ local M = {}
 local CAP_TO_SIZE = 0.7 -- a font's cap height is about 0.7 of its TextSize (Fredoka, Titillium): Gumdrop matches that
 local LINE = 1.18 -- line height in TextSizes
 local GLOSS_MIN = 15 -- below this text size the bevel light is too small to see: one layer per letter
+local MODE = C.uiText() -- "flat": the flat atlas and no gloss layer
+local BODY_IMG = MODE == "flat" and C.GUM.flat or C.GUM.body
 
 local ready = false
 local waiting = {}
 task.spawn(function()
 	local probes = {}
-	for _, id in { C.GUM.body, C.GUM.gloss } do
+	for _, id in MODE == "flat" and { BODY_IMG } or { BODY_IMG, C.GUM.gloss } do -- the flat look never shows the gloss: it does not wait for it (Codex 2026-11-24)
 		local p = Instance.new("ImageLabel")
 		p.Image = id
 		table.insert(probes, p)
@@ -32,15 +34,24 @@ task.spawn(function()
 	for _, p in probes do p.Size, p.BackgroundTransparency, p.ImageTransparency, p.Parent = UDim2.fromOffset(2, 2), 1, 0.99, holder end
 	holder.Parent = game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui")
 	local t0 = os.clock()
-	while not (probes[1].IsLoaded and probes[2].IsLoaded) and os.clock() - t0 < 30 do task.wait(0.25) end
+	while not probes[1].IsLoaded do task.wait(0.25) end -- the body atlas: text stays plain until it is in, however long (a 30 s cut-off left later labels plain for good, Codex 2026-11-24)
+	while probes[2] and not probes[2].IsLoaded and os.clock() - t0 < 30 do task.wait(0.25) end
 	holder:Destroy()
-	ready = probes[1].IsLoaded
+	ready = true
 	for _, f in waiting do task.spawn(f) end
 	table.clear(waiting)
 end)
 
+function M.whenReady(f) -- run f now if the atlas has loaded, else once it has (JellyText.mirror in the flat look)
+	if ready then f() else table.insert(waiting, f) end
+end
+
+local function norm(s) -- key brackets have no glyph: "[ R ]" is drawn "(R)", as the jelly letters do (2026-11-24: FLARE NOW [ R ] fell back to the plain font)
+	return (s:gsub("%[ ?", "("):gsub(" ?%]", ")"))
+end
+
 function M.covers(str)
-	for _, cp in utf8.codes(str) do
+	for _, cp in utf8.codes(norm(str)) do
 		local ch = utf8.char(cp)
 		if ch ~= " " and ch ~= "\n" and not G.glyphs[ch] then return false end
 	end
@@ -97,7 +108,7 @@ function M.attach(label, opt)
 		local g = pool[i]
 		if g then return g end
 		local b = Instance.new("ImageLabel")
-		b.Name, b.BackgroundTransparency, b.Image, b.ImageRectSize = "B", 1, C.GUM.body, Vector2.new(G.cell, G.cell)
+		b.Name, b.BackgroundTransparency, b.Image, b.ImageRectSize = "B", 1, BODY_IMG, Vector2.new(G.cell, G.cell)
 		b.Parent = holder
 		local s = Instance.new("ImageLabel")
 		s.Name, s.BackgroundTransparency, s.Image, s.ImageRectSize = "S", 1, C.GUM.gloss, Vector2.new(G.cell, G.cell)
@@ -119,7 +130,7 @@ function M.attach(label, opt)
 	local function layout()
 		queued = false
 		if not on or not label.Parent then return end
-		local text = label.Text
+		local text = norm(label.Text)
 		local abs = label.AbsoluteSize
 		if abs.X < 2 or abs.Y < 2 then return end -- not drawn (a billboard out of range): lay out when it has a size again
 		local pad = label:FindFirstChildOfClass("UIPadding")
@@ -165,7 +176,7 @@ function M.attach(label, opt)
 		local xa = label.TextXAlignment
 		local capPx = cell * G.cap
 		local n = 0
-		local gloss = s >= GLOSS_MIN
+		local gloss = s >= GLOSS_MIN and MODE == "jelly"
 		for li, ln in ls do
 			local x = l + (xa == Enum.TextXAlignment.Left and 0 or (xa == Enum.TextXAlignment.Right and w - ln[2] or (w - ln[2]) / 2))
 			local base = y0 + (li - 1) * lineH + (lineH + capPx) / 2 -- the cap sits centred in its line
@@ -253,6 +264,7 @@ function M.start(E)
 end
 
 -- self-check: the atlas spells the HUD's words, and a long sentence wraps into more than one line in a narrow box
+assert(M.covers("FLARE NOW  [ R ]") and norm("FLARE NOW  [ R ]") == "FLARE NOW  (R)", "GumText: brackets")
 assert(M.covers("SPORE STORM IN 03:47") and M.covers("Walk to the minecart and ride down into the mine!") and not M.covers("\u{1F48E}"), "GumText: covers")
 assert(#(lines("one two three four five six", 20, 120, true)) > 1, "GumText: wrap")
 return M
