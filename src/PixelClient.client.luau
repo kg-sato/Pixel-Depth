@@ -2591,7 +2591,7 @@ end)()
 		require(mod).start({
 			R = R, C = C, plr = plr, cave = cave, caveHud = caveHud, panel = panel, fit = fit, S = S, new = new, text = text, button = button,
 			setKind = setKind, tween = tween, burst = burst, sfx = sfx, shake = shake, toast = toast, commas = commas, hrp = hrp,
-			INK = INK, PINK = PINK, GOLD = GOLD, CREAM = CREAM, FONT = FONT,
+			INK = INK, PINK = PINK, GOLD = GOLD, CREAM = CREAM, FONT = FONT, vmHook = forgeUI,
 		})
 	end)
 	if not ok then warn("[GloomClient] " .. tostring(err)) end

@@ -54,6 +54,7 @@ function M.start(E)
 		local em = melt:FindFirstChild("MeltEmbers")
 		if em then em.Rate = on and 6 or 0 end
 		if not on then melt.Color, melt.Material = SLAG, Enum.Material.Slate end
+		for _, t in melt.Parent:GetChildren() do if t.Name == "CrucibleTongs" then t.LocalTransparencyModifier = on and 1 or 0 end end -- the paddle works the melt; the tongs rest only on a cold pot
 	end
 	local active = nil
 	local nextBubble = 0

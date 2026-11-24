@@ -167,7 +167,7 @@ function M.start(E)
 		local xs = look.rank[1][1]
 		local name = text(sky, look.sky, UDim2.fromScale(0.3, 0.075), UDim2.fromScale(xs, 0.955), MID, look.tint, 700, false)
 		name.ZIndex = 6
-		if id == "flare" then name.Visible = false end -- the middle row is the shard count's; the flare's name is in the inspector and on its pick ring
+		if id == "flare" then name.Position = UDim2.fromScale(xs, 0.05) end -- the middle constellation is named over its crown star (the bottom row's middle is the shard star's)
 		fig.name = name
 		local hit = new("TextButton", sky, { Name = "Pick_" .. id, Text = "", AutoButtonColor = false, BackgroundTransparency = 1, Size = UDim2.fromScale(0.24, id == "flare" and 0.6 or 0.86), Position = UDim2.fromScale(xs, id == "flare" and 0.35 or 0.48), AnchorPoint = MID, ZIndex = 12 })
 		hit.Activated:Connect(function()

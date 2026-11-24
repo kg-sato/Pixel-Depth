@@ -43,15 +43,12 @@ function M.start(E)
 	local segs = {}
 	for i, rot in { 0, 180, 90, 270 } do -- round 2 (Gemini v15_r1 3/10: thin scribbles over an untinted scene): a crimson tint closes in from every edge
 		local tint = new("Frame", shatter, { Name = "Tint" .. i, Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(150, 14, 46), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 62 })
-		new("UIGradient", tint, { Rotation = rot, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.25), NumberSequenceKeypoint.new(0.28, 0.85), NumberSequenceKeypoint.new(0.45, 1), NumberSequenceKeypoint.new(1, 1) }) })
+		new("UIGradient", tint, { Rotation = rot, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.45), NumberSequenceKeypoint.new(0.22, 0.9), NumberSequenceKeypoint.new(0.38, 1), NumberSequenceKeypoint.new(1, 1) }) })
 	end
 	do
 		local rnd = Random.new(23)
-		local function seg(a, b, k, w, branch) -- a white-hot core line with a crimson glow round it and a wide soft bloom under it
-			local glow = new("Frame", shatter, { AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 40, 90), BackgroundTransparency = 0.72, BorderSizePixel = 0, Visible = false, ZIndex = 62 })
-			local f = new("Frame", shatter, { AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = branch and Color3.fromRGB(255, 190, 210) or Color3.fromRGB(255, 236, 242), BorderSizePixel = 0, Visible = false, ZIndex = 62 })
-			new("UIStroke", f, { Color = Color3.fromRGB(230, 30, 80), Thickness = branch and 1.5 or 2.5, Transparency = 0.1 })
-			table.insert(segs, { a = a, b = b, k = k, w = w, f = f, g = glow })
+		local function seg(a, b, k, w, branch) -- round 3: a crack is a chain of chunky square pixel shards (the voxel look), white-hot cores in crimson rims
+			table.insert(segs, { a = a, b = b, k = k, w = w, branch = branch, sq = {} })
 		end
 		for e = 1, 16 do -- sixteen cracks, four from each edge, each a jagged chain toward the middle that stops short of the card
 			local side = (e - 1) % 4 + 1
@@ -79,12 +76,23 @@ function M.start(E)
 		local vp = layer.AbsoluteSize
 		for _, sg in segs do
 			local on = u > sg.k * 0.92
-			sg.f.Visible, sg.g.Visible = on, on
-			if on then
-				local a, b = sg.a * vp, sg.b * vp
-				local mid, len, rot = UDim2.fromOffset((a.X + b.X) / 2, (a.Y + b.Y) / 2), (b - a).Magnitude + 1, math.deg(math.atan2(b.Y - a.Y, b.X - a.X))
-				sg.f.Position, sg.f.Size, sg.f.Rotation = mid, UDim2.fromOffset(len, sg.w), rot
-				sg.g.Position, sg.g.Size, sg.g.Rotation = mid, UDim2.fromOffset(len + 4, sg.w * 4), rot
+			local a, b = sg.a * vp, sg.b * vp
+			local px = math.max(4, math.floor(sg.w * (sg.branch and 1.4 or 2) + 0.5)) -- the shard's side in pixels
+			local n = on and math.max(1, math.ceil((b - a).Magnitude / (px * 0.85))) or 0
+			for i = 1, math.max(n, #sg.sq) do
+				local q = sg.sq[i]
+				if i <= n and not q then
+					q = new("Frame", shatter, { AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = sg.branch and Color3.fromRGB(255, 186, 206) or Color3.fromRGB(255, 238, 244), BorderSizePixel = 0, ZIndex = 62 })
+					new("UIStroke", q, { Color = Color3.fromRGB(200, 22, 70), Thickness = 2, Transparency = 0.05 })
+					sg.sq[i] = q
+				end
+				if q then
+					q.Visible = i <= n
+					if i <= n then
+						local p = a:Lerp(b, (i - 0.5) / n)
+						q.Position, q.Size = UDim2.fromOffset(math.floor(p.X / 2) * 2, math.floor(p.Y / 2) * 2), UDim2.fromOffset(px, px) -- snapped to a 2 px grid: hard pixel steps, not a smooth line
+					end
+				end
 			end
 		end
 	end

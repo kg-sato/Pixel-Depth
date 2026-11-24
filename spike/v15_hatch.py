@@ -8,12 +8,12 @@ pet = sys.argv[1] if len(sys.argv) > 1 else "Fafnir"
 tag = sys.argv[2] if len(sys.argv) > 2 else "a"
 N.play(False); N.play(True); time.sleep(9)
 # when does the pet land? the client notes the hero act's start (PetVoxels.hero sets rig.act = "hero")
-N.lua("_G.V15H=nil local PV=require(game.ReplicatedStorage.Shared.PetVoxels) local old=PV.hero PV.hero=function(m) _G.V15H=os.clock() return old(m) end return 1", "Client")
+N.lua("workspace:SetAttribute('DevHeroAt',nil) return 1", "Client")  # PetVoxels.hero sets it in Studio
 N.lua("workspace:SetAttribute('DevHeroSlow',4) return 1", "Server")
 N.lua(f"game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1], 'hatch', '{pet}') return 1", "Server")
 t0 = time.time()
 for _ in range(200):
-    if N.lua("return tostring(_G.V15H~=nil)", "Client").splitlines()[-1] == "true": break
+    if N.lua("return tostring(workspace:GetAttribute('DevHeroAt')~=nil)", "Client").splitlines()[-1] == "true": break
     time.sleep(0.1)
 print("hero act began %.1f s after the hatch" % (time.time() - t0), flush=True)
 t1 = time.time()

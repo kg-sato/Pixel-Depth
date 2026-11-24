@@ -371,7 +371,7 @@ ACT.hero = { dur = 1.65, fn = function(u) -- v15 (Oakheart's hatch showcase): be
 	local r = key(u, { { 0.44, 0 }, { 0.58, 1 }, { 0.8, 1 }, { 0.9, -0.12 }, { 1, 0 } })
 	local land = key(u, { { 0.86, 0 }, { 0.9, 1 }, { 1, 0 } })
 	local j = math.sin(u * 120) * 0.045 * key(u, { { 0.56, 0 }, { 0.6, 1 }, { 0.78, 1 }, { 0.82, 0 } })
-	return { root = { pitch = r * 0.45 - c * 0.08 + j, lift = -c * 0.14 - land * 0.1, pivotBack = true }, head = CFrame.Angles(r * 0.55 - c * 0.35 + j, 0, j),
+	return { root = { pitch = r * 0.45 - c * 0.08 + j, lift = -c * 0.14 - land * 0.1, pivotBack = true }, head = CFrame.Angles(r * 0.28 - c * 0.35 + j, r * 0.25, j),
 		wing = c * 0.45 - r * 0.85, tail = CFrame.Angles(-r * 0.35 + c * 0.2, 0, 0), legF = CFrame.Angles(-r * 0.9 + math.sin(u * 30) * 0.3 * r, 0, 0), squash = c * 0.1 + land * 0.12 - r * 0.05, charge = c, flare = r }
 end, burst = 0.58, impact = 0.9 }
 -- the sound of each action on its beat (impact or burst): { name, pitch } from PixelClient's bank (M.sfx); pets far from the
@@ -408,6 +408,7 @@ function M.hero(m)
 	if info and HERO[info[1]] then -- v15: rare and better pets land with the two-beat showcase (gather, then rear up and roar)
 		rig.act, rig.actT, rig.burst, rig.hit = "hero", os.clock(), false, false
 		rig.slow = game:GetService("RunService"):IsStudio() and tonumber(workspace:GetAttribute("DevHeroSlow")) or nil -- Studio test hook: play the showcase slower for stills (spike/v15_hatch.py)
+		if game:GetService("RunService"):IsStudio() then workspace:SetAttribute("DevHeroAt", os.clock()) end -- Studio test hook: when the showcase began (a test's own Lua runs another copy of this module)
 		return
 	end
 	local list = ACTS[m.Name] or { "look" }

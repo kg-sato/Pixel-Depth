@@ -40,6 +40,10 @@ print("hearth held 3 s:", home("home", 0.1, "home", 3.05, "homeEnd"), "| studs f
 again = home("home")
 print("hearth again at once:", again, "| cooldown on:", again.split("no:")[-1].strip().isdigit())  # the seconds left: any number (a slow Studio takes a while between two calls)
 print("ziplines built:", S1("local n,p=0,0 for _,d in workspace.Caves.Ziplines:GetChildren() do if d.Name=='ZipRope' then n+=1 end if d.Name=='ZipHandle' then p+=1 end end return n..' ropes '..p..' handles'"))
+FARSPOT = P + ("local pr for _,d in cv.Ziplines:GetDescendants() do if d:GetAttribute('Zip')==1 then pr=d end end local best,bd=h.Position,(h.Position-pr.Parent.Position).Magnitude "
+               "for _,d in cv.Ziplines:GetDescendants() do if d:IsA('ProximityPrompt') and d~=pr then local m=(d.Parent.Position-pr.Parent.Position).Magnitude if m>bd then best,bd=d.Parent.Position+Vector3.new(3,0,0),m end end end "
+               "h.AssemblyLinearVelocity=Vector3.zero h.CFrame=CFrame.new(best) return math.floor(bd)")
+print("stand far from grip 1 (studs):", S1(FARSPOT)); time.sleep(1.5)  # 2026-11-24: some hours' cave seeds put the camp within reach of grip 1, and the server rightly let that ride
 z = zip_(1, 1, 1.0, "true")
 if z.startswith("prompt fired 0"):  # the prompt was not shown yet just after the hearth (a slow Studio): try once more
     time.sleep(2); z = zip_(1, 1, 1.0, "true")

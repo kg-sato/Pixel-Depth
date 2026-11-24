@@ -371,8 +371,8 @@ function M.init(c)
 		part("CrucibleLip", Vector3.new(0.9, 0.24, 0.55), fat * CFrame.new(0, 4.93, CZ - 1.6) * CFrame.Angles(math.rad(-14), 0, 0), stoneD, SL)
 		local melt = part("CrucibleMelt", Vector3.new(2.56, 0.3, 1.96), fat * CFrame.new(0, 4.25, CZ), Color3.fromRGB(58, 48, 62), Enum.Material.Slate)
 		melt.CanCollide = false
-		for k, a in { -0.5, 0.42 } do -- the tongs, resting across the rim
-			part("CrucibleTongs", Vector3.new(0.14, 0.14, 3.3), fat * CFrame.new(-0.55 + k * 0.32, 5.0 + k * 0.03, CZ) * CFrame.Angles(0, a, 0), iron, Enum.Material.Metal).CanCollide = false
+		for k = 1, 2 do -- the tongs, resting across the rim side by side at the left (crossed, they read as an X over the melt: v15 still)
+			part("CrucibleTongs", Vector3.new(0.14, 0.14, 3.0), fat * CFrame.new(-1.0 + k * 0.22, 5.0 + k * 0.03, CZ) * CFrame.Angles(0, 0.12 * k, 0), iron, Enum.Material.Metal).CanCollide = false
 		end
 		local stirPt = part("CrucibleStirPoint", Vector3.new(0.4, 0.4, 0.4), fat * CFrame.new(0, 5.6, CZ), stone, Enum.Material.SmoothPlastic)
 		stirPt.Transparency, stirPt.CanCollide, stirPt.CanQuery, stirPt.CanTouch = 1, false, false, false

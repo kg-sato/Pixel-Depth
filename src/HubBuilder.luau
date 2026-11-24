@@ -1368,8 +1368,12 @@ function Hub.build(parent, origin)
 			vox(g, "ChronicleRim", e[1], at(e[2].X, e[2].Y, e[2].Z), OBS_E, { Material = Enum.Material.Basalt })
 		end
 		for _, sx in { -1, 1 } do -- engraved gold runes glowing down both sides of the face, inside the border
-			for k = 0, 7 do
-				vox(g, "ChronicleRune", Vector3.new(0.16, 0.5 + (k % 3) * 0.18, 0.06), at(sx * 2.3, top + 1.3 + k * (SH - 2.6) / 7, 0.42), Color3.fromRGB(196, 138, 58), { Material = Enum.Material.Neon, CanCollide = false })
+			for k = 0, 7 do -- each rune a stem with a crossbar or a hook at its own height: carved letters, not dashes
+				local y = top + 1.3 + k * (SH - 2.6) / 7
+				local RUNE = { Material = Enum.Material.Neon, CanCollide = false }
+				vox(g, "ChronicleRune", Vector3.new(0.12, 0.62, 0.06), at(sx * 2.3, y, 0.42), Color3.fromRGB(196, 138, 58), RUNE)
+				local cy = ({ 0.2, -0.05, 0.12, -0.18 })[k % 4 + 1]
+				vox(g, "ChronicleRune", Vector3.new(0.3, 0.1, 0.06), at(sx * 2.3 + ((k % 2 == 0) and 0.09 or -0.09), y + cy, 0.425) * CFrame.Angles(0, 0, (k % 3 - 1) * 0.5), Color3.fromRGB(196, 138, 58), RUNE)
 			end
 		end
 		vox(g, "ChronicleCap", Vector3.new(6.6, 0.8, 2.2), at(0, top + SH + 0.4, -0.3), OBS_E, { Material = Enum.Material.Basalt })

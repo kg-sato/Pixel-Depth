@@ -293,7 +293,7 @@ function M.start(E)
 				end
 				local bu = bubbles[name]
 				if bu and bu.head.Parent and h then
-					local near = (bu.head.Position - h.Position).Magnitude < (name == "Wick" and 18 or 12) and plr:GetAttribute("InCave")
+					local near = (bu.head.Position - h.Position).Magnitude < (name == "Wick" and 18 or 12) and plr:GetAttribute("InCave") and not (E.vmHook and E.vmHook.modalOpen) -- v15: quiet under a panel
 					if near and not bu.bb.Enabled then bu.bb.Enabled = true end
 					if not near then bu.bb.Enabled = false end
 					if near and os.clock() > bu.next then

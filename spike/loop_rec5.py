@@ -121,11 +121,11 @@ time.sleep(1.0)
 if globals().get("FORCE"): FORCE.set()  # PERFECT FORGE!
 time.sleep(9)
 mark("a Legendary hatch: Fafnir")
-C("_G.V15H=nil local PV=require(game.ReplicatedStorage.Shared.PetVoxels) if not _G.V15HP then _G.V15HP=PV.hero PV.hero=function(m) _G.V15H=os.clock() return _G.V15HP(m) end end return 1")  # v15: note when the pet lands (its showcase starts)
+C("workspace:SetAttribute('DevHeroAt',nil) return 1")  # v15: PetVoxels.hero notes in Studio when the pet lands (its showcase starts)
 S("workspace:SetAttribute('DevHeroSlow',2) game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1], 'hatch', 'Fafnir') return 1")  # the showcase at half speed so a still lands in each beat
 t_h = time.time()
 for _ in range(80):
-    if C("return tostring(_G.V15H~=nil)") == "true": break
+    if C("return tostring(workspace:GetAttribute('DevHeroAt')~=nil)") == "true": break
     time.sleep(0.15)
 mark("the hatch showcase: gather, then the rear-up roar")
 if globals().get("FORCE"): FORCE.set()  # beat 1, the gather
