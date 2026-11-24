@@ -71,6 +71,7 @@ C("local pr=workspace.Hub.RefineryMouth:FindFirstChildOfClass('ProximityPrompt')
 mark("the crucible: the geode melts in the open pot; one stir takes 5 s off")  # v15 (Master Directive phase 3)
 CRU = "workspace.Hub:FindFirstChild('CrucibleMelt',true)"
 hold_cam(f"({CRU}.CFrame*CFrame.new(1.5,6,-8)).Position", f"{CRU}.Position", 8); time.sleep(2.5)
+mark("the crucible: melting")
 if globals().get("FORCE"): FORCE.set()
 C("local pt=workspace.Hub:FindFirstChild('CrucibleStirPoint',true) local pr=pt:FindFirstChildOfClass('ProximityPrompt') task.wait(0.2) pr:InputHoldBegin() task.wait(0.15) pr:InputHoldEnd() return 1"); time.sleep(0.6)
 if globals().get("FORCE"): FORCE.set()  # the stir's spark burst
@@ -96,6 +97,7 @@ S(P + "p:SetAttribute('DevMarquee','Ninering') return 1"); time.sleep(8)
 mark("the Deep Chronicle: the miners of this server on a stone in town")  # v15 (Master Directive phase 3)
 S(P + "local s=workspace.Hub.Chronicle.ChronicleSlab h.CFrame=CFrame.lookAt((s.CFrame*CFrame.new(1.5,-5.4,8)).Position,(s.CFrame*CFrame.new(0,-5.4,0)).Position) return 1"); time.sleep(1.5)
 hold_cam("(workspace.Hub.Chronicle.ChronicleSlab.CFrame*CFrame.new(-4,1.5,15)).Position", "workspace.Hub.Chronicle.ChronicleSlab.Position+Vector3.new(0,0.5,0)", 7); time.sleep(2.5)
+mark("the Deep Chronicle: close")
 if globals().get("FORCE"): FORCE.set()
 time.sleep(4.5)
 S(P + "p:SetAttribute('DevCodex',12) return 1"); time.sleep(1.5)
@@ -116,10 +118,19 @@ for _ in range(100):
     if C("return tostring(_G.HT and _G.HT.start~=nil)") == "true": break
     time.sleep(0.2)
 time.sleep(0.5)
+mark("HEAT & BLOW: the gauge")
 if globals().get("FORCE"): FORCE.set()  # the HEARTH HEAT gauge
 time.sleep(1.0)
+mark("HEAT & BLOW: PERFECT FORGE")
 if globals().get("FORCE"): FORCE.set()  # PERFECT FORGE!
 time.sleep(9)
+for _ in range(20):  # the NEW PICKAXE! card waits for its NICE! button (full1124a: left up, it covered the rest of the tour)
+    nice = C("for _,d in game.Players.LocalPlayer.PlayerGui:GetDescendants() do if d:IsA('TextButton') and d.Text=='NICE!' and d.Visible and d.AbsoluteSize.X>4 then return d:GetFullName() end end return 'none'")
+    if nice.startswith("Players."):
+        N.run("user_mouse_input", {"actions": [{"action": "mouseButtonClick", "mouse_button": "left", "instance_path": nice}], "datamodel_type": "Client"}); time.sleep(1.2)
+        print("NICE! pressed:", C("for _,d in game.Players.LocalPlayer.PlayerGui:GetDescendants() do if d:IsA('TextButton') and d.Text=='NICE!' and d.Visible and d.AbsoluteSize.X>4 then return 'still up' end end return 'closed'"), flush=True)
+        break
+    time.sleep(1)
 mark("a Legendary hatch: Fafnir")
 C("workspace:SetAttribute('DevHeroAt',nil) return 1")  # v15: PetVoxels.hero notes in Studio when the pet lands (its showcase starts)
 S("workspace:SetAttribute('DevHeroSlow',2) game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1], 'hatch', 'Fafnir') return 1")  # the showcase at half speed so a still lands in each beat
@@ -130,6 +141,7 @@ for _ in range(80):
 mark("the hatch showcase: gather, then the rear-up roar")
 if globals().get("FORCE"): FORCE.set()  # beat 1, the gather
 time.sleep(1.3)
+mark("the hatch showcase: the roar")
 if globals().get("FORCE"): FORCE.set()  # beat 2, the rear-up roar
 S("workspace:SetAttribute('DevHeroSlow',nil) return 1")
 time.sleep(max(1, 16.5 - (time.time() - t_h)))  # it closes itself 6 s after the burst
@@ -140,6 +152,7 @@ mark("the Soul Tree at the campfire: three constellations round the shard star")
 S(P + "p:SetAttribute('DevSoul',14) return 1"); time.sleep(1)
 trigger("SoulTree", "true"); time.sleep(0.8)
 C("local R=game.ReplicatedStorage.Remotes R.Soul:FireServer('buy','hide') task.wait(0.6) R.Soul:FireServer('buy','flare') task.wait(0.6) R.Soul:FireServer('buy','hide') task.wait(0.8) return 1"); time.sleep(1.2)
+mark("the Soul Tree: open")
 if globals().get("FORCE"): FORCE.set()
 time.sleep(3)
 C("local w=game.Players.LocalPlayer.PlayerGui:FindFirstChild('SoulTree',true) if w then w.Visible=false end return 1"); time.sleep(1)
@@ -243,8 +256,13 @@ C("task.spawn(function() local p=game.Players.LocalPlayer local RS=game.Replicat
   "local z=C.stokeZone(4242,hits) local x=C.stokeAt(t0,workspace:GetServerTimeNow()) if x>z+0.07 and x<z+S.zone-0.07 then R:FireServer('k') task.wait(0.9) end "
   "if (flares==0 and os.clock()-start>9) or (flares==1 and os.clock()-start>22) then flares+=1 R:FireServer('f') end task.wait() end end) return 1")
 time.sleep(25)  # the ride is not there in the first seconds: asking at once took "no ride yet" for "home"
-for _ in range(35):
-    time.sleep(2)
+card_seen = False
+for _ in range(70):
+    time.sleep(1)
+    if not card_seen and C("for _,d in game.Players.LocalPlayer.PlayerGui:GetDescendants() do if d:IsA('TextButton') and d.Text=='CONTINUE' and d.Visible and d.AbsoluteSize.X>4 then return 'card' end end return 'no'") == "card":
+        card_seen = True  # v15: the result card gets its own label and a forced still (view 12 kept landing on SURFACING)
+        mark("the escape result card"); time.sleep(0.8)
+        if globals().get("FORCE"): FORCE.set()
     if "home" in C("local p=game.Players.LocalPlayer return (not workspace:FindFirstChild('MinecartEscape') and p:GetAttribute('InCave')~=true) and 'home' or 'riding'"): break
 mark("crew ride over")
 time.sleep(2.5)
