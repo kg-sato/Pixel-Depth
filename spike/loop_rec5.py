@@ -96,7 +96,7 @@ C("local g for _,d in workspace.Hub.TrophyHouse:GetChildren() do if d.Name=='Tro
 S(P + "p:SetAttribute('DevMarquee','Ninering') return 1"); time.sleep(8)
 mark("the Deep Chronicle: the miners of this server on a stone in town")  # v15 (Master Directive phase 3)
 S(P + "local s=workspace.Hub.Chronicle.ChronicleSlab h.CFrame=CFrame.lookAt((s.CFrame*CFrame.new(1.5,-5.4,8)).Position,(s.CFrame*CFrame.new(0,-5.4,0)).Position) return 1"); time.sleep(1.5)
-hold_cam("(workspace.Hub.Chronicle.ChronicleSlab.CFrame*CFrame.new(-4,1.5,15)).Position", "workspace.Hub.Chronicle.ChronicleSlab.Position+Vector3.new(0,0.5,0)", 7); time.sleep(2.5)
+hold_cam("(workspace.Hub.Chronicle.ChronicleSlab.CFrame*CFrame.new(2.5,0,12.5)).Position", "workspace.Hub.Chronicle.ChronicleSlab.Position+Vector3.new(0,0.5,0)", 7); time.sleep(2.5)
 mark("the Deep Chronicle: close")
 if globals().get("FORCE"): FORCE.set()
 time.sleep(4.5)

@@ -123,7 +123,7 @@ function M.start(E)
 		for k = 0, 3 do -- v15: the lower shaft (-50 to -85 m) on all four walls, one piece every 12 studs: a violet root vine, a crystal
 			-- cluster growing out of the face, or a warm kiln seam flush on it (Orchestrator final grade: at -65 m the left and upper-right walls still read bare tan)
 			local face = CFrame.Angles(0, k * math.pi / 2, 0)
-			for r = 50, ROWS - 2, 3 do
+			for r = 22, ROWS - 2, 3 do -- v15 round 2: from -22 m down (the tour grade: "barren brown planar wedges" higher up too)
 				local c = (r * 3 + k * 2) % 5
 				local d, x, y = dep[k][c][r], -8 + c * 4, -r * 4 - 2
 				local pick = (r // 3 + k) % 3
@@ -132,7 +132,7 @@ function M.start(E)
 					for q = 0, 2 do sp(Vector3.new(0.35, len / 3 + 0.2, 0.35), face * CFrame.new(x + math.sin(q * 1.7 + r + k) * 0.35, y + 2 - len / 6 - q * len / 3, -5.3) * CFrame.Angles(0, 0, math.sin(q + r + k) * 0.18), Color3.fromRGB(190, 120, 255), LIT) end
 					sp(Vector3.new(0.8, 0.8, 0.8), face * CFrame.new(x, y + 1.8 - len, -5.3) * CFrame.Angles(0.6, 0.6, 0), Color3.fromRGB(225, 190, 255), LIT)
 				elseif pick == 1 then
-					for q = 0, 2 do sp(Vector3.new(0.8, 2.4 - q * 0.5, 0.8), face * CFrame.new(x + q * 0.9 - 0.9, y - 0.6, d + 0.7) * CFrame.Angles(1.0, (q - 1) * 0.5, (q - 1) * 0.45), q == 1 and Color3.fromRGB(196, 120, 255) or CYAN, { Material = Enum.Material.Glass, Transparency = 0.1 }) end
+					for q = 0, 2 do sp(Vector3.new(0.8, 2.4 - q * 0.5, 0.8), face * CFrame.new(x + q * 0.9 - 0.9, y - 0.6, d + 0.45) * CFrame.Angles(1.0, (q - 1) * 0.5, (q - 1) * 0.45), q == 1 and Color3.fromRGB(196, 120, 255) or CYAN, { Material = Enum.Material.Glass, Transparency = 0.1 }) end
 					sp(Vector3.new(3.8, 3.8, 0.1), face * CFrame.new(x, y, d + 0.07), Color3.fromRGB(150, 170, 255), { Material = LIT.Material, Transparency = 0.76 }) -- its glow on the rock
 				else
 					sp(Vector3.new(3.8, 0.7, 0.1), face * CFrame.new(x, y, d + 0.08) * CFrame.Angles(0, 0, (r % 2 == 0 and 1 or -1) * 0.12), Color3.fromRGB(255, 160, 80), { Material = LIT.Material, Transparency = 0.2 })
