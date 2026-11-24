@@ -372,6 +372,15 @@ function C.uiText()
 	return (v == "jelly" or v == "flat") and v or C.UI_TEXT
 end
 C.UI_GLASS.jelly = { orbShell = "rbxassetid://91481062363506", butter = "rbxassetid://82722958965216", hex = "rbxassetid://87686358893136", hexOn = "rbxassetid://75293938644821", lilac = "rbxassetid://83610146800339", mint = "rbxassetid://80108985332313", off = "rbxassetid://134880782343072", pill = "rbxassetid://127721842367915", pillButter = "rbxassetid://99208125217300", pillLilac = "rbxassetid://123145393975518", pillMint = "rbxassetid://135134308692883", pillPink = "rbxassetid://77519248895436", pink = "rbxassetid://130777996955576", sky = "rbxassetid://106257324109473" } -- 2026-11-18: the lit gel skins v2 (art/pd_ui_gel.py, art/ui_gel); v1 ids in art/ui_jelly/asset_ids.json
+-- Matte skins (2026-11-24, the owner chose "matte skins" for a more generic HUD; art/pd_ui_gel.py --matte): the same shapes and sizes
+-- without the gel lighting. UI_SKIN = "gel" brings the lit gel back; in Studio the workspace attribute DevUISkin overrides it.
+C.UI_GLASS.matte = { butter = "rbxassetid://136414650799475", hex = "rbxassetid://74680033100001", hexOn = "rbxassetid://106432657926747", lilac = "rbxassetid://122051332561298", mint = "rbxassetid://139076334891726", off = "rbxassetid://90498895482853", pill = "rbxassetid://100818639608952", pillButter = "rbxassetid://77045514903242", pillLilac = "rbxassetid://86437460178660", pillMint = "rbxassetid://86959798934109", pillPink = "rbxassetid://132395294439907", pink = "rbxassetid://75266121371292", sky = "rbxassetid://94086720527672" }
+C.UI_SKIN = "matte"
+function C.uiSkin()
+	local v = game:GetService("RunService"):IsStudio() and workspace:GetAttribute("DevUISkin")
+	return (v == "gel" or v == "matte") and v or C.UI_SKIN
+end
+if C.uiSkin() == "matte" then for k, v in C.UI_GLASS.matte do C.UI_GLASS.jelly[k] = v end end -- every reader takes the skins from UI_GLASS.jelly
 if C.UI_KIT == "glass" then for k, v in C.UI_GLASS.hud do C.HUD_ICON[k] = v end end
 C.EGG_COINS = 75
 -- the Egg Altar in the caves (playtest 2: "rarer ones should be found in caves ... players will need to roll for them"; board PT2_Eggs).

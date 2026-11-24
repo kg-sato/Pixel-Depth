@@ -8,13 +8,18 @@ field, its normals take a key light from the upper left, and the result is
   * a thin specular crescent where the top bevel faces the light, and a small hot glint at the upper left
   * light gathered low inside the jelly (subsurface glow) in the rim colour
   * a darker extruded lip under it (the slab's side) and a soft shadow baked under the lip
-    python art/pd_ui_gel.py        -> art/ui_gel/*.png and _sheet.png"""
-import math, pathlib
+    python art/pd_ui_gel.py        -> art/ui_gel/*.png and _sheet.png
+    python art/pd_ui_gel.py --matte -> art/ui_matte/*.png (2026-11-24, the owner chose "matte skins" for a more generic HUD after the
+                                      flat-text A/B, where Gemini kept marking down the baked gloss): the same shapes, sizes, lip and
+                                      shadow, a soft body gradient and a flat rim stroke in the rim colour; no bevel light, Fresnel,
+                                      sheen, inner glow, specular or glint"""
+import math, pathlib, sys
 import numpy as np
 from PIL import Image, ImageFilter
 
 here = pathlib.Path(__file__).resolve().parent
-out = here / "ui_gel"
+MATTE = "--matte" in sys.argv
+out = here / ("ui_matte" if MATTE else "ui_gel")
 out.mkdir(exist_ok=True)
 SS = 4
 
@@ -58,9 +63,25 @@ def gel(size, rim, top="#4c2d82", bot="#130d22", radius=16, lip=6, hexa=False, l
     face = np.clip(0.5 - d, 0, 1)  # anti-aliased coverage (supersampled anyway)
     side = np.clip(0.5 - sdf(L), 0, 1)  # the slab's side, seen under the face
     shadow = np.asarray(Image.fromarray((np.clip(0.5 - sdf(L + 2 * SS, 1 * SS), 0, 1) * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(3 * SS)), np.float32) / 255
+    if MATTE:
+        yy = np.clip((y - y0) / max(y1 - y0, 1), 0, 1)
+        rimc = H(rim)
+        col = H(top)[None, None, :] * (1 - 0.35 * yy[..., None]) + H(bot)[None, None, :] * (0.35 * yy[..., None])  # a soft fall, no light
+        ring = smooth(-3.2 * SS, -1.8 * SS, d)  # a flat stroke just inside the edge
+        col = col * (1 - ring[..., None] * 0.85) + rimc[None, None, :] * ring[..., None] * 0.85
+        a_face = face * body_alpha
+        sidecol = np.broadcast_to(H(bot) * 0.55, col.shape).copy()
+    else:
+        col, a_face, sidecol = lit_face(x, y, d, sdf, x0, y0, x1, y1, W, Hh, B_of(hh, hexa), R, L, rim, top, bot, hexa, lit, body_alpha, rim_gain, face, side)
+    return finish(col, a_face, sidecol, shadow, side, w, h)
+
+
+def B_of(hh, hexa): return min(hh, 9 * SS) if not hexa else 9 * SS
+
+
+def lit_face(x, y, d, sdf, x0, y0, x1, y1, W, Hh, B, R, L, rim, top, bot, hexa, lit, body_alpha, rim_gain, face, side):
 
     # the bevel as a height field: a quarter circle over the outer B pixels, flat inside
-    B = min(hh, 9 * SS) if not hexa else 9 * SS
     t = np.clip(-d / B, 0, 1)
     hgt = np.sqrt(1 - (1 - t) ** 2) * B * 0.9
     gy, gx = np.gradient(hgt)
@@ -97,9 +118,12 @@ def gel(size, rim, top="#4c2d82", bot="#130d22", radius=16, lip=6, hexa=False, l
     # the side catches a thin line of rim light at its bottom edge
     sd_edge = smooth(-2.0 * SS, 0, sdf(L)) * side
     sidecol += rimc * 0.12 * sd_edge[..., None]  # only a hint: a bright line there read as a second outline
+    return col, a_face, sidecol
 
+
+def finish(col, a_face, sidecol, shadow, side, w, h):
     # composite: shadow, then side, then face
-    rgb = np.zeros(col.shape, np.float32); A = np.zeros(face.shape, np.float32)
+    rgb = np.zeros(col.shape, np.float32); A = np.zeros(a_face.shape, np.float32)
     def over(c, a):
         nonlocal rgb, A
         na = a + A * (1 - a)
