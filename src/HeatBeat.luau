@@ -61,7 +61,7 @@ function M.new(gui, token, sfx)
 	local touchOnly = UIS.TouchEnabled and not UIS.KeyboardEnabled
 	words(gauge, "HEARTH HEAT", UDim2.fromScale(0.6, 0.27), UDim2.fromScale(0.5, 0.17), Color3.fromRGB(255, 196, 110))
 	words(gauge, touchOnly and "TAP THE BAR IN THE GOLD!" or "STRIKE IN THE GOLD!   SPACE / CLICK THE BAR", UDim2.fromScale(0.8, 0.22), UDim2.fromScale(0.5, 0.83), WHITE) -- under the bar, not squeezed beside the title
-	local result, rStroke = words(gui, "", UDim2.fromScale(0.6, 0.12), UDim2.fromScale(0.5, 0.36), WHITE, nil, 21)
+	local result, rStroke = words(gui, "", UDim2.fromScale(0.5, 0.085), UDim2.fromScale(0.5, 0.08), WHITE, nil, 21) -- above the gauge, over the letterbox (blind tour grade: dead centre it covered the smith)
 	rStroke.Color, rStroke.Thickness = Color3.fromRGB(70, 30, 10), 4
 	result.Visible = false
 	local hit = Instance.new("TextButton") -- the whole gauge is the STRIKE button for a mouse or a finger
