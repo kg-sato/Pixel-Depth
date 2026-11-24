@@ -407,6 +407,7 @@ function M.hero(m)
 	local info = okC and Cfg.PETS and Cfg.PETS[m.Name]
 	if info and HERO[info[1]] then -- v15: rare and better pets land with the two-beat showcase (gather, then rear up and roar)
 		rig.act, rig.actT, rig.burst, rig.hit = "hero", os.clock(), false, false
+		rig.slow = game:GetService("RunService"):IsStudio() and tonumber(workspace:GetAttribute("DevHeroSlow")) or nil -- Studio test hook: play the showcase slower for stills (spike/v15_hatch.py)
 		return
 	end
 	local list = ACTS[m.Name] or { "look" }
@@ -440,7 +441,7 @@ function M.animate(m, now, dt, moving)
 	local pose, aw = nil, 1 - w
 	if rig.act then
 		local a = ACT[rig.act]
-		local u = (now - rig.actT) / a.dur
+		local u = (now - rig.actT) / (a.dur * (rig.act == "hero" and rig.slow or 1))
 		if u >= 1 + 0.45 / a.dur then -- run on until the last chain segment has settled too (a snap when it was cut at u = 1)
 			rig.act, rig.nextAct = nil, now + 3 + math.random() * 3
 		else

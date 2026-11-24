@@ -12,7 +12,9 @@ dest.mkdir(parents=True, exist_ok=True)
 WANT = [("loading splash", "loading logo", 2), ("town HUD", "town HUD", 1), ("settings", "settings:", 1), ("forge", "forge", 2),
         ("Camp 1 arrival", "arrival at Camp 1", 1), ("mining strike", "minigames", 3), ("boss fight and strike reticle", "strike reticle on a knot|Root Warden: the whole fight", 0),
         ("boss reward chest", "fight over", 1), ("glass lift ride", "glass lift", 2), ("Clay Caves hall", "Camp 2: the hall", 2),
-        ("crew escape HUD", "crew ride from the stoker", 1), ("escape result card", "crew ride from the stoker", -2), ("town arrival", "back in town after the escape card|crew ride over", 0)]
+        ("crew escape HUD", "crew ride from the stoker", 1), ("escape result card", "crew ride from the stoker", -2), ("town arrival", "back in town after the escape card|crew ride over", 0),
+        ("Deep Chronicle monolith", "the Deep Chronicle", 1), ("refinery crucible", "the crucible", 1), ("forge HEAT & BLOW gauge", "HEAT & BLOW", 1),
+        ("Soul Tree constellations", "the Soul Tree at the campfire", 1), ("Legendary hatch showcase", "the hatch showcase|a Legendary hatch: Fafnir", 1)]  # v15
 rows = [l.split("	") for l in (src / "labels.txt").read_text(encoding="utf-8").splitlines() if l.count("	") >= 2]
 lines = []
 for i, (view, key, k) in enumerate(WANT, 1):

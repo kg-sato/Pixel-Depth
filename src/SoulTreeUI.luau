@@ -44,6 +44,9 @@ function M.start(E)
 	fit(win, 780, 480)
 	win.Name, win.Visible = "SoulTree", false
 	if E.addModal then E.addModal(win) end
+	win:GetPropertyChangedSignal("Visible"):Connect(function() -- round 2 (Gemini: an NPC's chat bubble showed through the panel): bubble chat rests while the tree is open
+		pcall(function() game:GetService("TextChatService").BubbleChatConfiguration.Enabled = not win.Visible end)
+	end)
 	local rb, rbT = E.ribbonTitle(win, "SOUL TREE", "ribbonLilac", 0.4)
 	do -- a smoked obsidian ribbon with a gold rim (directive v14)
 		local sk = rb:FindFirstChild("Skin")
@@ -67,10 +70,10 @@ function M.start(E)
 			local holder = new("Frame", sky, { Name = layer == 1 and "Far" or "Near", Size = UDim2.fromScale(2, 1), BackgroundTransparency = 1, ZIndex = 3 })
 			for _ = 1, layer == 1 and 70 or 34 do
 				local k = layer == 1 and rng:NextNumber(0.008, 0.014) or rng:NextNumber(0.014, 0.022)
-				local st = new("Frame", holder, { Size = UDim2.fromScale(k, k), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(rng:NextNumber(0, 1), rng:NextNumber(0.03, 0.97)), AnchorPoint = MID,
+				local st = new("Frame", holder, { Size = UDim2.fromScale(k, k), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(rng:NextNumber(0, 0.5), rng:NextNumber(0.03, 0.97)), AnchorPoint = MID,
 					BackgroundColor3 = rng:NextNumber() < 0.25 and Color3.fromRGB(200, 190, 255) or WHITE, BackgroundTransparency = rng:NextNumber(0.25, 0.7), BorderSizePixel = 0, ZIndex = 3 })
 				if layer == 2 then new("UICorner", st, { CornerRadius = UDim.new(0.5, 0) }) end
-				local twin = new("Frame", holder, { Size = st.Size, SizeConstraint = st.SizeConstraint, Position = st.Position + UDim2.fromScale(1, 0), AnchorPoint = MID, BackgroundColor3 = st.BackgroundColor3, BackgroundTransparency = st.BackgroundTransparency, BorderSizePixel = 0, ZIndex = 3 }) -- the wrap copy one width over
+				local twin = new("Frame", holder, { Size = st.Size, SizeConstraint = st.SizeConstraint, Position = st.Position + UDim2.fromScale(0.5, 0), AnchorPoint = MID, BackgroundColor3 = st.BackgroundColor3, BackgroundTransparency = st.BackgroundTransparency, BorderSizePixel = 0, ZIndex = 3 }) -- the wrap copy one sky width over (the holder is two skies wide), so the drift wraps without a jump
 				table.insert(twinkle, { st, twin, st.BackgroundTransparency, rng:NextNumber(0, 6.28), rng:NextNumber(0.8, 2.2) })
 			end
 			if layer == 1 then far = holder else near = holder end
@@ -79,10 +82,19 @@ function M.start(E)
 	end
 
 	-- lines between sky points: a thin frame turned to the angle the two points make on screen (the sky is wide, not square)
+	do -- round 2 (Gemini v15_r1: "a flat black box with uniform dots"): soft nebula glows behind the core and each constellation
+		local GLOWIMG = "rbxassetid://77591933607769" -- the soft glow sprite (art/forge/fx), as the forging scenes use it
+		for _, n in { { 0.5, 0.72, 0.62, 1.25, Color3.fromRGB(150, 90, 255), 0.6 }, { 0.2, 0.48, 0.34, 1.0, Color3.fromRGB(60, 220, 170), 0.72 },
+			{ 0.5, 0.33, 0.32, 0.85, Color3.fromRGB(255, 110, 150), 0.74 }, { 0.8, 0.48, 0.34, 1.0, Color3.fromRGB(255, 180, 70), 0.74 } } do
+			new("ImageLabel", sky, { Name = "Nebula", Image = GLOWIMG, ImageColor3 = n[5], ImageTransparency = n[6], BackgroundTransparency = 1, Size = UDim2.fromScale(n[3], n[4]), Position = UDim2.fromScale(n[1], n[2]), AnchorPoint = MID, ZIndex = 3 })
+		end
+	end
 	local lines = {}
 	local function line(a, b, color, z)
+		local g = new("Frame", sky, { AnchorPoint = MID, BackgroundColor3 = color, BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 4 }) -- the soft glow under a lit line
+		new("UICorner", g, { CornerRadius = UDim.new(0.5, 0) })
 		local f = new("Frame", sky, { AnchorPoint = MID, BackgroundColor3 = color, BorderSizePixel = 0, ZIndex = z or 4 })
-		local l = { f = f, a = a, b = b }
+		local l = { f = f, g = g, a = a, b = b }
 		table.insert(lines, l)
 		return l
 	end
@@ -95,6 +107,7 @@ function M.start(E)
 			l.f.Position = UDim2.fromScale((l.a[1] + l.b[1]) / 2, (l.a[2] + l.b[2]) / 2)
 			l.f.Size = UDim2.new(0, len, 0, math.max(2, math.floor(H * 0.012 + 0.5)))
 			l.f.Rotation = math.deg(math.atan2(dy, dx))
+			l.g.Position, l.g.Size, l.g.Rotation = l.f.Position, UDim2.new(0, len + 6, 0, math.max(6, math.floor(H * 0.045 + 0.5))), l.f.Rotation
 		end
 	end
 	sky:GetPropertyChangedSignal("AbsoluteSize"):Connect(layout)
@@ -164,7 +177,7 @@ function M.start(E)
 		end)
 		local ring = new("Frame", sky, { Name = "PickRing", Size = UDim2.fromScale(0.25, 0.25), SizeConstraint = Enum.SizeConstraint.RelativeYY, Position = UDim2.fromScale(look.rank[1][1], look.rank[1][2]), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 5 })
 		new("UICorner", ring, { CornerRadius = UDim.new(0.5, 0) })
-		fig.ring = new("UIStroke", ring, { Color = look.tint, Thickness = 2, Transparency = 1 })
+		fig.ring = new("UIStroke", ring, { Color = look.tint, Thickness = 3, Transparency = 1 })
 		figs[id] = fig
 	end
 	layout()
@@ -215,11 +228,13 @@ function M.start(E)
 			for k, s in fig.ranks do paintStar(s, look.tint, k <= rank, chosen) end
 			for _, s in fig.deco do paintStar(s, look.tint, full, chosen) end
 			fig.branch.f.BackgroundColor3, fig.branch.f.BackgroundTransparency = rank > 0 and look.tint or LINE_OFF, rank > 0 and 0.15 or 0.35
+			fig.branch.g.BackgroundColor3, fig.branch.g.BackgroundTransparency = look.tint, rank > 0 and 0.7 or 1
 			for i, l in fig.links do -- a rank line lights when both its stars are lit; the outline lights when the figure is full
 				local la, lb = look.links[i][1], look.links[i][2]
 				local function lit(n) return (n:sub(1, 1) == "r" and tonumber(n:sub(2)) <= rank) or (n:sub(1, 1) == "d" and full) end
 				local on = lit(la) and lit(lb)
 				l.f.BackgroundColor3, l.f.BackgroundTransparency = on and look.tint or LINE_OFF, on and 0.2 or (chosen and 0.3 or 0.5)
+				l.g.BackgroundColor3, l.g.BackgroundTransparency = look.tint, on and 0.72 or 1
 			end
 			fig.crown.Visible = full
 			fig.ring.Transparency = chosen and 0.15 or 1
@@ -283,6 +298,8 @@ function M.start(E)
 			end
 			local pulse = 0.55 + math.sin(t * 2.4) * 0.08 -- the core breathes
 			core.halo.BackgroundTransparency = pulse
+			local f = figs[pick]
+			if f then f.ring.Transparency = 0.1 + (math.sin(t * 4) + 1) * 0.18 end -- the picked constellation's ring pulses
 		end)
 	end
 	close.Activated:Connect(function() if win.Visible then E.closePanel(win) end end)

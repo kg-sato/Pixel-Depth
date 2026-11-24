@@ -355,15 +355,20 @@ function M.init(c)
 		-- screen); cold, it holds a dark bed of ash slag and a pair of tongs rests across the rim. The chimney moved to the back corner.
 		local CZ = -0.3 -- the crucible's middle, front to back
 		for _, w in { { Vector3.new(3.4, 1.5, 0.4), Vector3.new(0, 4.15, CZ - 1.2) }, { Vector3.new(3.4, 1.5, 0.4), Vector3.new(0, 4.15, CZ + 1.2) },
-			{ Vector3.new(0.4, 1.46, 2.4), Vector3.new(-1.5, 4.15, CZ) }, { Vector3.new(0.4, 1.46, 2.4), Vector3.new(1.5, 4.15, CZ) } } do -- the side walls run into the end walls and stop short of their tops: no shared faces
+			{ Vector3.new(0.4, 1.46, 2.4), Vector3.new(-1.48, 4.15, CZ) }, { Vector3.new(0.4, 1.46, 2.4), Vector3.new(1.48, 4.15, CZ) } } do -- the side walls run into the end walls and stop short of their tops: no shared faces
 			part("CrucibleWall", w[1], fat * CFrame.new(w[2]), stoneD, SL)
 		end
 		for k, y in { 3.75, 4.75 } do -- two iron hoops round the bowl, a little proud of the stone
-			for _, w in { { Vector3.new(3.56, 0.22, 0.1), Vector3.new(0, y, CZ - 1.4 - k * 0.01) }, { Vector3.new(3.56, 0.22, 0.1), Vector3.new(0, y, CZ + 1.4 + k * 0.01) },
+			for _, w in { { Vector3.new(3.64, 0.22, 0.1), Vector3.new(0, y, CZ - 1.4 - k * 0.01) }, { Vector3.new(3.64, 0.22, 0.1), Vector3.new(0, y, CZ + 1.4 + k * 0.01) },
 				{ Vector3.new(0.1, 0.22, 3.1), Vector3.new(-1.7 - k * 0.01, y, CZ) }, { Vector3.new(0.1, 0.22, 3.1), Vector3.new(1.7 + k * 0.01, y, CZ) } } do -- each hoop straddles the stone face it wraps
 				part("CrucibleHoop", w[1], fat * CFrame.new(w[2]), iron, Enum.Material.Metal)
 			end
 		end
+		for _, sx in { -1, 1 } do -- iron carrying handles on both sides and a pouring lip at the front: a crucible, not a box
+			part("CrucibleHandle", Vector3.new(0.14, 0.14, 1.0), fat * CFrame.new(sx * 2.0, 4.5, CZ), iron, Enum.Material.Metal)
+			for _, dz in { -0.43, 0.43 } do part("CrucibleHandleStub", Vector3.new(0.4, 0.12, 0.12), fat * CFrame.new(sx * 1.85, 4.5, CZ + dz), iron, Enum.Material.Metal) end -- each stub sinks into the wall: no end face on its face
+		end
+		part("CrucibleLip", Vector3.new(0.9, 0.24, 0.55), fat * CFrame.new(0, 4.93, CZ - 1.6) * CFrame.Angles(math.rad(-14), 0, 0), stoneD, SL)
 		local melt = part("CrucibleMelt", Vector3.new(2.56, 0.3, 1.96), fat * CFrame.new(0, 4.25, CZ), Color3.fromRGB(58, 48, 62), Enum.Material.Slate)
 		melt.CanCollide = false
 		for k, a in { -0.5, 0.42 } do -- the tongs, resting across the rim
@@ -378,10 +383,10 @@ function M.init(c)
 		sp.Enabled = false -- each player's own screen turns it on while that player's job runs unstirred (Shared.RefineryFX)
 		sp.Parent = stirPt
 		sp.Triggered:Connect(function(plr) stir(plr, sp) end)
-		part("RefineryChimney", Vector3.new(1.0, 3.6, 1.0), fat * CFrame.new(1.6, 5.2, 1.55), stoneD, SL)
-		part("RefineryChimneyRim", Vector3.new(1.4, 0.35, 1.4), fat * CFrame.new(1.6, 7.175, 1.55), copper, Enum.Material.Metal)
-		part("RefineryChimneyTip", Vector3.new(0.8, 0.6, 0.8), fat * CFrame.new(1.6, 7.65, 1.55), stoneD, SL) -- a narrower top: its own outline against the forge's chimney
-		local glow = part("RefineryChimneyGlow", Vector3.new(0.5, 0.12, 0.5), fat * CFrame.new(1.6, 8.01, 1.55), Color3.fromRGB(255, 190, 90), Enum.Material.Neon)
+		part("RefineryChimney", Vector3.new(1.0, 3.6, 1.0), fat * CFrame.new(1.6, 5.2, 1.62), stoneD, SL)
+		part("RefineryChimneyRim", Vector3.new(1.4, 0.35, 1.4), fat * CFrame.new(1.6, 7.175, 1.62), copper, Enum.Material.Metal)
+		part("RefineryChimneyTip", Vector3.new(0.8, 0.6, 0.8), fat * CFrame.new(1.6, 7.65, 1.62), stoneD, SL) -- a narrower top: its own outline against the forge's chimney
+		local glow = part("RefineryChimneyGlow", Vector3.new(0.5, 0.12, 0.5), fat * CFrame.new(1.6, 8.01, 1.62), Color3.fromRGB(255, 190, 90), Enum.Material.Neon)
 		part("RefineryShelf", Vector3.new(3.4, 0.2, 0.9), fat * CFrame.new(0, 0.6, -2.45), stoneL, SL)
 		-- the firebox (Gemini, 2026-11-14: "a flat black box with four yellow stripes"): a deep iron porch, so the fire sits back in
 		-- shadow; a dark red back wall, ember blocks of three heats in front of it, a flame, and two thin bars only

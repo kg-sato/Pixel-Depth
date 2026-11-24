@@ -41,10 +41,6 @@ print("stir prompt on:", C("local pt=workspace.Hub:FindFirstChild('CrucibleStirP
 print("stir:", C("local pt=workspace.Hub:FindFirstChild('CrucibleStirPoint',true) local pr=pt:FindFirstChildOfClass('ProximityPrompt') local c=workspace.CurrentCamera c.CFrame=CFrame.lookAt(c.CFrame.Position,pt.Position) task.wait(0.6) local a0=game.Players.LocalPlayer:GetAttribute('RefineAt') pr:InputHoldBegin() task.wait(0.15) pr:InputHoldEnd() task.wait(0.8) local a1=game.Players.LocalPlayer:GetAttribute('RefineAt') return string.format('%.1f s earlier, stirred=%s, prompt=%s', (a0 or 0)-(a1 or 0), tostring(game.Players.LocalPlayer:GetAttribute('RefineStirred')), tostring(pr.Enabled))"))
 cam(f"({CR}.CFrame*CFrame.new(0,5.5,-7.5)).Position", f"{CR}.Position")
 time.sleep(0.4); shot("crucible_stir")
-# D the crimson shatter on the grab card
-S(P + "game.ReplicatedStorage.Remotes.Fx:FireClient(p,'grabbed',5) return 1"); time.sleep(0.9)
-shot("grab_shatter")
-time.sleep(6)
 # C the Soul Tree
 N.lua("local g=game.Players.LocalPlayer.PlayerGui:FindFirstChild('DailyChest') if g then g.Enabled=false end return 1", "Client")
 N.key("Q"); time.sleep(28)  # the shrine's buys only count at Camp 1's fire (SoulTree checks the campfire)
@@ -56,4 +52,8 @@ C("game.ReplicatedStorage.Remotes.Soul:FireServer('buy','hide') task.wait(0.8) g
 time.sleep(1.5); shot("soul_bought")
 C("game.Players.LocalPlayer:SetAttribute('DevSoulPick','shield') return 1"); time.sleep(1); shot("soul_shield")
 C("game.Players.LocalPlayer:SetAttribute('DevOpen',nil) local w=game.Players.LocalPlayer.PlayerGui:FindFirstChild('SoulTree',true) if w then w.Visible=false end return 1"); time.sleep(1)
+# D the crimson shatter on the grab card, in the caves (round 2: a grab happens there)
+S(P + "game.ReplicatedStorage.Remotes.Fx:FireClient(p,'grabbed',5) return 1"); time.sleep(0.9)
+shot("grab_shatter")
+time.sleep(6)
 print("done")

@@ -107,7 +107,10 @@ function M.start(E)
 				local vs = cam.ViewportSize
 				local x, y = v.X, v.Y
 				if v.Z < 0 then x, y = vs.X - x, vs.Y * 0.9 end -- behind you: it waits low on the side to turn toward
-				x, y = math.clamp(x, vs.X * 0.25, vs.X * 0.83), math.clamp(y, vs.Y * 0.24, vs.Y * 0.8) -- inside the HUD's columns, so a marker never lies on a button
+				local cur = E.gui:FindFirstChild("Currency", true) -- v15 (night_all: on a short view the marker met the HOME button): it stays below the top-left row too
+				local yMin = vs.Y * 0.24
+				if cur and cur:IsA("GuiObject") and cur.Visible then yMin = math.max(yMin, cur.AbsolutePosition.Y + cur.AbsoluteSize.Y + inset + m.pill.AbsoluteSize.Y + 6) end
+				x, y = math.clamp(x, vs.X * 0.25, vs.X * 0.83), math.clamp(y, math.min(yMin, vs.Y * 0.7), vs.Y * 0.8) -- inside the HUD's columns, so a marker never lies on a button
 				local off = v.Z < 0 or math.abs(x - v.X) > 2 or math.abs(y - v.Y) > 2 -- pushed in from where the spot really is
 				m.tip.Position = (not off) and UDim2.fromScale(0.5, 1.02) or UDim2.fromScale((v.Z < 0 and vs.X - v.X or v.X) < vs.X / 2 and -0.02 or 1.02, 0.5)
 				m.pill.Position = UDim2.fromOffset(x, y - inset) -- PixelHUD starts below the top bar inset

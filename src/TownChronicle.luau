@@ -23,13 +23,13 @@ function M.start(E)
 		local ok, rows = pcall(HttpService.JSONDecode, HttpService, m:GetAttribute("Rows") or "[]")
 		if not ok or type(rows) ~= "table" then rows = {} end
 		local me
+		for _, r in rows do if type(r) == "table" and r.u == plr.UserId then me = r end end -- the server lists everyone; the stone shows the first six
 		for i = 1, 6 do
 			local r = rows[i]
 			local nameL, statL = sg:FindFirstChild("Name" .. i), sg:FindFirstChild("Stat" .. i)
 			if nameL and statL then
 				if type(r) == "table" then
 					local mine = r.u == plr.UserId
-					if mine then me = r end
 					nameL.Text = i .. ".  " .. tostring(r.n or "MINER")
 					nameL.TextColor3 = mine and MINE or IVORY
 					local d = math.clamp(tonumber(r.d) or 0, 0, 2)

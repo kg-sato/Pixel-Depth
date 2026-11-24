@@ -27,12 +27,12 @@ function M.new(gui, token, sfx)
 		f.Parent = props.Parent or gui
 		return f
 	end
-	local gauge = frame({ Name = "HearthHeat", Size = UDim2.fromScale(0.4, 0.1), Position = UDim2.fromScale(0.5, 0.74), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 10, 18), BackgroundTransparency = 0.12, Visible = false, ZIndex = 20 })
+	local gauge = frame({ Name = "HearthHeat", Size = UDim2.fromScale(0.44, 0.13), Position = UDim2.fromScale(0.5, 0.22), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 10, 18), BackgroundTransparency = 0.12, Visible = false, ZIndex = 20 })
 	Instance.new("UICorner", gauge).CornerRadius = UDim.new(0.3, 0)
 	local edge = Instance.new("UIStroke")
-	edge.Color, edge.Thickness, edge.Transparency = Color3.fromRGB(255, 170, 80), 2, 0.2
+	edge.Color, edge.Thickness, edge.Transparency = Color3.fromRGB(214, 150, 70), 3, 0.05 -- a bronze rim (Gemini v15_r1: "unstyled, flat")
 	edge.Parent = gauge
-	local bar = frame({ Parent = gauge, Size = UDim2.fromScale(0.92, 0.32), Position = UDim2.fromScale(0.5, 0.64), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = WHITE, ZIndex = 21 })
+	local bar = frame({ Parent = gauge, Size = UDim2.fromScale(0.92, 0.26), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = WHITE, ZIndex = 21 })
 	Instance.new("UICorner", bar).CornerRadius = UDim.new(0.5, 0)
 	local grad = Instance.new("UIGradient") -- crimson at the cold and the scorched ends, white-hot gold in the middle
 	grad.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, Color3.fromRGB(150, 30, 40)), ColorSequenceKeypoint.new(0.3, Color3.fromRGB(240, 110, 40)), ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 200, 90)), ColorSequenceKeypoint.new(0.7, Color3.fromRGB(240, 110, 40)), ColorSequenceKeypoint.new(1, Color3.fromRGB(150, 30, 40)) })
@@ -59,11 +59,16 @@ function M.new(gui, token, sfx)
 		return l, st
 	end
 	local touchOnly = UIS.TouchEnabled and not UIS.KeyboardEnabled
-	words(gauge, "HEARTH HEAT", UDim2.fromScale(0.42, 0.34), UDim2.fromScale(0.27, 0.22), Color3.fromRGB(255, 196, 110), Enum.TextXAlignment.Left)
-	words(gauge, touchOnly and "TAP IN THE GOLD!" or "STRIKE IN THE GOLD!  [SPACE]", UDim2.fromScale(0.5, 0.3), UDim2.fromScale(0.72, 0.22), WHITE, Enum.TextXAlignment.Right)
+	words(gauge, "HEARTH HEAT", UDim2.fromScale(0.6, 0.27), UDim2.fromScale(0.5, 0.17), Color3.fromRGB(255, 196, 110))
+	words(gauge, touchOnly and "TAP THE BAR IN THE GOLD!" or "STRIKE IN THE GOLD!   SPACE / CLICK THE BAR", UDim2.fromScale(0.8, 0.22), UDim2.fromScale(0.5, 0.83), WHITE) -- under the bar, not squeezed beside the title
 	local result, rStroke = words(gui, "", UDim2.fromScale(0.6, 0.12), UDim2.fromScale(0.5, 0.36), WHITE, nil, 21)
 	rStroke.Color, rStroke.Thickness = Color3.fromRGB(70, 30, 10), 4
 	result.Visible = false
+	local hit = Instance.new("TextButton") -- the whole gauge is the STRIKE button for a mouse or a finger
+	hit.Name, hit.Text, hit.BackgroundTransparency, hit.AutoButtonColor, hit.ZIndex = "Strike", "", 1, false, 25
+	hit.Size, hit.Position, hit.AnchorPoint = UDim2.fromScale(1.1, 1.6), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5)
+	hit.Parent = gauge
+	hit.Activated:Connect(function() self:press() end)
 	self.flash = frame({ Name = "HeatFlash", Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(255, 236, 190), BackgroundTransparency = 1, ZIndex = 19 }) -- the golden impact frame
 	self.gauge, self.needle, self.result = gauge, needle, result
 	return self
@@ -109,15 +114,18 @@ function M:start()
 	end)
 	CAS:BindActionAtPriority("PD_HeatStrike", function(_, state)
 		if state ~= Enum.UserInputState.Begin then return Enum.ContextActionResult.Pass end
-		if self.on and self.startT and not self.pressed then
-			self.pressed = true
-			self.R:FireServer("press", self.token)
-			self.sfx("hit", 1.1)
-			return Enum.ContextActionResult.Sink
-		end
+		if self:press() then return Enum.ContextActionResult.Sink end
 		return Enum.ContextActionResult.Pass
-	end, false, 3000, Enum.KeyCode.Space, Enum.KeyCode.ButtonA, Enum.UserInputType.MouseButton1, Enum.UserInputType.Touch)
+	end, false, 3000, Enum.KeyCode.Space, Enum.KeyCode.ButtonA) -- clicks and taps go to the gauge's own button, so a click on SKIP never spends the strike (Codex)
 	self.R:FireServer("start", self.token)
+end
+
+function M:press() -- one strike a beat, only once the server has started the needle
+	if not (self.on and self.startT and not self.pressed) then return false end
+	self.pressed = true
+	self.R:FireServer("press", self.token)
+	self.sfx("hit", 1.1)
+	return true
 end
 
 function M:step() -- each frame while on: move the needle; give up when the server is silent or the time is out

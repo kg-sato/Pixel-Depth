@@ -57,7 +57,13 @@ function M.start(E)
 	end
 	local active = nil
 	local nextBubble = 0
+	local nextFind = 0
 	RunService.Heartbeat:Connect(function()
+		if melt and melt.Parent and (not prompt or not prompt.Parent) and os.clock() > nextFind then -- the prompt may replicate after the melt (Codex): look again once a second
+			nextFind = os.clock() + 1
+			local pt = workspace.Hub:FindFirstChild("CrucibleStirPoint", true)
+			prompt = pt and pt:FindFirstChildOfClass("ProximityPrompt")
+		end
 		if not melt or not melt.Parent then
 			if not find() then return end
 			if folder then folder:Destroy() end -- the town was built again: start over on the new crucible

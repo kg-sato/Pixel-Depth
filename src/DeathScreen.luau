@@ -41,12 +41,17 @@ function M.start(E)
 	-- edge-crack segments, thinner and with side branches). With reduced motion they are simply there, no creep.
 	local shatter = new("CanvasGroup", layer, { Name = "Shatter", Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, GroupTransparency = 1, Visible = false, ZIndex = 62 })
 	local segs = {}
+	for i, rot in { 0, 180, 90, 270 } do -- round 2 (Gemini v15_r1 3/10: thin scribbles over an untinted scene): a crimson tint closes in from every edge
+		local tint = new("Frame", shatter, { Name = "Tint" .. i, Size = UDim2.fromScale(1, 1), BackgroundColor3 = Color3.fromRGB(150, 14, 46), BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 62 })
+		new("UIGradient", tint, { Rotation = rot, Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.25), NumberSequenceKeypoint.new(0.28, 0.85), NumberSequenceKeypoint.new(0.45, 1), NumberSequenceKeypoint.new(1, 1) }) })
+	end
 	do
 		local rnd = Random.new(23)
-		local function seg(a, b, k, w, branch)
-			local f = new("Frame", shatter, { AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = branch and Color3.fromRGB(236, 120, 150) or Color3.fromRGB(255, 92, 124), BorderSizePixel = 0, Visible = false, ZIndex = 62 })
-			new("UIStroke", f, { Color = Color3.fromRGB(110, 16, 56), Thickness = branch and 1 or 1.5, Transparency = 0.25 })
-			table.insert(segs, { a = a, b = b, k = k, w = w, f = f })
+		local function seg(a, b, k, w, branch) -- a white-hot core line with a crimson glow round it and a wide soft bloom under it
+			local glow = new("Frame", shatter, { AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(255, 40, 90), BackgroundTransparency = 0.72, BorderSizePixel = 0, Visible = false, ZIndex = 62 })
+			local f = new("Frame", shatter, { AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = branch and Color3.fromRGB(255, 190, 210) or Color3.fromRGB(255, 236, 242), BorderSizePixel = 0, Visible = false, ZIndex = 62 })
+			new("UIStroke", f, { Color = Color3.fromRGB(230, 30, 80), Thickness = branch and 1.5 or 2.5, Transparency = 0.1 })
+			table.insert(segs, { a = a, b = b, k = k, w = w, f = f, g = glow })
 		end
 		for e = 1, 16 do -- sixteen cracks, four from each edge, each a jagged chain toward the middle that stops short of the card
 			local side = (e - 1) % 4 + 1
@@ -56,12 +61,12 @@ function M.start(E)
 			for k = 1, steps do
 				local ang = math.atan2(dir.Y, dir.X) + rnd:NextNumber(-0.65, 0.65)
 				local q = p + Vector2.new(math.cos(ang), math.sin(ang)) * rnd:NextNumber(0.025, 0.05)
-				seg(p, q, (k - 1) / steps, math.max(1.2, 4.2 - k * 0.6))
+				seg(p, q, (k - 1) / steps, math.max(2, 5.5 - k * 0.7))
 				if (k == 2 or k == 3) and rnd:NextNumber() < 0.7 then -- a thin side branch
 					local b0, ba = q, ang + (rnd:NextNumber() < 0.5 and -1 or 1) * rnd:NextNumber(0.8, 1.3)
 					for j = 1, 2 do
 						local b1 = b0 + Vector2.new(math.cos(ba), math.sin(ba)) * rnd:NextNumber(0.018, 0.032)
-						seg(b0, b1, (k - 0.5 + j * 0.25) / steps, 1.2, true)
+						seg(b0, b1, (k - 0.5 + j * 0.25) / steps, 1.6, true)
 						b0, ba = b1, ba + rnd:NextNumber(-0.5, 0.5)
 					end
 				end
@@ -74,12 +79,12 @@ function M.start(E)
 		local vp = layer.AbsoluteSize
 		for _, sg in segs do
 			local on = u > sg.k * 0.92
-			sg.f.Visible = on
+			sg.f.Visible, sg.g.Visible = on, on
 			if on then
 				local a, b = sg.a * vp, sg.b * vp
-				sg.f.Position = UDim2.fromOffset((a.X + b.X) / 2, (a.Y + b.Y) / 2)
-				sg.f.Size = UDim2.fromOffset((b - a).Magnitude + 1, sg.w)
-				sg.f.Rotation = math.deg(math.atan2(b.Y - a.Y, b.X - a.X))
+				local mid, len, rot = UDim2.fromOffset((a.X + b.X) / 2, (a.Y + b.Y) / 2), (b - a).Magnitude + 1, math.deg(math.atan2(b.Y - a.Y, b.X - a.X))
+				sg.f.Position, sg.f.Size, sg.f.Rotation = mid, UDim2.fromOffset(len, sg.w), rot
+				sg.g.Position, sg.g.Size, sg.g.Rotation = mid, UDim2.fromOffset(len + 4, sg.w * 4), rot
 			end
 		end
 	end

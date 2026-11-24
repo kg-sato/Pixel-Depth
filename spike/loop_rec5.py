@@ -20,6 +20,7 @@ here = pathlib.Path(__file__).resolve().parent
 game, ws = here.parent, here.parent.parent.parent
 sys.path.insert(0, str(here))
 import night as N
+from prompt_test import trigger
 name = sys.argv[1] if len(sys.argv) > 1 else "loop3"
 VENV = r"C:\Users\kgsat\Documents\Roblox\Hunyuan3D\.venv\Scripts\python.exe"
 video = game / "captures" / "loop" / f"{name}.mp4"; video.parent.mkdir(parents=True, exist_ok=True)
@@ -31,6 +32,11 @@ PILOT = re.search(r"PILOT = r'''(.*?)'''", (here / "boss_fight_test.py").read_te
 def S(code): return (N.lua(code, "Server").splitlines() or ["?"])[-1]
 def C(code): return (N.lua(code, "Client").splitlines() or ["?"])[-1]
 def key(k, wait): N.key(k); time.sleep(wait)
+def hold_cam(eye, at, secs=7):  # v15: a camera bound after the game's own (the town camera), with the crew pets out of shot (the game's cutscenes hide them the same way)
+    C("local RS=game:GetService('RunService') _G.TourN=(_G.TourN or 0)+1 local nm='TourCam'.._G.TourN game.Players.LocalPlayer:SetAttribute('HidePetsUntil',os.clock()+" + str(secs) + ") "
+      "local C=require(game.ReplicatedStorage.Shared.Config) local O=C.CAVE2_ORIGIN local cv=workspace:FindFirstChild('Caves') "
+      "local eye,at=" + eye + "," + at + " RS:BindToRenderStep(nm,2000,function() local c=workspace.CurrentCamera c.CameraType=Enum.CameraType.Scriptable c.CFrame=CFrame.lookAt(eye,at) end) "
+      "task.delay(" + str(secs) + ",function() pcall(function() RS:UnbindFromRenderStep(nm) end) workspace.CurrentCamera.CameraType=Enum.CameraType.Custom end) return 1")
 def look(expr): C("local C=require(game.ReplicatedStorage.Shared.Config) local O=C.CAVE2_ORIGIN local cv=workspace.Caves local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.Position," + expr + ") return 1")
 
 
@@ -62,6 +68,13 @@ click("Timers.Main.Open"); time.sleep(2.4); click("Timers.Main.Open"); time.slee
 N.run("user_mouse_input", {"actions": [{"action": "moveTo", "x": 300, "y": 500}], "datamodel_type": "Client"}); time.sleep(0.5)
 S(P + "p:SetAttribute('DevGeodes',2) local m=workspace.Hub:FindFirstChild('RefineryMouth') h.CFrame=CFrame.lookAt(m.Position+m.CFrame.LookVector*3.5+Vector3.new(0,2,0),m.Position) return 1"); mark("the refinery: a geode goes in"); time.sleep(2.5)
 C("local pr=workspace.Hub.RefineryMouth:FindFirstChildOfClass('ProximityPrompt') local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.Position,pr.Parent.Position) task.wait(0.5) pr:InputHoldBegin() task.wait(0.15) pr:InputHoldEnd() return 1"); time.sleep(4)
+mark("the crucible: the geode melts in the open pot; one stir takes 5 s off")  # v15 (Master Directive phase 3)
+CRU = "workspace.Hub:FindFirstChild('CrucibleMelt',true)"
+hold_cam(f"({CRU}.CFrame*CFrame.new(1.5,6,-8)).Position", f"{CRU}.Position", 8); time.sleep(2.5)
+if globals().get("FORCE"): FORCE.set()
+C("local pt=workspace.Hub:FindFirstChild('CrucibleStirPoint',true) local pr=pt:FindFirstChildOfClass('ProximityPrompt') task.wait(0.2) pr:InputHoldBegin() task.wait(0.15) pr:InputHoldEnd() return 1"); time.sleep(0.6)
+if globals().get("FORCE"): FORCE.set()  # the stir's spark burst
+time.sleep(4)
 mark("Geode Timing Crack on the workbench: one press on the gold ring")
 S(P + "local an=workspace.Hub.Forge:FindFirstChild('Bench',true) local away=((an.Position-workspace.Hub.Forge:FindFirstChild('Anvil',true).Position)*Vector3.new(1,0,1)).Unit h.CFrame=CFrame.lookAt(an.Position+away*3+Vector3.new(0,3,0),an.Position) return 1"); time.sleep(2)
 C("task.spawn(function() local RS=game.ReplicatedStorage local Cf=require(RS.Shared.Config) local t0 local c=RS.Remotes.Fx.OnClientEvent:Connect(function(k,w,a) if k=='crack' and w=='start' then t0=a end end) "
@@ -80,6 +93,11 @@ C("local g for _,d in workspace.Hub.TrophyHouse:GetChildren() do if d.Name=='Tro
   "RS:BindToRenderStep('tourcam',2000,function() local u=os.clock()-t if u>11 then RS:UnbindFromRenderStep('tourcam') return end "
   "local far=true cur=(cur or cam.CFrame):Lerp(CFrame.lookAt((g.CFrame*CFrame.new(far and 6.9 or 18.1,far and 5 or 1.6,far and 20 or 6.5)).Position,(g.CFrame*CFrame.new(far and 6.9 or 18.1,far and -0.6 or 0.1,0)).Position),0.1) cam.CFrame=cur end) return 1"); time.sleep(4)
 S(P + "p:SetAttribute('DevMarquee','Ninering') return 1"); time.sleep(8)
+mark("the Deep Chronicle: the miners of this server on a stone in town")  # v15 (Master Directive phase 3)
+S(P + "local s=workspace.Hub.Chronicle.ChronicleSlab h.CFrame=CFrame.lookAt((s.CFrame*CFrame.new(1.5,-5.4,8)).Position,(s.CFrame*CFrame.new(0,-5.4,0)).Position) return 1"); time.sleep(1.5)
+hold_cam("(workspace.Hub.Chronicle.ChronicleSlab.CFrame*CFrame.new(-4,1.5,15)).Position", "workspace.Hub.Chronicle.ChronicleSlab.Position+Vector3.new(0,0.5,0)", 7); time.sleep(2.5)
+if globals().get("FORCE"): FORCE.set()
+time.sleep(4.5)
 S(P + "p:SetAttribute('DevCodex',12) return 1"); time.sleep(1.5)
 mark("the Codex: found ores and pets, and the luck they give"); key("K", 4); key("K", 0.8)
 mark("bag"); key("B", 2.5); key("B", 0.8)
@@ -89,9 +107,42 @@ mark("settings: middle, left, right"); key("N", 3); key("A", 2); key("D", 1); ke
 # directive v13: G is the pickaxe clink away from Bolt's anvil, and the forge beside it: walk to the anvil first
 S(P + "local a=workspace.Hub:FindFirstChild('Anvil',true) h.CFrame=CFrame.lookAt(a.Position+Vector3.new(3,2,4),Vector3.new(a.Position.X,a.Position.Y+2,a.Position.Z)) return 1"); time.sleep(1.5)
 mark("forge"); key("G", 5); key("G", 1.5)
-mark("a Legendary hatch: Fafnir"); S("game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1], 'hatch', 'Fafnir') return 1"); time.sleep(16.5)  # it closes itself 6 s after the burst
+mark("HEAT & BLOW: a new pickaxe, its forging scene and a strike in the gold")  # v15 (Master Directive phase 4); the press is sent by script when the needle is in the gold
+S(P + "p:SetAttribute('DevGold',5000) p:SetAttribute('DevOres',60) return 1"); time.sleep(1.2)
+C("_G.HT={} local R=game.ReplicatedStorage.Remotes R.Heat.OnClientEvent:Connect(function(k,id,a) if k=='start' then _G.HT.start=a _G.HT.id=id end end) R.Buy:FireServer('pick') "
+  "task.spawn(function() local Cf=require(game.ReplicatedStorage.Shared.Config) local t0=os.clock() while not _G.HT.start and os.clock()-t0<30 do task.wait() end if not _G.HT.start then return end "
+  "task.wait(1.1) while true do local el=workspace:GetServerTimeNow()-_G.HT.start if math.abs(Cf.heatAt(el+0.05)-0.5)<0.03 or el>2.3 then break end task.wait() end R.Heat:FireServer('press',_G.HT.id) end) return 1")
+for _ in range(100):
+    if C("return tostring(_G.HT and _G.HT.start~=nil)") == "true": break
+    time.sleep(0.2)
+time.sleep(0.5)
+if globals().get("FORCE"): FORCE.set()  # the HEARTH HEAT gauge
+time.sleep(1.0)
+if globals().get("FORCE"): FORCE.set()  # PERFECT FORGE!
+time.sleep(9)
+mark("a Legendary hatch: Fafnir")
+C("_G.V15H=nil local PV=require(game.ReplicatedStorage.Shared.PetVoxels) if not _G.V15HP then _G.V15HP=PV.hero PV.hero=function(m) _G.V15H=os.clock() return _G.V15HP(m) end end return 1")  # v15: note when the pet lands (its showcase starts)
+S("workspace:SetAttribute('DevHeroSlow',2) game.ReplicatedStorage.Remotes.Fx:FireClient(game.Players:GetPlayers()[1], 'hatch', 'Fafnir') return 1")  # the showcase at half speed so a still lands in each beat
+t_h = time.time()
+for _ in range(80):
+    if C("return tostring(_G.V15H~=nil)") == "true": break
+    time.sleep(0.15)
+mark("the hatch showcase: gather, then the rear-up roar")
+if globals().get("FORCE"): FORCE.set()  # beat 1, the gather
+time.sleep(1.3)
+if globals().get("FORCE"): FORCE.set()  # beat 2, the rear-up roar
+S("workspace:SetAttribute('DevHeroSlow',nil) return 1")
+time.sleep(max(1, 16.5 - (time.time() - t_h)))  # it closes itself 6 s after the burst
 mark("Q: ride down"); key("Q", 30)
 mark("arrival at Camp 1")
+time.sleep(3)
+mark("the Soul Tree at the campfire: three constellations round the shard star")  # v15 (Master Directive phase 2)
+S(P + "p:SetAttribute('DevSoul',14) return 1"); time.sleep(1)
+trigger("SoulTree", "true"); time.sleep(0.8)
+C("local R=game.ReplicatedStorage.Remotes R.Soul:FireServer('buy','hide') task.wait(0.6) R.Soul:FireServer('buy','flare') task.wait(0.6) R.Soul:FireServer('buy','hide') task.wait(0.8) return 1"); time.sleep(1.2)
+if globals().get("FORCE"): FORCE.set()
+time.sleep(3)
+C("local w=game.Players.LocalPlayer.PlayerGui:FindFirstChild('SoulTree',true) if w then w.Visible=false end return 1"); time.sleep(1)
 S(P + "local c=cv.Spot_Camp.Value.WorldPosition h.CFrame=CFrame.lookAt(c+Vector3.new(0,3,14),c+Vector3.new(0,3,0)) return 1"); time.sleep(2)  # Cave v2: the camp spot (zip 1 is in the cathedral now)
 mark("HOME on the wheel: the hearthstone hold")
 C("local p=game.Players.LocalPlayer p:SetAttribute('DevWheel',nil) p:SetAttribute('DevWheel',4) return 1"); time.sleep(6)

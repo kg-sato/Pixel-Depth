@@ -1202,8 +1202,16 @@ CrewR.OnServerEvent:Connect(function(plr, kind, a, b, c, d)
 	if not ok then return end
 	local args = table.pack(a, b, c, d)
 	if kind == "s" and run.gap then args[4] = run.gap end -- v15: riders see the server's gap, never the driver's
-	if kind == "p" and b == true and c ~= true and run.gap and os.clock() - (run.stumbleAt or 0) > 1 then -- a stumble lets the Gloom close in
-		-- shortcut: that the cart hit something is the driver's word (as every hazard is); one a second at most, and it only ever costs the crew
+	if kind == "s" then run.dist = a end
+	if kind == "r" or kind == "o" or kind == "b" or kind == "g" or kind == "c" then -- v15 (Codex): every hazard the driver's cart puts on the rail, in order: a hazard's number is its place here
+		run.haz = run.haz or {}
+		if #run.haz < 600 then table.insert(run.haz, { at = (kind == "r" or kind == "o") and b or a, orb = kind == "o" }) end
+	end
+	local hz = kind == "p" and run.haz and run.haz[a]
+	if hz and b == true and not hz.orb and not hz.used and run.gap and workspace:GetServerTimeNow() >= run.gapAt and math.abs((run.dist or 0) - hz.at) < 25 and os.clock() - (run.stumbleAt or 0) > 1 then -- a stumble lets the Gloom close in
+		-- shortcut: that the cart hit something is the driver's word (as every hazard is); only a real hazard the cart has reached, each
+		-- one once, one a second at most, never in the countdown (Codex 2026-11-23: a driver could repeat hits to grief the crew's catch)
+		hz.used = true
 		run.stumbleAt = os.clock()
 		crew.gloomTo(run, workspace:GetServerTimeNow())
 		run.gap = math.max(0, run.gap - 0.35)
@@ -1283,7 +1291,7 @@ task.spawn(function() -- v15: the Deep Chronicle in town (HubBuilder's monolith,
 				if a.e ~= b.e then return a.e > b.e end
 				return a.u < b.u
 			end)
-			while #rows > 6 do table.remove(rows) end
+			while #rows > 40 do table.remove(rows) end -- the stone shows the first six; everyone's own line is in the list for their next mark (Codex)
 			local j = HS:JSONEncode(rows)
 			if m:GetAttribute("Rows") ~= j then m:SetAttribute("Rows", j) end
 		end
@@ -2454,7 +2462,8 @@ local function onJoin(plr)
 	s.gift = Retention.cleanGift(d.gift)
 	s.refine = Retention.cleanRefine(d.refine)
 	s.refineStir = math.clamp(math.floor(tonumber(d.refineStir) or 0), 0, 1e6) -- v15; a save from before has 0
-	s.refineN = math.clamp(math.floor(tonumber(d.refineN) or 0), 0, 1e6) -- saved since 2026-11-22 (Codex: it reset every session); a save from before has 0, so its next job is short once
+	s.refineN = math.clamp(math.floor(tonumber(d.refineN) or 0), 0, 1e6)
+	if s.refine > 0 and s.refineN == 0 then s.refineN = 1 end -- a job running from a save before refineN was kept: it is job 1, not stirred (Codex) -- saved since 2026-11-22 (Codex: it reset every session); a save from before has 0, so its next job is short once
 	s.charms = {}
 	for _, ch in C.CHARMS do if type(d.charms) == "table" and d.charms[ch.id] == true then s.charms[ch.id] = true end end
 	for _, ch in C.CHARMS do plr:SetAttribute("Charm_" .. ch.id, C.CHARMS_ON and s.charms[ch.id] == true or nil) end -- the client widens prompts from this

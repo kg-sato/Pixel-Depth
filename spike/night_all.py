@@ -56,6 +56,11 @@ TESTS = [  # script, [(what, text that must be in the output)]
         ("event pill shows the surge", "GOLD SURGE ON"), ("friends are counted", "board: 2/5 FRIENDS HERE / +15% ORE VALUE  +20% EGG LUCK"), ("friends luck keeps the odds at 100", "egg odds, 2 friends: 57.00 25.00 12.00 4.80 1.08 0.12 sum 100.00 | none: 60.00 25.00 10.00 4.00 0.90 0.10 | 99 friends: 0.15 0.10 60.00"), ("the odds panel shows the friends luck", "odds panel, 2 friends: 57% 12% 4.8% 1.08% 0.12% / FRIENDS: EPIC+ LUCK +20%"), ("rift is off by default", "rift off: 1 in the Clay Caves, 1 in Camp 1"), ("rift triples Clay Caves ore only", "rift on: 3 in the Clay Caves, 1 in Camp 1"), ("rift crystal shows", "crystal: true"), ("refinery refuses without a geode", "refinery, no geode: none"), ("refinery starts once", "refinery, a geode in, pressed again: none start | none start wait"), ("refinery pays once", "refinery, done: none start wait paid"), ("a geode cracked on the seam is perfect", "geode crack, on the seam: done perfect 5 30"), ("a geode cracked at once is bad", "geode crack, pressed at once: done bad 1 15"), ("no geode, no crack", "geode crack, no geode: none nil nil nil"), ("refinery is empty after", "refinery, empty again: none start wait paid none"), ("refinery refuses from far away", "refinery, pressed from far away: none start wait paid none" + chr(10)), ("no client errors", "client errors: 0"), ("no server errors", "server errors: 0")]),
     ("verify_night.py", [("wind-up dodge", "after stepping away 100"), ("way home embers", "(PASS over 0), at camp 0 (PASS 0)"), ("the lantern orb has its fuel arc", "fuel ring: true")]),
     ("coop_test.py", [("directive v13 co-op, FTUE and save checks", "8 of 8 checks passed")]),
+    ("v15_sec_test.py", [("no stir without a refine job", "PASS no job: a stir changes nothing"), ("a stir takes 5 s off", "PASS first stir takes 5 s off"), ("one stir a job", "PASS second stir on the same job is refused"),
+        ("a new pickaxe hands out a forge token", "PASS a new pickaxe hands out a token"), ("a press before start spends the token", "PASS a press before start uses the token up"),
+        ("forged or old tokens ignored", "PASS a forged or old token is ignored"), ("PERFECT pays the rebate once", "PASS a press in the gold is PERFECT and pays the rebate once"),
+        ("an old token is dead", "PASS a token older than"), ("a miss pays nothing", "PASS a press far from the gold is a miss")]),  # v15
+    ("pet_clear_test.py", [("pets stay out of the Clay columns", "RESULT PASS")]),  # v15
 ]
 # which source files each test exercises (src names without .luau); the quick mode picks tests by these
 COVER = {
@@ -68,6 +73,7 @@ COVER = {
     "townfill_test.py": ["TownFill"], "menu_test.py": ["HudCompact", "RetentionTimers", "UpgradeTracker"], "chime_test.py": ["CrystalChimes", "ClayCaves"], "codex_test.py": ["CodexUI"], "marquee_test.py": ["Marquee"], "retention_test.py": ["Retention", "RetentionTimers", "LanternTether", "CaveEvents", "ClayCaves", "GeodeCrack"],
     "verify_night.py": ["MiningReticle", "Juice", "VoxelFractureFX", "CaveBuilder"],
     "coop_test.py": ["Ping", "PingRelay", "Clink", "Gloom", "FtueGate", "Config", "CaveProps", "ClayCaves"],
+    "v15_sec_test.py": ["Retention", "RefineryFX", "HeatBeat", "ForgeCutscene", "ForgeStory", "ForgeUI"], "pet_clear_test.py": ["PetCompanion", "PetVoxels"],  # v15
 }
 SMOKE = ["load_test.py", "opts_test.py", "marquee_test.py"]  # short, and between them they load every script on both sides
 CORE = {"PixelClient.client", "PixelServer.server", "Config"}  # touch everything: in quick mode they only add the smoke set
