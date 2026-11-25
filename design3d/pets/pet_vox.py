@@ -465,7 +465,9 @@ def kobold(v):
     v.paint("Dark", lambda x, y, z: (y % 0.36) < 0.07, part="Body", only={"Shale"})
     shade(v, "Clay")
     scales(v, "Body", (0, 1.7, 3.3), (0, -2.15, 2.9), rows=11, arc=(-100, 100), size=0.36, col="Tile", rim="TileRim")
-    v.paint("Glow", lambda x, y, z: nz(x, y, z, 0.3) > 0.72 and z > 3.3, part="Body", only={"TileRim"})
+    v.paint("Glow", lambda x, y, z: nz(x, y, z, 0.3) > 0.58 and z > 3.1, part="Body", only={"TileRim"})
+    for st in ([(0, 1.62, 2.0), (0, 1.62, 2.75)], [(0, 1.62, 2.55), (0.3, 1.55, 2.75)], [(0, 1.62, 2.55), (-0.3, 1.55, 2.75)], [(0, 1.62, 2.2), (0.25, 1.58, 2.05)], [(0, 1.62, 2.2), (-0.25, 1.58, 2.05)]):
+        v.line("Body", "Glow", st, r=0.06)
     v.anchor("back", "Body", (0, -0.2, 4.7))
     # the head: a long pangolin snout, a trilobite shell visor with a ridge and segments, ember eyes under it, gargoyle horns
     v.joint("Head", (0, 1.9, 3.35), "Body", "head")
@@ -478,7 +480,7 @@ def kobold(v):
     v.cap("Head", "Tile", (0, 1.6, 3.85), (0, 3.25, 3.6), 0.13, 0.08)
     shade(v, "Clay", parts={"Head"})
     for s in (-1, 1):
-        v.eye("Head", (s * 0.48, 2.98, 3.12), (s * 0.8, 0.6, 0.0), w=0.28, h=0.2)
+        v.eye("Head", (s * 0.48, 2.98, 3.12), (s * 0.8, 0.6, 0.0), w=0.34, h=0.24)
         v.curve("Head", "Claw", [(s * 0.62, 2.15, 3.75), (s * 0.95, 1.85, 4.2), (s * 1.05, 1.35, 4.45), (s * 0.95, 1.05, 4.3)], [0.13, 0.11, 0.07, 0.03])
         v.blade("Head", "Clay", (s * 0.72, 2.1, 3.4), (s * 1.15, 1.85, 3.6), 0.3, thick=0.12, normal=(0, 0.3, 1))
     v.anchor("eyes", "Head", (0, 3.15, 3.1))
@@ -491,6 +493,8 @@ def kobold(v):
             t = V(s * 1.5 + k * 0.24, 2.65, 0.2)
             v.curve(L + "3", "Claw", [t + V(0, -0.2, 0.25), t + V(0, 0.35, 0.3), t + V(0, 0.75, 0.0)], [0.15, 0.1, 0.03])
         shade(v, "Clay", parts={L + "1", L + "2"})
+        for k in range(2):
+            v.torus(L + "2", "Glow", V(s * 1.55, 1.3 + 0.35 * k, 1.75 - 0.55 * k), (0, 0.35, 1), 0.47 - 0.04 * k, 0.04)
         B = "LegBL" if s < 0 else "LegBR"
         leg2(v, B, (s * 0.92, -1.6, 2.7), (s * 1.05, -0.9, 1.6), (s * 1.05, -1.75, 0.68), (s * 1.05, -1.55, 0.0), (0.72, 0.5, 0.36, 0.34), "Clay", front=False, claw="Claw")
         shade(v, "Clay", parts={B + "1", B + "2"})
@@ -502,7 +506,8 @@ def kobold(v):
         v.joint(nm, tuple(pts[i]), "Body" if i == 0 else f"Tail{i}", "tail")
         v.cap(nm, "Clay", pts[i], pts[i + 1], rad[i], rad[i + 1])
         scales(v, nm, pts[i + 1], pts[i], rows=2, arc=(-110, 110), size=max(0.16, rad[i] * 0.48), col="Tile", rim="TileRim")
-    v.cluster("Tail5", "Crystal", pts[5], (0, -0.6, 0.5), 0.6, n=5, seed=3)
+    v.ell("Tail5", "Glow", pts[5] + V(0, 0, 0.05), (0.2, 0.2, 0.2))
+    v.cluster("Tail5", "Crystal", pts[5], (0, -0.6, 0.5), 0.8, n=6, seed=3)
     v.anchor("tail", "Tail5", pts[5] + V(0, -0.2, 0.3))
     ground(v)
 
@@ -900,6 +905,13 @@ def selkie(v):
         p = pts[i]; out = (p - C0); out.normalize()
         v.box("Body", "Glow", p + out * rad[i] * 0.92 + V(0.0, 0, 0), (0.6 * rad[i] + 0.1, 0.1, 0.1))
     v.anchor("shell", "Body", C0 + V(0, 0, 1.3))
+    for s2 in (-1, 1):
+        for k in range(6):
+            q = surf(v, "Body", (0, 1.4 - 0.45 * k, 1.6 - 0.05 * k), (s2, 0, 0.35))
+            if q: v.box("Body", "Glow", q, (0.13, 0.13, 0.13))
+    for i in range(20, n, 2):
+        p2 = pts[i]; out = (p2 - C0); out.normalize()
+        v.box("Body", "Glow", p2 + out * rad[i] * 0.96, (0.11, 0.11, 0.11))
     v.joint("Neck", (0, 1.45, 2.5), "Body", "neck")
     v.cap("Neck", "Fur", (0, 1.4, 2.4), (0, 1.95, 3.2), 0.6, 0.48)
     shade(v, "Fur", parts={"Neck"})
@@ -912,6 +924,10 @@ def selkie(v):
         v.eye("Head", (s * 0.36, 2.66, 3.55), (s * 0.6, 0.8, 0.05), w=0.24, h=0.22)
         v.ell("Head", "Fur", (s * 0.5, 1.95, 3.85), (0.15, 0.1, 0.13))
         pass
+    v.ell("Head", "Shell", (0, 2.55, 3.88), (0.14, 0.12, 0.14))
+    v.ell("Head", "Glow", (0, 2.63, 3.9), (0.07, 0.05, 0.07))
+    for k in range(5):
+        v.crystal("Neck", "Crystal", (0, 1.55 + 0.1 * k, 3.0 + 0.12 * k), (0, -0.6, 1), 0.3, 0.07)
     v.anchor("snout", "Head", (0, 3.1, 3.3)); v.anchor("eyes", "Head", (0, 2.8, 3.55))
     for s, f in ((-1, "FlipFL"), (1, "FlipFR")):
         v.joint(f + "1", (s * 0.8, 1.2, 1.7), "Body", "arm")

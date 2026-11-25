@@ -27,7 +27,7 @@ function M.count() return #queue + (live and 1 or 0) end
 -- banner lane for their hold; toasts wait while it is claimed, and a claimer waits while a toast is up
 local claimUntil = 0
 function M.claim(sec) claimUntil = math.max(claimUntil, os.clock() + sec) end
-function M.free() return os.clock() >= claimUntil and live == nil end
+function M.free() return os.clock() >= claimUntil and live == nil and os.clock() >= gap end
 
 function M.start(e)
 	E = e

@@ -439,6 +439,31 @@ local RIGFX = { -- the v16 voxel pets (design3d/pets/pet_vox.py anchors): orbit 
 	Ninering = { { "core", "sparkle", C3(90, 230, 255), { C3(80, 220, 255), 12, 1 } }, { "core", "orbit", C3(110, 235, 255) }, { "core", "aura", C3(90, 200, 255) }, { "eyes", "sparkle", C3(120, 235, 255) } },
 }
 
+local RARITY = (function()
+	local ok, C = pcall(function() return require(script.Parent:WaitForChild("Config", 5)) end)
+	local r = {}
+	if ok and C and C.PETS then for n, p in C.PETS do r[n] = p[1] end end
+	return r
+end)()
+local TIER = { Rare = 1, Epic = 1, Legendary = 2, Mythic = 2, Secret = 2 }
+local function cube(m, col, sz)
+	local q = Instance.new("Part")
+	q.Name, q.Size, q.Material, q.Color = "Fx_mote", Vector3.new(sz, sz, sz), Enum.Material.Neon, col
+	q.Anchored, q.CanCollide, q.CanQuery, q.CanTouch, q.CastShadow = true, false, false, false, false
+	q.Parent = m
+	return q
+end
+local function rigAura(m, name, d, rig) -- the rune ring at the feet, the rising halo, the stomp shockwave (pooled cubes)
+	if not d.vox then return end
+	local tier = TIER[RARITY[name] or ""] or 0
+	local col = d.glow
+	local R = math.max(d.size.X, d.size.Z) * 0.42
+	rig.aura = { R = R, h = d.height, ring = {}, halo = {}, wave = {}, waveT = -9 }
+	if tier >= 1 then for i = 1, 16 do table.insert(rig.aura.ring, cube(m, col, 0.12)) end end
+	if tier >= 2 then for i = 1, 14 do table.insert(rig.aura.halo, cube(m, col, 0.1)) end end
+	for i = 1, 18 do local q = cube(m, col, 0.14) q.Transparency = 1 table.insert(rig.aura.wave, q) end
+end
+
 local function rigFx(m, name, d, rig)
 	local list = table.clone(RIGFX[name] or {})
 	table.insert(list, { "_feet", "dust", Color3.fromRGB(232, 218, 196) })
@@ -569,6 +594,7 @@ rigBuild = function(name)
 		c.Parent = m
 	end
 	rigFx(m, name, d, rig)
+	rigAura(m, name, d, rig)
 	m:SetAttribute("Voxel", true)
 	m:SetAttribute("Reach", math.max(d.size.X, d.size.Z) / 4.5) -- PixelClient keeps a big pet this much further off, per unit of scale
 	M.rigs[m] = rig
@@ -580,9 +606,9 @@ rigAnimate = function(m, rig, now, dt, moving)
 	dt = math.min(dt or 1 / 60, 1 / 20)
 	local root = m.PrimaryPart.CFrame
 	local pos = root.Position
+	local v = rig.lastPos and (pos - rig.lastPos).Magnitude / math.max(dt, 1e-3) or 0
+	rig.speed = (rig.speed or 0) + (v - (rig.speed or 0)) * math.min(1, dt * 8)
 	if moving == nil then
-		local v = rig.lastPos and (pos - rig.lastPos).Magnitude / math.max(dt, 1e-3) or 0
-		rig.speed = (rig.speed or 0) + (v - (rig.speed or 0)) * math.min(1, dt * 8)
 		moving = v > 2.5
 	end
 	rig.lastPos = pos
@@ -605,6 +631,7 @@ rigAnimate = function(m, rig, now, dt, moving)
 			pose.tail, pose.wing = lag.tail, lag.wing
 			if a.impact and not rig.hit and u >= a.impact then
 				rig.hit = true
+				if rig.aura then rig.aura.waveT = now end
 				actSound(m, rig.act)
 				rig.actT += 0.07
 				for _, e in m:GetDescendants() do if e:IsA("ParticleEmitter") and e.Parent.Name == "Fx_dust" then e:Emit(26) end end
@@ -714,6 +741,37 @@ rigAnimate = function(m, rig, now, dt, moving)
 		if g.role == "Glow" then g.p.Color = dim:Lerp(lit, 0.5 + 0.5 * math.sin(t * 2.4 + i * 0.7)) end
 	end
 	for _, l in rig.lights or {} do l.l.Brightness = l.b * (0.7 + 0.5 * pulse) end
+	local au = rig.aura
+	if au then
+		local g = root * CFrame.new(0, -ROOT_Y * s + 0.06 * s, 0)
+		local n = #au.ring
+		for i2, q in au.ring do
+			local a2 = t * 0.45 + i2 / n * math.pi * 2
+			q.CFrame = g * CFrame.new(math.cos(a2) * au.R * s, 0, math.sin(a2) * au.R * s) * CFrame.Angles(0, -a2, 0)
+			q.Transparency = 0.15 + 0.35 * (0.5 + 0.5 * math.sin(t * 3 + i2 * 0.8))
+		end
+		local hp = (t * 0.32) % 1
+		n = #au.halo
+		for i2, q in au.halo do
+			local a2 = -t * 0.8 + i2 / n * math.pi * 2
+			local rr = au.R * s * (0.9 - 0.25 * hp)
+			q.CFrame = g * CFrame.new(math.cos(a2) * rr, hp * au.h * s * 0.9, math.sin(a2) * rr)
+			q.Transparency = 0.1 + 0.9 * hp
+		end
+		local wt = now - au.waveT
+		n = #au.wave
+		for i2, q in au.wave do
+			if wt >= 0 and wt < 0.6 then
+				local a2 = i2 / n * math.pi * 2
+				local rr = au.R * s * (0.4 + 2.2 * wt / 0.6)
+				q.CFrame = g * CFrame.new(math.cos(a2) * rr, 0.05 * s, math.sin(a2) * rr) * CFrame.Angles(0, a2, 0)
+				q.Transparency = wt / 0.6
+				q.Size = Vector3.one * (0.22 - 0.12 * wt / 0.6) * s
+			elseif q.Transparency < 1 then
+				q.Transparency = 1
+			end
+		end
+	end
 	for oi, o in rig.orbits or {} do
 		local c = o.att.WorldPosition
 		local n = #o.cubes

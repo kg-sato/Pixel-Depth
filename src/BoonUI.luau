@@ -3,6 +3,7 @@
 -- and comes back later. Display and the request only: the server keeps the offer and applies the boon.
 local M = {}
 
+local function stack4(col) pcall(function() local ch = game.Players.LocalPlayer.Character local h = ch and ch:FindFirstChild("HumanoidRootPart") if h then require(script.Parent:WaitForChild("Stack4FX")).play(h.Position - Vector3.new(0, 2.9, 0), col) end end) end -- the 4-layer VFX at the feet (v16 3.2)
 function M.start(E)
 	local C, R, gui, new, S, fit, text, panel, button = E.C, E.R, E.gui, E.new, E.S, E.fit, E.text, E.panel, E.button
 	local BoonR = R:WaitForChild("Boon", 20)
@@ -151,6 +152,7 @@ function M.start(E)
 				end
 			end
 		elseif kind == "boonTaken" then
+			stack4(Color3.fromRGB(255, 200, 90))
 			local def = C.BOON.list[a]
 			E.toast((def and def[1] or "Blessing") .. " is yours for this dive", nil, false, 3)
 			pcall(E.sfx, "upgrade", 1.1)

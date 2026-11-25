@@ -34,7 +34,7 @@ function M.start(E)
 		waited = waited or 0
 		if waited < 4 and giftOpen() then task.delay(0.25, show, name, line, color, waited + 0.25, my) return end
 		local T = require(script.Parent:WaitForChild("ToastManager"))
-		if waited < 3 and not T.free() then task.delay(0.25, show, name, line, color, waited + 0.25, my) return end -- one banner at a time (v16 4.1)
+		if waited < 10 and not T.free() then task.delay(0.25, show, name, line, color, waited + 0.25, my) return end -- one banner at a time (v16 4.1; up to 6 s after the gift wait)
 		T.claim(3.1)
 		word.tint(color)
 		word.set(name)

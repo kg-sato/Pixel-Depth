@@ -139,14 +139,14 @@ function M.start(E)
 	-- the prompt on screen belongs to something else than its own station.
 	local shown = {}
 	local PPS = game:GetService("ProximityPromptService")
-	-- the crew sign says "CREW RIDE: PRESS V TO BOARD" over the cart, and its own V prompt says the same right under it
+	-- the crew sign says "V  CREW RIDE" over the cart, and its own V prompt says the same right under it
 	-- (Orchestrator round 2, sheet_12): while the prompt shows, the sign hides unless it carries a live crew countdown
 	local crewSign = {}
 	local function crew(pr)
 		local bb = pr:GetAttribute("CrewRide") and pr.Parent and pr.Parent:FindFirstChild("CrewSign")
 		local ln = bb and bb:FindFirstChild("Line")
 		if not ln then return end
-		local function f() bb.Enabled = not (shown[pr] and ln.Text:find("PRESS V", 1, true)) end
+		local function f() bb.Enabled = not (shown[pr] and not ln.Text:find("0:", 1, true)) end -- hidden unless it carries the live countdown
 		f()
 		crewSign[pr] = crewSign[pr] or ln:GetPropertyChangedSignal("Text"):Connect(f)
 	end

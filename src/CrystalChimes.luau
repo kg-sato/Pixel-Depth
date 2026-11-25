@@ -7,6 +7,7 @@
 local TweenService = game:GetService("TweenService")
 local M = {}
 
+local function stack4(col) pcall(function() local ch = game.Players.LocalPlayer.Character local h = ch and ch:FindFirstChild("HumanoidRootPart") if h then require(script.Parent:WaitForChild("Stack4FX")).play(h.Position - Vector3.new(0, 2.9, 0), col) end end) end -- the 4-layer VFX at the feet (v16 3.2)
 function M.start(E)
 	local C, R = E.C, E.R
 	if not C.CHIMES then return end
@@ -68,6 +69,7 @@ function M.start(E)
 		if what == "cool" then
 			E.toast("THE CHIMES ARE STILL.  THEY RING AGAIN IN " .. tostring(a) .. " MIN", WHITE)
 		elseif what == "start" and type(a) == "table" then
+			stack4(Color3.fromRGB(150, 220, 255))
 			run += 1
 			local me = run
 			for n, k in a do

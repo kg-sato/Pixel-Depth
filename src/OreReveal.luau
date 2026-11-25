@@ -17,9 +17,15 @@ end
 
 function M.start(E)
 	local pg = E.plr:WaitForChild("PlayerGui")
-	local busy = false
-	local function play(layerName, oreName, color, tier)
-		if busy then return end
+	local busy, waiting = false, {}
+	local play
+	local function nextUp()
+		busy = false
+		local w = table.remove(waiting, 1)
+		if w then play(table.unpack(w)) end
+	end
+	function play(layerName, oreName, color, tier)
+		if busy then table.insert(waiting, { layerName, oreName, color, tier }) return end
 		busy = true
 		local gui = Instance.new("ScreenGui")
 		gui.Name, gui.DisplayOrder, gui.IgnoreGuiInset, gui.ResetOnSpawn = "OreReveal", 60, true, false
@@ -32,7 +38,7 @@ function M.start(E)
 				if o:IsA("TextLabel") then tw(o, 0.2, { TextTransparency = 1, TextStrokeTransparency = 1 })
 				elseif o:IsA("Frame") then tw(o, 0.2, { BackgroundTransparency = 1 }) end
 			end
-			task.delay(0.25, function() gui:Destroy() busy = false end)
+			task.delay(0.25, function() gui:Destroy() nextUp() end)
 		end
 		local skip = UIS.InputBegan:Connect(function(i)
 			if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.Keyboard then finish() end

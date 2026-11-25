@@ -10,7 +10,7 @@ function M.start(E)
 	local plr = E.plr
 	local signs = {} -- SurfaceGui -> { part, { {gui object, property, base} } }
 	local function track(sg)
-		if signs[sg] or not sg:IsA("SurfaceGui") then return end
+		if signs[sg] or not sg:IsA("SurfaceGui") or not sg.Parent then return end
 		local part = sg.Adornee or sg.Parent
 		if not (part and part:IsA("BasePart")) or KEEP[part.Name] then return end
 		if not part:FindFirstAncestor("Hub") and not part:FindFirstAncestor("Town") then return end
@@ -31,7 +31,7 @@ function M.start(E)
 			local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
 			local inCave = plr:GetAttribute("InCave") == true
 			for sg, s in signs do
-				if not sg.Parent then signs[sg] = nil continue end
+				if not sg.Parent then signs[sg] = nil last[sg] = nil continue end
 				local a = 0
 				if hrp and not inCave then
 					local d = (s.part.Position - hrp.Position).Magnitude

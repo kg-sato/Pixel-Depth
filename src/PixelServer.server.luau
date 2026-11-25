@@ -943,7 +943,7 @@ function crew.show() -- the signs over the crew carts: Camp 1's, and the Kiln Ca
 	local L = crew.lobby
 	for _, sg in crew.signs or {} do
 		if sg.line.Parent then
-			sg.line.Text = L and string.format("%sCREW RIDE  0:%02d   %d OF %d ABOARD", sg.pre, math.max(0, math.ceil(L.ends - os.clock())), #L.members, C.CREW.max) or (sg.pre .. "CREW RIDE:  PRESS V TO BOARD")
+			sg.line.Text = L and string.format("%sCREW  %d/%d  0:%02d", sg.pre, #L.members, C.CREW.max, math.max(0, math.ceil(L.ends - os.clock()))) or (sg.pre .. "V  CREW RIDE") -- one short pill (v16 4.1, Df0G1CTSQWj)
 		end
 	end
 end
@@ -1235,13 +1235,16 @@ task.spawn(function() -- the sign and its prompt over Camp 1's cart, and (direct
 	a.Name, a.Size, a.Transparency, a.Anchored, a.CanCollide, a.CanQuery, a.CanTouch = name, Vector3.new(1, 1, 1), 1, true, false, false, false
 	a.CFrame = over.CFrame * CFrame.new(0, 5.4, 0) -- above the cart's own Ride up card; 5.4 (was 7): from beside the cart the sign was cut by the top of the screen (Gemini full1121c)
 	local bb = Instance.new("BillboardGui")
-	bb.Name, bb.Size, bb.MaxDistance, bb.LightInfluence, bb.StudsOffset = "CrewSign", UDim2.fromScale(10, 1.1), 40, 0, Vector3.new(0, 1.9, 0) -- lifted over its own V prompt card, which sat on the middle of the sign (2026-11-19) -- MaxDistance 40 (was 70): from the deposits round camp it hung cut off at the top edge (Orchestrator tour 3)
+	bb.Name, bb.Size, bb.MaxDistance, bb.LightInfluence, bb.StudsOffset = "CrewSign", UDim2.fromScale(5.6, 1.05), 40, 0, Vector3.new(0, 1.9, 0) -- lifted over its own V prompt card, which sat on the middle of the sign (2026-11-19) -- MaxDistance 40 (was 70): from the deposits round camp it hung cut off at the top edge (Orchestrator tour 3)
 	local t = Instance.new("TextLabel")
 	t.Name, t.Size, t.BackgroundColor3, t.BackgroundTransparency, t.TextScaled, t.Font = "Line", UDim2.fromScale(1, 1), Color3.fromRGB(36, 17, 56), 0.2, true, Enum.Font.FredokaOne
-	t.TextColor3, t.Text = Color3.fromRGB(255, 214, 107), pre .. "CREW RIDE:  PRESS V TO BOARD"
+	t.TextColor3, t.Text = Color3.fromRGB(255, 214, 107), pre .. "V  CREW RIDE"
+	local st = Instance.new("UIStroke") -- the minimalist single pill: dark plum, a thin gold rim
+	st.ApplyStrokeMode, st.Color, st.Thickness, st.Transparency = Enum.ApplyStrokeMode.Border, Color3.fromRGB(232, 186, 96), 1.5, 0.2
+	st.Parent = t
 	table.insert(crew.signs, { line = t, pre = pre })
 	local uc = Instance.new("UICorner")
-	uc.CornerRadius = UDim.new(0.4, 0)
+	uc.CornerRadius = UDim.new(0.5, 0)
 	uc.Parent = t
 	local pad = Instance.new("UIPadding")
 	pad.PaddingLeft, pad.PaddingRight, pad.PaddingTop, pad.PaddingBottom = UDim.new(0.05, 0), UDim.new(0.05, 0), UDim.new(0.18, 0), UDim.new(0.18, 0)
@@ -1767,9 +1770,8 @@ local function finishMinigame(s)
 	local key = L .. "." .. idx
 	s.bagOres[key] = (s.bagOres[key] or 0) + count
 	if idx == 3 and not s.codex.ore[key] then -- the first ever find of a layer's rarest ore: the escalation reveal (Shared.OreReveal), once
-		s.revealed = s.revealed or {}
-		if not s.revealed[key] then
-			s.revealed[key] = true
+		if not s.codex.seen[key] then
+			s.codex.seen[key] = true -- saved with the Codex (Codex review: a session flag replayed it after a rejoin)
 			local lay = C.LAYERS[L]
 			FxR:FireClient(s.player, "oreReveal", lay[1], lay[4][3][1], lay[4][3][2], (L >= 7 and "SECRET") or (L >= 5 and "MYTHIC") or "RARE")
 		end
@@ -2475,7 +2477,7 @@ local function onJoin(plr)
 	s.charms = {}
 	for _, ch in C.CHARMS do if type(d.charms) == "table" and d.charms[ch.id] == true then s.charms[ch.id] = true end end
 	for _, ch in C.CHARMS do plr:SetAttribute("Charm_" .. ch.id, C.CHARMS_ON and s.charms[ch.id] == true or nil) end -- the client widens prompts from this
-	s.codex = { ore = {}, pet = {} }
+	s.codex = { ore = {}, pet = {}, seen = {} }
 	local dc = type(d.codex) == "table" and d.codex or {}
 	for k, v in type(dc.ore) == "table" and dc.ore or {} do
 		local L, i = string.match(type(k) == "string" and k or "", "^(%d+)%.(%d+)$")
@@ -2483,6 +2485,10 @@ local function onJoin(plr)
 	end
 	for name, v in type(dc.pet) == "table" and dc.pet or {} do
 		if v == true and type(name) == "string" and C.PETS[name] then s.codex.pet[name] = true end
+	end
+	for k, v in type(dc.seen) == "table" and dc.seen or {} do -- first-find reveals already shown (Shared.OreReveal)
+		local L, n = string.match(tostring(k), "^(%d+)%.(%d+)$")
+		if v == true and L and C.LAYERS[tonumber(L)] and C.LAYERS[tonumber(L)][4][tonumber(n)] then s.codex.seen[k] = true end
 	end
 	s.rare = {}
 	for name, v in type(d.rare) == "table" and d.rare or {} do

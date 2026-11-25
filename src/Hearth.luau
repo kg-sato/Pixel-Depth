@@ -6,6 +6,7 @@
 local RunService = game:GetService("RunService")
 local M = {}
 
+local function stack4(col) pcall(function() local ch = game.Players.LocalPlayer.Character local h = ch and ch:FindFirstChild("HumanoidRootPart") if h then require(script.Parent:WaitForChild("Stack4FX")).play(h.Position - Vector3.new(0, 2.9, 0), col) end end) end -- the 4-layer VFX at the feet (v16 3.2)
 function M.start(E)
 	local C, plr, hook, new = E.C, E.plr, E.vmHook, E.new
 	local R = E.R:WaitForChild("Travel", 10)
@@ -52,6 +53,7 @@ function M.start(E)
 			E.tween(scale, 0.25, { Scale = 1 }, Enum.EasingStyle.Back)
 			E.sfx("open", 1.4)
 		elseif what == "done" then
+			stack4(Color3.fromRGB(120, 255, 200))
 			stop(false)
 			coolUntil = os.clock() + a
 			flash.GroupTransparency, flash.Visible = 0.62, true -- directive v14: a soft mint wash at the edges (it was a 0.1 full-screen whiteout)
