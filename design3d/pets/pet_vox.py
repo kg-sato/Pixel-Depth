@@ -228,7 +228,7 @@ def tosk(v):
         v.blade("Head", "Leaf", A[3], A[3] + V(s * 0.3, -0.35, 0.2), 0.2, thick=0.1, normal=(0, 0.3, 1))
         v.blade("Head", "Leaf", A[2], A[2] + V(s * 0.4, 0.1, -0.15), 0.18, thick=0.1, normal=(0, 0.3, 1))
         # the tusks: thick at the jaw, a root band, sweeping out, up and back, an amber crystal at each tip
-        TK = [(s * 0.4, 3.95, 2.3), (s * 0.85, 4.35, 2.45), (s * 1.18, 4.55, 3.1), (s * 1.15, 4.25, 3.75), (s * 0.9, 3.75, 4.05)]
+        TK = [(s * 0.4, 3.95, 2.35), (s * 0.78, 4.45, 2.75), (s * 1.05, 4.6, 3.35), (s * 1.08, 4.3, 3.95), (s * 0.85, 3.85, 4.25)]
         v.curve("Head", "Tusk", TK, [0.26, 0.24, 0.19, 0.13, 0.06])
         vine(v, "Head", TK[0], TK[2], (0.3, 0.24), turns=1.3, colour="Leaf", phase=s, seed=6, leaves=5)
         vine(v, "Head", TK[2], TK[4], (0.22, 0.12), turns=1.0, colour="Leaf", phase=s + 2, seed=7, leaves=3, w=0.045)
@@ -911,7 +911,7 @@ def selkie(v):
     for s in (-1, 1):
         v.eye("Head", (s * 0.36, 2.66, 3.55), (s * 0.6, 0.8, 0.05), w=0.24, h=0.22)
         v.ell("Head", "Fur", (s * 0.5, 1.95, 3.85), (0.15, 0.1, 0.13))
-        for k in range(3): v.line("Head", "Belly", [(s * 0.22, 3.0, 3.18 - 0.07 * k), (s * 0.7, 3.05, 3.12 - 0.12 * k)], r=0.03)
+        pass
     v.anchor("snout", "Head", (0, 3.1, 3.3)); v.anchor("eyes", "Head", (0, 2.8, 3.55))
     for s, f in ((-1, "FlipFL"), (1, "FlipFR")):
         v.joint(f + "1", (s * 0.8, 1.2, 1.7), "Body", "arm")
@@ -921,14 +921,14 @@ def selkie(v):
         v.blade(f + "2", "Fur", (s * 1.1, 1.45, 0.6), (s * 1.55, 2.25, 0.08), 0.9, thick=0.2, normal=(0, 0, 1))
         for k in (-1, 0, 1): v.cap(f + "2", "Claw", (s * (1.45 + 0.14 * k), 2.1 + 0.05 * k, 0.14), (s * (1.5 + 0.16 * k), 2.4, 0.05), 0.07, 0.02)
         shade(v, "Fur", parts={f + "1"})
-    pts = [V(0, -1.7, 1.25), V(0, -2.5, 0.9), V(0, -3.3, 0.62), V(0, -4.0, 0.55), V(0, -4.55, 0.7)]
+    pts = [V(0, -1.7, 1.25), V(0, -2.45, 1.0), V(0, -3.15, 1.15), V(0, -3.6, 1.7), V(0, -3.8, 2.4)]
     for i in range(4):
         nm = f"Tail{i + 1}"
         v.joint(nm, tuple(pts[i]), "Body" if i == 0 else f"Tail{i}", "tail")
         v.muscle(nm, "Fur", pts[i].lerp(pts[i + 1], 0.5), (0.62 - 0.12 * i, (pts[i + 1] - pts[i]).length * 0.62, 0.52 - 0.1 * i), rot=look(pts[i + 1] - pts[i]))
         shade(v, "Fur", parts={nm})
     for s in (-1, 1):
-        v.blade("Tail4", "Crystal", pts[4], pts[4] + V(0, -0.6, s * 0.95 + 0.3), 0.55, thick=0.12, normal=(1, 0, 0))
+        v.blade("Tail4", "Crystal", pts[4], pts[4] + V(s * 0.9, -0.45, 0.55), 0.6, thick=0.12, normal=(0, 0.6, 1))
         v.blade("Tail3", "Fur", pts[3] + V(s * 0.3, 0.1, 0), pts[3] + V(s * 0.75, -0.2, 0.05), 0.35, thick=0.12, normal=(0, 0, 1))
     v.anchor("gills", "Body", (0, 1.3, 2.9))
     ground(v)
@@ -975,12 +975,14 @@ def zharbird(v):
         v.cap(w + "1", "Obsidian", sh, el, 0.24, 0.16)
         for k in range(5):
             p = sh.lerp(el, 0.2 + 0.18 * k)
-            v.blade(w + "1", "Ember" if k % 2 else "Obsidian", p, p + V(s * 0.15, -0.7, -0.9 + 0.05 * k), 0.3, thick=0.11, normal=(0, 0.3, 1))
+            v.blade(w + "1", "Ember" if k % 2 else "Flame", p, p + V(s * 0.15, -0.95, -1.05 + 0.08 * k), 0.46, thick=0.12, normal=(0, 0.3, 1))
+            v.blade(w + "1", "Obsidian", p + V(0, 0.05, 0.08), p + V(s * 0.1, -0.5, -0.45), 0.4, thick=0.12, normal=(0, 0.3, 1))
         v.joint(w + "2", tuple(el), w + "1", "wing")
         v.cap(w + "2", "Obsidian", el, wr, 0.16, 0.1)
         for k in range(6):
             p = el.lerp(wr, 0.15 + 0.17 * k)
-            v.blade(w + "2", ("Flame", "Ember", "Gold")[k % 3], p, p + V(s * (0.55 + 0.1 * k), -0.9 - 0.08 * k, -0.35 + 0.28 * k), 0.34, thick=0.11, normal=(0, 0.4, 1))
+            v.blade(w + "2", ("Flame", "Ember", "Gold")[k % 3], p, p + V(s * (0.65 + 0.12 * k), -1.1 - 0.08 * k, -0.35 + 0.3 * k), 0.48, thick=0.12, normal=(0, 0.4, 1))
+            v.blade(w + "2", "Obsidian", p + V(0, 0.05, 0.08), p + V(s * 0.25, -0.5, -0.1 + 0.15 * k), 0.36, thick=0.12, normal=(0, 0.4, 1))
     for s, L in ((-1, "LegL"), (1, "LegR")):
         hip, knee, ank, foot = V(s * 0.42, -0.2, 3.0), V(s * 0.5, 0.35, 1.95), V(s * 0.5, -0.2, 0.75), V(s * 0.5, 0.05, 0.0)
         v.joint(L + "1", tuple(hip), "Body", "leg")
@@ -1014,6 +1016,12 @@ def zharbird(v):
 
 
 
+
+
+def diamond(v, part, col, c, w, h):
+    """a floating diamond (octahedron): |x|/w + |y|/w + |z|/h <= 1"""
+    c = V(c)
+    v.fill(part, col, c - V(w, w, h), c + V(w, w, h), lambda x, y, z: abs(x - c.x) / w + abs(y - c.y) / w + abs(z - c.z) / h <= 1)
 
 
 def tri(v, part, col, a, b, c, thick=0.12):
@@ -1108,8 +1116,8 @@ def fafnir(v):
         v.cluster("Head", "Crystal", (s * 0.3, 3.4, 6.35), (s * 0.3, -0.3, 1), 0.7, n=3, seed=5)
     v.anchor("snout", "Head", (0, 5.35, 5.35)); v.anchor("eyes", "Head", (0, 4.15, 5.85))
     for s, w in ((-1, "WingL"), (1, "WingR")):
-        bat_wing(v, w, (s * 1.2, 0.9, 5.2), (s * 3.0, 0.2, 6.7), [(s * 4.5, -0.5, 6.3), (s * 4.3, -1.5, 5.3), (s * 3.5, -2.2, 4.5), (s * 2.2, -2.1, 4.4)], "Stone", "Wing", (s * 1.1, -1.4, 4.6))
-        v.cluster(w + "2", "Crystal", (s * 3.0, 0.2, 6.75), (s * 0.3, 0.2, 1), 0.55, n=3, seed=6)
+        bat_wing(v, w, (s * 1.2, 0.9, 5.2), (s * 2.6, 0.4, 8.0), [(s * 4.4, -0.3, 8.9), (s * 4.7, -1.3, 7.6), (s * 4.1, -2.3, 6.2), (s * 2.6, -2.3, 5.2)], "Stone", "Wing", (s * 1.1, -1.4, 4.7))
+        v.cluster(w + "2", "Crystal", (s * 2.6, 0.4, 8.05), (s * 0.3, 0.2, 1), 0.6, n=3, seed=6)
     for limb, x, y, front in (("LegFL", -1.25, 1.4, True), ("LegFR", 1.25, 1.4, True), ("LegBL", -1.15, -2.05, False), ("LegBR", 1.15, -2.05, False)):
         s = 1 if x > 0 else -1
         if front: hip, knee, ank, foot = (x, y, 3.55), (x + s * 0.12, y + 0.15, 1.95), (x + s * 0.12, y + 0.05, 0.68), (x + s * 0.12, y + 0.15, 0.0)
@@ -1189,7 +1197,7 @@ def kirin(v):
     for s, w in ((-1, "FinL"), (1, "FinR")):
         v.joint(w, (s * 0.65, 1.0, 4.6), "Body", "wing")
         for k in range(3):
-            v.blade(w, "Fin" if k % 2 else "Gold", (s * 0.85, 1.0, 4.6), (s * (2.05 - 0.2 * k), 0.4 - 0.55 * k, 5.6 - 0.25 * k), 0.5, thick=0.11, normal=(0, 0.3, 1))
+            v.blade(w, "Fin" if k % 2 else "Gold", (s * 0.85, 1.0, 4.7), (s * (1.55 - 0.15 * k), 1.2 - 0.6 * k, 6.4 - 0.3 * k), 0.55, thick=0.12, normal=(s, 0.2, 0.3), bend=0.12)
     for limb, x, y, front in (("LegFL", -0.46, 1.05, True), ("LegFR", 0.46, 1.05, True), ("LegBL", -0.5, -1.35, False), ("LegBR", 0.5, -1.35, False)):
         s = 1 if x > 0 else -1
         if front: hip, knee, ank, foot = (x, y, 3.7), (x + s * 0.03, y + 0.1, 2.25), (x + s * 0.03, y, 0.78), (x + s * 0.03, y + 0.08, 0.0)
@@ -1287,8 +1295,8 @@ def ouro(v):
         a = k / 6 * math.tau
         c = V(math.cos(a) * 2.7, -0.25 + math.sin(a) * 2.7, 1.6 + 0.9 * (k % 3))
         col = "Crystal" if k % 2 else "Prism"
-        v.crystal("Orbit", col, c, (0, 0, 1), 0.75, 0.24, sides=4)
-        v.crystal("Orbit", col, c + V(0, 0, 0.05), (0, 0, -1), 0.55, 0.24, sides=4)
+        diamond(v, "Orbit", col, c, 0.32, 0.6)
+        v.box("Orbit", "Glow", c, (0.12, 0.12, 0.2))
     ground(v)
 
 
