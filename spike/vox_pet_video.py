@@ -44,6 +44,7 @@ return string.format("%d parts, %d neon, %d orbit motes, %d emitters", n, glow, 
 print(C(SETUP))
 out = N.root / "Games" / "Pixel Depth" / "captures" / "video"; out.mkdir(parents=True, exist_ok=True)
 mp4 = out / f"vox_{name.replace(' ', '')}_{tag}.mp4"
+N.restore(); time.sleep(1.0)  # a minimised or covered Studio records a frozen frame
 rec = subprocess.Popen([str(N.root / "Hunyuan3D" / ".venv" / "Scripts" / "python.exe"), "-I", str(N.root / "tools" / "record_window.py"), str(mp4), "12", "30"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 time.sleep(1.5)
 print(N.shot(f"vox_{tag}_idle").name)

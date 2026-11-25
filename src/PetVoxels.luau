@@ -497,8 +497,8 @@ local function rigFx(m, name, d, rig)
 				a0.Position, a1.Position = Vector3.new(0, o.sz * 0.5, 0), Vector3.new(0, -o.sz * 0.5, 0)
 				a0.Parent, a1.Parent = q, q
 				local tr = Instance.new("Trail")
-				tr.Attachment0, tr.Attachment1, tr.Lifetime, tr.LightEmission, tr.FaceCamera = a0, a1, 0.28, 1, true
-				tr.Color, tr.Transparency = ColorSequence.new(col), NumberSequence.new(0.25, 1)
+				tr.Attachment0, tr.Attachment1, tr.Lifetime, tr.LightEmission, tr.FaceCamera = a0, a1, 0.16, 0.6, true -- short and soft (tour full1125b: long bright trails read as debug rays by the walls)
+				tr.Color, tr.Transparency = ColorSequence.new(col), NumberSequence.new(0.55, 1)
 				tr.Parent = q
 				q.Parent = m
 				table.insert(o.cubes, q)
