@@ -1,0 +1,2392 @@
+{
+ "Tosk": {
+  "name": "Tosk",
+  "tris": 56316,
+  "maxPart": 11066,
+  "objects": 38,
+  "parts": 16,
+  "height": 6.4,
+  "size": [
+   3.7,
+   8.6,
+   6.4
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "LegFL1": "Body",
+   "LegFL2": "LegFL1",
+   "LegFL3": "LegFL2",
+   "LegFR1": "Body",
+   "LegFR2": "LegFR1",
+   "LegFR3": "LegFR2",
+   "LegBL1": "Body",
+   "LegBL2": "LegBL1",
+   "LegBL3": "LegBL2",
+   "LegBR1": "Body",
+   "LegBR2": "LegBR1",
+   "LegBR3": "LegBR2",
+   "Tail1": "Body",
+   "Tail2": "Tail1"
+  },
+  "groups": {
+   "Head": "head",
+   "LegFL1": "leg",
+   "LegFL2": "leg",
+   "LegFL3": "leg",
+   "LegFR1": "leg",
+   "LegFR2": "leg",
+   "LegFR3": "leg",
+   "LegBL1": "leg",
+   "LegBL2": "leg",
+   "LegBL3": "leg",
+   "LegBR1": "leg",
+   "LegBR2": "leg",
+   "LegBR3": "leg",
+   "Tail1": "tail",
+   "Tail2": "tail"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.05,
+    3.6,
+    -0.7
+   ],
+   "Head": [
+    0.05,
+    3.6,
+    1.4
+   ],
+   "LegFL1": [
+    -0.93,
+    3.25,
+    0.55
+   ],
+   "LegFL2": [
+    -0.97,
+    1.75,
+    0.67
+   ],
+   "LegFL3": [
+    -0.97,
+    0.82,
+    0.57
+   ],
+   "LegFR1": [
+    1.03,
+    3.25,
+    0.55
+   ],
+   "LegFR2": [
+    1.07,
+    1.75,
+    0.67
+   ],
+   "LegFR3": [
+    1.07,
+    0.82,
+    0.57
+   ],
+   "LegBL1": [
+    -0.87,
+    3.3,
+    -2.7
+   ],
+   "LegBL2": [
+    -0.93,
+    2.05,
+    -2.25
+   ],
+   "LegBL3": [
+    -0.93,
+    1.05,
+    -2.85
+   ],
+   "LegBR1": [
+    0.97,
+    3.3,
+    -2.7
+   ],
+   "LegBR2": [
+    1.03,
+    2.05,
+    -2.25
+   ],
+   "LegBR3": [
+    1.03,
+    1.05,
+    -2.85
+   ],
+   "Tail1": [
+    0.05,
+    4.05,
+    -3.55
+   ],
+   "Tail2": [
+    0.05,
+    3.65,
+    -3.9
+   ]
+  },
+  "anchors": {
+   "back": [
+    "Body",
+    [
+     0.05,
+     5.6,
+     -1.65
+    ]
+   ],
+   "canopy": [
+    "Body",
+    [
+     0.7,
+     6.1,
+     -0.05
+    ]
+   ],
+   "tuskL": [
+    "Head",
+    [
+     -0.77,
+     4.15,
+     3.35
+    ]
+   ],
+   "tuskR": [
+    "Head",
+    [
+     0.87,
+     4.15,
+     3.35
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.05,
+     3.4,
+     3.05
+    ]
+   ],
+   "hoofFL": [
+    "LegFL3",
+    [
+     -0.97,
+     0.55,
+     0.75
+    ]
+   ],
+   "hoofFR": [
+    "LegFR3",
+    [
+     1.07,
+     0.55,
+     0.75
+    ]
+   ],
+   "hoofBL": [
+    "LegBL3",
+    [
+     -0.93,
+     0.55,
+     -2.65
+    ]
+   ],
+   "hoofBR": [
+    "LegBR3",
+    [
+     1.03,
+     0.55,
+     -2.65
+    ]
+   ]
+  },
+  "palette": {
+   "Bark": "#5a3826",
+   "BarkTop": "#7e5236",
+   "BarkHi": "#86562e",
+   "BarkHiTop": "#a87038",
+   "BarkLo": "#3e2632",
+   "BarkLoTop": "#54323a",
+   "Crease": "#22141a",
+   "CreaseTop": "#2e1c22",
+   "Grain": "#3e2418",
+   "GrainTop": "#553222",
+   "Dark": "#2e1a12",
+   "DarkTop": "#42281a",
+   "Moss": "#55a832",
+   "MossTop": "#8fdc4e",
+   "Moss2": "#3f8a2a",
+   "Moss2Top": "#68b83e",
+   "Leaf": "#6cc63a",
+   "LeafTop": "#b4f06a",
+   "Tusk": "#f2e2c0",
+   "TuskTop": "#fffbef",
+   "Bone": "#4a4552",
+   "BoneTop": "#77717f",
+   "Root": "#8a5e36",
+   "RootTop": "#b07c48",
+   "Snout": "#c47a66",
+   "SnoutTop": "#e0967e",
+   "Shroom": "#22c4c8",
+   "ShroomTop": "#7af6ee",
+   "Stem": "#efe4cc",
+   "StemTop": "#fffaf0",
+   "Petal": "#ff7ab8",
+   "PetalTop": "#ffb8dc",
+   "Eye": "#24120a",
+   "EyeTop": "#24120a",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Crystal": "#ffae2a",
+   "Glow": "#ffc23a",
+   "GlowSap": "#ff9a1e",
+   "Edge": "#c8b088",
+   "_noseams": true
+  },
+  "cells": 44398,
+  "proportions": {
+   "clearance": 0.46,
+   "head": 0.77,
+   "shoulder": 4.8
+  }
+ },
+ "Ninering": {
+  "name": "Ninering",
+  "tris": 46424,
+  "maxPart": 8280,
+  "objects": 14,
+  "parts": 10,
+  "height": 7.743,
+  "size": [
+   7.42,
+   3.32,
+   7.74
+  ],
+  "parent": {
+   "Body": null,
+   "Ring1": "Body",
+   "Ring2": "Body",
+   "Ring3": "Body",
+   "Ring4": "Body",
+   "Ring5": "Body",
+   "Ring6": "Body",
+   "Ring7": "Body",
+   "Ring8": "Body",
+   "Ring9": "Body"
+  },
+  "groups": {
+   "Ring1": "ring",
+   "Ring2": "ring",
+   "Ring3": "ring",
+   "Ring4": "ring",
+   "Ring5": "ring",
+   "Ring6": "ring",
+   "Ring7": "ring",
+   "Ring8": "ring",
+   "Ring9": "ring"
+  },
+  "axes": {
+   "Ring1": [
+    0.07,
+    0.0,
+    0.998
+   ],
+   "Ring2": [
+    -0.08,
+    0.081,
+    0.994
+   ],
+   "Ring3": [
+    -0.002,
+    -0.156,
+    0.988
+   ],
+   "Ring4": [
+    0.144,
+    0.138,
+    0.98
+   ],
+   "Ring5": [
+    -0.242,
+    0.006,
+    0.97
+   ],
+   "Ring6": [
+    0.195,
+    -0.207,
+    0.959
+   ],
+   "Ring7": [
+    0.012,
+    0.325,
+    0.946
+   ],
+   "Ring8": [
+    -0.27,
+    -0.248,
+    0.93
+   ],
+   "Ring9": [
+    0.406,
+    -0.02,
+    0.914
+   ]
+  },
+  "pivots": {
+   "Body": [
+    0.0,
+    3.871,
+    0.0
+   ],
+   "Ring1": [
+    0.0,
+    3.871,
+    0.0
+   ],
+   "Ring2": [
+    0.0,
+    3.871,
+    0.0
+   ],
+   "Ring3": [
+    0.0,
+    3.871,
+    0.0
+   ],
+   "Ring4": [
+    0.0,
+    3.871,
+    0.0
+   ],
+   "Ring5": [
+    0.0,
+    3.871,
+    0.0
+   ],
+   "Ring6": [
+    0.0,
+    3.871,
+    0.0
+   ],
+   "Ring7": [
+    0.0,
+    3.871,
+    0.0
+   ],
+   "Ring8": [
+    0.0,
+    3.871,
+    0.0
+   ],
+   "Ring9": [
+    0.0,
+    3.871,
+    0.0
+   ]
+  },
+  "anchors": {
+   "core": [
+    "Body",
+    [
+     0.0,
+     3.871,
+     0.4
+    ]
+   ]
+  },
+  "palette": {
+   "Main": "#16151c",
+   "MainTop": "#27252f",
+   "Plate": "#1d1b24",
+   "PlateTop": "#2e2b38",
+   "Brass": "#8a6a2e",
+   "BrassTop": "#c8a050",
+   "Dark": "#0c0b10",
+   "Bone": "#e6e2ea",
+   "BoneTop": "#ffffff",
+   "Stud": "#b8963f",
+   "StudTop": "#e0c070",
+   "Glow": "#c040ff",
+   "Edge": "#7a6a90"
+  }
+ },
+ "Glimwisp": {
+  "name": "Glimwisp",
+  "tris": 23376,
+  "maxPart": 10186,
+  "objects": 27,
+  "parts": 25,
+  "height": 5.218,
+  "size": [
+   4.12,
+   6.86,
+   5.22
+  ],
+  "parent": {
+   "Body": null,
+   "Tent1_1": "Body",
+   "Tent1_2": "Tent1_1",
+   "Tent1_3": "Tent1_2",
+   "Tent1_4": "Tent1_3",
+   "Tent2_1": "Body",
+   "Tent2_2": "Tent2_1",
+   "Tent2_3": "Tent2_2",
+   "Tent2_4": "Tent2_3",
+   "Tent3_1": "Body",
+   "Tent3_2": "Tent3_1",
+   "Tent3_3": "Tent3_2",
+   "Tent3_4": "Tent3_3",
+   "Tent4_1": "Body",
+   "Tent4_2": "Tent4_1",
+   "Tent4_3": "Tent4_2",
+   "Tent4_4": "Tent4_3",
+   "Tent5_1": "Body",
+   "Tent5_2": "Tent5_1",
+   "Tent5_3": "Tent5_2",
+   "Tent5_4": "Tent5_3",
+   "Tent6_1": "Body",
+   "Tent6_2": "Tent6_1",
+   "Tent6_3": "Tent6_2",
+   "Tent6_4": "Tent6_3"
+  },
+  "groups": {
+   "Tent1_1": "tentacle",
+   "Tent1_2": "tentacle",
+   "Tent1_3": "tentacle",
+   "Tent1_4": "tentacle",
+   "Tent2_1": "tentacle",
+   "Tent2_2": "tentacle",
+   "Tent2_3": "tentacle",
+   "Tent2_4": "tentacle",
+   "Tent3_1": "tentacle",
+   "Tent3_2": "tentacle",
+   "Tent3_3": "tentacle",
+   "Tent3_4": "tentacle",
+   "Tent4_1": "tentacle",
+   "Tent4_2": "tentacle",
+   "Tent4_3": "tentacle",
+   "Tent4_4": "tentacle",
+   "Tent5_1": "tentacle",
+   "Tent5_2": "tentacle",
+   "Tent5_3": "tentacle",
+   "Tent5_4": "tentacle",
+   "Tent6_1": "tentacle",
+   "Tent6_2": "tentacle",
+   "Tent6_3": "tentacle",
+   "Tent6_4": "tentacle"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    3.115,
+    1.372
+   ],
+   "Tent1_1": [
+    0.866,
+    2.665,
+    1.872
+   ],
+   "Tent1_2": [
+    0.996,
+    2.045,
+    1.767
+   ],
+   "Tent1_3": [
+    1.126,
+    1.425,
+    1.302
+   ],
+   "Tent1_4": [
+    1.256,
+    0.805,
+    0.477
+   ],
+   "Tent2_1": [
+    0.0,
+    2.665,
+    2.372
+   ],
+   "Tent2_2": [
+    0.0,
+    2.045,
+    2.342
+   ],
+   "Tent2_3": [
+    0.0,
+    1.425,
+    1.952
+   ],
+   "Tent2_4": [
+    0.0,
+    0.805,
+    1.202
+   ],
+   "Tent3_1": [
+    -0.866,
+    2.665,
+    1.872
+   ],
+   "Tent3_2": [
+    -0.996,
+    2.045,
+    1.767
+   ],
+   "Tent3_3": [
+    -1.126,
+    1.425,
+    1.302
+   ],
+   "Tent3_4": [
+    -1.256,
+    0.805,
+    0.477
+   ],
+   "Tent4_1": [
+    -0.866,
+    2.665,
+    0.872
+   ],
+   "Tent4_2": [
+    -0.996,
+    2.045,
+    0.617
+   ],
+   "Tent4_3": [
+    -1.126,
+    1.425,
+    0.002
+   ],
+   "Tent4_4": [
+    -1.256,
+    0.805,
+    -0.973
+   ],
+   "Tent5_1": [
+    -0.0,
+    2.665,
+    0.372
+   ],
+   "Tent5_2": [
+    -0.0,
+    2.045,
+    0.042
+   ],
+   "Tent5_3": [
+    -0.0,
+    1.425,
+    -0.648
+   ],
+   "Tent5_4": [
+    -0.0,
+    0.805,
+    -1.698
+   ],
+   "Tent6_1": [
+    0.866,
+    2.665,
+    0.872
+   ],
+   "Tent6_2": [
+    0.996,
+    2.045,
+    0.617
+   ],
+   "Tent6_3": [
+    1.126,
+    1.425,
+    0.002
+   ],
+   "Tent6_4": [
+    1.256,
+    0.805,
+    -0.973
+   ]
+  },
+  "anchors": {
+   "core": [
+    "Body",
+    [
+     0.0,
+     2.565,
+     1.372
+    ]
+   ],
+   "visor": [
+    "Body",
+    [
+     0.0,
+     3.465,
+     3.072
+    ]
+   ]
+  },
+  "palette": {
+   "Main": "#171b22",
+   "MainTop": "#2a313c",
+   "Plate": "#1f242d",
+   "PlateTop": "#34404e",
+   "Dark": "#0b0d11",
+   "Bone": "#e4eaee",
+   "BoneTop": "#ffffff",
+   "Stud": "#7f8ea0",
+   "StudTop": "#aebccc",
+   "Tendril": "#3a4a52",
+   "TendrilTop": "#55707a",
+   "Glow": "#16e8ff",
+   "Edge": "#7a8aa0"
+  }
+ },
+ "Kobold": {
+  "name": "Kobold",
+  "tris": 9564,
+  "maxPart": 4980,
+  "objects": 14,
+  "parts": 10,
+  "height": 4.258,
+  "size": [
+   4.44,
+   3.98,
+   4.26
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "ArmL1": "Body",
+   "ArmL2": "ArmL1",
+   "ArmR1": "Body",
+   "ArmR2": "ArmR1",
+   "LegL1": "Body",
+   "LegL2": "LegL1",
+   "LegR1": "Body",
+   "LegR2": "LegR1"
+  },
+  "groups": {
+   "Head": "head",
+   "ArmL1": "arm",
+   "ArmL2": "arm",
+   "ArmR1": "arm",
+   "ArmR2": "arm",
+   "LegL1": "leg",
+   "LegL2": "leg",
+   "LegR1": "leg",
+   "LegR2": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    1.998,
+    -0.741
+   ],
+   "Head": [
+    0.0,
+    3.198,
+    -0.241
+   ],
+   "ArmL1": [
+    -1.25,
+    2.948,
+    -0.491
+   ],
+   "ArmL2": [
+    -1.75,
+    1.998,
+    -0.141
+   ],
+   "ArmR1": [
+    1.25,
+    2.948,
+    -0.491
+   ],
+   "ArmR2": [
+    1.75,
+    1.998,
+    -0.141
+   ],
+   "LegL1": [
+    -0.6,
+    1.298,
+    -0.741
+   ],
+   "LegL2": [
+    -0.72,
+    0.748,
+    -0.491
+   ],
+   "LegR1": [
+    0.6,
+    1.298,
+    -0.741
+   ],
+   "LegR2": [
+    0.72,
+    0.748,
+    -0.491
+   ]
+  },
+  "anchors": {
+   "back": [
+    "Body",
+    [
+     0.0,
+     2.898,
+     -1.791
+    ]
+   ],
+   "visor": [
+    "Head",
+    [
+     0.0,
+     3.398,
+     0.759
+    ]
+   ]
+  },
+  "palette": {
+   "Main": "#22262c",
+   "MainTop": "#343a44",
+   "Plate": "#2a2f37",
+   "PlateTop": "#3f4652",
+   "Dark": "#111317",
+   "Bone": "#e6dfcc",
+   "BoneTop": "#fbf6ea",
+   "Stud": "#8f949f",
+   "StudTop": "#c0c4ce",
+   "Iron": "#3a3530",
+   "IronTop": "#54493e",
+   "Glow": "#1cff9a",
+   "Edge": "#86909e"
+  }
+ },
+ "Fafnir": {
+  "name": "Fafnir",
+  "tris": 24846,
+  "maxPart": 11026,
+  "objects": 26,
+  "parts": 24,
+  "height": 5.766,
+  "size": [
+   9.55,
+   10.39,
+   5.77
+  ],
+  "parent": {
+   "Body": null,
+   "Neck": "Body",
+   "Head": "Neck",
+   "WingL1": "Body",
+   "WingL2": "WingL1",
+   "WingR1": "Body",
+   "WingR2": "WingR1",
+   "LegFL1": "Body",
+   "LegFL2": "LegFL1",
+   "LegFL3": "LegFL2",
+   "LegFR1": "Body",
+   "LegFR2": "LegFR1",
+   "LegFR3": "LegFR2",
+   "LegBL1": "Body",
+   "LegBL2": "LegBL1",
+   "LegBL3": "LegBL2",
+   "LegBR1": "Body",
+   "LegBR2": "LegBR1",
+   "LegBR3": "LegBR2",
+   "Tail1": "Body",
+   "Tail2": "Tail1",
+   "Tail3": "Tail2",
+   "Tail4": "Tail3",
+   "Tail5": "Tail4"
+  },
+  "groups": {
+   "Neck": "neck",
+   "Head": "head",
+   "WingL1": "wing",
+   "WingL2": "wing",
+   "WingR1": "wing",
+   "WingR2": "wing",
+   "LegFL1": "leg",
+   "LegFL2": "leg",
+   "LegFL3": "leg",
+   "LegFR1": "leg",
+   "LegFR2": "leg",
+   "LegFR3": "leg",
+   "LegBL1": "leg",
+   "LegBL2": "leg",
+   "LegBL3": "leg",
+   "LegBR1": "leg",
+   "LegBR2": "leg",
+   "LegBR3": "leg",
+   "Tail1": "tail",
+   "Tail2": "tail",
+   "Tail3": "tail",
+   "Tail4": "tail",
+   "Tail5": "tail"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    2.847,
+    0.857
+   ],
+   "Neck": [
+    0.0,
+    3.347,
+    2.757
+   ],
+   "Head": [
+    0.0,
+    4.147,
+    3.457
+   ],
+   "WingL1": [
+    -1.3,
+    3.847,
+    1.357
+   ],
+   "WingL2": [
+    -2.8,
+    5.047,
+    0.757
+   ],
+   "WingR1": [
+    1.3,
+    3.847,
+    1.357
+   ],
+   "WingR2": [
+    2.8,
+    5.047,
+    0.757
+   ],
+   "LegFL1": [
+    -1.4,
+    2.447,
+    2.157
+   ],
+   "LegFL2": [
+    -1.65,
+    1.347,
+    2.357
+   ],
+   "LegFL3": [
+    -1.65,
+    0.497,
+    2.207
+   ],
+   "LegFR1": [
+    1.4,
+    2.447,
+    2.157
+   ],
+   "LegFR2": [
+    1.65,
+    1.347,
+    2.357
+   ],
+   "LegFR3": [
+    1.65,
+    0.497,
+    2.207
+   ],
+   "LegBL1": [
+    -1.35,
+    2.447,
+    -0.443
+   ],
+   "LegBL2": [
+    -1.6,
+    1.347,
+    -0.243
+   ],
+   "LegBL3": [
+    -1.6,
+    0.497,
+    -0.393
+   ],
+   "LegBR1": [
+    1.35,
+    2.447,
+    -0.443
+   ],
+   "LegBR2": [
+    1.6,
+    1.347,
+    -0.243
+   ],
+   "LegBR3": [
+    1.6,
+    0.497,
+    -0.393
+   ],
+   "Tail1": [
+    0.0,
+    2.747,
+    -1.543
+   ],
+   "Tail2": [
+    0.0,
+    2.447,
+    -2.243
+   ],
+   "Tail3": [
+    0.0,
+    2.047,
+    -2.893
+   ],
+   "Tail4": [
+    0.0,
+    1.597,
+    -3.443
+   ],
+   "Tail5": [
+    0.0,
+    1.197,
+    -3.893
+   ]
+  },
+  "anchors": {
+   "chest": [
+    "Body",
+    [
+     0.0,
+     2.647,
+     3.457
+    ]
+   ],
+   "snout": [
+    "Head",
+    [
+     0.0,
+     4.047,
+     5.207
+    ]
+   ]
+  },
+  "palette": {
+   "Main": "#1b1d22",
+   "MainTop": "#2c3038",
+   "Plate": "#23262d",
+   "PlateTop": "#383d48",
+   "Dark": "#0d0e11",
+   "Bone": "#ece4d0",
+   "BoneTop": "#fffaf0",
+   "Stud": "#8c919c",
+   "StudTop": "#c2c6d0",
+   "Wing": "#191b21",
+   "WingTop": "#2a2e38",
+   "Iron": "#2e3036",
+   "IronTop": "#454852",
+   "Glow": "#ff2440",
+   "Edge": "#8a90a0"
+  }
+ },
+ "Kepri Scarab": {
+  "name": "Kepri Scarab",
+  "tris": 11704,
+  "maxPart": 5044,
+  "objects": 26,
+  "parts": 22,
+  "height": 3.14,
+  "size": [
+   4.67,
+   5.41,
+   3.14
+  ],
+  "parent": {
+   "Body": null,
+   "WingL": "Body",
+   "WingR": "Body",
+   "Head": "Body",
+   "LegL1_1": "Body",
+   "LegL1_2": "LegL1_1",
+   "LegL1_3": "LegL1_2",
+   "LegL2_1": "Body",
+   "LegL2_2": "LegL2_1",
+   "LegL2_3": "LegL2_2",
+   "LegL3_1": "Body",
+   "LegL3_2": "LegL3_1",
+   "LegL3_3": "LegL3_2",
+   "LegR1_1": "Body",
+   "LegR1_2": "LegR1_1",
+   "LegR1_3": "LegR1_2",
+   "LegR2_1": "Body",
+   "LegR2_2": "LegR2_1",
+   "LegR2_3": "LegR2_2",
+   "LegR3_1": "Body",
+   "LegR3_2": "LegR3_1",
+   "LegR3_3": "LegR3_2"
+  },
+  "groups": {
+   "WingL": "wing",
+   "WingR": "wing",
+   "Head": "head",
+   "LegL1_1": "leg",
+   "LegL1_2": "leg",
+   "LegL1_3": "leg",
+   "LegL2_1": "leg",
+   "LegL2_2": "leg",
+   "LegL2_3": "leg",
+   "LegL3_1": "leg",
+   "LegL3_2": "leg",
+   "LegL3_3": "leg",
+   "LegR1_1": "leg",
+   "LegR1_2": "leg",
+   "LegR1_3": "leg",
+   "LegR2_1": "leg",
+   "LegR2_2": "leg",
+   "LegR2_3": "leg",
+   "LegR3_1": "leg",
+   "LegR3_2": "leg",
+   "LegR3_3": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    1.582,
+    -0.517
+   ],
+   "WingL": [
+    -0.55,
+    2.332,
+    -0.167
+   ],
+   "WingR": [
+    0.55,
+    2.332,
+    -0.167
+   ],
+   "Head": [
+    0.0,
+    1.582,
+    0.933
+   ],
+   "LegL1_1": [
+    -0.85,
+    1.282,
+    0.333
+   ],
+   "LegL1_2": [
+    -1.75,
+    1.732,
+    0.483
+   ],
+   "LegL1_3": [
+    -2.15,
+    0.532,
+    0.633
+   ],
+   "LegL2_1": [
+    -0.85,
+    1.282,
+    -0.467
+   ],
+   "LegL2_2": [
+    -1.75,
+    1.732,
+    -0.417
+   ],
+   "LegL2_3": [
+    -2.15,
+    0.532,
+    -0.367
+   ],
+   "LegL3_1": [
+    -0.85,
+    1.282,
+    -1.267
+   ],
+   "LegL3_2": [
+    -1.75,
+    1.732,
+    -1.317
+   ],
+   "LegL3_3": [
+    -2.15,
+    0.532,
+    -1.367
+   ],
+   "LegR1_1": [
+    0.85,
+    1.282,
+    0.333
+   ],
+   "LegR1_2": [
+    1.75,
+    1.732,
+    0.483
+   ],
+   "LegR1_3": [
+    2.15,
+    0.532,
+    0.633
+   ],
+   "LegR2_1": [
+    0.85,
+    1.282,
+    -0.467
+   ],
+   "LegR2_2": [
+    1.75,
+    1.732,
+    -0.417
+   ],
+   "LegR2_3": [
+    2.15,
+    0.532,
+    -0.367
+   ],
+   "LegR3_1": [
+    0.85,
+    1.282,
+    -1.267
+   ],
+   "LegR3_2": [
+    1.75,
+    1.732,
+    -1.317
+   ],
+   "LegR3_3": [
+    2.15,
+    0.532,
+    -1.367
+   ]
+  },
+  "anchors": {
+   "gem": [
+    "Body",
+    [
+     0.0,
+     2.482,
+     0.233
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.0,
+     1.682,
+     1.533
+    ]
+   ]
+  },
+  "palette": {
+   "Jade": "#0e6a4e",
+   "JadeTop": "#16a87c",
+   "Dark": "#08281f",
+   "DarkTop": "#0f3d30",
+   "Gold": "#c99a2e",
+   "GoldTop": "#ffe08a",
+   "Quartz": "#e8f6ee",
+   "QuartzTop": "#ffffff",
+   "Leg": "#0b3a2c",
+   "LegTop": "#14614a",
+   "Bone": "#d4a83a",
+   "BoneTop": "#ffe08a",
+   "Crystal": "#3ee8a8",
+   "Glow": "#5dffb8",
+   "Edge": "#a8f0d0",
+   "_noseams": true,
+   "_smooth": [
+    "Jade",
+    "Dark",
+    "Gold",
+    "Leg"
+   ]
+  }
+ },
+ "Shinemane": {
+  "name": "Shinemane",
+  "tris": 16298,
+  "maxPart": 4548,
+  "objects": 28,
+  "parts": 19,
+  "height": 5.978,
+  "size": [
+   2.94,
+   7.88,
+   5.98
+  ],
+  "parent": {
+   "Body": null,
+   "Neck": "Body",
+   "Head": "Neck",
+   "LegFL1": "Body",
+   "LegFL2": "LegFL1",
+   "LegFL3": "LegFL2",
+   "LegFR1": "Body",
+   "LegFR2": "LegFR1",
+   "LegFR3": "LegFR2",
+   "LegBL1": "Body",
+   "LegBL2": "LegBL1",
+   "LegBL3": "LegBL2",
+   "LegBR1": "Body",
+   "LegBR2": "LegBR1",
+   "LegBR3": "LegBR2",
+   "Tail1": "Body",
+   "Tail2": "Tail1",
+   "Tail3": "Tail2",
+   "Tail4": "Tail3"
+  },
+  "groups": {
+   "Neck": "neck",
+   "Head": "head",
+   "LegFL1": "leg",
+   "LegFL2": "leg",
+   "LegFL3": "leg",
+   "LegFR1": "leg",
+   "LegFR2": "leg",
+   "LegFR3": "leg",
+   "LegBL1": "leg",
+   "LegBL2": "leg",
+   "LegBL3": "leg",
+   "LegBR1": "leg",
+   "LegBR2": "leg",
+   "LegBR3": "leg",
+   "Tail1": "tail",
+   "Tail2": "tail",
+   "Tail3": "tail",
+   "Tail4": "tail"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.033,
+    2.545,
+    0.598
+   ],
+   "Neck": [
+    0.033,
+    2.945,
+    1.898
+   ],
+   "Head": [
+    0.033,
+    3.745,
+    2.448
+   ],
+   "LegFL1": [
+    -0.447,
+    2.245,
+    1.598
+   ],
+   "LegFL2": [
+    -0.487,
+    1.245,
+    1.748
+   ],
+   "LegFL3": [
+    -0.487,
+    0.325,
+    1.598
+   ],
+   "LegFR1": [
+    0.513,
+    2.245,
+    1.598
+   ],
+   "LegFR2": [
+    0.553,
+    1.245,
+    1.748
+   ],
+   "LegFR3": [
+    0.553,
+    0.325,
+    1.598
+   ],
+   "LegBL1": [
+    -0.487,
+    2.345,
+    -0.702
+   ],
+   "LegBL2": [
+    -0.527,
+    1.245,
+    -0.402
+   ],
+   "LegBL3": [
+    -0.527,
+    0.325,
+    -0.952
+   ],
+   "LegBR1": [
+    0.553,
+    2.345,
+    -0.702
+   ],
+   "LegBR2": [
+    0.593,
+    1.245,
+    -0.402
+   ],
+   "LegBR3": [
+    0.593,
+    0.325,
+    -0.952
+   ],
+   "Tail1": [
+    0.033,
+    2.895,
+    -1.352
+   ],
+   "Tail2": [
+    0.033,
+    3.245,
+    -2.102
+   ],
+   "Tail3": [
+    0.033,
+    3.795,
+    -2.752
+   ],
+   "Tail4": [
+    0.033,
+    4.495,
+    -3.002
+   ]
+  },
+  "anchors": {
+   "mane": [
+    "Neck",
+    [
+     0.033,
+     3.265,
+     2.148
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.033,
+     4.045,
+     3.298
+    ]
+   ],
+   "tail": [
+    "Tail4",
+    [
+     0.033,
+     5.645,
+     -2.802
+    ]
+   ]
+  },
+  "palette": {
+   "Fur": "#1d2c78",
+   "FurTop": "#3150c0",
+   "Dark": "#0d1440",
+   "DarkTop": "#16205e",
+   "Belly": "#3446a8",
+   "BellyTop": "#5a76e6",
+   "Amethyst": "#8b6cf0",
+   "AmethystTop": "#c4b2ff",
+   "Bone": "#bfe6ff",
+   "BoneTop": "#ffffff",
+   "Crystal": "#5ee6ff",
+   "Glow": "#8af4ff",
+   "Edge": "#9ab4ff",
+   "_noseams": true,
+   "_smooth": [
+    "Fur",
+    "FurTop",
+    "Dark",
+    "Belly",
+    "BellyTop"
+   ]
+  }
+ },
+ "Goldbristle": {
+  "name": "Goldbristle",
+  "tris": 16056,
+  "maxPart": 10304,
+  "objects": 17,
+  "parts": 15,
+  "height": 3.428,
+  "size": [
+   3.35,
+   6.09,
+   3.43
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "LegFL1": "Body",
+   "LegFL2": "LegFL1",
+   "LegFL3": "LegFL2",
+   "LegFR1": "Body",
+   "LegFR2": "LegFR1",
+   "LegFR3": "LegFR2",
+   "LegBL1": "Body",
+   "LegBL2": "LegBL1",
+   "LegBL3": "LegBL2",
+   "LegBR1": "Body",
+   "LegBR2": "LegBR1",
+   "LegBR3": "LegBR2",
+   "Tail1": "Body"
+  },
+  "groups": {
+   "Head": "head",
+   "LegFL1": "leg",
+   "LegFL2": "leg",
+   "LegFL3": "leg",
+   "LegFR1": "leg",
+   "LegFR2": "leg",
+   "LegFR3": "leg",
+   "LegBL1": "leg",
+   "LegBL2": "leg",
+   "LegBL3": "leg",
+   "LegBR1": "leg",
+   "LegBR2": "leg",
+   "LegBR3": "leg",
+   "Tail1": "tail"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    1.587,
+    -0.036
+   ],
+   "Head": [
+    0.0,
+    1.487,
+    1.464
+   ],
+   "LegFL1": [
+    -0.9,
+    1.087,
+    0.864
+   ],
+   "LegFL2": [
+    -1.05,
+    0.637,
+    1.014
+   ],
+   "LegFL3": [
+    -1.05,
+    0.387,
+    0.964
+   ],
+   "LegFR1": [
+    0.9,
+    1.087,
+    0.864
+   ],
+   "LegFR2": [
+    1.05,
+    0.637,
+    1.014
+   ],
+   "LegFR3": [
+    1.05,
+    0.387,
+    0.964
+   ],
+   "LegBL1": [
+    -0.85,
+    1.087,
+    -1.136
+   ],
+   "LegBL2": [
+    -1.0,
+    0.637,
+    -1.236
+   ],
+   "LegBL3": [
+    -1.0,
+    0.387,
+    -1.136
+   ],
+   "LegBR1": [
+    0.85,
+    1.087,
+    -1.136
+   ],
+   "LegBR2": [
+    1.0,
+    0.637,
+    -1.236
+   ],
+   "LegBR3": [
+    1.0,
+    0.387,
+    -1.136
+   ],
+   "Tail1": [
+    0.0,
+    1.387,
+    -2.086
+   ]
+  },
+  "anchors": {
+   "back": [
+    "Body",
+    [
+     0.0,
+     3.087,
+     -0.436
+    ]
+   ],
+   "snout": [
+    "Head",
+    [
+     0.0,
+     1.207,
+     3.014
+    ]
+   ]
+  },
+  "palette": {
+   "Main": "#1b1d22",
+   "MainTop": "#2c3038",
+   "Plate": "#22252c",
+   "PlateTop": "#363b46",
+   "Dark": "#0d0e11",
+   "Bone": "#e8e2d0",
+   "BoneTop": "#ffffff",
+   "Stud": "#8e939e",
+   "StudTop": "#c4c8d2",
+   "Gold": "#b8892a",
+   "GoldTop": "#f0c860",
+   "Glow": "#ffb424",
+   "Edge": "#8a909e"
+  }
+ },
+ "Pixiu": {
+  "name": "Pixiu",
+  "tris": 15376,
+  "maxPart": 7336,
+  "objects": 19,
+  "parts": 17,
+  "height": 4.789,
+  "size": [
+   4.73,
+   7.23,
+   4.79
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "LegFL1": "Body",
+   "LegFL2": "LegFL1",
+   "LegFL3": "LegFL2",
+   "LegFR1": "Body",
+   "LegFR2": "LegFR1",
+   "LegFR3": "LegFR2",
+   "LegBL1": "Body",
+   "LegBL2": "LegBL1",
+   "LegBL3": "LegBL2",
+   "LegBR1": "Body",
+   "LegBR2": "LegBR1",
+   "LegBR3": "LegBR2",
+   "Tail1": "Body",
+   "Tail2": "Tail1",
+   "Tail3": "Tail2"
+  },
+  "groups": {
+   "Head": "head",
+   "LegFL1": "leg",
+   "LegFL2": "leg",
+   "LegFL3": "leg",
+   "LegFR1": "leg",
+   "LegFR2": "leg",
+   "LegFR3": "leg",
+   "LegBL1": "leg",
+   "LegBL2": "leg",
+   "LegBL3": "leg",
+   "LegBR1": "leg",
+   "LegBR2": "leg",
+   "LegBR3": "leg",
+   "Tail1": "tail",
+   "Tail2": "tail",
+   "Tail3": "tail"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    2.43,
+    0.585
+   ],
+   "Head": [
+    0.0,
+    3.33,
+    1.885
+   ],
+   "LegFL1": [
+    -1.1,
+    2.03,
+    1.585
+   ],
+   "LegFL2": [
+    -1.3,
+    1.13,
+    1.835
+   ],
+   "LegFL3": [
+    -1.3,
+    0.45,
+    1.735
+   ],
+   "LegFR1": [
+    1.1,
+    2.03,
+    1.585
+   ],
+   "LegFR2": [
+    1.3,
+    1.13,
+    1.835
+   ],
+   "LegFR3": [
+    1.3,
+    0.45,
+    1.735
+   ],
+   "LegBL1": [
+    -0.9,
+    1.73,
+    -0.715
+   ],
+   "LegBL2": [
+    -1.0,
+    0.98,
+    -0.915
+   ],
+   "LegBL3": [
+    -1.0,
+    0.43,
+    -0.715
+   ],
+   "LegBR1": [
+    0.9,
+    1.73,
+    -0.715
+   ],
+   "LegBR2": [
+    1.0,
+    0.98,
+    -0.915
+   ],
+   "LegBR3": [
+    1.0,
+    0.43,
+    -0.715
+   ],
+   "Tail1": [
+    0.0,
+    2.33,
+    -1.415
+   ],
+   "Tail2": [
+    0.0,
+    2.13,
+    -2.015
+   ],
+   "Tail3": [
+    0.0,
+    1.78,
+    -2.515
+   ]
+  },
+  "anchors": {
+   "vault": [
+    "Body",
+    [
+     0.0,
+     2.48,
+     2.535
+    ]
+   ]
+  },
+  "palette": {
+   "Main": "#1a2622",
+   "MainTop": "#2b3b35",
+   "Plate": "#22302b",
+   "PlateTop": "#364841",
+   "Dark": "#0c110f",
+   "Bone": "#e8e4d4",
+   "BoneTop": "#ffffff",
+   "Stud": "#8e9a94",
+   "StudTop": "#c4d0ca",
+   "Gold": "#8a6a2c",
+   "GoldTop": "#c8a24c",
+   "Glow": "#00ffb7",
+   "Edge": "#88a098"
+  }
+ },
+ "Selkie": {
+  "name": "Selkie",
+  "tris": 10040,
+  "maxPart": 5388,
+  "objects": 14,
+  "parts": 12,
+  "height": 3.614,
+  "size": [
+   4.62,
+   8.53,
+   3.61
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "FinFL1": "Body",
+   "FinFL2": "FinFL1",
+   "FinFR1": "Body",
+   "FinFR2": "FinFR1",
+   "FinBL1": "Body",
+   "FinBL2": "FinBL1",
+   "FinBR1": "Body",
+   "FinBR2": "FinBR1",
+   "Tail1": "Body",
+   "Tail2": "Tail1"
+  },
+  "groups": {
+   "Head": "head",
+   "FinFL1": "leg",
+   "FinFL2": "leg",
+   "FinFR1": "leg",
+   "FinFR2": "leg",
+   "FinBL1": "leg",
+   "FinBL2": "leg",
+   "FinBR1": "leg",
+   "FinBR2": "leg",
+   "Tail1": "tail",
+   "Tail2": "tail"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    1.809,
+    0.445
+   ],
+   "Head": [
+    0.0,
+    1.859,
+    2.445
+   ],
+   "FinFL1": [
+    -0.95,
+    1.409,
+    1.545
+   ],
+   "FinFL2": [
+    -1.475,
+    1.134,
+    1.795
+   ],
+   "FinFR1": [
+    0.95,
+    1.409,
+    1.545
+   ],
+   "FinFR2": [
+    1.475,
+    1.134,
+    1.795
+   ],
+   "FinBL1": [
+    -0.75,
+    1.409,
+    -0.855
+   ],
+   "FinBL2": [
+    -1.225,
+    1.134,
+    -1.005
+   ],
+   "FinBR1": [
+    0.75,
+    1.409,
+    -0.855
+   ],
+   "FinBR2": [
+    1.225,
+    1.134,
+    -1.005
+   ],
+   "Tail1": [
+    0.0,
+    1.809,
+    -2.155
+   ],
+   "Tail2": [
+    0.0,
+    1.859,
+    -2.755
+   ]
+  },
+  "anchors": {
+   "gills": [
+    "Body",
+    [
+     0.0,
+     2.509,
+     1.745
+    ]
+   ],
+   "snout": [
+    "Head",
+    [
+     0.0,
+     1.709,
+     4.245
+    ]
+   ]
+  },
+  "palette": {
+   "Main": "#16202c",
+   "MainTop": "#24344a",
+   "Plate": "#1c2836",
+   "PlateTop": "#2e4258",
+   "Dark": "#0a0e14",
+   "Bone": "#e4eaee",
+   "BoneTop": "#ffffff",
+   "Stud": "#7f8ea0",
+   "StudTop": "#aebccc",
+   "Gill": "#1a5260",
+   "GillTop": "#2a7a8a",
+   "Glow": "#00e5ff",
+   "Edge": "#7a8ca8"
+  }
+ },
+ "Zharbird": {
+  "name": "Zharbird",
+  "tris": 9172,
+  "maxPart": 3652,
+  "objects": 20,
+  "parts": 13,
+  "height": 5.751,
+  "size": [
+   7.61,
+   4.05,
+   5.75
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "WingL1": "Body",
+   "WingL2": "WingL1",
+   "WingR1": "Body",
+   "WingR2": "WingR1",
+   "LegL1": "Body",
+   "LegL2": "LegL1",
+   "LegR1": "Body",
+   "LegR2": "LegR1",
+   "Tail1": "Body",
+   "Tail2": "Body",
+   "Tail3": "Body"
+  },
+  "groups": {
+   "Head": "head",
+   "WingL1": "wing",
+   "WingL2": "wing",
+   "WingR1": "wing",
+   "WingR2": "wing",
+   "LegL1": "leg",
+   "LegL2": "leg",
+   "LegR1": "leg",
+   "LegR2": "leg",
+   "Tail1": "tail",
+   "Tail2": "tail",
+   "Tail3": "tail"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    2.595,
+    0.271
+   ],
+   "Head": [
+    0.0,
+    3.895,
+    0.671
+   ],
+   "WingL1": [
+    -0.95,
+    3.395,
+    0.271
+   ],
+   "WingL2": [
+    -2.0,
+    3.895,
+    0.071
+   ],
+   "WingR1": [
+    0.95,
+    3.395,
+    0.271
+   ],
+   "WingR2": [
+    2.0,
+    3.895,
+    0.071
+   ],
+   "LegL1": [
+    -0.5,
+    1.895,
+    0.071
+   ],
+   "LegL2": [
+    -0.6,
+    1.045,
+    0.471
+   ],
+   "LegR1": [
+    0.5,
+    1.895,
+    0.071
+   ],
+   "LegR2": [
+    0.6,
+    1.045,
+    0.471
+   ],
+   "Tail1": [
+    -0.105,
+    2.095,
+    -0.629
+   ],
+   "Tail2": [
+    0.0,
+    2.095,
+    -0.629
+   ],
+   "Tail3": [
+    0.105,
+    2.095,
+    -0.629
+   ]
+  },
+  "anchors": {
+   "breast": [
+    "Body",
+    [
+     0.0,
+     2.895,
+     1.371
+    ]
+   ],
+   "crest": [
+    "Head",
+    [
+     0.0,
+     5.495,
+     0.571
+    ]
+   ]
+  },
+  "palette": {
+   "Main": "#1f1717",
+   "MainTop": "#342626",
+   "Plate": "#2a1d1c",
+   "PlateTop": "#40302c",
+   "Dark": "#0e0a0a",
+   "Bone": "#ece4d4",
+   "BoneTop": "#ffffff",
+   "Stud": "#8c7e78",
+   "StudTop": "#c0b0a8",
+   "Brick": "#5a2a20",
+   "BrickTop": "#86402c",
+   "Glow": "#ff4a12",
+   "Edge": "#9a8480"
+  }
+ },
+ "Kirin": {
+  "name": "Kirin",
+  "tris": 11016,
+  "maxPart": 4048,
+  "objects": 21,
+  "parts": 19,
+  "height": 6.662,
+  "size": [
+   3.21,
+   7.35,
+   6.66
+  ],
+  "parent": {
+   "Body": null,
+   "Neck": "Body",
+   "Head": "Neck",
+   "LegFL1": "Body",
+   "LegFL2": "LegFL1",
+   "LegFL3": "LegFL2",
+   "LegFR1": "Body",
+   "LegFR2": "LegFR1",
+   "LegFR3": "LegFR2",
+   "LegBL1": "Body",
+   "LegBL2": "LegBL1",
+   "LegBL3": "LegBL2",
+   "LegBR1": "Body",
+   "LegBR2": "LegBR1",
+   "LegBR3": "LegBR2",
+   "Tail1": "Body",
+   "Tail2": "Tail1",
+   "Tail3": "Tail2",
+   "Tail4": "Tail3"
+  },
+  "groups": {
+   "Neck": "neck",
+   "Head": "head",
+   "LegFL1": "leg",
+   "LegFL2": "leg",
+   "LegFL3": "leg",
+   "LegFR1": "leg",
+   "LegFR2": "leg",
+   "LegFR3": "leg",
+   "LegBL1": "leg",
+   "LegBL2": "leg",
+   "LegBL3": "leg",
+   "LegBR1": "leg",
+   "LegBR2": "leg",
+   "LegBR3": "leg",
+   "Tail1": "tail",
+   "Tail2": "tail",
+   "Tail3": "tail",
+   "Tail4": "tail"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    2.706,
+    0.238
+   ],
+   "Neck": [
+    0.0,
+    3.106,
+    1.638
+   ],
+   "Head": [
+    0.0,
+    4.006,
+    2.238
+   ],
+   "LegFL1": [
+    -0.6,
+    2.206,
+    1.238
+   ],
+   "LegFL2": [
+    -0.65,
+    1.256,
+    1.538
+   ],
+   "LegFL3": [
+    -0.65,
+    0.356,
+    1.338
+   ],
+   "LegFR1": [
+    0.6,
+    2.206,
+    1.238
+   ],
+   "LegFR2": [
+    0.65,
+    1.256,
+    1.538
+   ],
+   "LegFR3": [
+    0.65,
+    0.356,
+    1.338
+   ],
+   "LegBL1": [
+    -0.55,
+    2.206,
+    -1.062
+   ],
+   "LegBL2": [
+    -0.6,
+    1.256,
+    -1.412
+   ],
+   "LegBL3": [
+    -0.6,
+    0.356,
+    -1.162
+   ],
+   "LegBR1": [
+    0.55,
+    2.206,
+    -1.062
+   ],
+   "LegBR2": [
+    0.6,
+    1.256,
+    -1.412
+   ],
+   "LegBR3": [
+    0.6,
+    0.356,
+    -1.162
+   ],
+   "Tail1": [
+    0.0,
+    2.906,
+    -1.862
+   ],
+   "Tail2": [
+    0.0,
+    2.756,
+    -2.412
+   ],
+   "Tail3": [
+    0.0,
+    2.406,
+    -2.862
+   ],
+   "Tail4": [
+    0.0,
+    1.956,
+    -3.162
+   ]
+  },
+  "anchors": {
+   "back": [
+    "Body",
+    [
+     0.0,
+     3.806,
+     0.038
+    ]
+   ],
+   "antlers": [
+    "Head",
+    [
+     0.0,
+     5.606,
+     2.038
+    ]
+   ]
+  },
+  "palette": {
+   "Main": "#171b2a",
+   "MainTop": "#252c44",
+   "Plate": "#1d2336",
+   "PlateTop": "#2f3a58",
+   "Dark": "#0b0d14",
+   "Bone": "#ece8dc",
+   "BoneTop": "#ffffff",
+   "Stud": "#8a94ae",
+   "StudTop": "#bcc6de",
+   "Gold": "#8a6a2c",
+   "GoldTop": "#d0a650",
+   "Glow": "#00f5ff",
+   "Edge": "#8090b4"
+  }
+ },
+ "Ouro": {
+  "name": "Ouro",
+  "tris": 8598,
+  "maxPart": 2056,
+  "objects": 30,
+  "parts": 23,
+  "height": 4.508,
+  "size": [
+   4.46,
+   4.36,
+   4.51
+  ],
+  "parent": {
+   "Body": null,
+   "Spine1": "Body",
+   "Spine2": "Spine1",
+   "Spine3": "Spine2",
+   "Spine4": "Spine3",
+   "Spine5": "Spine4",
+   "Spine6": "Spine5",
+   "Spine7": "Spine6",
+   "Spine8": "Spine7",
+   "Spine9": "Spine8",
+   "Spine10": "Spine9",
+   "Spine11": "Spine10",
+   "Spine12": "Spine11",
+   "Spine13": "Spine12",
+   "Spine14": "Spine13",
+   "Spine15": "Spine14",
+   "Spine16": "Spine15",
+   "Spine17": "Spine16",
+   "Spine18": "Spine17",
+   "Neck1": "Spine18",
+   "Neck2": "Neck1",
+   "Neck3": "Neck2",
+   "Head": "Neck3"
+  },
+  "groups": {
+   "Spine1": "spine",
+   "Spine2": "spine",
+   "Spine3": "spine",
+   "Spine4": "spine",
+   "Spine5": "spine",
+   "Spine6": "spine",
+   "Spine7": "spine",
+   "Spine8": "spine",
+   "Spine9": "spine",
+   "Spine10": "spine",
+   "Spine11": "spine",
+   "Spine12": "spine",
+   "Spine13": "spine",
+   "Spine14": "spine",
+   "Spine15": "spine",
+   "Spine16": "spine",
+   "Spine17": "spine",
+   "Spine18": "spine",
+   "Neck1": "neck",
+   "Neck2": "neck",
+   "Neck3": "neck",
+   "Head": "head"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    1.671,
+    0.366,
+    1.134
+   ],
+   "Spine1": [
+    1.671,
+    0.366,
+    1.134
+   ],
+   "Spine2": [
+    0.796,
+    0.367,
+    1.82
+   ],
+   "Spine3": [
+    -0.286,
+    0.371,
+    1.953
+   ],
+   "Spine4": [
+    -1.261,
+    0.376,
+    1.518
+   ],
+   "Spine5": [
+    -1.859,
+    0.385,
+    0.661
+   ],
+   "Spine6": [
+    -1.928,
+    0.395,
+    -0.36
+   ],
+   "Spine7": [
+    -1.471,
+    0.408,
+    -1.25
+   ],
+   "Spine8": [
+    -0.639,
+    0.423,
+    -1.765
+   ],
+   "Spine9": [
+    0.317,
+    0.441,
+    -1.777
+   ],
+   "Spine10": [
+    1.123,
+    0.461,
+    -1.305
+   ],
+   "Spine11": [
+    1.559,
+    0.483,
+    -0.505
+   ],
+   "Spine12": [
+    1.521,
+    0.508,
+    0.384
+   ],
+   "Spine13": [
+    1.042,
+    0.535,
+    1.107
+   ],
+   "Spine14": [
+    0.279,
+    0.564,
+    1.469
+   ],
+   "Spine15": [
+    -0.54,
+    0.596,
+    1.388
+   ],
+   "Spine16": [
+    -1.182,
+    0.63,
+    0.909
+   ],
+   "Spine17": [
+    -1.475,
+    0.666,
+    0.188
+   ],
+   "Spine18": [
+    -1.358,
+    0.705,
+    -0.559
+   ],
+   "Neck1": [
+    -0.886,
+    0.746,
+    -1.121
+   ],
+   "Neck2": [
+    -0.686,
+    1.646,
+    -0.821
+   ],
+   "Neck3": [
+    -0.636,
+    2.446,
+    -0.371
+   ],
+   "Head": [
+    -0.686,
+    3.046,
+    0.129
+   ]
+  },
+  "anchors": {
+   "gem": [
+    "Head",
+    [
+     -0.686,
+     3.896,
+     0.729
+    ]
+   ]
+  },
+  "palette": {
+   "Main": "#12161a",
+   "MainTop": "#222a30",
+   "Plate": "#192026",
+   "PlateTop": "#2c3842",
+   "Dark": "#080a0c",
+   "Bone": "#e6e2cc",
+   "BoneTop": "#ffffff",
+   "Belly": "#a8a07c",
+   "BellyTop": "#d0c8a0",
+   "Stud": "#7c8a90",
+   "StudTop": "#b0bec4",
+   "Glow": "#00ff88",
+   "Edge": "#7a9098"
+  }
+ }
+}

@@ -22,9 +22,11 @@ function M.serverLoad()
 	local folder = RS:FindFirstChild("PetMeshes") or Instance.new("Folder")
 	folder.Name, folder.Parent = "PetMeshes", RS
 	local IS = game:GetService("InsertService")
+	local okR, RIGD = pcall(function() return require(script.Parent:WaitForChild("PetRigData", 5)) end)
 	for name, d in DATA do
 		if not folder:FindFirstChild(name) then
-			local ok, got = pcall(function() return IS:LoadAsset(d.id) end)
+			local id = okR and RIGD[name] and RIGD[name].id or d.id -- v16: the plate pet replaces the voxel one
+			local ok, got = pcall(function() return IS:LoadAsset(id) end)
 			if ok and got then
 				local m = got:FindFirstChildWhichIsA("Model") or got
 				m.Name = name
@@ -228,8 +230,10 @@ local function seams(m, name, rig)
 	end
 end
 
+local rigBuild, rigAnimate -- the v16 plate pets (defined below, after the action library)
 -- client: a fresh, painted model for this pet, or nil while its meshes have not arrived
 function M.build(name)
+	if rigBuild and M.RIG and M.RIG[name] then return rigBuild(name) end
 	local d = DATA[name]
 	local folder = RS:FindFirstChild("PetMeshes")
 	local src = d and folder and folder:FindFirstChild(name)
@@ -397,6 +401,312 @@ local ACTS = {
 	Fafnir = { "look", "roar", "flap" }, Kirin = { "look", "rear", "roar" }, Ouro = { "sway", "look", "roar" }, Ninering = { "spin", "look" },
 }
 
+-- ===================================================================================== v16 PLATE PETS (Master Directive v16)
+-- The owner's target (the Lure a Pet Showcase video, vault Projects/Pixel-_ ... pets_v16): big armoured creatures with one
+-- MeshPart per bone (design3d/pets/pet_plate.py, data in Shared.PetRigData). Tex pieces carry vertex colours (Color stays
+-- white so they show as baked), Glow pieces are Neon in the pet's glow colour. Each bone has a parent and a group, and the
+-- groups move procedurally: legs walk in diagonal pairs (tripods for six legs), arms swing, wings beat, tails, tendrils and
+-- spines ripple, necks and heads look, rings spin on their own axes. The ACT library above drives the clips (look, roar,
+-- stomp, flap, rear, spin, hero...) through the same pose fields, so every pet has idle actions and the hatch showcase.
+local RIG = (function()
+	local ok, r = pcall(function() return require(script.Parent:WaitForChild("PetRigData", 5)) end)
+	return ok and r or {}
+end)()
+M.RIG = RIG
+local RIGFX = {
+	Tosk = { { "back", "motes", C3(255, 190, 60), { C3(255, 170, 50), 8, 0.5 } }, { "canopy", "leaf", C3(130, 220, 80) },
+		{ "tuskL", "orbit", C3(255, 196, 70), { C3(255, 180, 60), 4, 0.3 } }, { "tuskR", "orbit", C3(255, 196, 70), { C3(255, 180, 60), 4, 0.3 } },
+		{ "tuskL", "sparkle", C3(255, 210, 110) }, { "tuskR", "sparkle", C3(255, 210, 110) }, { "eyes", "sparkle", C3(255, 170, 50) },
+		{ "hoofFL", "motes", C3(255, 190, 70) }, { "hoofFR", "motes", C3(255, 190, 70) }, { "hoofBL", "motes", C3(255, 190, 70) }, { "hoofBR", "motes", C3(255, 190, 70) } },
+	Kobold = { { "visor", "sparkle", C3(40, 255, 150), { C3(40, 255, 150), 7, 0.7 } }, { "back", "motes", C3(120, 255, 180) } },
+	["Kepri Scarab"] = { { "eyes", "motes", C3(40, 240, 130), { C3(40, 240, 130), 6, 0.6 } } },
+	Shinemane = { { "crown", "sparkle", C3(255, 200, 70), { C3(255, 200, 80), 10, 1 } }, { "heart", "motes", C3(255, 190, 60) } },
+	Goldbristle = { { "back", "coins", C3(255, 200, 60), { C3(255, 190, 60), 7, 0.6 } } },
+	Pixiu = { { "vault", "coins", C3(255, 210, 90), { C3(0, 255, 180), 7, 0.6 } } },
+	Glimwisp = { { "core", "motes", C3(40, 230, 255), { C3(40, 230, 255), 12, 1.2 } }, { "visor", "sparkle", C3(80, 240, 255) } },
+	Selkie = { { "gills", "bubbles", C3(160, 240, 255), { C3(0, 220, 255), 7, 0.6 } }, { "snout", "bubbles", C3(160, 240, 255) } },
+	Zharbird = { { "crest", "flame", C3(255, 110, 30), { C3(255, 120, 40), 9, 1 } }, { "breast", "embers", C3(255, 120, 40) } },
+	Fafnir = { { "chest", "embers", C3(255, 60, 60), { C3(255, 40, 60), 10, 1 } }, { "snout", "smoke", C3(110, 100, 100) } },
+	Kirin = { { "antlers", "zap", C3(80, 240, 255), { C3(80, 240, 255), 10, 1 } }, { "back", "motes", C3(120, 230, 255) } },
+	Ouro = { { "gem", "sparkle", C3(40, 255, 140), { C3(40, 255, 140), 9, 1 } } },
+	Ninering = { { "core", "sparkle", C3(200, 80, 255), { C3(200, 80, 255), 14, 1.4 } }, { "core", "aura", C3(190, 90, 255) } },
+}
+
+local function rigFx(m, name, d, rig)
+	local list = table.clone(RIGFX[name] or {})
+	table.insert(list, { "_feet", "dust", Color3.fromRGB(232, 218, 196) })
+	for _, f in list do
+		local anchor, kind, col, li = f[1], f[2], f[3], f[4]
+		local a = d.anchors and d.anchors[anchor]
+		local partName, pos = "Body", Vector3.new(0, 0.05, 0)
+		if a then partName, pos = a[1], a[2] end
+		local P = (FLIP * CFrame.new(pos)).Position
+		local host, best = nil, math.huge
+		for _, g in rig.pieces do
+			if g.part == partName then
+				local dd = (g.p.Position - P).Magnitude
+				if dd < best then host, best = g.p, dd end
+			end
+		end
+		if not host then for _, g in rig.pieces do if g.part == "Body" then host = g.p break end end end
+		local k = KIND[kind]
+		if host and kind == "orbit" then
+			local att = Instance.new("Attachment")
+			att.Name = "Fx_orbit"
+			att.Position = host.CFrame:PointToObjectSpace(P)
+			att.Parent = host
+			local big = d.vox and 0.65 or math.clamp(d.height / 3, 1, 2.5) -- voxel pets: one or two cells per spark
+			local o = { att = att, cubes = {}, r = 0.32 * big, sz = 0.11 * big }
+			for i = 1, 6 do
+				local q = Instance.new("Part")
+				q.Name, q.Size, q.Material, q.Color = "Fx_mote", Vector3.new(o.sz, o.sz, o.sz), Enum.Material.Neon, col
+				q.Anchored, q.CanCollide, q.CanQuery, q.CanTouch, q.CastShadow = true, false, false, false, false
+				q.Parent = m
+				table.insert(o.cubes, q)
+			end
+			rig.orbits = rig.orbits or {}
+			table.insert(rig.orbits, o)
+			if li then
+				local l = Instance.new("PointLight")
+				l.Color, l.Range, l.Brightness, l.Shadows = li[1], li[2] * big, li[3], false
+				l.Parent = att
+				rig.lights = rig.lights or {}
+				table.insert(rig.lights, { l = l, b = li[3] })
+			end
+		elseif host and k then
+			local att = Instance.new("Attachment")
+			att.Name = "Fx_" .. kind
+			att.Position = host.CFrame:PointToObjectSpace(P)
+			att.Parent = host
+			local e = Instance.new("ParticleEmitter")
+			local big = d.vox and 0.65 or math.clamp(d.height / 3, 1, 2.5) -- voxel pets: one or two cells per spark -- the plate pets are 3 to 8 studs tall: their sparks are bigger
+			local sz = {}
+			for _, kp in k.size.Keypoints do table.insert(sz, NumberSequenceKeypoint.new(kp.Time, kp.Value * big, kp.Envelope * big)) end
+			e.Texture, e.Color, e.Size, e.Transparency = TEX[k.tex], ColorSequence.new(col), NumberSequence.new(sz), k.trans
+			e.Rate, e.Lifetime, e.Speed, e.SpreadAngle = k.rate, k.life, NumberRange.new(k.speed.Min * big, k.speed.Max * big), Vector2.new(k.spread, k.spread)
+			e.Acceleration, e.Drag, e.LightEmission, e.LightInfluence = (k.accel or Vector3.zero) * big, k.drag or 0, k.light, 0
+			e.EmissionDirection, e.LockedToPart = k.dir or Enum.NormalId.Top, k.locked == true
+			if k.rot then e.RotSpeed, e.Rotation = NumberRange.new(-k.rot, k.rot), NumberRange.new(0, 360)
+			elseif k.tex == "square" then e.Rotation, e.RotSpeed = NumberRange.new(0, 90), NumberRange.new(-40, 40) end
+			if kind == "flame" then e.Color = ColorSequence.new(col:Lerp(Color3.new(1, 1, 1), 0.2), col:Lerp(Color3.fromRGB(120, 20, 10), 0.5)) end
+			if kind == "aura" then e.ZOffset = -1 end
+			e.Parent = att
+			if li then
+				local l = Instance.new("PointLight")
+				l.Color, l.Range, l.Brightness, l.Shadows = li[1], li[2] * big, li[3], false
+				l.Parent = att
+				rig.lights = rig.lights or {}
+				table.insert(rig.lights, { l = l, b = li[3] })
+			end
+		end
+	end
+end
+
+rigBuild = function(name)
+	local d = RIG[name]
+	local folder = RS:FindFirstChild("PetMeshes")
+	local src = d and folder and folder:FindFirstChild(name)
+	if not src then return nil end
+	local parts = {}
+	local lo, hi = Vector3.new(math.huge, math.huge, math.huge), Vector3.new(-math.huge, -math.huge, -math.huge)
+	for _, p in src:GetDescendants() do
+		if p:IsA("BasePart") then
+			table.insert(parts, p)
+			local h = p.Size / 2
+			lo, hi = lo:Min(p.Position - h), hi:Max(p.Position + h)
+		end
+	end
+	if #parts == 0 then return nil end
+	local origin = CFrame.new((lo.X + hi.X) / 2, lo.Y, (lo.Z + hi.Z) / 2)
+	local m = Instance.new("Model")
+	m.Name = name
+	local root = Instance.new("Part")
+	root.Name, root.Size, root.Transparency = "Root", Vector3.new(0.2, 0.2, 0.2), 1
+	root.Anchored, root.CanCollide, root.CanQuery, root.CanTouch = true, false, false, false
+	root.CFrame = CFrame.new(0, ROOT_Y, 0)
+	root.Parent = m
+	m.PrimaryPart = root
+	local rig = { kind = "plate", pieces = {}, piv = {}, par = {}, grp = {}, axis = {}, seed = math.random() * 10, w = 0, lastPos = nil, order = {}, glow = d.glow }
+	for part, info in d.parts do
+		rig.piv[part] = (FLIP * CFrame.new(info[2])).Position
+		rig.par[part] = info[1]
+		rig.grp[part] = info[3]
+	end
+	for part, ax in d.axes or {} do rig.axis[part] = (FLIP * CFrame.new(ax)).Position.Unit end
+	local headNamed = false
+	for _, p in parts do
+		local c = p:Clone()
+		local part, role = string.match(p.Name, "^(.-)__(.+)$")
+		part, role = part or "Body", role or "Tex"
+		local glow = string.sub(role, 1, 4) == "Glow"
+		local crystal = string.sub(role, 1, 7) == "Crystal"
+		if part == "Head" and not glow and not crystal and not headNamed then c.Name, headNamed = "Head", true else c.Name = part .. "_" .. role end
+		if glow then
+			c.Material, c.Color = Enum.Material.Neon, d.glow:Lerp(Color3.new(0, 0, 0), 0.25)
+		elseif crystal then -- living crystal: glass in the crystal colour, a little see-through (the magic theme, 2026-11-24)
+			c.Material, c.Color, c.Transparency = Enum.Material.Glass, d.crystal or d.glow, 0.12
+		else
+			c.Material, c.Color = Enum.Material.SmoothPlastic, Color3.new(1, 1, 1) -- the vertex colours multiply with Color
+		end
+		c.Anchored, c.CanCollide, c.CanQuery, c.CanTouch, c.CastShadow = true, false, false, false, not glow and not crystal
+		local rest = FLIP * origin:ToObjectSpace(p.CFrame)
+		table.insert(rig.pieces, { p = c, part = part, role = glow and "Glow" or (crystal and "Crystal" or "Tex"), rest = rest, size = c.Size })
+		c.CFrame = rest
+		c.Parent = m
+	end
+	rigFx(m, name, d, rig)
+	m:SetAttribute("Voxel", true)
+	m:SetAttribute("Reach", math.max(d.size.X, d.size.Z) / 4.5) -- PixelClient keeps a big pet this much further off, per unit of scale
+	M.rigs[m] = rig
+	m.WorldPivot = root.CFrame
+	return m
+end
+
+rigAnimate = function(m, rig, now, dt, moving)
+	dt = math.min(dt or 1 / 60, 1 / 20)
+	local root = m.PrimaryPart.CFrame
+	local pos = root.Position
+	if moving == nil then
+		local v = rig.lastPos and (pos - rig.lastPos).Magnitude / math.max(dt, 1e-3) or 0
+		moving = v > 2.5
+	end
+	rig.lastPos = pos
+	rig.w += ((moving and 1 or 0) - rig.w) * math.min(1, dt * 6)
+	local w, t, s = rig.w, now + rig.seed, m:GetScale()
+	if not rig.backZ then
+		local z = 0
+		for _, g in rig.pieces do z = math.max(z, g.rest.Position.Z) end
+		rig.backZ = z * 0.6
+	end
+	local pose, aw = nil, 1 - w
+	if rig.act then
+		local a = ACT[rig.act]
+		local u = (now - rig.actT) / (a.dur * (rig.act == "hero" and rig.slow or 1))
+		if u >= 1 + 0.45 / a.dur then
+			rig.act, rig.nextAct = nil, now + 3 + math.random() * 3
+		else
+			pose = a.fn(math.min(u, 1))
+			local lag = a.fn(math.clamp(u - 0.14 / a.dur, 0, 1))
+			pose.tail, pose.wing = lag.tail, lag.wing
+			if a.impact and not rig.hit and u >= a.impact then
+				rig.hit = true
+				actSound(m, rig.act)
+				rig.actT += 0.07
+				for _, e in m:GetDescendants() do if e:IsA("ParticleEmitter") and e.Parent.Name == "Fx_dust" then e:Emit(26) end end
+			end
+			if a.burst and not rig.burst and u >= a.burst then
+				rig.burst = true
+				if not a.impact then actSound(m, rig.act) elseif ACT_SFX[rig.act .. "Burst"] then actSound(m, rig.act .. "Burst") end
+				for _, e in m:GetDescendants() do if e:IsA("ParticleEmitter") and not e.LockedToPart and e.Parent.Name ~= "Fx_dust" then e:Emit(8) end end
+			end
+		end
+	elseif w < 0.2 and now >= (rig.nextAct or now + 1) then
+		local list = ACTS[m.Name] or { "look" }
+		rig.act, rig.actT, rig.burst, rig.hit = list[math.random(#list)], now, false, false
+		if not ACT[rig.act].burst and not ACT[rig.act].impact then actSound(m, rig.act) end
+	end
+	if not rig.nextAct then rig.nextAct = now + 2 + math.random() * 4 end
+	pose = pose or {}
+	local rp = pose.root or {}
+	local base = root * CFrame.new(0, -ROOT_Y * s, 0)
+	local idle = 1 - w
+	local pitch = (rp.pitch or 0) * aw + math.sin(t * 1.1) * 0.02 * idle
+	local roll = (rp.roll or 0) * aw + math.sin(t * 0.8 + 1) * 0.025 * idle
+	local P = Vector3.new(0, 0, rp.pivotBack and rig.backZ or 0) * s
+	local step = math.sin(t * 7)
+	local breathe = math.sin(t * 2)
+	local lift = ((rp.lift or 0) * aw + math.abs(step) * 0.08 * w + breathe * 0.03 * idle) * s
+	base = base * CFrame.new(0, lift, 0) * CFrame.new(P) * CFrame.Angles(pitch, 0, roll) * CFrame.new(-P)
+	local xf = {}
+	local function localOf(part)
+		local grp = rig.grp[part] or "body"
+		local prefix, k = string.match(part, "^(.-)(%d+)$")
+		k = tonumber(k) or 1
+		local pv = rig.piv[part] or Vector3.zero
+		if grp == "leg" or grp == "arm" then
+			local first = rig.piv[(prefix or part) .. "1"] or pv
+			local side = first.X >= 0 and 1 or -1
+			local front = first.Z <= 0 and 1 or -1 -- the pets look -Z after FLIP
+			local nLegs = rig.nLegs
+			local phase = (grp == "arm" or nLegs == 2) and side or (nLegs == 6 and (side * ((tonumber(string.match(prefix or "", "(%d)_$") or 1) % 2 == 0) and 1 or -1)) or side * front)
+			local swing = step * phase
+			local r
+			if k == 1 then
+				r = CFrame.Angles(swing * (grp == "arm" and 0.4 or 0.42) * w + breathe * 0.03 * idle, 0, 0)
+				if grp == "leg" and pose.legF and front > 0 then r = r * CFrame.new():Lerp(pose.legF, aw) end
+				if grp == "arm" and pose.armR then r = r * CFrame.new():Lerp(pose.armR, aw) end
+			elseif k == 2 then
+				r = CFrame.Angles(-math.max(0, swing) * 0.55 * w, 0, 0)
+			else
+				r = CFrame.Angles(math.max(0, swing) * 0.3 * w, 0, 0)
+			end
+			return r
+		elseif grp == "wing" then
+			local first = rig.piv[(prefix or part) .. "1"] or pv
+			local side = first.X >= 0 and 1 or -1
+			local beat = math.sin(t * (3 + 9 * w) - (k - 1) * 0.6) * (0.14 + 0.28 * w)
+			local spread = (pose.wing or 0) * aw
+			return CFrame.Angles(0, 0, side * (beat * (k == 1 and 1 or 0.7) + spread * (k == 1 and 1 or 0.5)))
+		elseif grp == "tail" or grp == "spine" then
+			local amp = grp == "spine" and 0.05 or (0.12 + 0.03 * k)
+			local r = CFrame.Angles(math.sin(t * 1.6 - k * 0.5) * amp * 0.35, math.sin(t * (2.2 + 3 * w) - k * 0.7) * amp, 0)
+			if grp == "tail" and k == 1 and pose.tail then r = r * CFrame.new():Lerp(pose.tail, aw) end
+			return r
+		elseif grp == "tentacle" then
+			local ph = (#(prefix or "") * 1.7) + k * 0.8
+			return CFrame.Angles(math.sin(t * 1.4 - ph) * (0.1 + 0.05 * k) - w * 0.25, 0, math.cos(t * 1.1 - ph) * (0.08 + 0.04 * k))
+		elseif grp == "neck" then
+			local r = CFrame.Angles(math.sin(t * 1.3 - 0.5) * 0.06 * idle + breathe * 0.03 * idle, math.sin(t * 0.7 - 0.4) * 0.12 * idle, 0)
+			if pose.head then r = r * CFrame.new():Lerp(pose.head, aw * 0.4) end
+			return r
+		elseif grp == "head" then
+			local twitch = (t % (2.7 + rig.seed % 1.3)) < 0.14 and 0.1 or 0
+			local r = CFrame.Angles(math.sin(t * 1.3) * 0.08 * idle - step * 0.04 * w, math.sin(t * 0.7) * 0.3 * idle * (pose.head and 0.3 or 1), math.sin(t * 0.9) * 0.06 + twitch * idle)
+			if pose.head then r = r * CFrame.new():Lerp(pose.head, aw) end
+			return r
+		elseif grp == "ring" then
+			local ax = rig.axis[part] or Vector3.yAxis
+			rig.spin = rig.spin or {}
+			rig.spin[part] = (rig.spin[part] or 0) + dt * (0.35 + 0.12 * k) * ((k % 2 == 0) and -1 or 1) * (1 + (pose.ring or 0) * aw)
+			return CFrame.fromAxisAngle(ax, rig.spin[part])
+		end
+		return CFrame.identity
+	end
+	local function xfOf(part)
+		if xf[part] then return xf[part] end
+		local pv = (rig.piv[part] or Vector3.zero) * s
+		local own = CFrame.new(pv) * localOf(part) * CFrame.new(-pv)
+		local par = rig.par[part]
+		local r = par and xfOf(par) * own or own
+		xf[part] = r
+		return r
+	end
+	if not rig.nLegs then
+		local legs = {}
+		for part, g in rig.grp do if g == "leg" then local pre = string.match(part, "^(.-)%d+$") legs[pre or part] = true end end
+		local n = 0 for _ in legs do n += 1 end
+		rig.nLegs = n
+	end
+	local sq = (pose.squash or 0) * aw
+	local pulse = 0.5 + 0.5 * math.sin(t * 2.4)
+	local dim, lit = rig.glow:Lerp(Color3.new(0, 0, 0), 0.5), rig.glow:Lerp(Color3.new(1, 1, 1), 0.08)
+	for i, g in rig.pieces do
+		g.p.CFrame = base * xfOf(g.part) * (g.rest.Rotation + g.rest.Position * s) * (g.part == "Body" and CFrame.new(0, -sq * 0.1, 0) or CFrame.identity)
+		if g.role == "Glow" then g.p.Color = dim:Lerp(lit, 0.5 + 0.5 * math.sin(t * 2.4 + i * 0.7)) end
+	end
+	for _, l in rig.lights or {} do l.l.Brightness = l.b * (0.7 + 0.5 * pulse) end
+	for oi, o in rig.orbits or {} do
+		local c = o.att.WorldPosition
+		local n = #o.cubes
+		for i, q in o.cubes do
+			local a = t * (1.6 + 0.2 * oi) + i / n * math.pi * 2
+			local r = o.r * s * (1 + 0.15 * math.sin(t * 3 + i))
+			q.CFrame = CFrame.new(c + Vector3.new(math.cos(a) * r, math.sin(a * 2 + t) * 0.35 * r, math.sin(a) * r)) * CFrame.Angles(t * 2 + i, t * 1.5, 0)
+			q.Size = Vector3.one * o.sz * s * (0.75 + 0.25 * math.sin(t * 5 + i * 1.3))
+		end
+	end
+end
+
 -- every frame, after the model was pivoted: pose the parts. now: os.clock(); moving: overrides the speed guess
 -- directive v13: start the pet's signature act now (the hatch fires it on the landing frame instead of after 2 to 6 s)
 local HERO = { Rare = true, Epic = true, Legendary = true, Mythic = true, Secret = true }
@@ -423,6 +733,7 @@ end
 function M.animate(m, now, dt, moving)
 	local rig = M.rigs[m]
 	if not rig or not m.PrimaryPart then return end
+	if rig.kind == "plate" then return rigAnimate(m, rig, now, dt, moving) end
 	dt = math.min(dt or 1 / 60, 1 / 20)
 	local root = m.PrimaryPart.CFrame
 	local pos = root.Position

@@ -230,8 +230,8 @@ C.PETS = {
 C.PITY = 40 -- eggs without Legendary or better before the next one is guaranteed (shown on the odds panel)
 C.FIRST_PET = "Kobold" -- the free tutorial egg always hatches this (strong, visible digger)
 C.MAX_PETS = 3
-C.PET_SCALE = 2.5 -- the crew's size following you in town and the caves (the owner 2026-11-18: upscale 2 to 3x)
-C.PET_SCALE_MINE = 1.3 -- in the mine's narrow tunnels
+C.PET_SCALE = 1.5 -- the crew's size following you in town and the caves (the owner 2026-11-18: upscale 2 to 3x; v16 2026-11-24: the plate pets are built 3 to 8 studs tall, so 1.5 makes them much bigger than the old voxel pets at 2.5)
+C.PET_SCALE_MINE = 0.65 -- in the mine's narrow tunnels
 C.HATCH_TIME = 5 -- seconds of the hatch show before the pet starts digging
 
 -- Saving (ProfileStore; Studio without API access uses its mock store)

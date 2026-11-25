@@ -2197,8 +2197,11 @@ end)()
 					task.delay(0.15 + k * 0.18, function() tween(r.text, 0.25, { TextTransparency = 0 }) end)
 				end
 			end
-		elseif kind == "mgStrike" and card.Visible then
-			closePanel(card) -- the first swing is in: the card gives the screen back
+		elseif kind == "mgStrike" then
+			if card.Visible then closePanel(card) end -- the first swing is in: the card gives the screen back
+			card:SetAttribute("Strikes", (card:GetAttribute("Strikes") or 0) + 1) -- (an attribute, not a local: this chunk is near Luau's 200-local limit)
+			if current and card:GetAttribute("Strikes") >= 3 then tip(current) current = nil end -- v16 (full1124c fix 4): three strikes and the card never comes back
+
 		elseif kind == "mgEnd" and current then
 			tip(current) -- seen once it has been played through
 			current = nil
@@ -2874,7 +2877,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		local ps = (inMine or fp) and C.PET_SCALE_MINE or C.PET_SCALE -- the crew stands big in the open, smaller in the tunnels and in first person (the owner 2026-11-18: 2 to 3x)
 		if pet.scale ~= ps then pet.model:ScaleTo(ps) pet.scale = ps end
 		local side = (i % 2 == 0) and 1 or -1
-		local k = math.max(1, ps * 0.8) -- bigger pets keep further off
+		local k = math.max(1, ps * 0.8, ps * (pet.model:GetAttribute("Reach") or 0)) -- bigger pets keep further off (v16: the plate pets carry their own footprint)
 		local goalP = h.Position - look * (i <= 2 and 1.2 or 4) * k + right * (i <= 2 and side * 3.4 or 0) * k + Vector3.new(0, -1.2 + 0.92 * (ps - 1) + math.sin(now * 5 + i) * 0.25, 0) -- big pets flank you instead of trailing between you and the camera
 		if now < pet.digUntil then goalP = pet.digPos + Vector3.new(0, math.abs(math.sin((now - pet.hop) * 18)) * 0.6, 0) end
 		pet.pos = pet.pos:Lerp(goalP, 1 - math.exp(-dt * 10))

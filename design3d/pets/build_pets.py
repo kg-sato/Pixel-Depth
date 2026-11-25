@@ -60,7 +60,7 @@ def bake_mat(m, base, img, vox=0.16, height=20):
     nt.links.new(ins.outputs[0], snap.inputs[0])
     wn = nt.nodes.new("ShaderNodeTexWhiteNoise"); wn.noise_dimensions = "3D"
     nt.links.new(snap.outputs[0], wn.inputs["Vector"])
-    jit = nt.nodes.new("ShaderNodeMapRange"); jit.inputs["To Min"].default_value, jit.inputs["To Max"].default_value = 0.85, 1.1
+    jit = nt.nodes.new("ShaderNodeMapRange"); jit.inputs["To Min"].default_value, jit.inputs["To Max"].default_value = (0.85, 1.1) if os.environ.get("VOXEL_NOISE", "1") != "0" else (1.0, 1.0)  # VOXEL_NOISE=0 (v5, 2026-11-24): no per-voxel speckle
     nt.links.new(wn.outputs["Value"], jit.inputs["Value"])
     sp = nt.nodes.new("ShaderNodeSeparateXYZ"); nt.links.new(geo.outputs["Position"], sp.inputs[0])
     gr = nt.nodes.new("ShaderNodeMapRange"); gr.inputs["From Min"].default_value, gr.inputs["From Max"].default_value = 0, height * vox
@@ -131,7 +131,47 @@ for pet in pets:
     groups = {}
     for (x, y, z), (part, role) in owner.items():
         groups.setdefault((part, role), []).append((x, y, z))
-    for (part, role), cells in groups.items():
+    # v5 (2026-11-24): "fine" half-voxel cells (the inset eyes), in fine units (2 per voxel), meshed with their part and role
+    fowner = {}
+    for part, vs in pet.get("fine", {}).items():
+        for x, y, z, r in vs: fowner[(x, y, z)] = (part, r)
+    fgroups = {}
+    for k, (part, role) in fowner.items():
+        fgroups.setdefault((part, role), []).append(k)
+    VC = os.environ.get("VOXEL_VC") == "1"  # v5: one vertex-coloured mesh per moving part (vc_mesh.py), the KEEP roles stay their own parts
+    if VC:
+        sys.path.insert(0, here)
+        import vc_mesh
+        for part in sorted({pp for pp, r in owner.values()} | {pp for pp, r in fowner.values()}):
+            cells = {k: r for k, (pp, r) in owner.items() if pp == part and r not in KEEP}
+            cells.update({(x, y, z, "f"): r for (x, y, z), (pp, r) in fowner.items() if pp == part and r not in KEEP})
+            if not cells: continue
+            occ = lambda x, y, z, own=False, part=part: (x, y, z) in owner and (not own or owner[(x, y, z)][0] == part)
+            verts, faces, cols = vc_mesh.mesh_part(cells, occ, pet["palette"], s, None, pet["height"])
+            px, py, pz = pet["pivots"].get(part, (cx - 0.5, 0, cz - 0.5))
+            piv = (px + 0.5 - cx, py, pz + 0.5 - cz)
+            me = bpy.data.meshes.new(f"{part}__VC")
+            me.from_pydata([to_blender(v[0] - cx - piv[0], v[1] - piv[1], v[2] - cz - piv[2], s) for v in verts], [], [tuple(reversed(f)) for f in faces])
+            me.update()
+            ca = me.color_attributes.new(name="Col", type="BYTE_COLOR", domain="CORNER")
+            for poly, cc in zip(me.polygons, cols):
+                poly.use_smooth = False
+                for k, c in enumerate(reversed(cc)):
+                    ca.data[poly.loop_start + k].color_srgb = (c[0], c[1], c[2], 1.0)
+            me.color_attributes.active_color = ca
+            mat = bpy.data.materials.new(f"{part}_vc"); mat.use_nodes = True
+            vcn = mat.node_tree.nodes.new("ShaderNodeVertexColor"); vcn.layer_name = "Col"
+            mat.node_tree.links.new(vcn.outputs["Color"], mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"])
+            mat.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.8
+            me.materials.append(mat)
+            tris += len(me.polygons)
+            o = bpy.data.objects.new(f"{part}__VC", me)
+            o.location = to_blender(piv[0], piv[1], piv[2], s)
+            bpy.context.scene.collection.objects.link(o)
+        groups = {k: v for k, v in groups.items() if k[1] in KEEP}
+        fgroups = {k: v for k, v in fgroups.items() if k[1] in KEEP}
+    for (part, role) in list(groups) + [k for k in fgroups if k not in groups]:
+        cells = groups.get((part, role), [])
         px, py, pz = pet["pivots"].get(part, (cx - 0.5, 0, cz - 0.5))
         piv = (px + 0.5 - cx, py, pz + 0.5 - cz)  # pivots are voxel centres; move into the centred frame
         bm = bmesh.new()
@@ -149,6 +189,16 @@ for pet in pets:
                     bm.faces.new([vert((x + a, y + b, z + c)) for a, b, c in reversed(quad)])  # reversed: the (x, z, y) axis swap mirrors the winding; unreversed, Roblox culled every outer face (seen 2026-11-17)
                 except ValueError:
                     pass
+        for (x, y, z) in fgroups.get((part, role), []):
+            for n, quad in FACES:
+                nb = fowner.get((x + n[0], y + n[1], z + n[2]))
+                if nb and nb[0] == part: continue
+                cb = owner.get(((x + n[0]) // 2, (y + n[1]) // 2, (z + n[2]) // 2))
+                if cb and cb[0] == part: continue  # against a full voxel of the same piece: hidden
+                try:
+                    bm.faces.new([vert(((x + a) / 2, (y + b) / 2, (z + c) / 2)) for a, b, c in reversed(quad)])
+                except ValueError:
+                    pass
         bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
         bmesh.ops.dissolve_limit(bm, angle_limit=0.001, verts=bm.verts, edges=bm.edges, delimit={"NORMAL"})
         bmesh.ops.triangulate(bm, faces=bm.faces)
@@ -158,10 +208,13 @@ for pet in pets:
         o = bpy.data.objects.new(f"{part}__{role}", me)
         o.location = to_blender(piv[0], piv[1], piv[2], s)
         bpy.context.scene.collection.objects.link(o)
-    if os.environ.get("VOXEL_BAKE"):  # 2026-11-17 night: bake colour x occlusion + edge light per moving part (the MagicaVoxel-render look)
+    if os.environ.get("VOXEL_BAKE") and os.environ.get("VOXEL_VC") != "1":  # 2026-11-17 night: bake colour x occlusion + edge light per moving part (the MagicaVoxel-render look)
         bake_parts(pet, os.path.join(out, pet["name"].replace(" ", "")))
     path = os.path.join(out, pet["name"].replace(" ", "") + ".glb")
-    bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_apply=True, export_yup=True)
+    try:
+        bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_apply=True, export_yup=True, export_vertex_color="ACTIVE")
+    except TypeError:
+        bpy.ops.export_scene.gltf(filepath=path, export_format="GLB", export_apply=True, export_yup=True, export_colors=True)
     report.append(f"{pet['name']}: {len(groups)} objects, {tris} triangles -> {path}")
     assert tris < int(os.environ.get("VOXEL_TRI_LIMIT", 5000)), (pet["name"], tris)
     for o in bpy.context.scene.objects: o.select_set(False)

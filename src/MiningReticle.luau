@@ -304,6 +304,13 @@ function M.start(E)
 				end
 			end
 			if near < (at - eye):Dot(dir) - 0.05 then at, n, ns = eye + dir * (near - 0.15), v, v end
+			local bossOn = pg:FindFirstChild("BossBar", true)
+			if bossOn and bossOn.Visible then -- v16 (tour full1124c fix 1): in a boss fight the dial hangs in the lower third of the view, off the Warden's face, chest and slam telegraphs
+				local cf = cam.CFrame
+				at = eye + cf.LookVector * 10 - cf.UpVector * 2.9
+				n, ns, v = -cf.LookVector, -cf.LookVector, -cf.LookVector
+				k = 1.9
+			end
 			anchor.Size = Vector3.new(k * 1.38, k * 1.66, 0.05) -- 15% larger: the Orchestrator (2026-11-23) could not find the dial in the tour
 			local glow = anchor:FindFirstChild("RockGlow") or new("PointLight", anchor, { Name = "RockGlow", Color = Color3.fromRGB(255, 200, 90), Shadows = false }) -- the dial lights the rock it sits on, so it reads as part of the world
 			glow.Range, glow.Brightness = k * 1.6, 0.5 + math.sin(os.clock() * 6) * 0.15 -- softer: up close the rock under the dial blew out (Gemini full1119i)
