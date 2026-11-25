@@ -1766,6 +1766,14 @@ local function finishMinigame(s)
 	s.bagV += count * v
 	local key = L .. "." .. idx
 	s.bagOres[key] = (s.bagOres[key] or 0) + count
+	if idx == 3 and not s.codex.ore[key] then -- the first ever find of a layer's rarest ore: the escalation reveal (Shared.OreReveal), once
+		s.revealed = s.revealed or {}
+		if not s.revealed[key] then
+			s.revealed[key] = true
+			local lay = C.LAYERS[L]
+			FxR:FireClient(s.player, "oreReveal", lay[1], lay[4][3][1], lay[4][3][2], (L >= 7 and "SECRET") or (L >= 5 and "MYTHIC") or "RARE")
+		end
+	end
 	if flawless and C.VEIN then -- a vein chain: same-ore deposits close by pop with it (vault Briefs/Cave Mining Loops)
 		local here, popped = mg.dep:GetPivot().Position, {}
 		for _, d in mg.dep.Parent:GetChildren() do
