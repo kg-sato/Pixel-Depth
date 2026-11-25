@@ -413,23 +413,30 @@ local RIG = (function()
 	return ok and r or {}
 end)()
 M.RIG = RIG
-local RIGFX = {
+local RIGFX = { -- the v16 voxel pets (design3d/pets/pet_vox.py anchors): orbit = Neon pixel motes circling with trails, the rest emitters
 	Tosk = { { "back", "motes", C3(255, 190, 60), { C3(255, 170, 50), 8, 0.5 } }, { "canopy", "leaf", C3(130, 220, 80) },
 		{ "tuskL", "orbit", C3(255, 196, 70), { C3(255, 180, 60), 4, 0.3 } }, { "tuskR", "orbit", C3(255, 196, 70), { C3(255, 180, 60), 4, 0.3 } },
 		{ "tuskL", "sparkle", C3(255, 210, 110) }, { "tuskR", "sparkle", C3(255, 210, 110) }, { "eyes", "sparkle", C3(255, 170, 50) },
 		{ "hoofFL", "motes", C3(255, 190, 70) }, { "hoofFR", "motes", C3(255, 190, 70) }, { "hoofBL", "motes", C3(255, 190, 70) }, { "hoofBR", "motes", C3(255, 190, 70) } },
-	Kobold = { { "visor", "sparkle", C3(40, 255, 150), { C3(40, 255, 150), 7, 0.7 } }, { "back", "motes", C3(120, 255, 180) } },
-	["Kepri Scarab"] = { { "eyes", "motes", C3(40, 240, 130), { C3(40, 240, 130), 6, 0.6 } } },
-	Shinemane = { { "crown", "sparkle", C3(255, 200, 70), { C3(255, 200, 80), 10, 1 } }, { "heart", "motes", C3(255, 190, 60) } },
-	Goldbristle = { { "back", "coins", C3(255, 200, 60), { C3(255, 190, 60), 7, 0.6 } } },
-	Pixiu = { { "vault", "coins", C3(255, 210, 90), { C3(0, 255, 180), 7, 0.6 } } },
-	Glimwisp = { { "core", "motes", C3(40, 230, 255), { C3(40, 230, 255), 12, 1.2 } }, { "visor", "sparkle", C3(80, 240, 255) } },
-	Selkie = { { "gills", "bubbles", C3(160, 240, 255), { C3(0, 220, 255), 7, 0.6 } }, { "snout", "bubbles", C3(160, 240, 255) } },
-	Zharbird = { { "crest", "flame", C3(255, 110, 30), { C3(255, 120, 40), 9, 1 } }, { "breast", "embers", C3(255, 120, 40) } },
-	Fafnir = { { "chest", "embers", C3(255, 60, 60), { C3(255, 40, 60), 10, 1 } }, { "snout", "smoke", C3(110, 100, 100) } },
-	Kirin = { { "antlers", "zap", C3(80, 240, 255), { C3(80, 240, 255), 10, 1 } }, { "back", "motes", C3(120, 230, 255) } },
-	Ouro = { { "gem", "sparkle", C3(40, 255, 140), { C3(40, 255, 140), 9, 1 } } },
-	Ninering = { { "core", "sparkle", C3(200, 80, 255), { C3(200, 80, 255), 14, 1.4 } }, { "core", "aura", C3(190, 90, 255) } },
+	Kobold = { { "back", "embers", C3(255, 120, 40), { C3(255, 110, 40), 8, 0.6 } }, { "tail", "orbit", C3(255, 130, 50), { C3(255, 120, 40), 4, 0.3 } },
+		{ "tail", "embers", C3(255, 140, 50) }, { "eyes", "sparkle", C3(255, 150, 60) }, { "footL", "dust", C3(200, 140, 100) } },
+	["Kepri Scarab"] = { { "gem", "sparkle", C3(80, 255, 180), { C3(60, 255, 170), 6, 0.5 } }, { "gem", "orbit", C3(90, 255, 190) }, { "eyes", "motes", C3(90, 255, 190) } },
+	Shinemane = { { "mane", "orbit", C3(110, 240, 255), { C3(100, 230, 255), 8, 0.6 } }, { "mane", "sparkle", C3(140, 245, 255) },
+		{ "tail", "motes", C3(120, 240, 255) }, { "tail", "orbit", C3(170, 150, 255) }, { "eyes", "sparkle", C3(140, 245, 255) } },
+	Goldbristle = { { "halo", "orbit", C3(255, 210, 70), { C3(255, 200, 70), 6, 0.5 } }, { "back", "coins", C3(255, 210, 70) }, { "eyes", "sparkle", C3(255, 220, 90) } },
+	Pixiu = { { "maw", "embers", C3(255, 160, 60), { C3(255, 150, 60), 6, 0.6 } }, { "vault", "coins", C3(255, 210, 80) }, { "tail", "flame", C3(255, 150, 50) },
+		{ "tail", "orbit", C3(255, 200, 80) }, { "eyes", "sparkle", C3(255, 90, 110) } },
+	Glimwisp = { { "core", "motes", C3(80, 240, 255), { C3(70, 235, 255), 10, 0.9 } }, { "core", "orbit", C3(110, 245, 255) }, { "visor", "sparkle", C3(120, 245, 255) },
+		{ "tenA", "motes", C3(90, 240, 255) }, { "tenB", "motes", C3(90, 240, 255) }, { "tenC", "motes", C3(90, 240, 255) }, { "tenD", "motes", C3(90, 240, 255) } },
+	Selkie = { { "shell", "bubbles", C3(170, 240, 255), { C3(120, 230, 255), 6, 0.5 } }, { "shell", "orbit", C3(150, 245, 255) }, { "snout", "bubbles", C3(170, 240, 255) } },
+	Zharbird = { { "crest", "flame", C3(255, 130, 40), { C3(255, 130, 50), 8, 0.8 } }, { "crest", "orbit", C3(255, 180, 60) }, { "breast", "embers", C3(255, 120, 40) },
+		{ "plumeA", "flame", C3(255, 120, 40) }, { "plumeB", "flame", C3(255, 150, 50) }, { "plumeC", "flame", C3(255, 120, 40) } },
+	Fafnir = { { "back", "sparkle", C3(190, 120, 255), { C3(170, 110, 255), 10, 0.8 } }, { "back", "orbit", C3(200, 140, 255) }, { "chest", "embers", C3(255, 180, 60) },
+		{ "snout", "smoke", C3(120, 110, 120) }, { "tail", "sparkle", C3(190, 120, 255) }, { "tail", "orbit", C3(200, 140, 255) } },
+	Kirin = { { "antlers", "sparkle", C3(255, 140, 210), { C3(255, 130, 200), 8, 0.7 } }, { "antlers", "orbit", C3(255, 160, 220) }, { "back", "motes", C3(255, 170, 220) },
+		{ "footFL", "motes", C3(120, 255, 190) }, { "footFR", "motes", C3(120, 255, 190) }, { "footBL", "motes", C3(120, 255, 190) }, { "footBR", "motes", C3(120, 255, 190) } },
+	Ouro = { { "gem", "sparkle", C3(190, 120, 255), { C3(170, 110, 255), 9, 0.8 } }, { "coil", "motes", C3(200, 150, 255) }, { "coil", "aura", C3(170, 110, 255) }, { "eyes", "sparkle", C3(200, 150, 255) } },
+	Ninering = { { "core", "sparkle", C3(90, 230, 255), { C3(80, 220, 255), 12, 1 } }, { "core", "orbit", C3(110, 235, 255) }, { "core", "aura", C3(90, 200, 255) }, { "eyes", "sparkle", C3(120, 235, 255) } },
 }
 
 local function rigFx(m, name, d, rig)
@@ -461,6 +468,13 @@ local function rigFx(m, name, d, rig)
 				local q = Instance.new("Part")
 				q.Name, q.Size, q.Material, q.Color = "Fx_mote", Vector3.new(o.sz, o.sz, o.sz), Enum.Material.Neon, col
 				q.Anchored, q.CanCollide, q.CanQuery, q.CanTouch, q.CastShadow = true, false, false, false, false
+				local a0, a1 = Instance.new("Attachment"), Instance.new("Attachment")
+				a0.Position, a1.Position = Vector3.new(0, o.sz * 0.5, 0), Vector3.new(0, -o.sz * 0.5, 0)
+				a0.Parent, a1.Parent = q, q
+				local tr = Instance.new("Trail")
+				tr.Attachment0, tr.Attachment1, tr.Lifetime, tr.LightEmission, tr.FaceCamera = a0, a1, 0.28, 1, true
+				tr.Color, tr.Transparency = ColorSequence.new(col), NumberSequence.new(0.25, 1)
+				tr.Parent = q
 				q.Parent = m
 				table.insert(o.cubes, q)
 			end
