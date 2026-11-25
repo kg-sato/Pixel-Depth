@@ -226,13 +226,13 @@ def _surface():
 @icon("sonar")
 def _sonar():
     ic = Icon()
-    # a handheld pinger and two thick ping arcs with wide gaps (icons_r3: three thin arcs were noise)
-    ic.part([(40, 176), (82, 134), (106, 158), (64, 200)], "iron", 8)
-    ic.ell(80, 168, 40, 40, "steel", 12)
-    ic.ell(80, 168, 16, 16, "sky", 5)
-    for r, th in ((82, 26), (150, 28)):
-        pts = circle_pts(80, 168, r + th, 26, -84, -6) + list(reversed(circle_pts(80, 168, r, 26, -84, -6)))
-        ic.part(pts, "teal", 8)
+    # a round sonar screen: a bezel, a dark scope with one ring and a cross, a bright sweep wedge and a blip
+    ic.ell(128, 128, 108, 108, "steel", 12)
+    ic.ell(128, 128, 84, 84, "plum", 6)
+    ic.part(circle_pts(128, 128, 84, 12, -90, -30) + [(128, 128)], "teal", 4)
+    ic.part(circle_pts(128, 128, 52, 30) + list(reversed(circle_pts(128, 128, 40, 30))), "mint", 3)
+    ic.line([(128, 52), (128, 204)], 6, ("teal", "shadow")); ic.line([(52, 128), (204, 128)], 6, ("teal", "shadow"))
+    ic.ell(168, 92, 14, 14, "mint", 4)
     return ic
 
 
@@ -263,36 +263,37 @@ def _skull():
 @icon("boot")
 def _boot():
     ic = Icon()
-    # a winged speed boot: the ankle, a long toe, a thick sole, and a wing that stands clear of the shaft
-    ic.part([(66, 40), (134, 40), (138, 146), (214, 164), (224, 204), (44, 204), (56, 146)], "leather", 13)
-    ic.part(rrect(36, 194, 230, 226, 8), "iron", 7)
-    ic.part(rrect(58, 34, 142, 64, 8), "leather", 7)
-    ic.part([(156, 54), (232, 20), (220, 52), (240, 60), (210, 90), (156, 92)], "white", 8)
-    ic.part(rrect(70, 98, 128, 112, 5), "gold", 4)
+    ic.part([(60, 44), (124, 44), (128, 148), (210, 166), (220, 204), (40, 204), (50, 148)], "leather", 13)
+    ic.part(rrect(32, 194, 228, 226, 8), "iron", 7)
+    ic.part(rrect(52, 38, 132, 66, 8), "leather", 7)
+    ic.part([(184, 40), (244, 14), (236, 44), (252, 52), (226, 82), (184, 84)], "white", 8)  # the wing, clear of the shaft
+    ic.part(rrect(62, 98, 120, 112, 5), "gold", 4)
     return ic
 
 
 @icon("root")
 def _root():
     ic = Icon()
-    # a big forked root: one thick light trunk splitting into three bold roots, a sprout on top
-    ic.part(capsule((128, 70), (128, 150), 30), "wood", 12)
-    ic.part(capsule((128, 140), (54, 222), 22), "wood", 10)
-    ic.part(capsule((128, 140), (202, 222), 22), "wood", 10)
-    ic.part(capsule((128, 150), (128, 232), 20), "wood", 9)
-    ic.part([(124, 70), (84, 24), (60, 52), (96, 76)], "moss", 8)
-    ic.part([(132, 70), (172, 18), (200, 46), (160, 76)], "moss", 8)
+    # a seedling pulled from the soil: two leaves, a stem, a soil clod, and three thick roots hanging below it
+    ic.part([(124, 70), (64, 22), (34, 58), (78, 88)], "moss", 9)
+    ic.part([(132, 70), (192, 22), (222, 58), (178, 88)], "moss", 9)
+    ic.part(capsule((128, 64), (128, 122), 12), "green", 6)
+    ic.part(rrect(70, 110, 186, 152, 20), "clay", 10)
+    for a, b in (((100, 148), (70, 228)), ((128, 150), (128, 238)), ((156, 148), (186, 228))):
+        ic.part(capsule(a, b, 14), "cream", 6)
     return ic
 
 
 @icon("bag")
 def _bag():
     ic = Icon()
-    # a satchel with a tall carry handle: its open loop survives the keyline at 32 px
-    ic.part(circle_pts(128, 76, 68, 30, 180, 360) + [(196, 124), (168, 124)] + list(reversed(circle_pts(128, 76, 40, 30, 180, 360))) + [(88, 124), (60, 124)], "leather", 6)
-    ic.part(rrect(28, 114, 228, 234, 22), "leather", 14)
-    ic.part(rrect(28, 114, 228, 168, 22), "clay", 8)
-    ic.part(rrect(108, 148, 148, 188, 8), "gold", 6)
+    # a backpack (icons_r4: the satchel read as the padlock): two shoulder straps, a rolled bedroll on top, a front pocket
+    ic.part(rrect(40, 40, 216, 82, 20), "clay", 8)  # the bedroll
+    for x in (40, 216): ic.ell(x, 61, 16, 21, "clay", 5)
+    ic.part(rrect(46, 74, 210, 232, 26), "leather", 14)
+    ic.part(rrect(70, 140, 186, 214, 14), "leather", 9)  # the front pocket
+    ic.part(rrect(116, 132, 140, 156, 6), "gold", 5)
+    for x in (24, 214): ic.part(rrect(x, 96, x + 18, 196, 8), "wood", 5)  # straps sticking out of the sides
     return ic
 
 
@@ -367,13 +368,12 @@ def _camp():
 @icon("lock")
 def _lock():
     ic = Icon()
-    # a tall shackle so its open loop survives the keyline at 32 px (icons_r2: the loop was plugged)
-    outer = circle_pts(128, 84, 64, 30, 180, 360) + [(192, 140), (164, 140)]
-    inner = list(reversed(circle_pts(128, 84, 36, 30, 180, 360)))
-    ic.part(outer + inner + [(92, 140), (64, 140)], "steel", 8)
-    ic.part(rrect(44, 126, 212, 234, 22), "gold", 14)
-    ic.ell(128, 168, 18, 18, "plum", 3)
-    ic.part([(119, 174), (137, 174), (143, 210), (113, 210)], "plum", 3)
+    outer = circle_pts(128, 78, 74, 30, 180, 360) + [(202, 138), (170, 138)]
+    inner = list(reversed(circle_pts(128, 78, 42, 30, 180, 360)))
+    ic.part(outer + inner + [(86, 138), (54, 138)], "steel", 8)
+    ic.part(rrect(40, 128, 216, 236, 22), "gold", 14)
+    ic.ell(128, 170, 18, 18, "plum", 3)
+    ic.part([(119, 176), (137, 176), (143, 212), (113, 212)], "plum", 3)
     return ic
 
 
@@ -455,14 +455,13 @@ def _home():
 @icon("trophy")
 def _trophy():
     ic = Icon()
-    # loop handles with real holes, a deep cup, a short stem and a plinth
-    for sx in (-1, 1):
-        cx = 128 + sx * 84
-        ic.part(circle_pts(cx, 88, 40, 30) + list(reversed(circle_pts(cx, 88, 18, 30))), "gold", 6)
-    ic.part(circle_pts(128, 52, 76, 30, 0, 180, ry=104) + [(52, 52)], "gold", 14)
-    ic.part(rrect(110, 150, 146, 188, 4), "gold", 6)
-    ic.part(rrect(66, 186, 190, 226, 8), "wood", 8)
-    ic.part(star_pts(128, 96, 28, 12), "cream", 4)
+    for sx in (-1, 1):  # loop handles that stay inside the frame
+        cx = 128 + sx * 78
+        ic.part(circle_pts(cx, 84, 40, 30) + list(reversed(circle_pts(cx, 84, 22, 30))), "gold", 6)
+    ic.part(circle_pts(128, 46, 66, 30, 0, 180, ry=100) + [(62, 46)], "gold", 14)
+    ic.part(rrect(112, 144, 144, 186, 4), "gold", 6)
+    ic.part(rrect(70, 184, 186, 226, 8), "wood", 8)
+    ic.part(star_pts(128, 90, 26, 11), "cream", 4)
     return ic
 
 
@@ -481,12 +480,13 @@ def _stopwatch():
 @icon("cart")
 def _cart():
     ic = Icon()
-    for x, m in ((84, "gold"), (124, "teal"), (164, "ruby")):
-        ic.part([(x - 24, 92), (x - 10, 58), (x + 14, 52), (x + 24, 92)], m, 7)
-    ic.part([(36, 92), (220, 92), (196, 192), (60, 192)], "iron", 12)
-    ic.part(rrect(26, 84, 230, 104, 6), "slate", 6)
-    ic.ell(80, 204, 22, 22, "steel", 6)
-    ic.ell(176, 204, 22, 22, "steel", 6)
+    for x, m in ((84, "gold"), (130, "teal"), (174, "ruby")):  # three big ore chunks heaped above the rim
+        ic.part([(x - 30, 96), (x - 20, 52), (x + 6, 40), (x + 30, 64), (x + 26, 96)], m, 8)
+    ic.part([(30, 92), (226, 92), (200, 188), (56, 188)], "iron", 12)
+    ic.part(rrect(22, 84, 234, 106, 6), "steel", 6)
+    for x in (82, 176):
+        ic.ell(x, 206, 26, 26, "steel", 7)
+        ic.ell(x, 206, 9, 9, "plum", 2)
     return ic
 
 
@@ -573,9 +573,10 @@ def _face(kind):
     elif kind in ("happy", "proud"):
         for x in (98, 158): ic.line([(x - 15, 130), (x, 116), (x + 15, 130)], 7)
     elif kind == "greedy":
-        for x in (98, 158):
-            ic.part(star_pts(x, 124, 26, 12), "plum", 3)
-            ic.part(star_pts(x, 124, 17, 8), "cream", 3)
+        for x in (96, 160):  # big gold-coin eyes with a dark rim
+            ic.ell(x, 120, 30, 30, "plum", 3)
+            ic.ell(x, 120, 21, 21, "gold", 4)
+            ic.line([(x, 108), (x, 132)], 6, ("gold", "shadow"))
     else:
         ic.ell(98, 124, 11, 15, "plum", 2)
         ic.ell(158, 124, 11, 15, "plum", 2)
@@ -588,7 +589,7 @@ def _face(kind):
     elif kind == "curious": ic.ell(128, 170, 12, 14, "plum", 2)
     elif kind == "sleepy":
         ic.line([(112, 170), (144, 170)], 7)
-        ic.line([(150, 76), (176, 76), (150, 102), (176, 102)], 8)
+        ic.part([(150, 40), (206, 40), (206, 54), (172, 92), (206, 92), (206, 106), (150, 106), (150, 92), (184, 54), (150, 54)], "white", 4)
     elif kind == "uneasy": ic.line([(100, 172), (116, 164), (132, 172), (148, 164), (160, 170)], 6)
     elif kind == "scared": ic.ell(128, 172, 18, 22, "plum", 2)
     elif kind == "hurt":

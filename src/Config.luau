@@ -381,6 +381,18 @@ function C.uiSkin()
 	return (v == "gel" or v == "matte") and v or C.UI_SKIN
 end
 if C.uiSkin() == "matte" then for k, v in C.UI_GLASS.matte do C.UI_GLASS.jelly[k] = v end end -- every reader takes the skins from UI_GLASS.jelly
+-- Unified matte icons (Master Directive v16 phase 2, art/pd_icons_matte.py -> art/icons_matte, ids in art/icons_matte/asset_ids.json):
+-- one keyline, one 4-step value ramp, tools at 45 degrees; they replace the jelly icons, HUD pills and pet faces while ICON_SET is
+-- "matte" ("jelly" brings the 2026-11-18 set back)
+C.ICON_SET = "matte"
+C.ICON_MATTE = { icon = { coin = "rbxassetid://105532739077656", gem = "rbxassetid://79663005989471", pick = "rbxassetid://86631147206904", bag = "rbxassetid://109651047798158", crew = "rbxassetid://91951067864461", surface = "rbxassetid://81139909075473", egg = "rbxassetid://140345950361916", star = "rbxassetid://122434372175753", dice = "rbxassetid://127978032339376", map = "rbxassetid://106344220016818", camp = "rbxassetid://137894197513048", chisel = "rbxassetid://86735302163326", hammer = "rbxassetid://82817415789775", lock = "rbxassetid://123841022220164", sonar = "rbxassetid://139739679871684", gear = "rbxassetid://123856712629620", shirt = "rbxassetid://130656678351423", pin = "rbxassetid://76202967760240", smile = "rbxassetid://71649086560274", chest = "rbxassetid://113676869372368", book = "rbxassetid://120442288479722", kiln = "rbxassetid://80687272988182", root = "rbxassetid://128320875887546", gift = "rbxassetid://89810476427570", home = "rbxassetid://137829421790853", trophy = "rbxassetid://129735078248570", stopwatch = "rbxassetid://125790390306214", cart = "rbxassetid://88812753725191", skull = "rbxassetid://88828910604162", spore = "rbxassetid://106763473059364", scroll = "rbxassetid://117305947523559", pouch = "rbxassetid://99548908728342", check = "rbxassetid://106737904177853", boot = "rbxassetid://130627660599590" },
+	hud = { heart = "rbxassetid://127651030665786", torch = "rbxassetid://104396515617632", flare = "rbxassetid://78186969269588", calm = "rbxassetid://82411694778689", uneasy = "rbxassetid://103143715944201", scared = "rbxassetid://131296092816447" },
+	face = { calm = "rbxassetid://107281201136805", curious = "rbxassetid://137644286675755", greedy = "rbxassetid://107639445738846", happy = "rbxassetid://71649086560274", hurt = "rbxassetid://72459226858482", proud = "rbxassetid://109002983843172", scared = "rbxassetid://136207295975778", sleepy = "rbxassetid://109546011182281" } }
+if C.ICON_SET == "matte" then
+	for k, v in C.ICON_MATTE.icon do C.UI_GLASS.icon[k] = v end
+	for k, v in C.ICON_MATTE.hud do C.UI_GLASS.hud[k] = v; C.HUD_ICON[k] = v end
+	for k, v in C.ICON_MATTE.face do C.PET_FACE[k] = v end
+end
 if C.UI_KIT == "glass" then for k, v in C.UI_GLASS.hud do C.HUD_ICON[k] = v end end
 C.EGG_COINS = 75
 -- the Egg Altar in the caves (playtest 2: "rarer ones should be found in caves ... players will need to roll for them"; board PT2_Eggs).

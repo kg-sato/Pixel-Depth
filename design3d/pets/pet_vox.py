@@ -209,12 +209,12 @@ def tosk(v):
     for s in (-1, 1):
         v.muscle("Head", "Bark", (s * 0.62, 2.35, 3.3), (0.42, 0.72, 0.6), rot=E(25, 0, 0))   # the neck muscle to the shoulder
         v.muscle("Head", "Bark", (s * 0.56, 3.25, 2.72), (0.3, 0.45, 0.42))                  # the jaw (masseter)
-    v.cap("Head", "Bark", (0, 3.3, 2.85), (0, 4.6, 2.42), 0.6, 0.42)
-    v.ell("Head", "Snout", (0, 4.64, 2.4), (0.44, 0.13, 0.36))
+    v.cap("Head", "Bark", (0, 3.3, 2.85), (0, 4.3, 2.6), 0.66, 0.52)
+    v.ell("Head", "Snout", (0, 4.38, 2.68), (0.52, 0.16, 0.42), rot=E(-15, 0, 0))
     v.ell("Head", "Dark", (0, 3.65, 2.35), (0.48, 0.85, 0.3))
     v.ell("Head", "Moss", (0, 2.6, 3.6), (0.85, 0.75, 0.58), cut=lambda x, y, z: z > 3.75 + nz(x, y, z) * 0.25)
     for s in (-1, 1):
-        v.box("Head", "Dark", (s * 0.15, 4.74, 2.4), (0.1, 0.1, 0.14))
+        v.ell("Head", "Dark", (s * 0.17, 4.5, 2.7), (0.09, 0.08, 0.13))
         v.ell("Head", "Moss2", (s * 0.42, 3.4, 3.45), (0.32, 0.42, 0.13), rot=E(0, s * -18, 0))  # a mossy brow ridge
         v.eye("Head", (s * 0.55, 3.7, 3.08), (s * 0.75, 0.7, 0.05), w=0.34, h=0.26)
         v.blade("Head", "Bark", (s * 0.45, 2.55, 3.65), (s * 0.85, 2.35, 4.4), 0.42, thick=0.12, normal=(s * 0.4, 1, 0), bend=0.05)
@@ -228,7 +228,7 @@ def tosk(v):
         v.blade("Head", "Leaf", A[3], A[3] + V(s * 0.3, -0.35, 0.2), 0.2, thick=0.1, normal=(0, 0.3, 1))
         v.blade("Head", "Leaf", A[2], A[2] + V(s * 0.4, 0.1, -0.15), 0.18, thick=0.1, normal=(0, 0.3, 1))
         # the tusks: thick at the jaw, a root band, sweeping out, up and back, an amber crystal at each tip
-        TK = [(s * 0.36, 4.05, 2.2), (s * 0.7, 4.5, 2.3), (s * 0.98, 4.75, 2.85), (s * 1.0, 4.5, 3.5), (s * 0.82, 4.05, 3.85)]
+        TK = [(s * 0.4, 3.95, 2.3), (s * 0.85, 4.35, 2.45), (s * 1.18, 4.55, 3.1), (s * 1.15, 4.25, 3.75), (s * 0.9, 3.75, 4.05)]
         v.curve("Head", "Tusk", TK, [0.26, 0.24, 0.19, 0.13, 0.06])
         vine(v, "Head", TK[0], TK[2], (0.3, 0.24), turns=1.3, colour="Leaf", phase=s, seed=6, leaves=5)
         vine(v, "Head", TK[2], TK[4], (0.22, 0.12), turns=1.0, colour="Leaf", phase=s + 2, seed=7, leaves=3, w=0.045)
@@ -451,11 +451,16 @@ def kobold(v):
     v.joint("Body", (0, 0, 3.0))
     # a hunched knuckle-walking gargoyle pangolin (magic/concepts/Kobold_s21): long armoured forearms with spade claws, a
     # terracotta tile coat split by glowing heat cracks, a fossil belly, a trilobite visor, ember eyes, a heavy scaled tail
-    v.muscle("Body", "Clay", (0, 0.8, 3.25), (1.35, 1.3, 1.25))
+    v.muscle("Body", "Clay", (0, 0.8, 3.55), (1.45, 1.25, 1.35))
     v.muscle("Body", "Clay", (0, -0.55, 2.95), (1.15, 1.45, 1.02))
     v.muscle("Body", "Clay", (0, -1.65, 2.8), (1.02, 0.85, 0.92))
     v.muscle("Body", "Clay", (0, 0.45, 4.05), (1.0, 1.1, 0.6))
-    for s in (-1, 1): v.muscle("Body", "Clay", (s * 1.12, 1.15, 3.55), (0.45, 0.62, 0.72), rot=E(-15, s * -12, 0))
+    for s in (-1, 1):
+        v.muscle("Body", "Clay", (s * 1.2, 1.15, 3.85), (0.5, 0.66, 0.78), rot=E(-15, s * -12, 0))
+        v.ell("Body", "Tile", (s * 1.25, 1.0, 4.45), (0.75, 0.8, 0.35), rot=E(0, s * 20, 0))
+        for k in range(3):
+            v.crystal("Body", "Claw", V(s * (1.0 + 0.3 * k), 1.25 - 0.25 * k, 4.65), (s * 0.4, -0.2, 1), 0.55 - 0.08 * k, 0.12, sides=4)
+        v.line("Body", "Glow", [(s * 1.55, 1.25, 4.5), (s * 1.75, 0.75, 4.35)], r=0.06)
     v.ell("Body", "Shale", (0, 0.35, 2.25), (0.85, 1.55, 0.42))
     v.paint("Dark", lambda x, y, z: (y % 0.36) < 0.07, part="Body", only={"Shale"})
     shade(v, "Clay")
@@ -480,14 +485,14 @@ def kobold(v):
     # long armoured forelimbs on spade-clawed knuckles; shorter hind legs
     for s in (-1, 1):
         L = "ArmL" if s < 0 else "ArmR"
-        leg2(v, L, (s * 1.18, 1.3, 3.3), (s * 1.48, 1.15, 1.95), (s * 1.42, 1.55, 0.62), (s * 1.42, 1.7, 0.0), (0.55, 0.42, 0.34, 0.32), "Clay", front=True, claw="Claw", toes=3, group="leg")
+        leg2(v, L, (s * 1.25, 1.35, 3.6), (s * 1.6, 1.5, 2.25), (s * 1.5, 2.05, 0.75), (s * 1.5, 2.25, 0.0), (0.6, 0.46, 0.36, 0.34), "Clay", front=True, claw="Claw", toes=3, group="leg")
         scales(v, L + "2", (s * 1.42, 1.55, 0.75), (s * 1.48, 1.15, 1.9), rows=4, arc=(-60, 60), size=0.24, col="Tile", rim="TileRim")
         for k in (-1, 0, 1):
-            t = V(s * 1.42 + k * 0.2, 2.15, 0.12)
-            v.cap(L + "3", "Claw", t + V(0, -0.1, 0.18), t + V(0, 0.5, 0.0), 0.12, 0.03)
+            t = V(s * 1.5 + k * 0.24, 2.65, 0.2)
+            v.curve(L + "3", "Claw", [t + V(0, -0.2, 0.25), t + V(0, 0.35, 0.3), t + V(0, 0.75, 0.0)], [0.15, 0.1, 0.03])
         shade(v, "Clay", parts={L + "1", L + "2"})
         B = "LegBL" if s < 0 else "LegBR"
-        leg2(v, B, (s * 0.88, -1.6, 2.6), (s * 0.98, -1.05, 1.5), (s * 0.98, -1.7, 0.62), (s * 0.98, -1.6, 0.0), (0.58, 0.4, 0.3, 0.28), "Clay", front=False, claw="Claw")
+        leg2(v, B, (s * 0.92, -1.6, 2.7), (s * 1.05, -0.9, 1.6), (s * 1.05, -1.75, 0.68), (s * 1.05, -1.55, 0.0), (0.72, 0.5, 0.36, 0.34), "Clay", front=False, claw="Claw")
         shade(v, "Clay", parts={B + "1", B + "2"})
     # the heavy tail: five bones of tiles tapering to a smouldering ember club
     pts = [V(0, -2.25, 2.95), V(0, -3.0, 2.45), V(0, -3.6, 1.75), V(0, -4.05, 1.05), V(0, -4.45, 0.55), V(0, -4.9, 0.4)]
@@ -524,14 +529,15 @@ def kepri(v):
             q = surf(v, "Body", (s * 0.6, 0.2 - 0.75 * k, 1.9), (s * 0.55, 0, 1))
             if q: v.ell("Body", "Glow", q, (0.11, 0.11, 0.09))
     gq = surf(v, "Body", (0, 1.05, 1.85), (0, 0.55, 1)) or V(0, 1.4, 2.4)
-    v.torus("Body", "Gold", gq, (0, 0.55, 0.84), 0.32, 0.07)
-    v.ell("Body", "Crystal", gq + V(0, 0.02, 0.05), (0.26, 0.26, 0.3))
+    v.torus("Body", "Gold", gq, (0, 0.4, 0.9), 0.55, 0.09)
+    v.ell("Body", "Crystal", gq + V(0, 0.02, 0.1), (0.48, 0.5, 0.42))
+    v.ell("Body", "Glow", gq + V(0, 0.02, 0.18), (0.22, 0.24, 0.3))
     v.anchor("gem", "Body", gq + V(0, 0.1, 0.25))
     # crystal winglets on their own bones (they beat)
     for s, w in ((-1, "WingL"), (1, "WingR")):
         root = V(s * 0.55, 0.45, 2.7)
         v.joint(w, tuple(root), "Body", "wing")
-        for tx, ty, tz, wd in ((2.3, -0.2, 3.25, 0.55), (2.1, -1.0, 2.95, 0.45), (1.6, -1.65, 2.6, 0.36)):
+        for tx, ty, tz, wd in ((2.4, -0.6, 3.05, 0.95), (1.9, -1.6, 2.7, 0.7)):
             tip = V(s * tx, ty, tz)
             v.blade(w, "Crystal", root, tip, wd, thick=0.1, normal=(0, 0.2, 1))
             v.curve(w, "Gold", [root, root.lerp(tip, 0.55) + V(0, 0.1, 0.1), tip], [0.04, 0.035, 0.02])
@@ -544,7 +550,10 @@ def kepri(v):
     v.tube("Head", "Gold", sp, [0.04] * len(sp))
     for s in (-1, 1):
         v.eye("Head", (s * 0.44, 2.22, 1.88), (s * 0.7, 0.7, 0.1), w=0.24, h=0.2)
-        v.curve("Head", "Gold", [(s * 0.3, 2.1, 2.1), (s * 0.58, 2.3, 2.65), (s * 0.82, 2.1, 3.15), (s * 0.72, 1.7, 3.3), (s * 0.5, 1.65, 3.05), (s * 0.52, 1.85, 2.9)], [0.12, 0.11, 0.09, 0.07, 0.05, 0.03])
+        v.curve("Head", "Gold", [(s * 0.35, 2.2, 1.95), (s * 0.85, 2.55, 2.2), (s * 1.0, 3.05, 2.3), (s * 0.7, 3.4, 2.25), (s * 0.25, 3.35, 2.15)], [0.15, 0.14, 0.11, 0.07, 0.03])
+        for k in range(3):
+            q = V(s * (0.85 - 0.05 * k), 2.55 + 0.25 * k, 2.22)
+            v.torus("Head", "Leg", q, (0.3, 1, 0), 0.13, 0.035)
         v.cap("Head", "Claw", (s * 0.32, 2.25, 1.38), (s * 0.12, 2.75, 1.28), 0.1, 0.03)
         v.curve("Head", "Gold", [(s * 0.2, 2.3, 2.0), (s * 0.5, 2.8, 2.4), (s * 0.85, 3.0, 2.45)], [0.035, 0.03, 0.02])
         v.box("Head", "Glow", (s * 0.88, 3.02, 2.45), (0.1, 0.1, 0.1))
@@ -567,7 +576,7 @@ def kepri(v):
 
 
 # ---------------------------------------------------------------- SHINEMANE: Prismatic Crystal Lurcher (Uncommon light; A)
-@pet("Shinemane", palette(form=("Fur",), Fur="#253a96", Chest="#7d95e8", Dark="#101848", Amethyst="#9a7cf4", Claw="#c8ecff",
+@pet("Shinemane", palette(form=("Fur",), Fur="#253a96", Chest="#7d95e8", Dark="#101848", Amethyst="#d052f8", Claw="#c8ecff",
                           Crystal="#5ee6ff", Glow="#8af4ff", Edge="#9ab4ff"))
 def shinemane(v):
     nz = noise(8)
@@ -575,9 +584,9 @@ def shinemane(v):
     # a lean, long-legged crystal lurcher (magic/concepts/Shinemane_s21): a deep chest and tucked waist, a halo collar of
     # crystal shards round its neck, tall ears, a crystal on its brow, glowing starmaps on its flanks, crystal bracers, a plume
     # tail that ends in a crown of crystals
-    v.muscle("Body", "Fur", (0, 1.05, 3.55), (0.88, 1.0, 1.02))
-    v.muscle("Body", "Fur", (0, -0.2, 3.62), (0.62, 1.2, 0.66))
-    v.muscle("Body", "Fur", (0, -1.4, 3.55), (0.78, 0.82, 0.8))
+    v.muscle("Body", "Fur", (0, 1.05, 3.55), (1.08, 1.05, 1.1))
+    v.muscle("Body", "Fur", (0, -0.2, 3.62), (0.82, 1.2, 0.8))
+    v.muscle("Body", "Fur", (0, -1.4, 3.55), (0.98, 0.88, 0.92))
     for s in (-1, 1):
         v.muscle("Body", "Fur", (s * 0.72, 1.15, 3.75), (0.28, 0.55, 0.62), rot=E(-15, s * -10, 0))
         v.muscle("Body", "Fur", (s * 0.55, -1.55, 3.75), (0.42, 0.62, 0.55))
@@ -598,11 +607,11 @@ def shinemane(v):
     for s in (-1, 1): v.muscle("Neck", "Fur", (s * 0.3, 1.75, 4.3), (0.28, 0.5, 0.55), rot=E(35, 0, 0))
     shade(v, "Fur", parts={"Neck"})
     N0 = V(0, 1.7, 4.35)
-    for k in range(18):
-        a = k / 18 * math.tau
-        out = V(math.cos(a), -0.35, math.sin(a) * 0.95 + 0.2).normalized()
-        L = 0.75 + 0.45 * (0.5 + 0.5 * math.sin(a)) + (0.2 if k % 2 else 0)
-        v.crystal("Neck", "Crystal" if k % 3 else "Amethyst", N0 + out * 0.42, out, L, 0.12 if k % 2 else 0.09)
+    for k in range(22):
+        a = k / 22 * math.tau
+        out = V(math.cos(a), -0.05, math.sin(a) * 0.95 + 0.1).normalized()
+        L = 1.0 + 0.5 * (0.5 + 0.5 * math.sin(a)) + (0.25 if k % 2 else 0)
+        v.crystal("Neck", "Crystal" if k % 3 else "Amethyst", N0 + out * 0.45, out, L, 0.17 if k % 2 else 0.13)
     v.anchor("mane", "Neck", N0)
     v.joint("Head", (0, 2.05, 4.85), "Neck", "head")
     v.muscle("Head", "Fur", (0, 2.3, 5.05), (0.52, 0.58, 0.48))
@@ -630,7 +639,7 @@ def shinemane(v):
         v.crystal(limb + "2", "Amethyst", k.lerp(a, 0.62) + V(s * 0.13, 0.12, 0), (s * 0.7, -0.2, 0.5), 0.32, 0.06)
     # the plume tail
     pts = [V(0, -2.0, 3.9), V(0, -2.75, 4.25), V(0, -3.35, 4.75), V(0, -3.6, 5.4), V(0, -3.4, 6.0)]
-    rad = [0.2, 0.36, 0.48, 0.44, 0.2]
+    rad = [0.3, 0.62, 0.82, 0.74, 0.38]
     for i in range(4):
         nm = f"Tail{i + 1}"
         v.joint(nm, tuple(pts[i]), "Body" if i == 0 else f"Tail{i}", "tail")
@@ -678,20 +687,31 @@ def goldbristle(v):
     v.muscle("Head", "Fur", (0, 1.7, 2.6), (0.92, 0.55, 0.72))
     v.cap("Head", "Fur", (0, 2.6, 2.25), (0, 3.25, 2.05), 0.44, 0.24)
     shade(v, "Fur", parts={"Head"})
-    v.paint("Stripe", lambda x, y, z: abs(x) < 0.22 + 0.05 * (y - 2) and z > 2.25 - 0.1 * (y - 2.0), part="Head", only={"Fur", "FurHi", "FurLo", "FurCrease"})
+    for s2 in (-1, 1):
+        v.curve("Head", "Gold", [(s2 * 0.3, 2.95, 1.95), (s2 * 0.42, 3.15, 1.75), (s2 * 0.38, 3.25, 1.5)], [0.09, 0.07, 0.03])
     v.ell("Head", "Dark", (0, 3.3, 2.06), (0.22, 0.1, 0.16))
     for s in (-1, 1):
         v.eye("Head", (s * 0.48, 2.65, 2.55), (s * 0.75, 0.65, 0.1), w=0.22, h=0.16)
         v.ell("Head", "Fur", (s * 0.66, 1.75, 2.95), (0.2, 0.12, 0.2))
     for st in ([(0, 3.02, 2.38), (0, 3.06, 2.52)], [(-0.08, 3.02, 2.45), (0.08, 3.02, 2.45)]):
         v.line("Head", "Glow", st, r=0.05)
-    v.anchor("eyes", "Head", (0, 2.8, 2.55)); v.anchor("halo", "Head", (0, 1.8, 3.7))
+    v.anchor("eyes", "Head", (0, 2.8, 2.55)); v.anchor("halo", "Head", (0, 1.9, 3.9))
+    v.joint("Halo", (0, 1.9, 3.95), "Head", "ring"); v.axis("Halo", (0, 0, 1))
+    v.torus("Halo", "Gold", (0, 1.9, 3.95), (0, 0.15, 1), 0.75, 0.07)
+    for k in range(6):
+        a = k / 6 * math.tau
+        v.box("Halo", "Nugget", (math.cos(a) * 0.75, 1.9 + math.sin(a) * 0.75, 3.98), (0.26, 0.26, 0.08))
     # powerful forelegs in gold bracers, digging claws; hind legs
     for limb, x, y, front in (("LegFL", -1.0, 1.15, True), ("LegFR", 1.0, 1.15, True), ("LegBL", -0.92, -1.35, False), ("LegBR", 0.92, -1.35, False)):
         s = 1 if x > 0 else -1
         if front:
             leg2(v, limb, (x, y, 2.1), (x + s * 0.08, y + 0.15, 1.15), (x + s * 0.08, y + 0.15, 0.45), (x + s * 0.08, y + 0.25, 0.0), (0.58, 0.42, 0.34, 0.32), "Fur", front=True, claw="Claw", toes=5)
             v.torus(limb + "2", "Gold", V(x + s * 0.08, y + 0.15, 0.85), (0, 0, 1), 0.42, 0.09)
+            v.ell(limb + "1", "Gold", V(x + s * 0.2, y + 0.1, 2.25), (0.55, 0.6, 0.38), cut=lambda xx, yy, zz: zz > 2.05)
+            v.torus(limb + "1", "Nugget", V(x + s * 0.2, y + 0.1, 2.08), (0, 0, 1), 0.52, 0.05)
+            for k in (-1, 0, 1):
+                t = V(x + s * 0.08 + k * 0.22, y + 0.95, 0.12)
+                v.cap(limb + "3", "Claw", t + V(0, -0.15, 0.18), t + V(0, 0.45, -0.02), 0.11, 0.03)
             v.torus(limb + "2", "Gold", V(x + s * 0.08, y + 0.15, 0.62), (0, 0, 1), 0.38, 0.07)
             v.curve(limb + "2", "Gold", [(x + s * 0.5, y + 0.15, 1.05), (x + s * 0.52, y + 0.35, 0.8), (x + s * 0.48, y + 0.15, 0.55)], [0.04, 0.04, 0.04])
         else:
@@ -723,9 +743,9 @@ def pixiu(v):
     v.joint("Body", (0, 0, 3.3))
     # a jade lion-dragon (magic/concepts/Pixiu_s22): a deep chest and lion's waist, a mane of golden curls, swept gold horns,
     # an open maw glowing with treasure-fire, small jade wings on gold spars, gold filigree on its flanks, a flame-tufted tail
-    v.muscle("Body", "Jade", (0, 1.0, 3.45), (1.15, 1.2, 1.15))
+    v.muscle("Body", "Jade", (0, 1.0, 3.45), (1.45, 1.25, 1.2))
     v.muscle("Body", "Jade", (0, -0.4, 3.4), (0.92, 1.4, 0.88))
-    v.muscle("Body", "Jade", (0, -1.6, 3.45), (1.0, 0.9, 0.95))
+    v.muscle("Body", "Jade", (0, -1.6, 3.45), (1.25, 0.95, 1.0))
     for s in (-1, 1):
         v.muscle("Body", "Jade", (s * 0.95, 1.15, 3.7), (0.38, 0.6, 0.72), rot=E(-15, s * -12, 0))
         v.muscle("Body", "Jade", (s * 0.72, -1.75, 3.65), (0.55, 0.72, 0.65))
@@ -740,6 +760,11 @@ def pixiu(v):
     for k in range(9):
         y = 1.5 - k * 0.42; q = surf(v, "Body", (0, y, 3.4), (0, 0, 1))
         if q: v.blade("Body", "Gold", q - V(0, 0, 0.1), q + V(0, -0.3, 0.45 - abs(k - 2) * 0.03), 0.28, thick=0.12, normal=(1, 0, 0))
+    for s in (-1, 1):
+        q = surf(v, "Body", (0, -0.6, 3.35), (s, 0, 0)) or V(s * 1.0, -0.6, 3.35)
+        v.ell("Body", "Gold", q, (0.12, 0.48, 0.48))
+        v.torus("Body", "Mane", q + V(s * 0.08, 0, 0), (s, 0, 0), 0.4, 0.06)
+        v.box("Body", "Glow", q + V(s * 0.1, 0, 0), (0.1, 0.18, 0.18))
     v.anchor("vault", "Body", (0, -0.6, 4.6))
     # the head and mane
     v.joint("Head", (0, 1.85, 3.95), "Body", "head")
@@ -751,8 +776,9 @@ def pixiu(v):
     v.ell("Head", "Mane", (0, 1.9, 4.0), (0.95, 0.55, 0.95))
     v.muscle("Head", "Jade", (0, 2.55, 4.2), (0.78, 0.82, 0.72))
     v.cap("Head", "Jade", (0, 3.0, 4.15), (0, 3.75, 3.98), 0.48, 0.38)
-    v.cap("Head", "Jade", (0, 2.85, 3.62), (0, 3.6, 3.28), 0.38, 0.28)
-    v.ell("Head", "Glow", (0, 3.3, 3.68), (0.3, 0.42, 0.16))
+    v.cap("Head", "Jade", (0, 2.85, 3.5), (0, 3.65, 3.0), 0.4, 0.3)
+    v.ell("Head", "Glow", (0, 3.3, 3.55), (0.36, 0.55, 0.3))
+    v.ell("Head", "Crystal", (0, 3.25, 3.5), (0.2, 0.3, 0.16))
     v.ell("Head", "Gold", (0, 3.82, 4.02), (0.24, 0.12, 0.15))
     for s in (-1, 1):
         for k in range(3):
@@ -769,7 +795,7 @@ def pixiu(v):
     for s, w in ((-1, "WingL"), (1, "WingR")):
         root = V(s * 0.75, 0.95, 4.4)
         v.joint(w, tuple(root), "Body", "wing")
-        for tx, ty, tz, wd in ((1.9, 0.3, 5.7, 0.5), (2.2, -0.3, 5.3, 0.48), (2.1, -0.85, 4.8, 0.42), (1.7, -1.2, 4.35, 0.36)):
+        for tx, ty, tz, wd in ((1.7, 0.7, 6.3, 0.62), (2.3, 0.1, 6.0, 0.66), (2.6, -0.5, 5.4, 0.62), (2.5, -1.1, 4.8, 0.56), (2.0, -1.5, 4.3, 0.48)):
             tip = V(s * tx, ty, tz)
             v.blade(w, "Wing", root, tip, wd, thick=0.11, normal=(0, 0.5, 1))
             v.curve(w, "Gold", [root, root.lerp(tip, 0.5) + V(0, 0.1, 0.1), tip], [0.06, 0.05, 0.02])
@@ -801,14 +827,15 @@ def glimwisp(v):
     # a floating mushroom spirit (magic/concepts/Glimwisp_s21): a wide glowing-spotted cap with gills underneath and crystal
     # drops hanging from its rim, a small spirit body with a cage of wooden ribs round a cyan wisp core, big glowing eyes,
     # crystal leaf wings, and four root tendrils trailing to crystal tips
-    v.muscle("Body", "Spirit", (0, 0, 3.55), (0.58, 0.52, 0.75))
+    v.muscle("Body", "Spirit", (0, 0, 3.5), (0.8, 0.72, 0.9))
     v.muscle("Body", "Spirit", (0, 0.05, 4.2), (0.62, 0.6, 0.48))
     v.muscle("Body", "Spirit", (0, 0, 2.95), (0.4, 0.38, 0.4))
     shade(v, "Spirit")
-    v.ell("Body", "Glow", (0, 0.32, 3.45), (0.3, 0.2, 0.36))
+    v.ell("Body", "Glow", (0, 0.45, 3.4), (0.34, 0.26, 0.5))
+    v.cap("Body", "Glow", (0, 0.45, 3.6), (0, 0.5, 4.05), 0.22, 0.04)
     for k in range(5):
         z = 3.05 + k * 0.2
-        v.curve("Body", "Root", [(-0.55, -0.1, z), (-0.5, 0.45, z + 0.05), (0, 0.62, z + 0.08), (0.5, 0.45, z + 0.05), (0.55, -0.1, z)], [0.055] * 5)
+        v.curve("Body", "Root", [(-0.78, -0.1, z), (-0.7, 0.55, z + 0.05), (0, 0.85, z + 0.08), (0.7, 0.55, z + 0.05), (0.78, -0.1, z)], [0.06] * 5)
     v.line("Body", "Root", [(0, 0.6, 2.95), (0, 0.66, 4.0)], r=0.07)
     for s in (-1, 1):
         v.eye("Body", (s * 0.25, 0.55, 4.25), (s * 0.4, 1, 0.05), w=0.26, h=0.3)
@@ -836,14 +863,15 @@ def glimwisp(v):
     v.anchor("visor", "Cap", (0, 0, 5.9))
     # four root tendrils trailing down to glowing crystal tips
     for j, (x, y) in enumerate(((0.3, 0.25), (-0.3, 0.25), (0.28, -0.3), (-0.28, -0.3))):
-        pts = [V(x, y, 2.75), V(x * 1.6, y * 1.5, 2.15), V(x * 2.0, y * 1.9, 1.5), V(x * 1.8, y * 2.2, 0.9), V(x * 1.4, y * 2.4, 0.4)]
+        pts = [V(x, y, 2.85), V(x * 3.2, y * 3.0, 2.45), V(x * 5.0, y * 4.6, 2.35), V(x * 6.0, y * 5.6, 2.75), V(x * 6.1, y * 5.7, 2.2)]
         pre = "Ten" + "ABCD"[j]
         for i in range(4):
             nm = f"{pre}{i + 1}"
             v.joint(nm, tuple(pts[i]), "Body" if i == 0 else f"{pre}{i}", "tentacle")
             v.cap(nm, "Root", pts[i], pts[i + 1], 0.12 - 0.02 * i, 0.1 - 0.02 * i)
             if i % 2 == 0: v.blade(nm, "Leaf", pts[i + 1], pts[i + 1] + V(x * 0.6, y * 0.6, -0.1), 0.18, thick=0.1, normal=(0, 0, 1))
-        v.crystal(f"{pre}4", "Crystal", pts[4] + V(0, 0, 0.1), (0, 0, -1), 0.4, 0.1)
+        v.ell(f"{pre}4", "Crystal", pts[4] + V(0, 0, -0.15), (0.2, 0.2, 0.3))
+        v.crystal(f"{pre}4", "Crystal", pts[4] + V(0, 0, -0.3), (0, 0, -1), 0.35, 0.12)
         v.anchor("ten" + "ABCD"[j], f"{pre}4", pts[4])
 
 
@@ -860,10 +888,10 @@ def selkie(v):
     v.ell("Body", "Belly", (0, 0.9, 1.55), (0.7, 1.05, 0.7))
     shade(v, "Fur")
     pts, rad = [], []
-    C0, n = V(0, -0.35, 2.75), 60
+    C0, n = V(0, -0.45, 2.6), 60
     for i in range(n + 1):
-        t = i / n; a = t * 1.35 * math.tau; R = 0.12 * (1.15 / 0.12) ** t
-        pts.append(C0 + V(0, math.cos(a) * R, math.sin(a) * R)); rad.append(0.08 + 0.72 * t ** 1.3)
+        t = i / n; a = t * 1.35 * math.tau; R = 0.14 * (1.4 / 0.14) ** t
+        pts.append(C0 + V(0, math.cos(a) * R, math.sin(a) * R)); rad.append(0.09 + 0.92 * t ** 1.3)
     v.tube("Body", "Shell", pts, rad)
     for i in range(6, n, 5):
         p, q = pts[i], pts[i - 1]; d = (p - q).normalized()
@@ -887,21 +915,21 @@ def selkie(v):
     v.anchor("snout", "Head", (0, 3.1, 3.3)); v.anchor("eyes", "Head", (0, 2.8, 3.55))
     for s, f in ((-1, "FlipFL"), (1, "FlipFR")):
         v.joint(f + "1", (s * 0.8, 1.2, 1.7), "Body", "arm")
-        v.cap(f + "1", "Fur", (s * 0.8, 1.2, 1.7), (s * 1.15, 1.6, 0.7), 0.32, 0.24)
-        v.muscle(f + "1", "Fur", (s * 0.88, 1.3, 1.45), (0.32, 0.35, 0.45))
-        v.joint(f + "2", (s * 1.15, 1.6, 0.7), f + "1", "arm")
-        v.blade(f + "2", "Fur", (s * 1.15, 1.6, 0.7), (s * 1.45, 2.3, 0.08), 0.62, thick=0.14, normal=(0, 0, 1))
-        for k in (-1, 0, 1): v.cap(f + "2", "Claw", (s * (1.4 + 0.12 * k), 2.2 + 0.05 * k, 0.12), (s * (1.45 + 0.14 * k), 2.45, 0.05), 0.05, 0.02)
+        v.cap(f + "1", "Fur", (s * 0.8, 1.2, 1.6), (s * 1.1, 1.45, 0.75), 0.48, 0.4)
+        v.muscle(f + "1", "Fur", (s * 0.9, 1.3, 1.35), (0.48, 0.5, 0.55))
+        v.joint(f + "2", (s * 1.1, 1.45, 0.75), f + "1", "arm")
+        v.blade(f + "2", "Fur", (s * 1.1, 1.45, 0.6), (s * 1.55, 2.25, 0.08), 0.9, thick=0.2, normal=(0, 0, 1))
+        for k in (-1, 0, 1): v.cap(f + "2", "Claw", (s * (1.45 + 0.14 * k), 2.1 + 0.05 * k, 0.14), (s * (1.5 + 0.16 * k), 2.4, 0.05), 0.07, 0.02)
         shade(v, "Fur", parts={f + "1"})
-    pts = [V(0, -1.7, 1.25), V(0, -2.4, 0.9), V(0, -3.05, 0.6), V(0, -3.55, 0.5)]
-    for i in range(3):
+    pts = [V(0, -1.7, 1.25), V(0, -2.5, 0.9), V(0, -3.3, 0.62), V(0, -4.0, 0.55), V(0, -4.55, 0.7)]
+    for i in range(4):
         nm = f"Tail{i + 1}"
         v.joint(nm, tuple(pts[i]), "Body" if i == 0 else f"Tail{i}", "tail")
-        v.muscle(nm, "Fur", pts[i].lerp(pts[i + 1], 0.5), (0.6 - 0.15 * i, (pts[i + 1] - pts[i]).length * 0.62, 0.5 - 0.12 * i), rot=look(pts[i + 1] - pts[i]))
+        v.muscle(nm, "Fur", pts[i].lerp(pts[i + 1], 0.5), (0.62 - 0.12 * i, (pts[i + 1] - pts[i]).length * 0.62, 0.52 - 0.1 * i), rot=look(pts[i + 1] - pts[i]))
         shade(v, "Fur", parts={nm})
     for s in (-1, 1):
-        v.blade("Tail3", "Crystal", pts[3], pts[3] + V(s * 0.95, -0.55, 0.15), 0.5, thick=0.12, normal=(0, 0, 1))
-        v.blade("Tail3", "Fur", pts[2] + V(s * 0.3, 0.1, 0), pts[2] + V(s * 0.75, -0.2, 0.05), 0.35, thick=0.12, normal=(0, 0, 1))
+        v.blade("Tail4", "Crystal", pts[4], pts[4] + V(0, -0.6, s * 0.95 + 0.3), 0.55, thick=0.12, normal=(1, 0, 0))
+        v.blade("Tail3", "Fur", pts[3] + V(s * 0.3, 0.1, 0), pts[3] + V(s * 0.75, -0.2, 0.05), 0.35, thick=0.12, normal=(0, 0, 1))
     v.anchor("gills", "Body", (0, 1.3, 2.9))
     ground(v)
 
@@ -942,7 +970,7 @@ def zharbird(v):
         v.blade("Head", ("Flame", "Ember", "Gold")[k % 3], base, tip, 0.26, thick=0.11, normal=(math.cos(a), 0, -math.sin(a)))
     v.anchor("crest", "Head", (0, 0.4, 6.1)); v.anchor("eyes", "Head", (0, 1.2, 5.12))
     for s, w in ((-1, "WingL"), (1, "WingR")):
-        sh, el, wr = V(s * 0.6, 0.2, 4.2), V(s * 1.6, -0.15, 4.85), V(s * 2.7, -0.75, 5.35)
+        sh, el, wr = V(s * 0.6, 0.2, 4.3), V(s * 1.45, -0.05, 5.55), V(s * 2.2, -0.55, 6.9)
         v.joint(w + "1", tuple(sh), "Body", "wing")
         v.cap(w + "1", "Obsidian", sh, el, 0.24, 0.16)
         for k in range(5):
@@ -952,20 +980,27 @@ def zharbird(v):
         v.cap(w + "2", "Obsidian", el, wr, 0.16, 0.1)
         for k in range(6):
             p = el.lerp(wr, 0.15 + 0.17 * k)
-            v.blade(w + "2", ("Flame", "Ember", "Gold")[k % 3], p, p + V(s * (0.3 + 0.12 * k), -0.85 - 0.05 * k, -0.7 + 0.2 * k), 0.3, thick=0.11, normal=(0, 0.3, 1))
+            v.blade(w + "2", ("Flame", "Ember", "Gold")[k % 3], p, p + V(s * (0.55 + 0.1 * k), -0.9 - 0.08 * k, -0.35 + 0.28 * k), 0.34, thick=0.11, normal=(0, 0.4, 1))
     for s, L in ((-1, "LegL"), (1, "LegR")):
         hip, knee, ank, foot = V(s * 0.42, -0.2, 3.0), V(s * 0.5, 0.35, 1.95), V(s * 0.5, -0.2, 0.75), V(s * 0.5, 0.05, 0.0)
         v.joint(L + "1", tuple(hip), "Body", "leg")
-        v.muscle(L + "1", "Obsidian", hip.lerp(knee, 0.4), (0.42, 0.45, 0.62), over=False)
-        v.cap(L + "1", "Obsidian", hip, knee, 0.32, 0.2, over=False)
+        v.muscle(L + "1", "Obsidian", hip.lerp(knee, 0.4), (0.58, 0.62, 0.78), over=False)
+        v.cap(L + "1", "Obsidian", hip, knee, 0.42, 0.26, over=False)
         v.joint(L + "2", tuple(knee), L + "1", "leg")
-        v.cap(L + "2", "Dark", knee, ank, 0.18, 0.13)
+        v.cap(L + "2", "Dark", knee, ank, 0.24, 0.17)
         for k in range(5): v.torus(L + "2", "Ember", knee.lerp(ank, 0.15 + 0.17 * k), (ank - knee).normalized(), 0.16, 0.03)
         v.joint(L + "3", tuple(ank), L + "2", "leg")
         v.cap(L + "3", "Dark", ank, foot + V(0, 0, 0.15), 0.13, 0.12)
         foot_talon(v, L + "3", foot, 0.13, "Dark", "Claw")
         shade(v, "Obsidian", parts={L + "1"})
         v.anchor("foot" + L[3:], L + "3", foot + V(0, 0.1, 0.25))
+    tp = [V(0, -0.7, 2.85), V(0, -1.5, 2.3), V(0, -2.3, 1.55), V(0, -3.0, 0.85), V(0, -3.6, 0.45), V(0, -4.1, 0.5)]
+    for i in range(5):
+        nm = f"Tail{i + 1}"
+        v.joint(nm, tuple(tp[i]), "Body" if i == 0 else f"Tail{i}", "tail")
+        v.cap(nm, "Obsidian", tp[i], tp[i + 1], 0.26 - 0.04 * i, 0.22 - 0.04 * (i + 1))
+        v.cap(nm, "Ember", tp[i] + V(0, 0, -0.08), tp[i + 1] + V(0, 0, -0.08), 0.16 - 0.025 * i, 0.13 - 0.025 * (i + 1))
+    for s2 in (-1, 1): v.blade("Tail5", "Flame", tp[5], tp[5] + V(s2 * 0.5, -0.6, 0.55), 0.36, thick=0.11, normal=(0, 0.3, 1))
     for j, x in enumerate((-0.25, 0.0, 0.25)):
         pre = "Plume" + "ABC"[j]
         pts = [V(x, -0.7, 3.05), V(x * 1.6, -1.6, 2.7), V(x * 2.2, -2.5, 2.55), V(x * 2.4, -3.3, 2.8), V(x * 2.0, -3.9, 3.3)]
@@ -1025,7 +1060,7 @@ def bat_wing(v, w, sh, wrist, tips, spar, membrane, root_back, thick=0.12):
 
 # ---------------------------------------------------------------- FAFNIR: Bastion Amethyst Drake (Legendary hoard drake; B)
 @pet("Fafnir", palette(form=("Stone",), Stone="#4c5262", Plate="#6c7488", PlateRim="#3a3e4c", Dark="#22252e", Horn="#c0905c",
-                       Wing="#5e2e9e", Claw="#ece0c8", Crystal="#ac6cff", Glow="#ffb02a", Edge="#b8b0d8"))
+                       Wing="#5e2e9e", Claw="#ece0c8", Maw="#d040ff", Crystal="#c84cff", Glow="#ff8a1e", Edge="#b8b0d8"))
 def fafnir(v):
     nz = noise(11)
     v.joint("Body", (0, 0, 3.9))
@@ -1042,11 +1077,11 @@ def fafnir(v):
     v.ell("Body", "Plate", (0, 0.2, 2.75), (1.05, 1.9, 0.48))
     v.paint("PlateRim", lambda x, y, z: (y % 0.42) < 0.08, part="Body", only={"Plate"})
     shade(v, "Stone")
-    v.paint("Glow", lambda x, y, z: nz(x, y, z, 0.35) > 0.74 and 3.2 < z < 4.6, part="Body", only={"StoneCrease", "StoneLo"})
+    v.paint("Glow", lambda x, y, z: (nz(x, y, z, 0.32) > 0.6 and 2.4 < z < 4.9) or (y > 1.6 and abs(math.sin(x * 4 + z * 6)) < 0.09), part="Body", only={"StoneCrease", "StoneLo", "Stone", "Plate"})
     scales(v, "Body", (0, 2.2, 4.2), (0, -2.8, 4.0), rows=10, arc=(-55, 55), size=0.42, col="Plate", rim="PlateRim")
     for (x, y, z, sz) in ((0, 1.2, 5.6, 1.4), (0.7, 0.2, 5.3, 1.0), (-0.65, -0.5, 5.25, 1.1), (0.2, -1.4, 5.1, 1.2), (1.35, 1.25, 5.1, 0.8), (-1.35, 1.25, 5.1, 0.8)):
         q = surf(v, "Body", (x * 0.6, y, 3.9), (x * 0.5, 0, 1)) or V(x, y, z)
-        v.cluster("Body", "Crystal", q - V(0, 0, 0.15), (x * 0.4, -0.2, 1), sz, n=6, seed=int(sz * 10 + y * 3))
+        v.cluster("Body", "Crystal", q - V(0, 0, 0.15), (x * 0.4, -0.2, 1), sz * 1.45, n=7, seed=int(sz * 10 + y * 3))
     v.anchor("chest", "Body", (0, 2.4, 3.8)); v.anchor("back", "Body", (0, 0.4, 6.4))
     # neck and head
     v.joint("Neck", (0, 2.2, 4.6), "Body", "neck")
@@ -1055,19 +1090,23 @@ def fafnir(v):
     scales(v, "Neck", (0, 3.0, 5.6), (0, 2.1, 4.9), rows=3, arc=(-60, 60), size=0.36, col="Plate", rim="PlateRim")
     shade(v, "Stone", parts={"Neck"})
     v.joint("Head", (0, 3.05, 5.45), "Neck", "head")
-    v.muscle("Head", "Stone", (0, 3.5, 5.65), (0.88, 0.95, 0.76))
-    v.cap("Head", "Stone", (0, 3.95, 5.5), (0, 4.95, 5.2), 0.56, 0.42)
-    v.cap("Head", "Dark", (0, 3.75, 5.0), (0, 4.7, 4.78), 0.46, 0.32)
+    v.muscle("Head", "Stone", (0, 3.55, 5.7), (1.1, 1.2, 0.95))
+    v.cap("Head", "Stone", (0, 4.0, 5.65), (0, 5.3, 5.35), 0.7, 0.52)
+    v.cap("Head", "Dark", (0, 3.85, 4.85), (0, 5.05, 4.45), 0.55, 0.38)
+    v.ell("Head", "Maw", (0, 4.5, 5.0), (0.42, 0.7, 0.2))
+    for s2 in (-1, 1): v.ell("Head", "Stone", (s2 * 0.55, 3.75, 6.1), (0.42, 0.55, 0.24), rot=E(0, s2 * -15, 0))
     shade(v, "Stone", parts={"Head"})
     for s in (-1, 1):
         for k in range(4):
-            q = V(s * (0.18 + 0.1 * k), 4.85 - 0.18 * k, 5.0)
-            v.cap("Head", "Claw", q, q + V(0, 0, -0.22), 0.06, 0.02)
+            q = V(s * (0.2 + 0.11 * k), 5.15 - 0.22 * k, 5.12)
+            v.cap("Head", "Claw", q, q + V(0, 0, -0.3), 0.08, 0.02)
+            q2 = V(s * (0.2 + 0.11 * k), 4.95 - 0.22 * k, 4.6)
+            v.cap("Head", "Claw", q2, q2 + V(0, 0, 0.25), 0.07, 0.02)
         v.eye("Head", (s * 0.52, 4.05, 5.85), (s * 0.7, 0.7, 0.1), w=0.26, h=0.18)
         v.box("Head", "Glow", (s * 0.16, 5.02, 5.32), (0.1, 0.1, 0.1))
-        v.curve("Head", "Horn", [(s * 0.6, 3.25, 6.15), (s * 1.0, 2.75, 6.55), (s * 1.5, 2.45, 6.15), (s * 1.65, 2.75, 5.5), (s * 1.5, 3.3, 5.3), (s * 1.3, 3.5, 5.62)], [0.34, 0.3, 0.24, 0.17, 0.1, 0.04])
-        v.cluster("Head", "Crystal", (s * 0.3, 3.4, 6.2), (s * 0.3, -0.3, 1), 0.5, n=3, seed=5)
-    v.anchor("snout", "Head", (0, 5.05, 5.3)); v.anchor("eyes", "Head", (0, 4.15, 5.85))
+        v.curve("Head", "Horn", [(s * 0.6, 3.25, 6.15), (s * 1.0, 2.75, 6.55), (s * 1.5, 2.45, 6.15), (s * 1.65, 2.75, 5.5), (s * 1.5, 3.3, 5.3), (s * 1.3, 3.5, 5.62)], [0.44, 0.4, 0.32, 0.22, 0.13, 0.05])
+        v.cluster("Head", "Crystal", (s * 0.3, 3.4, 6.35), (s * 0.3, -0.3, 1), 0.7, n=3, seed=5)
+    v.anchor("snout", "Head", (0, 5.35, 5.35)); v.anchor("eyes", "Head", (0, 4.15, 5.85))
     for s, w in ((-1, "WingL"), (1, "WingR")):
         bat_wing(v, w, (s * 1.2, 0.9, 5.2), (s * 3.0, 0.2, 6.7), [(s * 4.5, -0.5, 6.3), (s * 4.3, -1.5, 5.3), (s * 3.5, -2.2, 4.5), (s * 2.2, -2.1, 4.4)], "Stone", "Wing", (s * 1.1, -1.4, 4.6))
         v.cluster(w + "2", "Crystal", (s * 3.0, 0.2, 6.75), (s * 0.3, 0.2, 1), 0.55, n=3, seed=6)
@@ -1077,6 +1116,8 @@ def fafnir(v):
         else: hip, knee, ank, foot = (x, y, 3.6), (x + s * 0.12, y + 0.5, 2.1), (x + s * 0.12, y - 0.25, 0.85), (x + s * 0.12, y - 0.1, 0.0)
         leg2(v, limb, hip, knee, ank, foot, (0.78, 0.55, 0.44, 0.42), "Stone", front=front, claw="Claw", toes=4)
         shade(v, "Stone", parts={limb + "1", limb + "2", limb + "3"})
+        kq = V(knee) + V(s * 0.3, 0.35 if front else -0.35, 0.1)
+        v.cluster(limb + "1", "Crystal", kq, (s * 0.5, 0.5 if front else -0.5, 0.6), 0.65, n=4, seed=7)
     pts = [V(0, -2.9, 4.05), V(0, -3.7, 3.5), V(0, -4.45, 2.8), V(0, -5.1, 2.0), V(0, -5.6, 1.3), V(0, -6.05, 0.9), V(0, -6.45, 0.8)]
     rad = [0.78, 0.64, 0.52, 0.42, 0.33, 0.26, 0.2]
     for i in range(6):
@@ -1094,15 +1135,15 @@ def fafnir(v):
 
 # ---------------------------------------------------------------- KIRIN: Sacred Lotus Qilin (Legendary cleanser; B)
 @pet("Kirin", palette(form=("Pearl",), Pearl="#e8e4f2", Scale="#d2caee", ScaleRim="#a89cd8", Pink="#ff74b4", PinkLight="#ffbadc",
-                      Gold="#e8c050", Hoof="#22a46c", Claw="#22a46c", Petal="#ff9ad2", Crystal="#ff8ac4", Glow="#ff6cc0", Edge="#f0d8f0"))
+                      Gold="#e8c050", Fin="#ffc888", Hoof="#22a46c", Claw="#f4f0e8", Petal="#ff9ad2", Crystal="#ff8ac4", Glow="#ff6cc0", Edge="#f0d8f0"))
 def kirin(v):
     v.joint("Body", (0, 0, 3.95))
     # a pearl-scaled qilin (magic/concepts/Kirin_s22): a deer's long legs on jade hooves, a scaled back, a long neck under a
     # flowing pink mane, rose-quartz antlers that bloom into lotus flowers, dragon whiskers, pink shoulder fins and silk
     # ribbons trailing from its shoulders
-    v.muscle("Body", "Pearl", (0, 0.95, 4.1), (0.85, 0.95, 0.95))
+    v.muscle("Body", "Pearl", (0, 0.95, 4.1), (1.15, 1.05, 1.08))
     v.muscle("Body", "Pearl", (0, -0.2, 4.05), (0.72, 1.2, 0.75))
-    v.muscle("Body", "Pearl", (0, -1.3, 4.1), (0.8, 0.85, 0.85))
+    v.muscle("Body", "Pearl", (0, -1.3, 4.1), (0.98, 0.9, 0.92))
     for s in (-1, 1):
         v.muscle("Body", "Pearl", (s * 0.7, 1.05, 4.35), (0.3, 0.55, 0.62), rot=E(-15, s * -10, 0))
         v.muscle("Body", "Pearl", (s * 0.58, -1.45, 4.3), (0.45, 0.62, 0.6))
@@ -1120,9 +1161,19 @@ def kirin(v):
             v.blade("Neck", "Pink" if (k + (s > 0)) % 2 else "PinkLight", q + V(s * 0.05, -0.1, 0), q + V(s * 0.45, -0.75, -0.25), 0.3, thick=0.1, normal=(s, 0.2, 0.4))
     shade(v, "Pearl", parts={"Neck"})
     v.joint("Head", (0, 2.0, 5.65), "Neck", "head")
-    v.muscle("Head", "Pearl", (0, 2.3, 5.85), (0.48, 0.6, 0.46))
-    v.cap("Head", "Pearl", (0, 2.6, 5.8), (0, 3.3, 5.55), 0.3, 0.2)
-    v.box("Head", "Pink", (0, 3.38, 5.58), (0.12, 0.08, 0.08))
+    v.muscle("Head", "Pearl", (0, 2.3, 5.85), (0.64, 0.72, 0.56))
+    v.cap("Head", "Pearl", (0, 2.65, 5.85), (0, 3.5, 5.6), 0.42, 0.3)
+    v.cap("Head", "Pearl", (0, 2.6, 5.35), (0, 3.35, 5.05), 0.3, 0.22)
+    v.ell("Head", "Glow", (0, 3.0, 5.4), (0.26, 0.35, 0.12))
+    for s2 in (-1, 1):
+        for k in range(3):
+            v.cap("Head", "Claw", (s2 * (0.12 + 0.09 * k), 3.35 - 0.12 * k, 5.45), (s2 * (0.12 + 0.09 * k), 3.35 - 0.12 * k, 5.25), 0.05, 0.015)
+        v.cap("Head", "Claw", (s2 * 0.24, 3.25, 5.18), (s2 * 0.24, 3.25, 5.5), 0.06, 0.015)
+    v.box("Head", "Pink", (0, 3.58, 5.65), (0.16, 0.08, 0.1))
+    for k in range(14):
+        a = math.radians(-120 + k * 240 / 13)
+        d = V(math.sin(a), -0.55, math.cos(a) * 0.9 + 0.1).normalized()
+        v.crystal("Head", "Crystal", V(0, 2.0, 5.85) + d * 0.5, d, 0.75 + 0.25 * math.cos(a), 0.1)
     shade(v, "Pearl", parts={"Head"})
     for s in (-1, 1):
         v.eye("Head", (s * 0.3, 2.62, 6.02), (s * 0.7, 0.7, 0.1), w=0.2, h=0.16)
@@ -1138,25 +1189,26 @@ def kirin(v):
     for s, w in ((-1, "FinL"), (1, "FinR")):
         v.joint(w, (s * 0.65, 1.0, 4.6), "Body", "wing")
         for k in range(3):
-            v.blade(w, "Pink" if k % 2 else "PinkLight", (s * 0.65, 1.0, 4.6), (s * (1.5 - 0.15 * k), 0.4 - 0.45 * k, 5.4 - 0.2 * k), 0.36, thick=0.1, normal=(0, 0.3, 1))
+            v.blade(w, "Fin" if k % 2 else "Gold", (s * 0.85, 1.0, 4.6), (s * (2.05 - 0.2 * k), 0.4 - 0.55 * k, 5.6 - 0.25 * k), 0.5, thick=0.11, normal=(0, 0.3, 1))
     for limb, x, y, front in (("LegFL", -0.46, 1.05, True), ("LegFR", 0.46, 1.05, True), ("LegBL", -0.5, -1.35, False), ("LegBR", 0.5, -1.35, False)):
         s = 1 if x > 0 else -1
         if front: hip, knee, ank, foot = (x, y, 3.7), (x + s * 0.03, y + 0.1, 2.25), (x + s * 0.03, y, 0.78), (x + s * 0.03, y + 0.08, 0.0)
         else: hip, knee, ank, foot = (x, y, 3.8), (x + s * 0.04, y + 0.45, 2.55), (x + s * 0.04, y - 0.25, 1.1), (x + s * 0.04, y - 0.12, 0.0)
-        leg2(v, limb, hip, knee, ank, foot, (0.38, 0.21, 0.15, 0.15), "Pearl", front=front, kind="hoof", hoof="Hoof", band="Gold")
+        leg2(v, limb, hip, knee, ank, foot, (0.48, 0.28, 0.2, 0.19), "Pearl", front=front, kind="hoof", hoof="Hoof", band="Gold")
         shade(v, "Pearl", parts={limb + "1", limb + "2"})
         a = V(ank)
         for k in range(6):
             ang = k / 6 * math.tau
             v.blade(limb + "3", "PinkLight", a + V(math.cos(ang) * 0.1, math.sin(ang) * 0.1, -0.25), a + V(math.cos(ang) * 0.3, math.sin(ang) * 0.3 - 0.1, -0.6), 0.16, thick=0.1, normal=(math.sin(ang), -math.cos(ang), 0))
-    pts = [V(0, -2.0, 4.4), V(0, -2.55, 4.3), V(0, -2.95, 3.85), V(0, -3.15, 3.3)]
-    for i in range(3):
+    pts = [V(0, -2.0, 4.4), V(0, -2.75, 4.45), V(0, -3.4, 4.1), V(0, -3.8, 3.5), V(0, -4.0, 2.85), V(0, -3.9, 2.25)]
+    for i in range(5):
         nm = f"Tail{i + 1}"
         v.joint(nm, tuple(pts[i]), "Body" if i == 0 else f"Tail{i}", "tail")
-        v.cap(nm, "Pearl", pts[i], pts[i + 1], 0.16 - 0.03 * i, 0.13 - 0.03 * i)
+        v.cap(nm, "Pearl", pts[i], pts[i + 1], 0.24 - 0.035 * i, 0.21 - 0.035 * (i + 1))
+        v.blade(nm, "Pink", pts[i + 1] + V(0, 0, 0.1), pts[i + 1] + V(0, -0.35, 0.45), 0.22, thick=0.1, normal=(1, 0, 0))
     for k in range(7):
         a = k / 7 * math.tau
-        v.blade("Tail3", "Pink" if k % 2 else "PinkLight", pts[3] + V(0, 0, 0.1), pts[3] + V(math.cos(a) * 0.35, -0.3, -0.6 + math.sin(a) * 0.2), 0.24, thick=0.1, normal=(math.cos(a), 0, math.sin(a)))
+        v.blade("Tail5", "Pink" if k % 2 else "PinkLight", pts[5] + V(0, 0, 0.1), pts[5] + V(math.cos(a) * 0.4, -0.35, -0.6 + math.sin(a) * 0.25), 0.26, thick=0.1, normal=(math.cos(a), 0, math.sin(a)))
     for s, r in ((-1, "RibbonL"), (1, "RibbonR")):
         pts = [V(s * 0.6, 0.8, 4.75), V(s * 0.9, -0.3, 5.25), V(s * 1.0, -1.5, 4.9), V(s * 0.8, -2.6, 5.3)]
         for i in range(3):
@@ -1167,7 +1219,7 @@ def kirin(v):
 
 
 # ---------------------------------------------------------------- OURO: World-Tree Infinity Wyrm (Mythic all-rounder; A)
-@pet("Ouro", palette(form=("Scale",), Scale="#26457e", Belly="#eaa22a", Crest="#ff8a2a", Gold="#e2b452", Wing="#c8507c", Dark="#101a30",
+@pet("Ouro", palette(form=("Scale",), Scale="#26457e", Belly="#eaa22a", Crest="#ff8a2a", Gold="#e2b452", Wing="#c8507c", Mane="#c8186c", Prism="#c070ff", Dark="#101a30",
                      Claw="#f0e6d6", Crystal="#c8f2ff", Glow="#b070ff", Edge="#a8c0f0"))
 def ouro(v):
     # a coiled world-tree wyrm (magic/concepts/Ouro_s21): a long serpent body lying in a spiral coil with a gold belly and an
@@ -1202,16 +1254,20 @@ def ouro(v):
         v.joint(nm, tuple(npts[i]), "Body" if i == 0 else f"Neck{i}", "neck")
         v.muscle(nm, "Scale", npts[i].lerp(npts[i + 1], 0.5), (0.52 - 0.04 * i, (npts[i + 1] - npts[i]).length * 0.66, 0.5 - 0.04 * i), rot=look(npts[i + 1] - npts[i]))
         v.paint("Belly", lambda x, y, z: y > npts[i].lerp(npts[i + 1], 0.5).y + 0.2, part=nm, only={"Scale"})
-        v.blade(nm, "Crest", npts[i] + V(0, -0.35, 0.2), npts[i] + V(0, -0.85, 0.55), 0.3, thick=0.1, normal=(1, 0, 0))
+        for s2 in (-1, 0, 1):
+            v.blade(nm, "Mane" if s2 else "Crest", npts[i] + V(s2 * 0.2, -0.35, 0.2), npts[i] + V(s2 * 0.55, -1.0, 0.45), 0.34, thick=0.1, normal=(1, 0, s2 * 0.5))
         shade(v, "Scale", parts={nm})
     v.joint("Head", tuple(npts[3]), "Neck3", "head")
     v.muscle("Head", "Scale", (0, 2.0, 3.95), (0.5, 0.62, 0.46))
     v.cap("Head", "Scale", (0, 2.3, 3.9), (0, 3.05, 3.7), 0.36, 0.26)
-    v.cap("Head", "Belly", (0, 2.25, 3.55), (0, 2.95, 3.38), 0.28, 0.2)
+    v.cap("Head", "Belly", (0, 2.2, 3.4), (0, 2.85, 3.05), 0.27, 0.19)
+    v.ell("Head", "Glow", (0, 2.55, 3.45), (0.2, 0.3, 0.1))
+    for s2 in (-1, 1):
+        for k in range(3): v.cap("Head", "Claw", (s2 * 0.16, 2.6 + 0.15 * k, 3.6), (s2 * 0.16, 2.6 + 0.15 * k, 3.4), 0.04, 0.015)
     shade(v, "Scale", parts={"Head"})
     for s in (-1, 1):
         v.eye("Head", (s * 0.34, 2.45, 4.12), (s * 0.7, 0.7, 0.1), w=0.22, h=0.16)
-        A = [V(s * 0.25, 1.85, 4.3), V(s * 0.5, 1.6, 4.85), V(s * 0.75, 1.25, 5.25), V(s * 0.8, 0.9, 5.45)]
+        A = [V(s * 0.25, 1.85, 4.3), V(s * 0.55, 1.35, 4.75), V(s * 0.8, 0.75, 5.0), V(s * 0.85, 0.25, 5.05)]
         v.curve("Head", "Gold", A, [0.1, 0.09, 0.06, 0.03])
         for i, d in ((1, V(s * 0.4, 0.3, 0.3)), (2, V(s * 0.35, 0.05, 0.4))):
             v.curve("Head", "Gold", [A[i], A[i] + d], [0.05, 0.025])
@@ -1221,33 +1277,41 @@ def ouro(v):
     v.anchor("eyes", "Head", (0, 2.55, 4.1)); v.anchor("gem", "Head", (0, 1.9, 4.55))
     for s, w in ((-1, "WingL"), (1, "WingR")):
         bat_wing(v, w, (s * 0.45, 1.75, 2.3), (s * 1.9, 1.3, 3.5), [(s * 3.0, 0.7, 3.3), (s * 2.9, -0.1, 2.6), (s * 2.3, -0.5, 2.0), (s * 1.3, 0.2, 1.7)], "Scale", "Wing", (s * 0.6, 1.0, 1.6))
+    # two clawed forelegs planted in front of the coil (round 2: Gemini)
+    for limb, x in (("LegFL", -0.62), ("LegFR", 0.62)):
+        leg2(v, limb, (x, 1.75, 1.45), (x * 1.35, 2.05, 0.95), (x * 1.4, 2.1, 0.4), (x * 1.4, 2.25, 0.0), (0.32, 0.24, 0.19, 0.18), "Scale", front=True, claw="Claw", toes=4)
+        shade(v, "Scale", parts={limb + "1", limb + "2"})
     # six prism crystals on a bone of their own that spins round the wyrm
     v.joint("Orbit", (0, -0.25, 2.2), "Body", "ring"); v.axis("Orbit", (0, 0, 1))
     for k in range(6):
         a = k / 6 * math.tau
         c = V(math.cos(a) * 2.7, -0.25 + math.sin(a) * 2.7, 1.6 + 0.9 * (k % 3))
-        v.cluster("Orbit", "Crystal", c, (math.cos(a) * 0.3, math.sin(a) * 0.3, 1), 0.7, n=4, seed=k + 1)
+        col = "Crystal" if k % 2 else "Prism"
+        v.crystal("Orbit", col, c, (0, 0, 1), 0.75, 0.24, sides=4)
+        v.crystal("Orbit", col, c + V(0, 0, 0.05), (0, 0, -1), 0.55, 0.24, sides=4)
     ground(v)
 
 
 # ---------------------------------------------------------------- NINERING: Sovereign Chrono-Relic (Secret ore copier; B)
-@pet("Ninering", palette(Gold="#e2a634", Dark="#1c1c36", Void="#0a0a18", Head="#24243c", Horn="#ffd04a", Claw="#ffd04a",
+@pet("Ninering", palette(form=("Head",), Gold="#e2a634", Dark="#1c1c36", Void="#0a0a18", Head="#2a2c40", Horn="#ffd04a", Claw="#ffd04a",
                          Crystal="#7ae8ff", Glow="#38d8ff", Edge="#f0d890"))
 def ninering(v):
-    C = V(0, 0, 3.45)
+    C = V(0, 0, 3.95)
     v.joint("Body", tuple(C), None)
     # a living astrolabe (magic/concepts/Ninering_s22): nine counter-rotating rings of gold and dark enamel set with glowing
-    # crystal gems round a void disc with a gold star and a crystal heart, a horned void-dragon head crowning it, and two gold
-    # claws gripping the outer ring
-    v.ell("Body", "Void", C, (0.85, 0.22, 0.85))
+    # crystal gems round a domed void-glass core under a raised gold star, a big horned void-dragon head crowning it, and two
+    # scaled digitigrade legs on gold talons that carry the whole relic (round 2: Gemini, head 2.5x, legs, a domed core)
+    v.ell("Body", "Void", C, (0.95, 0.55, 0.95))
+    v.ell("Body", "Dark", C + V(0, -0.15, 0), (1.05, 0.4, 1.05))
     for k in range(8):
         a = k / 8 * math.tau
         d = V(math.cos(a), 0, math.sin(a))
-        v.blade("Body", "Gold", C + V(0, 0.18, 0), C + V(0, 0.18, 0) + d * (0.75 if k % 2 == 0 else 0.5), 0.22, thick=0.1, normal=(0, 1, 0))
-    v.ell("Body", "Glow", C + V(0, 0.25, 0), (0.22, 0.14, 0.22))
-    v.anchor("core", "Body", C + V(0, 0.35, 0))
+        v.blade("Body", "Gold", C + V(0, 0.5, 0), C + V(0, 0.42, 0) + d * (0.9 if k % 2 == 0 else 0.55), 0.26, thick=0.14, normal=(0, 1, 0))
+    v.ell("Body", "Glow", C + V(0, 0.58, 0), (0.26, 0.16, 0.26))
+    v.torus("Body", "Glow", C + V(0, 0.3, 0), (0, 1, 0), 0.95, 0.05)
+    v.anchor("core", "Body", C + V(0, 0.7, 0))
     for i in range(9):
-        R = 1.05 + 0.25 * i
+        R = 1.15 + 0.24 * i
         nm = f"Ring{i + 1}"
         tilt = math.radians(5 + 2.5 * i); az = i * 2.35
         nrm = V(math.sin(tilt) * math.cos(az), math.cos(tilt), math.sin(tilt) * math.sin(az))
@@ -1259,30 +1323,43 @@ def ninering(v):
         for k in range(gems):
             a = k / gems * math.tau + i
             q = C + (u * math.cos(a) + w * math.sin(a)) * R
-            v.box(nm, "Glow" if (k + i) % 2 == 0 else "Crystal", q + nrm * 0.08, (0.14, 0.14, 0.14))
+            v.box(nm, "Glow" if (k + i) % 2 == 0 else "Crystal", q + nrm * 0.08, (0.15, 0.15, 0.15))
         if i == 8:
             for k in range(16):
                 a = k / 16 * math.tau
                 rd = u * math.cos(a) + w * math.sin(a)
-                v.crystal(nm, "Gold", C + rd * (R + 0.05), rd, 0.35, 0.08, sides=4)
-    # the crowning dragon head on its own bone above the rings
-    v.joint("Head", (0, 0, 6.0), "Body", "head")
-    v.cap("Head", "Head", (0, 0, 5.75), (0, 0.15, 6.35), 0.42, 0.42)
-    v.ell("Head", "Head", (0, 0.35, 6.45), (0.5, 0.6, 0.45))
-    v.cap("Head", "Head", (0, 0.7, 6.4), (0, 1.3, 6.25), 0.32, 0.22)
+                v.crystal(nm, "Gold", C + rd * (R + 0.05), rd, 0.38, 0.09)
+    # the crowning dragon head, 2.5x the first build
+    v.joint("Head", (0, 0, 6.3), "Body", "head")
+    v.cap("Head", "Head", (0, -0.2, 6.1), (0, 0.1, 6.9), 0.75, 0.7)
+    v.muscle("Head", "Head", (0, 0.35, 7.05), (0.9, 1.0, 0.78))
+    v.cap("Head", "Head", (0, 0.9, 6.95), (0, 1.9, 6.7), 0.55, 0.38)
+    v.cap("Head", "Dark", (0, 0.85, 6.5), (0, 1.75, 6.3), 0.42, 0.3)
+    for k in range(4):
+        for s2 in (-1, 1): v.cap("Head", "Claw", (s2 * (0.14 + 0.09 * k), 1.75 - 0.18 * k, 6.62), (s2 * (0.14 + 0.09 * k), 1.75 - 0.18 * k, 6.42), 0.05, 0.02)
+    shade(v, "Head", parts={"Head"})
     for s in (-1, 1):
-        v.eye("Head", (s * 0.3, 0.78, 6.6), (s * 0.7, 0.7, 0.1), w=0.22, h=0.16)
-        v.curve("Head", "Horn", [(s * 0.3, 0.2, 6.75), (s * 0.7, -0.15, 7.15), (s * 0.95, -0.55, 7.25), (s * 1.0, -0.85, 7.05)], [0.13, 0.1, 0.06, 0.03])
-        v.cap("Head", "Horn", (s * 0.42, 0.45, 6.15), (s * 0.95, 0.4, 5.85), 0.08, 0.02)
-    v.crystal("Head", "Crystal", (0, 0.2, 6.85), (0, -0.2, 1), 0.6, 0.12)
-    v.anchor("eyes", "Head", (0, 0.85, 6.6))
-    for s, a in ((-1, "ArmL"), (1, "ArmR")):
-        sh, el, wr = V(s * 1.1, 0.35, 2.3), V(s * 2.1, 0.45, 1.6), V(s * 2.65, 0.4, 1.15)
-        v.joint(a + "1", tuple(sh), "Body", "arm"); v.cap(a + "1", "Head", sh, el, 0.18, 0.15)
-        v.joint(a + "2", tuple(el), a + "1", "arm"); v.cap(a + "2", "Head", el, wr, 0.15, 0.13)
-        for k in (-1, 0, 1):
-            d = V(s * 0.2, 0.15 * k + 0.1, -0.55).normalized()
-            v.cap(a + "2", "Claw", wr, wr + d * 0.5, 0.08, 0.03)
+        v.eye("Head", (s * 0.55, 1.05, 7.25), (s * 0.7, 0.7, 0.1), w=0.32, h=0.22)
+        v.curve("Head", "Horn", [(s * 0.5, 0.0, 7.55), (s * 1.05, -0.45, 8.1), (s * 1.45, -0.95, 8.25), (s * 1.6, -1.4, 7.95)], [0.24, 0.18, 0.11, 0.04])
+        v.curve("Head", "Horn", [(s * 0.75, 0.55, 6.85), (s * 1.4, 0.4, 6.75), (s * 1.75, 0.1, 6.45)], [0.12, 0.08, 0.03])
+        v.curve("Head", "Gold", [(s * 0.3, 1.7, 7.0), (s * 0.55, 0.9, 7.55), (s * 0.4, 0.2, 7.85)], [0.05, 0.05, 0.04])
+    v.crystal("Head", "Crystal", (0, 0.4, 7.75), (0, -0.2, 1), 0.85, 0.16)
+    for k in range(4):
+        a = (k - 1.5) * 0.4
+        v.crystal("Head", "Gold", (math.sin(a) * 0.5, 0.0, 7.6), (math.sin(a), -0.4, 1), 0.5, 0.08)
+    v.anchor("eyes", "Head", (0, 1.15, 7.25))
+    # two scaled digitigrade legs behind the rings, gold talons with cyan gem insets
+    for s, L in ((-1, "LegL"), (1, "LegR")):
+        hip, knee, ank, foot = V(s * 1.0, -0.55, 2.3), V(s * 1.45, -0.1, 1.45), V(s * 1.4, -0.75, 0.55), V(s * 1.4, -0.45, 0.0)
+        v.joint(L + "1", tuple(hip), "Body", "leg")
+        v.muscle(L + "1", "Head", hip.lerp(knee, 0.4), (0.55, 0.55, 0.62), over=False)
+        v.cap(L + "1", "Head", hip, knee, 0.45, 0.3)
+        v.joint(L + "2", tuple(knee), L + "1", "leg"); v.cap(L + "2", "Head", knee, ank, 0.3, 0.22)
+        v.joint(L + "3", tuple(ank), L + "2", "leg"); v.cap(L + "3", "Head", ank, foot + V(0, 0, 0.15), 0.22, 0.2)
+        foot_talon(v, L + "3", foot, 0.22, "Gold", "Claw")
+        v.box(L + "3", "Glow", foot + V(0, 0.35, 0.35), (0.14, 0.14, 0.14))
+        shade(v, "Head", parts={L + "1", L + "2"})
+        v.anchor("foot" + L[3:], L + "3", foot + V(0, 0.1, 0.3))
     ground(v)
 
 
