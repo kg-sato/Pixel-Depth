@@ -1401,7 +1401,7 @@ function M.play(opt)
 			if u > 0.85 and not card then
 				K.petHide = os.clock() + 15 -- directive v14 (tour grade: the town crew pets stood between the camera and the result card): the crew stays out of shot for the card (PixelClient reads HidePetsUntil)
 				plr:SetAttribute("HidePetsUntil", math.max(plr:GetAttribute("HidePetsUntil") or 0, K.petHide))
-				frame({ Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(10, 4, 18), BackgroundTransparency = 0.32, ZIndex = 5 }) -- a dim scrim, so the card does not float over the bright town (Gemini full1122e 545 s); gone with the gui
+				frame({ Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(10, 4, 18), BackgroundTransparency = 0.16, ZIndex = 5 }) -- 0.16 (tour full1125b: a fence post read through the 0.32 scrim) -- a dim scrim, so the card does not float over the bright town (Gemini full1122e 545 s); gone with the gui
 				card = frame({ Size = UDim2.fromScale(0.34, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.1, ZIndex = 6 }) -- obsidian jelly glass (Gemini, loop v10n: "a stark white box after a dark ride")
 				round(card, 0.1)
 				stroke(card, Color3.fromRGB(155, 31, 232), 3)
