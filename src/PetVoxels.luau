@@ -582,6 +582,7 @@ rigAnimate = function(m, rig, now, dt, moving)
 	local pos = root.Position
 	if moving == nil then
 		local v = rig.lastPos and (pos - rig.lastPos).Magnitude / math.max(dt, 1e-3) or 0
+		rig.speed = (rig.speed or 0) + (v - (rig.speed or 0)) * math.min(1, dt * 8)
 		moving = v > 2.5
 	end
 	rig.lastPos = pos
@@ -627,7 +628,11 @@ rigAnimate = function(m, rig, now, dt, moving)
 	local pitch = (rp.pitch or 0) * aw + math.sin(t * 1.1) * 0.02 * idle
 	local roll = (rp.roll or 0) * aw + math.sin(t * 0.8 + 1) * 0.025 * idle
 	local P = Vector3.new(0, 0, rp.pivotBack and rig.backZ or 0) * s
-	local step = math.sin(t * 7)
+	-- the stride follows the real ground speed (v16, full1124c view 18): a faster walk is a faster cadence, never a glide
+	local spd = rig.speed or 0
+	if moving and spd < 3 then spd = 9 end -- a caller that says 'walking' without moving the model (lineups, showcases)
+	rig.gp = (rig.gp or 0) + dt * math.clamp(3.5 + spd * 0.9 / math.max(s, 0.3), 3.5, 15)
+	local step = math.sin(rig.gp)
 	local breathe = math.sin(t * 2)
 	local lift = ((rp.lift or 0) * aw + math.abs(step) * 0.08 * w + breathe * 0.03 * idle) * s
 	base = base * CFrame.new(0, lift, 0) * CFrame.new(P) * CFrame.Angles(pitch, 0, roll) * CFrame.new(-P)

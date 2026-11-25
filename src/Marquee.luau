@@ -17,6 +17,10 @@ function M.start(E)
 		if busy then return end
 		busy = true
 		while #queue > 0 do
+			local T = require(script.Parent:WaitForChild("ToastManager"))
+			local w0 = os.clock()
+			while not T.free() and os.clock() - w0 < 6 do task.wait(0.25) end -- one banner at a time (v16 4.1)
+			T.claim(5.4)
 			local m = table.remove(queue, 1)
 			line.Text, line.TextColor3 = m[1], m[2]
 			bar.Visible, sc.Scale = true, 0

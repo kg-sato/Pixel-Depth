@@ -130,9 +130,31 @@ function M.attach(label)
 	queue()
 end
 
+-- Master Directive v16 2.3 (uisk_r2: matte primary buttons looked unembellished): the primary calls to action get a thin warm brass
+-- rim just inside their matte skin, the restraint-first accent of the DfO3Yiyys6r reference. Display only.
+M.CTA = { "^FORGE$", "^SELL", "^INVEST", "STRIKE!$", "^GRAB", "^HATCH", "^BUY", "^CLAIM", "^OPEN$" }
+function M.bevel(b)
+	if b:FindFirstChild("Bevel") or not b:FindFirstChild("Skin") then return end
+	local f = Instance.new("Frame")
+	f.Name, f.BackgroundTransparency, f.AnchorPoint, f.Position, f.Size, f.ZIndex = "Bevel", 1, Vector2.new(0.5, 0.5), UDim2.fromScale(0.5, 0.5), UDim2.new(1, -8, 1, -8), b.ZIndex
+	local c = Instance.new("UICorner")
+	c.CornerRadius = UDim.new(0, 10)
+	c.Parent = f
+	local s = Instance.new("UIStroke")
+	s.Color, s.Thickness, s.Transparency = Color3.fromRGB(232, 186, 96), 1.75, 0.15
+	s.Parent = f
+	f.Parent = b
+end
+local function cta(d)
+	if not d:IsA("TextButton") then return end
+	local up = string.upper(d.Text)
+	for _, p in M.CTA do if string.find(up, p) then M.bevel(d) return end end
+end
+
 function M.start(E)
 	local pg = E.plr:WaitForChild("PlayerGui")
 	local function look(d)
+		cta(d)
 		if (d:IsA("TextLabel") or d:IsA("TextButton")) and not d:GetAttribute("IconPass") then
 			if M.pick(d.Text) then M.attach(d) return end
 			local c c = d:GetPropertyChangedSignal("Text"):Connect(function() -- a label that gets its words later (timers, toasts)

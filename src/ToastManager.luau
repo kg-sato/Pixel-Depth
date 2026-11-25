@@ -23,6 +23,11 @@ function M.show(msg, color, big, delay)
 end
 
 function M.count() return #queue + (live and 1 or 0) end
+-- one banner at a time across the screen top (Master Directive v16 4.1): the arrival banner and the hatch marquee claim the
+-- banner lane for their hold; toasts wait while it is claimed, and a claimer waits while a toast is up
+local claimUntil = 0
+function M.claim(sec) claimUntil = math.max(claimUntil, os.clock() + sec) end
+function M.free() return os.clock() >= claimUntil and live == nil end
 
 function M.start(e)
 	E = e
@@ -44,7 +49,7 @@ function M.start(e)
 			gap = os.clock() + 0.34 -- the next line waits until this one is gone
 			return
 		end
-		if hold or os.clock() < gap or #queue == 0 then return end
+		if hold or os.clock() < gap or os.clock() < claimUntil or #queue == 0 then return end
 		local fight = lane() ~= LANE -- a boss fight: only its own lines show now; the rest (quests, torch, gifts) wait for the end (Gemini full1119h)
 		local pick = 1
 		if fight then

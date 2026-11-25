@@ -307,7 +307,7 @@ function M.play(opt)
 	nameGrad.Parent = nameL
 	local subL, subS = label(string.upper(opt.rarity or "") .. "  -  " .. string.upper(opt.role or "") .. ((opt.odds or "") ~= "" and ("  -  " .. opt.odds) or ""),
 		UDim2.fromScale(0.5, 0.04), UDim2.fromScale(0.5, 0.228), rc:Lerp(WHITE, 0.25), 7)
-	local hint = label(game:GetService("UserInputService").TouchEnabled and "TAP TO CONTINUE" or "CLICK TO CONTINUE", UDim2.fromScale(0.3, 0.035), UDim2.fromScale(0.5, 0.95), Color3.fromRGB(236, 224, 255), 7)
+	local hint = label(game:GetService("UserInputService").TouchEnabled and "TAP TO CONTINUE" or "CLICK TO CONTINUE", UDim2.fromScale(0.34, 0.042), UDim2.fromScale(0.5, 0.95), Color3.fromRGB(255, 212, 92), 7) -- v16 (full1124c view 18): gold on the black bar, not lavender
 	for _, l in { nameL, subL, hint } do l.TextTransparency, l.UIStroke.Transparency = 1, 1 end
 	local tapBtn = Instance.new("TextButton")
 	tapBtn.Size, tapBtn.BackgroundTransparency, tapBtn.Text, tapBtn.ZIndex, tapBtn.Visible = UDim2.fromScale(1, 1), 1, "", 10, false

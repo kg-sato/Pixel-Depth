@@ -33,6 +33,9 @@ function M.start(E)
 		if my ~= token then return end
 		waited = waited or 0
 		if waited < 4 and giftOpen() then task.delay(0.25, show, name, line, color, waited + 0.25, my) return end
+		local T = require(script.Parent:WaitForChild("ToastManager"))
+		if waited < 3 and not T.free() then task.delay(0.25, show, name, line, color, waited + 0.25, my) return end -- one banner at a time (v16 4.1)
+		T.claim(3.1)
 		word.tint(color)
 		word.set(name)
 		sub.Text, sub.TextTransparency = line, 1
