@@ -315,68 +315,110 @@ end
 --   head = CFrame, root = { pitch, roll, lift, pivotBack (true: rock about the hind feet) }, tail = CFrame,
 --   wing = spread (negative raises and spreads, positive folds), armR = CFrame, legF = CFrame (front legs), ring = speed boost
 local ACT = {}
-ACT.look = { dur = 2.6, fn = function(u)
-	return { head = CFrame.Angles(key(u, { { 0, 0 }, { 0.3, 0.12 }, { 0.6, 0.12 }, { 1, 0 } }), key(u, { { 0, 0 }, { 0.18, 0.75 }, { 0.42, 0.75 }, { 0.58, -0.75 }, { 0.84, -0.75 }, { 1, 0 } }), 0) }
+-- v16b (the owner 2026-11-25: "move XYZ not just 2 dimensional up and downs"): every act also moves the body sideways (root.x,
+-- in body widths), forward and back (root.z, in body lengths, -: forward) and turns it (root.yaw), and one-sided acts get a
+-- side (+1 or -1, picked when the act starts): a single front leg stomps (legFL / legFR), the roar sweeps one way first.
+ACT.look = { dur = 2.6, fn = function(u) -- a curious look round: the head turns and tilts, the body turns after it, the weight shifts
+	local y = key(u, { { 0, 0 }, { 0.18, 0.75 }, { 0.42, 0.75 }, { 0.58, -0.75 }, { 0.84, -0.75 }, { 1, 0 } })
+	local tilt = key(u, { { 0, 0 }, { 0.25, 0.22 }, { 0.4, 0.22 }, { 0.5, 0 }, { 0.65, -0.18 }, { 0.8, -0.18 }, { 1, 0 } })
+	return { head = CFrame.Angles(key(u, { { 0, 0 }, { 0.3, 0.12 }, { 0.6, 0.12 }, { 1, 0 } }), y, tilt), root = { yaw = y * 0.14, x = y * 0.035, roll = -y * 0.03 }, tail = CFrame.Angles(0, -y * 0.35, 0) }
 end }
-ACT.shake = { dur = 0.9, fn = function(u)
-	local d = math.sin(u * math.pi * 14) * (1 - u) * key(u, { { 0, 0 }, { 0.1, 1 }, { 1, 1 } })
-	return { root = { roll = d * 0.14 }, head = CFrame.Angles(0, 0, -d * 0.3), tail = CFrame.Angles(0, d * 0.8, 0) }
+ACT.shake = { dur = 0.9, fn = function(u) -- a wet-dog shake: the body twists about its spine, the hind end a beat behind the shoulders
+	local env = (1 - u) * key(u, { { 0, 0 }, { 0.1, 1 }, { 1, 1 } })
+	local d = math.sin(u * math.pi * 14) * env
+	local d2 = math.sin(u * math.pi * 14 - 0.9) * env
+	return { root = { roll = d * 0.16, yaw = d2 * 0.07, x = d * 0.03 }, head = CFrame.Angles(0, d * 0.25, -d * 0.35), tail = CFrame.Angles(0, d2 * 0.9, 0), squash = math.abs(d) * 0.02 }
 end }
-ACT.stomp = { dur = 1.4, fn = function(u) -- lean back, lift, slam, compress, settle with a small overshoot
+ACT.stomp = { dur = 1.4, fn = function(u, side) -- weight onto three legs, one front leg rises and slams, the body drops, settles
+	side = side or 1
 	local up = key(u, { { 0, 0 }, { 0.12, -0.1 }, { 0.35, 1 }, { 0.45, 1 }, { 0.52, 0 }, { 1, 0 } })
 	local hit = key(u, { { 0.48, 0 }, { 0.54, 1 }, { 0.7, -0.3 }, { 0.85, 0 } })
-	return { legF = CFrame.Angles(-math.max(up, 0) * 1.1, 0, 0), root = { pitch = up * 0.12 - hit * 0.03, lift = -hit * 0.08, pivotBack = true }, head = CFrame.Angles(-hit * 0.25, 0, 0), squash = hit * 0.08 }
+	local leg = CFrame.Angles(-math.max(up, 0) * 1.1, 0, side * math.max(up, 0) * 0.12)
+	return { legFL = side < 0 and leg or nil, legFR = side > 0 and leg or nil, root = { pitch = up * 0.09 - hit * 0.03, roll = side * up * 0.05, x = -side * up * 0.04, yaw = side * up * 0.05, lift = -hit * 0.08, pivotBack = true },
+		head = CFrame.Angles(-hit * 0.25, -side * up * 0.15, side * up * 0.1), squash = hit * 0.08 }
 end, impact = 0.53 }
-ACT.roar = { dur = 2.1, fn = function(u) -- breathe in (head down, chest swells), roar (head up, wings out, a tremble), overshoot down, settle
+ACT.roar = { dur = 2.1, fn = function(u, side) -- breathe in (head down, drawn back), roar (lunge, head up and sweeping across), settle
+	side = side or 1
 	local inh = key(u, { { 0, 0 }, { 0.2, 1 }, { 0.3, 0 } })
 	local r = key(u, { { 0.18, 0 }, { 0.32, 1 }, { 0.72, 1 }, { 0.86, -0.15 }, { 1, 0 } })
 	local j = math.sin(u * 110) * 0.05 * key(u, { { 0.3, 0 }, { 0.36, 1 }, { 0.7, 1 }, { 0.76, 0 } })
-	return { head = CFrame.Angles(r * 0.6 - inh * 0.3 + j, 0, j), root = { pitch = r * 0.1 - inh * 0.06, lift = -inh * 0.05, pivotBack = true }, wing = -math.max(r, 0) * 0.75 + inh * 0.2, tail = CFrame.Angles(r * 0.35, 0, 0), squash = -inh * 0.06 + j * 0.5 }
+	local sweep = math.sin(math.clamp((u - 0.32) / 0.4, 0, 1) * math.pi * 1.5) * side * 0.35 * math.max(r, 0)
+	return { head = CFrame.Angles(r * 0.6 - inh * 0.3 + j, sweep, j - sweep * 0.3), root = { pitch = r * 0.1 - inh * 0.06, lift = -inh * 0.05, pivotBack = true, z = -r * 0.05 + inh * 0.03, yaw = sweep * 0.2 },
+		wing = -math.max(r, 0) * 0.75 + inh * 0.2, tail = CFrame.Angles(r * 0.35, -sweep * 0.5, 0), squash = -inh * 0.06 + j * 0.5 }
 end, burst = 0.33 }
-ACT.flap = { dur = 1.8, fn = function(u) -- crouch with wings cocked, beat up into the air, land and compress
+ACT.flap = { dur = 1.8, fn = function(u) -- crouch with wings cocked, beat up into the air rocking with each beat, land and compress
 	local c = key(u, { { 0, 0 }, { 0.18, 1 }, { 0.26, 0 } })
 	local f = key(u, { { 0.2, 0 }, { 0.3, 1 }, { 0.82, 1 }, { 0.9, 0 } })
 	local land = key(u, { { 0.86, 0 }, { 0.91, 1 }, { 1, 0 } })
-	return { wing = c * 0.35 - f * (0.5 + math.sin((u - 0.2) * math.pi * 8) * 0.45), root = { lift = -c * 0.12 + f * math.sin(math.clamp((u - 0.25) / 0.6, 0, 1) * math.pi) * 0.4 - land * 0.1 }, head = CFrame.Angles(-c * 0.25 + f * 0.2, 0, 0), squash = c * 0.08 + land * 0.1 - f * 0.04 }
+	local beat = math.sin((u - 0.2) * math.pi * 8)
+	return { wing = c * 0.35 - f * (0.5 + beat * 0.45), root = { lift = -c * 0.12 + f * math.sin(math.clamp((u - 0.25) / 0.6, 0, 1) * math.pi) * 0.4 - land * 0.1, roll = math.sin(u * math.pi * 5) * 0.05 * f, pitch = beat * 0.04 * f, z = -f * 0.03 },
+		head = CFrame.Angles(-c * 0.25 + f * 0.2 - beat * 0.05 * f, 0, 0), squash = c * 0.08 + land * 0.1 - f * 0.04 }
 end, impact = 0.9 }
-ACT.rear = { dur = 1.9, fn = function(u) -- crouch on the haunches, rise and paw the air, drop hard, settle
+ACT.rear = { dur = 1.9, fn = function(u) -- crouch on the haunches, rise and paw the air with alternate hooves, twist, drop hard, settle
 	local c = key(u, { { 0, 0 }, { 0.16, 1 }, { 0.24, 0 } })
 	local r = key(u, { { 0.16, 0 }, { 0.45, 1 }, { 0.7, 1 }, { 0.8, -0.1 }, { 0.9, 0 } }) -- a slower rise (judge: the kirin snapped up)
 	local land = key(u, { { 0.76, 0 }, { 0.81, 1 }, { 0.95, 0 } })
-	return { root = { pitch = r * (0.5 + math.sin(u * 20) * 0.04) - c * 0.06, lift = -c * 0.1 - land * 0.08, pivotBack = true }, legF = CFrame.Angles(-math.max(r, 0) * 0.9 + math.sin(u * 28) * 0.35 * math.max(r, 0), 0, 0), head = CFrame.Angles(r * 0.35 - land * 0.2, 0, 0), tail = CFrame.Angles(-r * 0.4, 0, 0), squash = c * 0.07 + land * 0.1 }
+	local up, paw = math.max(r, 0), math.sin(u * 28) * 0.35 * math.max(r, 0)
+	return { root = { pitch = r * (0.5 + math.sin(u * 20) * 0.04) - c * 0.06, lift = -c * 0.1 - land * 0.08, pivotBack = true, yaw = math.sin(u * math.pi * 3) * 0.08 * up, roll = math.sin(u * 14) * 0.03 * up },
+		legFL = CFrame.Angles(-up * 0.9 + paw, 0, -0.08 * up), legFR = CFrame.Angles(-up * 0.9 - paw, 0, 0.08 * up),
+		head = CFrame.Angles(r * 0.35 - land * 0.2, math.sin(u * math.pi * 2) * 0.2 * up, 0), tail = CFrame.Angles(-r * 0.4, math.sin(u * 9) * 0.2 * up, 0), squash = c * 0.07 + land * 0.1 }
 end, burst = 0.4, impact = 0.8 }
-ACT.armflex = { dur = 1.9, fn = function(u) -- lean back as the pick goes up, hold, slam forward, compress, a small rebound
+ACT.armflex = { dur = 1.9, fn = function(u) -- twist back as the pick goes up, hold, slam forward with the whole body, a small rebound
 	local up = key(u, { { 0, 0 }, { 0.38, 1 }, { 0.52, 1 }, { 0.6, -0.25 }, { 0.75, 0.12 }, { 1, 0 } })
 	local hit = key(u, { { 0.56, 0 }, { 0.61, 1 }, { 0.85, 0 } })
 	local lean = key(u, { { 0, 0 }, { 0.38, -1 }, { 0.52, -1 }, { 0.6, 0.8 }, { 0.8, 0 } })
-	return { armR = CFrame.Angles(up * 2.5, 0, 0), root = { pitch = lean * 0.1, lift = -hit * 0.1, pivotBack = true }, head = CFrame.Angles(up * 0.25 - hit * 0.15, 0, 0), squash = hit * 0.1 }
+	return { armR = CFrame.Angles(up * 2.5, 0, 0), root = { pitch = lean * 0.1, lift = -hit * 0.1, pivotBack = true, yaw = -lean * 0.12, x = lean * 0.02, z = lean * 0.03 }, head = CFrame.Angles(up * 0.25 - hit * 0.15, lean * 0.1, 0), squash = hit * 0.1 }
 end, impact = 0.6, burst = 0.6 }
-ACT.tailfan = { dur = 1.8, fn = function(u)
+ACT.tailfan = { dur = 1.8, fn = function(u) -- the tails fan out and sweep while the body sways against them
 	local f = key(u, { { 0, 0 }, { 0.2, 1 }, { 0.8, 1 }, { 1, 0 } })
-	return { tail = CFrame.Angles(f * 0.35, math.sin(u * math.pi * 4) * 0.7 * f, 0), head = CFrame.Angles(0, 0, math.sin(u * math.pi * 2) * 0.2 * f) }
+	local sw = math.sin(u * math.pi * 4)
+	return { tail = CFrame.Angles(f * 0.35, sw * 0.7 * f, 0), head = CFrame.Angles(0, -sw * 0.15 * f, math.sin(u * math.pi * 2) * 0.2 * f), root = { x = -sw * 0.03 * f, roll = sw * 0.03 * f, yaw = -sw * 0.05 * f } }
 end, burst = 0.5 }
-ACT.hop = { dur = 1, fn = function(u) -- crouch, spring up, land, compress, settle
+ACT.hop = { dur = 1, fn = function(u, side) -- crouch, pounce forward with a playful twist in the air, land, compress, settle back
+	side = side or 1
 	local c = key(u, { { 0, 0 }, { 0.2, 1 }, { 0.28, 0 } })
 	local h = math.sin(math.clamp((u - 0.24) / 0.5, 0, 1) * math.pi)
 	local land = key(u, { { 0.72, 0 }, { 0.77, 1 }, { 0.95, 0 } })
-	return { root = { lift = h * 0.5 - c * 0.12 - land * 0.1 }, head = CFrame.Angles(h * 0.2 - c * 0.2, 0, 0), squash = c * 0.12 + land * 0.12 - h * 0.08 }
+	local tw = side * key(u, { { 0.24, 0 }, { 0.5, 0.35 }, { 0.78, 0.3 }, { 1, 0 } })
+	return { root = { lift = h * 0.5 - c * 0.12 - land * 0.1, z = -h * 0.1 + c * 0.04, yaw = tw, pitch = -c * 0.06 + h * 0.08 - land * 0.05, roll = -tw * 0.2 }, legF = CFrame.Angles(h * 0.5, 0, 0), head = CFrame.Angles(h * 0.2 - c * 0.2, tw * 0.5, 0), squash = c * 0.12 + land * 0.12 - h * 0.08 }
 end, impact = 0.76 }
-ACT.sway = { dur = 2.4, fn = function(u)
+ACT.sway = { dur = 2.4, fn = function(u) -- a cobra sway: the body weaves, the head draws a figure of eight
 	local f = key(u, { { 0, 0 }, { 0.15, 1 }, { 0.85, 1 }, { 1, 0 } })
-	return { head = CFrame.Angles(math.sin(u * math.pi * 4) * 0.25 * f, math.sin(u * math.pi * 2) * 0.5 * f, 0) }
+	return { head = CFrame.Angles(math.sin(u * math.pi * 4) * 0.25 * f, math.sin(u * math.pi * 2) * 0.5 * f, math.sin(u * math.pi * 2) * 0.15 * f), root = { yaw = math.sin(u * math.pi * 2) * 0.12 * f, x = math.sin(u * math.pi * 2 + 0.6) * 0.04 * f, roll = math.sin(u * math.pi * 2 + 1.2) * 0.04 * f } }
 end }
-ACT.spin = { dur = 2.2, fn = function(u)
+ACT.spin = { dur = 2.2, fn = function(u) -- a full turn on the spot as the rings race
 	local f = key(u, { { 0, 0 }, { 0.2, 1 }, { 0.8, 1 }, { 1, 0 } })
-	return { ring = f * 6, root = { lift = f * 0.25 }, head = CFrame.Angles(f * 0.15, 0, 0) }
+	return { ring = f * 6, root = { lift = f * 0.25, yaw = math.pi * 2 * key(u, { { 0.15, 0 }, { 0.85, 1 } }), roll = math.sin(u * math.pi * 2) * 0.06 * f }, head = CFrame.Angles(f * 0.15, 0, 0) }
 end, burst = 0.5 }
+ACT.sniff = { dur = 2.4, fn = function(u, side) -- nose down to the ground, snuffling from side to side, a step in, then back up
+	side = side or 1
+	local d = key(u, { { 0, 0 }, { 0.2, 1 }, { 0.8, 1 }, { 1, 0 } })
+	local sn = math.sin(u * 70) * 0.035 * d
+	local sw = math.sin(u * math.pi * 3) * 0.35 * d * side
+	return { head = CFrame.Angles(-0.55 * d + sn, sw, sw * 0.2), root = { pitch = -0.07 * d, z = -0.05 * d, yaw = sw * 0.15, x = sw * 0.03 }, legF = CFrame.Angles(0.15 * d, 0, 0), tail = CFrame.Angles(0.15 * d, math.sin(u * math.pi * 6) * 0.3 * d, 0) }
+end }
+ACT.stretch = { dur = 2.6, fn = function(u) -- a play bow: front legs reach out, chest down, rump up, tail wagging, then a shake-off
+	local b = key(u, { { 0, 0 }, { 0.25, 1 }, { 0.7, 1 }, { 0.85, 0 } })
+	local wag = math.sin(u * math.pi * 10) * 0.45 * b
+	local sh = math.sin(u * math.pi * 30) * key(u, { { 0.8, 0 }, { 0.86, 1 }, { 1, 0 } })
+	return { legF = CFrame.Angles(0.75 * b, 0, 0), root = { pitch = -0.16 * b, lift = -0.06 * b, z = -0.04 * b, roll = sh * 0.12, pivotBack = true }, head = CFrame.Angles(0.35 * b, 0, -sh * 0.3 + wag * 0.1), tail = CFrame.Angles(0.4 * b, wag, 0), squash = b * 0.03 }
+end }
+ACT.preen = { dur = 2.2, fn = function(u, side) -- a bird turns its head right round to its wing and nibbles at the feathers
+	side = side or 1
+	local f = key(u, { { 0, 0 }, { 0.22, 1 }, { 0.78, 1 }, { 1, 0 } })
+	local peck = math.sin(u * 46) * 0.07 * key(u, { { 0.25, 0 }, { 0.3, 1 }, { 0.72, 1 }, { 0.76, 0 } })
+	return { head = CFrame.Angles(-0.45 * f + peck, side * 1.25 * f, side * 0.3 * f), root = { roll = side * 0.1 * f, yaw = side * 0.12 * f, x = -side * 0.06 * f }, wing = -0.5 * f + peck * 2, tail = CFrame.Angles(0, -side * 0.3 * f, 0) }
+end }
 ACT.hero = { dur = 1.65, fn = function(u) -- v15 (Oakheart's hatch showcase): beat 1 (0 to 0.75 s) gathers: a crouch, wings and fins drawn in,
 	-- head down, a long inhale; beat 2 (0.75 to 1.65 s) rears onto the hind feet with wings flared wide and a roar, then drops onto the front feet in a burst of dust
 	local c = key(u, { { 0, 0 }, { 0.3, 1 }, { 0.44, 1 }, { 0.5, 0 } })
 	local r = key(u, { { 0.44, 0 }, { 0.58, 1 }, { 0.8, 1 }, { 0.9, -0.12 }, { 1, 0 } })
 	local land = key(u, { { 0.86, 0 }, { 0.9, 1 }, { 1, 0 } })
 	local j = math.sin(u * 120) * 0.045 * key(u, { { 0.56, 0 }, { 0.6, 1 }, { 0.78, 1 }, { 0.82, 0 } })
-	return { root = { pitch = r * 0.45 - c * 0.08 + j, lift = -c * 0.14 - land * 0.1, pivotBack = true }, head = CFrame.Angles(r * 0.28 - c * 0.35 + j, r * 0.25, j),
-		wing = c * 0.45 - r * 0.85, tail = CFrame.Angles(-r * 0.35 + c * 0.2, 0, 0), legF = CFrame.Angles(-r * 0.9 + math.sin(u * 30) * 0.3 * r, 0, 0), squash = c * 0.1 + land * 0.12 - r * 0.05, charge = c, flare = r }
+	local up, paw = math.max(r, 0), math.sin(u * 30) * 0.3 * math.max(r, 0)
+	return { root = { pitch = r * 0.45 - c * 0.08 + j, lift = -c * 0.14 - land * 0.1, pivotBack = true, yaw = math.sin(u * math.pi * 4) * 0.06 * up, z = c * 0.03 - land * 0.03 }, head = CFrame.Angles(r * 0.28 - c * 0.35 + j, r * 0.25, j),
+		wing = c * 0.45 - r * 0.85, tail = CFrame.Angles(-r * 0.35 + c * 0.2, math.sin(u * 12) * 0.2 * up, 0), legFL = CFrame.Angles(-up * 0.9 + paw, 0, -0.06 * up), legFR = CFrame.Angles(-up * 0.9 - paw, 0, 0.06 * up),
+		squash = c * 0.1 + land * 0.12 - r * 0.05, charge = c, flare = r }
 end, burst = 0.58, impact = 0.9 }
 -- the sound of each action on its beat (impact or burst): { name, pitch } from PixelClient's bank (M.sfx); pets far from the
 -- camera stay quiet, and a big pet sounds deeper
@@ -395,11 +437,12 @@ local function actSound(m, act)
 	for _, sd in list do M.sfx(sd[1], sd[2] * deep) end
 end
 local ACTS = {
-	Tosk = { "look", "shake", "stomp" }, Kobold = { "look", "armflex", "stomp" }, ["Kepri Scarab"] = { "look", "shake", "hop" },
-	Shinemane = { "look", "rear", "shake" }, Goldbristle = { "look", "shake", "hop" }, Pixiu = { "look", "roar", "stomp" },
-	Glimwisp = { "look", "tailfan", "hop" }, Selkie = { "look", "roar", "shake" }, Zharbird = { "look", "flap", "roar" },
-	Fafnir = { "look", "roar", "flap" }, Kirin = { "look", "rear", "roar" }, Ouro = { "sway", "look", "roar" }, Ninering = { "spin", "look" },
+	Tosk = { "look", "shake", "stomp", "sniff" }, Kobold = { "look", "armflex", "stomp", "sniff" }, ["Kepri Scarab"] = { "look", "shake", "hop" },
+	Shinemane = { "look", "rear", "shake", "sniff" }, Goldbristle = { "look", "shake", "hop", "stretch" }, Pixiu = { "look", "roar", "stomp", "stretch" },
+	Glimwisp = { "look", "tailfan", "hop" }, Selkie = { "look", "roar", "shake" }, Zharbird = { "look", "flap", "roar", "preen" },
+	Fafnir = { "look", "roar", "flap", "sniff" }, Kirin = { "look", "rear", "roar", "sniff" }, Ouro = { "sway", "look", "roar" }, Ninering = { "spin", "look" },
 }
+local QUIET = { look = true, sway = true, sniff = true, stretch = true, preen = true } -- idles that are no signature act
 
 -- ===================================================================================== v16 PLATE PETS (Master Directive v16)
 -- The owner's target (the Lure a Pet Showcase video, vault Projects/Pixel-_ ... pets_v16): big armoured creatures with one
@@ -438,6 +481,29 @@ local RIGFX = { -- the v16 voxel pets (design3d/pets/pet_vox.py anchors): orbit 
 	Ouro = { { "gem", "sparkle", C3(190, 120, 255), { C3(170, 110, 255), 9, 0.8 } }, { "coil", "motes", C3(200, 150, 255) }, { "coil", "aura", C3(170, 110, 255) }, { "eyes", "sparkle", C3(200, 150, 255) } },
 	Ninering = { { "core", "sparkle", C3(90, 230, 255), { C3(80, 220, 255), 12, 1 } }, { "core", "orbit", C3(110, 235, 255) }, { "core", "aura", C3(90, 200, 255) }, { "eyes", "sparkle", C3(120, 235, 255) } },
 }
+
+local SIGFX = (function() -- Shared.PetSigFX: the signature effects of each pet, more and richer with rarity
+	local ok, r = pcall(function() return require(script.Parent:WaitForChild("PetSigFX", 5)) end)
+	return ok and r or nil
+end)()
+local function anchorAtt(d, rig, anchor) -- an Attachment riding the rig piece nearest one of the pet's anchors
+	local a = d.anchors and d.anchors[anchor]
+	if not a then return nil end
+	local P = (FLIP * CFrame.new(a[2])).Position
+	local host, best = nil, math.huge
+	for _, g in rig.pieces do
+		if g.part == a[1] then
+			local dd = (g.p.Position - P).Magnitude
+			if dd < best then host, best = g.p, dd end
+		end
+	end
+	if not host then return nil end
+	local att = Instance.new("Attachment")
+	att.Name = "Fx_sig_" .. anchor
+	att.Position = host.CFrame:PointToObjectSpace(P)
+	att.Parent = host
+	return att, a[1]
+end
 
 local RARITY = (function()
 	local ok, C = pcall(function() return require(script.Parent:WaitForChild("Config", 5)) end)
@@ -595,6 +661,8 @@ rigBuild = function(name)
 	end
 	rigFx(m, name, d, rig)
 	rigAura(m, name, d, rig)
+	rig.W, rig.L, rig.H = d.size.X, d.size.Y, d.height -- width, length and height at scale 1 (the motion sizes its sway by them)
+	if SIGFX then pcall(SIGFX.build, m, name, d, rig, function(a) return anchorAtt(d, rig, a) end) end
 	m:SetAttribute("Voxel", true)
 	m:SetAttribute("Reach", math.max(d.size.X, d.size.Z) / 4.5) -- PixelClient keeps a big pet this much further off, per unit of scale
 	M.rigs[m] = rig
@@ -603,7 +671,7 @@ rigBuild = function(name)
 end
 
 rigAnimate = function(m, rig, now, dt, moving)
-	dt = math.min(dt or 1 / 60, 1 / 20)
+	dt = math.clamp(dt or 1 / 60, 1e-3, 1 / 20)
 	local root = m.PrimaryPart.CFrame
 	local pos = root.Position
 	local v = rig.lastPos and (pos - rig.lastPos).Magnitude / math.max(dt, 1e-3) or 0
@@ -620,14 +688,16 @@ rigAnimate = function(m, rig, now, dt, moving)
 		rig.backZ = z * 0.6
 	end
 	local pose, aw = nil, 1 - w
+	if rig.act and math.abs((rig.actT or 0) - (rig.sideT or -99)) > 0.3 then rig.actSide = math.random() < 0.5 and -1 or 1 end -- a new act: which side it favours
+	rig.sideT = rig.act and rig.actT or rig.sideT
 	if rig.act then
 		local a = ACT[rig.act]
 		local u = (now - rig.actT) / (a.dur * (rig.act == "hero" and rig.slow or 1))
 		if u >= 1 + 0.45 / a.dur then
 			rig.act, rig.nextAct = nil, now + 3 + math.random() * 3
 		else
-			pose = a.fn(math.min(u, 1))
-			local lag = a.fn(math.clamp(u - 0.14 / a.dur, 0, 1))
+			pose = a.fn(math.min(u, 1), rig.actSide)
+			local lag = a.fn(math.clamp(u - 0.14 / a.dur, 0, 1), rig.actSide)
 			pose.tail, pose.wing = lag.tail, lag.wing
 			if a.impact and not rig.hit and u >= a.impact then
 				rig.hit = true
@@ -650,19 +720,143 @@ rigAnimate = function(m, rig, now, dt, moving)
 	if not rig.nextAct then rig.nextAct = now + 2 + math.random() * 4 end
 	pose = pose or {}
 	local rp = pose.root or {}
+	-- v16b CREATURE MOTION (the owner 2026-11-25: "move XYZ not just 2 dimensional up and downs. They should feel alive and
+	-- replicate real movement of creatures. Plan idle, and all other state animations"; plan: vault Projects/Pixel-_/Briefs/
+	-- Pet Motion Plan (2026-11-25).md). The body moves on all six axes in every state. Walking: a stride with stance and swing
+	-- phases (each foot planted flat and swept back, then lifted, folded and carried forward, a little outward), the weight
+	-- rocking over the supporting legs, the spine twisting with the diagonal pair, a bob twice a stride, a lean into turns and
+	-- against speeding up or stopping, a trot that turns into a rocking gallop at speed, small shuffling steps when turning on
+	-- the spot; bipeds rock over each leg, the scarab runs on tripods, the seal galumphs, the jelly hovers and pulses, the
+	-- serpent weaves. Idle: breathing, a slow shift of weight, a head that darts to look at things (the camera now and then)
+	-- and holds there while the body turns a little after it; tails swing out on turns with spring follow-through.
+	local TAU = math.pi * 2
+	if not rig.loco then
+		local legs, nNeck, tent = {}, 0, false
+		for part, g in rig.grp do
+			if g == "leg" then legs[string.match(part, "^(.-)%d+$") or part] = true end
+			if g == "neck" then nNeck += 1 end
+			if g == "tentacle" then tent = true end
+		end
+		local n = 0
+		for _ in legs do n += 1 end
+		rig.nLegs, rig.nNeck = n, nNeck
+		for _, g in rig.grp do if g == "wing" then rig.hasWing = true end end
+		rig.loco = m.Name == "Ouro" and "serpent" or (n == 6 and "hex") or (n == 2 and "biped") or (n == 0 and (tent and "float" or "seal")) or "quad"
+	end
+	local loco = rig.loco
 	local base = root * CFrame.new(0, -ROOT_Y * s, 0)
 	local idle = 1 - w
-	local pitch = (rp.pitch or 0) * aw + math.sin(t * 1.1) * 0.02 * idle
-	local roll = (rp.roll or 0) * aw + math.sin(t * 0.8 + 1) * 0.025 * idle
-	local P = Vector3.new(0, 0, rp.pivotBack and rig.backZ or 0) * s
+	local lk = root.LookVector
+	local yaw0 = math.atan2(-lk.X, -lk.Z)
+	local dyaw = rig.lastYaw and ((yaw0 - rig.lastYaw + math.pi) % TAU - math.pi) or 0
+	rig.lastYaw = yaw0
+	rig.yr = (rig.yr or 0) + (math.clamp(dyaw / dt, -4, 4) - (rig.yr or 0)) * math.min(1, dt * 5) -- the turn rate (+: to its left)
 	-- the stride follows the real ground speed (v16, full1124c view 18): a faster walk is a faster cadence, never a glide
 	local spd = rig.speed or 0
-	if moving and spd < 3 then spd = 9 end -- a caller that says 'walking' without moving the model (lineups, showcases)
-	rig.gp = (rig.gp or 0) + dt * math.clamp(3.5 + spd * 0.9 / math.max(s, 0.3), 3.5, 15)
-	local step = math.sin(rig.gp)
-	local breathe = math.sin(t * 2)
-	local lift = ((rp.lift or 0) * aw + math.abs(step) * 0.08 * w + breathe * 0.03 * idle) * s
-	base = base * CFrame.new(0, lift, 0) * CFrame.new(P) * CFrame.Angles(pitch, 0, roll) * CFrame.new(-P)
+	if moving then spd = math.max(spd, 9) end -- a caller that says 'walking' without moving the model (lineups, showcases)
+	local su = spd / math.max(s, 0.3) -- the speed in the pet's own size
+	rig.acc = (rig.acc or 0) + ((su - (rig.su or su)) / dt - (rig.acc or 0)) * math.min(1, dt * 3)
+	rig.su = su
+	rig.run = (rig.run or 0) + (math.clamp((su - 11) / 7, 0, 1) * w - (rig.run or 0)) * math.min(1, dt * 3)
+	local run = rig.run
+	local turn = math.clamp(math.abs(rig.yr) * 0.35, 0, 0.6) * idle -- turning on the spot: a shuffle of small steps
+	local wl = math.max(w, turn)
+	rig.gp = (rig.gp or 0) + dt * math.clamp(3.5 + spd * 0.9 / math.max(s, 0.3), 3.5, 15) * (1 - 0.15 * run) -- a gallop: longer, slower strides
+	local gp = rig.gp
+	local step = math.sin(gp)
+	local breathe = math.sin(t * 2.6) -- a breath every 2.4 s
+	local W, L, Hh = rig.W or 3, rig.L or 4, rig.H or 4
+	-- the gait's own body motion (studs at scale 1, radians), by the way the creature gets about
+	local gx, gy, gz, gpit, gyaw, groll = 0, 0, 0, 0, 0, 0
+	local sn, c2 = math.sin(gp), math.cos(gp * 2)
+	if loco == "float" then -- hovers, drifts and turns lazily; each pulse of the bell pushes it on, nose down
+		gy = Hh * (0.06 + 0.03 * math.sin(t * 1.5)) + Hh * 0.04 * math.max(0, sn) * w
+		gpit = -0.2 * w + 0.04 * math.sin(t * 1.1) * idle
+		gx, gz = W * 0.04 * math.sin(t * 0.4) * idle, L * 0.04 * math.cos(t * 0.31) * idle
+		gyaw = 0.25 * math.sin(t * 0.23) * idle
+		groll = 0.05 * math.sin(t * 0.8) * idle
+	elseif loco == "seal" then -- galumphing: the front rises as the rear pushes
+		gpit = sn * 0.1 * wl
+		gy = math.max(0, sn) * 0.06 * Hh * wl
+		gz = math.cos(gp) * 0.03 * L * wl
+		gyaw = math.sin(gp * 0.5) * 0.04 * wl
+	elseif loco == "biped" then -- the weight rocks over each stance leg, the hips twist
+		gx = sn * 0.08 * W * wl
+		groll = sn * 0.11 * wl
+		gyaw = sn * 0.1 * wl
+		gy = math.abs(sn) * 0.03 * Hh * wl
+		gpit = c2 * 0.02 * wl - 0.04 * w
+	elseif loco == "serpent" then -- the coil weaves from side to side as the front legs pull
+		gx = sn * 0.025 * W * wl + math.sin(t * 0.6) * 0.02 * W * idle
+		groll = sn * 0.03 * wl
+		gyaw = sn * 0.07 * wl + math.sin(t * 0.5) * 0.05 * idle
+		gy = math.abs(sn) * 0.015 * Hh * wl
+	elseif loco == "hex" then -- a scuttle: tripods, almost no bob, a quick wiggle
+		gyaw = sn * 0.04 * wl
+		groll = sn * 0.03 * wl
+		gx = sn * 0.015 * W * wl
+		gy = math.abs(math.sin(gp * 1.5)) * 0.012 * Hh * wl
+	else -- quadrupeds: a trot on diagonal pairs that becomes a rocking gallop at speed
+		local trot = 1 - run
+		gx = sn * 0.035 * W * wl * trot
+		groll = (sn * 0.075 * trot + math.sin(gp + 0.6) * 0.03 * run) * wl -- the hips drop over the swinging leg
+		gyaw = sn * 0.06 * wl * trot
+		gy = (math.abs(sn) * 0.02 * trot + math.max(0, math.sin(gp + 0.6)) * 0.06 * run) * Hh * wl
+		gz = (c2 * 0.012 * trot + math.cos(gp) * 0.03 * run) * L * wl
+		gpit = (c2 * 0.015 * trot + sn * 0.1 * run) * wl
+	end
+	-- the gaze: pick something to look at every 1 to 4 s (the camera a third of the time), dart the head there and hold
+	local gzs = rig.gaze
+	if not gzs then gzs = { y = 0, p = 0, vy = 0, vp = 0, ty = 0, tp = 0, nt = now + 0.3 } rig.gaze = gzs end
+	if now >= gzs.nt then
+		gzs.nt = now + 0.8 + math.random() * 2.2
+		local ws = m:FindFirstAncestorWhichIsA("Workspace")
+		local cam = ws and ws.CurrentCamera
+		if cam and math.random() < 0.35 then
+			local lp = root:PointToObjectSpace(cam.CFrame.Position)
+			gzs.ty = math.clamp(math.atan2(-lp.X, -lp.Z), -0.8, 0.8)
+			gzs.tp = math.clamp(math.atan2(lp.Y - Hh * s * 0.6, math.sqrt(lp.X * lp.X + lp.Z * lp.Z)), -0.25, 0.35)
+		else
+			gzs.ty, gzs.tp = (math.random() * 2 - 1) * 0.85, (math.random() * 2 - 1) * 0.22
+		end
+	end
+	local ty, tp = gzs.ty * (1 - 0.7 * w) * (1 - turn) + rig.yr * (0.12 * w + 0.4 * turn), gzs.tp * (1 - 0.7 * w) -- the head leads into turns
+	gzs.vy += ((ty - gzs.y) * 70 - gzs.vy * 16.7) * dt -- critically damped: a quick dart that stops without wobble
+	gzs.vp += ((tp - gzs.p) * 70 - gzs.vp * 16.7) * dt
+	gzs.y += gzs.vy * dt
+	gzs.p += gzs.vp * dt
+	local ts = rig.tailS
+	if not ts then ts = { a = 0, v = 0 } rig.tailS = ts end
+	ts.v += ((-rig.yr * 0.3 - ts.a) * 22 - ts.v * 3.2) * dt -- the tail swings out against a turn, overshoots and settles
+	ts.a += ts.v * dt
+	local lean = math.clamp(rig.yr * 0.07 * (0.3 + w), -0.2, 0.2) -- into the turn
+	local brake = math.clamp(-rig.acc * 0.004, -0.07, 0.07) -- forward to speed up, back to stop
+	-- standing: the weight drifts from side to side (two rates, so it never looks like a metronome); a fidget step leans off
+	-- the lifted foot (judge s5a: idle read as a frozen statue at 1-2 degrees)
+	local fz, fside = 0, 0
+	if loco == "quad" or loco == "biped" or loco == "hex" then
+		local fd = rig.fid
+		if fd and not rig.act then
+			local q = (now - fd.t0) / 0.6
+			if q > 0 and q < 1 then fz, fside = math.sin(math.pi * q) * idle, fd.side end
+		end
+		if idle > 0.85 and not rig.act and rig.legC and now >= (rig.fidN or now + 1) then
+			local list = {}
+			for pre in rig.legC do table.insert(list, pre) end
+			local pre = list[math.random(#list)]
+			local pv1 = rig.piv[pre .. "1"]
+			rig.fid = { leg = pre, t0 = now, side = pv1 and (pv1.X >= 0 and 1 or -1) or 1 }
+		end
+		if not rig.fidN or now >= rig.fidN then rig.fidN = now + 2.2 + math.random() * 2.8 end
+	end
+	local shift = (math.sin(t * 0.9 + rig.seed) * 0.7 + math.sin(t * 1.9 + rig.seed * 2) * 0.3) * idle - fside * fz * 0.5
+	local pitch = (rp.pitch or 0) * aw + gpit + brake + (math.sin(t * 1.1) * 0.035 + breathe * 0.02) * idle
+	local yaw = (rp.yaw or 0) * aw + gyaw + gzs.y * 0.2 * idle + shift * 0.06 - rig.yr * 0.1 * turn
+	local roll = (rp.roll or 0) * aw + groll + lean - shift * 0.07 + math.sin(t * 0.8 + 1) * 0.02 * idle
+	local P = Vector3.new(0, 0, rp.pivotBack and rig.backZ or 0) * s
+	local lift = ((rp.lift or 0) * aw + gy + breathe * 0.1 * idle) * s
+	local ox, oz = ((rp.x or 0) * aw * W + gx + shift * 0.05 * W) * s, ((rp.z or 0) * aw * L + gz + math.sin(t * 0.6 + rig.seed) * 0.025 * L * idle) * s
+	base = base * CFrame.new(ox, lift, oz) * CFrame.new(P) * CFrame.Angles(pitch, yaw, roll) * CFrame.new(-P)
 	local xf = {}
 	local function localOf(part)
 		local grp = rig.grp[part] or "body"
@@ -673,41 +867,92 @@ rigAnimate = function(m, rig, now, dt, moving)
 			local first = rig.piv[(prefix or part) .. "1"] or pv
 			local side = first.X >= 0 and 1 or -1
 			local front = first.Z <= 0 and 1 or -1 -- the pets look -Z after FLIP
-			local nLegs = rig.nLegs
-			local phase = (grp == "arm" or nLegs == 2) and side or (nLegs == 6 and (side * ((tonumber(string.match(prefix or "", "(%d)_$") or 1) % 2 == 0) and 1 or -1)) or side * front)
-			local swing = step * phase
-			local r
-			if k == 1 then
-				r = CFrame.Angles(swing * (grp == "arm" and 0.4 or 0.42) * w + breathe * 0.03 * idle, 0, 0)
-				if grp == "leg" and pose.legF and front > 0 then r = r * CFrame.new():Lerp(pose.legF, aw) end
-				if grp == "arm" and pose.armR then r = r * CFrame.new():Lerp(pose.armR, aw) end
-			elseif k == 2 then
-				r = CFrame.Angles(-math.max(0, swing) * 0.55 * w, 0, 0)
-			else
-				r = CFrame.Angles(math.max(0, swing) * 0.3 * w, 0, 0)
+			if loco == "seal" then -- flippers stroke together: down and back, then up and out
+				local st = math.sin(gp)
+				if k == 1 then return CFrame.Angles(st * 0.5 * wl + breathe * 0.04 * idle, 0, side * (0.12 + 0.18 * math.cos(gp)) * wl + side * math.sin(t * 1.2) * 0.06 * idle) end
+				return CFrame.Angles(-math.max(0, st) * 0.4 * wl, 0, side * 0.1 * math.sin(gp - 0.8) * wl)
 			end
-			return r
+			local off
+			if grp == "arm" or rig.nLegs == 2 then
+				off = side > 0 and 0 or math.pi
+			elseif rig.nLegs == 6 then
+				local idx = tonumber(string.match(prefix or "", "(%d)_$")) or 1
+				off = ((idx % 2 == 1) == (side > 0)) and 0 or math.pi -- the tripod gait
+			else
+				local trotOff = side * front > 0 and 0 or math.pi
+				local galOff = (front > 0 and 0 or 3.6) + (side > 0 and 0.55 or 0)
+				off = trotOff + (galOff - trotOff) * run
+			end
+			local c = ((gp + off) / TAU) % 1
+			if k == 1 and prefix then
+				rig.legC = rig.legC or {}
+				local pc = rig.legC[prefix]
+				if pc and c < pc - 0.5 then -- the phase wrapped: this foot just landed
+					rig.contact = rig.contact or {}
+					rig.contact[prefix] = now
+				end
+				rig.legC[prefix] = c
+			end
+			local hip, up
+			if c < 0.6 then
+				hip, up = math.cos(math.pi * c / 0.6), 0 -- stance (60%): the planted foot sweeps back under the body
+			else
+				local q = (c - 0.6) / 0.4
+				hip, up = -math.cos(math.pi * q), math.sin(math.pi * q) -- swing (40%): lifted, folded and carried forward
+			end
+			local fq = (grp == "leg" and rig.fid and rig.fid.leg == prefix) and fz or 0
+			local h1 = hip * (grp == "arm" and 0.4 or 0.42) * (1 + 0.4 * run) * wl - fq * 0.25
+			local k2 = -(up * (0.8 + 0.35 * run) + math.max(0, hip) * 0.12) * wl - fq * 0.75
+			if k == 1 then
+				local r = CFrame.Angles(h1 + breathe * 0.03 * idle, 0, side * up * 0.09 * wl) -- the swinging leg also swings a little outward
+				local lf = pose.legF
+				if side > 0 and pose.legFR then lf = pose.legFR elseif side < 0 and pose.legFL then lf = pose.legFL end
+				if grp == "leg" and lf and front > 0 then r = r * CFrame.new():Lerp(lf, aw) end
+				if grp == "arm" and pose.armR then r = r * CFrame.new():Lerp(pose.armR, aw) end
+				return r
+			elseif k == 2 then
+				return CFrame.Angles(k2, 0, 0) -- the knee folds to lift the foot
+			end
+			return CFrame.Angles(-(h1 + k2) + up * 0.35 * wl + fq * 0.3, 0, -side * up * 0.09 * wl) -- the sole stays level while the foot is down: flat, planted feet
 		elseif grp == "wing" then
 			local first = rig.piv[(prefix or part) .. "1"] or pv
 			local side = first.X >= 0 and 1 or -1
 			local beat = math.sin(t * (3 + 9 * w) - (k - 1) * 0.6) * (0.14 + 0.28 * w)
-			local spread = (pose.wing or 0) * aw
-			return CFrame.Angles(0, 0, side * (beat * (k == 1 and 1 or 0.7) + spread * (k == 1 and 1 or 0.5)))
+			local spread = (pose.wing or 0) * aw - math.abs(rig.yr) * 0.08 -- wings lift a little to balance in a turn
+			return CFrame.Angles(math.sin(t * 1.7 + side) * 0.05, 0, side * (beat * (k == 1 and 1 or 0.7) + spread * (k == 1 and 1 or 0.5)))
 		elseif grp == "tail" or grp == "spine" then
 			local amp = grp == "spine" and 0.05 or (0.12 + 0.03 * k)
-			local r = CFrame.Angles(math.sin(t * 1.6 - k * 0.5) * amp * 0.35, math.sin(t * (2.2 + 3 * w) - k * 0.7) * amp, 0)
+			local wave = loco == "serpent" and 1.8 or 1
+			local r = CFrame.Angles(math.sin(t * 1.6 - k * 0.5) * amp * 0.35 + (loco == "seal" and math.sin(gp - k * 0.7) * 0.12 * wl or 0) + run * 0.1,
+				math.sin(t * (2.2 + 3 * w) - k * 0.7 * wave) * amp * wave * (1 + 0.6 * idle) + math.sin(gp - k * 0.6) * 0.1 * w + ts.a * 0.18
+				+ (grp == "tail" and math.max(0, math.sin(t * 0.55 + rig.seed)) ^ 6 * math.sin(t * 7 - k * 0.9) * 0.3 * idle or 0), 0)
 			if grp == "tail" and k == 1 and pose.tail then r = r * CFrame.new():Lerp(pose.tail, aw) end
 			return r
-		elseif grp == "tentacle" then
+		elseif grp == "tentacle" then -- trail behind the motion, flare with each pulse, lag on turns
 			local ph = (#(prefix or "") * 1.7) + k * 0.8
-			return CFrame.Angles(math.sin(t * 1.4 - ph) * (0.1 + 0.05 * k) - w * 0.25, 0, math.cos(t * 1.1 - ph) * (0.08 + 0.04 * k))
+			return CFrame.Angles(math.sin(t * 1.4 - ph) * (0.1 + 0.05 * k) - w * 0.25 + math.max(0, math.sin(gp - k * 0.5)) * 0.15 * w, ts.a * 0.15, math.cos(t * 1.1 - ph) * (0.08 + 0.04 * k))
 		elseif grp == "neck" then
-			local r = CFrame.Angles(math.sin(t * 1.3 - 0.5) * 0.06 * idle + breathe * 0.03 * idle, math.sin(t * 0.7 - 0.4) * 0.12 * idle, 0)
+			local nk = loco == "serpent" and math.sin(t * 0.9 - k * 0.8) * 0.1 or 0
+			local share = 0.4 / math.max(rig.nNeck or 1, 1)
+			local bob = CFrame.identity
+			if k == 1 and loco == "biped" and rig.hasWing then
+				local ph = (gp * 2 / TAU) % 1
+				local hold = ph < 0.7 and ph / 0.7 or 1 - (ph - 0.7) / 0.3
+				bob = CFrame.new(0, 0, (hold - 0.5) * 0.09 * L * s * w * (1 - 0.6 * run))
+			end
+			local r = bob * CFrame.Angles(math.sin(t * 1.3 - 0.5) * 0.04 * idle + breathe * 0.03 * idle + gzs.p * share, gzs.y * share * (pose.head and 0.3 or 1) + nk, 0)
 			if pose.head then r = r * CFrame.new():Lerp(pose.head, aw * 0.4) end
 			return r
 		elseif grp == "head" then
 			local twitch = (t % (2.7 + rig.seed % 1.3)) < 0.14 and 0.1 or 0
-			local r = CFrame.Angles(math.sin(t * 1.3) * 0.08 * idle - step * 0.04 * w, math.sin(t * 0.7) * 0.3 * idle * (pose.head and 0.3 or 1), math.sin(t * 0.9) * 0.06 + twitch * idle)
+			local share = ((rig.nNeck or 0) > 0 and 0.6 or 1) * (pose.head and 0.25 or 1)
+			local r = CFrame.Angles(gzs.p * share + math.sin(t * 1.3) * 0.05 * idle - step * 0.04 * w, gzs.y * share, math.sin(t * 0.9) * 0.06 * idle + twitch * idle + gzs.y * 0.25 * idle)
+			if (rig.nNeck or 0) == 0 and loco == "biped" and rig.hasWing then
+				local ph = (gp * 2 / TAU) % 1
+				local hold = ph < 0.7 and ph / 0.7 or 1 - (ph - 0.7) / 0.3
+				r = CFrame.new(0, 0, (hold - 0.5) * 0.09 * L * s * w * (1 - 0.6 * run)) * r
+			end
+			r = r * CFrame.Angles(-gpit * 0.7, -gyaw * 0.6, -groll * 0.7) -- the head stays steady while the body rocks under it
 			if pose.head then r = r * CFrame.new():Lerp(pose.head, aw) end
 			return r
 		elseif grp == "ring" then
@@ -746,9 +991,12 @@ rigAnimate = function(m, rig, now, dt, moving)
 		local g = root * CFrame.new(0, -ROOT_Y * s + 0.06 * s, 0)
 		local n = #au.ring
 		for i2, q in au.ring do
-			local a2 = t * 0.45 + i2 / n * math.pi * 2
-			q.CFrame = g * CFrame.new(math.cos(a2) * au.R * s, 0, math.sin(a2) * au.R * s) * CFrame.Angles(0, -a2, 0)
-			q.Transparency = 0.15 + 0.35 * (0.5 + 0.5 * math.sin(t * 3 + i2 * 0.8))
+			local ph = (t * 0.3 + i2 * 0.618) % 1
+			local a2 = i2 * 2.4 + math.floor(t * 0.3 + i2 * 0.618) * 1.7 + ph * 0.6
+			local rr = au.R * s * (0.55 + 0.5 * ((i2 * 0.37) % 1))
+			q.CFrame = g * CFrame.new(math.cos(a2) * rr + math.sin(t * 2 + i2) * 0.08 * s, ph * au.h * s * 0.35, math.sin(a2) * rr) * CFrame.Angles(t * 2 + i2, -a2, 0)
+			q.Size = Vector3.one * 0.12 * s * (1 - 0.6 * ph)
+			q.Transparency = 0.1 + 0.9 * (ph < 0.12 and 1 - ph / 0.12 or ph)
 		end
 		local hp = (t * 0.32) % 1
 		n = #au.halo
@@ -764,7 +1012,12 @@ rigAnimate = function(m, rig, now, dt, moving)
 			if wt >= 0 and wt < 0.6 then
 				local a2 = i2 / n * math.pi * 2
 				local rr = au.R * s * (0.4 + 2.2 * wt / 0.6)
-				q.CFrame = g * CFrame.new(math.cos(a2) * rr, 0.05 * s, math.sin(a2) * rr) * CFrame.Angles(0, a2, 0)
+				local y = 0.05 * s
+				if i2 % 2 == 0 then -- a clod: up and out on an arc, tumbling
+					rr = au.R * s * (0.5 + 1.3 * wt / 0.6)
+					y = math.max(0, (3.2 * wt - 9 * wt * wt) * (0.8 + 0.4 * ((i2 * 0.29) % 1))) * s
+				end
+				q.CFrame = g * CFrame.new(math.cos(a2) * rr, y, math.sin(a2) * rr) * CFrame.Angles(wt * 9 * (1 - i2 % 2), a2, wt * 6 * (1 - i2 % 2))
 				q.Transparency = wt / 0.6
 				q.Size = Vector3.one * (0.22 - 0.12 * wt / 0.6) * s
 			elseif q.Transparency < 1 then
@@ -782,6 +1035,7 @@ rigAnimate = function(m, rig, now, dt, moving)
 			q.Size = Vector3.one * o.sz * s * (0.75 + 0.25 * math.sin(t * 5 + i * 1.3))
 		end
 	end
+	if rig.sig and SIGFX then SIGFX.step(m, rig, now, t, dt, s, root * CFrame.new(0, -ROOT_Y * s + 0.06 * s, 0)) end
 end
 
 -- every frame, after the model was pivoted: pose the parts. now: os.clock(); moving: overrides the speed guess
@@ -802,7 +1056,7 @@ function M.hero(m)
 	local pick = list[1]
 	for _, a in list do
 		if a == "roar" or a == "flap" or a == "rear" or a == "tailfan" then pick = a break end
-		if a ~= "look" and a ~= "sway" then pick = a end
+		if not QUIET[a] then pick = a end
 	end
 	rig.act, rig.actT, rig.burst, rig.hit = pick, os.clock(), false, false
 end
