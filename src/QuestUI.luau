@@ -88,6 +88,8 @@ function M.start(E)
 	local function readyShown() -- the claim line, or nil while the caves rest from it (6 s when it comes due, then 6 s every 90 s)
 		if not readyLine or not readySince then return nil end
 		local age = os.clock() - readySince
+		local okT, T = pcall(require, script.Parent:FindFirstChild("ToastManager"))
+		if okT and T and T.busy and T.busy() then return nil end -- v16.1 (audit 6:00, 9:58): never beside QUEST COMPLETE or an arrival banner
 		if age < 2.5 then return nil end -- the QUEST COMPLETE toast says it first; the card waits so the two never stack (Gemini full1121c)
 		return (not E.plr:GetAttribute("InCave") or age < 8.5 or (age % 90) < 6) and readyLine or nil -- 6 s in the caves, not 12 (Gemini full1122e 180-188 s: a pinned banner on arrival)
 	end
@@ -277,6 +279,11 @@ function M.start(E)
 		for _, m in hook.modals or {} do if m.Visible then busy = true end end
 		local h = E.hrp()
 		local far = pos and h and (pos - h.Position).Magnitude or 0
+		if h and not busy then -- v16.1 (audit 4:10): reading the Deep Chronicle, no RIDE sign floats over the slab
+			local hub = workspace:FindFirstChild("Hub")
+			local ch = hub and hub:FindFirstChild("Chronicle")
+			if ch and ch:IsA("Model") and (ch:GetPivot().Position - h.Position).Magnitude < 26 then busy = true end
+		end
 		-- a sign near its place, not a pill hanging in the air all through the caves (the user, 2026-11-10)
 		hook.bossBarUI = hook.bossBarUI or gui:FindFirstChild("BossBar", true) -- found once, not searched every frame
 		local boss = hook.bossBarUI

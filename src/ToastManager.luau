@@ -28,6 +28,8 @@ function M.count() return #queue + (live and 1 or 0) end
 local claimUntil = 0
 function M.claim(sec) claimUntil = math.max(claimUntil, os.clock() + sec) end
 function M.free() return os.clock() >= claimUntil and live == nil and os.clock() >= gap end
+function M.claimed() return os.clock() < claimUntil end -- a banner holds the centre: prompt bubbles step back (v16.1, audit 9:58)
+function M.busy() return live ~= nil or #queue > 0 or os.clock() < claimUntil end -- anything on or waiting for the banner lane
 
 function M.start(e)
 	E = e

@@ -363,7 +363,13 @@ function M.start(E)
 			bar.Visible = false
 			tents(false)
 			eyes(false)
-			prompt(true)
+			task.spawn(function() -- v16.1 (audit 8:32): no [F] Challenge over the defeat; it comes back once the win's notices have played
+				local t0 = os.clock()
+				task.wait(6.5)
+				local okT, T = pcall(require, game:GetService("ReplicatedStorage").Shared:FindFirstChild("ToastManager"))
+				while okT and T and T.busy and T.busy() and os.clock() - t0 < 14 do task.wait(0.5) end
+				if not bar.Visible then prompt(true) end -- not if a new fight has begun meanwhile
+			end)
 			openDoor(true)
 			sfx("upgrade", 1)
 			do -- the stone gives: a spill of basalt chunks rolls off the beaten boss (Gemini full1119k), client only, gone in 5 s

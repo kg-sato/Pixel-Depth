@@ -275,5 +275,6 @@ time.sleep(max(left + 4, 4))
 print(rec.communicate(timeout=900)[0][-300:])
 print("client errors:", C("local t={} for _,m in game:GetService('LogService'):GetLogHistory() do if m.messageType==Enum.MessageType.MessageError and not string.find(m.message,'Requester') and not string.find(m.message,'not authorized') then t[string.sub(m.message,1,140)]=true end end local e={} for k in t do table.insert(e,k) end return #e..' '..table.concat(e,' | ')"))
 N.play(False)
+print(subprocess.run([sys.executable, str(pathlib.Path(__file__).with_name("trim_intro.py")), str(video)], capture_output=True, text=True).stdout.strip())  # v16.1: no Studio default sky before the cover
 r = subprocess.run([VENV, "-I", str(ws / "tools" / "video_sheets.py"), str(video), str(sheets), "3"], capture_output=True, text=True)
 print([l for l in r.stdout.splitlines() if l.startswith("wrote")][-3:])

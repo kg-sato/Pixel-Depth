@@ -9,8 +9,6 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
 
-ReplicatedFirst:RemoveDefaultLoadingScreen()
-
 local plr = Players.LocalPlayer
 local pg = plr:WaitForChild("PlayerGui")
 local OBSIDIAN, PLUM = Color3.fromRGB(14, 6, 26), Color3.fromRGB(46, 18, 72)
@@ -36,6 +34,9 @@ for i = 1, 3 do
 end
 all.Parent = gui
 gui.Parent = pg
+-- v16.1 (the 2:35 blue-sky flash): the default loading screen goes only once this cover is parented. Removed first, the bare
+-- default sky showed for seconds until PlayerGui came (DevForum "Stare at the sky for a long time before loading", 2023).
+ReplicatedFirst:RemoveDefaultLoadingScreen()
 
 local t0 = os.clock()
 local pulse = RunService.RenderStepped:Connect(function()

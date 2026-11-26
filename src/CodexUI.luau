@@ -111,6 +111,7 @@ function M.start(E)
 		local name = E.text(f, "???", UDim2.fromScale(0.94, 0.22), UDim2.fromScale(0.5, 0.86), MID, PALE, 600, false)
 		name.Name, name.ZIndex = "Label", 7
 		name.TextScaled, name.TextWrapped = false, true -- round 2 (Gemini: long names shrank to 8 px): one size for every label, long ones wrap
+		name.TextStrokeColor3, name.TextStrokeTransparency = Color3.fromRGB(14, 8, 26), 0.35 -- v16.1 (audit 4:21): a dark edge so the small names read crisp on the glass
 		table.insert(cells, { f = f, mark = mark, name = name, kind = kind, key = key, color = color, label = label, gem = gem, strip = strip, tint = tint })
 	end
 	local n = 0
@@ -226,10 +227,10 @@ function M.start(E)
 			local st = c.f:FindFirstChildOfClass("UIStroke")
 			if st then st.Color, st.Transparency = got and c.color:Lerp(WHITE, 0.3) or VIOLET, got and 0.1 or 0.45 end
 			c.name.Text = got and c.label or "???"
-			c.name.TextColor3 = got and WHITE or Color3.fromRGB(120, 104, 160)
+			c.name.TextColor3 = got and WHITE or Color3.fromRGB(150, 136, 192) -- v16.1: the ??? brighter too
 			c.got = got
 		end
-		local px = math.clamp(math.floor((cells[1] and cells[1].f.AbsoluteSize.Y or 90) * 0.105), 9, 16)
+		local px = math.clamp(math.floor((cells[1] and cells[1].f.AbsoluteSize.Y or 90) * 0.125), 11, 17) -- v16.1 (audit 4:21): was 0.105 and 9 px, micro-text
 		for _, c in cells do c.name.TextSize = px end
 		local per = { all = { 0, 0 }, ore = { 0, 0 }, pet = { 0, 0 } }
 		for _, c in cells do

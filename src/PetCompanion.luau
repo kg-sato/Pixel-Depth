@@ -242,6 +242,7 @@ function M.start(E)
 		local blink = want == "calm" and (now + d.seed) % 4.2 < 0.13
 		show(d, blink and "sleepy" or want, blink or d.face == "sleepy" and want == "calm")
 		if not view then
+			if d.mood and d.mood.state ~= "" then d.mood.state, d.mood.bb.Enabled = "", false end -- v16.1 (audit 10:10): a cave mood mark left on followed the pet up into town
 			if (d.fade or 0) > 0 then setFade(pet, d, 0) end
 			if d.big then -- back in town, or a ride owns the view: its own size again
 				d.big = false

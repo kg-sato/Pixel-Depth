@@ -80,8 +80,8 @@ local SIG = {
 		{ "bolt", { anchor = "antlers", to = "sky", segs = 5, period = 2.4, col = C3(170, 235, 255) } },
 		{ "bolt", { anchor = "antlers", to = "ground", segs = 7, period = 3.6, col = C3(170, 235, 255) } },
 		{ "steps", { feet = { "footFL", "footBR", "footFR", "footBL" }, style = "cloud", col = C3(244, 246, 255) } },
-		{ "spiral", { n = 14, r = 0.75, h = 1.0, speed = 0.22, turns = 1.2, shape = "petal", col = C3(255, 150, 210), col2 = C3(255, 232, 245) } },
-		{ "runes", { plane = "back", anchor = "antlers", r = 0.32, n = 16, col = C3(255, 140, 210), col2 = C3(255, 220, 120) } },
+		{ "spiral", { n = 14, r = 0.75, h = 1.0, speed = 0.22, turns = 1.2, shape = "petal", col = C3(255, 176, 70), col2 = C3(255, 236, 180) } }, -- v16.1: amber-gold petals for the sapphire coat (were pink)
+		{ "runes", { plane = "back", anchor = "antlers", r = 0.32, n = 16, col = C3(255, 196, 90), col2 = C3(150, 225, 255) } },
 		{ "glint", { anchor = "antlers", n = 2, r = 0.9, col = C3(255, 240, 250) } },
 	},
 	Ouro = { -- Mythic all-rounder: counter-turning rune circles, a void drawn into its gem, two comets, a light column, lightning

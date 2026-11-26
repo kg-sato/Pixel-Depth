@@ -82,7 +82,7 @@ function M.start(E)
 		blob:FindFirstChildOfClass("UIStroke").Color = Color3.fromRGB(255, 190, 215)
 		local im = Instance.new("ImageLabel")
 		im.Name, im.Image, im.BackgroundTransparency, im.ScaleType = "Skull", skull, 1, Enum.ScaleType.Fit
-		im.Size, im.Position, im.AnchorPoint, im.ZIndex = UDim2.fromScale(1.7, 1.7), UDim2.fromScale(0.5, 0.45), Vector2.new(0.5, 0.5), 8
+		im.Size, im.Position, im.AnchorPoint, im.ZIndex = UDim2.fromScale(1.5, 1.5), UDim2.fromScale(0.5, 0.45), Vector2.new(0.5, 0.5), 8
 		im.Parent = blob
 	else
 		for _, x in { 0.36, 0.68 } do square(blob, 0.2, UDim2.fromScale(x, 0.42), WHITE, 7) end
@@ -92,7 +92,7 @@ function M.start(E)
 	stroke(cart, INK, 3)
 	frame(cart, { Size = UDim2.fromScale(1, 0.22), Position = UDim2.fromScale(0.5, 0.3), BackgroundColor3 = CREAM, ZIndex = 7 }) -- the cart's rim band
 	for _, x in { 0.24, 0.76 } do square(cart, 0.46, UDim2.fromScale(x, 1.05), INK, 7) end
-	local gapText = label(box, "THE GLOOM  30 m", UDim2.fromScale(0.9, 0.36), UDim2.fromScale(0.5, 0.16), WHITE, 5) -- the words never change, only the number and the colour
+	local gapText = label(box, "THE GLOOM  30 m", UDim2.fromScale(0.9, 0.36), UDim2.fromScale(0.5, -0.16), WHITE, 5) -- the words never change, only the number and the colour; v16.1 (audit 10:55): raised clear of the skull, about 6 px between them
 	stroke(gapText, INK, 3)
 
 	-- the warnings: butter chevrons running the way to go, with the key to press

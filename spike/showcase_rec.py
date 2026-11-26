@@ -120,6 +120,7 @@ task.spawn(function()
 			local pos, yawA, ang = stage, math.rad(200), 0
 			local T, base = 0, os.clock()
 			local acted, heroed = false, false
+			local tgtS -- v16.1 (audit 1:33): the camera holds the pet itself from second 0, then follows it round its walk
 			local dist = 7 + math.max(ext.X, ext.Y, ext.Z) * 1.05
 			m:PivotTo(CFrame.new(stage + Vector3.new(0, Y, 0)) * CFrame.Angles(0, yawA, 0))
 			RS:BindToRenderStep("ShowPet", 2001, function(dt)
@@ -141,7 +142,9 @@ task.spawn(function()
 				pcall(PV.animate, m, now, dt)
 				hideMiner()
 				local a = 0.5 + T * 0.22
-				local tgt = stage:Lerp(pos, 0.5) + Vector3.new(-R * 0.3, ext.Y * 0.42, 0)
+				local want = pos + Vector3.new(0, ext.Y * 0.42, 0)
+				tgtS = tgtS and tgtS:Lerp(want, 1 - math.exp(-dt * 3)) or want
+				local tgt = tgtS
 				cam.CameraType = Enum.CameraType.Scriptable
 				cam.CFrame = CFrame.lookAt(tgt + Vector3.new(math.sin(a) * dist, ext.Y * 0.8 + 4, math.cos(a) * dist), tgt) -- above, looking down onto the plaza
 				cam.FieldOfView = 55

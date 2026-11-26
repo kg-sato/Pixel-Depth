@@ -220,7 +220,14 @@ function M.init(c)
 	local hub = workspace:FindFirstChild("Hub")
 	local cart = hub and hub:FindFirstChild("HubCart", true)
 	if cart then
-		local at = cart:GetPivot() * CFrame.new(-9, 3.2, 2) * CFrame.Angles(0, math.rad(25), 0)
+		-- v16.1 (audit 10:10, every pet showcase): a grounded dark-wood notice board with a brass frame beside the Friends bench,
+		-- out of the bridge and minecart sightline (it was a purple glass sign by the cart that read neon pink under the town lamps)
+		local rpb = RaycastParams.new()
+		rpb.FilterType = Enum.RaycastFilterType.Include
+		rpb.FilterDescendantsInstances = { hub:FindFirstChild("Ground") or hub }
+		local gx, gz = 23.5, 52.5
+		local hitB = workspace:Raycast(Vector3.new(gx, 40, gz), Vector3.new(0, -60, 0), rpb)
+		local at = CFrame.new(gx, (hitB and hitB.Position.Y or 0.6) + 3.4, gz) * CFrame.Angles(0, math.pi + math.rad(-12), 0) -- faces the plaza (+Z, toward the town camera), turned a little to the lane
 		local function part(name, size, cf, color, mat)
 			local p = Instance.new("Part")
 			p.Name, p.Size, p.CFrame, p.Color, p.Material, p.Anchored = name, size, cf, color, mat or Enum.Material.Wood, true
@@ -228,22 +235,36 @@ function M.init(c)
 			p.Parent = hub
 			return p
 		end
-		local wood = Color3.fromRGB(92, 62, 48)
-		for _, x in { -2.6, 2.6 } do part("PartyPost", Vector3.new(0.5, 5.2, 0.5), at * CFrame.new(x, -0.9, 0.1), wood) end
-		local board = part("PartyBoard", Vector3.new(6, 3, 0.3), at, Color3.fromRGB(36, 17, 56), Enum.Material.Glass)
-		board.Transparency = 0.15
-		local rim = part("PartyBoardRim", Vector3.new(6.4, 3.4, 0.16), at * CFrame.new(0, 0, 0.14), Color3.fromRGB(150, 110, 220), Enum.Material.Glass) -- Neon glared white in the town view
+		local wood, brass = Color3.fromRGB(70, 46, 36), Color3.fromRGB(176, 136, 70)
+		for _, x in { -2.9, 2.9 } do part("PartyPost", Vector3.new(0.55, 6.6, 0.55), at * CFrame.new(x, -0.3, 0.1), wood) end
+		part("PartyRoof", Vector3.new(7.2, 0.4, 1.4), at * CFrame.new(0, 2.25, -0.1), Color3.fromRGB(58, 38, 30)) -- a little plank roof over it
+		local board = part("PartyBoard", Vector3.new(5.6, 3.4, 0.3), at, wood)
+		local rim = part("PartyBoardRim", Vector3.new(6, 3.8, 0.16), at * CFrame.new(0, 0, 0.14), brass, Enum.Material.Metal)
+		rim.Reflectance = 0
+		for _, y in { -1.15, 0, 1.15 } do part("PartyPlank", Vector3.new(5.4, 0.06, 0.32), at * CFrame.new(0, y, -0.01), Color3.fromRGB(52, 34, 26)) end -- plank seams
+		local sheet = part("PartyNotice", Vector3.new(4.6, 2.6, 0.06), at * CFrame.new(0, 0, -0.18) * CFrame.Angles(0, 0, math.rad(-1.5)), Color3.fromRGB(226, 206, 162), Enum.Material.Fabric) -- the pinned notice
+		local sheetB = part("PartyNoticeBack", Vector3.new(4.6, 2.6, 0.06), at * CFrame.new(0, 0, 0.27) * CFrame.Angles(0, 0, math.rad(1.5)), Color3.fromRGB(226, 206, 162), Enum.Material.Fabric)
+		for _, q in { { -2, 1.1 }, { 2, 1.1 } } do part("PartyPin", Vector3.new(0.22, 0.22, 0.12), at * CFrame.new(q[1], q[2], -0.23), brass, Enum.Material.Metal) end
+		local lamp = part("PartyLamp", Vector3.new(0.38, 0.46, 0.38), at * CFrame.new(0, 2.05, -1.1), Color3.fromRGB(196, 128, 62), Enum.Material.Neon) -- a little lamp under the roof lights the notice (a darker amber: a pale one bloomed white)
+		lamp.Transparency = 0.35
+		part("PartyLampArm", Vector3.new(0.12, 0.12, 1.1), at * CFrame.new(0, 2.3, -0.6), brass, Enum.Material.Metal)
+		local pl = Instance.new("PointLight")
+		pl.Color, pl.Brightness, pl.Range, pl.Shadows = Color3.fromRGB(255, 200, 140), 0.4, 8, false -- low: within 4 studs a Realistic-style lamp burns faces white
+		pl.Parent = lamp
 		local sg = Instance.new("SurfaceGui")
-		sg.Name, sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence = "PartyGui", Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 50, 0
-		for i, d in { { "PARTY", 0.3, 0.2, Color3.fromRGB(255, 214, 107) }, { "0/5 FRIENDS HERE", 0.2, 0.52, Color3.new(1, 1, 1) }, { "+15% ORE VALUE WITH A FRIEND", 0.16, 0.8, Color3.fromRGB(0, 240, 255) } } do
+		sg.Name, sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence, sg.Adornee = "PartyGui", Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 60, 0.35, sheet -- the paper is drawn by the gui itself (a lit Fabric sheet read near black at night)
+		local paper = Instance.new("Frame")
+		paper.Name, paper.Size, paper.BackgroundColor3, paper.BorderSizePixel, paper.ZIndex = "Paper", UDim2.fromScale(1, 1), Color3.fromRGB(238, 222, 184), 0, 0
+		paper.Parent = sg
+		for i, d in { { "PARTY", 0.3, 0.2, Color3.fromRGB(120, 40, 34) }, { "0/5 FRIENDS HERE", 0.2, 0.52, Color3.fromRGB(46, 30, 24) }, { "+15% ORE VALUE WITH A FRIEND", 0.16, 0.8, Color3.fromRGB(28, 84, 92) } } do
 			local t = Instance.new("TextLabel")
 			t.Name, t.Size, t.Position, t.AnchorPoint, t.BackgroundTransparency = "Line" .. i, UDim2.fromScale(0.9, d[2]), UDim2.fromScale(0.5, d[3]), Vector2.new(0.5, 0.5), 1
-			t.Text, t.TextScaled, t.Font, t.TextColor3 = d[1], true, Enum.Font.FredokaOne, d[4]
+			t.Text, t.TextScaled, t.Font, t.TextColor3 = d[1], true, Enum.Font.FredokaOne, d[4] -- ink on paper, not neon
 			t.Parent = sg
 		end
 		sg.Parent = board
-		local back = sg:Clone() -- the board's back read as a blank purple slab from the cart (Gemini full1122f 157 s): the same words on both faces
-		back.Name, back.Face, back.Adornee, back.Parent = "PartyGuiBack", Enum.NormalId.Back, rim, board -- drawn on the rim plate: from behind the rim covers the board (Orchestrator 2026-11-23: a blank purple board by the mine)
+		local back = sg:Clone() -- the same words on the back notice
+		back.Name, back.Face, back.Adornee, back.Parent = "PartyGuiBack", Enum.NormalId.Back, sheetB, board
 		local pr = Instance.new("ProximityPrompt")
 		pr.ActionText, pr.ObjectText, pr.KeyboardKeyCode, pr.GamepadKeyCode = "Invite", "Friends", Enum.KeyCode.F, Enum.KeyCode.ButtonX
 		pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.Style, pr.HoldDuration = 9, false, Enum.ProximityPromptStyle.Custom, 0

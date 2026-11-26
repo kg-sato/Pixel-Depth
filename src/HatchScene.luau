@@ -354,6 +354,21 @@ function M.play(opt)
 	local landed, squashed = false, nil
 	local done, closing, closeAt = false, false, nil
 	local pet, petT, petBig = nil, nil, 1
+	local fr = nil -- v16.1 reveal framing from the pet's own body box: { top, bot, w } above the nest, the live maxima, the eased camera
+	local function petBox(m) -- the body only (Fx_ motes and hidden parts left out), as heights over the nest and the half width across the screen
+		local lo, hi, w = math.huge, -math.huge, 0
+		for _, q in m:GetDescendants() do
+			if q:IsA("BasePart") and q.Transparency < 0.98 and string.sub(q.Name, 1, 3) ~= "Fx_" then
+				local cf, h = q.CFrame, q.Size / 2
+				local R, U, L = cf.RightVector, cf.UpVector, cf.LookVector
+				local ey = math.abs(R.Y) * h.X + math.abs(U.Y) * h.Y + math.abs(L.Y) * h.Z
+				local ex = math.abs(R.X) * h.X + math.abs(U.X) * h.Y + math.abs(L.X) * h.Z
+				lo, hi, w = math.min(lo, cf.Y - ey), math.max(hi, cf.Y + ey), math.max(w, math.abs(cf.X - NEST.X) + ex)
+			end
+		end
+		if lo > hi then return 0, 3, 1 end
+		return lo - NEST.Y, hi - NEST.Y, w
+	end
 	local shards, shock, rays = {}, nil, nil
 	local climbStep, climbCol = 1, ladder[1]
 	local shake = 0
@@ -569,7 +584,13 @@ function M.play(opt)
 				pet:PivotTo(CFrame.new(NEST + Vector3.new(0, 0.92, 0))) -- pets look -Z: at the camera
 				pet.Parent = world
 				local _, bb = pet:GetBoundingBox()
-				petBig = math.clamp(2.9 / math.max(bb.Y, 0.5), 1, 1.9) -- small pets grow to fill the hero shot like Fafnir does (stills rv: Tosk and Selkie read tiny)
+				local lo, hi, w = petBox(pet) -- the body alone (v16 pets carry wide effect motes in the model)
+				local bodyH = math.max(hi - lo, 0.5)
+				petBig = math.clamp(2.9 / bodyH, 1, 1.9) -- small pets grow to fill the hero shot like Fafnir does (stills rv: Tosk and Selkie read tiny)
+				if bodyH * 1.15 * petBig > 4.2 then petBig = 4.2 / (bodyH * 1.15) end -- v16.1: the grown v16 pets (Fafnir 8 studs) shrink to the grotto: a camera far enough back for them left the cave
+				local fs, piv = 1.15 * petBig, 0.92
+				local b0, t0 = 0.6 + piv * fs + (lo - piv) * fs, 0.6 + piv * fs + (hi - piv) * fs
+				fr = { bot = math.min(0.1, b0), top = b0 + (t0 - b0) * 1.1, w = w * fs } -- 1.1 plus the quarter of headroom below: the room M.hero's rear-up rises into (heads peak at 1.2x; only Fafnir's wing tips go higher) (v16.1: Fafnir's head was cut off behind the name at 5:36)
 				pet:ScaleTo(0.2)
 			end
 			petT = t
@@ -655,11 +676,29 @@ function M.play(opt)
 				end
 			end
 			local ru = smooth(A3, A3 + 0.9, t)
-			camPos = (NEST + Vector3.new(0.5, 2.7, -8.2)):Lerp(NEST + Vector3.new(-0.6, 2.9, -10.8) + Vector3.new(math.sin((t - A3) * 0.35) * 1.2, 0, 0), ru)
-			look = NEST + Vector3.new(0, 2.75, 0) -- the pet sits low in frame, under its name (stills m6: the floating pet's head was behind the card)
-			fov = 54 - ru * 14 -- a wide pop on the burst that settles in
+			-- v16.1: frame the body box in the clear band between the name plate (to 26% from the top) and the hint bar (from 90%),
+			-- with a quarter of the pet's height clear above it for the rear-up of M.hero. The frame holds still through the act: one that
+			-- followed the rear-up live climbed over the grotto's rim into the black (Fafnir's raised wings reach 1.7x its height)
+			local d, yC, fovF = 10.8, 2.75, 40
+			if fr then
+				local S = math.max(0.5, fr.top - fr.bot)
+				local pTop, pBot = fr.top + 0.25 * S, fr.bot - 0.12 * S
+				local vp = cam.ViewportSize
+				local aspect = math.max(1, vp.X / math.max(1, vp.Y))
+				local viewH = math.max((pTop - pBot) / 0.64, 2.6 * fr.w / aspect, 7.86) -- 7.86: the old 10.8-stud shot, kept for small pets
+				local tD = math.clamp(viewH / (2 * math.tan(math.rad(20))), 10.8, 12.5) -- the camera stays inside the grotto (its wall is about 15 studs out)
+				local tF = math.clamp(math.deg(2 * math.atan(viewH / (2 * tD))), 40, 62) -- past that the lens widens instead
+				local tY = (pTop + pBot) / 2 + 0.08 * viewH -- the band's middle sits 8% under the screen's
+				local a = fr.d and (1 - math.exp(-8 * dt)) or 1
+				fr.d, fr.y, fr.f = (fr.d or tD) + (tD - (fr.d or tD)) * a, (fr.y or tY) + (tY - (fr.y or tY)) * a, (fr.f or tF) + (tF - (fr.f or tF)) * a
+				d, yC, fovF = fr.d, fr.y, fr.f
+				if RunService:IsStudio() then workspace:SetAttribute("DevHatchFrame", string.format("d %.1f fov %.0f y %.1f top %.1f bot %.1f fs %.2f", d, fovF, yC, fr.top, fr.bot, 1.15 * petBig)) end
+			end
+			camPos = (NEST + Vector3.new(0.5, 2.7, -8.2)):Lerp(NEST + Vector3.new(-0.6 * d / 10.8, yC + 0.15, -d) + Vector3.new(math.sin((t - A3) * 0.35) * 1.2 * d / 10.8, 0, 0), ru)
+			look = NEST + Vector3.new(0, yC, 0)
+			fov = 54 + (fovF - 54) * ru -- a wide pop on the burst that settles in (to 40, or wider for a tall pet)
 			if t - A3 < 0.07 then fov = 30 end -- a snap in on the impact frame before the pop (Gemini m20/m21)
-			dof.FarIntensity, dof.FocusDistance = 0.5, 10.8
+			dof.FarIntensity, dof.FocusDistance = 0.5, d
 			Lighting.Ambient, Lighting.OutdoorAmbient = DARK:Lerp(AMB, 0.1 + ru * 0.2), DARK:Lerp(OAMB, 0.1 + ru * 0.2) -- the cave stays mostly dark: the pet is the light (Gemini m17)
 		end
 		if sig and sig.reveal and t >= A3 and fired.omen then sig.reveal(ctx, t - A3, fdt) end

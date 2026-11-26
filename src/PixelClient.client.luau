@@ -1165,7 +1165,7 @@ RunService.RenderStepped:Connect(function()
 		local a = u.adornee
 		local p = (a:IsA("BasePart") and a.Position or (a:IsA("Attachment") and a.WorldPosition or Vector3.zero)) + Vector3.new(0, u.lift, 0)
 		local v, on = cam:WorldToScreenPoint(p)
-		u.bb.Visible = on and not forgeUI.modalOpen and not (a.Name == "RefineryMouth" and (((state and state.geodes or 0) <= 0 and plr:GetAttribute("RefineAt") == nil) or (plr:GetAttribute("RefineAt") or 0) > workspace:GetServerTimeNow())) -- the refinery's bubble only with a geode or a job: at spawn it sat on the minecart (Orchestrator rounds 2-3); directive v14: a bubble shown before a panel opened drew over it (F BUY AN EGG on EGG ODDS) -- v15: while a job melts only the crucible's STIR shows (Refine would only say 'wait')
+		u.bb.Visible = on and not forgeUI.modalOpen and not Toasts.claimed() and not (a.Name == "RefineryMouth" and (((state and state.geodes or 0) <= 0 and plr:GetAttribute("RefineAt") == nil) or (plr:GetAttribute("RefineAt") or 0) > workspace:GetServerTimeNow())) -- the refinery's bubble only with a geode or a job: at spawn it sat on the minecart (Orchestrator rounds 2-3); directive v14: a bubble shown before a panel opened drew over it (F BUY AN EGG on EGG ODDS) -- v15: while a job melts only the crucible's STIR shows (Refine would only say 'wait')
 		local sz, vp = u.bb.AbsoluteSize, cam.ViewportSize -- kept whole on screen: a bubble over a tall thing was cut by the top edge (Gemini UI review, 2026-11-10)
 		local x, y = math.clamp(v.X, sz.X * 0.62 + 6, math.max(vp.X - sz.X * 0.38 - 6, sz.X * 0.62 + 6)), math.max(v.Y, sz.Y + vp.Y * 0.2) -- below the top strip and the timers pill (directive v10: a boss prompt sat on the pill)
 		if on then
@@ -2183,29 +2183,50 @@ end)()
 	local prevMg = cave.mg
 	cave.mg = function(kind, ...)
 		prevMg(kind, ...)
+		-- v16.1 (audit 7:02): a seen card folds into a quiet [?] key in its corner for the rest of the run; the key opens it again
+		HOWTO.fill = HOWTO.fill or function(which)
+			cName.Text = HOWTO[which][1]
+			for k, r in rows do r.icon.Image, r.text.Text = ICON[HOWTO[which][2][k][1]], HOWTO[which][2][k][2] end
+			rows[2].icon.Rotation = which == "rush" and 90 or 0 -- the second chisel points the other way
+			card.Visible = true
+			pop(card, 0.6, 0.35)
+			for k, r in rows do -- the steps arrive one by one
+				r.text.TextTransparency = 1
+				task.delay(0.15 + k * 0.18, function() tween(r.text, 0.25, { TextTransparency = 0 }) end)
+			end
+		end
+		if not HOWTO.key then
+			local b = new("TextButton", caveHud, { Name = "HowToKey", Text = "?", Font = HEAD, TextScaled = true, TextColor3 = WHITE, BackgroundColor3 = Color3.fromRGB(30, 21, 58), BackgroundTransparency = 0.25, Size = S(30, 30), Position = card.Position, AnchorPoint = card.AnchorPoint, Visible = false, ZIndex = 13, AutoButtonColor = false })
+			new("UICorner", b, { CornerRadius = UDim.new(0.5, 0) })
+			new("UIStroke", b, { Color = Color3.fromRGB(236, 226, 255), Thickness = 1.5, Transparency = 0.4 })
+			b.Activated:Connect(function()
+				if card.Visible then closePanel(card) b.Visible = HOWTO.on ~= nil elseif HOWTO.on then b.Visible = false HOWTO.fill(HOWTO.on) end
+			end)
+			HOWTO.key = b
+		end
 		if kind == "mgStart" then
 			local _, which = ...
+			HOWTO.on = HOWTO[which] and which or nil
+			HOWTO.key.Visible = false
 			if HOWTO[which] and not seen(which) then
 				current = which
-				cName.Text = HOWTO[which][1]
-				for k, r in rows do r.icon.Image, r.text.Text = ICON[HOWTO[which][2][k][1]], HOWTO[which][2][k][2] end
-				rows[2].icon.Rotation = which == "rush" and 90 or 0 -- the second chisel points the other way
-				card.Visible = true
-				pop(card, 0.6, 0.35)
-				for k, r in rows do -- the steps arrive one by one
-					r.text.TextTransparency = 1
-					task.delay(0.15 + k * 0.18, function() tween(r.text, 0.25, { TextTransparency = 0 }) end)
-				end
+				HOWTO.fill(which)
+			elseif HOWTO.on then
+				HOWTO.key.Visible = true
 			end
 		elseif kind == "mgStrike" then
 			if card.Visible then closePanel(card) end -- the first swing is in: the card gives the screen back
+			HOWTO.key.Visible = HOWTO.on ~= nil
 			card:SetAttribute("Strikes", (card:GetAttribute("Strikes") or 0) + 1) -- (an attribute, not a local: this chunk is near Luau's 200-local limit)
 			if current and card:GetAttribute("Strikes") >= 3 then tip(current) current = nil end -- v16 (full1124c fix 4): three strikes and the card never comes back
 
-		elseif kind == "mgEnd" and current then
-			tip(current) -- seen once it has been played through
-			current = nil
-			closePanel(card)
+		elseif kind == "mgEnd" then
+			HOWTO.on, HOWTO.key.Visible = nil, false
+			if current then
+				tip(current) -- seen once it has been played through
+				current = nil
+			end
+			if card.Visible then closePanel(card) end
 		end
 	end
 
@@ -2524,7 +2545,8 @@ R.Fx.OnClientEvent:Connect(function(kind, ...)
 		end)
 	elseif kind == "lift" then
 		local down = ...
-		fadeText.Text = down and "RIDING THE LIFT DOWN..." or "BACK TO CAMP!"
+		fadeText.Text = down and "RIDING THE LIFT DOWN..." or "" -- going up the town's arrival banner names the place (v16.1, audit 9:58: BACK TO CAMP! sat under it)
+		Toasts.claim(1)
 		sfx("swing", 0.6)
 		fade.BackgroundTransparency = 0
 		fadeText.TextTransparency = 0
