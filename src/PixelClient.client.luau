@@ -2200,7 +2200,7 @@ end)()
 			new("UICorner", b, { CornerRadius = UDim.new(0.5, 0) })
 			new("UIStroke", b, { Color = Color3.fromRGB(236, 226, 255), Thickness = 1.5, Transparency = 0.4 })
 			b.Activated:Connect(function()
-				if card.Visible then closePanel(card) b.Visible = HOWTO.on ~= nil elseif HOWTO.on then b.Visible = false HOWTO.fill(HOWTO.on) end
+				if card.Visible then closePanel(card) b.Visible = false task.delay(0.2, function() b.Visible = HOWTO.on ~= nil and not card.Visible end) elseif HOWTO.on then b.Visible = false HOWTO.fill(HOWTO.on) end -- the key returns once the close tween is done (Codex review)
 			end)
 			HOWTO.key = b
 		end
@@ -2216,7 +2216,7 @@ end)()
 			end
 		elseif kind == "mgStrike" then
 			if card.Visible then closePanel(card) end -- the first swing is in: the card gives the screen back
-			HOWTO.key.Visible = HOWTO.on ~= nil
+			task.delay(0.2, function() HOWTO.key.Visible = HOWTO.on ~= nil and not card.Visible end) -- after closePanel's 0.15 s hide
 			card:SetAttribute("Strikes", (card:GetAttribute("Strikes") or 0) + 1) -- (an attribute, not a local: this chunk is near Luau's 200-local limit)
 			if current and card:GetAttribute("Strikes") >= 3 then tip(current) current = nil end -- v16 (full1124c fix 4): three strikes and the card never comes back
 
