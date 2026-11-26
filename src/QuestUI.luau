@@ -283,6 +283,8 @@ function M.start(E)
 			local hub = workspace:FindFirstChild("Hub")
 			local ch = hub and hub:FindFirstChild("Chronicle")
 			if ch and ch:IsA("Model") and (ch:GetPivot().Position - h.Position).Magnitude < 26 then busy = true end
+			local rm = hub and hub:FindFirstChild("RefineryMouth") -- and none beside the refinery's STIR prompt (tour full1126v161 view 15)
+			if rm and rm:IsA("BasePart") and (rm.Position - h.Position).Magnitude < 16 then busy = true end
 		end
 		-- a sign near its place, not a pill hanging in the air all through the caves (the user, 2026-11-10)
 		hook.bossBarUI = hook.bossBarUI or gui:FindFirstChild("BossBar", true) -- found once, not searched every frame
