@@ -339,6 +339,7 @@ function M.start(E)
 			local dx, dy = tx - x, ty - y
 			local m = math.sqrt(dx * dx + dy * dy)
 			tip.Position = m > 40 and UDim2.fromScale(0.5 + dx / m * 0.62, 0.3 + dy / m * 0.62) or UDim2.fromScale(0.5, 0.72)
+			if m > 40 and not plr:GetAttribute("InCave") then marker.Visible = false end -- in town the step card and the minimap already point the way; a tag held at the screen edge read as a stray prompt over the grass (Gemini town_n5)
 		end
 		local mp, ms = marker.AbsolutePosition, marker.AbsoluteSize
 		local hud = gui:FindFirstChild("CaveHud")

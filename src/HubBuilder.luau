@@ -1469,7 +1469,7 @@ function Hub.build(parent, origin)
 		local wingR = tvox(g, "Wing", Vector3.new(4.4, 5, 0.5), at(6.7, 6, 1) * CFrame.Angles(0, -0.46, 0), "planks", 4)
 		local function atN(x, y, z) return at(0, 0, 0.4) * CFrame.Angles(0, math.pi / 2, 0) * CFrame.new(x, y, z) end
 		stepRoof(g, atN, 6.4, 19.6, 10.2, "shingle_plum", 0.8, 1) -- a steep storybook gable facing front
-		sign(g, "QUESTS", CFrame.new(at(0, 14.2, 3.9).Position), 5, 1.3, PAL.cream[3], Color3.fromRGB(108, 191, 156))
+		sign(g, "QUESTS", CFrame.new(at(0, 14.2, 4.8).Position), 5, 1.3, PAL.cream[3], Color3.fromRGB(108, 191, 156))
 		for k, pp in { { -0.8, 0.8, 1.4, 1.8 }, { 0.9, 0.4, 1.6, 1.6 }, { -0.2, -1.2, 1.8, 1.4 } } do -- notices on the right wing
 			local cf = wingR.CFrame * CFrame.new(pp[1], pp[2], 0.3 + k * 0.01) * CFrame.Angles(0, 0, (hash(k, 4, 4) - 0.5) * 0.3)
 			vox(g, "Paper", Vector3.new(pp[3], pp[4], 0.08), cf, PAL.cream[2]:Lerp(PAL.straw[3], 0.25), { CanCollide = false })
