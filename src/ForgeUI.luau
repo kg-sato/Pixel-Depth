@@ -89,14 +89,25 @@ function M.start(E)
 	local coinP, coinT = pill(0.67, 0.15, "coin", Color3.fromRGB(59, 36, 22))
 	local gemP, gemT = pill(0.83, 0.12, "gem", Color3.fromRGB(140, 30, 62))
 
+	do -- the three currencies, one line each (Progression and Boss Fight Overhaul 1.3, 2026-11-27): what each one buys
+		local legend = new("Frame", forge, { Name = "Currencies", Size = UDim2.fromScale(0.175, 0.2), Position = UDim2.fromScale(0.025, 0.76), BackgroundColor3 = Color3.fromRGB(26, 18, 46), BackgroundTransparency = 0.25, BorderSizePixel = 0, ZIndex = 3 })
+		round(legend, 0.12)
+		new("UIPadding", legend, { PaddingLeft = UDim.new(0, 8), PaddingRight = UDim.new(0, 8), PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6) })
+		for k, l in { { "GOLD: PICKS, PACKS, CHARMS", Color3.fromRGB(255, 214, 107) }, { "GEMS: FORGE TEMPER, EGGS", Color3.fromRGB(255, 140, 190) }, { "SHARDS: SOUL TREE", Color3.fromRGB(196, 170, 255) } } do
+			local t = text(legend, l[1], UDim2.fromScale(1, 0.3), UDim2.fromScale(0, (k - 1) * 0.34), nil, l[2], 700, false)
+			t.TextXAlignment, t.ZIndex = Enum.TextXAlignment.Left, 4
+		end
+	end
 	-- left: category tabs
 	for i, t in { { "pick", "PICKAXES", "pick" }, { "pack", "BACKPACKS", "bag" }, { "charm", "CHARMS", "star" } } do
 		local b = button(forge, t[2], UDim2.fromScale(0.175, 0.15), UDim2.fromScale(0.025, 0.2 + (i - 1) * 0.18), nil, "lilac", t[3])
 		b.Name = "Tab" .. t[2]
 		tabBtn[t[1]] = b
 		if t[1] ~= "pick" then -- what the tab holds, in a small line under its name: BACKPACKS and CHARMS gave no hint (Gemini full1119p)
-			local sub = text(b, t[1] == "pack" and "MORE ROOM" or (C.CHARMS_ON and "PERKS" or "SOON"), UDim2.fromScale(0.6, 0.18), UDim2.fromScale(0.5, 0.78), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 214, 107), 700, false) -- directive v14: 0.88 sat on the tab rim
+			local sub = text(b, t[1] == "pack" and "MORE ROOM" or (C.CHARMS_ON and "PERKS" or "SOON"), UDim2.fromScale(0.52, 0.16), UDim2.fromScale(0.68, 0.8), Vector2.new(0.5, 0.5), Color3.fromRGB(255, 214, 107), 700, false) -- directive v14: 0.88 sat on the tab rim
 			sub.ZIndex = 5
+			local main = b:FindFirstChild("Label") -- 2026-11-27 (UI audit: BACKPACKS sat on MORE ROOM): the name rises to make room for its line
+			if main then main.Position, main.Size = UDim2.fromScale(0.68, 0.4), UDim2.fromScale(0.52, 0.36) end
 		end
 		if t[1] == "charm" and not C.CHARMS_ON then
 			local l = icon(b, "lock", UDim2.fromScale(0.2, 0.46), UDim2.fromScale(0.95, 0.12), Vector2.new(0.5, 0.5))
@@ -269,7 +280,7 @@ function M.start(E)
 		end
 		return "NEEDS  " .. table.concat(parts, "   "), ok
 	end
-	local lvLabel = text(det, "", UDim2.fromScale(0.5, 0.038), UDim2.fromScale(0.06, 0.743), nil, CHALK, 700, false)
+	local lvLabel = text(det, "", UDim2.fromScale(0.88, 0.038), UDim2.fromScale(0.06, 0.743), nil, CHALK, 700, false)
 	lvLabel.TextXAlignment = Enum.TextXAlignment.Left
 	local pips = {}
 	for k = 1, C.FORGE.maxLv do
@@ -297,7 +308,16 @@ function M.start(E)
 	local function splitAct()
 		local a, b = act.Text:match("^(.-)%s%s+(%S+)$")
 		actTop.Text, actCost.Text, actCost.Visible = a or act.Text, b or "", b ~= nil
-		actTop.Position = b and UDim2.fromScale(0.5, 0.30) or UDim2.fromScale(0.5, 0.48)
+		-- 2026-11-27 (UI audit text 3: UPGRADE 3 crowded the gem under the word): one line, the verb then [gem] 3 beside it
+		if b then
+			actTop.AnchorPoint, actTop.Position, actTop.Size = Vector2.new(0, 0.5), UDim2.fromScale(0.08, 0.48), UDim2.fromScale(0.54, 0.46)
+			actTop.TextXAlignment = Enum.TextXAlignment.Right
+			ai.AnchorPoint, ai.Position, ai.Size = Vector2.new(0, 0.5), UDim2.fromScale(0.65, 0.48), UDim2.fromScale(0.14, 0.42)
+			actCost.AnchorPoint, actCost.Position, actCost.Size = Vector2.new(0, 0.5), UDim2.fromScale(0.79, 0.48), UDim2.fromScale(0.18, 0.42)
+		else
+			actTop.AnchorPoint, actTop.Position, actTop.Size = Vector2.new(0.5, 0.5), UDim2.fromScale(0.5, 0.48), UDim2.fromScale(0.86, 0.36)
+			actTop.TextXAlignment = Enum.TextXAlignment.Center
+		end
 		local deep = DEEP[act:GetAttribute("Kind")] or INK
 		actTop.TextStrokeColor3, actCost.TextStrokeColor3 = deep, deep
 	end
@@ -355,7 +375,7 @@ function M.start(E)
 				local maxed = lv >= C.FORGE.maxLv
 				setRow(1, "Ore Value", "coin", val(i, lv), not maxed and val(i, lv + 1) or nil)
 				setRow(2, "Strike Zone", "star", zone(lv), not maxed and zone(lv + 1) or nil)
-				lvLabel.Text = "LV " .. lv .. " / " .. C.FORGE.maxLv
+				lvLabel.Text = "FORGE TEMPER LV " .. lv .. "/" .. C.FORGE.maxLv .. "  (ALL PICKAXES)" -- 2026-11-27: one account-wide level
 				for k, p in pips do
 					p.frame.BackgroundColor3 = k <= lv and BUTTER or Color3.fromRGB(30, 62, 140)
 					p.stroke.Color = k <= lv and Color3.fromRGB(196, 138, 46) or CHALK
@@ -368,8 +388,8 @@ function M.start(E)
 				eqB.Text = i == eqI and "EQUIPPED" or "EQUIP"
 				setKind(eqB, i == eqI and "off" or "butter")
 			else
-				setRow(1, "Ore Value", "coin", val(eqI, lvOf(eqI)), val(i, 1))
-				setRow(2, "Strike Zone", "star", zone(lvOf(eqI)), zone(1))
+				setRow(1, "Ore Value", "coin", val(eqI, lvOf(eqI)), val(i, lvOf(eqI))) -- the temper carries over to the new pickaxe
+				setRow(2, "Strike Zone", "star", zone(lvOf(eqI)), zone(lvOf(eqI)))
 				local line, oreOk = oreLine(i)
 				mode = nxt and { kind = oreOk and "buy" or "needOre", cost = def.cost } or { kind = "none" }
 				act.Text = nxt and (oreOk and ("BUY  " .. shortNum(def.cost)) or "NEED ORE") or ("BUY " .. short(list[cur + 1] and list[cur + 1].name or "") .. " FIRST"):upper()

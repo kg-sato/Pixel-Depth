@@ -131,29 +131,29 @@ C.PICKS = {
 	{ name = "Kobold-Copper Pickaxe", power = 4, cost = 150, model = "CopperPickaxe" }, -- Common; Camp 1 Root Hollow
 	{ name = "Bog-Iron Pickaxe", power = 6, cost = 350, model = "BogIronPickaxe" }, -- Common; Camp 1 Root Hollow
 	{ name = "Rootheart Pickaxe", power = 8, cost = 800, model = "RootheartPickaxe" }, -- Rare; Camp 1 Root Hollow
-	{ name = "Mossback Pickaxe", power = 11, cost = 2000, model = "MossbackPickaxe" }, -- Common; Camp 2 Clay Caves
-	{ name = "Kiln Pickaxe", power = 14, cost = 4000, model = "KilnPickaxe" }, -- Common; Camp 2 Clay Caves
-	{ name = "Rune-Tin Pickaxe", power = 18, cost = 8000, model = "RuneTinPickaxe" }, -- Rare; Camp 2 Clay Caves
-	{ name = "Geode Pickaxe", power = 23, cost = 15000, model = "GeodePickaxe" }, -- Rare; Camp 2 Clay Caves
-	{ name = "Fossil Pickaxe", power = 29, cost = 28000, model = "FossilPickaxe" }, -- Rare; Camp 2 Clay Caves
-	{ name = "Titan Hammer Pickaxe", power = 36, cost = 50000, model = "TitanHammerPickaxe" }, -- Epic; Camp 2 Clay Caves
-	{ name = "Frostquartz Pickaxe", power = 45, cost = 100000, model = "FrostquartzPickaxe" }, -- Rare; Camp 3 Glitterhall
-	{ name = "Amethyst Pickaxe", power = 56, cost = 180000, model = "AmethystPickaxe" }, -- Rare; Camp 3 Glitterhall
-	{ name = "Songcrystal Pickaxe", power = 70, cost = 320000, model = "SongcrystalPickaxe" }, -- Rare; Camp 3 Glitterhall
-	{ name = "Sapphire Pickaxe", power = 88, cost = 560000, model = "SapphirePickaxe" }, -- Epic; Camp 3 Glitterhall
-	{ name = "Prism Pickaxe", power = 110, cost = 1000000, model = "PrismPickaxe" }, -- Epic; Camp 3 Glitterhall
-	{ name = "Aurora Pickaxe", power = 140, cost = 1800000, model = "AuroraPickaxe" }, -- Epic; Camp 3 Glitterhall
-	{ name = "Surtshard Pickaxe", power = 175, cost = 3500000, model = "SurtshardPickaxe" }, -- Epic; Camp 4 Muspell
-	{ name = "Fireglass Pickaxe", power = 220, cost = 6000000, model = "FireglassPickaxe" }, -- Epic; Camp 4 Muspell
-	{ name = "Ember Pickaxe", power = 275, cost = 10000000, model = "EmberPickaxe" }, -- Epic; Camp 4 Muspell
-	{ name = "Ruby Pickaxe", power = 345, cost = 17000000, model = "RubyPickaxe" }, -- Legendary; Camp 4 Muspell
-	{ name = "Phoenix Pickaxe", power = 430, cost = 28000000, model = "PhoenixPickaxe" }, -- Legendary; Camp 4 Muspell
-	{ name = "Sunforge Pickaxe", power = 540, cost = 45000000, model = "SunforgePickaxe" }, -- Legendary; Camp 4 Muspell
-	{ name = "Starlight Pickaxe", power = 700, cost = 80000000, model = "StarlightPickaxe" }, -- Legendary; Sky (ultra endgame)
-	{ name = "Moonlit Pickaxe", power = 900, cost = 130000000, model = "MoonlitPickaxe" }, -- Legendary; Sky (ultra endgame)
-	{ name = "Galaxy Pickaxe", power = 1150, cost = 210000000, model = "GalaxyPickaxe" }, -- Mythic; Sky (ultra endgame)
-	{ name = "Royal Heart Pickaxe", power = 1500, cost = 340000000, model = "RoyalHeartPickaxe" }, -- Mythic; Sky (ultra endgame)
-	{ name = "Silver Wing Pickaxe", power = 2000, cost = 550000000, model = "SilverWingPickaxe" }, -- Secret; Sky (ultra endgame)
+	{ name = "Mossback Pickaxe", power = 11, cost = 1200, model = "MossbackPickaxe" }, -- Common; Camp 2 Clay Caves
+	{ name = "Kiln Pickaxe", power = 14, cost = 1900, model = "KilnPickaxe" }, -- Common; Camp 2 Clay Caves
+	{ name = "Rune-Tin Pickaxe", power = 18, cost = 3000, model = "RuneTinPickaxe" }, -- Rare; Camp 2 Clay Caves
+	{ name = "Geode Pickaxe", power = 23, cost = 4600, model = "GeodePickaxe" }, -- Rare; Camp 2 Clay Caves
+	{ name = "Fossil Pickaxe", power = 29, cost = 7200, model = "FossilPickaxe" }, -- Rare; Camp 2 Clay Caves
+	{ name = "Titan Hammer Pickaxe", power = 36, cost = 11000, model = "TitanHammerPickaxe" }, -- Epic; Camp 2 Clay Caves
+	{ name = "Frostquartz Pickaxe", power = 45, cost = 17000, model = "FrostquartzPickaxe" }, -- Rare; Camp 3 Glitterhall
+	{ name = "Amethyst Pickaxe", power = 56, cost = 27000, model = "AmethystPickaxe" }, -- Rare; Camp 3 Glitterhall
+	{ name = "Songcrystal Pickaxe", power = 70, cost = 41000, model = "SongcrystalPickaxe" }, -- Rare; Camp 3 Glitterhall
+	{ name = "Sapphire Pickaxe", power = 88, cost = 64000, model = "SapphirePickaxe" }, -- Epic; Camp 3 Glitterhall
+	{ name = "Prism Pickaxe", power = 110, cost = 99000, model = "PrismPickaxe" }, -- Epic; Camp 3 Glitterhall
+	{ name = "Aurora Pickaxe", power = 140, cost = 150000, model = "AuroraPickaxe" }, -- Epic; Camp 3 Glitterhall
+	{ name = "Surtshard Pickaxe", power = 175, cost = 240000, model = "SurtshardPickaxe" }, -- Epic; Camp 4 Muspell
+	{ name = "Fireglass Pickaxe", power = 220, cost = 370000, model = "FireglassPickaxe" }, -- Epic; Camp 4 Muspell
+	{ name = "Ember Pickaxe", power = 275, cost = 570000, model = "EmberPickaxe" }, -- Epic; Camp 4 Muspell
+	{ name = "Ruby Pickaxe", power = 345, cost = 890000, model = "RubyPickaxe" }, -- Legendary; Camp 4 Muspell
+	{ name = "Phoenix Pickaxe", power = 430, cost = 1400000, model = "PhoenixPickaxe" }, -- Legendary; Camp 4 Muspell
+	{ name = "Sunforge Pickaxe", power = 540, cost = 2100000, model = "SunforgePickaxe" }, -- Legendary; Camp 4 Muspell
+	{ name = "Starlight Pickaxe", power = 700, cost = 3300000, model = "StarlightPickaxe" }, -- Legendary; Sky (ultra endgame)
+	{ name = "Moonlit Pickaxe", power = 900, cost = 5100000, model = "MoonlitPickaxe" }, -- Legendary; Sky (ultra endgame)
+	{ name = "Galaxy Pickaxe", power = 1150, cost = 7900000, model = "GalaxyPickaxe" }, -- Mythic; Sky (ultra endgame)
+	{ name = "Royal Heart Pickaxe", power = 1500, cost = 12000000, model = "RoyalHeartPickaxe" }, -- Mythic; Sky (ultra endgame)
+	{ name = "Silver Wing Pickaxe", power = 2000, cost = 19000000, model = "SilverWingPickaxe" }, -- Secret; Sky (ultra endgame)
 }
 C.PICK_SCALE = 0.75 -- the 3.6-stud forge models shrunk to fit the miner's hand
 -- Forge v2 (2026-11-08): coins buy the next pickaxe, gems level an owned one (LV 1 to 10). In the caves the equipped pickaxe
@@ -161,12 +161,18 @@ C.PICK_SCALE = 0.75 -- the 3.6-stud forge models shrunk to fit the miner's hand
 -- Perfect Strike gold zone by 2 degrees. Rarity per pickaxe indexes C.RARITIES (card rims, gem cost scale).
 C.FORGE = { maxLv = 10, gems = { 3, 4, 6, 8, 11, 15, 20, 26, 34 }, lvValue = 0.1, lvArc = 2 }
 C.PICK_RARITY = { 1, 1, 1, 1, 1, 2, 1, 1, 2, 2, 2, 3, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 6 }
+-- Progression and Boss Fight Overhaul / Town and Mine Map Overhaul 3.2 (2026-11-27): the 866-hour economy. Pickaxe costs past
+-- Rootheart rise about 1.55x a tier (was about 1.85x, 550 million for the last one), the pickaxe's value grows with power^0.62
+-- (was its square root), and each layer's ore is worth C.LAYER_MULT times layer 1's (was 3^(L-1) in four places).
+C.LAYER_MULT = { 1, 5, 25, 120, 600, 3000, 15000 }
+function C.layerValueMult(L) return C.LAYER_MULT[math.clamp(math.floor(L or 1), 1, #C.LAYER_MULT)] end
 function C.pickValue(tier, lv) -- ore value multiplier in the caves
-	return math.sqrt(C.PICKS[tier].power) * (1 + C.FORGE.lvValue * ((lv or 1) - 1))
+	return (C.PICKS[tier].power ^ 0.62) * (1 + C.FORGE.lvValue * ((lv or 1) - 1))
 end
+-- Forge Temper (2026-11-27): the gem levels are one account-wide temper that every pickaxe uses (the server keeps s.temper and
+-- copies it to each owned pickaxe's level), so the cost no longer depends on which pickaxe is held
 function C.upgradeCost(tier, lv) -- gems to go from lv to lv + 1, nil at the max level
-	local g = C.FORGE.gems[lv or 1]
-	return g and math.floor(g * (1 + (C.PICK_RARITY[tier] - 1) * 0.5) + 0.5)
+	return C.FORGE.gems[lv or 1]
 end
 function C.strikeArc(lv) -- the Perfect Strike gold zone in degrees
 	return C.DEPOSIT.arc + C.FORGE.lvArc * ((lv or 1) - 1)
@@ -255,6 +261,20 @@ C.PICK_ORE = {
 	[25] = { ["5.3"] = 60, ["3.2"] = 100 }, [26] = { ["5.3"] = 90, ["5.1"] = 300 }, [27] = { ["5.3"] = 120, ["6.3"] = 30 },
 	[28] = { ["5.3"] = 160, ["4.3"] = 200 }, [29] = { ["5.3"] = 220, ["3.3"] = 200 },
 }
+-- Deposit hardness gates (Town and Mine Map Overhaul 3.1, 2026-11-27): each layer's base, mid and rare ore needs at least this
+-- pickaxe tier; a weaker pickaxe bounces off with sparks and the prompt names the tier. The wanted ladder is clamped so every
+-- pickaxe recipe stays possible: an ore a recipe needs never asks for that pickaxe or a later one.
+C.MIN_TIER_WANT = { { 1, 2, 4 }, { 6, 8, 10 }, { 12, 14, 16 }, { 18, 20, 22 }, { 24, 25, 26 }, { 26, 27, 28 }, { 28, 29, 29 } }
+C.MIN_TIER = {}
+for L, row in C.MIN_TIER_WANT do
+	C.MIN_TIER[L] = {}
+	for o, t in row do
+		local cap = t
+		for i, need in C.PICK_ORE do if need[L .. "." .. o] then cap = math.min(cap, i - 1) end end
+		C.MIN_TIER[L][o] = math.max(1, cap)
+	end
+end
+function C.minTier(L, o) local r = C.MIN_TIER[tonumber(L) or 1] return r and r[tonumber(o) or 1] or 1 end
 -- ore icons for the forge's have/need chips (art/icons_soft, ChatGPT via Codex imagegen, 2026-11-09)
 C.ORE_ICON = { ["1.1"] = "rbxassetid://75783670652886", ["1.2"] = "rbxassetid://78471713808749", ["1.3"] = "rbxassetid://87100596939076", ["2.1"] = "rbxassetid://100049353460587", ["2.2"] = "rbxassetid://138271387658933", ["2.3"] = "rbxassetid://84304854874096", ["3.1"] = "rbxassetid://105789721830747", ["3.2"] = "rbxassetid://105263817138186", ["3.3"] = "rbxassetid://139140232453040" }
 function C.oreName(key) -- "1.2" -> "Ashcoal"

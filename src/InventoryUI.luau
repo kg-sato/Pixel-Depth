@@ -91,7 +91,7 @@ function M.start(E)
 		local o = L and C.LAYERS[L] and C.LAYERS[L][4][i]
 		if not o or not st then return 0 end
 		local eq = st.equip or 1
-		return math.max(1, math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(eq, st.lv and st.lv[tostring(eq)]) + 0.5))
+		return math.max(1, math.floor(o[4] * C.layerValueMult(L) * C.pickValue(eq, st.lv and st.lv[tostring(eq)]) + 0.5))
 	end
 	local function neededBy(key) -- how many of this ore the next pickaxe asks for (a reminder tag, never a lock)
 		local nxt = st and C.PICK_ORE[(st.pick or 1) + 1]

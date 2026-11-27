@@ -12,17 +12,19 @@ M.STORY = {
 	{ id = "ride", title = "Ride the minecart", hint = "Ride the minecart down!", ev = "ride", n = 1, coins = 20, point = "cart" },
 	{ id = "first", cave = true, title = "Extract your first ore", hint = "Find a glinting vein and mine it!", ev = "extract", n = 1, coins = 30, point = "deposit" },
 	{ id = "three", cave = true, title = "Extract 3 more deposits", hint = "Mine 3 more glinting veins!", ev = "extract", n = 3, coins = 40, point = "deposit" },
-	{ id = "sell", title = "Sell ore to Bolt", hint = "Ride up and sell ore to Bolt!", ev = "sell", n = 1, coins = 50, point = "sell" },
+	{ id = "sell", title = "Sell ore at the market", hint = "Ride up and sell ore to Pip!", ev = "sell", n = 1, coins = 50, point = "sell" },
 	{ id = "forge", title = "Forge a new pickaxe", hint = "Forge a new pickaxe at Bolt's!", ev = "buy", n = 1, gems = 5, point = "forge" },
-	{ id = "hatch", title = "Hatch an egg", hint = "Hatch an egg from Maribel!", ev = "hatch", n = 1, gems = 5, point = "egg" },
+	{ id = "hatch", title = "Hatch an egg", hint = "Hatch an egg at the hatchery!", ev = "hatch", n = 1, gems = 5, point = "egg" },
 	{ id = "chest", title = "Open the daily relic chest", hint = "Open the relic chest at spawn!", ev = "chest", n = 1, coins = 60, point = "chest" },
-	-- chapter 2, the Clay Caves (2026-11-10 night): no guide marker (no `point`), the hint says where to go
-	{ id = "warden", title = "Calm the Root Warden", hint = "Forge Rootheart, calm the Warden!", ev = "warden", n = 1, gems = 10 },
-	{ id = "clay", cave = true, title = "Go down to the Clay Caves", hint = "Go down past the Deep Gate!", ev = "clay", n = 1, coins = 100 },
-	{ id = "jars", cave = true, title = "Smash 3 clay jars", hint = "Smash 3 jars in the Clay Caves!", ev = "jar", n = 3, coins = 120 },
-	{ id = "echo", cave = true, title = "Win Echo Tap", hint = "Tap an echo wall, find the drum!", ev = "echo", n = 1, coins = 120 },
-	{ id = "geode", cave = true, title = "Crack a geode", hint = "Crack a geode at the kiln anvil!", ev = "geode", n = 1, gems = 6 },
-	{ id = "fossil", cave = true, title = "Brush a fossil clean", hint = "Gently brush a pale wall slab!", ev = "fossil", n = 1, gems = 6 },
+	-- chapter 2, the Clay Caves (2026-11-10 night). Since 2026-11-27 each points at its place too (Shared.QuestUI finds the nearest
+	-- prompt with that attribute in the caves; up in town it leads to the cart): the Warden's gate, the way down, a jar, an echo
+	-- wall, the geode anvil, a fossil slab
+	{ id = "warden", title = "Calm the Root Warden", hint = "Forge Rootheart, calm the Warden!", ev = "warden", n = 1, gems = 10, point = "warden" },
+	{ id = "clay", cave = true, title = "Go down to the Clay Caves", hint = "Go down past the Deep Gate!", ev = "clay", n = 1, coins = 100, point = "clay" },
+	{ id = "jars", cave = true, title = "Smash 3 clay jars", hint = "Smash 3 jars in the Clay Caves!", ev = "jar", n = 3, coins = 120, point = "jars" },
+	{ id = "echo", cave = true, title = "Win Echo Tap", hint = "Tap an echo wall, find the drum!", ev = "echo", n = 1, coins = 120, point = "echo" },
+	{ id = "geode", cave = true, title = "Crack a geode", hint = "Crack a geode at the kiln anvil!", ev = "geode", n = 1, gems = 6, point = "geode" },
+	{ id = "fossil", cave = true, title = "Brush a fossil clean", hint = "Gently brush a pale wall slab!", ev = "fossil", n = 1, gems = 6, point = "fossil" },
 }
 M.DAILY = {
 	{ id = "d_extract", title = "Extract 6 deposits", ev = "extract", n = 6, coins = 120 },

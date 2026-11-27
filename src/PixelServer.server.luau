@@ -246,7 +246,7 @@ local UNBREAKABLE = { bedrock = true, crust = true }
 
 local function cellInfo(kind, r) -- ore name, colour, value and hp of a solid cell
 	local L = layerOf(r)
-	local hpScale, valScale = 2 ^ (L - 1), 3 ^ (L - 1)
+	local hpScale, valScale = 2 ^ (L - 1), C.layerValueMult(L)
 	if kind == "egg" then
 		return { ore = "Fossil Egg", col = C.EGG_COLOR, v = 0, hp = 2 * hpScale }
 	end
@@ -522,6 +522,7 @@ local function save(s) -- mirror the saved fields into the ProfileStore session 
 	d.gold, d.pick, d.pack, d.best, d.hatched, d.pity, d.step = s.gold, s.pick, s.pack, s.best, s.hatched, s.pity, s.step
 	d.eggs, d.lastSeen, d.deepest = s.eggs, os.time(), s.deepest
 	d.gems, d.lv, d.equip, d.tips, d.ores = s.gems, s.lv, s.equip, s.tips, s.ores
+	d.temper = s.temper -- Forge Temper, account-wide (2026-11-27)
 	d.wear, d.quests, d.lanterns, d.found = s.wear, s.quests, s.lanterns, s.found
 	d.opts = s.opts or {}
 	d.gift = s.gift -- the playtime gift ladder of today (ServerScriptService.Retention)
@@ -560,6 +561,7 @@ local function trophies(s) -- which trophy cases this player has filled (Shared.
 	if s.player:GetAttribute("Trophies") ~= str then s.player:SetAttribute("Trophies", str) end
 end
 local function sendState(s)
+	if s.temper then for i = 1, s.pick do s.lv[tostring(i)] = s.temper end end -- Forge Temper: every owned pickaxe uses the one account-wide level
 	save(s)
 	trophies(s)
 	local pets = {}
@@ -713,7 +715,7 @@ local function hit(s, r, c, d, dmg, who, crit)
 		local L0, L1 = layerOf(math.max(s.deepest, 1)), layerOf(r)
 		s.deepest = r
 		if L1 > L0 and s.deepest > 1 then -- first time into a new layer: a depth reward
-			local bonus = 25 * 3 ^ (L1 - 1)
+			local bonus = 25 * C.layerValueMult(L1)
 			s.gold += bonus
 			FxR:FireClient(s.player, "newLayer", L1, bonus)
 		end
@@ -1485,7 +1487,7 @@ do -- selling at Bolt (playtest 2, board PT2_Sell): the player picks stacks from
 		L, i = tonumber(L), tonumber(i)
 		local o = L and C.LAYERS[L] and C.LAYERS[L][4][i]
 		if not o then return nil end
-		return math.max(1, math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) + 0.5))
+		return math.max(1, math.floor(o[4] * C.layerValueMult(L) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) + 0.5))
 	end
 	SellPickR.OnServerEvent:Connect(function(plr, list)
 		local s = data[plr]
@@ -1594,7 +1596,7 @@ game:GetService("ProximityPromptService").PromptTriggered:Connect(function(promp
 	local SH = C.DEPOSIT.shrines
 	coolSet(s, key, SH.regrow)
 	local L = chest:GetAttribute("Layer") or 1
-	local gold = SH.gold * 3 ^ (L - 1)
+	local gold = SH.gold * C.layerValueMult(L)
 	s.gold += gold
 	s.gems += SH.gems
 	A.earn(s, "Coins", gold, s.gold, "CaveShrine")
@@ -1742,7 +1744,7 @@ local function finishMinigame(s)
 	local L, idx = mg.dep:GetAttribute("Layer"), mg.dep:GetAttribute("Ore")
 	local o = C.LAYERS[L][4][idx]
 	if idx == 3 and mg.dep.PrimaryPart then pcall(function() require(game:GetService("ServerScriptService").PingRelay).auto(s.player, mg.dep.PrimaryPart.Position) end) end -- a rare vein calls itself out to the crew (directive v13)
-	local v = math.floor(o[4] * 3 ^ (L - 1) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) * Retention.valueMult(s.player) * CaveEvents.riftMult(mg.dep:GetPivot().Position) + 0.5) -- worth more with a friend in the server (the Lantern Tether) and in the Clay Caves during a Crystal Rift
+	local v = math.floor(o[4] * C.layerValueMult(L) * C.pickValue(s.equip, s.lv[tostring(s.equip)]) * Retention.valueMult(s.player) * CaveEvents.riftMult(mg.dep:GetPivot().Position) + 0.5) -- worth more with a friend in the server (the Lantern Tether) and in the Clay Caves during a Crystal Rift
 	local job = PetJobs.perks(crewOf(s)) -- Kobold +1 ore, Goldbristle +1 on rare, Ninering doubles every 9th deposit
 	count += job.ore + (idx == 3 and job.rareOre or 0)
 	local flawless = (mg.kind == "strike" and mg.perfects >= D.strikes) or (mg.kind ~= "strike" and grade == D.grades[1][1])
@@ -1866,6 +1868,11 @@ for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
 		local s, hrp = data[plr], hrpOf(plr)
 		if not s or not hrp or s.mg or (s.claimed[dep] and os.clock() < s.claimed[dep]) or not plr:GetAttribute("InCave") then return end
 		if (hrp.Position - core.Position).Magnitude > D.reach * (C.CHARMS_ON and s.charms.magnet and 2 or 1) + 4 then return end -- the Ore Magnet charm doubles the reach
+		local need = C.minTier(dep:GetAttribute("Layer"), dep:GetAttribute("Ore")) -- the hardness gate (2026-11-27): the held pickaxe's tier
+		if (s.equip or 1) < need then
+			FxR:FireClient(plr, "needTier", need, C.PICKS[need] and C.PICKS[need].name or "", dep)
+			return
+		end
 		local now = workspace:GetServerTimeNow()
 		local starts = dep:GetAttribute("CoopStarts") or "" -- recent starts on this deposit, "userId:time;..." (co-op bonus)
 		local coop, keep = false, {}
@@ -2155,13 +2162,13 @@ BuyR.OnServerEvent:Connect(function(plr, what, arg)
 			mountGear(s)
 			FxR:FireClient(plr, "equipped", arg)
 		else
-			local lv = s.lv[tostring(arg)] or 1
+			local lv = s.temper or 1 -- Forge Temper (2026-11-27): one account-wide level, whichever pickaxe the button sits on
 			local cost = C.upgradeCost(arg, lv)
 			if not cost or s.gems < cost then return end
 			s.gems -= cost
 			A.spend(s, "Gems", cost, s.gems, "ForgeLevel")
 			A.step(s, "FirstUpgrade")
-			s.lv[tostring(arg)] = lv + 1
+			s.temper = lv + 1
 			FxR:FireClient(plr, "upgraded", arg, lv + 1)
 		end
 		sendState(s)
@@ -2277,7 +2284,7 @@ local function buildShrine(s, f, L, r0)
 		if plr ~= s.player or chest:GetAttribute("Opened") then return end
 		chest:SetAttribute("Opened", true)
 		pr.Enabled = false
-		local gold = 60 * 3 ^ (L - 1)
+		local gold = 60 * C.layerValueMult(L)
 		s.gold += gold
 		FxR:FireClient(plr, "chest", chest, gold, C.LAYERS[L][1])
 		sendState(s)
@@ -2336,7 +2343,7 @@ local function dailyChest(s)
 	end
 	s.streak = d.chestDay == day - 1 and math.min((d.streak or 0) + 1, 7) or math.max(d.streak or 0, 1) -- a missed day only pauses the streak
 	d.chestDay, d.streak = day, s.streak
-	local gold = C.CHEST_GOLD * s.streak * 3 ^ (layerOf(math.max(s.deepest, 1)) - 1)
+	local gold = C.CHEST_GOLD * s.streak * C.layerValueMult(layerOf(math.max(s.deepest, 1)))
 	local gems = C.GEMS.chest * s.streak
 	s.gold += gold
 	s.gems += gems
@@ -2536,6 +2543,11 @@ local function onJoin(plr)
 			s.gold += gold
 			s.nightReport = { math.floor(away / 60), gold }
 		end
+	end
+	do -- Forge Temper (2026-11-27): the highest level any pickaxe reached (or the saved temper) becomes the account-wide temper
+		local t = tonumber(d.temper) or 1
+		for _, v in s.lv do if type(v) == "number" then t = math.max(t, v) end end
+		s.temper = math.clamp(math.floor(t), 1, C.FORGE.maxLv)
 	end
 	data[plr] = s
 	-- Codex save audit 2026-11-20: ProfileStore's own shutdown save may run before any BindToClose of ours, so the live session is

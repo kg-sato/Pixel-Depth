@@ -233,6 +233,24 @@ function M.start(E)
 	tagText.Font, tagText.TextStrokeColor3 = E.HEAD or Enum.Font.Bangers, E.GLASS and Color3.fromRGB(30, 20, 66) or Color3.fromRGB(59, 36, 22)
 	tagText.ZIndex = 3
 	local PLACE = { cart = { "HubCart", "RIDE" }, sell = { "SellStall", "SELL" }, forge = { "Forge", "FORGE" }, egg = { "Incubator", "EGG" }, chest = { "DailyChest", "OPEN" } }
+	-- chapter 2's places in the caves (2026-11-27): the prompt attribute to look for, the word on the sign
+	local CAVEPT = { warden = { "BossGate", "WARDEN" }, clay = { "ClayPortal", "DOWN" }, jars = { "ClayJar", "SMASH" }, echo = { "Echo", "TAP" }, geode = { "GeodeAnvil", "CRACK" }, fossil = { "Fossil", "BRUSH" } }
+	local caveCache, caveAt = {}, 0
+	local function cavePrompts(attr) -- the prompts with that attribute in the caves, scanned at most every 10 s
+		if os.clock() - caveAt > 10 then
+			caveAt, caveCache = os.clock(), {}
+			local caves = workspace:FindFirstChild("Caves")
+			for _, d in caves and caves:GetDescendants() or {} do
+				if d:IsA("ProximityPrompt") then
+					for k in CAVEPT do
+						local a = CAVEPT[k][1]
+						if d:GetAttribute(a) ~= nil then caveCache[a] = caveCache[a] or {} table.insert(caveCache[a], d) end
+					end
+				end
+			end
+		end
+		return caveCache[attr] or {}
+	end
 	local function target() -- the world position and the word, or nil
 		local st, sp = Quests.guide(q)
 		if not st or sp >= st.n or not st.point then return nil end -- chapter 2 quests have no place to point at
@@ -255,6 +273,22 @@ function M.start(E)
 				end
 			end
 			if best then return best.Position + Vector3.new(0, 3.5, 0), "MINE" end
+			return nil
+		end
+		local cp = CAVEPT[st.point]
+		if cp then
+			if not inCave then return over(hub and hub:FindFirstChild("HubCart", true), "RIDE") end
+			local h, best, bd = E.hrp(), nil, nil
+			for _, pr in cavePrompts(cp[1]) do
+				local v = pr:GetAttribute(cp[1])
+				local par = pr.Parent
+				local at = par and (par:IsA("Attachment") and par.WorldPosition or (par:IsA("BasePart") and par.Position))
+				if at and pr.Enabled and h and (st.point ~= "warden" or v == true or v == 1) then
+					local m = (at - h.Position).Magnitude
+					if not bd or m < bd then best, bd = at, m end
+				end
+			end
+			if best then return best + Vector3.new(0, 3.5, 0), cp[2] end
 			return nil
 		end
 		if inCave then -- the place is up in town: lead back to the camp's cart
