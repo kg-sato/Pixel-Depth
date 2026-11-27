@@ -30,7 +30,7 @@ function M.start(E)
 		return new("TextLabel", parent, { Text = s, Font = font or E.FONT, TextScaled = true, TextColor3 = color or WHITE, BackgroundTransparency = 1, Size = size, Position = pos, AnchorPoint = MID, ZIndex = 3 })
 	end
 
-	local TITLE = { forge = "BOLT'S FORGE", sell = "SELL ORE", hatch = "EGG STALL", map = "MINE MAP", chest = "DAILY CHEST" }
+	local TITLE = { forge = "BOLT'S FORGE", sell = "SELL ORE", hatch = "EGG STALL", eggs = "EGG HATCHERY", map = "MINE MAP", chest = "DAILY CHEST" }
 	-- each station's lines: returns { { text, colour }, ... } (two or three short lines) and whether the card should glow gold
 	local LINES = {
 		forge = function()
@@ -53,7 +53,7 @@ function M.start(E)
 		sell = function()
 			local n = 0
 			for _, v in state.bagOres or {} do n += v end
-			return { { "BAG " .. (state.bag or n) .. "/" .. (state.cap or 10), WHITE }, { n > 0 and "Bolt buys your spare ore." or "Nothing to sell yet.", n > 0 and MINT or EDGE } }, false
+			return { { "BAG " .. (state.bag or n) .. "/" .. (state.cap or 10), WHITE }, { n > 0 and "Pip buys your spare ore." or "Nothing to sell yet.", n > 0 and MINT or EDGE } }, false
 		end,
 		hatch = function()
 			local eggs = state.eggs or 0
@@ -79,7 +79,10 @@ function M.start(E)
 		local title = require(script.Parent:WaitForChild("JellyText")).new(holder, TITLE[kind] or string.upper(kind), { color = Color3.new(1, 1, 1), z = 3 }) -- jelly glass letters
 		new("Frame", card, { Size = UDim2.new(1, 0, 0, 2), Position = UDim2.fromScale(0, 0.27), BackgroundColor3 = EDGE, BackgroundTransparency = 0.3, BorderSizePixel = 0, ZIndex = 3 })
 		local rows = {}
-		for i = 1, 3 do rows[i] = label(card, "", UDim2.fromScale(0.9, 0.17), UDim2.fromScale(0.5, 0.27 + i * 0.2), WHITE, i == 1 and E.HEAD or E.FONT) end
+		for i = 1, 3 do
+			rows[i] = label(card, "", UDim2.fromScale(0.9, 0.17), UDim2.fromScale(0.5, 0.27 + i * 0.2), WHITE, i == 1 and E.HEAD or E.FONT)
+			new("UIPadding", rows[i], { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10) }) -- audit 2026-11-26 text 1: the first letter clipped ("othing to sell yet.")
+		end
 		local sc = new("UIScale", card, { Scale = 0.6 })
 		local c = { sg = sg, title = title, part = part, kind = kind, board = board, card = card, edge = edge, rows = rows, sc = sc, sheen = sheen, top = top, open = false }
 		function c.fill()
@@ -115,6 +118,7 @@ function M.start(E)
 		end
 	end
 
+	LINES.eggs = LINES.hatch -- town overhaul 2026-11-27: the hatchery's one prompt
 	LINES.chest = nil -- v10 (Gemini: "the DAILY CHEST card stacks over its own [F] OPEN prompt"): the chest keeps only its prompt
 	local stations = {}
 	local function adopt(p)

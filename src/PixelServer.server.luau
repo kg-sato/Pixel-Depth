@@ -2358,6 +2358,7 @@ end)
 
 local STATION = {
 	quests = function(s) FxR:FireClient(s.player, "openQuests") end,
+	eggs = function(s) FxR:FireClient(s.player, "openHatchery") end, -- town overhaul 2026-11-27: the hatchery's one prompt opens BUY / ODDS / HATCH (Shared.HatcheryUI)
 	sell = function(s) -- Bolt and the sell stall open the sell screen (InventoryUI): pick stacks from the ore bank
 		if C.CAVES_ON then FxR:FireClient(s.player, "openSell") else sell(s) end
 	end,
@@ -2407,6 +2408,14 @@ for _, d in hub:GetDescendants() do
 			if s and STATION[kind] and not plr:GetAttribute("InCave") and nearPrompt(plr, d) then STATION[kind](s) end
 		end)
 	end
+end
+do -- the Egg Hatchery panel's BUY and HATCH buttons: the same station code, only beside the hatchery and only in town
+	local base = hub:FindFirstChild("Incubator") and hub.Incubator:FindFirstChild("Base")
+	local pr = base and base:FindFirstChildOfClass("ProximityPrompt")
+	remote("Hatchery").OnServerEvent:Connect(function(plr, what)
+		local s = data[plr]
+		if s and pr and (what == "buyEgg" or what == "hatch") and not plr:GetAttribute("InCave") and nearPrompt(plr, pr) then STATION[what](s) end
+	end)
 end
 local pit = hub:FindFirstChild("PitFloor", true) -- jumping into the glowing pit also takes the lift down
 pit.Touched:Connect(function(hitPart)

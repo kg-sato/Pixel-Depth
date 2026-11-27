@@ -16,9 +16,12 @@ function M.start(E)
 	local GOLD, WHITE, PINK = Color3.fromRGB(255, 214, 107), Color3.new(1, 1, 1), Color3.fromRGB(255, 0, 127)
 	local live -- { t0, folder, ring, conn, sent }
 	local function anvil()
-		local f = workspace:FindFirstChild("Hub") and workspace.Hub:FindFirstChild("Forge")
-		for _, d in f and f:GetDescendants() or {} do -- the part that carries the crack prompt (Bolt's workbench)
-			if d:IsA("ProximityPrompt") and d:GetAttribute("GeodeCrack") then return d.Parent end
+		local hub = workspace:FindFirstChild("Hub")
+		for _, n in { "GeodeRefinery", "Forge" } do -- the part that carries the crack prompt (the refinery's bench since 2026-11-27)
+			local f = hub and hub:FindFirstChild(n)
+			for _, d in f and f:GetDescendants() or {} do
+				if d:IsA("ProximityPrompt") and d:GetAttribute("GeodeCrack") then return d.Parent end
+			end
 		end
 		return nil
 	end

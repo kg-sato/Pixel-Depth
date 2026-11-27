@@ -5,6 +5,9 @@
 local M = {}
 local NEAR, FAR, GHOST = 14, 34, 0.6 -- full inside NEAR studs, GHOST transparency beyond FAR
 local KEEP = { ChronicleSlab = true }
+-- town overhaul 2026-11-27 (vault Briefs/Town and Mine Map Overhaul 1.3): the station boards themselves never fade, so you can read
+-- every place from the high camera; only small signs (the signpost arms, the friends board) sink back with distance
+local PRIMARY = { MINE = true, SELL = true, FORGE = true, REFINERY = true, EGGS = true, QUESTS = true, TROPHIES = true, ["CREW HEARTH"] = true }
 
 function M.start(E)
 	local plr = E.plr
@@ -14,6 +17,11 @@ function M.start(E)
 		local part = sg.Adornee or sg.Parent
 		if not (part and part:IsA("BasePart")) or KEEP[part.Name] then return end
 		if not part:FindFirstAncestor("Hub") and not part:FindFirstAncestor("Town") then return end
+		if not part:FindFirstAncestor("Signpost") then
+			for _, o in sg:GetDescendants() do
+				if (o:IsA("TextLabel") or o:IsA("TextButton")) and PRIMARY[string.upper(o.Text)] then return end
+			end
+		end
 		local list = {}
 		for _, o in sg:GetDescendants() do
 			if o:IsA("TextLabel") or o:IsA("TextButton") then table.insert(list, { o, "TextTransparency", o.TextTransparency })

@@ -104,9 +104,9 @@ local function stepRoof(g, at, w, d, y0, tex, step, run)
 	run = run or step
 	local n = math.floor(d / 2 / run)
 	for i = 0, n - 1 do
-		tvox(g, "Roof", Vector3.new(w, step, d - i * 2 * run), at(0, y0 + (i + 0.5) * step, 0), tex, 4)
+		tvox(g, "Roof", Vector3.new(w, step, d - i * 2 * run), at(0, y0 + (i + 0.5) * step, 0), tex, 4):SetAttribute("RoofFadeTarget", true)
 	end
-	tvox(g, "Ridge", Vector3.new(w + 0.6, 0.8, 1.4), at(0, y0 + n * step + 0.3, 0), "beam", 4)
+	tvox(g, "Ridge", Vector3.new(w + 0.6, 0.8, 1.4), at(0, y0 + n * step + 0.3, 0), "beam", 4):SetAttribute("RoofFadeTarget", true)
 	return y0 + n * step
 end
 -- Stepped gable ends under a stepRoof: bars on the two side walls (x = +-x), each shorter than the one below
@@ -135,7 +135,7 @@ local function sign(g, text, cf, w, h, fg, plain, postH)
 		tvox(g, "SignArm", Vector3.new(1.4, 0.3, 0.3), CFrame.new(arm - cf.RightVector * 0.3), "beam", 2, { CanCollide = false })
 		cubeLantern(g, arm + cf.RightVector * 0.2 - Vector3.new(0, 1.2, 0), 0.5, 0.55)
 	end
-	cf = cf * CFrame.Angles(math.rad(cf.LookVector.Z > 0 and 45 or -45), 0, 0) -- the face the camera sees (it sits south: C.CAM_YAW 0, pitch 52) tilts up toward it
+	cf = cf * CFrame.Angles(math.rad(45 * math.clamp(cf.LookVector.Z, -1, 1)), 0, 0) -- the face the camera sees (it sits south: C.CAM_YAW 0, pitch 52) tilts up toward it; a board turned edge-on to the camera stays upright (town overhaul 2026-11-27: the fixed +-45 cross-tilted the signpost arms)
 	local WOOD, WOOD_DARK, CARVED = Color3.fromRGB(202, 146, 88), Color3.fromRGB(84, 52, 34), Color3.fromRGB(255, 246, 220) -- 2026-11-11: carved wooden boards (the cream plates with ink pixel letters clashed with the soft HUD)
 	-- regrade 2026-11-11: cream letters on a dark stained face inside a light timber rim (contrast about 7:1; the light rim keeps the outline against the night ground)
 	local board = vox(g, "Sign", Vector3.new(w, h, 0.4), cf, plain or WOOD_DARK, { CanCollide = false, Material = Enum.Material.Wood })
@@ -143,7 +143,7 @@ local function sign(g, text, cf, w, h, fg, plain, postH)
 	if fg then vox(g, "SignTrim", Vector3.new(w, 0.3, 0.46), cf * CFrame.new(0, -h / 2 + 0.25, 0), fg, { CanCollide = false }) end
 	for _, face in { N.Back, N.Front } do
 		local sg = Instance.new("SurfaceGui")
-		sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence = face, Enum.SurfaceGuiSizingMode.PixelsPerStud, 40, 0
+		sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence = face, Enum.SurfaceGuiSizingMode.PixelsPerStud, 55, 0
 		local t = Instance.new("TextLabel")
 		t.Name = "Label"
 		t.Size, t.BackgroundTransparency, t.Text, t.TextScaled = UDim2.fromScale(1, 1), 1, text, true
@@ -363,9 +363,9 @@ function Hub.build(parent, origin)
 		skin(vox(ground, "Meadow", Vector3.new(b[3], 6, b[4]), CFrame.new(W(b[1], -2.4, b[2])), AVG.grass), "grass", 6, { N.Top })
 	end
 	-- the small square round the shaft: cobbles with a ragged edge (top y 1.1)
-	for z = -20, 18, 3 do
+	for z = -20, 24, 3 do
 		local zc = z + 1.5
-		local half = 17 * math.sqrt(math.max(0, 1 - (zc / 20.5) ^ 2)) + (hash(z, 2, 2) - 0.5) * 4
+		local half = 22 * math.sqrt(math.max(0, 1 - (zc / 26.5) ^ 2)) + (hash(z, 2, 2) - 0.5) * 4
 		if half > 3 then
 			local spans = math.abs(zc) < 8 and { { -half, -7.5 }, { 7.5, half } } or { { -half, half } }
 			for _, sp in spans do
@@ -564,19 +564,27 @@ function Hub.build(parent, origin)
 			end
 		end
 	end
-	lane({ P(-13, 3), P(-18, 1), P(-23, 4), P(-28, 3) }, 5, "cobble_lane") -- to the sell stall (the ore cart rails run along it)
-	lane({ P(-11, -11), P(-17, -19), P(-26, -14), P(-32, -22) }, 5, "cobble_lane") -- to the forge
-	lane({ P(6, -28), P(6, -31), P(6, -33), P(6, -36) }, 6, "flagstone", 4) -- up the stairs to the quest kiosk
-	lane({ P(9, -30), P(16, -28), P(24, -37), P(31, -36) }, 5, "flagstone", 4) -- along the terrace to the trophy hall
+	lane({ P(-13, 3), P(-18, 1), P(-24, 4), P(-31, 1) }, 5, "cobble_lane") -- to the sell stall (the ore cart rails run along it)
+	lane({ P(-14, -12), P(-22, -20), P(-32, -28), P(-40, -35) }, 5, "cobble_lane") -- to the forge
+	lane({ P(6, -28), P(7, -33), P(10, -38), P(12, -41) }, 6, "flagstone", 4) -- up the stairs to the quest kiosk
+	lane({ P(9, -30), P(18, -29), P(28, -38), P(37, -40) }, 5, "flagstone", 4) -- along the terrace to the trophy hall
 	lane({ P(15, 2), P(19, 6), P(22, 6), P(24, 7) }, 5, "cobble_lane") -- east to the rise steps
 	lane({ P(28, 6), P(34, 4), P(40, -2), P(44, -1) }, 4.5, "cobble_lane", 2) -- the cabins on the rise
-	lane({ P(28, 8), P(31, 14), P(33, 22), P(36, 24) }, 4.5, "cobble_lane", 2)
+	lane({ P(28, 8), P(31, 14), P(34, 20), P(39, 24) }, 4.5, "cobble_lane", 2) -- to the egg hatchery
 	lane({ P(-11, 11), P(-14, 13), P(-18, 14), P(-19, 17) }, 5, "cobble_lane") -- over the first bridge to the incubator
-	steps({ P(-19, 27), P(-21, 30), P(-26, 30.5), P(-30, 30) })
+	steps({ P(-19, 27), P(-22, 31), P(-27, 35), P(-31, 38) }) -- to the geode refinery (2026-11-27)
 	lane({ P(3, 19), P(5, 24), P(7, 28), P(9, 31) }, 5, "cobble_lane") -- south to the campfire glade
 	steps({ P(2, 42), P(0, 43), P(-3, 43.5), P(-4.5, 43.8) }) -- the glade loop over the second bridge to the garden
 	steps({ P(-13.5, 48.3), P(-14.5, 49.5), P(-15.5, 50.5), P(-16.5, 51) })
 
+	-- town overhaul 2026-11-27 (vault Briefs/Town and Mine Map Overhaul): one job per station, 20-stud lanes between them, and no
+	-- tree, clutter pile or bush inside these circles (x, z, radius): the square, the sell market, the forge, the geode refinery,
+	-- the egg hatchery, the chronicle, the quest board, the trophy hall and the crew cabin
+	local CLEAR = { { 0, 2, 24 }, { -39, -2, 13 }, { -50, -44, 16 }, { -40, 37, 12 }, { 44, 26, 12 }, { -14, -44, 8 }, { 14, -48, 12 }, { 44, -46, 15 }, { 48, -2, 11 } }
+	local function clearOf(x, z, r)
+		for _, c in CLEAR do if (x - c[1]) ^ 2 + (z - c[2]) ^ 2 < (c[3] + r) ^ 2 then return false end end
+		return true
+	end
 	-- voxel trees v2 (refs: art/hub/refs/README.md, Trees): a trunk in two bent segments with a root flare, branches for the
 	-- blossom and wisteria kinds, and a canopy of shaded clumps (dark underside, light top, loose leaf cubes breaking the outline).
 	-- Kinds: round (mint), blossom (pink, petals on the ground), wisteria (lilac, hanging strands), bonsai (flat layered pads).
@@ -682,7 +690,7 @@ function Hub.build(parent, origin)
 		{ 44, 56, 1, "wisteria" }, { 60, 48, 1.3 }, { 58, -20, 1, "bonsai" }, { 54, -42, 1.2, "blossom" }, { -8, -58, 1.3 }, { 22, -62, 1.1, "wisteria" }, { 20, -18, 0.9, "blossom" },
 		{ 18, 24, 0.8, "bonsai" }, { -48, -18, 0.8, "blossom" }, { 62, 12, 1.1 }, { -66, 6, 1.1, "wisteria" },
 		{ -38, 54, 0.9, "blossom" }, { 14, 56, 0.8 }, { 44, 12, 0.85, "wisteria" } } do
-		tree(t[1], t[2], t[3], t[4])
+		if clearOf(t[1], t[2], 4.5 * t[3]) then tree(t[1], t[2], t[3], t[4]) end
 	end
 
 	-- the vegetable garden by the second bridge: soil rows, sprouts, pumpkins, a picket fence with a gate on the east side
@@ -729,7 +737,7 @@ function Hub.build(parent, origin)
 		vox(g, "Rope", Vector3.new(0.12, 0.9, 0.12), CFrame.new(c + Vector3.new(0.4, 3.1, 0.3)), PAL.cream[1], { CanCollide = false })
 		local sp = group("Signpost")
 		local q = W(11, 1.1, -14)
-		tvox(sp, "Post", Vector3.new(0.6, 6.2, 0.6), CFrame.new(q + Vector3.new(0, 3.1, 0)), "beam", 2)
+		tvox(sp, "Post", Vector3.new(0.7, 10.6, 0.7), CFrame.new(q + Vector3.new(0, 5.3, 0)), "beam", 2)
 		-- directive v13 (Gemini round 1: the post stabbed the paving): a stone footing collar with cobbles at its foot, and a small
 		-- hooded lantern on the finial so the boards read at night without a torch beside them
 		vox(sp, "PostFoot", Vector3.new(2.0, 0.7, 2.0), CFrame.new(q + Vector3.new(0, 0.33, 0)) * CFrame.Angles(0, 0.35, 0), PAL.stone[3])
@@ -738,13 +746,19 @@ function Hub.build(parent, origin)
 			local a = k * 1.7 + 0.4
 			vox(sp, "PostCobble", Vector3.new(0.8, 0.4, 0.65), CFrame.new(q + Vector3.new(math.cos(a) * 1.35, 0.18, math.sin(a) * 1.35)) * CFrame.Angles(0, a, 0.1), PAL.stone[(k % 2) + 1], { CanCollide = false })
 		end
-		vox(sp, "PostLantern", Vector3.new(0.42, 0.5, 0.42), CFrame.new(q + Vector3.new(0, 6.44, 0)), Color3.fromRGB(255, 206, 120), { CanCollide = false, CastShadow = false, Material = Enum.Material.Neon })
-		vox(sp, "PostLanternHood", Vector3.new(0.72, 0.18, 0.72), CFrame.new(q + Vector3.new(0, 6.78, 0)) * CFrame.Angles(0, 0.785, 0), Color3.fromRGB(58, 44, 40), { CanCollide = false })
+		vox(sp, "PostLantern", Vector3.new(0.42, 0.5, 0.42), CFrame.new(q + Vector3.new(0, 10.84, 0)), Color3.fromRGB(255, 206, 120), { CanCollide = false, CastShadow = false, Material = Enum.Material.Neon })
+		vox(sp, "PostLanternHood", Vector3.new(0.72, 0.18, 0.72), CFrame.new(q + Vector3.new(0, 11.18, 0)) * CFrame.Angles(0, 0.785, 0), Color3.fromRGB(58, 44, 40), { CanCollide = false })
 		-- directive v13 (light = attention, a readable first sightline): each board points at its place: the mine shaft and Bolt's
 		-- forge highest, then the quest board and the crew hearth cabins (angles from the post to each station)
-		for k, d in { { "QUESTS", 100, 5.55 }, { "FORGE", 166, 4.55 }, { "CREW", -18, 3.55 }, { "MINE", -128, 2.55 } } do -- 1 stud apart (the tilted 1.12-stud boards cut into each other at 0.7); the board pointing most toward the town camera in the south sits lowest so none hides another (Gemini round 2)
-			sign(sp, d[1], CFrame.new(q + Vector3.new(0, d[3], 0)) * CFrame.Angles(0, math.rad(d[2]), 0) * CFrame.new(1.6, 0, 0), 3.4, 0.8, PAL.cream[2])
+		-- town overhaul 2026-11-27: one arm per one-job station, each turned at its station; the arm pointing most toward the town
+		-- camera in the south sits lowest so none hides another, 1 stud apart (the tilted boards cut into each other at 0.7)
+		local arms = { { "MINE", 0, 0 }, { "SELL", -39, -2 }, { "FORGE", -50, -44 }, { "REFINERY", -40, 37 }, { "EGGS", 44, 26 }, { "QUESTS", 14, -48 } }
+		table.sort(arms, function(a, b) return (a[3] - (q.Z - O.Z)) < (b[3] - (q.Z - O.Z)) end) -- the most northern first: highest
+		for k, d in arms do
+			local dx, dz = d[2] - (q.X - O.X), d[3] - (q.Z - O.Z)
+			sign(sp, d[1], CFrame.new(q + Vector3.new(0, 9.9 - (k - 1) * 1.45, 0)) * CFrame.Angles(0, math.atan2(-dz, dx), 0) * CFrame.new(2.3, 0, 0), 4, 0.95, PAL.cream[2])
 		end
+		prompt(sp:FindFirstChild("Post"), "Guide me", "Signpost", "guide").MaxActivationDistance = 9
 	end
 
 	for i = 0, 219 do -- grass tufts and flowers in the grass between the lanes
@@ -890,7 +904,7 @@ function Hub.build(parent, origin)
 	-- 3. Sell stall (west; ref art/hub/pdv4_sell_s61.jpg): a raised plank deck, a counter with drawers and brass knobs, thick posts,
 	-- a scalloped pink and cream awning, crates heaped with glowing ore, brass scales, lanterns and a SELL sign hung from the post
 	do
-		local g, at = group("SellStall"), stationAt(-36, 2, -12, 4)
+		local g, at = group("SellStall"), stationAt(-39, -2, -12, 4)
 		tvox(g, "Deck", Vector3.new(18, 1.4, 12), at(0, 1.3, -2), "planks_light", 4)
 		for _, x in { -8.6, 8.6 } do for _, z in { 3.6, -7.6 } do tvox(g, "DeckPost", Vector3.new(0.9, 1.5, 0.9), at(x, 1.2, z), "beam", 2) end end
 		tvox(g, "Counter", Vector3.new(14, 3, 2.6), at(0, 3.5, 1.6), "planks", 4)
@@ -908,11 +922,12 @@ function Hub.build(parent, origin)
 			end
 		end
 		local aw = tvox(g, "Awning", Vector3.new(17.4, 0.6, 12), at(0, top, -2) * CFrame.Angles(slope, 0, 0), "awning", 4)
+		aw:SetAttribute("RoofFadeTarget", true)
 		for i = 0, 16 do -- the scalloped front valance: rounded tabs in alternating pink and cream
 			local lip = aw.CFrame * CFrame.new(-8 + i, -0.3, 6.1) * CFrame.Angles(-slope, 0, 0)
 			local c = (math.floor(i / 2) % 2 == 0) and PAL.pink[2] or PAL.cream[3]
-			vox(g, "Scallop", Vector3.new(1, 1.2, 0.5), lip * CFrame.new(0, -0.6, 0), c, { CanCollide = false })
-			vox(g, "ScallopTip", Vector3.new(0.6, 0.45, 0.5), lip * CFrame.new(0, -1.42, 0), c, { CanCollide = false })
+			vox(g, "Scallop", Vector3.new(1, 1.2, 0.5), lip * CFrame.new(0, -0.6, 0), c, { CanCollide = false }):SetAttribute("RoofFadeTarget", true)
+			vox(g, "ScallopTip", Vector3.new(0.6, 0.45, 0.5), lip * CFrame.new(0, -1.42, 0), c, { CanCollide = false }):SetAttribute("RoofFadeTarget", true)
 		end
 		for i, ore in { ORE[1], ORE[2], ORE[3] } do oreCrate(g, at(-4.6 + (i - 1) * 4.6, 5.5, 1.6), ore, 3) end
 		for i, ore in { ORE[4], ORE[1], ORE[3] } do oreCrate(g, at(-6.4 + (i - 1) * 3.4, 1.1, 5.8) * CFrame.Angles(0, (i - 2) * 0.15, 0), ore, 2.6) end
@@ -932,7 +947,7 @@ function Hub.build(parent, origin)
 		for _, sd in { -1, 1 } do -- scallops down both flanks of the awning
 			for k = 0, 11 do
 				local lip = aw.CFrame * CFrame.new(sd * 8.75, -0.3, -5.5 + k) * CFrame.Angles(-slope, 0, 0)
-				vox(g, "Scallop", Vector3.new(0.5, k % 2 == 0 and 1.2 or 0.9, 1), lip * CFrame.new(0, k % 2 == 0 and -0.6 or -0.45, 0), (math.floor(k / 2) % 2 == 0) and PAL.pink[2] or PAL.cream[3], { CanCollide = false })
+				vox(g, "Scallop", Vector3.new(0.5, k % 2 == 0 and 1.2 or 0.9, 1), lip * CFrame.new(0, k % 2 == 0 and -0.6 or -0.45, 0), (math.floor(k / 2) % 2 == 0) and PAL.pink[2] or PAL.cream[3], { CanCollide = false }):SetAttribute("RoofFadeTarget", true)
 			end
 		end
 		do -- a price ledger and a quill on the counter
@@ -941,9 +956,9 @@ function Hub.build(parent, origin)
 			vox(g, "Quill", Vector3.new(0.15, 0.15, 1.4), led.CFrame * CFrame.new(0.6, 0.2, 0.1) * CFrame.Angles(0.5, 0.4, 0), PAL.pink[3], { CanCollide = false })
 		end
 		-- the SELL sign hangs from an arm on the front post, turned to face the camera (south)
-		tvox(g, "SignArm", Vector3.new(7.2, 0.5, 0.5), at(11.2, 11.8, 4.2), "beam", 2) -- out past the corner post: behind it the post and awning cut SELL to ELL (Orchestrator 2026-11-23)
+		tvox(g, "SignArm", Vector3.new(7.2, 0.5, 0.5), at(-11.2, 11.8, 4.2), "beam", 2) -- 2026-11-27: on the south post, toward the camera (north of the awning it hid behind it); out past the corner post: behind it the post and awning cut SELL to ELL (Orchestrator 2026-11-23)
 		do -- the SELL sign hangs off the front post on an arm, turned to face the camera (pairwise round 3 vs 5)
-			local sp = at(13.2, 7.6, 4.2).Position -- 7.6 (was 9.4): from the cart it hid the FORGE sign behind it ("GE", Orchestrator round 3)
+			local sp = at(-13.2, 7.6, 4.2).Position -- 7.6 (was 9.4): from the cart it hid the FORGE sign behind it ("GE", Orchestrator round 3)
 			sign(g, "SELL", CFrame.new(sp), 5, 2, GOLD)
 			for _, dx in { -1.6, 1.6 } do vox(g, "SignChain", Vector3.new(0.15, 3.1, 0.15), CFrame.new(sp + Vector3.new(dx, 2.55, 0)), PAL.stone[1], { CanCollide = false }) end
 		end
@@ -959,7 +974,7 @@ function Hub.build(parent, origin)
 	-- timber-framed plaster upper floor, a steep teal shingle gable facing front, a brick chimney with a fireplace on the right,
 	-- an anvil on a stump, a stone quench trough, a tool barrel and a lamp post
 	do
-		local g, at = group("Forge"), stationAt(-38, -26, -14, -10)
+		local g, at = group("Forge"), stationAt(-50, -44, -14, -12)
 		local cool = Color3.fromRGB(200, 196, 230) -- keeps the brick lilac next to the fire glow
 		skin(vox(g, "Apron", Vector3.new(28, 0.6, 18), at(2.5, 1.1, -3), PAL.stone[2]), "flagstone", 5, { N.Top, N.Front, N.Left, N.Right }, Color3.fromRGB(205, 200, 240))
 		skin(vox(g, "Base", Vector3.new(16, 5, 7), at(0, 3.9, -8.5), PAL.stone[2]), "stonebrick", 5, SIDES, cool)
@@ -985,13 +1000,10 @@ function Hub.build(parent, origin)
 			tvox(g, "GablePost", Vector3.new(0.5, peak - 12.6, 0.7), at(s * 8.3, (peak + 11.4) / 2 - 0.6, -5.7), "beam", 4)
 			for _, d in { -1, 1 } do tvox(g, "GableBrace", Vector3.new(0.5, 4.6, 0.5), at(s * 8.3, 14.2, -5.7 + d * 2.4) * CFrame.Angles(d * 0.8, 0, 0), "beam", 4) end
 		end
-		-- inside the alcove: a lit workbench and a tool rack on the back wall
-		tvox(g, "Bench", Vector3.new(5, 0.6, 2), at(3.4, 3.8, -4), "planks", 2)
-		for _, x in { 1.4, 5.4 } do tvox(g, "BenchLeg", Vector3.new(0.5, 2.4, 1.6), at(x, 2.6, -4), "beam", 2) end
-		local bulb = vox(g, "AlcoveLamp", Vector3.new(0.8, 0.8, 0.8), at(3.4, 4.5, -4.4), LAMP, { CanCollide = false })
-		glow(bulb, LAMP, 18, 1.6) -- brighter: the Geode Timing Crack at this bench read as a black void from the town camera (Gemini full1122f 61 s)
+		-- inside the alcove: a tool rack on the back wall and a lamp (the geode workbench moved to the Geode Refinery, 2026-11-27)
+		local bulb = vox(g, "AlcoveLamp", Vector3.new(0.8, 0.8, 0.8), at(3.4, 5.6, -4.6), LAMP, { CanCollide = false })
+		glow(bulb, LAMP, 18, 1.2)
 		tvox(g, "ToolRack", Vector3.new(6, 0.5, 0.5), at(-3, 5.4, -4.8), "beam", 2)
-		for _, o in { { 2.4, -4 }, { 3.7, -3.7 } } do vox(g, "Ingot", Vector3.new(1.2, 0.45, 0.6), at(o[1], 4.33, o[2]), EMBER, { Material = Enum.Material.Neon, CanCollide = false }) end
 		skin(vox(g, "YardWall", Vector3.new(1, 4.5, 7), at(-11, 3.65, 2), PAL.stone[2]), "stonebrick", 4, SIDES, cool) -- the yard's side wall behind the trough
 		for k = 0, 3 do tvox(g, "HungTool", Vector3.new(0.3, 2, 0.3), at(-5.2 + k * 1.4, 4.2, -4.7), k % 2 == 0 and "iron" or "beam", 1) end
 		-- a wide brick chimney on the right with a real firebox opening (4 wide, 3 tall, 2 deep) and a corbelled mantel
@@ -1053,14 +1065,13 @@ function Hub.build(parent, origin)
 			for _, dx in { -1.6, 1.6 } do vox(g, "SignChain", Vector3.new(0.15, 1.2, 0.15), CFrame.new(sp + Vector3.new(dx, 1.35, 0)), PAL.stone[1], { CanCollide = false }) end
 		end
 		prompt(anvil, "Upgrade", "Forge", "forge")
-		local bolt = raccoon("Bolt", at(1.8, 1.4, 4.6))
-		prompt(bolt:FindFirstChild("Body"), "Sell ore", "Bolt", "sell") -- playtest 2: sell at Bolt (pick stacks or SELECT ALL)
+		raccoon("Bolt", at(1.8, 1.4, 4.6)) -- the smith only forges (town overhaul 2026-11-27: his second "Sell ore" prompt beside the anvil is gone; ore sells at the market)
 	end
 
 	-- 5. Trophy hall (north-east; ref art/hub/pdv4_trophy_s61.jpg): a wide stone hall, stepped plum shingle roof, three horned
 	-- skulls along the eave, an arched double door in a stone arch, pennant bunting, fire braziers and glowing gem pedestals
 	do
-		local g, at = group("TrophyHouse"), stationAt(36, -42, 18, -18, 4)
+		local g, at = group("TrophyHouse"), stationAt(44, -46, 18, -18, 4)
 		tvox(g, "Apron", Vector3.new(26, 0.6, 19), at(0, 1.1, -3.5), "cobble", 4, nil, { N.Top, N.Front, N.Left, N.Right })
 		tvox(g, "Hall", Vector3.new(22, 11, 13), at(0, 6.9, -6.5), "stonebrick", 5)
 		gables(g, function(x, y, z) return at(x, y, z - 6.5) end, 10.6, 13, 12.4, "stonebrick")
@@ -1189,7 +1200,7 @@ function Hub.build(parent, origin)
 	-- 6. Two log guest cabins (east and south-east; ref art/hub/pdv4_cabin_s62.jpg): round-log walls with notched log ends, a front
 	-- gable with an attic window under a lower overhanging roof, a gabled porch roof, an outside fieldstone chimney, a barred
 	-- window with a flower box. The first cabin has a moss roof and pink flowers, the second teal shingles and butter flowers.
-	for n, spot in { { 48, -2, 20, 4 }, { 40, 26, 18, 14 } } do
+	for n, spot in { { 48, -2, 20, 4 } } do
 		local g, at = group("GuestCabin" .. n), stationAt(spot[1], spot[2], spot[3], spot[4], 2)
 		local roofTex = n == 1 and "moss_roof" or "shingle_teal"
 		local logTint = Color3.fromRGB(214, 198, 204)
@@ -1273,7 +1284,7 @@ function Hub.build(parent, origin)
 	-- 7. Egg incubator (south-west; ref art/hub/pdv4_incubator_s61.jpg): a stone base, a warm timber frame with clear glass and a
 	-- pitched glass roof, three big speckled eggs on twig nests, terracotta pots with succulents, two hanging lanterns
 	do
-		local g, at = group("Incubator"), stationAt(-34, 32, -10, 14)
+		local g, at = group("Incubator"), stationAt(44, 26, 18, 14, 2)
 		tvox(g, "Base", Vector3.new(15, 1.4, 13), at(0, 1.3, -5), "stonebrick", 4)
 		skin(vox(g, "Plinth", Vector3.new(17, 0.8, 15), at(0, 1.0, -5), PAL.stone[3]), "stonebrick", 4, SIDES, Color3.fromRGB(235, 232, 250))
 		for _, c in { { -7, 1 }, { 7, 1 }, { -7, -11 }, { 7, -11 }, { -2.3, 1 }, { 2.3, 1 }, { 0, -11 }, { -7, -5 }, { 7, -5 } } do
@@ -1281,12 +1292,12 @@ function Hub.build(parent, origin)
 		end
 		for _, z in { 1, -11 } do tvox(g, "Beam", Vector3.new(14.8, 0.7, 0.7), at(0, 9.6, z), "wood_frame", 4) end
 		for _, x in { -7, 7 } do tvox(g, "Beam", Vector3.new(0.7, 0.7, 12.8), at(x, 9.6, -5), "wood_frame", 4) end
-		tvox(g, "Ridge", Vector3.new(15.4, 0.8, 0.8), at(0, 13.2, -5), "wood_frame", 4)
+		tvox(g, "Ridge", Vector3.new(15.4, 0.8, 0.8), at(0, 13.2, -5), "wood_frame", 4):SetAttribute("RoofFadeTarget", true)
 		local glassProps = { Transparency = 1, CanCollide = false, CastShadow = false }
 		for _, s in { -1, 1 } do -- pitched glass roof with rafters
 			local cf = at(0, 11.4, -5 + s * 3.15) * CFrame.Angles(s * 0.62, 0, 0)
-			skin(vox(g, "RoofGlass", Vector3.new(14.6, 0.2, 7.6), cf, AVG.glass, glassProps), "glass", 7, { N.Top, N.Bottom })
-			for x = -7, 7, 3.5 do tvox(g, "Rafter", Vector3.new(0.5, 0.5, 7.8), cf * CFrame.new(x, 0.25, 0), "wood_frame", 2, { CanCollide = false }) end
+			skin(vox(g, "RoofGlass", Vector3.new(14.6, 0.2, 7.6), cf, AVG.glass, glassProps), "glass", 7, { N.Top, N.Bottom }):SetAttribute("RoofFadeTarget", true)
+			for x = -7, 7, 3.5 do tvox(g, "Rafter", Vector3.new(0.5, 0.5, 7.8), cf * CFrame.new(x, 0.25, 0), "wood_frame", 2, { CanCollide = false }):SetAttribute("RoofFadeTarget", true) end
 		end
 		for _, z in { 1, -11 } do skin(vox(g, "Glass", Vector3.new(13.8, 7.4, 0.2), at(0, 5.7, z), AVG.glass, glassProps), "glass", 7, { N.Front, N.Back }) end
 		for _, x in { -7, 7 } do skin(vox(g, "Glass", Vector3.new(0.2, 7.4, 11.8), at(x, 5.7, -5), AVG.glass, glassProps), "glass", 7, { N.Left, N.Right }) end
@@ -1343,10 +1354,31 @@ function Hub.build(parent, origin)
 		end
 		tvox(g, "SignPost", Vector3.new(0.5, 3.2, 0.5), at(3.8, 2.7, 3.4), "beam", 2)
 		sign(g, "EGGS", CFrame.new(at(3.8, 4.8, 3.4).Position), 3.4, 1.3, PAL.pink[3])
-		prompt(g:FindFirstChild("SignPost"), "Egg odds", "Incubator", "odds").MaxActivationDistance = 7 -- the odds moved off the HUD rail (the user, 2026-11-08); 7 studs: at 14 it popped up beside Buy an egg, two F prompts at once (Gemini full1122e 72 s)
-		prompt(g:FindFirstChild("Base"), "Hatch an egg", "Incubator", "hatch")
-		local maribel = villager("Maribel", at(-4.8, 1.1, 4.6), Color3.fromRGB(140, 227, 192), Color3.fromRGB(201, 184, 242))
-		prompt(maribel:FindFirstChild("Body"), "Buy an egg", "Maribel", "buyEgg") -- playtest 2: starter eggs for coins
+		-- town overhaul 2026-11-27: one F prompt (was three: odds on the sign post, hatch on the base, buy at Maribel); it opens the
+		-- Egg Hatchery panel (Shared.HatcheryUI) with BUY, ODDS and HATCH; the server checks distance again (remote Hatchery)
+		prompt(g:FindFirstChild("Base"), "Egg Hatchery", "Maribel", "eggs")
+		villager("Maribel", at(-4.8, 1.1, 4.6), Color3.fromRGB(140, 227, 192), Color3.fromRGB(201, 184, 242))
+	end
+
+	-- town overhaul 2026-11-27: the Geode Refinery, a workshop with one job (melt and crack geodes): a flagstone yard under a stepped
+	-- plum roof on four posts and a back wall; ServerScriptService.Retention stands the crucible on RefineryPad and hangs the Geode
+	-- Timing Crack prompt on CrackBench (both moved here from the forge)
+	do
+		local g, at = group("GeodeRefinery"), stationAt(-40, 37, -14, 63)
+		local cool = Color3.fromRGB(200, 196, 230)
+		tvox(g, "Apron", Vector3.new(20, 0.6, 16), at(0, 1.1, -2), "flagstone", 5, nil, { N.Top, N.Front, N.Left, N.Right })
+		for _, x in { -8.6, 8.6 } do for _, z in { 4.4, -8.4 } do tvox(g, "Post", Vector3.new(1, 10, 1), at(x, 6.4, z), "beam", 4) end end
+		for _, z in { 4.4, -8.4 } do tvox(g, "TieBeam", Vector3.new(18.6, 0.9, 1.1), at(0, 11.85, z), "beam", 4) end
+		local function atR(x, y, z) return at(x, y, z - 2) end
+		stepRoof(g, atR, 21, 17.6, 12.3, "shingle_plum", 0.8, 1)
+		skin(vox(g, "BackWall", Vector3.new(16.2, 5, 1), at(0, 3.9, -8.4), PAL.stone[2]), "stonebrick", 5, SIDES, cool)
+		tvox(g, "CrackBench", Vector3.new(5, 0.6, 2), at(4.6, 3.8, -5.6), "planks", 2)
+		for _, x in { 2.6, 6.6 } do tvox(g, "BenchLeg", Vector3.new(0.5, 2.4, 1.6), at(x, 2.6, -5.6), "beam", 2) end
+		local bulb = vox(g, "BenchLamp", Vector3.new(0.8, 0.8, 0.8), at(4.6, 7.2, -7.6), LAMP, { CanCollide = false })
+		glow(bulb, LAMP, 18, 1.4) -- bright: the Geode Timing Crack read as a black void from the town camera (Gemini full1122f 61 s)
+		for _, o in { { 3.2, -5.6, 0.9 }, { 5.9, -5.3, 0.7 } } do vox(g, "BenchGeode", Vector3.one * o[3], at(o[1], 4.1 + o[3] / 2, o[2]), Color3.fromRGB(70, 62, 92), { CanCollide = false, Material = Enum.Material.Slate }) end
+		vox(g, "RefineryPad", Vector3.new(1, 1, 1), at(-4.2, 1.9, -2.6) * CFrame.Angles(0, math.pi, 0), PAL.wood[1], { Transparency = 1, CanCollide = false, CanQuery = false })
+		sign(g, "REFINERY", CFrame.new(at(0, 5.2, 9.2).Position), 5.6, 1.3, Color3.fromRGB(150, 236, 210), nil, 3.6) -- on its own posts in front of the yard: under the eave the roof hid it from the high camera
 	end
 
 	-- Master Directive v15 (@neochampy's Monument of Life, vault Social References Review (2026-11-23)): the Deep Chronicle, a
@@ -1354,50 +1386,57 @@ function Hub.build(parent, origin)
 	-- each side. Its face lists the miners in this server: deepest camp, escapes and bosses beaten (PixelServer writes the
 	-- model's attribute Rows; Shared.TownChronicle fills the face on each player's screen and marks that player's own line).
 	do
-		local g, at = group("Chronicle"), stationAt(-12, -39, -4, 0, 4)
+		local g, at = group("Chronicle"), stationAt(-14, -44, -4, 0, 4)
+		local CW = 8.5 / 5.8 -- town overhaul 2026-11-27: the slab is 8.5 x 14 (was 5.8 x 12); everything across it scales by CW
 		local GRAN, GRAN_D, MOSS, OBS, OBS_E, IRON = Color3.fromRGB(104, 106, 114), Color3.fromRGB(82, 84, 94), Color3.fromRGB(86, 124, 72), Color3.fromRGB(26, 20, 38), Color3.fromRGB(64, 50, 92), Color3.fromRGB(58, 52, 74)
-		for k, d in { { 11, 7.6 }, { 9.4, 6.2 }, { 8, 5 } } do -- three stepped granite footings, moss creeping over each front lip
+		for k, d in { { 11 * CW, 7.6 }, { 9.4 * CW, 6.2 }, { 8 * CW, 5 } } do -- three stepped granite footings, moss creeping over each front lip
 			vox(g, "ChronicleStep", Vector3.new(d[1], 0.8, d[2]), at(0, 1.1 + 0.4 + (k - 1) * 0.8, 0), k % 2 == 1 and GRAN or GRAN_D, { Material = Enum.Material.Slate })
 			vox(g, "ChronicleMoss", Vector3.new(d[1] * 0.5, 0.12, 0.8), at((k - 2) * 1.3, 1.1 + k * 0.8 + 0.07, d[2] / 2 - 0.42), MOSS, { Material = Enum.Material.Grass, CanCollide = false })
 		end
 		local top = 1.1 + 2.4 -- the top step
-		local SH = 12 -- the slab's height (round 2, Gemini v15_r1 5/10: "a muddy dark slab with tiny text": taller, its face lit by itself)
-		local slab = vox(g, "ChronicleSlab", Vector3.new(5.8, SH, 1.4), at(0, top + SH / 2, -0.3), OBS, { Material = Enum.Material.SmoothPlastic, Reflectance = 0.06 }) -- polished obsidian (Basalt's texture read brown under the lamps)
-		for _, e in { { Vector3.new(5.5, 0.22, 0.1), Vector3.new(0, top + SH - 0.4, 0.44) }, { Vector3.new(5.5, 0.22, 0.1), Vector3.new(0, top + 0.4, 0.44) }, -- a carved border round the face (the side bars stop inside the top and bottom bars: no shared faces)
-			{ Vector3.new(0.22, SH - 0.7, 0.1), Vector3.new(-2.6, top + SH / 2, 0.44) }, { Vector3.new(0.22, SH - 0.7, 0.1), Vector3.new(2.6, top + SH / 2, 0.44) } } do
+		local SH = 14 -- the slab's height (round 2, Gemini v15_r1 5/10: "a muddy dark slab with tiny text": taller, its face lit by itself)
+		local slab = vox(g, "ChronicleSlab", Vector3.new(5.8 * CW, SH, 1.4), at(0, top + SH / 2, -0.3), OBS, { Material = Enum.Material.SmoothPlastic, Reflectance = 0.06 }) -- polished obsidian (Basalt's texture read brown under the lamps)
+		for _, e in { { Vector3.new(5.5 * CW, 0.22, 0.1), Vector3.new(0, top + SH - 0.4, 0.44) }, { Vector3.new(5.5 * CW, 0.22, 0.1), Vector3.new(0, top + 0.4, 0.44) }, -- a carved border round the face (the side bars stop inside the top and bottom bars: no shared faces)
+			{ Vector3.new(0.22, SH - 0.7, 0.1), Vector3.new(-2.6 * CW, top + SH / 2, 0.44) }, { Vector3.new(0.22, SH - 0.7, 0.1), Vector3.new(2.6 * CW, top + SH / 2, 0.44) } } do
 			vox(g, "ChronicleRim", e[1], at(e[2].X, e[2].Y, e[2].Z), OBS_E, { Material = Enum.Material.Basalt })
 		end
 		for _, sx in { -1, 1 } do -- engraved gold runes glowing down both sides of the face, inside the border
 			for k = 0, 7 do -- each rune a stem with a crossbar or a hook at its own height: carved letters, not dashes
 				local y = top + 1.3 + k * (SH - 2.6) / 7
 				local RUNE = { Material = Enum.Material.Neon, CanCollide = false }
-				vox(g, "ChronicleRune", Vector3.new(0.12, 0.62, 0.06), at(sx * 2.3, y, 0.42), Color3.fromRGB(196, 138, 58), RUNE)
+				vox(g, "ChronicleRune", Vector3.new(0.12, 0.62, 0.06), at(sx * 2.3 * CW, y, 0.42), Color3.fromRGB(196, 138, 58), RUNE)
 				local cy = ({ 0.2, -0.05, 0.12, -0.18 })[k % 4 + 1]
-				vox(g, "ChronicleRune", Vector3.new(0.3, 0.1, 0.06), at(sx * 2.3 + ((k % 2 == 0) and 0.09 or -0.09), y + cy, 0.425) * CFrame.Angles(0, 0, (k % 3 - 1) * 0.5), Color3.fromRGB(196, 138, 58), RUNE)
+				vox(g, "ChronicleRune", Vector3.new(0.3, 0.1, 0.06), at(sx * 2.3 * CW + ((k % 2 == 0) and 0.09 or -0.09), y + cy, 0.425) * CFrame.Angles(0, 0, (k % 3 - 1) * 0.5), Color3.fromRGB(196, 138, 58), RUNE)
 			end
 		end
-		vox(g, "ChronicleCap", Vector3.new(6.6, 0.8, 2.2), at(0, top + SH + 0.4, -0.3), OBS_E, { Material = Enum.Material.Basalt })
-		vox(g, "ChronicleCap2", Vector3.new(4.6, 0.8, 1.8), at(0, top + SH + 1.2, -0.3), OBS, { Material = Enum.Material.Basalt })
-		vox(g, "ChronicleTip", Vector3.new(2.2, 1, 1.4), at(0, top + SH + 2.1, -0.3), OBS_E, { Material = Enum.Material.Basalt })
+		vox(g, "ChronicleCap", Vector3.new(6.6 * CW, 0.8, 2.2), at(0, top + SH + 0.4, -0.3), OBS_E, { Material = Enum.Material.Basalt })
+		vox(g, "ChronicleCap2", Vector3.new(4.6 * CW, 0.8, 1.8), at(0, top + SH + 1.2, -0.3), OBS, { Material = Enum.Material.Basalt })
+		vox(g, "ChronicleTip", Vector3.new(2.2 * CW, 1, 1.4), at(0, top + SH + 2.1, -0.3), OBS_E, { Material = Enum.Material.Basalt })
 		vox(g, "ChronicleGem", Vector3.new(0.9, 0.9, 0.9), at(0, top + SH + 3.05, -0.3) * CFrame.Angles(0, math.rad(45), math.rad(35)), Color3.fromRGB(255, 200, 96), { Material = Enum.Material.Neon })
 		for _, sx in { -1, 1 } do -- a lantern sconce each side: a stone post, the lantern and a stone hood over it
-			vox(g, "ChronicleSconce", Vector3.new(0.9, 2.8, 0.9), at(sx * 3.52, top + 1.4, 0.6), GRAN_D, { Material = Enum.Material.Slate })
-			local lamp = vox(g, "ChronicleLamp", Vector3.new(0.62, 0.7, 0.62), at(sx * 3.52, top + 3.15, 0.6), Color3.fromRGB(255, 196, 120), { CanCollide = false })
+			vox(g, "ChronicleSconce", Vector3.new(0.9, 2.8, 0.9), at(sx * 3.52 * CW, top + 1.4, 0.6), GRAN_D, { Material = Enum.Material.Slate })
+			local lamp = vox(g, "ChronicleLamp", Vector3.new(0.62, 0.7, 0.62), at(sx * 3.52 * CW, top + 3.15, 0.6), Color3.fromRGB(255, 196, 120), { CanCollide = false })
 			local l = Instance.new("PointLight")
 			l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 180, 110), 11, 0.42, false -- 0.42: a lamp you can walk up to (Realistic burns surfaces white above ~0.45)
 			l.Parent = lamp
-			for _, bx in { -0.33, 0.33 } do vox(g, "ChronicleLampBar", Vector3.new(0.08, 0.8, 0.08), at(sx * 3.52 + bx, top + 3.15, 0.96), IRON, { Material = Enum.Material.Metal, CanCollide = false }) end
-			vox(g, "ChronicleHood", Vector3.new(1.3, 0.3, 1.24), at(sx * 3.52, top + 3.66, 0.62), GRAN, { Material = Enum.Material.Slate })
+			for _, bx in { -0.33, 0.33 } do vox(g, "ChronicleLampBar", Vector3.new(0.08, 0.8, 0.08), at(sx * 3.52 * CW + bx, top + 3.15, 0.96), IRON, { Material = Enum.Material.Metal, CanCollide = false }) end
+			vox(g, "ChronicleHood", Vector3.new(1.3, 0.3, 1.24), at(sx * 3.52 * CW, top + 3.66, 0.62), GRAN, { Material = Enum.Material.Slate })
 		end
 		local sg = Instance.new("SurfaceGui") -- the face: gold and ivory lines etched into the stone (lit by the scene, never drawn over it)
-		sg.Name, sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence, sg.AlwaysOnTop = "ChronicleGui", N.Back, Enum.SurfaceGuiSizingMode.PixelsPerStud, 40, 0, false -- lit by itself: at 0.2 the gold lines sank into the night
+		sg.Name, sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence, sg.AlwaysOnTop = "ChronicleGui", N.Back, Enum.SurfaceGuiSizingMode.PixelsPerStud, 55, 0, false -- lit by itself: at 0.2 the gold lines sank into the night
+		local faceF = Instance.new("Frame") -- 2026-11-27: the lines sit inside a padded frame, so no line touches the gold border
+		faceF.Name, faceF.Size, faceF.BackgroundTransparency = "Face", UDim2.fromScale(1, 1), 1
+		local fpad = Instance.new("UIPadding")
+		fpad.PaddingLeft, fpad.PaddingRight, fpad.PaddingTop, fpad.PaddingBottom = UDim.new(0, 24), UDim.new(0, 24), UDim.new(0, 28), UDim.new(0, 28)
+		fpad.Parent = faceF
+		faceF.Parent = sg
 		local function etch(name, txt, y, h, color, font, xa)
 			local t = Instance.new("TextLabel")
 			t.Name, t.Text, t.BackgroundTransparency, t.TextScaled, t.Font, t.TextColor3 = name, txt, 1, true, font or Enum.Font.GothamBold, color
 			t.Size, t.Position, t.AnchorPoint = UDim2.fromScale(0.74, h), UDim2.fromScale(0.5, y), Vector2.new(0.5, 0.5) -- 0.74: clear of the rune strips
 			t.TextXAlignment = xa or Enum.TextXAlignment.Center
 			t.TextStrokeTransparency, t.TextStrokeColor3 = 0.55, Color3.fromRGB(10, 6, 18)
-			t.Parent = sg
+			t.Parent = faceF
 			return t
 		end
 		local GOLDE, IVORY = Color3.fromRGB(255, 206, 110), Color3.fromRGB(236, 226, 204)
@@ -1405,19 +1444,19 @@ function Hub.build(parent, origin)
 		etch("Sub", "MINERS OF THIS SERVER", 0.125, 0.03, Color3.fromRGB(188, 176, 214))
 		local rule = Instance.new("Frame")
 		rule.Name, rule.Size, rule.Position, rule.AnchorPoint, rule.BackgroundColor3, rule.BorderSizePixel = "Rule", UDim2.fromScale(0.7, 0.005), UDim2.fromScale(0.5, 0.162), Vector2.new(0.5, 0.5), GOLDE, 0
-		rule.Parent = sg
+		rule.Parent = faceF
 		for i = 1, 6 do
 			etch("Name" .. i, "", 0.195 + (i - 1) * 0.112, 0.05, IVORY, Enum.Font.GothamBold, Enum.TextXAlignment.Left)
 			etch("Stat" .. i, "", 0.242 + (i - 1) * 0.112, 0.036, GOLDE, Enum.Font.GothamMedium, Enum.TextXAlignment.Left)
 		end
-		etch("Mine", "", 0.885, 0.07, Color3.fromRGB(150, 236, 210), Enum.Font.GothamBold)
+		etch("Mine", "", 0.9, 0.055, Color3.fromRGB(150, 236, 210), Enum.Font.GothamBold)
 		sg.Parent = slab
 		g:SetAttribute("Rows", "[]")
 	end
 
 	-- 8. Quest notice board, treasure map and the daily relic chest (north, behind the shaft; ref art/hub/pdv4_notice_s61.jpg)
 	do
-		local g, at = group("NoticeBoard"), stationAt(6, -42, 6, 0, 4)
+		local g, at = group("NoticeBoard"), stationAt(14, -48, 6, 0, 4)
 		tvox(g, "Apron", Vector3.new(24, 0.6, 12), at(0, 1.1, 0), "flagstone", 5, nil, { N.Top, N.Front, N.Left, N.Right })
 		for _, s in { -1, 1 } do
 			tvox(g, "Post", Vector3.new(1, 10, 1), at(s * 4.6, 5.4, 0), "beam", 4)
@@ -1588,30 +1627,32 @@ function Hub.build(parent, origin)
 	local tree = group("WorldTree")
 	local tubes = {}
 	local K, KR = 1.72, 1.8 -- position and radius scale against v3
+	local RS = 1.25 -- town overhaul 2026-11-27: the wall roots, arches and their lanterns stand 25% further out (about 20 studs at the plaza edge)
+	local function RW(x, y, z) return W(x * RS, y, z * RS) end
 	for _, s in { -1, 1 } do
 		local function T(p0, p1, p2, p3, r0, r1)
-			table.insert(tubes, { W(p0[1] * s * K, p0[2] * K, p0[3] * K), W(p1[1] * s * K, p1[2] * K, p1[3] * K), W(p2[1] * s * K, p2[2] * K, p2[3] * K), W(p3[1] * s * K, p3[2] * K, p3[3] * K), r0 * KR, r1 * KR })
+			table.insert(tubes, { RW(p0[1] * s * K, p0[2] * K, p0[3] * K), RW(p1[1] * s * K, p1[2] * K, p1[3] * K), RW(p2[1] * s * K, p2[2] * K, p2[3] * K), RW(p3[1] * s * K, p3[2] * K, p3[3] * K), r0 * KR, r1 * KR })
 		end
 		T({ 8, 24, -62 }, { 34, 30, -50 }, { 46, 14, -16 }, { 38, -1, 18 }, 7, 3.6) -- the big wall roots, west and east
-		T({ 6, 12, -60 }, { 26, 12, -44 }, { 36, 6, -30 }, { 30, -1, -20 }, 5.6, 3)
+		T({ 7, 12, -70 }, { 30, 12, -51 }, { 42, 6, -35 }, { 35, -1, -23 }, 5.6, 3) -- 2026-11-27: lands clear of the moved forge
 		T({ 46, 10, -18 }, { 54, 8, 4 }, { 48, 5, 24 }, { 32, -1, 34 }, 3.4, 1.8) -- curling round the south-west and south-east corners
 		T({ 10, 40, -60 }, { 22, 46, -34 }, { 30, 38, -16 }, { 40, 12, -4 }, 3.6, 2) -- arches over the back half of the plaza
 		T({ 0, 44, -58 }, { 8, 50, -30 }, { 20, 40, -8 }, { 34, 20, 6 }, 2.8, 1.6)
 	end
 	-- v4 canopy: a great arch over the plaza, two crossing arches toward the trunk and low roots that close the bowl
-	table.insert(tubes, { W(-96, -2, -10), W(-70, 120, -30), W(70, 120, -30), W(96, -2, -10), 8, 8 })
-	table.insert(tubes, { W(-90, -2, 40), W(-60, 100, 10), W(40, 110, -70), W(30, 60, -120), 6, 5 })
-	table.insert(tubes, { W(90, -2, 40), W(60, 100, 10), W(-40, 110, -70), W(-30, 60, -120), 6, 5 })
+	table.insert(tubes, { RW(-96, -2, -10), RW(-70, 120, -30), RW(70, 120, -30), RW(96, -2, -10), 8, 8 })
+	table.insert(tubes, { RW(-90, -2, 40), RW(-60, 100, 10), RW(40, 110, -70), W(30, 60, -120), 6, 5 })
+	table.insert(tubes, { RW(90, -2, 40), RW(60, 100, 10), RW(-40, 110, -70), W(-30, 60, -120), 6, 5 })
 	for _, s in { -1, 1 } do
-		table.insert(tubes, { W(s * 30, 30, -110), W(s * 70, 20, -90), W(s * 92, 10, -40), W(s * 84, -1, 10), 7, 4 })
-		table.insert(tubes, { W(s * 92, 26, -6), W(s * 98, 18, 30), W(s * 80, 8, 56), W(s * 50, -1, 72), 5, 3 })
+		table.insert(tubes, { W(s * 30, 30, -110), RW(s * 70, 20, -90), RW(s * 92, 10, -40), RW(s * 84, -1, 10), 7, 4 })
+		table.insert(tubes, { RW(s * 92, 26, -6), RW(s * 98, 18, 30), RW(s * 80, 8, 56), RW(s * 50, -1, 72), 5, 3 })
 	end
-	table.insert(tubes, { W(-52, 66, -34), W(-21, 90, -45), W(21, 90, -45), W(52, 66, -34), 5, 5 }) -- the crown arch across the north
+	table.insert(tubes, { RW(-52, 66, -34), RW(-21, 90, -45), RW(21, 90, -45), RW(52, 66, -34), 5, 5 }) -- the crown arch across the north
 	table.insert(tubes, { W(0, -2, -128), W(0, 60, -128), W(0, 140, -128), W(0, 220, -132), 24, 16 }) -- the trunk
 	for _, b in { -110, -80, -50, -20, 20, 50, 80, 110 } do -- great roots buttressing the hollow wall, from its top down to the ground
 		local a = math.rad(b)
 		local function P(r, y) return W(math.sin(a) * r, y, -math.cos(a) * r) end
-		table.insert(tubes, { P(100, 84), P(94, 60), P(86, 24), P(74, -1), 6.5, 3.6 })
+		table.insert(tubes, { P(120, 84), P(114, 60), P(106, 24), P(94, -1), 6.5, 3.6 })
 	end
 	rootSweep(tree, tubes, 6)
 	for ti, t in tubes do -- flowering vines hanging from the lower roots
@@ -1630,13 +1671,13 @@ function Hub.build(parent, origin)
 			end
 		end
 	end
-	for _, c in { W(-38, 92, -62), W(38, 92, -62), W(0, 214, -132), W(-30, 206, -124), W(30, 198, -136), W(-66, 70, -24), W(66, 70, -24), W(0, 98, -50), W(-20, 180, -110), W(22, 170, -116) } do
+	for _, c in { RW(-38, 92, -62), RW(38, 92, -62), W(0, 214, -132), W(-30, 206, -124), W(30, 198, -136), RW(-66, 70, -24), RW(66, 70, -24), RW(0, 98, -50), W(-20, 180, -110), W(22, 170, -116) } do
 		leafClump(tree, c, 3, 4.8)
 	end
-	stringLights(tree, W(-62, 46, -18), W(62, 46, -18), 10, 34)
-	stringLights(tree, W(-52, 34, 18), W(-14, 60, -36), 7, 14)
-	stringLights(tree, W(52, 34, 18), W(14, 60, -36), 7, 14)
-	for i, p in { W(-58, 24, -4), W(58, 24, -4), W(-34, 52, -48), W(34, 52, -48), W(-68, 14, 34), W(68, 14, 34), W(-20, 44, -20), W(20, 44, -20) } do -- lanterns hanging from the roots
+	stringLights(tree, RW(-62, 46, -18), RW(62, 46, -18), 10, 34)
+	stringLights(tree, RW(-52, 34, 18), RW(-14, 60, -36), 7, 14)
+	stringLights(tree, RW(52, 34, 18), RW(14, 60, -36), 7, 14)
+	for i, p in { RW(-58, 24, -4), RW(58, 24, -4), RW(-34, 52, -48), RW(34, 52, -48), RW(-68, 14, 34), RW(68, 14, 34), RW(-20, 44, -20), RW(20, 44, -20) } do -- lanterns hanging from the roots
 		cubeLantern(tree, p, 2 + (i % 3) * 3, 1.3)
 	end
 	local flies = Instance.new("ParticleEmitter") -- fireflies drifting round the canopy and the plaza
@@ -1652,7 +1693,7 @@ function Hub.build(parent, origin)
 		local a = i / 96 * math.pi * 2
 		local south = math.cos(a - math.pi / 2) -- 1 = due south (+z), the camera side
 		if south < 0.55 then
-			local rr = 92 + hash(i, 1, 2) * 10
+			local rr = 112 + hash(i, 1, 2) * 10 -- town overhaul 2026-11-27: was 92, 20 studs further out
 			local p = W(math.cos(a) * rr, 0, math.sin(a) * rr)
 			local h = (84 + hash(i, 3, 4) * 30) * (1 - math.max(south, 0) * 1.1)
 			local look = CFrame.lookAt(p, W(0, 0, 0))
@@ -1742,10 +1783,10 @@ function Hub.build(parent, origin)
 		end
 	end
 	for i, c in { { -22, -9, "barrow" }, { -22, 38, "sacks" }, { -1, 30, "stump" }, { 23, -11, "tools" }, { 32, 46, "crates" }, { 42, 48, "sacks" }, { 37, 12, "barrow" }, { -43, 48, "crates" }, { -40, 50, "stump" } } do
-		cluster(c[1], c[2], c[3], i * 1.3)
+		if clearOf(c[1], c[2], 2.5) then cluster(c[1], c[2], c[3], i * 1.3) end
 	end
 	for _, b in { { -18, -26 }, { 16, -24 }, { 22, 18 }, { -50, -12 }, { 26, 36 }, { 2, 56 }, { 36, -22 }, { -30, -40 } } do -- bush clumps round the lanes
-		bush(props, W(b[1], groundTop(b[1], b[2]), b[2]), b[1] * 3 + b[2])
+		if clearOf(b[1], b[2], 3) then bush(props, W(b[1], groundTop(b[1], b[2]), b[2]), b[1] * 3 + b[2]) end
 	end
 	for i = 0, 9 do -- glowing mushrooms at the root walls
 		local a = i / 10 * math.pi * 2 + 0.4
@@ -1753,7 +1794,7 @@ function Hub.build(parent, origin)
 			local tint = ({ Color3.fromRGB(196, 96, 128), Color3.fromRGB(80, 168, 136), Color3.fromRGB(140, 120, 200) })[i % 3 + 1]
 			for k = 0, 2 do
 				local h = 1.6 + k * 0.9
-				local mx, mz = math.cos(a) * 62 + k * 1.8, math.sin(a) * 66 + (k % 2) * 1.5
+				local mx, mz = math.cos(a) * 80 + k * 1.8, math.sin(a) * 84 + (k % 2) * 1.5 -- with the root wall, 20 studs further out
 				local p = W(mx, groundTop(mx, mz), mz)
 				vox(props, "MushStem", Vector3.new(0.7, h, 0.7), CFrame.new(p + Vector3.new(0, h / 2, 0)), PAL.cream[2], { CanCollide = false })
 				local cap = vox(props, "MushCap", Vector3.new(h * 1.2, 0.8, h * 1.2), CFrame.new(p + Vector3.new(0, h + 0.3, 0)), tint, { CanCollide = false })
@@ -1791,7 +1832,7 @@ function Hub.build(parent, origin)
 
 	-- directive v13 (A Short Hike #10, DQB2 #2): a soft dark contact skirt round the foot of each building, so the timber and
 	-- stone sit IN the meadow instead of on it (Gemini full1120x: buildings floated on the flat ground plane)
-	for _, name in { "SellStall", "Forge", "TrophyHouse", "GuestCabin1", "GuestCabin2", "Incubator", "NoticeBoard" } do
+	for _, name in { "SellStall", "Forge", "TrophyHouse", "GuestCabin1", "Incubator", "NoticeBoard", "GeodeRefinery" } do
 		local g = model:FindFirstChild(name)
 		if g and g:IsA("Model") and #g:GetChildren() > 0 then
 			local cf, size = g:GetBoundingBox()

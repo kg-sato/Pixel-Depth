@@ -26,21 +26,21 @@ function M.start(E)
 		for _, r in rows do if type(r) == "table" and r.u == plr.UserId then me = r end end -- the server lists everyone; the stone shows the first six
 		for i = 1, 6 do
 			local r = rows[i]
-			local nameL, statL = sg:FindFirstChild("Name" .. i), sg:FindFirstChild("Stat" .. i)
+			local nameL, statL = sg:FindFirstChild("Name" .. i, true), sg:FindFirstChild("Stat" .. i, true) -- inside the padded Face frame (2026-11-27)
 			if nameL and statL then
 				if type(r) == "table" then
 					local mine = r.u == plr.UserId
 					nameL.Text = i .. ".  " .. tostring(r.n or "MINER")
 					nameL.TextColor3 = mine and MINE or IVORY
 					local d = math.clamp(tonumber(r.d) or 0, 0, 2)
-					statL.Text = (LAYER[d] or "") .. (DEEP[d] or "TOWN") .. "  |  " .. (tonumber(r.e) or 0) .. " ESC  |  " .. (tonumber(r.b) or 0) .. " BOSS"
+					statL.Text = (LAYER[d] or "") .. (DEEP[d] or "TOWN") .. "   \u{00B7}   " .. (tonumber(r.e) or 0) .. " ESC   \u{00B7}   " .. (tonumber(r.b) or 0) .. " BOSS" -- middots: the thin pipes read as the digit 1 (audit 2026-11-26 text 5)
 					statL.TextColor3 = mine and MINE or GOLDE
 				else
 					nameL.Text, statL.Text = "", ""
 				end
 			end
 		end
-		local mineL = sg:FindFirstChild("Mine")
+		local mineL = sg:FindFirstChild("Mine", true)
 		if mineL then -- this player's next mark on the stone
 			local r = me
 			if not r then

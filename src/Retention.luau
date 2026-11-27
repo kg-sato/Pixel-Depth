@@ -270,7 +270,8 @@ function M.init(c)
 		pr.MaxActivationDistance, pr.RequiresLineOfSight, pr.Style, pr.HoldDuration = 9, false, Enum.ProximityPromptStyle.Custom, 0
 		pr:SetAttribute("PartyInvite", true)
 		pr.Parent = board
-		local anvil = hub:FindFirstChild("Forge") and hub.Forge:FindFirstChild("Bench", true) -- Geode Timing Crack on Bolt's workbench (the anvil has the forge's own prompt)
+		local ref = hub:FindFirstChild("GeodeRefinery") -- town overhaul 2026-11-27: the crack bench and the crucible live in the Geode Refinery (one job per station)
+		local anvil = (ref and ref:FindFirstChild("CrackBench")) or (hub:FindFirstChild("Forge") and hub.Forge:FindFirstChild("Bench", true)) -- Geode Timing Crack on the workbench (the anvil has the forge's own prompt)
 		if anvil then
 			local cp = Instance.new("ProximityPrompt")
 			cp.ActionText, cp.ObjectText, cp.KeyboardKeyCode, cp.GamepadKeyCode = "Crack", "A geode", Enum.KeyCode.F, Enum.KeyCode.ButtonX
@@ -320,8 +321,14 @@ function M.init(c)
 			end
 			return nil
 		end
+		local pad = ref and ref:FindFirstChild("RefineryPad")
+		if pad then -- the refinery's own floor: mouth out to its yard
+			local base = pad.Position - Vector3.new(0, pad.Size.Y / 2, 0)
+			local look = pad.CFrame.LookVector * Vector3.new(1, 0, 1)
+			fat = CFrame.lookAt(base, base + look.Unit)
+		end
 		local forge = hub:FindFirstChild("Forge")
-		if forge then
+		if forge and not fat then
 			local fp = forge:GetPivot().Position
 			local u = (cart:GetPivot().Position - fp) * Vector3.new(1, 0, 1)
 			if u.Magnitude > 1 then
