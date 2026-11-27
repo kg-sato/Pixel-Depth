@@ -794,10 +794,26 @@ end)
 
 local function loseShare(s, frac) -- a gloomling catch or passing out in the lake: lose a share of the unbanked ore, per kind too
 	local lost = math.floor(s.bag * frac)
-	if s.bag > 0 then s.bagV -= math.floor(s.bagV * lost / s.bag) end
+	if lost <= 0 then return 0 end
+	s.bagV -= math.floor(s.bagV * lost / s.bag)
 	s.bag -= lost
-	for k, n in s.bagOres do s.bagOres[k] = n - math.floor(n * frac) end
+	-- the lost units come out of the kinds, one at a time from the largest, so the kinds still sum to the bag
+	-- (Codex 2026-11-27: rounding each kind down kept all four of four single ores while the bag lost one)
+	local left = lost
+	while left > 0 do
+		local top, most = nil, 0
+		for k, n in s.bagOres do if n > most then top, most = k, n end end
+		if not top then break end
+		s.bagOres[top] = most > 1 and most - 1 or nil
+		left -= 1
+	end
 	return lost
+end
+if game:GetService("RunService"):IsStudio() then -- self-check of the share above
+	local t = { bag = 4, bagV = 40, bagOres = { a = 1, b = 1, c = 1, d = 1 } }
+	local n, sum = loseShare(t, 0.25), 0
+	for _, v in t.bagOres do sum += v end
+	assert(n == 1 and t.bag == 3 and sum == 3 and t.bagV == 30, "loseShare self-check")
 end
 local function sell(s)
 	if s.bag <= 0 then return end
@@ -2582,6 +2598,8 @@ local function onJoin(plr)
 		task.wait()
 		if inCave then
 			hrp.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
+			if s.mg and not s.mg.boss then s.mg, s.mgSafe = nil, os.clock() + 2.5 end -- an extraction left running could be finished from camp (Codex 2026-11-27): it ends with nothing paid; the client closes its panel on respawn
+			coolSet(s, "home", C.HOME.cool) -- the reset was the trip home: the hearthstone cools down as if used
 			local lost = loseShare(s, C.SWIM.loss)
 			FxR:FireClient(plr, "drowned", lost, "fell")
 			A.event(s, "CaveRespawn", lost)

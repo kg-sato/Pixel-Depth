@@ -2304,6 +2304,7 @@ plr:GetAttributeChangedSignal("InMine"):Connect(function() setMode(modeNow()) en
 plr:GetAttributeChangedSignal("InCave"):Connect(function() setMode(modeNow()) end)
 plr.CharacterAdded:Connect(function()
 	vm, vmTier = nil, nil
+	if cave.mgClose then cave.mgClose() end -- a respawn ends a running minigame (the server already dropped it)
 	task.defer(function() setMode(modeNow()) end)
 end)
 setMode(modeNow())
