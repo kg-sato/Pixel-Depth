@@ -30,7 +30,7 @@ function M.start(E)
 	win.ClipsDescendants = true
 	local title = E.text(win, "YOUR JOURNEY", UDim2.fromScale(0.6, 0.08), UDim2.fromScale(0.5, 0.07), Vector2.new(0.5, 0.5), E.WHITE, 700, false)
 	title.Font, title.ZIndex = E.HEAD or title.Font, 6
-	local sub = E.text(win, "", UDim2.fromScale(0.86, 0.045), UDim2.fromScale(0.5, 0.125), Vector2.new(0.5, 0.5), LILAC, 700, false)
+	local sub = E.text(win, "", UDim2.fromScale(0.86, 0.045), UDim2.fromScale(0.5, 0.133), Vector2.new(0.5, 0.5), LILAC, 700, false) -- 0.133: at 0.125 it touched the title
 	sub.ZIndex = 6
 	local close = E.closeButton(win, "JourneyClose")
 	local list = new("ScrollingFrame", win, { Name = "Roadmap", Size = UDim2.fromScale(0.92, 0.8), Position = UDim2.fromScale(0.5, 0.57), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 10, ScrollBarImageColor3 = Color3.fromRGB(255, 214, 107), ScrollBarImageTransparency = 0.1, VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 5 }) -- a gold scroll bar: the cards below the fold are there (Gemini r1)
@@ -90,7 +90,7 @@ function M.start(E)
 		local name = C.PICKS[pick] and C.PICKS[pick].name or ""
 		sub.Text = "TIER " .. pick .. "  \u{00B7}  " .. string.upper(name) .. "  \u{00B7}  FORGE TEMPER LV " .. tostring(state.lv and state.lv[tostring(state.equip or pick)] or 1)
 		local t = cards[0]
-		t.name.Text, t.status.Text = "TOWN", "HOME"
+		t.name.Text, t.status.Text = "TOWN", "OPEN" -- "HOME" took IconPass's house icon and spilled past the row (ui audit 2026-11-27)
 		t.ores.Text = "Gold: pickaxes, packs, charms  \u{00B7}  Gems: forge temper, eggs  \u{00B7}  Shards: Soul Tree"
 		for i = 1, #C.LAYERS do
 			local c, L, b = cards[i], C.LAYERS[i], M.BOSSES[i]

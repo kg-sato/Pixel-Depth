@@ -34,7 +34,7 @@ function M.start(E)
 					nameL.Text = i .. ".  " .. tostring(r.n or "MINER")
 					nameL.TextColor3 = mine and MINE or IVORY
 					local d = math.clamp(tonumber(r.d) or 0, 0, 2)
-					statL.Text = (LAYER[d] or "") .. (DEEP[d] or "TOWN") .. "   \u{00B7}   " .. count(r.e, "ESCAPE") .. "   \u{00B7}   " .. count(r.b, "BOSS", "BOSSES") -- "7 ESC" read as "GESC" (tour n1127b); middots: the thin pipes read as the digit 1 (audit 2026-11-26 text 5)
+					statL.Text = (LAYER[d] or "") .. (DEEP[d] or "TOWN") .. "  /  " .. count(r.e, "ESCAPE") .. "  /  " .. count(r.b, "BOSS", "BOSSES") -- "7 ESC" read as "GESC" (tour n1127b); slashes: the stone's font has no middot (it drew "?", tour pt1127), and pipes read as the digit 1: the thin pipes read as the digit 1 (audit 2026-11-26 text 5)
 					statL.TextColor3 = mine and MINE or GOLDE
 				else
 					nameL.Text, statL.Text = "", ""

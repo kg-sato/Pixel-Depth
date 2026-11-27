@@ -639,7 +639,7 @@ def pip(v):
         v.ell("Body", "PaperDark", tuple(c0 + V(-0.12, 0.02, h + 0.04)), (0.07, 0.07, 0.03))
     v.anchor("chest", "Body", (0, 0.66, 1.9))
     # the tail: a huge bushy S-curve up behind, a darker underside, a cream tip
-    tp = [V(0.1, -0.55, 1.0), V(-0.35, -1.35, 1.05), V(-0.95, -1.65, 1.85), V(-1.25, -1.45, 2.65), V(-1.05, -1.05, 2.95)]  # p2: a thin root, swept to one side under the hat line (d1: a blob behind the head)
+    tp = [V(-0.1, -0.55, 1.0), V(-0.65, -1.3, 0.95), V(-1.55, -1.45, 1.6), V(-2.05, -1.2, 2.5), V(-1.85, -0.8, 3.05)]  # p3: out past the flank, a gap at the root, the S plume clear of the back  # p2: a thin root, swept to one side under the hat line (d1: a blob behind the head)
     v.joint("Tail", tuple(tp[0]), "Body", "tail")
     v.tube("Tail", "Fur", tp, [0.2, 0.42, 0.58, 0.5, 0.3])
     for t in (0.35, 0.55, 0.75): v.torus("Tail", "Cream", tp[1].lerp(tp[3], t), tuple((tp[3] - tp[1]).normalized()), 0.55 - 0.1 * abs(t - 0.55) * 4, 0.07)  # cream bands
@@ -971,7 +971,7 @@ def warden(v):
     for k in range(5): v.crystal("Jaw", "Teeth", V(-0.8 + k * 0.4, 3.9, 8.6), (0, 0.15, 1), 0.45, 0.14, sides=4)
     # arms: huge gorilla arms knuckling forward, root-bound forearms, boulder fists with crystal knuckles
     for s, A in ((-1, "ArmL"), (1, "ArmR")):
-        sh, el, wr = V(s * 3.0, 0.6, 8.5), V(s * 4.1, 1.5, 6.0), V(s * 3.7, 2.5, 2.6)
+        sh, el, wr = V(s * 3.1, 0.6, 8.5), V(s * 4.9, 1.5, 6.2), V(s * 4.9, 2.6, 2.8)  # d2: flared out, daylight under the arms
         v.joint(A, tuple(sh), "Body", "arm")
         v.cap(A, "Slate", sh, el, 1.15, 0.95)
         v.muscle(A, "Moss", tuple(sh + V(0, 0, 0.7)), (1.0, 1.0, 0.5))
@@ -1049,15 +1049,16 @@ def golem(v):
     v.ell("Lid", "Smoke", (-0.2, 0.15, 13.75), (0.32, 0.32, 0.26))
     # arms: bronze-banded clay arms ending in colossal forge-hammer fists studded with rivets
     for s, A in ((-1, "ArmL"), (1, "ArmR")):
-        sh, el, wr = V(s * 3.3, 0.2, 8.6), V(s * 4.3, 1.0, 6.2), V(s * 4.0, 1.8, 3.4)
+        sh, el, wr = V(s * 3.4, 0.2, 8.6), V(s * 5.0, 0.9, 6.4), V(s * 5.1, 1.8, 3.6)  # g3: flared out, daylight under the arms (d2: one block in the blackout)
         v.joint(A, tuple(sh), "Body", "arm")
         v.cap(A, "Clay", sh, el, 1.15, 1.0)
         v.joint(A + "2", tuple(el), A, "arm")
         v.cap(A + "2", "Clay", el, wr, 1.0, 1.1)
         for t in (0.2, 0.6): v.torus(A + "2", "Bronze", el.lerp(wr, t), tuple((wr - el).normalized()), 1.08, 0.2)
         fist = wr + V(0, 0.2, -1.2)
-        v.box(A + "2", "Bronze", tuple(fist), (2.4, 2.2, 2.0))
-        v.box(A + "2", "BronzeDark", tuple(fist + V(0, 0, -0.95)), (2.5, 2.3, 0.3))
+        v.muscle(A + "2", "Bronze", tuple(fist), (1.25, 1.15, 1.0))  # g3: a gauntlet fist, not a block
+        for k in range(4): v.cap(A + "2", "BronzeDark", fist + V((k - 1.5) * 0.55, 0.9, 0.4), fist + V((k - 1.5) * 0.6, 1.35, -0.6), 0.32, 0.28)  # curled fingers
+        v.cap(A + "2", "BronzeDark", fist + V(-s * 1.0, 0.6, 0.2), fist + V(-s * 1.2, 1.2, -0.3), 0.3, 0.26)  # the thumb
         for cx in (-0.8, 0, 0.8):
             for cz in (-0.6, 0.6): v.ell(A + "2", "Rivet", tuple(fist + V(cx, 1.12, cz)), (0.18, 0.1, 0.18))
         v.line(A + "2", "Seam", [fist + V(s * 1.22, 0.6, 0.7), fist + V(s * 1.25, -0.2, 0.0), fist + V(s * 1.22, 0.4, -0.7)], r=0.12)

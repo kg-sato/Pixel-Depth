@@ -153,11 +153,11 @@ local function buildStage()
 			end
 			if rng:NextNumber() < 0.5 then -- a crystal vein: 3 or 4 glowing shards out of one wall, leaning over the rails
 				local s = rng:NextNumber() < 0.5 and -1 or 1
-				local base = pathAt(d + rng:NextNumber() * 4) * CFrame.new(s * 4.4, rng:NextNumber(0.6, 5.5), 0)
+				local base = pathAt(d + rng:NextNumber() * 4) * CFrame.new(s * 5.0, rng:NextNumber() < 0.6 and rng:NextNumber(0.4, 1.4) or rng:NextNumber(5.4, 6.6), 0) -- low or high, never at the rider's eye (tour pt1127: shards filled the view)
 				local col = CRYSTAL[rng:NextInteger(1, #CRYSTAL)]
 				for k = 1, rng:NextInteger(3, 4) do
 					local w = rng:NextNumber(0.5, 1.1)
-					part(f, Vector3.new(w, rng:NextNumber(1.4, 3), w), base * CFrame.new(0, k * 0.3, rng:NextNumber(-0.8, 0.8)) * CFrame.Angles(rng:NextNumber(-0.4, 0.4), 0, s * rng:NextNumber(0.5, 1.1)), col, { Material = Enum.Material.Neon })
+					part(f, Vector3.new(w, rng:NextNumber(1.2, 2.2), w), base * CFrame.new(0, k * 0.3, rng:NextNumber(-0.8, 0.8)) * CFrame.Angles(rng:NextNumber(-0.4, 0.4), 0, s * rng:NextNumber(0.3, 0.6)), col, { Material = Enum.Material.Neon })
 				end
 				if rng:NextNumber() < 0.35 then light(f:GetChildren()[#f:GetChildren()], col, 10, 0.8) end
 			end
@@ -191,7 +191,10 @@ local function buildStage()
 			e.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.4, spec[3]), NumberSequenceKeypoint.new(1, 1) })
 			e.Lifetime, e.Speed, e.Rate = NumberRange.new(6, 9), NumberRange.new(1, 3), spec[2] > 10 and 5 or 14
 			e.Shape, e.ShapeInOut, e.EmissionDirection = Enum.ParticleEmitterShape.Box, Enum.ParticleEmitterShapeInOut.Outward, Enum.NormalId.Top
-			if spec[2] < 10 then e.Texture = SPARK e.Size = NumberSequence.new(0.5, 0) e.LightEmission = 1 end
+			if spec[2] < 10 then e.Texture = SPARK e.Size = NumberSequence.new(0.5, 0) e.LightEmission = 1
+			else -- the mist: soft smoke that stays low over the lake (tour pt1127: with no texture each 26-stud puff was the default sparkle star, rising to the track as a giant cyan shard beside the camera)
+				e.Texture, e.Speed = "rbxasset://textures/particles/smoke_main.dds", NumberRange.new(0.3, 0.8)
+			end
 			e.Parent = lake
 		end
 		for _, sx in { -1, 1 } do -- light on the far walls so the room reads as huge
@@ -200,15 +203,18 @@ local function buildStage()
 		part(f, Vector3.new(halfW * 2, 4, -ex.Z), R * CFrame.new(0, yB, ex.Z / 2), ROCKC[1], ROCK)
 		for k = 1, 3 do light(part(f, Vector3.one, R * CFrame.new((k - 2) * 50, -14, ex.Z / 2), WHITE, { Transparency = 1 }), Color3.fromRGB(120, 230, 230), 60, 1.1) end
 		local placed = 0
+		local trackPts = {} -- the trestle curves through the room: spires are measured against the real path, not a straight line (tour pt1127: a spire filled a third of the view)
+		for d = cavFrom, cavTo, 2 do table.insert(trackPts, R:PointToObjectSpace(pathAt(d).Position)) end
 		for _ = 1, 60 do -- spires rising out of the lake, away from the track
 			if placed >= 12 then break end
 			local x, z = rng:NextNumber(-halfW + 8, halfW - 8), rng:NextNumber(ex.Z + 6, -6)
-			local trackX = ex.X * (z / ex.Z)
-			if math.abs(x - trackX) > 10 and (placed < 5 and math.abs(x - trackX) < 36 or placed >= 5) then -- the first few close by
+			local gap = math.huge
+			for _, q in trackPts do gap = math.min(gap, math.sqrt((x - q.X) ^ 2 + (z - q.Z) ^ 2)) end
+			if gap > 20 and x * x + z * z > 45 * 45 and (placed < 5 and gap < 40 or placed >= 5) then -- the first few close by; none within 45 of the entrance, where the ROOT CAVERN title shot looks across the room (tour pt1127: an unshaded neon spire filled a third of it)
 				placed += 1
 				local h, w = rng:NextNumber(18, 50), rng:NextNumber(3, 6)
 				local col = CRYSTAL[rng:NextInteger(1, #CRYSTAL)]
-				local sp = part(f, Vector3.new(w, h, w), R * CFrame.new(x, -24 + h / 2, z) * CFrame.Angles(rng:NextNumber(-0.15, 0.15), rng:NextNumber(0, 1.5), rng:NextNumber(-0.15, 0.15)), col, { Material = Enum.Material.Neon, Transparency = 0.15 })
+				local sp = part(f, Vector3.new(w, h, w), R * CFrame.new(x, -24 + h / 2, z) * CFrame.Angles(rng:NextNumber(-0.06, 0.06), rng:NextNumber(0, 1.5), rng:NextNumber(-0.06, 0.06)), col, { Material = Enum.Material.Neon, Transparency = 0.15 })
 				part(f, Vector3.new(w * 0.6, h * 0.3, w * 0.6), sp.CFrame * CFrame.new(0, h * 0.62, 0) * CFrame.Angles(0, 0.7, 0), col:Lerp(WHITE, 0.3), { Material = Enum.Material.Neon })
 				if placed % 3 == 0 then light(sp, col, 30, 1) end
 			end
