@@ -1389,6 +1389,7 @@ SurfaceR.OnServerEvent:Connect(function(plr, dir, report) -- the rail lift butto
 		local CaveSwim = require(RS.Shared:WaitForChild("CaveSwim"))
 		local top = CaveSwim.waterTop(hrp.Position + Vector3.new(0, 1.5, 0)) -- the cave pools are terrain water since 2026-11-27
 		if not top or hrp.Position.Y > top + 1 then return end -- not in the water
+		if not s.underSince or os.clock() - s.underSince < C.SWIM.air * 0.8 then return end -- the server saw the head under long enough (Codex 2026-11-27: a client could drown at once to teleport)
 		local lost = loseShare(s, C.SWIM.loss)
 		hrp.AssemblyLinearVelocity = Vector3.zero
 		hrp.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
@@ -2431,6 +2432,17 @@ do -- the Egg Hatchery panel's BUY and HATCH buttons: the same station code, onl
 		if s and pr and (what == "buyEgg" or what == "hatch") and not plr:GetAttribute("InCave") and nearPrompt(plr, pr) then STATION[what](s) end
 	end)
 end
+task.spawn(function() -- how long each caver's head has been under terrain water (the drown request needs it)
+	local CaveSwim = require(RS.Shared:WaitForChild("CaveSwim"))
+	while true do
+		task.wait(0.5)
+		for plr, s in data do
+			local head = plr:GetAttribute("InCave") and plr.Character and plr.Character:FindFirstChild("Head")
+			local top = head and CaveSwim.waterTop(head.Position)
+			if top and head.Position.Y < top - 0.2 then s.underSince = s.underSince or os.clock() else s.underSince = nil end
+		end
+	end
+end)
 local pit = hub:FindFirstChild("PitFloor", true) -- jumping into the glowing pit also takes the lift down
 pit.Touched:Connect(function(hitPart)
 	local plr = Players:GetPlayerFromCharacter(hitPart.Parent)

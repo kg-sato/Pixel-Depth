@@ -498,6 +498,14 @@ function void.reveal(ctx, s, dt)
 end
 
 M.BY_NAME = { Fafnir = hoard, Kirin = storm, Ouro = coil, Ninering = void }
+do -- 2026-11-27 (vault Briefs/Pet Hatch Cutscenes): the Rare and Epic vignettes join by name, and the high tiers grow into acts
+	local ok, HT = pcall(require, script.Parent:WaitForChild("HatchHighTier", 5))
+	if ok and HT then HT.apply({ hoard = hoard, storm = storm, coil = coil, void = void }) end
+	for _, n in { "HatchRare", "HatchEpic" } do
+		local ok2, T = pcall(require, script.Parent:WaitForChild(n, 5))
+		if ok2 and T then for name, sig in T.BY_NAME do M.BY_NAME[name] = sig end end
+	end
+end
 M.BY_RARITY = { Legendary = hoard, Mythic = coil, Secret = void }
 function M.get(name, rarity)
 	return M.BY_NAME[name] or M.BY_RARITY[rarity]

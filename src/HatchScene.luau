@@ -345,9 +345,9 @@ function M.play(opt)
 	local AB = A1 + BUILD
 	local okSig, SigMod = pcall(require, script.Parent:FindFirstChild("HatchSignature"))
 	local sig = okSig and SigMod and SigMod.get(opt.name, opt.rarity) or nil -- Legendary, Mythic and Secret pets get a set piece of their own (Shared.HatchSignature)
-	local OMEN = sig and not fast and sig.omen or 0
+	local OMEN = sig and (fast and (sig.fastOmen or 0) or sig.omen) or 0 -- Fast cutscenes keep a short omen (0.9 s Rare and Epic, 1.6 s higher) since 2026-11-27
 	local A2 = AB + OMEN -- the omen plays between the build-up and the hang
-	local ctx = sig and { world = world, egg = egg, NEST = NEST, rc = rc, part = part, light = light, sfx = sfx, rnd = Random.new(11), caption = caption, state = {} }
+	local ctx = sig and { world = world, egg = egg, NEST = NEST, rc = rc, part = part, light = light, sfx = sfx, rnd = Random.new(11), caption = caption, state = {}, fast = fast }
 	local HANG = fast and 0.2 or (0.95 + k * 0.3) -- directive v13: room for a two-stage coil (anim02: the wind-up before the wind-up)
 	local A3 = A2 + HANG -- the burst
 	local t, last, fired = 0, os.clock(), {}
@@ -381,6 +381,31 @@ function M.play(opt)
 	tapBtn.Activated:Connect(function()
 		if t > A3 + 0.8 and not closing then closing, closeAt = true, t end
 	end)
+	do -- SKIP (2026-11-27, vault Briefs/Pet Hatch Cutscenes): top right, 44 px tall; jumps to the burst, the reveal still plays
+		local skip = Instance.new("TextButton")
+		skip.Name, skip.Text, skip.Font, skip.TextScaled = "HatchSkip", "SKIP  >>", Enum.Font.FredokaOne, true
+		skip.Size, skip.Position, skip.AnchorPoint, skip.ZIndex = UDim2.new(0, 132, 0, 44), UDim2.new(1, -24, 0, 24), Vector2.new(1, 0), 12
+		skip.BackgroundColor3, skip.BackgroundTransparency, skip.TextColor3, skip.AutoButtonColor = Color3.fromRGB(30, 20, 50), 0.25, Color3.fromRGB(236, 224, 255), true
+		local c = Instance.new("UICorner")
+		c.CornerRadius = UDim.new(0.5, 0)
+		c.Parent = skip
+		local pad = Instance.new("UIPadding")
+		pad.PaddingTop, pad.PaddingBottom, pad.PaddingLeft, pad.PaddingRight = UDim.new(0, 8), UDim.new(0, 8), UDim.new(0, 12), UDim.new(0, 12)
+		pad.Parent = skip
+		skip.Parent = gui
+		skip.Activated:Connect(function()
+			if t < A3 - 0.1 then t = A3 - 0.05 end
+			skip.Visible = false
+		end)
+		task.delay(0.6, function() if skip.Parent then skip.Visible = t < A3 end end)
+		local plr = game:GetService("Players").LocalPlayer
+		local hookConn = plr:GetAttributeChangedSignal("DevHatchSkip"):Connect(function() -- Studio test hook: skip, then (a second set) close
+			if not plr:GetAttribute("DevHatchSkip") then return end
+			if t < A3 - 0.1 then t = A3 - 0.05 skip.Visible = false
+			elseif t > A3 + 0.8 and not closing then closing, closeAt = true, t end
+		end)
+		gui.Destroying:Connect(function() hookConn:Disconnect() end)
+	end
 	TweenService:Create(veil, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 }):Play()
 	local frozeAt = nil
 

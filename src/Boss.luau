@@ -36,7 +36,7 @@ local function modelOf(def) return workspace:FindFirstChild("Caves") and workspa
 local RELIC = { "Heartwood Sigil", "Kiln Crown Emblem" }
 local function pace(b) return b.phase == 3 and 0.7 or (b.phase == 2 and 0.8 or 1) end -- wind-ups shrink with each phase
 
-local function spawnChest(plr, s, def)
+local function spawnChest(plr, s, def, first)
 	local w = modelOf(def)
 	if not w or not w.PrimaryPart then return end
 	local look = w.PrimaryPart.CFrame.LookVector * Vector3.new(1, 0, 1)
@@ -72,13 +72,12 @@ local function spawnChest(plr, s, def)
 	pr.Parent = body
 	m.Parent = w.Parent
 	local opened = false
-	pr.Triggered:Connect(function(who)
-		if opened or who ~= plr or ctx.data[plr] ~= s or (ctx.nearPrompt and not ctx.nearPrompt(plr, pr)) then return end
+	local function claim()
+		if opened or ctx.data[plr] ~= s then return end
 		opened = true
 		local B = def.B
 		local gold, gems = math.floor(B.gold / 2), 5
-		local first = not s.tips["relic" .. def.id]
-		if first then gems += 10 s.tips["relic" .. def.id] = true end
+		if first then gems += 10 end
 		s.gold += gold
 		s.gems += gems
 		if type(s.soul) == "table" and type(s.soul.shards) == "number" then s.soul.shards += 2 end
@@ -89,8 +88,15 @@ local function spawnChest(plr, s, def)
 		ctx.fx:FireClient(plr, "bossChest", gold, gems, first and RELIC[def.id] or "", def.id, body.Position)
 		ctx.sendState(s)
 		m:Destroy()
+	end
+	pr.Triggered:Connect(function(who)
+		if who ~= plr or (ctx.nearPrompt and not ctx.nearPrompt(plr, pr)) then return end
+		claim()
 	end)
-	task.delay(120, function() if m.Parent and not opened then m:Destroy() end end) -- a chest nobody opens goes after two minutes
+	task.delay(120, function() -- after two minutes it opens itself for its owner (still here), so no loot is lost
+		if not opened then claim() end
+		if m.Parent then m:Destroy() end
+	end)
 end
 
 local function finish(plr, s, won)
@@ -108,9 +114,11 @@ local function finish(plr, s, won)
 			ctx.analytics.earn(s, "Gems", B.gems, s.gems, def.event)
 			ctx.analytics.event(s, def.event .. "Defeated")
 		end
+		local first = not s.tips["relic" .. def.id] -- the relic is earned by the win itself (Codex 2026-11-27: a chest left unopened lost it for good)
+		s.tips["relic" .. def.id] = true
 		ctx.fx:FireClient(plr, "bossWin", B.gold, B.gems, def.id)
 		if def.id == 1 and ctx.quest then ctx.quest(s, "warden") end
-		task.delay(1.2, function() pcall(spawnChest, plr, s, def) end)
+		task.delay(1.2, function() pcall(spawnChest, plr, s, def, first) end)
 	else
 		ctx.fx:FireClient(plr, "bossLose", def.id)
 	end
@@ -391,7 +399,9 @@ function M.init(c)
 			local used = type(n) == "number" and type(lastFlares) == "number" and n < lastFlares
 			lastFlares = n
 			local now = workspace:GetServerTimeNow()
-			if used and not b.stagger and (now < (b.coreUntil or 0) or now < (b.snareUntil or 0)) then
+			local hrp, w = ctx.hrpOf(plr), modelOf(def)
+			local near = hrp and w and w.PrimaryPart and (hrp.Position - w.PrimaryPart.Position).Magnitude <= def.B.leash -- thrown in the arena (Codex 2026-11-27: from anywhere counted)
+			if used and near and not b.stagger and (now < (b.coreUntil or 0) or now < (b.snareUntil or 0)) then
 				b.stagger = true
 				ctx.fx:FireClient(plr, "bossStagger", 2.5, def.id, now < (b.snareUntil or 0))
 			end
