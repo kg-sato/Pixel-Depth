@@ -1020,8 +1020,8 @@ rigAnimate = function(m, rig, now, dt, moving)
 				q.CFrame = g * CFrame.new(math.cos(a2) * rr, y, math.sin(a2) * rr) * CFrame.Angles(wt * 9 * (1 - i2 % 2), a2, wt * 6 * (1 - i2 % 2))
 				q.Transparency = wt / 0.6
 				q.Size = Vector3.one * (0.22 - 0.12 * wt / 0.6) * s
-			elseif q.Transparency < 1 then
-				q.Transparency = 1
+			else -- parked at the feet: a cube left where the last stomp ended held the model's box across the map (pet_clear_test 2026-11-27)
+				q.CFrame, q.Transparency = g, 1
 			end
 		end
 	end

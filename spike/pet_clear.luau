@@ -31,9 +31,13 @@ for ci = 1, math.min(#cols, 12) do
 			cam0.CFrame = CFrame.lookAt(cam0.CFrame.Position, cam0.CFrame.Position + L) -- first person keeps the camera's own yaw: turn it to face L
 			task.wait(1.6)
 			local want = cam0.CFrame:PointToWorldSpace(Vector3.new(-9, -1, -13.8))
-			local cf, size = pet:GetBoundingBox()
+			local cf = pet.PrimaryPart.CFrame -- 2026-11-27: the model's box held stray effect cubes, so each visible body part is checked instead
 			local inRock = {}
-			for _, q in workspace:GetPartBoundsInBox(cf, size * 0.7, op) do if q.CanCollide and q.Transparency < 1 then inRock[q.Name] = true end end
+			for _, bp in pet:GetDescendants() do
+				if bp:IsA('BasePart') and bp.Transparency < 0.98 and string.sub(bp.Name, 1, 3) ~= 'Fx_' then
+					for _, q in workspace:GetPartBoundsInBox(bp.CFrame, bp.Size * 0.7, op) do if q.CanCollide and q.Transparency < 1 then inRock[q.Name] = true end end
+				end
+			end
 			local names = {} for n in inRock do table.insert(names, n) end
 			if #names > 0 then bad += 1 end
 			local cam = workspace.CurrentCamera

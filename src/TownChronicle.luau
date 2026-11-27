@@ -17,6 +17,7 @@ function M.start(E)
 		local slab = m and m:FindFirstChild("ChronicleSlab")
 		return m, slab and slab:FindFirstChild("ChronicleGui")
 	end
+	local function count(n, one, many) n = tonumber(n) or 0 return n .. " " .. (n == 1 and one or (many or one .. "S")) end
 	local function draw()
 		local m, sg = face()
 		if not sg then return end
@@ -33,7 +34,7 @@ function M.start(E)
 					nameL.Text = i .. ".  " .. tostring(r.n or "MINER")
 					nameL.TextColor3 = mine and MINE or IVORY
 					local d = math.clamp(tonumber(r.d) or 0, 0, 2)
-					statL.Text = (LAYER[d] or "") .. (DEEP[d] or "TOWN") .. "   \u{00B7}   " .. (tonumber(r.e) or 0) .. " ESC   \u{00B7}   " .. (tonumber(r.b) or 0) .. " BOSS" -- middots: the thin pipes read as the digit 1 (audit 2026-11-26 text 5)
+					statL.Text = (LAYER[d] or "") .. (DEEP[d] or "TOWN") .. "   \u{00B7}   " .. count(r.e, "ESCAPE") .. "   \u{00B7}   " .. count(r.b, "BOSS", "BOSSES") -- "7 ESC" read as "GESC" (tour n1127b); middots: the thin pipes read as the digit 1 (audit 2026-11-26 text 5)
 					statL.TextColor3 = mine and MINE or GOLDE
 				else
 					nameL.Text, statL.Text = "", ""

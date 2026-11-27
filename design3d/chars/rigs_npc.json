@@ -1,14 +1,14 @@
 {
  "Bolt": {
   "name": "Bolt",
-  "tris": 24488,
-  "maxPart": 7364,
+  "tris": 27088,
+  "maxPart": 7496,
   "objects": 15,
   "parts": 12,
   "height": 5.9,
   "size": [
-   7.1,
-   3.1,
+   7.6,
+   3.2,
    5.9
   ],
   "parent": {
@@ -41,137 +41,137 @@
   "axes": {},
   "pivots": {
    "Body": [
-    -0.05,
+    0.2,
     2.05,
-    0.15
+    0.2
    ],
    "Head": [
-    -0.05,
+    0.2,
     3.85,
-    0.25
+    0.3
    ],
    "ArmL1": [
-    -1.1,
+    -0.85,
     3.45,
-    0.2
-   ],
-   "ArmL2": [
-    -1.55,
-    2.7,
-    0.4
-   ],
-   "ArmR1": [
-    1.0,
-    3.45,
-    0.2
-   ],
-   "ArmR2": [
-    1.85,
-    3.05,
     0.25
    ],
+   "ArmL2": [
+    -1.65,
+    2.95,
+    0.45
+   ],
+   "ArmR1": [
+    1.25,
+    3.45,
+    0.25
+   ],
+   "ArmR2": [
+    2.1,
+    3.05,
+    0.3
+   ],
    "LegL1": [
-    -0.5,
+    -0.32,
     1.62,
-    0.15
+    0.2
    ],
    "LegL2": [
-    -0.55,
+    -0.44,
     0.82,
-    0.43
+    0.48
    ],
    "LegR1": [
-    0.4,
+    0.72,
     1.62,
-    0.15
+    0.2
    ],
    "LegR2": [
-    0.45,
+    0.84,
     0.82,
-    0.43
+    0.48
    ],
    "Tail1": [
-    -0.35,
+    -0.1,
     1.75,
-    -0.45
+    -0.4
    ],
    "Tail2": [
-    -2.35,
-    1.7,
-    -1.0
+    -2.4,
+    1.35,
+    -0.8
    ]
   },
   "anchors": {
    "chest": [
     "Body",
     [
-     -0.05,
+     0.2,
      3.0,
-     0.95
+     1.0
     ]
    ],
    "eyes": [
     "Head",
     [
-     -0.05,
+     0.2,
      4.8,
-     1.1
+     1.15
     ]
    ],
    "speech": [
     "Head",
     [
-     -0.05,
+     0.2,
      5.9,
-     0.15
+     0.2
     ]
    ],
    "handL": [
     "ArmL2",
     [
-     -1.8,
-     1.95,
-     0.9
+     -2.2,
+     3.4,
+     0.8
     ]
    ],
    "handR": [
     "ArmR2",
     [
-     2.4,
+     2.65,
      3.55,
-     0.5
+     0.55
     ]
    ],
    "hammer": [
     "ArmR2",
     [
-     3.45,
+     3.7,
      5.0,
-     0.55
+     0.6
     ]
    ],
    "footL": [
     "LegL2",
     [
-     -0.55,
+     -0.56,
      0.1,
-     0.49
+     0.54
     ]
    ],
    "footR": [
     "LegR2",
     [
-     0.45,
+     0.96,
      0.1,
-     0.49
+     0.54
     ]
    ],
    "tail": [
     "Tail2",
     [
-     -3.35,
-     3.2,
-     -0.7
+     -3.55,
+     2.6,
+     -0.4
     ]
    ]
   },
@@ -238,11 +238,2474 @@
    "ShineTop": "#ffffff",
    "_noseams": true
   },
-  "cells": 14373,
+  "cells": 15672,
   "proportions": {
    "clearance": 0.55,
    "head": 0.55,
    "shoulder": 3.8
+  },
+  "npc": true
+ },
+ "Maribel": {
+  "name": "Maribel",
+  "tris": 33472,
+  "maxPart": 14208,
+  "objects": 10,
+  "parts": 8,
+  "height": 6.5,
+  "size": [
+   5.4,
+   5.0,
+   6.5
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "ArmL1": "Body",
+   "ArmL2": "ArmL1",
+   "ArmR1": "Body",
+   "ArmR2": "ArmR1",
+   "LegL1": "Body",
+   "LegR1": "Body"
+  },
+  "groups": {
+   "Head": "head",
+   "ArmL1": "arm",
+   "ArmL2": "arm",
+   "ArmR1": "arm",
+   "ArmR2": "arm",
+   "LegL1": "leg",
+   "LegR1": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    1.9,
+    -0.9
+   ],
+   "Head": [
+    0.0,
+    3.45,
+    -0.85
+   ],
+   "ArmL1": [
+    -0.95,
+    2.95,
+    -0.75
+   ],
+   "ArmL2": [
+    -1.45,
+    2.3,
+    0.2
+   ],
+   "ArmR1": [
+    0.95,
+    2.95,
+    -0.75
+   ],
+   "ArmR2": [
+    1.45,
+    2.3,
+    0.2
+   ],
+   "LegL1": [
+    -0.42,
+    0.9,
+    -0.8
+   ],
+   "LegR1": [
+    0.42,
+    0.9,
+    -0.8
+   ]
+  },
+  "anchors": {
+   "chest": [
+    "Body",
+    [
+     0.0,
+     2.9,
+     -0.0
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.0,
+     4.42,
+     -0.0
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     0.0,
+     6.3,
+     -0.9
+    ]
+   ],
+   "handL": [
+    "ArmL2",
+    [
+     -0.95,
+     2.15,
+     1.38
+    ]
+   ],
+   "handR": [
+    "ArmR2",
+    [
+     0.95,
+     2.15,
+     1.38
+    ]
+   ],
+   "egg": [
+    "ArmR2",
+    [
+     0.0,
+     2.65,
+     1.6
+    ]
+   ],
+   "footL": [
+    "LegL1",
+    [
+     -0.6,
+     0.1,
+     0.5
+    ]
+   ],
+   "footR": [
+    "LegR1",
+    [
+     0.6,
+     0.1,
+     0.5
+    ]
+   ]
+  },
+  "palette": {
+   "Fur": "#f2e4d4",
+   "FurTop": "#fbf5ef",
+   "FurHi": "#ffffff",
+   "FurHiTop": "#ffffff",
+   "FurLo": "#dcc4ae",
+   "FurLoTop": "#e2cab4",
+   "FurCrease": "#bf9f86",
+   "FurCreaseTop": "#c6a78e",
+   "FurDark": "#c8ad94",
+   "FurDarkTop": "#d6bfaa",
+   "White": "#fffaf2",
+   "WhiteTop": "#ffffff",
+   "Cloak": "#86dcb8",
+   "CloakTop": "#a0e6c9",
+   "CloakHi": "#b3eccc",
+   "CloakHiTop": "#ccf2db",
+   "CloakLo": "#64cbb9",
+   "CloakLoTop": "#77d2c1",
+   "CloakCrease": "#45b7a9",
+   "CloakCreaseTop": "#53beb1",
+   "CloakDark": "#4f9f86",
+   "CloakDarkTop": "#5eb499",
+   "Cape": "#b9a6ec",
+   "CapeTop": "#d0c2f3",
+   "CapeHi": "#dbd7f8",
+   "CapeHiTop": "#f2f1fd",
+   "CapeLo": "#b180df",
+   "CapeLoTop": "#bd94e4",
+   "CapeCrease": "#9e5cd0",
+   "CapeCreaseTop": "#a86cd4",
+   "CapeDark": "#7d68c0",
+   "CapeDarkTop": "#917fcd",
+   "Trim": "#fff1d6",
+   "TrimTop": "#fffdfa",
+   "Hat": "#5d4a8e",
+   "HatTop": "#6b52a9",
+   "HatDark": "#3c2f62",
+   "HatDarkTop": "#49387d",
+   "Band": "#86dcb8",
+   "BandTop": "#a0e6c9",
+   "Brass": "#e0b04a",
+   "BrassTop": "#e8be66",
+   "Straw": "#dcae5e",
+   "StrawTop": "#e5bd79",
+   "StrawDark": "#a2702e",
+   "StrawDarkTop": "#c18432",
+   "Egg": "#9fe6ff",
+   "EggTop": "#c3efff",
+   "Spot": "#6a44d0",
+   "SpotTop": "#7f5eda",
+   "Glow": "#bdf4ff",
+   "GlowTop": "#e1faff",
+   "Crystal": "#9ff0ff",
+   "CrystalTop": "#c3f6ff",
+   "Pink": "#f4b2c6",
+   "PinkTop": "#f9d0dd",
+   "Blush": "#f39ab4",
+   "BlushTop": "#f8b9cb",
+   "Nose": "#d86a8a",
+   "NoseTop": "#e2849f",
+   "Eye": "#1c1230",
+   "EyeTop": "#2b1a4b",
+   "Iris": "#4a2c8a",
+   "IrisTop": "#5731a8",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Boot": "#6a4a3a",
+   "BootTop": "#845944",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 23386,
+  "proportions": {
+   "clearance": 0.04,
+   "head": 1.25,
+   "shoulder": 2.4
+  },
+  "npc": true
+ },
+ "Wick": {
+  "name": "Wick",
+  "tris": 14620,
+  "maxPart": 4032,
+  "objects": 8,
+  "parts": 6,
+  "height": 5.0,
+  "size": [
+   3.7,
+   3.8,
+   5.0
+  ],
+  "parent": {
+   "Body": null,
+   "Seg2": "Body",
+   "Tail": "Seg2",
+   "Head": "Body",
+   "ArmL1": "Body",
+   "ArmR1": "Body"
+  },
+  "groups": {
+   "Seg2": "tail",
+   "Tail": "tail",
+   "Head": "head",
+   "ArmL1": "arm",
+   "ArmR1": "arm"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    -0.7,
+    1.15,
+    0.35
+   ],
+   "Seg2": [
+    -1.25,
+    0.6,
+    -0.05
+   ],
+   "Tail": [
+    -0.1,
+    0.48,
+    -1.45
+   ],
+   "Head": [
+    -0.55,
+    2.85,
+    0.25
+   ],
+   "ArmL1": [
+    -1.07,
+    2.3,
+    0.55
+   ],
+   "ArmR1": [
+    -0.03,
+    2.3,
+    0.55
+   ]
+  },
+  "anchors": {
+   "tail": [
+    "Tail",
+    [
+     1.4,
+     1.9,
+     -0.95
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     -0.55,
+     3.5,
+     1.0
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     -0.55,
+     5.3,
+     0.2
+    ]
+   ],
+   "handL": [
+    "ArmL1",
+    [
+     -0.89,
+     2.15,
+     1.5
+    ]
+   ],
+   "handR": [
+    "ArmR1",
+    [
+     -0.21,
+     2.15,
+     1.5
+    ]
+   ],
+   "mug": [
+    "ArmR1",
+    [
+     -0.55,
+     2.2,
+     1.62
+    ]
+   ]
+  },
+  "palette": {
+   "Body": "#7cd6b2",
+   "BodyTop": "#95e1c2",
+   "BodyHi": "#a8e7c4",
+   "BodyHiTop": "#c0eed3",
+   "BodyLo": "#5bc4b3",
+   "BodyLoTop": "#6ecbbc",
+   "BodyCrease": "#44a89e",
+   "BodyCreaseTop": "#4bb6ab",
+   "Head": "#86dcb8",
+   "HeadTop": "#a0e6c9",
+   "HeadHi": "#b3eccc",
+   "HeadHiTop": "#ccf2db",
+   "HeadLo": "#64cbb9",
+   "HeadLoTop": "#77d2c1",
+   "HeadCrease": "#45b7a9",
+   "HeadCreaseTop": "#53beb1",
+   "Ring": "#3d977b",
+   "RingTop": "#44b491",
+   "Belly": "#dcf6cc",
+   "BellyTop": "#f1fcea",
+   "Eye": "#1a1228",
+   "EyeTop": "#2a1c42",
+   "Iris": "#ffb347",
+   "IrisTop": "#ffc26b",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Brass": "#e0b04a",
+   "BrassTop": "#e8be66",
+   "BrassLo": "#a87a2a",
+   "BrassLoTop": "#c8902d",
+   "Beanie": "#c8643c",
+   "BeanieTop": "#d37955",
+   "BeanieDark": "#86381f",
+   "BeanieDarkTop": "#a64323",
+   "Patch": "#e3bf5e",
+   "PatchTop": "#ebcc7a",
+   "Patch2": "#6f7fd0",
+   "Patch2Top": "#8895db",
+   "Cape": "#7a5a9c",
+   "CapeTop": "#8c6baf",
+   "CapeDark": "#4e3a70",
+   "CapeDarkTop": "#5e438b",
+   "Tin": "#b2b6c4",
+   "TinTop": "#c5c8d5",
+   "TinDark": "#6c7080",
+   "TinDarkTop": "#7a8096",
+   "Cocoa": "#5e3420",
+   "CocoaTop": "#7b4227",
+   "Glow": "#ffd27a",
+   "GlowTop": "#ffde9e",
+   "Ember": "#ff9a30",
+   "EmberTop": "#ffab54",
+   "Blush": "#f39ab4",
+   "BlushTop": "#f8b9cb",
+   "Mouth": "#2a1a2a",
+   "MouthTop": "#422642",
+   "Stitch": "#f4e6c8",
+   "StitchTop": "#faf4e5",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 9438,
+  "proportions": {
+   "clearance": 0.14,
+   "head": 0.79,
+   "shoulder": 2.9
+  },
+  "npc": true
+ },
+ "KilnKeeper": {
+  "name": "KilnKeeper",
+  "tris": 16304,
+  "maxPart": 6496,
+  "objects": 8,
+  "parts": 8,
+  "height": 4.3,
+  "size": [
+   3.8,
+   3.6,
+   4.3
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "ArmL1": "Body",
+   "ArmL2": "ArmL1",
+   "ArmR1": "Body",
+   "ArmR2": "ArmR1",
+   "LegL1": "Body",
+   "LegR1": "Body"
+  },
+  "groups": {
+   "Head": "head",
+   "ArmL1": "arm",
+   "ArmL2": "arm",
+   "ArmR1": "arm",
+   "ArmR2": "arm",
+   "LegL1": "leg",
+   "LegR1": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    1.6,
+    -0.6
+   ],
+   "Head": [
+    0.0,
+    2.65,
+    -0.4
+   ],
+   "ArmL1": [
+    -1.0,
+    2.3,
+    -0.4
+   ],
+   "ArmL2": [
+    -1.62,
+    1.98,
+    0.12
+   ],
+   "ArmR1": [
+    1.0,
+    2.3,
+    -0.4
+   ],
+   "ArmR2": [
+    1.62,
+    1.98,
+    0.12
+   ],
+   "LegL1": [
+    -0.55,
+    0.7,
+    -0.55
+   ],
+   "LegR1": [
+    0.55,
+    0.7,
+    -0.55
+   ]
+  },
+  "anchors": {
+   "chest": [
+    "Body",
+    [
+     0.0,
+     2.0,
+     0.4
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.0,
+     3.42,
+     0.35
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     0.0,
+     4.8,
+     -0.5
+    ]
+   ],
+   "handL": [
+    "ArmL2",
+    [
+     -0.92,
+     2.05,
+     1.12
+    ]
+   ],
+   "handR": [
+    "ArmR2",
+    [
+     0.92,
+     2.05,
+     1.12
+    ]
+   ],
+   "pot": [
+    "ArmR2",
+    [
+     0.0,
+     2.3,
+     1.25
+    ]
+   ],
+   "footL": [
+    "LegL1",
+    [
+     -0.62,
+     0.1,
+     -0.05
+    ]
+   ],
+   "footR": [
+    "LegR1",
+    [
+     0.62,
+     0.1,
+     -0.05
+    ]
+   ]
+  },
+  "palette": {
+   "Velvet": "#6e4a86",
+   "VelvetTop": "#8253a1",
+   "VelvetHi": "#835eaf",
+   "VelvetHiTop": "#9072b9",
+   "VelvetLo": "#5c3c74",
+   "VelvetLoTop": "#62427a",
+   "VelvetCrease": "#3e2652",
+   "VelvetCreaseTop": "#442a58",
+   "VelvetDark": "#4a2f5e",
+   "VelvetDarkTop": "#5d3878",
+   "Snout": "#8c68a2",
+   "SnoutTop": "#9e7bb3",
+   "Nose": "#f49ab2",
+   "NoseTop": "#f9b9ca",
+   "NoseLo": "#d8708e",
+   "NoseLoTop": "#e28aa3",
+   "Tunic": "#c86a44",
+   "TunicTop": "#d37f5c",
+   "TunicHi": "#da7e6f",
+   "TunicHiTop": "#e19187",
+   "TunicLo": "#a8553a",
+   "TunicLoTop": "#b05c40",
+   "TunicCrease": "#7a3a26",
+   "TunicCreaseTop": "#82402a",
+   "TunicDark": "#8e4428",
+   "TunicDarkTop": "#ad502d",
+   "Apron": "#f2e2c2",
+   "ApronTop": "#f9f0df",
+   "ApronLo": "#d8c4a0",
+   "ApronLoTop": "#e4d4b8",
+   "Smudge": "#b8643e",
+   "SmudgeTop": "#c97651",
+   "Paw": "#f2dcd2",
+   "PawTop": "#faf1ed",
+   "Claw": "#fff6e8",
+   "ClawTop": "#ffffff",
+   "Brass": "#e0b04a",
+   "BrassTop": "#e8be66",
+   "Eye": "#1a1228",
+   "EyeTop": "#2a1c42",
+   "Iris": "#3a2450",
+   "IrisTop": "#4c2d6b",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Pot": "#cc7c4c",
+   "PotTop": "#d79065",
+   "PotDark": "#8e4c2c",
+   "PotDarkTop": "#ad5931",
+   "Paint": "#5fd0c0",
+   "PaintTop": "#78dbcd",
+   "PaintHi": "#c8fff4",
+   "PaintHiTop": "#ecfffb",
+   "Beret": "#3e3446",
+   "BeretTop": "#50415d",
+   "BeretDark": "#2a2232",
+   "BeretDarkTop": "#3c2f49",
+   "White": "#fff8ee",
+   "WhiteTop": "#ffffff",
+   "Blush": "#f39ab4",
+   "BlushTop": "#f8b9cb",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 11409,
+  "proportions": {
+   "clearance": 0.36,
+   "head": 0.72,
+   "shoulder": 2.5
+  },
+  "npc": true
+ },
+ "Moss": {
+  "name": "Moss",
+  "tris": 12772,
+  "maxPart": 5580,
+  "objects": 11,
+  "parts": 10,
+  "height": 3.9,
+  "size": [
+   2.3,
+   2.4,
+   3.9
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "ArmL1": "Body",
+   "ArmL2": "ArmL1",
+   "ArmR1": "Body",
+   "ArmR2": "ArmR1",
+   "LegL1": "Body",
+   "LegL2": "LegL1",
+   "LegR1": "Body",
+   "LegR2": "LegR1"
+  },
+  "groups": {
+   "Head": "head",
+   "ArmL1": "arm",
+   "ArmL2": "arm",
+   "ArmR1": "arm",
+   "ArmR2": "arm",
+   "LegL1": "leg",
+   "LegL2": "leg",
+   "LegR1": "leg",
+   "LegR2": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    -0.05,
+    1.45,
+    -0.1
+   ],
+   "Head": [
+    -0.05,
+    2.35,
+    -0.0
+   ],
+   "ArmL1": [
+    -0.85,
+    2.1,
+    -0.0
+   ],
+   "ArmL2": [
+    -1.0,
+    1.6,
+    0.45
+   ],
+   "ArmR1": [
+    0.75,
+    2.1,
+    -0.0
+   ],
+   "ArmR2": [
+    0.9,
+    1.6,
+    0.45
+   ],
+   "LegL1": [
+    -0.43,
+    0.95,
+    -0.1
+   ],
+   "LegL2": [
+    -0.55,
+    0.55,
+    0.3
+   ],
+   "LegR1": [
+    0.33,
+    0.95,
+    -0.1
+   ],
+   "LegR2": [
+    0.45,
+    0.55,
+    0.3
+   ]
+  },
+  "anchors": {
+   "chest": [
+    "Body",
+    [
+     -0.05,
+     1.9,
+     0.7
+    ]
+   ],
+   "lamp": [
+    "Head",
+    [
+     -0.05,
+     3.48,
+     0.96
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     -0.05,
+     2.98,
+     0.7
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     -0.05,
+     4.4,
+     -0.0
+    ]
+   ],
+   "handL": [
+    "ArmL2",
+    [
+     -0.25,
+     1.72,
+     0.75
+    ]
+   ],
+   "handR": [
+    "ArmR2",
+    [
+     0.37,
+     2.12,
+     0.85
+    ]
+   ],
+   "lantern": [
+    "ArmR2",
+    [
+     0.37,
+     1.85,
+     0.92
+    ]
+   ],
+   "footL": [
+    "LegL2",
+    [
+     -0.57,
+     0.1,
+     0.32
+    ]
+   ],
+   "footR": [
+    "LegR2",
+    [
+     0.47,
+     0.1,
+     0.32
+    ]
+   ]
+  },
+  "palette": {
+   "Coat": "#a998d4",
+   "CoatTop": "#bdb0e0",
+   "CoatHi": "#c6c1e8",
+   "CoatHiTop": "#dad7f0",
+   "CoatLo": "#9e79c0",
+   "CoatLoTop": "#ab8ac8",
+   "CoatCrease": "#895caa",
+   "CoatCreaseTop": "#936ab1",
+   "CoatDark": "#6f5f9a",
+   "CoatDarkTop": "#8170ac",
+   "Face": "#efd4b0",
+   "FaceTop": "#f6e4cd",
+   "FaceHi": "#faece2",
+   "FaceHiTop": "#fffdfc",
+   "FaceLo": "#e3d289",
+   "FaceLoTop": "#e8da9e",
+   "FaceCrease": "#d4c665",
+   "FaceCreaseTop": "#d8cc75",
+   "FaceDark": "#c9a882",
+   "FaceDarkTop": "#d6ba99",
+   "Spine": "#7a5236",
+   "SpineTop": "#96623e",
+   "SpineTip": "#d6a878",
+   "SpineTipTop": "#e0ba91",
+   "Nose": "#2a1a1a",
+   "NoseTop": "#422626",
+   "Helm": "#f0c85a",
+   "HelmTop": "#f5d479",
+   "HelmDark": "#a8822a",
+   "HelmDarkTop": "#c89a2d",
+   "Lamp": "#fff2b0",
+   "LampTop": "#fff8d4",
+   "Glow": "#ffd27a",
+   "GlowTop": "#ffde9e",
+   "Ember": "#ffa040",
+   "EmberTop": "#ffb264",
+   "Scarf": "#6aa84f",
+   "ScarfTop": "#7cba61",
+   "ScarfDark": "#3f7a32",
+   "ScarfDarkTop": "#4a9639",
+   "Leather": "#8a5a34",
+   "LeatherTop": "#a76b3a",
+   "LeatherDark": "#5e3a20",
+   "LeatherDarkTop": "#7b4a27",
+   "Boot": "#4a3a44",
+   "BootTop": "#614757",
+   "Brass": "#e0b04a",
+   "BrassTop": "#e8be66",
+   "Eye": "#1a1228",
+   "EyeTop": "#2a1c42",
+   "Iris": "#4a2e18",
+   "IrisTop": "#673f1f",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Blush": "#f39ab4",
+   "BlushTop": "#f8b9cb",
+   "Brow": "#5a3a2a",
+   "BrowTop": "#754933",
+   "Smudge": "#7a6a80",
+   "SmudgeTop": "#8e7896",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 7104,
+  "proportions": {
+   "clearance": 0.26,
+   "head": 0.74,
+   "shoulder": 2.3
+  },
+  "npc": true
+ },
+ "Smudge": {
+  "name": "Smudge",
+  "tris": 5384,
+  "maxPart": 2856,
+  "objects": 7,
+  "parts": 7,
+  "height": 2.3,
+  "size": [
+   1.8,
+   2.0,
+   2.3
+  ],
+  "parent": {
+   "Body": null,
+   "Tail": "Body",
+   "Head": "Body",
+   "ArmL1": "Body",
+   "ArmR1": "Body",
+   "LegL1": "Body",
+   "LegR1": "Body"
+  },
+  "groups": {
+   "Tail": "tail",
+   "Head": "head",
+   "ArmL1": "arm",
+   "ArmR1": "arm",
+   "LegL1": "leg",
+   "LegR1": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    0.7,
+    0.2
+   ],
+   "Tail": [
+    0.0,
+    0.45,
+    -0.3
+   ],
+   "Head": [
+    0.0,
+    1.12,
+    0.25
+   ],
+   "ArmL1": [
+    -0.45,
+    0.92,
+    0.55
+   ],
+   "ArmR1": [
+    0.45,
+    0.92,
+    0.55
+   ],
+   "LegL1": [
+    -0.25,
+    0.2,
+    0.3
+   ],
+   "LegR1": [
+    0.25,
+    0.2,
+    0.3
+   ]
+  },
+  "anchors": {
+   "tail": [
+    "Tail",
+    [
+     0.2,
+     1.2,
+     -0.75
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.0,
+     1.45,
+     0.7
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     0.0,
+     2.6,
+     0.2
+    ]
+   ],
+   "handL": [
+    "ArmL1",
+    [
+     -0.2,
+     0.82,
+     0.88
+    ]
+   ],
+   "handR": [
+    "ArmR1",
+    [
+     0.2,
+     0.82,
+     0.88
+    ]
+   ],
+   "pebble": [
+    "ArmR1",
+    [
+     0.0,
+     0.78,
+     0.86
+    ]
+   ],
+   "footL": [
+    "LegL1",
+    [
+     -0.27,
+     0.05,
+     0.45
+    ]
+   ],
+   "footR": [
+    "LegR1",
+    [
+     0.27,
+     0.05,
+     0.45
+    ]
+   ]
+  },
+  "palette": {
+   "Soot": "#4a3c5c",
+   "SootTop": "#5b4774",
+   "SootHi": "#5f4f86",
+   "SootHiTop": "#6a5a9a",
+   "SootLo": "#2e2440",
+   "SootLoTop": "#433549",
+   "SootCrease": "#1a161c",
+   "SootCreaseTop": "#251f27",
+   "Wisp": "#6c5a84",
+   "WispTop": "#7d659d",
+   "WispTip": "#9a88b4",
+   "WispTipTop": "#ac9cc4",
+   "Eye": "#1a1228",
+   "EyeTop": "#2a1c42",
+   "Iris": "#ffd24a",
+   "IrisTop": "#ffdb6e",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Cap": "#e8c25a",
+   "CapTop": "#efcf77",
+   "CapDark": "#a8822a",
+   "CapDarkTop": "#c89a2d",
+   "Lamp": "#fff2b0",
+   "LampTop": "#fff8d4",
+   "Pebble": "#ff9a40",
+   "PebbleTop": "#ffad64",
+   "PebbleHot": "#ffd27a",
+   "PebbleHotTop": "#ffde9e",
+   "Blush": "#e888b0",
+   "BlushTop": "#efa4c4",
+   "Paw": "#5c4c70",
+   "PawTop": "#6d5789",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 2255,
+  "proportions": {
+   "clearance": 0.17,
+   "head": 1.17,
+   "shoulder": 1.2
+  },
+  "npc": true
+ },
+ "Pip": {
+  "name": "Pip",
+  "tris": 11080,
+  "maxPart": 3804,
+  "objects": 9,
+  "parts": 9,
+  "height": 4.0,
+  "size": [
+   3.5,
+   3.2,
+   4.0
+  ],
+  "parent": {
+   "Body": null,
+   "Tail": "Body",
+   "Head": "Body",
+   "ArmR1": "Body",
+   "ArmR2": "ArmR1",
+   "ArmL1": "Body",
+   "ArmL2": "ArmL1",
+   "LegL1": "Body",
+   "LegR1": "Body"
+  },
+  "groups": {
+   "Tail": "tail",
+   "Head": "head",
+   "ArmR1": "arm",
+   "ArmR2": "arm",
+   "ArmL1": "arm",
+   "ArmL2": "arm",
+   "LegL1": "leg",
+   "LegR1": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.05,
+    1.55,
+    0.7
+   ],
+   "Tail": [
+    0.15,
+    1.0,
+    0.15
+   ],
+   "Head": [
+    0.05,
+    2.4,
+    0.8
+   ],
+   "ArmR1": [
+    0.71,
+    2.05,
+    0.75
+   ],
+   "ArmR2": [
+    1.2,
+    2.5,
+    0.85
+   ],
+   "ArmL1": [
+    -0.61,
+    2.05,
+    0.75
+   ],
+   "ArmL2": [
+    -0.8,
+    1.55,
+    1.0
+   ],
+   "LegL1": [
+    -0.27,
+    0.95,
+    0.7
+   ],
+   "LegR1": [
+    0.37,
+    0.95,
+    0.7
+   ]
+  },
+  "anchors": {
+   "chest": [
+    "Body",
+    [
+     0.05,
+     1.9,
+     1.36
+    ]
+   ],
+   "tail": [
+    "Tail",
+    [
+     -1.0,
+     2.95,
+     -0.35
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.05,
+     3.05,
+     1.32
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     0.05,
+     4.2,
+     0.8
+    ]
+   ],
+   "handR": [
+    "ArmR2",
+    [
+     1.6,
+     3.15,
+     1.0
+    ]
+   ],
+   "handL": [
+    "ArmL2",
+    [
+     -0.57,
+     1.4,
+     1.25
+    ]
+   ],
+   "footL": [
+    "LegL1",
+    [
+     -0.35,
+     0.1,
+     1.1
+    ]
+   ],
+   "footR": [
+    "LegR1",
+    [
+     0.45,
+     0.1,
+     1.1
+    ]
+   ]
+  },
+  "palette": {
+   "Fur": "#d8743a",
+   "FurTop": "#e18855",
+   "FurHi": "#e68469",
+   "FurHiTop": "#eb9683",
+   "FurLo": "#b57e2a",
+   "FurLoTop": "#c98d2f",
+   "FurCrease": "#876625",
+   "FurCreaseTop": "#977329",
+   "FurDark": "#9a4a24",
+   "FurDarkTop": "#ba5727",
+   "Cream": "#f6e2c4",
+   "CreamTop": "#fbf1e2",
+   "Vest": "#3e5a9c",
+   "VestTop": "#4467b9",
+   "VestHi": "#5486c3",
+   "VestHiTop": "#6b99cb",
+   "VestLo": "#343773",
+   "VestLoTop": "#3c4085",
+   "VestCrease": "#27274d",
+   "VestCreaseTop": "#2e2e5b",
+   "VestDark": "#28386a",
+   "VestDarkTop": "#2f4487",
+   "Scarf": "#ff7a6a",
+   "ScarfTop": "#ff9a8e",
+   "ScarfDark": "#c84a46",
+   "ScarfDarkTop": "#d3625e",
+   "Cap": "#2e3e72",
+   "CapTop": "#354a8e",
+   "CapDark": "#1c2648",
+   "CapDarkTop": "#243264",
+   "Brass": "#e8b84a",
+   "BrassTop": "#efc567",
+   "Leather": "#8a5a34",
+   "LeatherTop": "#a76b3a",
+   "LeatherDark": "#5e3a20",
+   "LeatherDarkTop": "#7b4a27",
+   "Paper": "#f8eed8",
+   "PaperTop": "#fefbf6",
+   "PaperDark": "#d8c8a4",
+   "PaperDarkTop": "#e4d8bc",
+   "Ribbon": "#e84a5a",
+   "RibbonTop": "#ef6775",
+   "Eye": "#1a1228",
+   "EyeTop": "#2a1c42",
+   "Iris": "#5a3418",
+   "IrisTop": "#78441d",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Blush": "#f39ab4",
+   "BlushTop": "#f8b9cb",
+   "Nose": "#3a2020",
+   "NoseTop": "#532b2b",
+   "Boot": "#4a3430",
+   "BootTop": "#62423c",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 6394,
+  "proportions": {
+   "clearance": 0.48,
+   "head": 0.7,
+   "shoulder": 2.3
+  },
+  "npc": true
+ },
+ "Juniper": {
+  "name": "Juniper",
+  "tris": 8900,
+  "maxPart": 3808,
+  "objects": 9,
+  "parts": 9,
+  "height": 4.0,
+  "size": [
+   2.0,
+   4.8,
+   4.0
+  ],
+  "parent": {
+   "Body": null,
+   "Tail": "Body",
+   "Head": "Body",
+   "ArmL1": "Body",
+   "ArmL2": "ArmL1",
+   "ArmR1": "Body",
+   "ArmR2": "ArmR1",
+   "LegL1": "Body",
+   "LegR1": "Body"
+  },
+  "groups": {
+   "Tail": "tail",
+   "Head": "head",
+   "ArmL1": "arm",
+   "ArmL2": "arm",
+   "ArmR1": "arm",
+   "ArmR2": "arm",
+   "LegL1": "leg",
+   "LegR1": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    1.5,
+    -1.3
+   ],
+   "Tail": [
+    0.0,
+    0.95,
+    -1.9
+   ],
+   "Head": [
+    0.0,
+    2.3,
+    -1.2
+   ],
+   "ArmL1": [
+    -0.7,
+    2.05,
+    -1.25
+   ],
+   "ArmL2": [
+    -0.85,
+    1.6,
+    -0.8
+   ],
+   "ArmR1": [
+    0.7,
+    2.05,
+    -1.25
+   ],
+   "ArmR2": [
+    0.85,
+    1.6,
+    -0.8
+   ],
+   "LegL1": [
+    -0.34,
+    0.9,
+    -1.3
+   ],
+   "LegR1": [
+    0.34,
+    0.9,
+    -1.3
+   ]
+  },
+  "anchors": {
+   "tail": [
+    "Tail",
+    [
+     0.0,
+     0.75,
+     -2.25
+    ]
+   ],
+   "chest": [
+    "Body",
+    [
+     0.0,
+     1.9,
+     -0.6
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.0,
+     3.0,
+     -0.7
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     0.0,
+     4.2,
+     -1.2
+    ]
+   ],
+   "handL": [
+    "ArmL2",
+    [
+     0.05,
+     1.75,
+     -0.35
+    ]
+   ],
+   "handR": [
+    "ArmR2",
+    [
+     0.55,
+     1.75,
+     -0.35
+    ]
+   ],
+   "marshmallow": [
+    "ArmR2",
+    [
+     0.55,
+     2.6,
+     2.08
+    ]
+   ],
+   "footL": [
+    "LegL1",
+    [
+     -0.42,
+     0.1,
+     -0.9
+    ]
+   ],
+   "footR": [
+    "LegR1",
+    [
+     0.42,
+     0.1,
+     -0.9
+    ]
+   ]
+  },
+  "palette": {
+   "Fur": "#8a8494",
+   "FurTop": "#9b94a8",
+   "FurHi": "#a5a1b5",
+   "FurHiTop": "#b5b2c2",
+   "FurLo": "#737075",
+   "FurLoTop": "#807d82",
+   "FurCrease": "#595959",
+   "FurCreaseTop": "#636363",
+   "Stripe": "#2e2a36",
+   "StripeTop": "#3e384c",
+   "Belly": "#f4f0ea",
+   "BellyTop": "#ffffff",
+   "Cloth": "#d86a8a",
+   "ClothTop": "#e2849f",
+   "ClothHi": "#e897bb",
+   "ClothHiTop": "#edb0cd",
+   "ClothLo": "#c7484e",
+   "ClothLoTop": "#cd5b61",
+   "ClothCrease": "#a33a39",
+   "ClothCreaseTop": "#b33f3e",
+   "ClothDark": "#9a4060",
+   "ClothDarkTop": "#b7476f",
+   "Shawl": "#6aa06a",
+   "ShawlTop": "#7db17d",
+   "ShawlDark": "#3e6e44",
+   "ShawlDarkTop": "#488850",
+   "Leaf": "#9ad86a",
+   "LeafTop": "#ade284",
+   "Hat": "#e0a03a",
+   "HatTop": "#e8b056",
+   "HatDark": "#a8701e",
+   "HatDarkTop": "#ca8520",
+   "Pom": "#fff4dc",
+   "PomTop": "#ffffff",
+   "Nose": "#1e1a22",
+   "NoseTop": "#302838",
+   "Eye": "#1a1228",
+   "EyeTop": "#2a1c42",
+   "Iris": "#3a2a1a",
+   "IrisTop": "#543c23",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Blush": "#f39ab4",
+   "BlushTop": "#f8b9cb",
+   "Paw": "#4a4452",
+   "PawTop": "#5b5168",
+   "Boot": "#5a3a30",
+   "BootTop": "#74483a",
+   "Stick": "#8a5a30",
+   "StickTop": "#a86b36",
+   "Mallow": "#fff6ec",
+   "MallowTop": "#ffffff",
+   "Toast": "#c88a4a",
+   "ToastTop": "#d39c62",
+   "Brass": "#e0b04a",
+   "BrassTop": "#e8be66",
+   "Ear": "#2e2a36",
+   "EarTop": "#3e384c",
+   "Hood": "#5a4a7a",
+   "HoodTop": "#695494",
+   "HoodDark": "#3a2e56",
+   "HoodDarkTop": "#493870",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 4958,
+  "proportions": {
+   "clearance": 0.68,
+   "head": 0.68,
+   "shoulder": 2.5
+  },
+  "npc": true
+ },
+ "Tock": {
+  "name": "Tock",
+  "tris": 10096,
+  "maxPart": 3020,
+  "objects": 9,
+  "parts": 9,
+  "height": 3.9,
+  "size": [
+   2.1,
+   5.6,
+   3.9
+  ],
+  "parent": {
+   "Body": null,
+   "Tail": "Body",
+   "Head": "Body",
+   "ArmL1": "Body",
+   "ArmL2": "ArmL1",
+   "ArmR1": "Body",
+   "ArmR2": "ArmR1",
+   "LegL1": "Body",
+   "LegR1": "Body"
+  },
+  "groups": {
+   "Tail": "tail",
+   "Head": "head",
+   "ArmL1": "arm",
+   "ArmL2": "arm",
+   "ArmR1": "arm",
+   "ArmR2": "arm",
+   "LegL1": "leg",
+   "LegR1": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.05,
+    1.5,
+    -0.9
+   ],
+   "Tail": [
+    0.05,
+    0.95,
+    -1.45
+   ],
+   "Head": [
+    0.05,
+    2.3,
+    -0.8
+   ],
+   "ArmL1": [
+    -0.65,
+    2.05,
+    -0.85
+   ],
+   "ArmL2": [
+    -0.8,
+    1.6,
+    -0.4
+   ],
+   "ArmR1": [
+    0.75,
+    2.05,
+    -0.85
+   ],
+   "ArmR2": [
+    0.9,
+    1.6,
+    -0.4
+   ],
+   "LegL1": [
+    -0.29,
+    0.9,
+    -0.9
+   ],
+   "LegR1": [
+    0.39,
+    0.9,
+    -0.9
+   ]
+  },
+  "anchors": {
+   "tail": [
+    "Tail",
+    [
+     -0.7,
+     2.0,
+     -2.1
+    ]
+   ],
+   "chest": [
+    "Body",
+    [
+     0.05,
+     1.9,
+     -0.2
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.05,
+     3.0,
+     -0.3
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     0.05,
+     4.2,
+     -0.8
+    ]
+   ],
+   "handL": [
+    "ArmL2",
+    [
+     0.1,
+     1.75,
+     0.05
+    ]
+   ],
+   "handR": [
+    "ArmR2",
+    [
+     0.6,
+     1.75,
+     0.05
+    ]
+   ],
+   "marshmallow": [
+    "ArmR2",
+    [
+     0.6,
+     2.6,
+     2.48
+    ]
+   ],
+   "footL": [
+    "LegL1",
+    [
+     -0.37,
+     0.1,
+     -0.5
+    ]
+   ],
+   "footR": [
+    "LegR1",
+    [
+     0.47,
+     0.1,
+     -0.5
+    ]
+   ]
+  },
+  "palette": {
+   "Fur": "#e0783a",
+   "FurTop": "#e88c56",
+   "FurHi": "#ec886b",
+   "FurHiTop": "#f09a86",
+   "FurLo": "#c28525",
+   "FurLoTop": "#d6942a",
+   "FurCrease": "#936e21",
+   "FurCreaseTop": "#a37a25",
+   "Stripe": "#3a2a2a",
+   "StripeTop": "#513737",
+   "Belly": "#fff4e6",
+   "BellyTop": "#ffffff",
+   "Cloth": "#4a5a8c",
+   "ClothTop": "#5367a7",
+   "ClothHi": "#6081b4",
+   "ClothHiTop": "#7493bd",
+   "ClothLo": "#3c3d67",
+   "ClothLoTop": "#464677",
+   "ClothCrease": "#2e2c44",
+   "ClothCreaseTop": "#363450",
+   "ClothDark": "#2c3660",
+   "ClothDarkTop": "#35427b",
+   "Shawl": "#6aa06a",
+   "ShawlTop": "#7db17d",
+   "ShawlDark": "#3e6e44",
+   "ShawlDarkTop": "#488850",
+   "Leaf": "#9ad86a",
+   "LeafTop": "#ade284",
+   "Hat": "#e0a03a",
+   "HatTop": "#e8b056",
+   "HatDark": "#a8701e",
+   "HatDarkTop": "#ca8520",
+   "Pom": "#fff4dc",
+   "PomTop": "#ffffff",
+   "Nose": "#1e1a22",
+   "NoseTop": "#302838",
+   "Eye": "#1a1228",
+   "EyeTop": "#2a1c42",
+   "Iris": "#3a2a1a",
+   "IrisTop": "#543c23",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Blush": "#f39ab4",
+   "BlushTop": "#f8b9cb",
+   "Paw": "#3a2a2e",
+   "PawTop": "#51373d",
+   "Boot": "#3a2e36",
+   "BootTop": "#503c49",
+   "Stick": "#8a5a30",
+   "StickTop": "#a86b36",
+   "Mallow": "#fff6ec",
+   "MallowTop": "#ffffff",
+   "Toast": "#c88a4a",
+   "ToastTop": "#d39c62",
+   "Brass": "#e0b04a",
+   "BrassTop": "#e8be66",
+   "Ear": "#3a2a2e",
+   "EarTop": "#51373d",
+   "Hood": "#6a5aa0",
+   "HoodTop": "#7c6cb2",
+   "HoodDark": "#40346a",
+   "HoodDarkTop": "#4d3d85",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 5771,
+  "proportions": {
+   "clearance": 0.45,
+   "head": 0.82,
+   "shoulder": 2.2
+  },
+  "npc": true
+ },
+ "Gloomling": {
+  "name": "Gloomling",
+  "tris": 7956,
+  "maxPart": 3200,
+  "objects": 9,
+  "parts": 9,
+  "height": 3.3,
+  "size": [
+   2.0,
+   3.6,
+   3.3
+  ],
+  "parent": {
+   "Body": null,
+   "Tail": "Body",
+   "Head": "Body",
+   "ArmL1": "Body",
+   "ArmL2": "ArmL1",
+   "ArmR1": "Body",
+   "ArmR2": "ArmR1",
+   "LegL1": "Body",
+   "LegR1": "Body"
+  },
+  "groups": {
+   "Tail": "tail",
+   "Head": "head",
+   "ArmL1": "arm",
+   "ArmL2": "arm",
+   "ArmR1": "arm",
+   "ArmR2": "arm",
+   "LegL1": "leg",
+   "LegR1": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    1.2,
+    0.2
+   ],
+   "Tail": [
+    0.0,
+    0.95,
+    -0.65
+   ],
+   "Head": [
+    0.0,
+    1.7,
+    0.85
+   ],
+   "ArmL1": [
+    -0.6,
+    1.55,
+    0.65
+   ],
+   "ArmL2": [
+    -0.85,
+    1.0,
+    1.15
+   ],
+   "ArmR1": [
+    0.6,
+    1.55,
+    0.65
+   ],
+   "ArmR2": [
+    0.85,
+    1.0,
+    1.15
+   ],
+   "LegL1": [
+    -0.4,
+    0.85,
+    -0.2
+   ],
+   "LegR1": [
+    0.4,
+    0.85,
+    -0.2
+   ]
+  },
+  "anchors": {
+   "tail": [
+    "Tail",
+    [
+     0.3,
+     2.45,
+     -1.0
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.0,
+     2.02,
+     1.5
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     0.0,
+     3.0,
+     1.0
+    ]
+   ],
+   "handL": [
+    "ArmL2",
+    [
+     -0.6,
+     0.4,
+     1.55
+    ]
+   ],
+   "handR": [
+    "ArmR2",
+    [
+     0.6,
+     0.4,
+     1.55
+    ]
+   ],
+   "footL": [
+    "LegL1",
+    [
+     -0.48,
+     0.0,
+     0.05
+    ]
+   ],
+   "footR": [
+    "LegR1",
+    [
+     0.48,
+     0.0,
+     0.05
+    ]
+   ]
+  },
+  "palette": {
+   "Soot": "#2c2438",
+   "SootTop": "#3d3050",
+   "SootHi": "#4a3c5e",
+   "SootHiTop": "#4e4374",
+   "SootLo": "#151118",
+   "SootLoTop": "#231c27",
+   "SootCrease": "#000000",
+   "SootCreaseTop": "#050506",
+   "Smoke": "#5e4e78",
+   "SmokeTop": "#6e5991",
+   "Smoke2": "#8e7eac",
+   "Smoke2Top": "#a091bd",
+   "Smoke3": "#c4b8dc",
+   "Smoke3Top": "#d8cfe9",
+   "Ring": "#ffb030",
+   "RingTop": "#ffbe54",
+   "Pupil": "#0a0610",
+   "PupilTop": "#1a0f2b",
+   "Claw": "#e4dcec",
+   "ClawTop": "#f6f3f9",
+   "Teeth": "#f4eefa",
+   "TeethTop": "#ffffff",
+   "Mouth": "#120a18",
+   "MouthTop": "#251332",
+   "Inner": "#ff6a8a",
+   "InnerTop": "#ff8ea6",
+   "Eye": "#0a0610",
+   "EyeTop": "#1a0f2b",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 3508,
+  "proportions": {
+   "clearance": 0.35,
+   "head": 0.9,
+   "shoulder": 2.0
+  },
+  "npc": true
+ },
+ "Clayling": {
+  "name": "Clayling",
+  "tris": 8740,
+  "maxPart": 4140,
+  "objects": 8,
+  "parts": 8,
+  "height": 3.7,
+  "size": [
+   3.0,
+   2.0,
+   3.7
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "ArmL1": "Body",
+   "ArmL2": "ArmL1",
+   "ArmR1": "Body",
+   "ArmR2": "ArmR1",
+   "LegL1": "Body",
+   "LegR1": "Body"
+  },
+  "groups": {
+   "Head": "head",
+   "ArmL1": "arm",
+   "ArmL2": "arm",
+   "ArmR1": "arm",
+   "ArmR2": "arm",
+   "LegL1": "leg",
+   "LegR1": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    1.6,
+    -0.1
+   ],
+   "Head": [
+    0.0,
+    2.5,
+    -0.1
+   ],
+   "ArmL1": [
+    -0.82,
+    2.15,
+    -0.1
+   ],
+   "ArmL2": [
+    -1.25,
+    1.55,
+    0.25
+   ],
+   "ArmR1": [
+    0.82,
+    2.15,
+    -0.1
+   ],
+   "ArmR2": [
+    1.25,
+    1.55,
+    0.25
+   ],
+   "LegL1": [
+    -0.38,
+    0.8,
+    -0.1
+   ],
+   "LegR1": [
+    0.38,
+    0.8,
+    -0.1
+   ]
+  },
+  "anchors": {
+   "chest": [
+    "Body",
+    [
+     0.0,
+     1.7,
+     0.75
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.0,
+     3.08,
+     0.45
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     0.0,
+     4.0,
+     -0.1
+    ]
+   ],
+   "handL": [
+    "ArmL2",
+    [
+     -1.2,
+     1.1,
+     0.75
+    ]
+   ],
+   "handR": [
+    "ArmR2",
+    [
+     1.2,
+     1.1,
+     0.75
+    ]
+   ],
+   "footL": [
+    "LegL1",
+    [
+     -0.5,
+     0.0,
+     0.05
+    ]
+   ],
+   "footR": [
+    "LegR1",
+    [
+     0.5,
+     0.0,
+     0.05
+    ]
+   ]
+  },
+  "palette": {
+   "Clay": "#c4643a",
+   "ClayTop": "#d07852",
+   "ClayHi": "#d77664",
+   "ClayHiTop": "#de887c",
+   "ClayLo": "#986a33",
+   "ClayLoTop": "#ab773a",
+   "ClayCrease": "#6e532a",
+   "ClayCreaseTop": "#7c5e30",
+   "ClayDark": "#8a3e22",
+   "ClayDarkTop": "#aa4926",
+   "ClayLi": "#e08a5a",
+   "ClayLiTop": "#e89f76",
+   "Glaze": "#7ae8c8",
+   "GlazeTop": "#97efd5",
+   "GlazeDark": "#3ea88a",
+   "GlazeDarkTop": "#49c19f",
+   "Seam": "#ffb040",
+   "SeamTop": "#ffbf64",
+   "SeamHot": "#fff0a0",
+   "SeamHotTop": "#fff6c4",
+   "Crack": "#3a1a10",
+   "CrackTop": "#582616",
+   "Eye": "#1a0c08",
+   "EyeTop": "#36180f",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Claw": "#f0e0c8",
+   "ClawTop": "#f8f0e4",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 4658,
+  "proportions": {
+   "clearance": 0.12,
+   "head": 0.62,
+   "shoulder": 2.6
+  },
+  "npc": true
+ },
+ "RootWarden": {
+  "name": "RootWarden",
+  "tris": 52036,
+  "maxPart": 15870,
+  "objects": 16,
+  "parts": 9,
+  "height": 12.41,
+  "size": [
+   10.54,
+   8.67,
+   12.41
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "Jaw": "Head",
+   "ArmL": "Body",
+   "ArmL2": "ArmL",
+   "ArmR": "Body",
+   "ArmR2": "ArmR",
+   "LegL": "Body",
+   "LegR": "Body"
+  },
+  "groups": {
+   "Head": "head",
+   "Jaw": "head",
+   "ArmL": "arm",
+   "ArmL2": "arm",
+   "ArmR": "arm",
+   "ArmR2": "arm",
+   "LegL": "leg",
+   "LegR": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    6.2,
+    -0.425
+   ],
+   "Head": [
+    0.0,
+    8.9,
+    1.475
+   ],
+   "Jaw": [
+    0.0,
+    8.45,
+    2.175
+   ],
+   "ArmL": [
+    -3.0,
+    8.5,
+    0.175
+   ],
+   "ArmL2": [
+    -4.1,
+    6.0,
+    1.075
+   ],
+   "ArmR": [
+    3.0,
+    8.5,
+    0.175
+   ],
+   "ArmR2": [
+    4.1,
+    6.0,
+    1.075
+   ],
+   "LegL": [
+    -1.7,
+    4.6,
+    -1.025
+   ],
+   "LegR": [
+    1.7,
+    4.6,
+    -1.025
+   ]
+  },
+  "anchors": {
+   "Knot1": [
+    "Body",
+    [
+     -2.7,
+     9.1,
+     0.775
+    ]
+   ],
+   "Knot2": [
+    "Body",
+    [
+     1.5,
+     7.7,
+     2.175
+    ]
+   ],
+   "Knot3": [
+    "Body",
+    [
+     0.0,
+     6.1,
+     1.825
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.0,
+     9.32,
+     3.375
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     0.0,
+     12.5,
+     1.575
+    ]
+   ],
+   "handL": [
+    "ArmL2",
+    [
+     -3.7,
+     1.6,
+     2.375
+    ]
+   ],
+   "handR": [
+    "ArmR2",
+    [
+     3.7,
+     1.6,
+     2.375
+    ]
+   ],
+   "footL": [
+    "LegL",
+    [
+     -2.1,
+     0.3,
+     -0.225
+    ]
+   ],
+   "footR": [
+    "LegR",
+    [
+     2.1,
+     0.3,
+     -0.225
+    ]
+   ]
+  },
+  "palette": {
+   "Slate": "#4c5668",
+   "SlateTop": "#586680",
+   "SlateHi": "#607991",
+   "SlateHiTop": "#6f8aa0",
+   "SlateLo": "#3a3b47",
+   "SlateLoTop": "#454755",
+   "SlateCrease": "#252529",
+   "SlateCreaseTop": "#2e2f34",
+   "SlateDark": "#30384a",
+   "SlateDarkTop": "#3c4762",
+   "Moss": "#5a8c4c",
+   "MossTop": "#67a755",
+   "MossHi": "#80b362",
+   "MossHiTop": "#93bd77",
+   "MossLo": "#3e673f",
+   "MossLoTop": "#487749",
+   "MossCrease": "#2e4430",
+   "MossCreaseTop": "#365038",
+   "MossDark": "#3a6a34",
+   "MossDarkTop": "#45853d",
+   "Bark": "#3c2c24",
+   "BarkTop": "#543c2f",
+   "BarkHi": "#5c4434",
+   "BarkHiTop": "#76543e",
+   "Crystal": "#4ae0d8",
+   "CrystalTop": "#66e8e1",
+   "CrystalHi": "#c8fff8",
+   "CrystalHiTop": "#ecfffd",
+   "Glow": "#7afff0",
+   "GlowTop": "#9efff4",
+   "Socket": "#1a1418",
+   "SocketTop": "#2f222b",
+   "Amber": "#ffb040",
+   "AmberTop": "#ffbf64",
+   "Teeth": "#cfc6b4",
+   "TeethTop": "#ded7c8",
+   "Eye": "#0a1418",
+   "EyeTop": "#132932",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 47460,
+  "proportions": {
+   "clearance": 0.38,
+   "head": 0.41,
+   "shoulder": 9.86
+  },
+  "npc": true
+ },
+ "KilnGolem": {
+  "name": "KilnGolem",
+  "tris": 49436,
+  "maxPart": 17504,
+  "objects": 9,
+  "parts": 9,
+  "height": 13.94,
+  "size": [
+   10.88,
+   6.12,
+   13.94
+  ],
+  "parent": {
+   "Body": null,
+   "Head": "Body",
+   "Lid": "Head",
+   "ArmL": "Body",
+   "ArmL2": "ArmL",
+   "ArmR": "Body",
+   "ArmR2": "ArmR",
+   "LegL": "Body",
+   "LegR": "Body"
+  },
+  "groups": {
+   "Head": "head",
+   "Lid": "head",
+   "ArmL": "arm",
+   "ArmL2": "arm",
+   "ArmR": "arm",
+   "ArmR2": "arm",
+   "LegL": "leg",
+   "LegR": "leg"
+  },
+  "axes": {},
+  "pivots": {
+   "Body": [
+    0.0,
+    6.5,
+    -0.17
+   ],
+   "Head": [
+    0.0,
+    9.6,
+    0.23
+   ],
+   "Lid": [
+    0.0,
+    11.8,
+    -0.57
+   ],
+   "ArmL": [
+    -3.3,
+    8.6,
+    0.03
+   ],
+   "ArmL2": [
+    -4.3,
+    6.2,
+    0.83
+   ],
+   "ArmR": [
+    3.3,
+    8.6,
+    0.03
+   ],
+   "ArmR2": [
+    4.3,
+    6.2,
+    0.83
+   ],
+   "LegL": [
+    -1.8,
+    4.4,
+    -0.37
+   ],
+   "LegR": [
+    1.8,
+    4.4,
+    -0.37
+   ]
+  },
+  "anchors": {
+   "Knot1": [
+    "Body",
+    [
+     -2.0,
+     8.9,
+     1.73
+    ]
+   ],
+   "Knot2": [
+    "Body",
+    [
+     2.1,
+     7.4,
+     1.83
+    ]
+   ],
+   "Knot3": [
+    "Body",
+    [
+     0.0,
+     7.6,
+     -2.57
+    ]
+   ],
+   "eyes": [
+    "Head",
+    [
+     0.0,
+     10.5,
+     1.93
+    ]
+   ],
+   "speech": [
+    "Head",
+    [
+     0.0,
+     14.0,
+     0.23
+    ]
+   ],
+   "handL": [
+    "ArmL2",
+    [
+     -4.0,
+     2.2,
+     1.83
+    ]
+   ],
+   "handR": [
+    "ArmR2",
+    [
+     4.0,
+     2.2,
+     1.83
+    ]
+   ],
+   "footL": [
+    "LegL",
+    [
+     -2.2,
+     0.3,
+     0.33
+    ]
+   ],
+   "footR": [
+    "LegR",
+    [
+     2.2,
+     0.3,
+     0.33
+    ]
+   ]
+  },
+  "palette": {
+   "Clay": "#c4643a",
+   "ClayTop": "#d07852",
+   "ClayHi": "#d77664",
+   "ClayHiTop": "#de887c",
+   "ClayLo": "#986a33",
+   "ClayLoTop": "#ab773a",
+   "ClayCrease": "#6e532a",
+   "ClayCreaseTop": "#7c5e30",
+   "ClayDark": "#8a3e22",
+   "ClayDarkTop": "#aa4926",
+   "Cream": "#f0e0c0",
+   "CreamTop": "#f7eedc",
+   "Bronze": "#8a6a3a",
+   "BronzeTop": "#a77e41",
+   "BronzeHi": "#bb7b47",
+   "BronzeHiTop": "#c3885d",
+   "BronzeLo": "#625a2f",
+   "BronzeLoTop": "#746a37",
+   "BronzeCrease": "#3d3b21",
+   "BronzeCreaseTop": "#4b4728",
+   "BronzeDark": "#4e3a22",
+   "BronzeDarkTop": "#694d2b",
+   "Iron": "#4a4650",
+   "IronTop": "#5b5466",
+   "IronDark": "#2c2a32",
+   "IronDarkTop": "#3c3847",
+   "Rivet": "#d8b060",
+   "RivetTop": "#e1bf7a",
+   "Coal": "#ff7a20",
+   "CoalTop": "#ff8f44",
+   "CoalHot": "#ffd060",
+   "CoalHotTop": "#ffdb84",
+   "Seam": "#ffb040",
+   "SeamTop": "#ffbf64",
+   "Socket": "#1a1210",
+   "SocketTop": "#31211c",
+   "Smoke": "#5a5058",
+   "SmokeTop": "#705e6c",
+   "Eye": "#120806",
+   "EyeTop": "#2e130e",
+   "Shine": "#ffffff",
+   "ShineTop": "#ffffff",
+   "Edge": "#b0a8c8",
+   "_noseams": true
+  },
+  "cells": 52173,
+  "proportions": {
+   "clearance": 0.36,
+   "head": 0.27,
+   "shoulder": 10.03
   },
   "npc": true
  }

@@ -7,10 +7,20 @@ local JellyText = GLASS and require(script.Parent:WaitForChild("JellyText"))
 local M = {}
 local LANE, MAX = 0.72, 6 -- the lane sits under the loot card (ends at 0.62) and above the hotbar (audit 2026-11-26 UI 9: was 0.69)
 local Players = game:GetService("Players")
+local found = {} -- name -> the GuiObject, found once (lane() runs every frame while a line is up)
+local function shown(name)
+	local g = found[name]
+	if not (g and g.Parent) then
+		local pg = Players.LocalPlayer and Players.LocalPlayer:FindFirstChild("PlayerGui")
+		g = pg and pg:FindFirstChild(name, true)
+		found[name] = g
+	end
+	return g ~= nil and g:IsA("GuiObject") and g.Visible
+end
 local function lane() -- in a boss fight the notices sit under the boss bar, off the fighting floor (Gemini v10n_r9: "floating across the combat space")
-	local pg = Players.LocalPlayer and Players.LocalPlayer:FindFirstChild("PlayerGui")
-	local bar = pg and pg:FindFirstChild("BossBar", true)
-	return (bar and bar:IsA("GuiObject") and bar.Visible) and 0.6 or LANE -- 0.6, between the Warden's head and the dial in the lower third (tour full1125b: at 0.34 KNOT CRACKED covered the head) -- under the boss bar and its pips (at 0.25 it sat on the pips, full1119o)
+	-- 0.6, between the Warden's head and the dial in the lower third (tour full1125b: at 0.34 KNOT CRACKED covered the head) -- under the boss bar and its pips (at 0.25 it sat on the pips, full1119o)
+	-- the RETURN TO CAMP ribbon spans 0.67-0.74, right on the lane: the same upper lane while it is up (wheel_test 2026-11-27)
+	return (shown("BossBar") or shown("RootsRibbon")) and 0.6 or LANE
 end
 local queue, live, E, gap = {}, nil, nil, 0
 local function wheelOpen() -- audit 2026-11-26 UI 1: a tip toast cut across the tool wheel's QUESTS and BAG slots
@@ -51,6 +61,8 @@ function M.start(e)
 		end
 		if live then
 			live.label.Visible = not hold
+			local ln = lane()
+			if live.lane ~= ln then live.lane = ln E.tween(live.label, 0.25, { Position = UDim2.fromScale(0.5, ln) }) end -- the roots ribbon or the boss bar came up under a line already on screen
 			if not hold then live.seen += dt end
 			if hold then live.t += dt return end -- a held line keeps its remaining time
 			if os.clock() < live.t - (#queue > 0 and 1.2 or 0) and live.seen < 4 then return end -- a waiting line shortens the one on screen
@@ -65,7 +77,7 @@ function M.start(e)
 			return
 		end
 		if hold or os.clock() < gap or os.clock() < claimUntil or #queue == 0 then return end
-		local fight = lane() ~= LANE or bossOn() -- a boss fight: only its own lines show now; the rest (quests, torch, gifts) wait for the end (Gemini full1119h)
+		local fight = shown("BossBar") or bossOn() -- a boss fight: only its own lines show now; the rest (quests, torch, gifts) wait for the end (Gemini full1119h)
 		local pick = 1
 		if fight then
 			pick = nil
@@ -110,7 +122,7 @@ function M.start(e)
 		l.Parent = E.gui
 		E.tween(l, 0.35, { Position = UDim2.fromScale(0.5, lane()) }, Enum.EasingStyle.Back)
 		E.pop(l, 0.86, 0.3) -- from 0.86, not 0.6: a deep shrink dropped the words under JellyText's 26 px fit and they swapped mid-pop
-		live = { msg = t.msg, label = l, t = os.clock() + 2.5, seen = 0 }
+		live = { msg = t.msg, label = l, t = os.clock() + 2.5, seen = 0, lane = lane() }
 	end)
 end
 

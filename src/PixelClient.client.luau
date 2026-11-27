@@ -2709,6 +2709,11 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 	fovKick *= math.exp(-dt * 8)
 	if inCave then caveStep(now) end
 	if inMine or inCave then
+		-- every ride and cutscene that takes the cave view hides the HUD: a Scriptable view with the HUD up is stuck (travel_test 2026-11-27, frozen after the ride to Camp 1)
+		if cam.CameraType == Enum.CameraType.Scriptable and gui.Enabled and not cave.mgBusy then
+			cave.stuckAt = cave.stuckAt or now
+			if now - cave.stuckAt > 0.6 then cam.CameraType, cave.stuckAt = Enum.CameraType.Custom, nil end
+		else cave.stuckAt = nil end
 		mgZoom += ((cave.mgBusy and -22 or 0) - mgZoom) * (1 - math.exp(-dt * 5))
 		local hv = h.AssemblyLinearVelocity * Vector3.new(1, 0, 1)
 		local vf = forgeUI.velFov or 0 -- in forgeUI: the main chunk is at Luau's 200-local limit
