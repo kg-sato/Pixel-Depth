@@ -280,7 +280,7 @@ def maribel(v):
 # stubby hands, and the lantern bulb of its tail held up behind it
 @char("Wick", P.palette(form=("Body", "Head"), Body="#7cd6b2", Head="#86dcb8", Ring="#3d977b", Belly="#dcf6cc", Eye="#1a1228", Iris="#ffb347",
                         Shine="#ffffff", Brass="#e0b04a", BrassLo="#a87a2a", Beanie="#c8643c", BeanieDark="#86381f", Patch="#e3bf5e", Patch2="#6f7fd0",
-                        Cape="#7a5a9c", CapeDark="#4e3a70", Tin="#b2b6c4", TinDark="#6c7080", Cocoa="#5e3420", Glow="#ffd27a", Ember="#ff9a30",
+                        Cape="#7a5a9c", CapeDark="#4e3a70", Tin="#d8604a", TinDark="#f4ecdc", Cocoa="#5e3420", Glow="#ffd27a", Ember="#ff9a30",
                         Blush="#f39ab4", Mouth="#2a1a2a", Stitch="#f4e6c8"))
 def wick(v):
     E = P.E
@@ -352,7 +352,7 @@ def wick(v):
     # stubby arms from the front of the neck holding a tin camp mug of cocoa
     mug = V(0.0, 1.95, 2.3)  # w3: further out (w2 1.62), a window under the arms
     for s, A in ((-1, "ArmL"), (1, "ArmR")):
-        sh, el, wr = V(s * 0.52, 0.55, 2.3), V(s * 0.95, 1.15, 2.1), V(s * 0.36, 1.82, 2.25)
+        sh, el, wr = V(s * 0.52, 0.55, 2.3), V(s * 0.98, 1.1, 2.0), V(s * 0.36, 1.82, 2.35)  # w4: forearms angled up
         v.joint(A + "1", tuple(sh), "Body", "arm")
         v.cap(A + "1", "Body", sh, el, 0.17, 0.16)
         v.cap(A + "1", "Body", el, wr, 0.16, 0.15)
@@ -362,6 +362,7 @@ def wick(v):
     v.torus("ArmR1", "TinDark", mug + V(0, 0, 0.18), (0, 0, 1), 0.24, 0.04)
     v.ell("ArmR1", "Cocoa", tuple(mug + V(0, 0, 0.17)), (0.19, 0.19, 0.03))
     v.torus("ArmR1", "TinDark", mug + V(0.3, 0, 0.0), (0, 1, 0), 0.11, 0.035)  # the handle
+    for k in range(3): v.crystal("ArmR1", "Stitch", mug + V(-0.08 + k * 0.08, 0, 0.3 + k * 0.06), (0.2 * (k - 1), 0, 1), 0.3, 0.04, sides=4)  # w4: steam, so it reads as a hot mug (w3: "a grey book")
     v.anchor("mug", "ArmR1", tuple(mug))
     P.ground(v)
 
@@ -961,11 +962,11 @@ def warden(v):
     v.joint("Head", (0, 1.9, 8.9), "Body", "head")
     v.muscle("Head", "Slate", (0, 2.6, 9.3), (1.45, 1.3, 1.2))
     P.shade(v, "Slate", parts={"Head"})
-    v.box("Head", "SlateDark", (0, 3.55, 9.75), (2.6, 0.7, 0.55), rot=E(-10, 0, 0))  # the brow ridge
+    v.box("Head", "SlateDark", (0, 3.35, 9.8), (2.6, 0.5, 0.45), rot=E(-10, 0, 0))  # the brow ridge, pulled back off the eyes (d4: the face vanished from the town camera)
     v.muscle("Head", "Moss", (0, 2.4, 10.25), (1.2, 1.1, 0.4))
     for s in (-1, 1):
         v.box("Head", "Eye", (s * 0.62, 3.92, 9.3), (0.9, 0.24, 0.42))  # a socket at the face (d2: the eyes sat inside the head)
-        v.box("Head", "Glow", (s * 0.62, 4.04, 9.3), (0.78, 0.12, 0.24))  # the turquoise slit
+        v.box("Head", "Glow", (s * 0.62, 4.04, 9.32), (0.84, 0.14, 0.34))  # the turquoise slit, bigger (d5)
         v.box("Head", "CrystalHi", (s * 0.62, 4.09, 9.3), (0.36, 0.06, 0.1))
     for k, (x, L) in enumerate(((-0.4, 1.6), (0.15, 2.2), (0.6, 1.3))):  # the forehead crest
         v.crystal("Head", "Crystal", V(x, 2.6, 10.4), (x * 0.4, -0.3, 1), L, 0.32, sides=5)
@@ -978,7 +979,7 @@ def warden(v):
         v.crystal("Jaw", "SlateDark" if k % 2 else "Teeth", V(x, 3.85, 8.6), (0.1 * (k - 1.5), 0.25, 1), L, 0.16, sides=4)
     # arms: huge gorilla arms knuckling forward, root-bound forearms, boulder fists with crystal knuckles
     for s, A in ((-1, "ArmL"), (1, "ArmR")):
-        sh, el, wr = V(s * 3.1, 0.6, 8.5), V(s * 4.9, 1.5, 6.2), V(s * 4.9, 2.6, 2.8)  # d2: flared out, daylight under the arms
+        sh, el, wr = V(s * 3.1, 0.6, 8.5), V(s * 5.3, 1.5, 6.3), V(s * 5.6, 2.6, 2.9)  # d5: flared further, daylight under the arms
         v.joint(A, tuple(sh), "Body", "arm")
         v.cap(A, "Slate", sh, el, 1.15, 0.95)
         v.muscle(A, "Moss", tuple(sh + V(0, 0, 0.7)), (1.0, 1.0, 0.5))
@@ -1040,11 +1041,11 @@ def golem(v):
     v.joint("Head", (0, 0.4, 9.6), "Body", "head")
     v.muscle("Head", "Clay", (0, 0.5, 10.6), (1.7, 1.6, 1.4))
     P.shade(v, "Clay", parts={"Head"})
-    v.box("Head", "ClayDark", (0, 2.0, 11.2), (3.0, 0.8, 0.5), rot=E(-8, 0, 0))  # the visor brow, raised off the eyes (g4)
+    v.box("Head", "ClayDark", (0, 1.85, 11.35), (3.0, 0.65, 0.45), rot=E(-8, 0, 0))  # the visor brow, raised and set back off the eyes (g6)
     for s in (-1, 1):
         v.carve(lambda x, y, z, s=s: abs(x - s * 0.68) < 0.55 and y > 1.75 and 10.36 < z < 10.86, part="Head")  # g5: a socket cut into the dome (g4 proud blocks read as googly eyes)
         v.box("Head", "Eye", (s * 0.68, 1.7, 10.61), (1.1, 0.12, 0.5))  # its dark back
-        v.box("Head", "Seam", (s * 0.68, 1.78, 10.61), (0.9, 0.1, 0.3))  # the molten slit glowing in it
+        v.box("Head", "Seam", (s * 0.68, 1.78, 10.62), (0.92, 0.1, 0.42))  # the molten slit glowing in it, taller (g6)
         v.box("Head", "Coal", (s * 0.68, 1.84, 10.61), (0.5, 0.06, 0.14))
     v.box("Head", "IronDark", (0, 2.0, 10.0), (1.4, 0.2, 0.2))  # the mouth vent
     v.torus("Head", "Bronze", (0, 0.5, 11.6), (0, 0, 1), 1.25, 0.18)
@@ -1058,7 +1059,7 @@ def golem(v):
     v.ell("Lid", "Smoke", (-0.2, 0.15, 13.75), (0.32, 0.32, 0.26))
     # arms: bronze-banded clay arms ending in colossal forge-hammer fists studded with rivets
     for s, A in ((-1, "ArmL"), (1, "ArmR")):
-        sh, el, wr = V(s * 3.4, 0.2, 8.6), V(s * 5.0, 0.9, 6.4), V(s * 5.1, 1.8, 3.6)  # g3: flared out, daylight under the arms (d2: one block in the blackout)
+        sh, el, wr = V(s * 3.4, 0.2, 8.6), V(s * 5.5, 0.9, 6.5), V(s * 5.8, 1.8, 3.7)  # g6: flared further (g3 was 5.0/5.1)
         v.joint(A, tuple(sh), "Body", "arm")
         v.cap(A, "Clay", sh, el, 1.15, 1.0)
         v.joint(A + "2", tuple(el), A, "arm")

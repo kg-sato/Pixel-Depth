@@ -468,7 +468,7 @@
  },
  "Wick": {
   "name": "Wick",
-  "tris": 14776,
+  "tris": 14868,
   "maxPart": 3964,
   "objects": 8,
   "parts": 6,
@@ -555,7 +555,7 @@
     "ArmL1",
     [
      -0.91,
-     2.25,
+     2.35,
      1.67
     ]
    ],
@@ -563,7 +563,7 @@
     "ArmR1",
     [
      -0.19,
-     2.25,
+     2.35,
      1.67
     ]
    ],
@@ -619,10 +619,10 @@
    "CapeTop": "#8c6baf",
    "CapeDark": "#4e3a70",
    "CapeDarkTop": "#5e438b",
-   "Tin": "#b2b6c4",
-   "TinTop": "#c5c8d5",
-   "TinDark": "#6c7080",
-   "TinDarkTop": "#7a8096",
+   "Tin": "#d8604a",
+   "TinTop": "#e17865",
+   "TinDark": "#f4ecdc",
+   "TinDarkTop": "#fdfbf7",
    "Cocoa": "#5e3420",
    "CocoaTop": "#7b4227",
    "Glow": "#ffd27a",
@@ -638,7 +638,7 @@
    "Edge": "#b0a8c8",
    "_noseams": true
   },
-  "cells": 9299,
+  "cells": 9312,
   "proportions": {
    "clearance": 0.14,
    "head": 0.79,
@@ -2295,13 +2295,13 @@
  },
  "RootWarden": {
   "name": "RootWarden",
-  "tris": 52344,
-  "maxPart": 15764,
+  "tris": 52408,
+  "maxPart": 15804,
   "objects": 16,
   "parts": 9,
   "height": 12.41,
   "size": [
-   12.92,
+   14.28,
    8.84,
    12.41
   ],
@@ -2349,8 +2349,8 @@
     0.09
    ],
    "ArmL2": [
-    -4.9,
-    6.2,
+    -5.3,
+    6.3,
     0.99
    ],
    "ArmR": [
@@ -2359,8 +2359,8 @@
     0.09
    ],
    "ArmR2": [
-    4.9,
-    6.2,
+    5.3,
+    6.3,
     0.99
    ],
    "LegL": [
@@ -2418,16 +2418,16 @@
    "handL": [
     "ArmL2",
     [
-     -4.9,
-     1.8,
+     -5.6,
+     1.9,
      2.39
     ]
    ],
    "handR": [
     "ArmR2",
     [
-     4.9,
-     1.8,
+     5.6,
+     1.9,
      2.39
     ]
    ],
@@ -2492,7 +2492,7 @@
    "Edge": "#b0a8c8",
    "_noseams": true
   },
-  "cells": 48083,
+  "cells": 48357,
   "proportions": {
    "clearance": 0.38,
    "head": 0.41,
@@ -2502,13 +2502,13 @@
  },
  "KilnGolem": {
   "name": "KilnGolem",
-  "tris": 50240,
-  "maxPart": 17304,
+  "tris": 50328,
+  "maxPart": 17288,
   "objects": 9,
   "parts": 9,
   "height": 13.94,
   "size": [
-   12.92,
+   14.28,
    6.46,
    13.94
   ],
@@ -2556,8 +2556,8 @@
     -0.14
    ],
    "ArmL2": [
-    -5.0,
-    6.4,
+    -5.5,
+    6.5,
     0.56
    ],
    "ArmR": [
@@ -2566,8 +2566,8 @@
     -0.14
    ],
    "ArmR2": [
-    5.0,
-    6.4,
+    5.5,
+    6.5,
     0.56
    ],
    "LegL": [
@@ -2625,16 +2625,16 @@
    "handL": [
     "ArmL2",
     [
-     -5.1,
-     2.4,
+     -5.8,
+     2.5,
      1.66
     ]
    ],
    "handR": [
     "ArmR2",
     [
-     5.1,
-     2.4,
+     5.8,
+     2.5,
      1.66
     ]
    ],
@@ -2701,7 +2701,7 @@
    "Edge": "#b0a8c8",
    "_noseams": true
   },
-  "cells": 50725,
+  "cells": 51169,
   "proportions": {
    "clearance": 0.36,
    "head": 0.27,
