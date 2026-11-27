@@ -2574,12 +2574,22 @@ local function onJoin(plr)
 	root.Parent = plots
 	root:SetAttribute("BuildMs", math.floor((os.clock() - t0) * 1000))
 	local function spawned(ch)
+		-- a reset or death in the caves wakes you at Camp 1 with a share of the unbanked ore lost, as the lake and the chasm do
+		-- (playtest 2026-11-27: it sent you to town with the whole bag, a free trip home past the hearth cooldown and the ride up)
+		local inCave = plr:GetAttribute("InCave") == true and caveLanding ~= nil and not riding[plr] and not escaping[plr]
 		local hrp = ch:WaitForChild("HumanoidRootPart")
 		ch:WaitForChild("RightHand", 5)
 		task.wait()
-		hrp.CFrame = spawnCFrame()
+		if inCave then
+			hrp.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
+			local lost = loseShare(s, C.SWIM.loss)
+			FxR:FireClient(plr, "drowned", lost, "fell")
+			A.event(s, "CaveRespawn", lost)
+		else
+			hrp.CFrame = spawnCFrame()
+			plr:SetAttribute("InCave", false)
+		end
 		plr:SetAttribute("InMine", false)
-		plr:SetAttribute("InCave", false)
 		ch:WaitForChild("LeftHand", 5)
 		buildTorch(ch) -- the miner's light: the caves are dark, light comes from your torch and the glowing things
 		dress(s)

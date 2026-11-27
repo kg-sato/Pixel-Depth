@@ -959,8 +959,9 @@ def warden(v):
     v.box("Head", "SlateDark", (0, 3.55, 9.75), (2.6, 0.7, 0.55), rot=E(-10, 0, 0))  # the brow ridge
     v.muscle("Head", "Moss", (0, 2.4, 10.25), (1.2, 1.1, 0.4))
     for s in (-1, 1):
-        v.box("Head", "Eye", (s * 0.6, 3.72, 9.32), (0.75, 0.2, 0.3))  # a recessed socket
-        v.box("Head", "Glow", (s * 0.6, 3.8, 9.32), (0.62, 0.12, 0.16))  # the turquoise slit
+        v.box("Head", "Eye", (s * 0.62, 3.92, 9.3), (0.9, 0.24, 0.42))  # a socket at the face (d2: the eyes sat inside the head)
+        v.box("Head", "Glow", (s * 0.62, 4.04, 9.3), (0.78, 0.12, 0.24))  # the turquoise slit
+        v.box("Head", "CrystalHi", (s * 0.62, 4.09, 9.3), (0.36, 0.06, 0.1))
     for k, (x, L) in enumerate(((-0.4, 1.6), (0.15, 2.2), (0.6, 1.3))):  # the forehead crest
         v.crystal("Head", "Crystal", V(x, 2.6, 10.4), (x * 0.4, -0.3, 1), L, 0.32, sides=5)
     v.anchor("eyes", "Head", (0, 3.8, 9.32)); v.anchor("speech", "Head", (0, 2.0, 12.5))
@@ -968,7 +969,8 @@ def warden(v):
     v.joint("Jaw", (0, 2.6, 8.45), "Head", "head")
     v.ell("Jaw", "Slate", (0, 3.1, 8.3), (1.25, 1.05, 0.55))
     v.ell("Jaw", "Moss", (0, 3.0, 7.95), (1.0, 0.9, 0.25))
-    for k in range(5): v.crystal("Jaw", "Teeth", V(-0.8 + k * 0.4, 3.9, 8.6), (0, 0.15, 1), 0.45, 0.14, sides=4)
+    for k, (x, L) in enumerate(((-0.75, 0.5), (-0.2, 0.3), (0.35, 0.55), (0.8, 0.25))):  # d4: a few uneven stone teeth (d3: an even white "radiator")
+        v.crystal("Jaw", "SlateDark" if k % 2 else "Teeth", V(x, 3.85, 8.6), (0.1 * (k - 1.5), 0.25, 1), L, 0.16, sides=4)
     # arms: huge gorilla arms knuckling forward, root-bound forearms, boulder fists with crystal knuckles
     for s, A in ((-1, "ArmL"), (1, "ArmR")):
         sh, el, wr = V(s * 3.1, 0.6, 8.5), V(s * 4.9, 1.5, 6.2), V(s * 4.9, 2.6, 2.8)  # d2: flared out, daylight under the arms
@@ -1033,10 +1035,12 @@ def golem(v):
     v.joint("Head", (0, 0.4, 9.6), "Body", "head")
     v.muscle("Head", "Clay", (0, 0.5, 10.6), (1.7, 1.6, 1.4))
     P.shade(v, "Clay", parts={"Head"})
-    v.box("Head", "ClayDark", (0, 1.95, 10.95), (3.0, 0.8, 0.6), rot=E(-8, 0, 0))  # the visor brow
+    v.box("Head", "ClayDark", (0, 2.0, 11.2), (3.0, 0.8, 0.5), rot=E(-8, 0, 0))  # the visor brow, raised off the eyes (g4)
     for s in (-1, 1):
-        v.box("Head", "Eye", (s * 0.65, 2.05, 10.5), (0.85, 0.25, 0.32))
-        v.box("Head", "Seam", (s * 0.65, 2.12, 10.5), (0.7, 0.14, 0.16))
+        v.carve(lambda x, y, z, s=s: abs(x - s * 0.68) < 0.55 and y > 1.75 and 10.36 < z < 10.86, part="Head")  # g5: a socket cut into the dome (g4 proud blocks read as googly eyes)
+        v.box("Head", "Eye", (s * 0.68, 1.7, 10.61), (1.1, 0.12, 0.5))  # its dark back
+        v.box("Head", "Seam", (s * 0.68, 1.78, 10.61), (0.9, 0.1, 0.3))  # the molten slit glowing in it
+        v.box("Head", "Coal", (s * 0.68, 1.84, 10.61), (0.5, 0.06, 0.14))
     v.box("Head", "IronDark", (0, 2.0, 10.0), (1.4, 0.2, 0.2))  # the mouth vent
     v.torus("Head", "Bronze", (0, 0.5, 11.6), (0, 0, 1), 1.25, 0.18)
     v.anchor("eyes", "Head", (0, 2.1, 10.5)); v.anchor("speech", "Head", (0, 0.4, 14.0))

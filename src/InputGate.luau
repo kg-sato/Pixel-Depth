@@ -36,8 +36,8 @@ function M.init(plr)
 	if M.ready then return true end
 	local ok = pcall(function()
 		local pg = plr:WaitForChild("PlayerGui")
-		local folder = Instance.new("Folder")
-		folder.Name = "PixelInput"
+		local folder = Instance.new("ScreenGui") -- not a Folder: a respawn cleared PlayerGui's folder and R, T and Z went dead (playtest 2026-11-27)
+		folder.Name, folder.ResetOnSpawn = "PixelInput", false
 		folder.Parent = pg
 		M.gameplay = context("Gameplay", 1000, false, folder)
 		M.modal = context("Modal", 2000, true, folder)

@@ -2295,7 +2295,7 @@
  },
  "RootWarden": {
   "name": "RootWarden",
-  "tris": 52268,
+  "tris": 52344,
   "maxPart": 15764,
   "objects": 16,
   "parts": 9,
@@ -2492,7 +2492,7 @@
    "Edge": "#b0a8c8",
    "_noseams": true
   },
-  "cells": 48048,
+  "cells": 48083,
   "proportions": {
    "clearance": 0.38,
    "head": 0.41,
@@ -2502,7 +2502,7 @@
  },
  "KilnGolem": {
   "name": "KilnGolem",
-  "tris": 50108,
+  "tris": 50240,
   "maxPart": 17304,
   "objects": 9,
   "parts": 9,
@@ -2701,7 +2701,7 @@
    "Edge": "#b0a8c8",
    "_noseams": true
   },
-  "cells": 50797,
+  "cells": 50725,
   "proportions": {
    "clearance": 0.36,
    "head": 0.27,
