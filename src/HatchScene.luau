@@ -300,6 +300,11 @@ function M.play(opt)
 	local rung = label("", UDim2.fromScale(0.5, 0.09), UDim2.fromScale(0.5, 0.2), WHITE, 6) -- each rung of the climb stamps big over the egg and fades (Gemini m20: the tier text belongs in the middle of the screen)
 	rung.TextTransparency, rung.UIStroke.Transparency = 1, 1
 	caption.TextTransparency, caption.UIStroke.Transparency = 1, 1
+	-- the caption reads over the signature acts' screen cracks and veils (HatchCracks 50, HatchHighTier 60; Gemini r1: Ouro's edge cracks covered it)
+	local capGui = Instance.new("ScreenGui")
+	capGui.Name, capGui.IgnoreGuiInset, capGui.ResetOnSpawn, capGui.DisplayOrder = "HatchCaption", true, false, 70
+	capGui.Parent = pg
+	caption.Parent = capGui
 	local nameL, nameS = label(string.upper(opt.name), UDim2.fromScale(0.5, 0.09), UDim2.fromScale(0.5, 0.155), WHITE, 7, rc:Lerp(INK, 0.45))
 	nameL.UIStroke.Thickness = 5
 	local nameGrad = Instance.new("UIGradient")
@@ -824,7 +829,7 @@ function M.play(opt)
 	world:Destroy()
 	if dof then dof:Destroy() end
 	TweenService:Create(veil, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 }):Play()
-	task.delay(0.4, function() gui:Destroy() end)
+	task.delay(0.4, function() gui:Destroy() capGui:Destroy() end)
 end
 
 return M

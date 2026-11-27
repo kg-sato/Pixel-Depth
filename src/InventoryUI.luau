@@ -293,7 +293,7 @@ function M.start(E)
 			ui.eggTip = true
 			R.Tip:FireServer("eggTip")
 			task.delay(2.5, function()
-				toast("EGGS HATCH HELPERS! MARIBEL SELLS STARTER EGGS; RARER ONES HIDE IN CAVE NESTS", PINK, true)
+				toast("EGGS HATCH HELPERS: MARIBEL SELLS THEM", PINK, true) -- short: the long line scaled down to unreadable in the toast lane (Gemini tour n1127b 114 s)
 				local hub = workspace:FindFirstChild("Hub")
 				local mar = hub and hub:FindFirstChild("Maribel", true)
 				local body = mar and mar:FindFirstChild("Body")
@@ -356,7 +356,7 @@ function M.start(E)
 			E.shake(0.12)
 		elseif kind == "boughtEgg" then
 			sfx("coin", 0.9)
-			toast("-" .. commas(gold) .. " COINS: A STARTER EGG! HATCH IT AT THE INCUBATOR", PINK, false)
+			toast("-" .. commas(gold) .. " COINS: A STARTER EGG! HATCH IT AT THE HATCHERY", PINK, false)
 		elseif kind == "soldPick" then -- coins burst from the SELL button into the gold pill
 			local inset = game:GetService("GuiService"):GetGuiInset()
 			local from = sellBtn.AbsolutePosition + sellBtn.AbsoluteSize / 2 + inset
