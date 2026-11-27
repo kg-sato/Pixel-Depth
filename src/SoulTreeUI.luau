@@ -33,6 +33,10 @@ function M.start(E)
 			links = { { "r1", "r2" }, { "r1", "r3" }, { "r2", "d1" }, { "r2", "d2" }, { "d1", "d3" }, { "d2", "d4" }, { "d3", "r3" }, { "d4", "r3" } } },
 	}
 	local CORE = { 0.5, 0.8 }
+	-- audit 2026-11-26 UI 4: the figures reached the sky's edges (names clipped the brackets); every star now sits in y 0.14..0.84
+	local function inset(p) p[2] = 0.14 + p[2] * 0.7 end
+	inset(CORE)
+	for _, l in LOOK do for _, p in l.rank do inset(p) end for _, p in l.deco do inset(p) end end
 	local soul = { shards = 0, nodes = {} }
 	local pick = T.order[1]
 
@@ -141,8 +145,9 @@ function M.start(E)
 	core.gem.Size = UDim2.fromScale(0.62, 0.62)
 	local count = text(core.holder, "0", UDim2.fromScale(0.5, 0.32), UDim2.fromScale(0.5, 0.46), MID, Color3.fromRGB(40, 18, 70), 700, false)
 	count.ZIndex = 14
-	local shardsWord = text(core.holder, "SHARDS", UDim2.fromScale(0.9, 0.16), UDim2.fromScale(0.5, 0.9), MID, Color3.fromRGB(230, 214, 255), 700, false) -- under the core star (a word in the bottom row ran into the constellation names)
+	local shardsWord = text(core.holder, "SHARDS", UDim2.fromScale(1.3, 0.24), UDim2.fromScale(0.5, 0.98), MID, Color3.fromRGB(230, 214, 255), 700, false) -- under the core star (a word in the bottom row ran into the constellation names)
 	shardsWord.ZIndex = 14
+	new("UITextSizeConstraint", shardsWord, { MinTextSize = 12 })
 
 	local figs = {}
 	for _, id in T.order do
@@ -165,9 +170,10 @@ function M.start(E)
 		new("UIStroke", band, { Color = Color3.fromRGB(120, 70, 20), Thickness = 1 })
 		fig.crown = crown
 		local xs = look.rank[1][1]
-		local name = text(sky, look.sky, UDim2.fromScale(0.3, 0.075), UDim2.fromScale(xs, 0.955), MID, look.tint, 700, false)
+		local name = text(sky, look.sky, UDim2.fromScale(0.3, 0.075), UDim2.fromScale(xs, 0.915), MID, look.tint, 700, false)
 		name.ZIndex = 6
-		if id == "flare" then name.Position = UDim2.fromScale(xs, 0.05) end -- the middle constellation is named over its crown star (the bottom row's middle is the shard star's)
+		new("UITextSizeConstraint", name, { MinTextSize = 12 })
+		if id == "flare" then name.Position = UDim2.fromScale(xs, 0.075) end -- the middle constellation is named over its crown star (the bottom row's middle is the shard star's)
 		fig.name = name
 		local hit = new("TextButton", sky, { Name = "Pick_" .. id, Text = "", AutoButtonColor = false, BackgroundTransparency = 1, Size = UDim2.fromScale(0.24, id == "flare" and 0.6 or 0.86), Position = UDim2.fromScale(xs, id == "flare" and 0.35 or 0.48), AnchorPoint = MID, ZIndex = 12 })
 		hit.Activated:Connect(function()

@@ -1405,6 +1405,11 @@ function M.play(opt)
 				card = frame({ Size = UDim2.fromScale(0.34, 0.42), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(22, 8, 30), BackgroundTransparency = 0.1, ZIndex = 6 }) -- obsidian jelly glass (Gemini, loop v10n: "a stark white box after a dark ride")
 				round(card, 0.1)
 				stroke(card, Color3.fromRGB(155, 31, 232), 3)
+				do -- audit 2026-11-26 UI 3: 12 px inside the frame, so the stars clear the border
+					local pad = Instance.new("UIPadding")
+					pad.PaddingTop, pad.PaddingBottom, pad.PaddingLeft, pad.PaddingRight = UDim.new(0, 12), UDim.new(0, 12), UDim.new(0, 12), UDim.new(0, 12)
+					pad.Parent = card
+				end
 				local sc = Instance.new("UIScale")
 				sc.Scale = 0.6
 				sc.Parent = card
@@ -1412,7 +1417,7 @@ function M.play(opt)
 				label(card, "ESCAPED!", UDim2.fromScale(0.8, 0.18), UDim2.fromScale(0.5, 0.2), Color3.fromRGB(236, 224, 255), 7)
 				local stars = hits == 0 and 3 or (hits <= 2 and 2 or 1) -- a clean run is three stars
 				for k = 1, 3 do
-					local st = label(card, "\u{2605}", UDim2.fromScale(0.13, 0.17), UDim2.fromScale(0.36 + (k - 1) * 0.14, 0.05), k <= stars and Color3.fromRGB(255, 196, 70) or Color3.fromRGB(220, 212, 236), 8)
+					local st = label(card, "\u{2605}", UDim2.fromScale(0.12, 0.13), UDim2.fromScale(0.36 + (k - 1) * 0.14, 0.07), k <= stars and Color3.fromRGB(255, 196, 70) or Color3.fromRGB(220, 212, 236), 8)
 					stroke(st, INK, 2)
 				end
 				local sub = frame({ Parent = card, Size = UDim2.fromScale(0.86, 0.46), Position = UDim2.fromScale(0.5, 0.53), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(36, 17, 56), BackgroundTransparency = 0.2, ZIndex = 6 })
@@ -1434,8 +1439,10 @@ function M.play(opt)
 				end
 				local step, tall = #rows > 4 and 0.068 or 0.085, #rows > 4 and 0.06 or 0.075 -- directive v14: from 0.26, so the superlative pill clears CONTINUE at 0.90
 				for i, r in rows do
-					label(card, r[1], UDim2.fromScale(0.4, tall), UDim2.fromScale(0.3, 0.26 + i * step), Color3.fromRGB(196, 160, 255), 7)
-					label(card, r[2], UDim2.fromScale(0.45, tall), UDim2.fromScale(0.7, 0.26 + i * step), i == #rows and Color3.fromRGB(255, 214, 107) or Color3.fromRGB(236, 224, 255), 7)
+					local a = label(card, r[1], UDim2.fromScale(0.4, tall), UDim2.fromScale(0.11, 0.26 + i * step), Color3.fromRGB(196, 160, 255), 7) -- audit UI 3: label flush left, value flush right
+					a.AnchorPoint, a.TextXAlignment = Vector2.new(0, 0.5), Enum.TextXAlignment.Left
+					local v = label(card, r[2], UDim2.fromScale(0.45, tall), UDim2.fromScale(0.89, 0.26 + i * step), i == #rows and Color3.fromRGB(255, 214, 107) or Color3.fromRGB(236, 224, 255), 7)
+					v.AnchorPoint, v.TextXAlignment = Vector2.new(1, 0.5), Enum.TextXAlignment.Right
 				end
 				if K.crew and type(cr) == "table" then -- directive v13 (open item 4): a playful crew superlative for this rider
 					local sup = (K.beadN or 0) >= 3 and "GOLD SNATCHER" or ((cr.flares or 0) >= 2 and K.job == "tail" and "FLARE ACE")

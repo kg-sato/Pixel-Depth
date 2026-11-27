@@ -411,6 +411,7 @@ local stepText = text(stepCard, "", UDim2.fromScale(0.78, 0.8), UDim2.fromScale(
 stepText.TextWrapped = true -- a long step takes two lines instead of shrinking to phone-unreadable size
 new("UITextSizeConstraint", stepText, { MaxTextSize = 30 }) -- directive v13: a short step stays a crisp line, not a shout
 stepCard.Name = "StepCard"
+new("UIPadding", stepCard, { PaddingLeft = UDim.new(0, 10) }) -- audit UI 6: the pickaxe overlapped the left edge
 do -- a small wooden plank nailed over the card's corner names it (Field Notebook pass 2026-11-12)
 	local plank = new("Frame", stepCard, { Name = "Plank", Size = UDim2.fromScale(0.3, 0.66), Position = UDim2.fromScale(0.03, -0.06), AnchorPoint = Vector2.new(0, 0.5), Rotation = -2, ZIndex = 3 })
 	skin(plank, "ribbonPink")
@@ -1622,7 +1623,7 @@ end
 		-- on the radar's rim always points home (vault Research/UI/Viral Game HUDs: top games keep about five HUD pieces)
 		local inRing = dist < C.CAMP_RING
 		if inRing ~= cave.pillRing then cave.pillRing, cave.pillUntil = inRing, os.clock() + 4 end
-		campPill.Visible = not cave.mgBusy and (cave.fear >= 0.25 or os.clock() < (cave.pillUntil or 0))
+		campPill.Visible = not cave.mgBusy and not plr:GetAttribute("BossFight") and (cave.fear >= 0.25 or os.clock() < (cave.pillUntil or 0))
 		local hold = plr:GetAttribute("DevGlint") and 0.25 -- Studio test hook: freeze every glint at its peak for captures
 		for _, g in map.deps do -- glints run every frame (cheap: a scale and a light per deposit)
 			if not g.claimed then
@@ -2657,7 +2658,7 @@ end)()
 	forgeUI.spatialExtra = forgeUI.spatialExtra or {} -- the small panels built in this script stand in the world too (Shared.SpatialPanels); the forge keeps its own staged screen
 	for _, f in { night, odds, mapP, forge } do table.insert(forgeUI.spatialExtra, { frame = f, home = gui, menu = true, on = function() return f.Visible end }) end
 	E.getState = E.getState or function() return state end
-	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "StrikeJuice", "Charms", "HubMinimap", "JellySkin", "JellyHUD", "GumText", "IconPass", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes", "MiningLoops", "DynamicHud", "InputGate", "TraversalFeel", "CrewHearth", "MuckPeeks", "FtueGate", "Clink", "WeakPoint", "RoofFade", "RefineryFX", "TownChronicle", "SignFade", "OreReveal", "WaterFX", "HatcheryUI", "TownGuide" } do
+	for _, name in { "InventoryUI", "UpgradeTracker", "WorldFX", "SurvivalHUD", "ViewHands", "WardrobeUI", "QuestUI", "Juice", "AudioManager", "DeathScreen", "PetCompanion", "CaveWeather", "ClayClient", "CoopMining", "WayHome", "Sonar", "Compass", "UtilityWheel", "SoulTreeUI", "BoonUI", "Ping", "LightGovernor", "Notebook", "ARSettings", "TouchControls", "SpatialWorldUI", "MiningReticle", "StrikeJuice", "Charms", "HubMinimap", "JellySkin", "JellyHUD", "GumText", "IconPass", "SpatialPanels", "TapJuiceFX", "DepthGauge", "ArrivalBanner", "Hearth", "GlassLift", "CampChoice", "JellyPress", "RetentionTimers", "LanternTether", "SellFountain", "VoxelFractureFX", "NearFade", "Marquee", "Trophies", "TownFill", "CodexUI", "HudCompact", "GeodeCrack", "CrystalChimes", "MiningLoops", "DynamicHud", "InputGate", "TraversalFeel", "CrewHearth", "MuckPeeks", "FtueGate", "Clink", "WeakPoint", "RoofFade", "RefineryFX", "TownChronicle", "SignFade", "OreReveal", "WaterFX", "HatcheryUI", "TownGuide", "TextFloor" } do
 		task.spawn(function()
 			local ok, err = pcall(function() require(RS.Shared:WaitForChild(name)).start(E) end)
 			if not ok then warn("[" .. name .. "] " .. tostring(err)) end

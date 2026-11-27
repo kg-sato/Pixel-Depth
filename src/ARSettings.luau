@@ -79,10 +79,10 @@ function M.start(E)
 
 	local function panel(slot, title, tint)
 		local part = new("Part", folder, { Name = title, Size = Vector3.new(PW, PH, 0.05), Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Transparency = 1 })
-		local sg = new("SurfaceGui", pg, { Name = "AR_" .. title, Adornee = part, Face = Enum.NormalId.Front, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = PPS, AlwaysOnTop = false, LightInfluence = 0, Brightness = 1.4, MaxDistance = 1000, ResetOnSpawn = false, Enabled = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
+		local sg = new("SurfaceGui", pg, { Name = "AR_" .. title, Adornee = part, Face = Enum.NormalId.Front, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = PPS, AlwaysOnTop = true, LightInfluence = 0, Brightness = 1.4, MaxDistance = 1000, ResetOnSpawn = false, Enabled = false, ZIndexBehavior = Enum.ZIndexBehavior.Sibling })
 		local root = new("Frame", sg, { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1 })
 		local sc = new("UIScale", root, {})
-		local card = new("Frame", root, { Size = UDim2.fromScale(0.94, 0.74), Position = UDim2.fromScale(0.5, 0.61), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.07, BorderSizePixel = 0, ZIndex = 2 }) -- nearly solid: the world behind made the labels hard to read
+		local card = new("Frame", root, { Size = UDim2.fromScale(0.94, 0.74), Position = UDim2.fromScale(0.5, 0.61), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0, BorderSizePixel = 0, ZIndex = 2 }) -- solid, and the gui is AlwaysOnTop (audit 2026-11-26 UI 2: the Deep Chronicle bled through); was nearly solid: the world behind made the labels hard to read
 		new("UICorner", card, { CornerRadius = UDim.new(0.07, 0) })
 		new("UIStroke", card, { Color = Color3.fromRGB(155, 31, 232):Lerp(WHITE, 0.35), Thickness = 3, Transparency = 0.1 }) -- one violet rim on all three (v10)
 		new("UIGradient", card, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(160, 140, 215)) })
@@ -129,9 +129,10 @@ function M.start(E)
 		local _, card = panel(0, "SETTINGS", PINK)
 		local function toggle(i, name, key, act)
 			local y = 0.10 + (i - 1) * 0.112 -- directive v14: five rows end at 0.60, well clear of the buttons at 0.87 (row 5 grazed them at 0.13 apart)
-			label(card, name, UDim2.fromScale(0.52, 0.1), UDim2.fromScale(0.33, y), WHITE, E.FONT, true) -- the open sentence font: condensed capitals filled in on a phone
+			local nl = label(card, name, UDim2.fromScale(0.52, 0.1), UDim2.fromScale(0.33, y), WHITE, E.FONT, true) -- the open sentence font: condensed capitals filled in on a phone
+			new("UITextSizeConstraint", nl, { MaxTextSize = 30, MinTextSize = 12 }) -- the same cap as the CONTROLS words (audit UI 2: they were twice the size)
 			local b, jt
-			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and CYAN or DEEP, UDim2.fromScale(0.26, 0.112), UDim2.fromScale(0.8, y), function()
+			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and CYAN or DEEP, UDim2.fromScale(0.26, 0.088), UDim2.fromScale(0.8, y), function() -- 0.088 tall on a 0.112 step: a clear gap between the toggles (audit UI 2)
 				state[key] = not state[key]
 				jt.set(state[key] and "ON" or "OFF")
 				b.BackgroundColor3 = state[key] and CYAN or DEEP
@@ -157,13 +158,14 @@ function M.start(E)
 		toggle(4, "Fast cutscenes", "fast", function(on) plr:SetAttribute("FastCine", on or nil) end)
 		-- directive v13: "Dynamic HUD": calm chrome slides off the edges until something needs the player (Shared.DynamicHud)
 		toggle(5, "Dynamic HUD", "hudDynamic", function(on) plr:SetAttribute("HudDynamic", on or nil) end)
-		local x = 0.2
-		for _, s in { { "BAG", DEEP, "bag" }, { "QUESTS", DEEP, "quests" }, { "DONE", PINK, nil } } do
-			glassButton(card, s[1], s[2], UDim2.fromScale(0.27, 0.14), UDim2.fromScale(x, 0.87), function()
+		local foot = new("Frame", card, { Name = "Footer", Size = UDim2.fromScale(0.9, 0.14), Position = UDim2.fromScale(0.5, 0.87), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 4 }) -- audit UI 2: three even pills, centred
+		new("UIListLayout", foot, { FillDirection = Enum.FillDirection.Horizontal, HorizontalAlignment = Enum.HorizontalAlignment.Center, VerticalAlignment = Enum.VerticalAlignment.Center, Padding = UDim.new(0.04, 0), SortOrder = Enum.SortOrder.LayoutOrder })
+		for i, s in { { "BAG", DEEP, "bag" }, { "QUESTS", DEEP, "quests" }, { "DONE", PINK, nil } } do
+			local b = glassButton(foot, s[1], s[2], UDim2.fromScale(0.3, 1), UDim2.new(), function()
 				shut()
 				if s[3] and hook[s[3]] then task.delay(0.3, hook[s[3]]) end
 			end)
-			x += 0.3
+			b.LayoutOrder = i
 		end
 	end
 
@@ -178,7 +180,7 @@ function M.start(E)
 			new("UICorner", cap, { CornerRadius = UDim.new(0.25, 0) })
 			new("UIStroke", cap, { Color = LILAC, Thickness = 2 })
 			label(cap, k[1], UDim2.fromScale(0.84, 0.7), UDim2.fromScale(0.5, 0.5), LILAC, E.HEAD)
-			label(card, k[2], UDim2.fromScale(0.33, 0.1), UDim2.fromScale(0.325 + col * 0.5, y), WHITE, E.FONT, true)
+			new("UITextSizeConstraint", label(card, k[2], UDim2.fromScale(0.33, 0.1), UDim2.fromScale(0.325 + col * 0.5, y), WHITE, E.FONT, true), { MaxTextSize = 30, MinTextSize = 12 })
 		end
 	end
 

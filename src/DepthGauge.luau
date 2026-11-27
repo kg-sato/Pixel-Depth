@@ -20,6 +20,11 @@ function M.start(E)
 		local boss = E.gui:FindFirstChild("BossBar", true)
 		pill.Visible = not (E.cave.mgBusy or (boss and boss.Visible))
 		if not E.caveHud.Visible or not pill.Visible then return end
+		local mm = E.caveHud:FindFirstChild("Minimap")
+		if mm and mm:IsA("GuiObject") and mm.AbsoluteSize.X > 4 then -- audit 2026-11-26 UI 8: centred over the radar, so "-4 M" never sits off to one side
+			local rel = mm.AbsolutePosition - E.caveHud.AbsolutePosition
+			pill.AnchorPoint, pill.Position = Vector2.new(0.5, 1), UDim2.fromOffset(rel.X + mm.AbsoluteSize.X / 2, rel.Y - 4)
+		end
 		local h = E.hrp()
 		if not h then return end
 		local depth = math.max(0, (E.C.CAVE_ORIGIN.Y - h.Position.Y) * 0.28)

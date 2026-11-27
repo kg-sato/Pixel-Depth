@@ -5,7 +5,7 @@
 local GLASS = require(script.Parent:WaitForChild("Config")).UI_KIT == "glass"
 local JellyText = GLASS and require(script.Parent:WaitForChild("JellyText"))
 local M = {}
-local LANE, MAX = 0.69, 6 -- the lane sits under the loot card (ends at 0.62) and over the bottom buttons
+local LANE, MAX = 0.72, 6 -- the lane sits under the loot card (ends at 0.62) and above the hotbar (audit 2026-11-26 UI 9: was 0.69)
 local Players = game:GetService("Players")
 local function lane() -- in a boss fight the notices sit under the boss bar, off the fighting floor (Gemini v10n_r9: "floating across the combat space")
 	local pg = Players.LocalPlayer and Players.LocalPlayer:FindFirstChild("PlayerGui")
@@ -13,6 +13,12 @@ local function lane() -- in a boss fight the notices sit under the boss bar, off
 	return (bar and bar:IsA("GuiObject") and bar.Visible) and 0.6 or LANE -- 0.6, between the Warden's head and the dial in the lower third (tour full1125b: at 0.34 KNOT CRACKED covered the head) -- under the boss bar and its pips (at 0.25 it sat on the pips, full1119o)
 end
 local queue, live, E, gap = {}, nil, nil, 0
+local function wheelOpen() -- audit 2026-11-26 UI 1: a tip toast cut across the tool wheel's QUESTS and BAG slots
+	local pg = Players.LocalPlayer and Players.LocalPlayer:FindFirstChild("PlayerGui")
+	local w = pg and pg:FindFirstChild("UtilityWheel", true)
+	return w ~= nil and w:IsA("GuiObject") and w.Visible and w.AbsoluteSize.X > 4
+end
+local function bossOn() return Players.LocalPlayer ~= nil and Players.LocalPlayer:GetAttribute("BossFight") == true end
 
 function M.show(msg, color, big, delay)
 	if delay and delay > 0 then task.delay(delay, M.show, msg, color, big) return end
@@ -36,6 +42,13 @@ function M.start(e)
 	game:GetService("RunService").Heartbeat:Connect(function(dt)
 		local ok, hold = pcall(E.hold) -- a hold check that throws must not freeze a line on screen
 		if not ok then hold = false end
+		hold = hold or wheelOpen()
+		if bossOn() then -- audit 2026-11-26 UI 9: ORE BANK lay across the Root Warden's chest and SAFE AT CAMP floated in the boss room
+			for i = #queue, 1, -1 do
+				local m = string.upper(queue[i].msg)
+				if m:find("ORE BANK") or m:find("SAFE AT CAMP") or m:find("CAMP IS SAFE") then table.remove(queue, i) end
+			end
+		end
 		if live then
 			live.label.Visible = not hold
 			if not hold then live.seen += dt end
@@ -52,7 +65,7 @@ function M.start(e)
 			return
 		end
 		if hold or os.clock() < gap or os.clock() < claimUntil or #queue == 0 then return end
-		local fight = lane() ~= LANE -- a boss fight: only its own lines show now; the rest (quests, torch, gifts) wait for the end (Gemini full1119h)
+		local fight = lane() ~= LANE or bossOn() -- a boss fight: only its own lines show now; the rest (quests, torch, gifts) wait for the end (Gemini full1119h)
 		local pick = 1
 		if fight then
 			pick = nil

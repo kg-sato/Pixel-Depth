@@ -68,7 +68,7 @@ function M.start(E)
 
 	-- 2. the tracker: compact pill + unfolding card
 	local pill = panel(pillRow, UDim2.fromScale(1, 1), UDim2.new(), nil, "card")
-	new("UIAspectRatioConstraint", pill, { AspectRatio = 236 / 46, DominantAxis = Enum.DominantAxis.Height })
+	new("UIAspectRatioConstraint", pill, { AspectRatio = 296 / 46, DominantAxis = Enum.DominantAxis.Height }) -- audit text 4: wider (was 236), so "Kobold-Copper Pickaxe" stays 11 px or more
 	pill.Name = "TrackerPill"
 	local ringBox = new("Frame", pill, { Size = UDim2.fromScale(0.17, 0.84), Position = UDim2.fromScale(0.025, 0.5), AnchorPoint = Vector2.new(0, 0.5), BackgroundTransparency = 1, ZIndex = 3 })
 	new("UIAspectRatioConstraint", ringBox, { AspectRatio = 1 })
@@ -76,6 +76,7 @@ function M.start(E)
 	new("UIAspectRatioConstraint", new("ImageLabel", ringBox, { Image = E.ICON and E.ICON.pick or "", BackgroundTransparency = 1, ScaleType = Enum.ScaleType.Fit, Size = UDim2.fromScale(0.56, 0.56), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), ZIndex = 4 }), { AspectRatio = 1 })
 	local nameT = text(pill, "", UDim2.fromScale(0.74, 0.4), UDim2.fromScale(0.2, 0.1), nil, PILL_NAME, 700, false)
 	nameT.TextXAlignment = Enum.TextXAlignment.Left
+	new("UITextSizeConstraint", nameT, { MinTextSize = 11 })
 	local sumT = text(pill, "", UDim2.fromScale(0.74, 0.3), UDim2.fromScale(0.2, 0.56), nil, PILL_SUM, 700, false)
 	sumT.TextXAlignment = Enum.TextXAlignment.Left
 

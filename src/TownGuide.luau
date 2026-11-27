@@ -1,4 +1,4 @@
-﻿-- TownGuide (ReplicatedStorage.Shared.TownGuide), started by PixelClient. Town overhaul 2026-11-27 (vault Briefs/Town and Mine
+-- TownGuide (ReplicatedStorage.Shared.TownGuide), started by PixelClient. Town overhaul 2026-11-27 (vault Briefs/Town and Mine
 -- Map Overhaul 1.3): the signpost in the square names the six one-job stations and its "Guide me" prompt opens this picker. The
 -- chosen station gets a beam of gold light and a trail of glowing gold voxel tiles along the walkable path to it (the client's
 -- PathfindingService; a straight line where it finds none). The trail clears on arrival, after 45 s, on a new choice, or on the

@@ -174,14 +174,15 @@ function M.start(E)
 			return l
 		end
 		word("CAMP 1", 0.055, Color3.fromRGB(214, 196, 255), 0.055)
-		word("KILN CAMP", 0.945, WARM, 0.06)
+		word("KILN CAMP", 0.92, WARM, 0.055) -- audit UI 10: clear of the plate's foot
+		new("UIPadding", plate, { PaddingBottom = UDim.new(0, 10), PaddingTop = UDim.new(0, 6) })
 		local rail = new("Frame", plate, { Name = "DepthRail", Size = UDim2.fromScale(0.07, 0.74), Position = UDim2.fromScale(0.74, 0.5), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = Color3.fromRGB(16, 8, 28), BorderSizePixel = 0, ZIndex = 53 })
 		new("UICorner", rail, { CornerRadius = UDim.new(0.5, 0) })
 		new("UIStroke", rail, { Color = BRASS, Thickness = 1.5 })
 		local dot = new("Frame", rail, { Size = UDim2.fromScale(3, 0.045), Position = UDim2.fromScale(0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = WARM, BorderSizePixel = 0, ZIndex = 53 })
 		new("UICorner", dot, { CornerRadius = UDim.new(0.5, 0) })
 		new("UIStroke", dot, { Color = Color3.fromRGB(255, 244, 220), Thickness = 1.5 })
-		local depth = new("TextLabel", plate, { Text = "0 m", Size = UDim2.fromScale(0.55, 0.05), Position = UDim2.fromScale(0.6, 0.13), AnchorPoint = Vector2.new(1, 0.5), BackgroundTransparency = 1, Font = Enum.Font.FredokaOne, TextScaled = true, TextColor3 = Color3.new(1, 1, 1), ZIndex = 53 })
+		local depth = new("TextLabel", plate, { Text = "0 m", Size = UDim2.fromScale(0.55, 0.05), Position = UDim2.fromScale(0.66, 0.13), AnchorPoint = Vector2.new(1, 0.5), TextXAlignment = Enum.TextXAlignment.Right, BackgroundTransparency = 1, Font = Enum.Font.FredokaOne, TextScaled = true, TextColor3 = Color3.new(1, 1, 1), ZIndex = 53 })
 		new("UIStroke", depth, { Color = Color3.fromRGB(20, 10, 30), Thickness = 2 })
 		return { dot = dot, depth = depth }
 	end
@@ -222,7 +223,7 @@ function M.start(E)
 				cage:PivotTo(floor)
 				gauge = gauge or makeGauge()
 				gauge.dot.Position = UDim2.fromScale(0.5, e)
-				gauge.depth.Position, gauge.depth.Text = UDim2.fromScale(0.6, 0.13 + 0.74 * e), "-" .. math.floor(e * dist / 4 + 0.5) .. " m"
+				gauge.depth.Position, gauge.depth.Text = UDim2.fromScale(0.66, 0.13 + 0.74 * e), "-" .. math.floor(e * dist / 4 + 0.5) .. " m"
 				local speed = 6 * t * (1 - t) -- 0 at both ends, 1.5 in the middle
 				vcam.CFrame = floor * CFrame.new(0, 4.6 + math.sin(os.clock() * 17) * 0.02 * speed, 0) * CFrame.Angles(0, 0.5 + t * 2.4, 0) * CFrame.Angles(-0.7 - math.sin(t * math.pi) ^ 2 * 0.3, 0, 0) -- a slow look round, always partly down the shaft (level, the first frames faced the rock 8 studs away: Gemini full1122e 313 s)
 				if os.clock() >= nextTick then

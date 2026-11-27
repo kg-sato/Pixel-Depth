@@ -27,7 +27,7 @@ function M.start(E)
 		 Vector2.new(0.5, 0.5), "pillButter")
 	badge.ZIndex = 3
 	local badgeT = text(badge, "0/10", UDim2.fromScale(0.82, 0.62), UDim2.fromScale(0.5, 0.5), Vector2.new(0.5, 0.5), Color3.fromRGB(146, 96, 10), 700, false) -- deeper than DEEP_GOLD: 3.0:1 measured, now about 4:1
-	badgeT.ZIndex = 4
+	badgeT.ZIndex, badgeT.TextWrapped = 4, false -- audit UI 5: "4/10" wrapped and lifted the row
 	local nubs = {} -- ore bits poke out of a full bag (board 8)
 	for _, d in { { 0.3, 10, 1 }, { 0.52, -12, 3 }, { 0.73, 16, 2 } } do
 		local n = new("Frame", invBtn, { Name = "OreNub", Size = UDim2.fromScale(0.17, 0.17), Position = UDim2.fromScale(d[1], 0.07), AnchorPoint = Vector2.new(0.5, 0.5), Rotation = d[2], BackgroundColor3 = C.LAYERS[1][4][d[3]][2], BorderSizePixel = 0, Visible = false, ZIndex = 3 })

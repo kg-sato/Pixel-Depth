@@ -18,6 +18,7 @@ function M.start(E)
 	local bar = panel(gui, S(440, 74), S(640, 70), Vector2.new(0.5, 0.5), "pill") -- over the tip ribbon, which sits under it
 	fit(bar, 440, 74)
 	bar.Name, bar.Visible = "BossBar", false
+	bar:GetPropertyChangedSignal("Visible"):Connect(function() game:GetService("Players").LocalPlayer:SetAttribute("BossFight", bar.Visible or nil) end) -- read by ToastManager and the camp pill (audit 2026-11-26 UI 9)
 	local barTitle = text(bar, "ROOT WARDEN", UDim2.fromScale(0.8, 0.44), UDim2.fromScale(0.5, 0.3), Vector2.new(0.5, 0.5), Color3.fromRGB(236, 224, 255), 700, false)
 	barTitle.Font = Enum.Font.FredokaOne -- Shared.JellyHUD turns this font into jelly letters
 	local pips = {}
