@@ -233,13 +233,13 @@ function M.start(E)
 			local n = now
 			task.delay(1.6, function() toast(n == 2 and "THE KILN GOLEM WAKES!  SEAL ITS 3 VENTS" or "THE ROOT WARDEN WAKES!  CRACK ITS 3 KNOTS", AMBER, true) end) -- directive v14: after the banner, so bar, banner and toast never stack
 		elseif kind == "bossKnot" then
-			pips[3 - a].BackgroundColor3 = Color3.fromRGB(90, 80, 110)
+			for k = 1, math.clamp(3 - a, 0, 3) do pips[k].BackgroundColor3 = Color3.fromRGB(90, 80, 110) end -- a staggered crack takes two (2026-11-27)
 			if b and b.PrimaryPart then
 				burst(b.PrimaryPart.Position, Vector3.yAxis, AMBER, 40)
 				b.PrimaryPart.Transparency = 1
 			end
 			sfx("breakRock", 0.8)
-			crackBody(3 - a)
+			crackBody(math.clamp(3 - a, 1, 3))
 			toast(a > 0 and ("KNOT CRACKED!  " .. a .. " TO GO") or "THE LAST KNOT CRACKS!", MINT, true)
 		elseif kind == "bossHold" then
 			toast("The knot holds! Two PERFECT swings crack it", PINK, false)
