@@ -51,7 +51,47 @@ def run(tool, args=None, shot=None, file=None, timeout=None):
     return _run(tool, args, shot, file, timeout)
 
 
+_SESS = {}
+
+
+def _persist(tool, args, shot, file):
+    """NIGHT_PERSIST=1 (2026-11-26): one StudioMCP link per process. A fresh link waits about 3 s for the Studio plugin to attach,
+    and a tour makes about 150 calls, so the tour ran 75% long and overran its recording; on a kept link a call takes 0.08 s.
+    The link is rebuilt once if it dies or loses Studio."""
+    import base64
+    args = dict(args or {})
+    if file: args["code"] = open(file, encoding="utf8").read()
+    for _ in range(2):
+        if "s" not in _SESS:
+            sys.path.insert(0, str(root / "tools")); import studio_live as SL
+            sp, rpc = SL.session(); sid = None
+            for _ in range(100):  # up to 20 s for the plugin to attach
+                st = json.loads(rpc("tools/call", {"name": "list_roblox_studios", "arguments": {}})["result"]["content"][0]["text"]).get("studios", [])
+                if st:
+                    sid = ([x for x in st if x.get("name") == os.environ.get("STUDIO_PLACE", "Claude.rbxl")] or st)[0]["id"]; break
+                time.sleep(0.2)
+            _SESS["s"] = (sp, rpc, sid)
+        sp, rpc, sid = _SESS["s"]
+        a = dict(args)
+        if sid and tool != "list_roblox_studios" and "studio_id" not in a: a["studio_id"] = sid
+        try:
+            r = rpc("tools/call", {"name": tool, "arguments": a})
+        except Exception:
+            _SESS.pop("s"); sp.kill(); continue
+        if "error" in r: return "ERROR " + str(r["error"])
+        out = []
+        for c in r["result"].get("content", []):
+            if c.get("type") == "image":
+                o = str(shot or "studio_shot.png"); open(o, "wb").write(base64.b64decode(c["data"])); out.append("saved image " + o)
+            else: out.append(c.get("text", str(c)))
+        txt = "\n".join(out).strip()
+        if "No Roblox Studio" in txt: _SESS.pop("s"); sp.kill(); continue
+        return txt
+    return "ERROR Studio not reachable"
+
+
 def _run(tool, args=None, shot=None, file=None, timeout=None):
+    if os.environ.get("NIGHT_PERSIST") and not timeout: return _persist(tool, args, shot, file)  # captures keep their timeout path
     env = dict(os.environ)
     if shot: env["STUDIO_SHOT"] = str(shot)
     cmd = [sys.executable, str(root / "tools" / "studio_live.py"), tool]
