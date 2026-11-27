@@ -756,7 +756,7 @@ function Hub.build(parent, origin)
 		table.sort(arms, function(a, b) return (a[3] - (q.Z - O.Z)) < (b[3] - (q.Z - O.Z)) end) -- the most northern first: highest
 		for k, d in arms do
 			local dx, dz = d[2] - (q.X - O.X), d[3] - (q.Z - O.Z)
-			sign(sp, d[1], CFrame.new(q + Vector3.new(0, 11.4 - (k - 1) * 1.75, 0)) * CFrame.Angles(0, math.atan2(-dz, dx), 0) * CFrame.new(2.3, 0, 0), 4, 0.95, PAL.cream[2], nil, nil, 25) -- 1.75 apart and tilted 25 degrees: at 1.45 and 45 the boards cut through each other (Gemini r1)
+			sign(sp, d[1], CFrame.new(q + Vector3.new(0, 11.4 - (k - 1) * 1.75 - (k == #arms and 0.45 or 0), 0)) * CFrame.Angles(0, math.atan2(-dz, dx), 0) * CFrame.new(2.3, 0, 0), 4, 0.95, PAL.cream[2], nil, nil, 25) -- 1.75 apart and tilted 25 degrees: at 1.45 and 45 the boards cut through each other (Gemini r1)
 		end
 		prompt(sp:FindFirstChild("Post"), "Guide me", "Signpost", "guide").MaxActivationDistance = 9
 	end
