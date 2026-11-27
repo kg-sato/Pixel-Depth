@@ -1095,7 +1095,7 @@ PPS.PromptShown:Connect(function(prompt, inputType)
 	skin(bubble, "pillLilac") -- v10: obsidian glass (was a pink ribbon)
 	local action = text(bubble, prompt.ActionText, UDim2.fromScale(0.66, 0.36), UDim2.fromScale(0.57, 0.3), Vector2.new(0.5, 0.5), CREAM, 700, false)
 	action.Font = HEAD
-	local object = text(bubble, prompt.ObjectText, UDim2.fromScale(0.64, 0.22), UDim2.fromScale(0.57, 0.58), Vector2.new(0.5, 0.5), CREAM, 700, false)
+	local object = text(bubble, prompt.ObjectText, UDim2.fromScale(0.64, 0.22), UDim2.fromScale(0.57, 0.6), Vector2.new(0.5, 0.5), CREAM, 700, false)
 	if prompt.ObjectText == "" then
 		object.Visible = false
 		action.Position = UDim2.fromScale(0.57, 0.4)
