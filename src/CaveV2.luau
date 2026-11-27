@@ -637,7 +637,7 @@ function M.build(parent, origin, seed, opt)
 				table.insert(placed, w)
 				table.insert(chosen, { c = c, idx2 = idx2, w = w })
 				local nx2, nz2 = c[1] + c[4][1], c[3] + c[4][2]
-				if get(nx2 + c[4][1], c[2], nz2 + c[4][2]) == 0 and get(nx2 + c[4][1], c[2] + 1, nz2 + c[4][2]) == 0 and get(nx2, c[2] + 2, nz2) == 0 then
+				if get(nx2 + c[4][1], c[2], nz2 + c[4][2]) == 0 and get(nx2 + c[4][1], c[2] + 1, nz2 + c[4][2]) == 0 and get(nx2, c[2] + 2, nz2) == 0 and get(nx2, c[2] - 1, nz2) == 0 then -- 2026-11-27: rock under the niche too, so its ore never hangs over air
 					set(nx2, c[2], nz2, 1)
 					set(nx2, c[2] + 1, nz2, 1)
 					c.niche = true
@@ -1267,24 +1267,76 @@ function M.build(parent, origin, seed, opt)
 			end
 		end
 	end
+	do -- talus (Town and Mine Map Overhaul 2026-11-27, 2.3; Stylized Voxel Cave Generation, Recipe A3): angular breakdown blocks
+		-- heaped in the corner where a wall meets the floor (the seam read as a hard 90-degree cut). Chamfered wedges and blocks in the
+		-- wall's own darker tones, no collision, never in the camp. At most 150 pieces a layer (the 12,000-part cave budget).
+		local nT = 0
+		for k in reach do
+			if nT >= 150 then break end
+			local z = k % NZ
+			local y = math.floor(k / NZ) % NY
+			local x = math.floor(k / (NZ * NY))
+			if hash(x, z, y + 91) < 0.06 and not inCamp(x, z) and get(x, y - 1, z) == 0 then
+				for _, d in { { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } } do
+					if get(x + d[1], y, z + d[2]) == 0 and get(x + d[1], y + 1, z + d[2]) == 0 then
+						local c = toWorld(x, y, z) - Vector3.new(0, V / 2, 0)
+						local wall, side = Vector3.new(d[1], 0, d[2]), Vector3.new(-d[2], 0, d[1])
+						for q = 0, 1 + math.floor(hash(x, y, z) * 2) do
+							local s = 1.1 + hash(x + q, z, 93) * 1.5
+							local at = c + wall * (V / 2 - s * 0.4) + side * ((hash(x, q, z) - 0.5) * 2.8) + Vector3.new(0, s * 0.28, 0)
+							local wp = Instance.new(q % 2 == 0 and "WedgePart" or "Part")
+							wp.Name, wp.Anchored, wp.CanCollide, wp.CanQuery, wp.CanTouch, wp.CastShadow = "Talus", true, false, false, false, false
+							wp.Size = Vector3.new(s * 1.2, s * 0.8, s)
+							wp.CFrame = CFrame.lookAt(at, at - wall) * CFrame.Angles(0, (hash(q, x, z) - 0.5) * 0.9, 0)
+							wp.Material, wp.Color = Enum.Material.Slate, WALL[1 + (q + x) % 2]:Lerp(Color3.new(0, 0, 0), 0.12)
+							if VARIANT then wp.MaterialVariant = VARIANT end
+							wp.Parent = group("Decor")
+							nT += 1
+						end
+						break
+					end
+				end
+			end
+		end
+		model:SetAttribute("Talus", nT)
+	end
 	if L == 2 then rimstone(spots.B2, 3) rimstone(spots.Cathedral, 4)
 	elseif L == 3 then rimstone(spots.B2, 3) rimstone(spots.B3, 2) end
-	-- water: the stream slot and the pools carry a sheet of glassy water on top
+	-- water (Town and Mine Map Overhaul 2026-11-27, 2.1): the stream slot and the pools are real Roblox terrain water on the 4-stud
+	-- voxel grid (the cave origins are multiples of 4, so each cell is exactly one terrain voxel): a column one cell deep is a
+	-- 2-stud ankle stream you wade through, a deeper one fills to 0.9 under its top cell and you swim (buoyancy, the swim state,
+	-- ripples, the underwater look; Shared.CaveSwim adds the air bar). The thin Glass slabs it replaces vanished when you stepped
+	-- in (RoofFade) and had no physics. In Muspell the streams are lava: a glowing sheet on the floor of the slot, as before.
 	local nWater = 0
+	local hot = L == 4
+	if not hot then
+		local T = workspace.Terrain
+		T.WaterColor, T.WaterTransparency, T.WaterWaveSize, T.WaterWaveSpeed, T.WaterReflectance = Color3.fromRGB(46, 150, 172), 0.55, 0.06, 6, 0.25
+	end
 	for x = 0, NX - 1 do
 		for z = 0, NZ - 1 do
-			for y = 0, NY - 2 do
-				if get(x, y, z) == 2 and get(x, y + 1, z) ~= 2 then
-					local hot = L == 4 -- in Muspell the streams and pools are lava (no swimming: it is only a glow on the floor of the slot)
-					local w = part("V2Water", hot and "LavaFlow" or "StreamWater", Vector3.new(V, 0.6, V), CFrame.new(toWorld(x, y, z) + Vector3.new(0, V / 2 - 1.2, 0)), hot and Color3.fromRGB(255, 96, 36) or PAL.water, hot and { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false } or { Material = Enum.Material.Glass, MaterialVariant = "", Transparency = 0.35, CanCollide = false, CastShadow = false })
-					if hot and hash(x, z, 5) > 0.82 then
-						local hl = Instance.new("PointLight")
-						hl.Color, hl.Range, hl.Brightness, hl.Shadows = Color3.fromRGB(255, 110, 50), 18, 0.8, false
-						hl.Parent = w
+			local y = 0
+			while y <= NY - 2 do
+				if get(x, y, z) == 2 then
+					local y0 = y
+					while y + 1 <= NY - 2 and get(x, y + 1, z) == 2 do y += 1 end
+					if hot then
+						local w = part("V2Water", "LavaFlow", Vector3.new(V, 0.6, V), CFrame.new(toWorld(x, y, z) + Vector3.new(0, V / 2 - 1.2, 0)), Color3.fromRGB(255, 96, 36), { Material = Enum.Material.Neon, MaterialVariant = "", CanCollide = false, CastShadow = false })
+						if hash(x, z, 5) > 0.82 then
+							local hl = Instance.new("PointLight")
+							hl.Color, hl.Range, hl.Brightness, hl.Shadows = Color3.fromRGB(255, 110, 50), 18, 0.8, false
+							hl.Parent = w
+						end
+						w.Reflectance = 0.1
+					else
+						local c0 = toWorld(x, y0, z)
+						local bottom = c0.Y - V / 2
+						local h = (y == y0) and 2 or ((y - y0 + 1) * V - 0.9)
+						workspace.Terrain:FillBlock(CFrame.new(c0.X, bottom + h / 2, c0.Z), Vector3.new(V, h, V), Enum.Material.Water)
 					end
 					nWater += 1
-					w.Reflectance = 0.1
 				end
+				y += 1
 			end
 		end
 	end

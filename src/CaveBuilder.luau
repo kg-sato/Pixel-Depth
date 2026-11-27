@@ -405,6 +405,7 @@ function Cave.build(parent, origin, seed)
 			end
 			part("Camp", "TentBack", Vector3.new(2.4, 3.6, 0.4) * S, base * CFrame.new(0, 1.8 * S, -2.7 * S), col:Lerp(Color3.new(0, 0, 0), 0.25)) -- narrow: a wide back stuck out of the A-frame's slopes
 			part("Camp", "Bedroll", Vector3.new(2.2, 0.6, 4) * S, base * CFrame.new(0, 0.3, 0), PAL.lilac, DECO)
+			part("Camp", "TentFoot", Vector3.new(6.6, 1.6, 6) * S, base * CFrame.new(0, -0.74, 0), Color3.fromRGB(92, 84, 104), DECO) -- 2026-11-27 (audit mesh 2): a stone foundation under the A-frame, so its corners never float over sloped rock
 			part("Camp", "Door", Vector3.new(2, 3, 0.2) * S, base * CFrame.new(0, 1.5 * S, 2.7 * S), Color3.fromRGB(40, 28, 52), DECO)
 			part("Camp", "Pole", Vector3.new(0.3, 2, 0.3), base * CFrame.new(0, 5.4 * S, 2.4 * S), PAL.bark, DECO)
 			part("Camp", "Flag", Vector3.new(1.4, 0.8, 0.1), base * CFrame.new(0.7, 6 * S, 2.4 * S), PAL.lilac, DECO)

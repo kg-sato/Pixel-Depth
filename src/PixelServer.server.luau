@@ -1383,11 +1383,10 @@ SurfaceR.OnServerEvent:Connect(function(plr, dir, report) -- the rail lift butto
 		return
 	end
 	if dir == "drown" then -- out of air in the grotto lake: lose a share of the unbanked ore, wake at Camp 1
-		local water = workspace:FindFirstChild("Caves") and workspace.Caves:FindFirstChild("Water", true)
-		if not s or not hrp or not water or not caveLanding or not plr:GetAttribute("InCave") or riding[plr] or escaping[plr] then return end
-		local p = water.CFrame:PointToObjectSpace(hrp.Position)
-		local surf = water.Position.Y + water.Size.Y / 2
-		if math.abs(p.X) > water.Size.X / 2 or math.abs(p.Z) > water.Size.Z / 2 or hrp.Position.Y > surf + 2 then return end -- not in the lake
+		if not s or not hrp or not caveLanding or not plr:GetAttribute("InCave") or riding[plr] or escaping[plr] then return end
+		local CaveSwim = require(RS.Shared:WaitForChild("CaveSwim"))
+		local top = CaveSwim.waterTop(hrp.Position + Vector3.new(0, 1.5, 0)) -- the cave pools are terrain water since 2026-11-27
+		if not top or hrp.Position.Y > top + 1 then return end -- not in the water
 		local lost = loseShare(s, C.SWIM.loss)
 		hrp.AssemblyLinearVelocity = Vector3.zero
 		hrp.CFrame = caveLanding.CFrame + Vector3.new(0, 3, 0)
@@ -1847,6 +1846,14 @@ if caveDeposits then -- directive v13 FTUE (ftue01): four sparkling Rootflint ve
 		end
 		caveDeposits:SetAttribute("Starters", made)
 	end
+end
+if caveDeposits then -- Town and Mine Map Overhaul 2026-11-27: every deposit stands on rock, and nothing hangs in a zip line's path
+	local GS = require(game:GetService("ServerScriptService"):WaitForChild("GroundSnap"))
+	local moved, pruned = GS.snap(workspace.Caves)
+	local cleared = GS.clearZips(workspace.Caves, 8)
+	print(string.format("[GroundSnap] deposits moved %d, pruned %d; zip path props cleared %d", moved, pruned, cleared))
+	local okW, errW = pcall(GS.wayfinding, workspace.Caves, C) -- lanterns on the main route, fork signposts
+	if not okW then warn("[GroundSnap] wayfinding: " .. tostring(errW)) end
 end
 for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
 	local core = dep.PrimaryPart

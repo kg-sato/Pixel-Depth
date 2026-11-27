@@ -83,7 +83,24 @@ function M.start(E)
 		task.delay(0.6, function() ring:Destroy() end)
 		pcall(function() E.sfx("splash", 1) end)
 	end
+	local waterTop = require(script.Parent:WaitForChild("CaveSwim")).waterTop -- the cave pools are terrain water (2026-11-27)
+	local function caveWater(hrp) -- the surface under the feet in a cave pool or stream, or nil
+		if not plr:GetAttribute("InCave") then return nil end
+		local top = waterTop(hrp.Position - Vector3.new(0, 2.6, 0))
+		return top and top > hrp.Position.Y - 3.4 and top or nil
+	end
 	local was = false
+	local wasCave = false
+	task.spawn(function()
+		while true do -- stepping into a cave pool or stream: the same voxel splash and foam ring
+			task.wait(0.12)
+			local ch = plr.Character
+			local hrp = ch and ch:FindFirstChild("HumanoidRootPart")
+			local top = hrp and caveWater(hrp)
+			if top and not wasCave then splash(hrp.Position, top) end
+			wasCave = top ~= nil
+		end
+	end)
 	task.spawn(function()
 		while true do
 			task.wait(0.1)
@@ -101,7 +118,8 @@ function M.start(E)
 			if new == Enum.HumanoidStateType.Landed then
 				local hrp = ch:FindFirstChild("HumanoidRootPart")
 				local w = hrp and inWater(hrp.Position - Vector3.new(0, 2.6, 0))
-				if w then splash(hrp.Position, w.Position.Y + w.Size.Y / 2) end
+				if w then splash(hrp.Position, w.Position.Y + w.Size.Y / 2)
+				elseif hrp then local top = caveWater(hrp) if top then splash(hrp.Position, top) end end
 			end
 		end)
 	end

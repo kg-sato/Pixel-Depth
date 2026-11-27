@@ -21,10 +21,27 @@ local function lakeOf(water, pos)
 end
 M.lakeOf = lakeOf
 
+-- terrain water (the cave pools since 2026-11-27): the surface over a point, if the point is in a water voxel or just above one
+local function waterTop(pos)
+	local m = Vector3.new(math.floor(pos.X / 4) * 4, math.floor(pos.Y / 4) * 4, math.floor(pos.Z / 4) * 4)
+	local ok, mats, occ = pcall(function() return workspace.Terrain:ReadVoxels(Region3.new(m - Vector3.new(0, 4, 0), m + Vector3.new(4, 8, 4)), 4) end)
+	if not ok then return nil end
+	local top
+	for y = 1, mats.Size.Y do
+		if mats[1][y][1] == Enum.Material.Water and occ[1][y][1] > 0.05 then top = m.Y - 4 + (y - 1) * 4 + occ[1][y][1] * 4 end
+	end
+	return top
+end
+M.waterTop = waterTop
+
 -- opt: { water = the lake Part, gui = a ScreenGui for the air bar, drown = fn() (asks the server), sfx = fn(name, pitch),
 --        active = fn() -> bool (false while a cutscene or minigame owns the player) }
 -- returns a stop function
 function M.start(opt)
+	if opt.plr and not opt.water then -- started by PixelClient with its E: the cave's terrain water (Roblox's own swimming moves you)
+		local E = opt
+		opt = { terrain = true, gui = E.gui, sfx = E.sfx, drown = function() E.R.Surface:FireServer("drown") end, active = function() return E.plr:GetAttribute("InCave") == true end }
+	end
 	local plr = Players.LocalPlayer
 	local cam = workspace.CurrentCamera
 	local sfx = opt.sfx or function() end
@@ -85,6 +102,25 @@ function M.start(opt)
 		local hum = char and char:FindFirstChildOfClass("Humanoid")
 		local head = char and char:FindFirstChild("Head")
 		local water = opt.water
+		if opt.terrain and hrp and hum and head and (not opt.active or opt.active()) and not hrp.Anchored then -- terrain water: the air bar and the teal look only
+			local surf = waterTop(head.Position)
+			under = surf ~= nil and head.Position.Y < surf - 0.2 and not passedOut
+			local cs = waterTop(cam.CFrame.Position)
+			tint.BackgroundTransparency = (cs and cam.CFrame.Position.Y < cs) and 0.72 or 1
+			if under then air = math.max(0, air - dt) else air = math.min(maxAir(), air + dt * maxAir() / S.refill) end
+			bar.Visible = under or air < maxAir() - 0.05
+			local k = air / maxAir()
+			fill.Size = UDim2.fromScale(k, 1)
+			fill.BackgroundColor3 = k < 0.3 and PINK or SKY
+			scale.Scale = k < 0.3 and 1 + 0.06 * math.sin(os.clock() * 12) or 1
+			if air <= 0 and not passedOut then
+				passedOut = true
+				sfx("breakRock", 0.5)
+				if opt.drown then opt.drown() end
+				task.delay(3, function() passedOut = false air = maxAir() end)
+			end
+			return
+		end
 		if not hrp or not hum or not head or not water or not water.Parent or (opt.active and not opt.active()) or hrp.Anchored then
 			setSwim(false, hrp, hum)
 			bar.Visible, tint.BackgroundTransparency = false, 1

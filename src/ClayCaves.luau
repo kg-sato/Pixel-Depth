@@ -391,35 +391,32 @@ function M.build(caves)
 	-- collar: a cream stem, a domed amber cap (two stacked discs) with a softly lit underside of gills and cream spots on top.
 	-- The part named BouncePad keeps its size and attribute (Shared.ClayClient reads them); it is the cap's lower disc.
 	function mushroomPad(x, y, z, power)
-		local UPc = CFrame.Angles(0, 0, math.pi / 2)
-		for k = 0, 9 do -- the wet stone collar round the stem's foot
-			local a = k / 10 * math.pi * 2
-			local st = part("PadCollar", Vector3.new(0.9, 0.55, 0.9), O * CFrame.new(x + math.cos(a) * 1.55, y + 0.2, z + math.sin(a) * 1.55) * CFrame.Angles(0, a, 0.1), Color3.fromRGB(70, 74, 84), { Material = Enum.Material.Slate, CanCollide = false, Shape = Enum.PartType.Ball })
-			st.Reflectance = 0.05
+		-- 2026-11-27 (audit mesh 6: the caps read as smooth hovering UFOs): a voxel spore-cap grounded in a stone collar: chunky
+		-- collar stones set into the floor, a stepped stalk, a cap of three stepped amber slabs with cream spot cubes on top.
+		for k = 0, 7 do
+			local a = k / 8 * math.pi * 2
+			part("PadCollar", Vector3.new(1.2, 0.8, 1.2), O * CFrame.new(x + math.cos(a) * 1.7, y + 0.15, z + math.sin(a) * 1.7) * CFrame.Angles(0, a + 0.3, 0), Color3.fromRGB(70, 74, 84), { Material = Enum.Material.Slate, CanCollide = false })
 		end
-		part("PadStem", Vector3.new(1.4, 1.5, 1.5), O * CFrame.new(x, y + 0.72, z) * UPc, CREAM, { CanCollide = false, Shape = Enum.PartType.Cylinder })
+		part("PadStem", Vector3.new(2.2, 0.9, 2.2), O * CFrame.new(x, y + 0.25, z), CREAM:Lerp(CLAY_D, 0.25), { CanCollide = false }) -- the foot, sunk into the floor
+		part("PadStem", Vector3.new(1.6, 1.0, 1.6), O * CFrame.new(x, y + 1.05, z), CREAM, { CanCollide = false })
 		local cap = part("BouncePad", Vector3.new(5.4, 1.1, 5.4), O * CFrame.new(x, y + 1.95, z), Color3.fromRGB(226, 140, 52), { Material = Enum.Material.SmoothPlastic, CanCollide = false, Transparency = 1 }) -- the pad's box: invisible, the mushroom draws it
 		cap:SetAttribute("BouncePad", power)
-		part("PadCap", Vector3.new(0.7, 5.2, 5.2), O * CFrame.new(x, y + 1.85, z) * UPc, Color3.fromRGB(214, 128, 46), { CanCollide = false, Shape = Enum.PartType.Cylinder })
-		-- a fleshy domed cap (an ellipsoid sphere mesh) over the rim disc, with spore motes drifting up off it (Gemini v13 round 1:
-		-- the stacked discs read as a plastic button)
-		local dome = part("PadDome", Vector3.new(4.8, 2.2, 4.8), O * CFrame.new(x, y + 2.1, z), Color3.fromRGB(236, 158, 64), { CanCollide = false })
-		local dm = Instance.new("SpecialMesh")
-		dm.MeshType = Enum.MeshType.Sphere
-		dm.Parent = dome
+		part("PadCap", Vector3.new(5.2, 0.7, 5.2), O * CFrame.new(x, y + 1.9, z), Color3.fromRGB(214, 128, 46), { CanCollide = false })
+		part("PadCap", Vector3.new(3.9, 0.7, 3.9), O * CFrame.new(x, y + 2.55, z), Color3.fromRGB(230, 150, 58), { CanCollide = false })
+		local dome = part("PadDome", Vector3.new(2.4, 0.6, 2.4), O * CFrame.new(x, y + 3.1, z), Color3.fromRGB(242, 170, 76), { CanCollide = false })
 		local motes = Instance.new("ParticleEmitter")
 		motes.Texture, motes.Rate, motes.Lifetime, motes.Speed, motes.SpreadAngle = "rbxasset://textures/particles/sparkles_main.dds", 2.5, NumberRange.new(3, 5), NumberRange.new(0.4, 1), Vector2.new(50, 50)
 		motes.Color, motes.LightEmission, motes.Acceleration = ColorSequence.new(Color3.fromRGB(255, 226, 160)), 1, Vector3.new(0, 0.25, 0)
 		motes.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.18), NumberSequenceKeypoint.new(1, 0.05) })
 		motes.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.2, 0.3), NumberSequenceKeypoint.new(1, 1) })
 		motes.Parent = dome
-		local gills = part("PadGills", Vector3.new(0.16, 4.6, 4.6), O * CFrame.new(x, y + 1.42, z) * UPc, Color3.fromRGB(255, 196, 110), { Material = Enum.Material.Neon, CanCollide = false, Transparency = 0.35, Shape = Enum.PartType.Cylinder })
+		local gills = part("PadGills", Vector3.new(4.6, 0.16, 4.6), O * CFrame.new(x, y + 1.47, z), Color3.fromRGB(255, 196, 110), { Material = Enum.Material.Neon, CanCollide = false, Transparency = 0.35 })
 		local l = Instance.new("PointLight")
 		l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 180, 90), 12, 0.7, false
 		l.Parent = gills
 		for k = 0, 4 do -- cream spots on the dome
 			local a = k / 5 * math.pi * 2 + 0.4
-			part("PadSpot", Vector3.new(0.6, 0.6, 0.6), O * CFrame.new(x + math.cos(a) * 1.3, y + 3.0, z + math.sin(a) * 1.3), CREAM, { CanCollide = false, Shape = Enum.PartType.Ball }) -- a cream bump half sunk in the dome
+			part("PadSpot", Vector3.new(0.6, 0.45, 0.6), O * CFrame.new(x + math.cos(a) * 1.55, y + 2.95, z + math.sin(a) * 1.55) * CFrame.Angles(0, a, 0), CREAM, { CanCollide = false }) -- a cream spot cube on the cap's top step
 		end
 	end
 	part("PadLedge", Vector3.new(26, 2, 10), O * CFrame.new(-34, 21, -49.5), CLAY_L, ROCK)
