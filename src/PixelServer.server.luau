@@ -1887,7 +1887,9 @@ for _, dep in caveDeposits and caveDeposits:GetChildren() or {} do
 		dep:SetAttribute("CoopStarts", table.concat(keep, ";"))
 		if dep:GetAttribute("Ore") < 3 then
 			local period = D.strikePeriod * PetJobs.perks(crewOf(s)).strike -- Kepri Scarab slows the needle
-			s.mg = { kind = "strike", dep = dep, t0 = now, arc = s.rng:NextNumber() * 360, zone = C.strikeArc(s.lv[tostring(s.equip)]) * CaveEvents.goldZone(), period = period, swings = 0, perfects = 0, last = 0, deadline = now + D.strikes * 4 * period + 2, coop = coop }
+			local Ld = math.clamp(tonumber(dep:GetAttribute("Layer")) or 1, 1, 7) -- deeper layers: a faster needle and a narrower gold zone (2026-11-27, layer differences)
+			period *= math.max(0.7, 1 - 0.06 * (Ld - 1))
+			s.mg = { kind = "strike", dep = dep, t0 = now, arc = s.rng:NextNumber() * 360, zone = C.strikeArc(s.lv[tostring(s.equip)]) * CaveEvents.goldZone() * math.max(0.75, 1 - 0.05 * (Ld - 1)), period = period, swings = 0, perfects = 0, last = 0, deadline = now + D.strikes * 4 * period + 2, coop = coop }
 			FxR:FireClient(plr, "mgStart", dep, "strike", now, s.mg.arc, s.mg.zone, period)
 		else
 			local seq = {} -- the side of the red crack on each beat: 1 left, 2 right; chiseling that side slips

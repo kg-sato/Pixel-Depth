@@ -77,9 +77,9 @@ C("local pt=workspace.Hub:FindFirstChild('CrucibleStirPoint',true) local pr=pt:F
 if globals().get("FORCE"): FORCE.set()  # the stir's spark burst
 time.sleep(4)
 mark("Geode Timing Crack on the workbench: one press on the gold ring")
-S(P + "local an=workspace.Hub.Forge:FindFirstChild('Bench',true) local away=((an.Position-workspace.Hub.Forge:FindFirstChild('Anvil',true).Position)*Vector3.new(1,0,1)).Unit h.CFrame=CFrame.lookAt(an.Position+away*3+Vector3.new(0,3,0),an.Position) return 1"); time.sleep(2)
+S(P + "local an=workspace.Hub.GeodeRefinery.CrackBench local away=-(an.CFrame.LookVector*Vector3.new(1,0,1)).Unit h.CFrame=CFrame.lookAt(an.Position+away*3.5+Vector3.new(0,3,0),an.Position) return 1"); time.sleep(2)  # 2026-11-27: the crack bench is in the Geode Refinery
 C("task.spawn(function() local RS=game.ReplicatedStorage local Cf=require(RS.Shared.Config) local t0 local c=RS.Remotes.Fx.OnClientEvent:Connect(function(k,w,a) if k=='crack' and w=='start' then t0=a end end) "
-  "local pr for _,d in workspace.Hub.Forge:GetDescendants() do if d:IsA('ProximityPrompt') and d:GetAttribute('GeodeCrack') then pr=d end end local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.Position,pr.Parent.Position) "
+  "local pr for _,d in workspace.Hub.GeodeRefinery:GetDescendants() do if d:IsA('ProximityPrompt') and d:GetAttribute('GeodeCrack') then pr=d end end local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.Position,pr.Parent.Position) "
   "task.wait(0.6) pr:InputHoldBegin() task.wait(0.1) pr:InputHoldEnd() local t=os.clock() while os.clock()-t<2 and not t0 do task.wait() end if t0 then while workspace:GetServerTimeNow()<Cf.crackAt(t0) do task.wait() end RS.Remotes.Crack:FireServer() end c:Disconnect() end) return 1"); time.sleep(1.2)
 if globals().get("FORCE"): FORCE.set()  # the crack ring shows for about 1.5 s: take a still inside it (full1123a missed it)
 time.sleep(4.3)

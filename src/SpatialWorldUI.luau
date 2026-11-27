@@ -67,7 +67,8 @@ function M.start(E)
 	local function build(part, kind)
 		local top = part.Position + Vector3.new(0, part.Size.Y / 2 + H / 2 + 4.2, 0) -- well above the station and its prompt (directive v9: at 1.5 it sat beside the prompt in the town view)
 		local board = new("Part", workspace.CurrentCamera, { Name = "SpatialCard", Size = Vector3.new(W, H, 0.05), CFrame = CFrame.new(top), Anchored = true, CanCollide = false, CanQuery = false, CanTouch = false, CastShadow = false, Transparency = 1 })
-		local sg = new("SurfaceGui", board, { Face = Enum.NormalId.Front, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = PPS, AlwaysOnTop = false, LightInfluence = 0.15, Brightness = 2, ResetOnSpawn = false })
+		local sg = new("SurfaceGui", board, { Face = Enum.NormalId.Front, SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud, PixelsPerStud = PPS, AlwaysOnTop = true, LightInfluence = 0, -- drawn over the roofs and beams round its station (Gemini town_n2: the hatchery's glass roof cut through the card)
+			 Brightness = 2, ResetOnSpawn = false })
 		local card = new("CanvasGroup", sg, { Size = UDim2.fromScale(1, 1), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundColor3 = SMOKE, BackgroundTransparency = 0.16, BorderSizePixel = 0, GroupTransparency = 1 })
 		new("UICorner", card, { CornerRadius = UDim.new(0.16, 0) })
 		new("UIStroke", card, { Color = Color3.fromRGB(224, 176, 255), Thickness = 3, Transparency = 0.15 }) -- a lit jelly rim
@@ -123,7 +124,7 @@ function M.start(E)
 	local stations = {}
 	local function adopt(p)
 		local kind = p:IsA("BasePart") and p:GetAttribute("Station")
-		if kind and LINES[kind] and not stations[p] then
+		if kind and LINES[kind] and not stations[p] and kind ~= "sell" then -- no card at the market: its sign, its prompt and the HUD bag pill say it all (Gemini r1 and town_n2: three indicators stacked)
 			stations[p] = kind
 			p.Destroying:Connect(function()
 				stations[p] = nil
@@ -194,15 +195,19 @@ function M.start(E)
 		end
 		return area
 	end
-	local function spot(c, cam) -- the offset from the station's top that keeps the card clear
+	local function inView(mn, mx, cam) -- the whole card on screen, under the top bar (Codex 2026-11-27: one point said it fit while a side spot ran off)
+		local vs = cam.ViewportSize
+		return mn ~= nil and mn.X >= 0 and mn.Y >= vs.Y * 0.06 and mx.X <= vs.X and mx.Y <= vs.Y
+	end
+	local function spot(c, cam) -- the offset from the station's top that keeps the card clear (nil: no spot shows it whole)
 		local right, up = cam.CFrame.RightVector, cam.CFrame.UpVector
 		local rects = hudRects()
 		local best, ba
 		for _, o in { right * (W / 2 + 7) + up * 1.5, -right * (W / 2 + 7) + up * 1.5, up * 5.5, up * 9 } do
 			local mn, mx = screenRect(cam, c.top + o, right, up)
-			local a = mn and covered(mn, mx, rects) or math.huge
+			local a = inView(mn, mx, cam) and covered(mn, mx, rects) or math.huge
 			if a == 0 then return o end
-			if not ba or a < ba then best, ba = o, a end
+			if a < math.huge and (not ba or a < ba) then best, ba = o, a end
 		end
 		return best
 	end
@@ -222,15 +227,18 @@ function M.start(E)
 				local d = (p.Position - h.Position).Magnitude
 				if d < nd then nearest, nd = p, d end
 			end
+			local function fits(p) -- 2026-11-27 (Gemini r1: the forge's card ran off the top of the screen): only a card the camera can show whole
+				return spot({ top = p.Position + Vector3.new(0, p.Size.Y / 2 + H / 2 + 4.2, 0) }, cam) ~= nil -- the same top as build()
+			end
 			for p, kind in stations do
 				local d = (p.Position - h.Position).Magnitude
 				local c = cards[p]
 				if c and p ~= nearest then
 					show(c, false)
-				elseif not busy and d < NEAR and not otherPrompt(p) then
+				elseif not busy and d < NEAR and not otherPrompt(p) and fits(p) then
 					if not c then c = build(p, kind); cards[p] = c end
 					show(c, true)
-				elseif c and (busy or d > FAR or otherPrompt(p)) then
+				elseif c and (busy or d > FAR or otherPrompt(p) or not fits(p)) then
 					show(c, false)
 				end
 			end
@@ -239,7 +247,7 @@ function M.start(E)
 		for _, c in cards do
 			if c.open or c.card.GroupTransparency < 0.99 then
 				local side = cam.CFrame.RightVector * Vector3.new(1, 0, 1)
-				if scan or not c.off then c.want = spot(c, cam) end
+				if scan or not c.off then c.want = spot(c, cam) or c.want or Vector3.new(0, 5.5, 0) end
 				c.off = c.off and c.off:Lerp(c.want, math.min(1, dt * 8)) or c.want
 				local pos = c.top + c.off + Vector3.new(0, math.sin(now * 1.6 + c.top.X) * 0.12, 0) -- in the clear spot round the station (see spot), with a slow hover
 				-- face against the camera's view direction (not toward its position: off-centre cards then look twisted), turning about the

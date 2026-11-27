@@ -49,6 +49,10 @@ function M.start(E)
 	close.Activated:Connect(function() E.closePanel(win) end)
 	R.Fx.OnClientEvent:Connect(function(kind) if kind == "openHatchery" and not win.Visible then refresh() E.openPanel(win) end end)
 	E.vmHook.hatchery = function() if not win.Visible then refresh() E.openPanel(win) end end
+	E.plr:GetAttributeChangedSignal("DevHatchery"):Connect(function() -- Studio test hook: "open" the panel, "odds" its ODDS button
+		local v = E.plr:GetAttribute("DevHatchery")
+		if v == "open" then E.vmHook.hatchery() elseif v == "odds" then odds() end
+	end)
 end
 
 return M

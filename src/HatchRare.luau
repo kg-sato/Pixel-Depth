@@ -60,6 +60,7 @@ function star.start(ctx)
 	st.shards, st.arcs, st.arcAt = {}, {}, 0
 	for i = 1, 10 do -- crystal shards round the nest, buried at first, each a tapering stack of two prisms
 		local a = i / 10 * math.pi * 2 + rnd:NextNumber(-0.15, 0.15)
+		if math.sin(a) < -0.45 then continue end -- none between the camera and the egg (Gemini r1: shards blocked the egg)
 		local r = rnd:NextNumber(2.6, 3.6)
 		local base = CFrame.new(ctx.NEST + Vector3.new(math.cos(a) * r, -0.6, math.sin(a) * r)) * CFrame.Angles(math.cos(a) * 0.35, 0, -math.sin(a) * 0.35)
 		local h = rnd:NextNumber(1.6, 2.8)
@@ -92,7 +93,7 @@ function star.step(ctx, u, dt)
 		end
 	end
 	local e = u * u * (3 - 2 * u)
-	return ctx.NEST + Vector3.new(0.6, 1.2 + e * 1.0, -9 + e * 2.6), ctx.NEST + Vector3.new(0, 2.4 + e * 1.4, 0), 54 - e * 10 -- a low push-in that tilts up into the light
+	return ctx.NEST + Vector3.new(0.6, 1.8 + e * 1.0, -9.5 + e * 1.8), ctx.NEST + Vector3.new(0, 2.3 + e * 1.0, 0), 54 - e * 10 -- a low push-in that tilts up into the light
 end
 function star.burst(ctx)
 	for _, a in ctx.state.arcs or {} do a:Destroy() end

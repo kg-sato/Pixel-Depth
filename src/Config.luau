@@ -137,23 +137,23 @@ C.PICKS = {
 	{ name = "Geode Pickaxe", power = 23, cost = 4600, model = "GeodePickaxe" }, -- Rare; Camp 2 Clay Caves
 	{ name = "Fossil Pickaxe", power = 29, cost = 7200, model = "FossilPickaxe" }, -- Rare; Camp 2 Clay Caves
 	{ name = "Titan Hammer Pickaxe", power = 36, cost = 11000, model = "TitanHammerPickaxe" }, -- Epic; Camp 2 Clay Caves
-	{ name = "Frostquartz Pickaxe", power = 45, cost = 17000, model = "FrostquartzPickaxe" }, -- Rare; Camp 3 Glitterhall
-	{ name = "Amethyst Pickaxe", power = 56, cost = 27000, model = "AmethystPickaxe" }, -- Rare; Camp 3 Glitterhall
-	{ name = "Songcrystal Pickaxe", power = 70, cost = 41000, model = "SongcrystalPickaxe" }, -- Rare; Camp 3 Glitterhall
-	{ name = "Sapphire Pickaxe", power = 88, cost = 64000, model = "SapphirePickaxe" }, -- Epic; Camp 3 Glitterhall
-	{ name = "Prism Pickaxe", power = 110, cost = 99000, model = "PrismPickaxe" }, -- Epic; Camp 3 Glitterhall
-	{ name = "Aurora Pickaxe", power = 140, cost = 150000, model = "AuroraPickaxe" }, -- Epic; Camp 3 Glitterhall
-	{ name = "Surtshard Pickaxe", power = 175, cost = 240000, model = "SurtshardPickaxe" }, -- Epic; Camp 4 Muspell
-	{ name = "Fireglass Pickaxe", power = 220, cost = 370000, model = "FireglassPickaxe" }, -- Epic; Camp 4 Muspell
-	{ name = "Ember Pickaxe", power = 275, cost = 570000, model = "EmberPickaxe" }, -- Epic; Camp 4 Muspell
-	{ name = "Ruby Pickaxe", power = 345, cost = 890000, model = "RubyPickaxe" }, -- Legendary; Camp 4 Muspell
-	{ name = "Phoenix Pickaxe", power = 430, cost = 1400000, model = "PhoenixPickaxe" }, -- Legendary; Camp 4 Muspell
-	{ name = "Sunforge Pickaxe", power = 540, cost = 2100000, model = "SunforgePickaxe" }, -- Legendary; Camp 4 Muspell
-	{ name = "Starlight Pickaxe", power = 700, cost = 3300000, model = "StarlightPickaxe" }, -- Legendary; Sky (ultra endgame)
-	{ name = "Moonlit Pickaxe", power = 900, cost = 5100000, model = "MoonlitPickaxe" }, -- Legendary; Sky (ultra endgame)
-	{ name = "Galaxy Pickaxe", power = 1150, cost = 7900000, model = "GalaxyPickaxe" }, -- Mythic; Sky (ultra endgame)
-	{ name = "Royal Heart Pickaxe", power = 1500, cost = 12000000, model = "RoyalHeartPickaxe" }, -- Mythic; Sky (ultra endgame)
-	{ name = "Silver Wing Pickaxe", power = 2000, cost = 19000000, model = "SilverWingPickaxe" }, -- Secret; Sky (ultra endgame)
+	{ name = "Frostquartz Pickaxe", power = 45, cost = 19000, model = "FrostquartzPickaxe" }, -- Rare; Camp 3 Glitterhall
+	{ name = "Amethyst Pickaxe", power = 56, cost = 34000, model = "AmethystPickaxe" }, -- Rare; Camp 3 Glitterhall
+	{ name = "Songcrystal Pickaxe", power = 70, cost = 59000, model = "SongcrystalPickaxe" }, -- Rare; Camp 3 Glitterhall
+	{ name = "Sapphire Pickaxe", power = 88, cost = 100000, model = "SapphirePickaxe" }, -- Epic; Camp 3 Glitterhall
+	{ name = "Prism Pickaxe", power = 110, cost = 180000, model = "PrismPickaxe" }, -- Epic; Camp 3 Glitterhall
+	{ name = "Aurora Pickaxe", power = 140, cost = 320000, model = "AuroraPickaxe" }, -- Epic; Camp 3 Glitterhall
+	{ name = "Surtshard Pickaxe", power = 175, cost = 560000, model = "SurtshardPickaxe" }, -- Epic; Camp 4 Muspell
+	{ name = "Fireglass Pickaxe", power = 220, cost = 980000, model = "FireglassPickaxe" }, -- Epic; Camp 4 Muspell
+	{ name = "Ember Pickaxe", power = 275, cost = 1700000, model = "EmberPickaxe" }, -- Epic; Camp 4 Muspell
+	{ name = "Ruby Pickaxe", power = 345, cost = 3000000, model = "RubyPickaxe" }, -- Legendary; Camp 4 Muspell
+	{ name = "Phoenix Pickaxe", power = 430, cost = 5200000, model = "PhoenixPickaxe" }, -- Legendary; Camp 4 Muspell
+	{ name = "Sunforge Pickaxe", power = 540, cost = 9200000, model = "SunforgePickaxe" }, -- Legendary; Camp 4 Muspell
+	{ name = "Starlight Pickaxe", power = 700, cost = 16000000, model = "StarlightPickaxe" }, -- Legendary; Sky (ultra endgame)
+	{ name = "Moonlit Pickaxe", power = 900, cost = 28000000, model = "MoonlitPickaxe" }, -- Legendary; Sky (ultra endgame)
+	{ name = "Galaxy Pickaxe", power = 1150, cost = 49000000, model = "GalaxyPickaxe" }, -- Mythic; Sky (ultra endgame)
+	{ name = "Royal Heart Pickaxe", power = 1500, cost = 86000000, model = "RoyalHeartPickaxe" }, -- Mythic; Sky (ultra endgame)
+	{ name = "Silver Wing Pickaxe", power = 2000, cost = 150000000, model = "SilverWingPickaxe" }, -- Secret; Sky (ultra endgame)
 }
 C.PICK_SCALE = 0.75 -- the 3.6-stud forge models shrunk to fit the miner's hand
 -- Forge v2 (2026-11-08): coins buy the next pickaxe, gems level an owned one (LV 1 to 10). In the caves the equipped pickaxe
@@ -161,9 +161,11 @@ C.PICK_SCALE = 0.75 -- the 3.6-stud forge models shrunk to fit the miner's hand
 -- Perfect Strike gold zone by 2 degrees. Rarity per pickaxe indexes C.RARITIES (card rims, gem cost scale).
 C.FORGE = { maxLv = 10, gems = { 3, 4, 6, 8, 11, 15, 20, 26, 34 }, lvValue = 0.1, lvArc = 2 }
 C.PICK_RARITY = { 1, 1, 1, 1, 1, 2, 1, 1, 2, 2, 2, 3, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 6 }
--- Progression and Boss Fight Overhaul / Town and Mine Map Overhaul 3.2 (2026-11-27): the 866-hour economy. Pickaxe costs past
--- Rootheart rise about 1.55x a tier (was about 1.85x, 550 million for the last one), the pickaxe's value grows with power^0.62
--- (was its square root), and each layer's ore is worth C.LAYER_MULT times layer 1's (was 3^(L-1) in four places).
+-- Progression and Boss Fight Overhaul / Town and Mine Map Overhaul 3.2 (2026-11-27): the 866-hour economy. The pickaxe's value grows
+-- with power^0.62 (was its square root) and each layer's ore is worth C.LAYER_MULT times layer 1's (was 3^(L-1) in four places).
+-- Costs: 1.55x a tier through Camp 2 (T7-T12), 1.75x after: with the 5x-per-layer ore the brief's flat 1.55x put the last pickaxe
+-- at about 6 hours, under its own 15-25 h target. The pacing model (vault Pickaxe Pacing Model, 2026-11-27 update) now gives Camp 1
+-- in 0.5 h, Camp 2's key (T12) at 1.4 h and the Silver Wing at about 18 h of pure mining (was 866 h).
 C.LAYER_MULT = { 1, 5, 25, 120, 600, 3000, 15000 }
 function C.layerValueMult(L) return C.LAYER_MULT[math.clamp(math.floor(L or 1), 1, #C.LAYER_MULT)] end
 function C.pickValue(tier, lv) -- ore value multiplier in the caves

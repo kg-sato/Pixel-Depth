@@ -13,7 +13,8 @@ pick = S1("""local deps=workspace.Caves.Deposits:GetChildren() local best
 for _,a in deps do if a:GetAttribute('Ore')>=3 and a:GetAttribute('OreName')~='Root Knot' and a:GetAttribute('OreName')~='Kiln Vent' and a.PrimaryPart and a.PrimaryPart.Transparency<1 then best=a end if best then break end end
 if not best then return 'none' end
 local p=game.Players:GetPlayers()[1] local c=best.PrimaryPart local rp=RaycastParams.new() rp.FilterDescendantsInstances={p.Character,best}
-local at=c.Position+Vector3.new(0,3,0) for i=0,15 do local a=i*math.pi/8 local q=c.Position+Vector3.new(math.cos(a)*5,3,math.sin(a)*5) local fl=workspace:Raycast(q,Vector3.new(0,-8,0),rp) if fl and not workspace:Raycast(q,c.Position-q,rp) then at=fl.Position+Vector3.new(0,3,0) break end end
+local at=c.Position+Vector3.new(0,3,0) local op=OverlapParams.new() op.FilterType=Enum.RaycastFilterType.Exclude op.FilterDescendantsInstances={p.Character,best} op.RespectCanCollide=true for i=0,31 do local a=i*math.pi/8 local r=i<16 and 5 or 7 local q=c.Position+Vector3.new(math.cos(a)*r,3,math.sin(a)*r) local fl=workspace:Raycast(q,Vector3.new(0,-8,0),rp) if fl and not workspace:Raycast(q,c.Position-q,rp) and #workspace:GetPartBoundsInBox(CFrame.new(fl.Position+Vector3.new(0,3.2,0)),Vector3.new(2,5,2),op)==0 then at=fl.Position+Vector3.new(0,3,0) break end end
+p:SetAttribute('FastCine',true) p:SetAttribute('DevEquip',require(game.ReplicatedStorage.Shared.Config).minTier(best:GetAttribute('Layer'),best:GetAttribute('Ore'))) -- 2026-11-27: deposits now need the pickaxe tier their hardness asks for (FastCine: no forge scene, which put the player back where it began)
 p.Character.HumanoidRootPart.CFrame=CFrame.lookAt(at,Vector3.new(c.Position.X,at.Y,c.Position.Z)) best:SetAttribute('VeinTest',true) return best:GetFullName()""")
 print("deposit:", pick)
 print(C1("""local p=game.Players.LocalPlayer local R=game.ReplicatedStorage.Remotes local got={} local seq
@@ -28,8 +29,8 @@ t=os.clock() while not got.n and os.clock()-t<4 do task.wait(0.05) end
 return 'chain fired: '..tostring(got.n ~= nil)..' | seq '..#seq..' | vein chain: '..tostring(got.n)..' deposits, +'..tostring(got.ore)..' ore'"""))
 time.sleep(2)
 # the rush above does not always leave ore in the bag (full suite 2026-11-22: "chain fired: false", bag empty, the breath cost 0): top it up
-S1("game.Players:GetPlayers()[1]:SetAttribute('DevBag', 20) return 1"); time.sleep(1.5)  # 20: the breath takes floor(20 * C.PULSE.loss 0.15) = 3 (6 rounded down to 0)
 print("moved:", S1("local p=game.Players:GetPlayers()[1] local c=workspace.Caves.Spot_Cathedral.Value.WorldPosition p.Character.HumanoidRootPart.CFrame=CFrame.new(c+Vector3.new(0,3,0)) return math.floor((c-workspace.Caves:FindFirstChild('LiftLanding',true).Position).Magnitude)"))
+S1("game.Players:GetPlayers()[1]:SetAttribute('DevBag', 20) return 1"); time.sleep(1.5)  # 20: the breath takes floor(20 * C.PULSE.loss 0.15) = 3 (6 rounded down to 0)  # after the move (2026-11-27): at camp the bag is banked at once (Fx sold), so a top-up there was gone before the breath
 time.sleep(1)
 print("bag before:", S1("local p=game.Players:GetPlayers()[1] return tostring(p:GetAttribute('InCave'))"))
 t0 = time.time()

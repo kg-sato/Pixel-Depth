@@ -16,7 +16,8 @@ if not best then -- 2026-11-21: some hours' seeds have no same-ore pair within 1
 end
 if not best then return 'none' end
 local p=game.Players:GetPlayers()[1] local c=best.PrimaryPart local rp=RaycastParams.new() rp.FilterDescendantsInstances={p.Character,best}
-local at=c.Position+Vector3.new(0,3,0) for i=0,15 do local a=i*math.pi/8 local q=c.Position+Vector3.new(math.cos(a)*5,3,math.sin(a)*5) local fl=workspace:Raycast(q,Vector3.new(0,-8,0),rp) if fl and not workspace:Raycast(q,c.Position-q,rp) then at=fl.Position+Vector3.new(0,3,0) break end end
+local at=c.Position+Vector3.new(0,3,0) local op=OverlapParams.new() op.FilterType=Enum.RaycastFilterType.Exclude op.FilterDescendantsInstances={p.Character,best} op.RespectCanCollide=true for i=0,31 do local a=i*math.pi/8 local r=i<16 and 5 or 7 local q=c.Position+Vector3.new(math.cos(a)*r,3,math.sin(a)*r) local fl=workspace:Raycast(q,Vector3.new(0,-8,0),rp) if fl and not workspace:Raycast(q,c.Position-q,rp) and #workspace:GetPartBoundsInBox(CFrame.new(fl.Position+Vector3.new(0,3.2,0)),Vector3.new(2,5,2),op)==0 then at=fl.Position+Vector3.new(0,3,0) break end end
+p:SetAttribute('FastCine',true) p:SetAttribute('DevEquip',require(game.ReplicatedStorage.Shared.Config).minTier(best:GetAttribute('Layer'),best:GetAttribute('Ore'))) -- 2026-11-27: deposits now need the pickaxe tier their hardness asks for (FastCine: no forge scene, which put the player back where it began)
 p.Character.HumanoidRootPart.CFrame=CFrame.lookAt(at,Vector3.new(c.Position.X,at.Y,c.Position.Z)) best:SetAttribute('VeinTest',true) return best:GetFullName()""")
 print("deposit:", pick)
 print(C1("""local p=game.Players.LocalPlayer local R=game.ReplicatedStorage.Remotes local got={} local seq

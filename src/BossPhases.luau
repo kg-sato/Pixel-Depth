@@ -36,7 +36,7 @@ function M.start(E)
 	end
 	local function shake(a) if not calm and E.shake then pcall(E.shake, a) end end
 	-- a big word in the upper third
-	local banner = E.text(E.gui, "", E.S(620, 70), E.S(640, 232), Vector2.new(0.5, 0.5), AMBER, 700, false)
+	local banner = E.text(E.gui, "", E.S(560, 44), E.S(640, 128), Vector2.new(0.5, 0.5), AMBER, 700, false) -- under the boss bar (Gemini r1: in the middle it covered the core and met JUMP!)
 	banner.Name, banner.Visible, banner.Font, banner.ZIndex = "BossPhaseBanner", false, Enum.Font.FredokaOne, 30
 	local bs = Instance.new("UIStroke")
 	bs.Color, bs.Thickness = Color3.fromRGB(30, 10, 20), 4

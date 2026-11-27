@@ -24,10 +24,10 @@ except ImportError:
 
 def palette_of(name):
     """the game's palette for a pet (Role -> hex) from PET_JSON (default the v5 set pets5.json), else the v4 set pets.json"""
-    rp = os.path.join(GAME, "design3d/pets/rigs.json")  # the v16 plate pets (pet_plate.py)
-    if os.path.exists(rp):
-        for k, d in json.load(open(rp)).items():
-            if k.replace(" ", "") == name.replace(" ", ""): return d["palette"]
+    for rp in (os.path.join(GAME, "design3d/pets/rigs.json"), os.path.join(GAME, "design3d/chars/rigs_npc.json")):  # the v16 plate pets (pet_plate.py), then the voxel NPCs
+        if os.path.exists(rp):
+            for k, d in json.load(open(rp)).items():
+                if k.replace(" ", "") == name.replace(" ", ""): return d["palette"]
     for f in (os.environ.get("PET_JSON", "design3d/pets/pets5.json"), "design3d/pets/pets.json"):
         p = os.path.join(GAME, f)
         if os.path.exists(p):

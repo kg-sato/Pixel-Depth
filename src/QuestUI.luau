@@ -323,7 +323,7 @@ function M.start(E)
 		-- a sign near its place, not a pill hanging in the air all through the caves (the user, 2026-11-10)
 		hook.bossBarUI = hook.bossBarUI or gui:FindFirstChild("BossBar", true) -- found once, not searched every frame
 		local boss = hook.bossBarUI
-		marker.Visible = pos ~= nil and not busy and far <= (tagText.Text == "RIDE UP" and 14 or 60) and not (tagText.Text == "MINE" and far < 9) and not (boss and boss.Visible) -- at the ore or in a boss fight the sign only clutters (views full1122h 06, 07)
+		marker.Visible = pos ~= nil and not busy and far <= (tagText.Text == "RIDE UP" and 14 or 60) and not (tagText.Text == "MINE" and far < 9) and not (tagText.Text == "RIDE" and far < 24) and not (boss and boss.Visible) -- at the ore or in a boss fight the sign only clutters (views full1122h 06, 07)
 		if not marker.Visible then return end
 		local cam = workspace.CurrentCamera
 		local v = cam:WorldToViewportPoint(pos)
@@ -333,6 +333,13 @@ function M.start(E)
 		x = math.clamp(x, vp.X * 0.27, vp.X * 0.8) -- stay between the side columns
 		y = math.clamp(y - math.abs(math.sin(now * 3)) * vp.Y * 0.02, vp.Y * 0.28, vp.Y * 0.66) -- under the step card and the currency pills (0.24 touched the gem pill by a pixel), over the talisman
 		marker.Position = UDim2.fromOffset(x, y - (gui.IgnoreGuiInset and 0 or game:GetService("GuiService"):GetGuiInset().Y))
+		do -- held at the screen edge, the gold tip leaves the tag's foot and points the way (Gemini town_n2: a RIDE tag floating over empty grass)
+			local tx, ty = v.X, v.Y
+			if v.Z < 0 then tx, ty = vp.X - v.X, vp.Y * 1.5 end
+			local dx, dy = tx - x, ty - y
+			local m = math.sqrt(dx * dx + dy * dy)
+			tip.Position = m > 40 and UDim2.fromScale(0.5 + dx / m * 0.62, 0.3 + dy / m * 0.62) or UDim2.fromScale(0.5, 0.72)
+		end
 		local mp, ms = marker.AbsolutePosition, marker.AbsoluteSize
 		local hud = gui:FindFirstChild("CaveHud")
 		local over = { gui:FindFirstChild("StepCard"), hud and hud.Visible and hud:FindFirstChild("TipBanner") or nil }

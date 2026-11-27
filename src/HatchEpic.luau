@@ -207,7 +207,7 @@ function ember.step(ctx, u, dt)
 		return ctx.NEST + Vector3.new(-6.5, 1.0, -3.5), ctx.NEST + Vector3.new(0, 1.0, 0), 50
 	end
 	local v = (u - CUT) / (1 - CUT) -- shot 2: low, tilting steeply up into the spiral
-	return ctx.NEST + Vector3.new(0.5, 0.4, -6.8), ctx.NEST + Vector3.new(0, 2 + v * 4, 0), 58
+	return ctx.NEST + Vector3.new(0.5, 0.9, -7.2), ctx.NEST + Vector3.new(0, 1.8 + v * 2.2, 0), 56 -- tilting up, but the egg stays in the frame (Gemini r1: a black void above it)
 end
 function ember.burst(ctx)
 	local st = ctx.state

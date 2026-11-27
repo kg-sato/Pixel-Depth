@@ -33,7 +33,7 @@ function M.start(E)
 	local sub = E.text(win, "", UDim2.fromScale(0.86, 0.045), UDim2.fromScale(0.5, 0.125), Vector2.new(0.5, 0.5), LILAC, 700, false)
 	sub.ZIndex = 6
 	local close = E.closeButton(win, "JourneyClose")
-	local list = new("ScrollingFrame", win, { Name = "Roadmap", Size = UDim2.fromScale(0.92, 0.8), Position = UDim2.fromScale(0.5, 0.57), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 8, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 5 })
+	local list = new("ScrollingFrame", win, { Name = "Roadmap", Size = UDim2.fromScale(0.92, 0.8), Position = UDim2.fromScale(0.5, 0.57), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 10, ScrollBarImageColor3 = Color3.fromRGB(255, 214, 107), ScrollBarImageTransparency = 0.1, VerticalScrollBarInset = Enum.ScrollBarInset.ScrollBar, CanvasSize = UDim2.new(), AutomaticCanvasSize = Enum.AutomaticSize.Y, ZIndex = 5 }) -- a gold scroll bar: the cards below the fold are there (Gemini r1)
 	new("UIListLayout", list, { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder })
 	new("UIPadding", list, { PaddingLeft = UDim.new(0, 6), PaddingRight = UDim.new(0, 14), PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 8) })
 	local function label(parent, s, size, pos, color, align, h)

@@ -41,9 +41,13 @@ function M.init(ctx)
 	local DECO = { CanCollide = false, CanQuery = false, CastShadow = false }
 	local rp = RaycastParams.new()
 	rp.FilterType = Enum.RaycastFilterType.Exclude
-	local function ground(p) -- the floor under a point (nil: no floor, the line is not built)
-		local r = workspace:Raycast(p + Vector3.new(0, 14, 0), Vector3.new(0, -40, 0), rp)
-		return r and r.Position
+	local function ground(p) -- the floor under a point, or under a point up to 8 studs beside it (nil: no floor, the line is not built)
+		-- 2026-11-27: an hour's seed left a Cathedral end over a gap, the line was dropped and travel_test found no handle 2
+		for _, o in { Vector3.zero, Vector3.new(4, 0, 0), Vector3.new(-4, 0, 0), Vector3.new(0, 0, 4), Vector3.new(0, 0, -4), Vector3.new(8, 0, 0), Vector3.new(-8, 0, 0), Vector3.new(0, 0, 8), Vector3.new(0, 0, -8) } do
+			local r = workspace:Raycast(p + o + Vector3.new(0, 14, 0), Vector3.new(0, -40, 0), rp)
+			if r then return r.Position end
+		end
+		return nil
 	end
 	local zipN = 0
 	local zips = {} -- [prompt] = { rope, rev, goal, secs }

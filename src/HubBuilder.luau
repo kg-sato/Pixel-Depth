@@ -120,7 +120,7 @@ local function gables(g, at, x, d, y0, tex, step)
 end
 
 local cubeLantern
-local function sign(g, text, cf, w, h, fg, plain, postH)
+local function sign(g, text, cf, w, h, fg, plain, postH, tilt)
 	-- playtest 2 (board 6): readable from the bird's-eye camera: 1.4x bigger, a cream plate (or the given colour), ink Fredoka
 	-- letters, a thick plum rim, a trim strip in the sign's colour, the camera-side face tilted up 45 degrees toward the steep camera (vertical
 	-- signs read as slivers from above); the face is lit by its own SurfaceGui background, so it stays cream at night
@@ -135,7 +135,7 @@ local function sign(g, text, cf, w, h, fg, plain, postH)
 		tvox(g, "SignArm", Vector3.new(1.4, 0.3, 0.3), CFrame.new(arm - cf.RightVector * 0.3), "beam", 2, { CanCollide = false })
 		cubeLantern(g, arm + cf.RightVector * 0.2 - Vector3.new(0, 1.2, 0), 0.5, 0.55)
 	end
-	cf = cf * CFrame.Angles(math.rad(45 * math.clamp(cf.LookVector.Z, -1, 1)), 0, 0) -- the face the camera sees (it sits south: C.CAM_YAW 0, pitch 52) tilts up toward it; a board turned edge-on to the camera stays upright (town overhaul 2026-11-27: the fixed +-45 cross-tilted the signpost arms)
+	cf = cf * CFrame.Angles(math.rad((tilt or 45) * math.clamp(cf.LookVector.Z, -1, 1)), 0, 0) -- the face the camera sees (it sits south: C.CAM_YAW 0, pitch 52) tilts up toward it; a board turned edge-on to the camera stays upright (town overhaul 2026-11-27: the fixed +-45 cross-tilted the signpost arms)
 	local WOOD, WOOD_DARK, CARVED = Color3.fromRGB(202, 146, 88), Color3.fromRGB(84, 52, 34), Color3.fromRGB(255, 246, 220) -- 2026-11-11: carved wooden boards (the cream plates with ink pixel letters clashed with the soft HUD)
 	-- regrade 2026-11-11: cream letters on a dark stained face inside a light timber rim (contrast about 7:1; the light rim keeps the outline against the night ground)
 	local board = vox(g, "Sign", Vector3.new(w, h, 0.4), cf, plain or WOOD_DARK, { CanCollide = false, Material = Enum.Material.Wood })
@@ -736,8 +736,8 @@ function Hub.build(parent, origin)
 		tvox(g, "Bucket", Vector3.new(0.9, 0.8, 0.9), CFrame.new(c + Vector3.new(0.4, 2.4, 0.3)), "planks", 1)
 		vox(g, "Rope", Vector3.new(0.12, 0.9, 0.12), CFrame.new(c + Vector3.new(0.4, 3.1, 0.3)), PAL.cream[1], { CanCollide = false })
 		local sp = group("Signpost")
-		local q = W(11, 1.1, -14)
-		tvox(sp, "Post", Vector3.new(0.7, 10.6, 0.7), CFrame.new(q + Vector3.new(0, 5.3, 0)), "beam", 2)
+		local q = W(15, 1.1, -14) -- x 15 (2026-11-27, Gemini town_n2: at 11 the mine shaft's east pillar hid the arms from the spawn)
+		tvox(sp, "Post", Vector3.new(0.7, 12.4, 0.7), CFrame.new(q + Vector3.new(0, 6.2, 0)), "beam", 2)
 		-- directive v13 (Gemini round 1: the post stabbed the paving): a stone footing collar with cobbles at its foot, and a small
 		-- hooded lantern on the finial so the boards read at night without a torch beside them
 		vox(sp, "PostFoot", Vector3.new(2.0, 0.7, 2.0), CFrame.new(q + Vector3.new(0, 0.33, 0)) * CFrame.Angles(0, 0.35, 0), PAL.stone[3])
@@ -746,8 +746,8 @@ function Hub.build(parent, origin)
 			local a = k * 1.7 + 0.4
 			vox(sp, "PostCobble", Vector3.new(0.8, 0.4, 0.65), CFrame.new(q + Vector3.new(math.cos(a) * 1.35, 0.18, math.sin(a) * 1.35)) * CFrame.Angles(0, a, 0.1), PAL.stone[(k % 2) + 1], { CanCollide = false })
 		end
-		vox(sp, "PostLantern", Vector3.new(0.42, 0.5, 0.42), CFrame.new(q + Vector3.new(0, 10.84, 0)), Color3.fromRGB(255, 206, 120), { CanCollide = false, CastShadow = false, Material = Enum.Material.Neon })
-		vox(sp, "PostLanternHood", Vector3.new(0.72, 0.18, 0.72), CFrame.new(q + Vector3.new(0, 11.18, 0)) * CFrame.Angles(0, 0.785, 0), Color3.fromRGB(58, 44, 40), { CanCollide = false })
+		vox(sp, "PostLantern", Vector3.new(0.42, 0.5, 0.42), CFrame.new(q + Vector3.new(0, 12.64, 0)), Color3.fromRGB(255, 206, 120), { CanCollide = false, CastShadow = false, Material = Enum.Material.Neon })
+		vox(sp, "PostLanternHood", Vector3.new(0.72, 0.18, 0.72), CFrame.new(q + Vector3.new(0, 12.98, 0)) * CFrame.Angles(0, 0.785, 0), Color3.fromRGB(58, 44, 40), { CanCollide = false })
 		-- directive v13 (light = attention, a readable first sightline): each board points at its place: the mine shaft and Bolt's
 		-- forge highest, then the quest board and the crew hearth cabins (angles from the post to each station)
 		-- town overhaul 2026-11-27: one arm per one-job station, each turned at its station; the arm pointing most toward the town
@@ -756,7 +756,7 @@ function Hub.build(parent, origin)
 		table.sort(arms, function(a, b) return (a[3] - (q.Z - O.Z)) < (b[3] - (q.Z - O.Z)) end) -- the most northern first: highest
 		for k, d in arms do
 			local dx, dz = d[2] - (q.X - O.X), d[3] - (q.Z - O.Z)
-			sign(sp, d[1], CFrame.new(q + Vector3.new(0, 9.9 - (k - 1) * 1.45, 0)) * CFrame.Angles(0, math.atan2(-dz, dx), 0) * CFrame.new(2.3, 0, 0), 4, 0.95, PAL.cream[2])
+			sign(sp, d[1], CFrame.new(q + Vector3.new(0, 11.4 - (k - 1) * 1.75, 0)) * CFrame.Angles(0, math.atan2(-dz, dx), 0) * CFrame.new(2.3, 0, 0), 4, 0.95, PAL.cream[2], nil, nil, 25) -- 1.75 apart and tilted 25 degrees: at 1.45 and 45 the boards cut through each other (Gemini r1)
 		end
 		prompt(sp:FindFirstChild("Post"), "Guide me", "Signpost", "guide").MaxActivationDistance = 9
 	end
@@ -1352,8 +1352,8 @@ function Hub.build(parent, origin)
 			vox(g, "Pot", Vector3.new(1.1, 0.9, 1.1), at(x, 1.85, 2), clay)
 			for j = 0, 2 do vox(g, "Succulent", Vector3.new(0.5, 0.8, 0.5), at(x + (j - 1) * 0.35, 2.6 + (j == 1 and 0.3 or 0) + j * 0.03, 2) * CFrame.Angles(0, 0, (j - 1) * 0.45), shadeOf("moss", j, k, 2), { CanCollide = false }) end
 		end
-		tvox(g, "SignPost", Vector3.new(0.5, 3.2, 0.5), at(3.8, 2.7, 3.4), "beam", 2)
-		sign(g, "EGGS", CFrame.new(at(3.8, 4.8, 3.4).Position), 3.4, 1.3, PAL.pink[3])
+		tvox(g, "SignPost", Vector3.new(0.5, 3.2, 0.5), at(3.8, 2.7, 4.8), "beam", 2) -- 2026-11-27: out past the greenhouse eave (Gemini r1: the board cut its rafter)
+		sign(g, "EGGS", CFrame.new(at(3.8, 4.8, 4.8).Position), 3.4, 1.3, PAL.pink[3])
 		-- town overhaul 2026-11-27: one F prompt (was three: odds on the sign post, hatch on the base, buy at Maribel); it opens the
 		-- Egg Hatchery panel (Shared.HatcheryUI) with BUY, ODDS and HATCH; the server checks distance again (remote Hatchery)
 		prompt(g:FindFirstChild("Base"), "Egg Hatchery", "Maribel", "eggs")
@@ -1367,17 +1367,19 @@ function Hub.build(parent, origin)
 		local g, at = group("GeodeRefinery"), stationAt(-40, 37, -14, 63)
 		local cool = Color3.fromRGB(200, 196, 230)
 		tvox(g, "Apron", Vector3.new(20, 0.6, 16), at(0, 1.1, -2), "flagstone", 5, nil, { N.Top, N.Front, N.Left, N.Right })
-		for _, x in { -8.6, 8.6 } do for _, z in { 4.4, -8.4 } do tvox(g, "Post", Vector3.new(1, 10, 1), at(x, 6.4, z), "beam", 4) end end
-		for _, z in { 4.4, -8.4 } do tvox(g, "TieBeam", Vector3.new(18.6, 0.9, 1.1), at(0, 11.85, z), "beam", 4) end
-		local function atR(x, y, z) return at(x, y, z - 2) end
-		stepRoof(g, atR, 21, 17.6, 12.3, "shingle_plum", 0.8, 1)
+		-- the roof covers the back half only (Gemini r1: a full roof hid the crucible and the bench from the town camera), so the
+		-- crucible stands in the open yard and the bench under the eave
+		for _, x in { -8.6, 8.6 } do for _, z in { -1.8, -8.4 } do tvox(g, "Post", Vector3.new(1, 10, 1), at(x, 6.4, z), "beam", 4) end end
+		for _, z in { -1.8, -8.4 } do tvox(g, "TieBeam", Vector3.new(18.6, 0.9, 1.1), at(0, 11.85, z), "beam", 4) end
+		local function atR(x, y, z) return at(x, y, z - 5.1) end
+		stepRoof(g, atR, 21, 10, 12.3, "shingle_plum", 0.8, 1)
 		skin(vox(g, "BackWall", Vector3.new(16.2, 5, 1), at(0, 3.9, -8.4), PAL.stone[2]), "stonebrick", 5, SIDES, cool)
 		tvox(g, "CrackBench", Vector3.new(5, 0.6, 2), at(4.6, 3.8, -5.6), "planks", 2)
 		for _, x in { 2.6, 6.6 } do tvox(g, "BenchLeg", Vector3.new(0.5, 2.4, 1.6), at(x, 2.6, -5.6), "beam", 2) end
 		local bulb = vox(g, "BenchLamp", Vector3.new(0.8, 0.8, 0.8), at(4.6, 7.2, -7.6), LAMP, { CanCollide = false })
 		glow(bulb, LAMP, 18, 1.4) -- bright: the Geode Timing Crack read as a black void from the town camera (Gemini full1122f 61 s)
 		for _, o in { { 3.2, -5.6, 0.9 }, { 5.9, -5.3, 0.7 } } do vox(g, "BenchGeode", Vector3.one * o[3], at(o[1], 4.1 + o[3] / 2, o[2]), Color3.fromRGB(70, 62, 92), { CanCollide = false, Material = Enum.Material.Slate }) end
-		vox(g, "RefineryPad", Vector3.new(1, 1, 1), at(-4.2, 1.9, -2.6) * CFrame.Angles(0, math.pi, 0), PAL.wood[1], { Transparency = 1, CanCollide = false, CanQuery = false })
+		vox(g, "RefineryPad", Vector3.new(1, 1, 1), at(-4.2, 1.9, 2.0) * CFrame.Angles(0, math.pi, 0), PAL.wood[1], { Transparency = 1, CanCollide = false, CanQuery = false })
 		sign(g, "REFINERY", CFrame.new(at(0, 5.2, 9.2).Position), 5.6, 1.3, Color3.fromRGB(150, 236, 210), nil, 3.6) -- on its own posts in front of the yard: under the eave the roof hid it from the high camera
 	end
 

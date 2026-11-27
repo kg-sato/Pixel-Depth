@@ -14,7 +14,8 @@ P = 'local p=game.Players:GetPlayers()[1] local h=p.Character.HumanoidRootPart '
 def go_to(which):
     return N.lua(P + "local best,bd for _,d in workspace.Caves.Deposits:GetChildren() do if (" + which + ") and d.PrimaryPart.Transparency<1 then "
                  "local m=(d.PrimaryPart.Position-Vector3.new(-3000,0,0)).Magnitude if not bd or m<bd then best,bd=d,m end end end "
-                 "if not best then return 'none' end local c=best.PrimaryPart local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Exclude rp.FilterDescendantsInstances={p.Character,best} "
+                 "if not best then return 'none' end p:SetAttribute('DevEquip',math.max(2,require(game.ReplicatedStorage.Shared.Config).minTier(best:GetAttribute('Layer'),best:GetAttribute('Ore')))) local c=best.PrimaryPart local rp=RaycastParams.new() rp.FilterType=Enum.RaycastFilterType.Exclude rp.FilterDescendantsInstances={p.Character,best} "
+                 # 2026-11-27: DevEquip holds the pickaxe tier the deposit's hardness asks for (the tier gate)
                  # 2026-11-19: 6 studs behind the deposit's own look direction was often inside the rock (the tour faced a wall for 5 min);
                  # try 16 spots round it and take the first with floor under it and a clear line to the ore
                  "local at=c.Position-c.CFrame.LookVector*Vector3.new(1,0,1)*6+Vector3.new(0,3,0) for i=0,15 do local a=i*math.pi/8 local q=c.Position+Vector3.new(math.cos(a)*6,3,math.sin(a)*6) "
