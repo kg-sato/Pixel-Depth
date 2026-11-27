@@ -619,7 +619,7 @@ function M.play(opt)
 	local function warnBoard(at, word, color, side)
 		if not JellyText or calm then return end
 		local cf = pathCF(math.max(at - 30, 2)) * CFrame.new(side * 3.0, 3.3, 0)
-		local board = part(world, Vector3.new(3.8, 1.6, 0.12), CFrame.lookAt(cf.Position, pathCF(math.max(at - 48, 0)).Position + Vector3.new(0, 3.3, 0)), Color3.fromRGB(46, 32, 92), { Material = Enum.Material.Glass, Transparency = 0.1 })
+		local board = part(world, Vector3.new(3.8, 1.6, 0.12), CFrame.lookAt(cf.Position, pathCF(math.max(at - 48, 0)).Position + Vector3.new(0, 3.3, 0)), Color3.fromRGB(46, 32, 92), { Material = Enum.Material.Glass, Transparency = 0 }) -- opaque: the DUCK beam's lamp 30 studs behind glowed through the letters (tour pt1127: "DU_K!")
 		part(world, Vector3.new(0.3, 3, 0.3), board.CFrame * CFrame.new(0, -2.3, 0.1), Color3.fromRGB(92, 62, 40), { Material = Enum.Material.Wood }) -- a sturdy post
 		local sg = Instance.new("SurfaceGui")
 		sg.Face, sg.SizingMode, sg.PixelsPerStud, sg.LightInfluence, sg.Brightness = Enum.NormalId.Front, Enum.SurfaceGuiSizingMode.PixelsPerStud, 60, 0, 1.05 -- 1.6 bloomed the yellow LEAN! into a white blob (Gemini audit 2026-11-18)
