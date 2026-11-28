@@ -137,6 +137,24 @@ def shift_part(v, parts, d):
         if part in parts: v.c.anchors[key] = (part, pos + dv)
 
 
+def dir_shade(v, base, parts, light=(-0.35, 0.45, 0.82)):
+    """form shading for limbs and props built from caps and tubes (the anatomy pass only shades muscle masses): a surface cell
+    of colour base takes <base>Hi where its open faces point at the light and <base>Lo where they point away"""
+    L = V(light).normalized()
+    dirs = [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)]
+    out = {}
+    for k, (part, col) in v.cells.items():
+        if col != base or part not in parts: continue
+        n = V(0, 0, 0)
+        for d in dirs:
+            if (k[0] + d[0], k[1] + d[1], k[2] + d[2]) not in v.cells: n = n + V(*d)
+        if n.length < 1e-6: continue
+        nd = n.normalized().dot(L)
+        if nd > 0.45: out[k] = (part, base + "Hi")
+        elif nd < -0.35: out[k] = (part, base + "Lo")
+    v.cells.update(out)
+
+
 def soft_tops(pal, names, k=0.35):
     """graders read the lighter top faces on big curved stone as dithered noise: pull each named family's Top tones toward the
     side tone (k = how much of the top lift is kept)"""
@@ -328,8 +346,8 @@ def bolt(v):
 # a lop-eared rabbit (2026-11-27: the brief leaves the species open; the town's named folk are creatures like Bolt) in a layered
 # mint-and-lavender hooded cloak with a scalloped trim and a brass egg clasp, a wide-brimmed botanist hat with glowing crystal
 # feathers, cradling a woven straw nest with a softly glowing spotted egg
-@char("Maribel", dict(P.palette(form=("Fur", "Cloak", "Cape", "Hat"), Fur="#f2e4d4", FurDark="#c8ad94", White="#fffaf2", Cloak="#8ad4bc", CloakDark="#488874",
-                           Cape="#8a6cc0", CapeDark="#583b68", Trim="#fff1d6", Hat="#5d4a8e", HatDark="#3c2f62", Band="#86dcb8", Brass="#e0b04a",
+@char("Maribel", dict(P.palette(form=("Fur", "Cloak", "Cape", "Hat"), Fur="#f2e4d4", FurDark="#c8ad94", White="#fffaf2", Cloak="#5aa690", CloakDark="#2c6656",
+                           Cape="#4a2e6a", CapeDark="#2a1a40", Trim="#fff1d6", Hat="#3a2858", HatDark="#22183a", Band="#86dcb8", Brass="#e0b04a",
                            Straw="#c48c3e", StrawDark="#7a4c1c", Egg="#ffd27a", Spot="#e0703a", Glow="#fff4c0", Lash="#2f1b38", Shadow="#261d3b", Grain="#4a2a14", Crystal="#9ff0ff", Pink="#f4b2c6",
                            Blush="#f39ab4", Nose="#d86a8a", Eye="#241638", Iris="#6a4ab8", Shine="#ffffff", Boot="#6a4a3a", Leaf="#6fcf8a"), FurLo="#dcc4ae", FurLoTop="#e2cab4", FurCrease="#bf9f86", FurCreaseTop="#c6a78e"))  # m5: warm face shading (the cool Lo read olive)
 def maribel(v):
@@ -364,7 +382,9 @@ def maribel(v):
     v.ell("Body", "Hat", (0, -0.86, 3.4), (0.62, 0.3, 0.46))
     v.ell("Body", "Cloak", (0, -0.95, 1.55), (0.9, 0.45, 0.42))  # m21: a gathered bustle at the back of the skirt
     v.torus("Body", "CloakDark", (0, -0.95, 1.55), (0, 1, 0.2), 0.62, 0.06)
-    v.ell("Body", "White", (0, -1.32, 0.95), (0.34, 0.3, 0.32))  # a cotton tail peeking out of the cloak
+    v.ell("Body", "White", (0, -1.38, 1.2), (0.52, 0.42, 0.48))  # a cotton tail out of the cloak (m35: big and fluffy, to break up the back)
+    for d in ((0.3, -0.1, 0.25), (-0.28, -0.08, 0.3), (0.05, -0.2, -0.3), (0.0, -0.12, 0.42)): v.ell("Body", "White", (d[0], -1.38 + d[1], 1.2 + d[2]), (0.22, 0.2, 0.2))  # tufts
+    v.ell("Body", "FurDark", (0, -1.3, 0.88), (0.36, 0.3, 0.12))  # its shaded underside
     for s in (-1, 1):  # m3: a big lavender bow at the small of the back, its ribbons down the skirt
         v.ell("Body", "CapeDark", (s * 0.42, -1.02, 2.12), (0.38, 0.16, 0.24), rot=E(0, s * -20, 0))
         v.ell("Body", "Cape", (s * 0.42, -1.08, 2.14), (0.3, 0.12, 0.18), rot=E(0, s * -20, 0))
@@ -388,7 +408,7 @@ def maribel(v):
     v.box("Head", "Lash", (0, 1.4, 3.92), (0.06, 0.05, 0.14))  # m28: a dark mouth seam
     for s in (-1, 1):
         v.box("Head", "Lash", (s * 0.1, 1.37, 3.85), (0.14, 0.05, 0.05))
-        round_eye(v, "Head", (s * 0.41, 0.84, 4.42), (s * 0.38, 1, 0.1), 0.38, 0.46, skin="Fur")  # m27: a step further apart
+        round_eye(v, "Head", (s * 0.41, 0.84, 4.42), (s * 0.38, 1, 0.1), 0.38, 0.46, skin="Fur", iris="Eye")  # m37: solid dark eyes, no violet ring  # m27: a step further apart
         v.ell("Head", "FurDark", (s * 0.41, 0.86, 4.72), (0.24, 0.07, 0.06))  # a soft brow over each eye  # m18: solid dark eyes, rounded corners; m17: the m13 eyes (a painted flush eye read as half closed)
         pass  # m25: no lash bar (graders: "a noisy cluster round the eyes")  # m13: m10 eyes plus a second catchlight (m12: a bright iris read as glasses)
         v.ell("Head", "Blush", (s * 0.6, 0.78, 4.08), (0.15, 0.06, 0.09))
@@ -424,7 +444,7 @@ def maribel(v):
     v.ell("Head", "Spot", (-0.55, 0.56, 5.36), (0.05, 0.03, 0.05))
     # m11 arms (both graders m10: arms and nest one mass with the torso): the right paw on a tall hatchery crook out to the side, an egg
     # lantern swinging from its hook; the left arm holds the nest basket out forward-left by its handle, daylight under it
-    arms = {"ArmL": (V(-0.95, 0.15, 2.95), V(-1.75, 0.55, 2.0), V(-2.35, 1.3, 1.75)),  # m19: the elbow drops (m22: further out)  # m15: further out
+    arms = {"ArmL": (V(-0.95, 0.15, 2.95), V(-1.95, 0.6, 2.1), V(-2.7, 1.45, 1.85)),  # m19: the elbow drops (m22: further out)  # m15: further out
             "ArmR": (V(0.95, 0.1, 2.95), V(1.85, -0.05, 2.4), V(2.54, 0.2, 2.8))}
     for A, (sh, el, wr) in arms.items():
         s = -1 if A == "ArmL" else 1
@@ -456,7 +476,7 @@ def maribel(v):
     v.torus("ArmR2", "Lash", lan + V(0, 0, -0.25), (0, 0, 1), 0.13, 0.06)
     v.anchor("lantern", "ArmR2", lan)
     # the nest basket, hanging from the left paw by an arched handle
-    nest = V(-2.4, 1.35, 0.75)
+    nest = V(-2.75, 1.5, 0.85)
     v.ell("ArmL2", "Straw", nest, (0.72, 0.6, 0.42), cut=lambda x, y, z: z <= nest.z + 0.14)
     v.torus("ArmL2", "StrawDark", nest + V(0, 0, 0.14), (0, 0, 1), 0.68, 0.11)
     v.paint("StrawDark", lambda x, y, z: (int((x + 10) * 5) + int((z + 10) * 5)) % 2 == 0, part="ArmL2", only={"Straw"})  # m15: a 2x2 wicker check
@@ -473,7 +493,7 @@ def maribel(v):
     v.anchor("egg", "ArmL2", egg)
     # little boots peeking under the hem
     for s, L in ((-1, "LegL"), (1, "LegR")):
-        hip, foot = V(s * 0.42, 0.1, 0.9), V(s * 0.6, 1.2, 0.0)  # m6: the toes well past the hem
+        hip, foot = V(s * 0.45, 0.2, 0.9), V(s * 0.72, 1.6, 0.0)  # m6: the toes well past the hem (m36: further, so the boots break the bell)
         v.joint(L + "1", tuple(hip), "Body", "leg")
         v.cap(L + "1", "Fur", hip, foot + V(0, -0.3, 0.18), 0.26, 0.22)
         v.ell(L + "1", "Boot", foot + V(0, 0.18, 0.18), (0.28, 0.44, 0.2), cut=lambda x, y, z: z >= 0.0)  # m22: a rounded brown boot, toe up
@@ -481,6 +501,7 @@ def maribel(v):
         v.cap(L + "1", "Boot", foot + V(0, -0.05, 0.25), foot + V(0, -0.05, 0.68), 0.22, 0.2)  # the shaft (m24: taller)
         v.torus(L + "1", "Trim", foot + V(0, -0.05, 0.68), (0, 0, 1), 0.22, 0.06)  # a cream cuff
         v.box(L + "1", "Brass", foot + V(0, 0.2, 0.36), (0.1, 0.06, 0.06))  # a buckle
+        v.box(L + "1", "Shadow", foot + V(0, 0.2, 0.03), (0.5, 0.9, 0.06))  # m37: a dark sole under each boot
         v.anchor("foot" + L[3:], L + "1", foot + V(0, 0.2, 0.1))
     P.ground(v)
 
@@ -554,10 +575,10 @@ def wick(v):
         v.cap("Head", "Brass", V(s * 0.64, 0.95, 3.55), V(s * 0.84, 0.35, 3.62), 0.06, 0.06)  # the arms of the spectacles, back to the skull
         v.ell("Head", "Blush", (s * 0.6, 0.86, 3.12), (0.15, 0.06, 0.08))
         # feelers: up through the beanie, curling outward, each ending in a glowing bulb
-        fe = [V(s * 0.3, 0.15, 4.05), V(s * 0.45, 0.2, 4.6), V(s * 0.75, 0.3, 4.95), V(s * 1.0, 0.45, 4.85)]
-        v.tube("Head", "Ring", fe, [0.07, 0.06, 0.055, 0.05])
-        v.ell("Head", "Glow", tuple(fe[3] + V(s * 0.08, 0.04, 0.02)), (0.17, 0.17, 0.17))
-        v.ell("Head", "Ember", tuple(fe[3] + V(s * 0.08, 0.04, 0.02)), (0.08, 0.08, 0.08))
+        fe = [V(s * 0.3, 0.15, 4.05), V(s * 0.45, 0.2, 4.8), V(s * 0.85, 0.3, 5.35), V(s * 1.3, 0.45, 5.3), V(s * 1.45, 0.55, 5.0)]  # w18: longer, curling out
+        v.tube("Head", "Ring", fe, [0.08, 0.07, 0.065, 0.06, 0.05])
+        v.ell("Head", "Glow", tuple(fe[4] + V(s * 0.05, 0.04, -0.05)), (0.19, 0.19, 0.19))
+        v.ell("Head", "Ember", tuple(fe[4] + V(s * 0.05, 0.04, -0.05)), (0.09, 0.09, 0.09))
     v.box("Head", "Brass", (0, 1.07, 3.55), (0.18, 0.05, 0.05))  # the bridge
     v.box("Head", "Mouth", (0, 1.04, 3.08), (0.22, 0.05, 0.05))
     for s in (-1, 1): v.box("Head", "Mouth", (s * 0.14, 1.02, 3.12), (0.06, 0.05, 0.05))  # the smile's turned-up corners
@@ -596,7 +617,7 @@ def wick(v):
 # a round plush plum-velvet mole in a terracotta tunic under a clay-smudged cream apron, a big pink digging nose, tiny round
 # brass spectacles low on the snout, a tilted terracotta beret, wide pale digging paws cradling a freshly painted clay pot
 @char("KilnKeeper", dict(P.palette(form=("Velvet", "Tunic"), Velvet="#6e4a86", VelvetDark="#4a2f5e", Snout="#8c68a2", Nose="#f49ab2", NoseLo="#d8708e",
-                              Tunic="#c86a44", TunicDark="#8e4428", Apron="#d8bc94", ApronLo="#b89c74", Smudge="#b8643e", Paw="#f2dcd2", Claw="#fff6e8",
+                              Tunic="#c86a44", TunicDark="#8e4428", Apron="#f2e2c2", ApronLo="#d8c4a0", Smudge="#b8643e", Paw="#f2dcd2", Claw="#fff6e8",
                               Brass="#e0b04a", Eye="#1a1228", Iris="#3a2450", Shine="#ffffff", Pot="#3a948e", PotDark="#1e5450", Paint="#f2e2c2",
                               PaintHi="#c8fff4", Beret="#e07a48", BeretDark="#a04a28", White="#fff8ee", Blush="#f39ab4"), TunicLo="#a8553a", TunicLoTop="#b05c40", TunicCrease="#7a3a26", TunicCreaseTop="#82402a", VelvetLo="#5c3c74", VelvetLoTop="#62427a", VelvetCrease="#3e2652", VelvetCreaseTop="#442a58"))  # k2: warm shading (the cool Lo read olive)
 def keeper(v):
@@ -610,10 +631,11 @@ def keeper(v):
     v.paint("TunicDark", lambda x, y, z: y >= 0.58 and z >= 0.35 and ((x / 0.9) ** 2 + ((z - 1.45) / 1.0) ** 2) > 0.8, part="Body", only={"Apron"})  # k7: a dark border round the apron
     v.torus("Body", "TunicDark", (0, 0.0, 2.55), (0, 0, 1), 0.72, 0.1)  # the tunic's collar
     v.ell("Body", "VelvetDark", (0, 0.5, 2.6), (0.5, 0.25, 0.12))  # k8: a shadowed neck recess under the chin
-    v.carve(lambda x, y, z: 2.62 < z < 2.72 and y > 0.55 and abs(x) < 0.45, part="Body")  # k12: a neck cut
     v.box("Body", "ApronLo", (0, 1.04, 2.28), (0.7, 0.06, 0.08))  # the apron's hem stitch at the bib
     for s in (-1, 1): v.cap("Body", "ApronLo", V(s * 0.42, 0.95, 2.3), V(s * 0.62, 0.2, 2.6), 0.06, 0.06)  # its neck straps
-    v.box("Body", "ApronLo", (0.38, 1.04, 1.25), (0.38, 0.08, 0.32))  # a pocket (k9: no brushes, a calmer bib)
+    v.box("Body", "ApronLo", (0.38, 1.04, 1.25), (0.38, 0.08, 0.32))  # a pocket with brushes in it
+    for k in range(3): v.cap("Body", "PotDark", V(0.28 + k * 0.09, 1.04, 1.3), V(0.25 + k * 0.12, 1.08, 1.7), 0.035, 0.03)
+    v.ell("Body", "Paint", (0.37, 1.08, 1.72), (0.05, 0.05, 0.06))
     v.ell("Body", "VelvetDark", (0, -0.95, 1.0), (0.2, 0.2, 0.24))  # a stubby tail
     for s in (-1, 1):  # k3: the apron's straps cross the back to a tied bow, and a potter's tool roll on the belt (k2: a bare back)
         v.curve("Body", "Apron", [(s * 0.62, 0.2, 2.6), (s * 0.4, -0.9, 2.2), (-s * 0.25, -1.08, 1.55)], [0.08, 0.08, 0.08])  # k8: lighter straps
@@ -639,14 +661,12 @@ def keeper(v):
     for s in (-1, 1):
         v.ell("Head", "NoseLo", (s * 0.09, 1.76, 3.05), (0.04, 0.03, 0.05))  # nostrils
         round_eye(v, "Head", (s * 0.28, 0.93, 3.44), (s * 0.4, 1, 0.15), 0.3, 0.34, skin="Velvet")  # k5: bigger, two catchlights (k6: rounded)
-        v.ell("Head", "VelvetDark", (s * 1.0, -0.05, 3.42), (0.3, 0.15, 0.28))  # k5: round mole ears (k7: bigger; k10: flared past the beret)
-        v.ell("Head", "Nose", (s * 1.03, 0.05, 3.42), (0.16, 0.06, 0.15))
+        v.ell("Head", "VelvetDark", (s * 0.86, -0.05, 3.5), (0.26, 0.14, 0.26))  # k5: round mole ears (k7: bigger, out from under the beret)
+        v.ell("Head", "Nose", (s * 0.88, 0.04, 3.5), (0.14, 0.06, 0.14))
         v.torus("Head", "Brass", V(s * 0.28, 1.02, 3.42), (s * 0.3, 1, 0.1), 0.25, 0.045)  # the spectacles, round, a little low (k1: thin rims read as yellow brows)
         v.cap("Head", "Brass", V(s * 0.46, 0.96, 3.4), V(s * 0.74, 0.55, 3.45), 0.04, 0.04)
         v.ell("Head", "Blush", (s * 0.42, 1.08, 3.0), (0.14, 0.06, 0.08))
     v.box("Head", "Brass", (0, 1.12, 3.4), (0.14, 0.05, 0.05))
-    v.box("Head", "VelvetDark", (0, 1.12, 3.27), (0.5, 0.06, 0.05))  # k12: a dark line between the spectacles and the snout
-    v.box("Head", "NoseLo", (0, 1.2, 2.86), (0.2, 0.05, 0.04))  # a small mouth under the snout
     # the beret: soft, tilted to one side, a little stem on top
     v.ell("Head", "Beret", (0.28, -0.3, 3.98), (0.88, 0.82, 0.28), rot=E(-22, 20, 0))  # k4: a floppy beret (k6: smaller, tipped back off the face)
     v.ell("Head", "BeretDark", (0.2, -0.3, 3.8), (0.72, 0.68, 0.08), rot=E(-22, 20, 0))
@@ -655,7 +675,7 @@ def keeper(v):
     v.ell("Head", "Paint", (0.9, 0.25, 3.86), (0.12, 0.1, 0.08))  # a glaze drip on the brim
     v.anchor("eyes", "Head", (0, 0.95, 3.42)); v.anchor("speech", "Head", (0, 0.1, 4.8))
     # k4 arms: the left paw holds a tall painted amphora up beside the head, the right a long glaze brush out to the side
-    arms = {"ArmL": (V(-1.0, 0.2, 2.3), V(-2.15, 0.5, 2.0), V(-2.2, 1.28, 2.45)), "ArmR": (V(1.0, 0.2, 2.3), V(1.85, 0.0, 1.95), V(2.2, 0.35, 2.55))}  # k8: further out
+    arms = {"ArmL": (V(-1.0, 0.2, 2.3), V(-1.72, 0.55, 1.95), V(-1.6, 1.28, 2.42)), "ArmR": (V(1.0, 0.2, 2.3), V(1.85, 0.0, 1.95), V(2.2, 0.35, 2.55))}  # k8: further out
     for A, (sh, el, wr) in arms.items():
         s = -1 if A == "ArmL" else 1
         v.joint(A + "1", tuple(sh), "Body", "arm")
@@ -666,7 +686,7 @@ def keeper(v):
         for k in range(4): v.crystal(A + "2", "Claw", wr + V((k - 1.5) * 0.13, 0.3, 0.0), (0, 1, 0.2), 0.2, 0.05, sides=4)
         v.anchor("hand" + A[3:], A + "2", tuple(wr))
     # the amphora: a tall slender vase standing on the raised paw, two looped handles, a teal glaze band and dots, a darker lip
-    pot = V(-2.22, 1.3, 2.65)
+    pot = V(-1.62, 1.3, 2.62)
     v.tube("ArmL2", "Pot", [pot + V(0, 0, dz) for dz in (0.0, 0.2, 0.42, 0.66, 0.86, 1.02, 1.16)], [0.24, 0.38, 0.45, 0.4, 0.26, 0.17, 0.18])
     v.torus("ArmL2", "PotDark", pot + V(0, 0, 1.2), (0, 0, 1), 0.22, 0.07)  # the lip
     v.torus("ArmL2", "Paint", pot + V(0, 0, 0.45), (0, 0, 1), 0.44, 0.07)
@@ -678,21 +698,17 @@ def keeper(v):
     v.anchor("pot", "ArmL2", tuple(pot + V(0, 0, 0.5)))
     # the glaze brush: a long wooden handle with a brass ferrule and a teal-loaded tip
     b0, b1 = V(2.2, 0.42, 2.2), V(2.6, 0.3, 3.85)
-    v.cap("ArmR2", "TunicDark", b0, b1, 0.14, 0.12)  # k8: a thicker brush (k11: a wooden handle)
+    v.cap("ArmR2", "PotDark", b0, b1, 0.1, 0.09)  # k8: a thicker brush
     v.torus("ArmR2", "Brass", b1 - (b1 - b0).normalized() * 0.05, tuple((b1 - b0).normalized()), 0.09, 0.04)
-    v.torus("ArmR2", "Brass", b1, tuple((b1 - b0).normalized()), 0.12, 0.05)  # k10: a brass collar
-    v.ell("ArmR2", "ApronLo", tuple(b1 + (b1 - b0).normalized() * 0.3), (0.26, 0.07, 0.34))  # k11: a flared wooden paddle tip (k10's cream blade read as a spike)
-    for k in range(3): v.ell("ArmR2", "Paw", tuple(b0 + (b1 - b0).normalized() * (0.18 + k * 0.1) + V(-0.08, 0.06, 0)), (0.08, 0.08, 0.06))  # finger blocks round the grip
+    v.cap("ArmR2", "Paint", b1, b1 + (b1 - b0).normalized() * 0.32, 0.12, 0.04)
     v.ell("ArmR2", "PaintHi", tuple(b1 + (b1 - b0).normalized() * 0.12 + V(0.05, 0.05, 0)), (0.05, 0.05, 0.05))
     v.anchor("brush", "ArmR2", tuple(b1))
     # short legs with pale clawed feet
     for s, L in ((-1, "LegL"), (1, "LegR")):
-        hip, foot = V(s * 0.6, 0.05, 0.7), (V(-1.0, 0.65, 0.0) if s < 0 else V(0.95, 0.0, 0.0))  # k7: apart, one foot forward (k9: wider)
+        hip, foot = V(s * 0.55, 0.05, 0.7), (V(-0.85, 0.65, 0.0) if s < 0 else V(0.8, 0.05, 0.0))  # k7: apart, one foot forward
         v.joint(L + "1", tuple(hip), "Body", "leg")
-        v.ell(L + "1", "Velvet", tuple(hip + V(s * 0.08, 0.05, 0.05)), (0.36, 0.38, 0.34))  # k10: a haunch
-        v.cap(L + "1", "VelvetDark", hip, foot + V(0, 0, 0.2), 0.26, 0.22)
-        v.ell(L + "1", "Paw", tuple(foot + V(0, 0.2, 0.13)), (0.3, 0.4, 0.16))
-        for k in (-1, 0, 1): v.ell(L + "1", "Paw", tuple(foot + V(k * 0.14, 0.52, 0.1)), (0.08, 0.1, 0.09))  # k11: toe pads
+        v.cap(L + "1", "VelvetDark", hip, foot + V(0, 0, 0.2), 0.3, 0.26)
+        v.ell(L + "1", "Paw", tuple(foot + V(0, 0.2, 0.13)), (0.32, 0.42, 0.15))
         for k in (-1, 0, 1): v.crystal(L + "1", "Claw", foot + V(k * 0.13, 0.58, 0.08), (0, 1, -0.3), 0.14, 0.045, sides=4)
         v.anchor("foot" + L[3:], L + "1", tuple(foot + V(0, 0.2, 0.1)))
     P.ground(v)
@@ -760,6 +776,13 @@ def moss(v):
     v.cap("Head", "Brass", V(0, 0.62, 3.72), V(0, 0.92, 3.78), 0.24, 0.24)  # the headlamp
     v.ell("Head", "Lamp", (0, 0.95, 3.78), (0.19, 0.05, 0.19))
     v.anchor("lamp", "Head", (0, 0.98, 3.78))
+    h0, h1 = V(-0.95, -0.95, 0.9), V(1.15, -1.0, 3.6)  # s15: a pickaxe on his back, the head up past his right shoulder
+    v.cap("Body", "Leather", h0, h1, 0.07, 0.07)
+    v.cap("Body", "LeatherDark", h1 - (h1 - h0).normalized() * 0.15, h1 + (h1 - h0).normalized() * 0.05, 0.09, 0.09)
+    hd = (h1 - h0).normalized(); side = V(0, 0, 1).cross(hd).normalized() if abs(hd.z) < 0.99 else V(1, 0, 0)
+    pk = h1 + hd * 0.08
+    perp = (V(-hd.z, 0, hd.x)).normalized()
+    v.tube("Body", "HelmDark", [pk - perp * 0.75 - hd * 0.12, pk - perp * 0.3, pk, pk + perp * 0.3, pk + perp * 0.75 - hd * 0.12], [0.04, 0.09, 0.11, 0.09, 0.04])  # the pick head, curved
     v.anchor("eyes", "Head", (0, 0.85, 3.08)); v.anchor("speech", "Head", (0, 0.1, 4.6))
     # the scarf: a knit loop round the neck, its tail blowing out back-right, fringed
     v.torus("Body", "Scarf", (0, 0.05, 2.42), (0, 0, 1), 0.58, 0.18)
@@ -1149,8 +1172,8 @@ def tock(v): roaster(v, True)
 # ---------------------------------------------------------------- GLOOMLING: the layer 1 darkness prowler (an enemy)
 # a hunched shadow-cat gremlin: jagged soot fur, tall tufted cat ears, a curled smoke tail that pales to its tip, sharp pale
 # claws, glowing amber ring eyes with dark slit pupils, a jagged grin
-@char("Gloomling", P.palette(form=("Soot",), Soot="#3a3050", SootHi="#64547e", Smoke="#5e4e78", Smoke2="#8e7eac", Smoke3="#a898c4",
-                             Ring="#ffb030", Pupil="#0a0610", Claw="#a898c0", Teeth="#f4eefa", Mouth="#120a18", Inner="#a86a9a",
+@char("Gloomling", P.palette(form=("Soot",), Soot="#2c2440", SootHi="#6a5a96", Smoke="#3a3052", Smoke2="#6e5e94", Smoke3="#9a8abc",
+                             Ring="#ffb030", Pupil="#0a0610", Claw="#ffb030", Teeth="#f4eefa", Mouth="#120a18", Inner="#ff8a3a",
                              Shard="#9a70e8", ShardHi="#b898f0", Wisp="#b8a8e0", Eye="#0a0610", Shine="#ffffff"))
 def gloomling(v):
     # e4 (d3 critique: a flat, muddy, collapsed dark blob): an upright hunched imp, tall ears with glowing pink insides, amber ring eyes
@@ -1165,16 +1188,12 @@ def gloomling(v):
     for s2 in (-1, 1): v.ell("Body", "SootHi", (s2 * 0.42, -0.25, 1.9), (0.3, 0.26, 0.16), rot=P.E(0, s2 * 20, 0))  # e10: bevelled shoulder plates
     v.ell("Body", "Smoke", (0, 0.5, 1.4), (0.42, 0.2, 0.48))  # e8: a pale smoky belly and chest
     v.ell("Body", "Smoke2", (0, 0.62, 1.55), (0.24, 0.1, 0.26))
-    for k in range(14):  # big fur tufts round the shoulders and flanks, dark with lilac tips
-        a = -2.4 + k * 4.8 / 13; h = 1.15 + 0.5 * abs(math.cos(a * 1.3))
-        base = V(math.sin(a) * 0.58, -math.cos(a) * 0.5 + 0.08, h)
-        d = V(math.sin(a) * 0.75, -0.55, 0.45).normalized()
-        v.crystal("Body", "Soot", base, tuple(d), 0.5, 0.16, sides=4)
-        v.crystal("Body", "Smoke2", base + d * 0.3, tuple(d), 0.22, 0.08, sides=4)
-    for k in range(5):  # e11: five segmented dorsal plates down the spine, lit lilac on top (e10: noisy jagged spikes)
-        c = V(0, -0.5 - k * 0.1, 2.0 - k * 0.24)
-        v.ell("Body", "SootHi", (0, c.y, c.z), (0.26 - k * 0.03, 0.12, 0.1), rot=P.E(-35, 0, 0))
-        v.ell("Body", "Smoke2", (0, c.y - 0.04, c.z + 0.05), (0.16 - k * 0.02, 0.08, 0.05), rot=P.E(-35, 0, 0))
+    # e19: no shoulder tufts (graders: messy lumps on the scapulae); a clean hunched back with the spine ridge
+    for k in range(8):  # e18: a tufted fur ridge down the spine, pale lilac tips (e17: "an unmodeled lump on the back")
+        c = V(0, -0.5 - k * 0.06, 2.05 - k * 0.15)
+        d = V(0.25 * (1 if k % 2 else -1), -0.8, 0.6).normalized()
+        v.crystal("Body", "Soot", c, tuple(d), 0.42 - k * 0.025, 0.12, sides=4)
+        v.crystal("Body", "Smoke3", c + d * (0.25 - k * 0.015), tuple(d), 0.18, 0.06, sides=4)
     # the smoke tail: out back-right, curling up, soot to smoke to a glowing wisp
     tp = [V(0.25, -0.7, 0.9), V(0.85, -1.2, 0.75), V(1.4, -1.35, 1.1), V(1.6, -1.15, 1.7), V(1.35, -0.85, 2.05)]
     v.joint("Tail", tuple(tp[0]), "Body", "tail")
@@ -1193,13 +1212,15 @@ def gloomling(v):
     v.paint("SootHi", lambda x, y, z: z > 2.6, part="Head", only={"Soot", "SootLo"})
     for s in (-1, 1):
         v.carve(lambda x, y, z, s=s: abs(x - s * 0.26) < 0.2 and abs(z - 2.42) < 0.18 and y > 0.98, part="Head")
-        v.ell("Head", "Ring", (s * 0.26, 0.95, 2.42), (0.18, 0.06, 0.16))  # e4: round amber eyes with a black slit (e11: flush, not proud)
-        v.box("Head", "Pupil", (s * 0.26, 0.99, 2.42), (0.06, 0.04, 0.22))
+        v.carve(lambda x, y, z, s=s: (x - s * 0.26) ** 2 / 0.045 + (z - 2.42) ** 2 / 0.035 < 1 and y > 0.82, part="Head")  # e17: a real socket
+        v.ell("Head", "SootLo", (s * 0.26, 0.84, 2.42), (0.22, 0.05, 0.19))  # its dark back
+        v.ell("Head", "Ring", (s * 0.26, 0.88, 2.42), (0.18, 0.05, 0.16))  # e4: round amber eyes with a black slit (e11: flush, not proud)
+        v.box("Head", "Pupil", (s * 0.26, 0.92, 2.42), (0.06, 0.03, 0.22))
         v.ell("Head", "SootHi", (s * 0.27, 0.98, 2.66), (0.22, 0.08, 0.06), rot=E(0, s * -18, 0))  # a heavy brow
         v.crystal("Head", "Soot", V(s * 0.32, 0.45, 2.7), (s * 0.35, -0.15, 1), 1.0, 0.3, sides=4)  # tall cat ears (e8: thicker, cupped)
         v.crystal("Head", "SootHi", V(s * 0.32, 0.38, 2.7), (s * 0.35, -0.15, 1), 0.95, 0.2, sides=4)  # the rim, lit
         v.crystal("Head", "Inner", V(s * 0.32, 0.6, 2.78), (s * 0.35, -0.15, 1), 0.55, 0.12, sides=4)
-        v.crystal("Head", "Soot", V(s * 0.32, 0.3, 2.7), (s * 0.35, -0.15, 1), 0.9, 0.24, sides=4)  # e9: a solid back to the ear
+        v.crystal("Head", "SootHi", V(s * 0.32, 0.3, 2.7), (s * 0.35, -0.15, 1), 0.9, 0.24, sides=4)  # e9: a solid back to the ear (e18: lit lilac)
         v.ell("Head", "Soot", (s * 0.34, 0.42, 2.78), (0.24, 0.22, 0.2))  # e11: a thick ear root
         v.crystal("Head", "Smoke2", V(s * 0.38, 0.2, 2.95), (s * 0.35, -0.4, 1), 0.5, 0.06, sides=4)  # a fur fringe on the ear back
         v.crystal("Head", "Smoke2", V(s * 0.6, 0.38, 3.6), (s * 0.4, -0.1, 1), 0.32, 0.06, sides=4)  # ear tufts
@@ -1327,7 +1348,7 @@ def clayling(v):
 # turquoise slit eyes, a hinged moss-rock jaw, asymmetric turquoise crystal spires out of the spine, shoulders and crest,
 # huge gorilla arms ending in root-bound boulder fists with crystal knuckles and glowing fissures, short pillar legs,
 # and three dark sockets (left shoulder, right chest, solar plexus) where the amber knot hearts lock in
-SCALE = {"RootWarden": 0.17, "KilnGolem": 0.17, "Smudge": 0.06, "Clayling": 0.08}  # sm5: Smudge is small, finer voxels (the brief: s = 0.07)
+SCALE = {"RootWarden": 0.17, "KilnGolem": 0.17, "Smudge": 0.06, "Clayling": 0.065, "Gloomling": 0.065, "Juniper": 0.075, "Tock": 0.075, "Moss": 0.075}  # finer voxels on the small enemies (2026-11-28: craft/form held them at 4-6)  # sm5: Smudge is small, finer voxels (the brief: s = 0.07)
 
 
 @char("RootWarden", soft_tops(P.palette(form=("Slate", "Moss"), Slate="#4c5668", SlateDark="#30384a", Moss="#5a8c4c", MossDark="#3a6a34", Bark="#4a3426",
@@ -1494,12 +1515,12 @@ def golem(v):
     v.box("Head", "IronDark", (0, 2.65, 12.15), (3.2, 0.4, 0.3), rot=E(-12, 0, 0))  # a cast-iron brow plate over the eyes  # g10: a slim brow, set back  # the brow, higher and set back (g7: it hid the eyes)
     for s in (-1, 1):
         v.paint("Soot", lambda x, y, z, s=s: abs(x - s * 0.92) < 0.82 and abs(z - 11.6) < 0.62 and y > 2.2, part="Head", only={"Clay", "ClayHi", "ClayLo", "ClayCrease", "ClayDark"})  # g15: a soot ring round the socket
-        v.carve(lambda x, y, z, s=s: abs(x - s * 0.92) < 0.62 and abs(z - 11.6) < 0.58 and y > 2.5, part="Head")  # a socket carved into the face plate (g17: taller)
-        v.box("Head", "IronDark", (s * 0.92, 2.55, 11.6), (1.24, 0.12, 0.88))  # its iron back
-        v.box("Head", "IronDark", (s * 0.92, 2.55, 11.6), (1.24, 0.12, 1.14))
-        v.box("Head", "CoalHot", (s * 0.92, 2.63, 11.6), (1.04, 0.08, 0.96))  # the glow, set inside (g17: bright yellow, taller)
-        v.box("Head", "WhiteHot", (s * 0.92, 2.69, 11.62), (0.6, 0.06, 0.5))
-        v.box("Head", "Shine", (s * 0.92 - s * 0.28, 2.73, 11.78), (0.17, 0.04, 0.14))
+        v.carve(lambda x, y, z, s=s: abs(x - s * 0.92) < 0.62 and abs(z - 11.6) < 0.58 and y > 2.2, part="Head")  # a socket carved into the face plate (g26: two voxels deeper)
+        v.box("Head", "IronDark", (s * 0.92, 2.25, 11.6), (1.24, 0.12, 1.14))  # its iron back
+        v.box("Head", "CoalHot", (s * 0.92, 2.33, 11.6), (1.04, 0.08, 0.96))  # the glow, set well inside
+        v.box("Head", "WhiteHot", (s * 0.92, 2.39, 11.62), (0.6, 0.06, 0.5))
+        for (dx, dz, w, h) in ((0, 0.64, 1.4, 0.14), (0, -0.64, 1.4, 0.14), (0.66, 0, 0.14, 1.4), (-0.66, 0, 0.14, 1.4)):
+            v.box("Head", "IronDark", (s * 0.92 + dx, 2.6, 11.6 + dz), (w, 0.2, h))  # g26: an iron frame round the recessed eye
     def mouth(x, y, z):  # an arched furnace mouth
         return y > 2.1 and abs(x) < 1.0 and 10.0 < z < 10.7 + 0.35 * max(0.0, 1 - (x / 1.0) ** 2)
     v.carve(mouth, part="Head")
@@ -1511,6 +1532,7 @@ def golem(v):
     v.box("Head", "IronDark", (0, 2.75, 10.72), (2.2, 0.14, 0.12))  # g18: the mouth hatch's hinge bar
     for xx in (-0.9, 0.9): v.ell("Head", "Rivet", (xx, 2.82, 10.72), (0.1, 0.06, 0.1))
     v.torus("Head", "Patina", (0, 0.8, 12.5), (0, 0, 1), 1.25, 0.18)
+    v.paint("IronDark", lambda x, y, z: y > 2.1 and z > 11.68 + (abs(x) - 0.38) * 0.42, part="Head", only={"CoalHot", "WhiteHot"})  # g28: the eye tops slant down to the middle, a stern brow
     v.anchor("eyes", "Head", (0, 2.9, 11.6)); v.anchor("speech", "Head", (0, 0.4, 16.0))
     # the chimney lid: a tall hinged bronze stack on the crown, its mouth glowing, smoke trailing back
     v.joint("Lid", (0, -0.2, 12.6), "Head", "head")
@@ -1518,10 +1540,10 @@ def golem(v):
     for z in (12.9, 13.6): v.torus("Lid", "Patina", V(0, -0.1 - (z - 12.5) * 0.25, z), (0, 0, 1), 0.7 - (z - 12.9) * 0.12, 0.13)
     v.torus("Lid", "BronzeDark", V(0, -0.5, 14.1), (0, 0, 1), 0.64, 0.17)
     v.ell("Lid", "Coal", (0, -0.5, 14.18), (0.48, 0.48, 0.1))
-    for (dx, dy, dz, r, col) in ((0.1, -0.7, 14.85, 0.78, "Smoke"), (0.7, -1.4, 15.75, 0.62, "Smoke2")):
+    for (dx, dy, dz, r, col) in ((0.1, -0.7, 14.85, 0.78, "Smoke"), (0.7, -1.4, 15.75, 0.66, "Smoke2"), (1.3, -2.0, 16.6, 0.55, "Smoke2"), (1.8, -2.5, 17.3, 0.42, "Smoke")):  # g25: a taller column
         v.ell("Lid", col, (dx, dy, dz), (r, r, r * 0.85))
     # arms: the right fist raised (a slam wind-up), the left hanging forward; bronze bands with verdigris, gauntlet fists
-    arms = {"ArmR": (V(3.4, 0.2, 8.6), V(5.5, -0.4, 9.5), V(6.3, -0.6, 11.7)), "ArmL": (V(-3.4, 0.2, 8.6), V(-6.8, 0.8, 8.4), V(-9.0, 1.6, 7.1))}  # g12: the crucible swung further out  # g8: the off arm swings a molten crucible out at its side (g7: the resting arm clumped with the torso)
+    arms = {"ArmR": (V(3.4, 0.2, 8.6), V(5.5, -0.4, 9.5), V(6.3, -0.6, 11.7)), "ArmL": (V(-3.4, 0.2, 8.6), V(-6.3, 0.6, 7.3), V(-8.8, 1.6, 7.5))}  # g12: the crucible swung further out  # g8: the off arm swings a molten crucible out at its side (g7: the resting arm clumped with the torso)
     for A, (sh, el, wr) in arms.items():
         s = 1 if A == "ArmR" else -1
         v.joint(A, tuple(sh), "Body", "arm")
@@ -1550,6 +1572,7 @@ def golem(v):
             v.torus(A + "2", "Patina", cb + V(0, 0, 0.0), (0, 0, 1), 1.18, 0.12)
             v.ell(A + "2", "Coal", tuple(cb + V(0, 0, 0.66)), (1.15, 1.15, 0.12))
             v.ell(A + "2", "CoalHot", tuple(cb + V(0.15, 0.1, 0.74)), (0.6, 0.6, 0.07))
+            v.ell(A + "2", "WhiteHot", tuple(cb + V(0.2, 0.15, 0.78)), (0.28, 0.28, 0.06))  # g27: a white-hot core
             v.cap(A + "2", "Iron", cb + V(-0.75, 0.55, 0.55), cb + V(-1.2, 0.95, 0.75), 0.22, 0.12)  # the pour lip
             v.cap(A + "2", "Seam", cb + V(-1.2, 0.95, 0.65), cb + V(-1.25, 1.0, -0.2), 0.1, 0.06)  # a molten drip off the lip
             for k in range(4): v.cap(A + "2", "BronzeDark", fist + V((k - 1.5) * 0.42, 0.55, -0.6), fist + V((k - 1.5) * 0.42, 0.2, -1.05), 0.2, 0.17)  # g10: fingers closed round the bail
@@ -1575,7 +1598,7 @@ if __name__ == "__main__":
     db = json.load(open(rp)) if os.path.exists(rp) else {}
     for name, (pal, fn) in D.items():
         if ONLY and name not in ONLY: continue
-        v = X.Vox(name, pal, s=SCALE.get(name, 0.1))  # the bosses build in chunkier 0.17-stud voxels (v17 brief)
+        v = X.Vox(name, pal, s=SCALE.get(name, 0.1))  # 2026-11-28: 0.075 tried on Bolt/Maribel/Pip/Wick, no gain; finer voxels kept only for the small enemies  # the bosses build in chunkier 0.17-stud voxels (v17 brief)
         fn(v)
         despeckle(v)
         ao_pass(v)
