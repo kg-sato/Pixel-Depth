@@ -198,7 +198,11 @@ function M.build(caves)
 	end
 	-- the arrival ledge (west): a root arch with the way back to Camp 1
 	local arrive = O * CFrame.new(-64, 0, 0)
-	part("Ledge", Vector3.new(14, 1.2, 18), arrive * CFrame.new(0, 0.6, 0), CLAY_L, ROCK)
+	part("Ledge", Vector3.new(14, 1.2, 18), arrive * CFrame.new(0, 0.6, 0), CLAY_L:Lerp(CLAY, 0.4), ROCK)
+	for _, e in { { 14.4, 0.6, 0, 8.8 }, { 14.4, 0.6, 0, -8.8 }, { 0.6, 18.4, 6.9, 0 }, { 0.6, 18.4, -6.9, 0 } } do -- 2026-11-28 (tour 1127n 6:46): a fired-brick lip and a course band, so the arrival ledge stops reading as one flat orange box
+		part("LedgeLip", Vector3.new(e[1], 0.4, e[2]), arrive * CFrame.new(e[3], 1.15, e[4]), CLAY_D, ROCK)
+	end
+	part("LedgeCourse", Vector3.new(14.3, 0.3, 18.3), arrive * CFrame.new(0, 0.5, 0), CLAY, ROCK)
 	for _, z in { -5, 5 } do part("ArchRoot", Vector3.new(2, 12, 2), arrive * CFrame.new(-5.2, 7.2, z), BARK, { Material = Enum.Material.Wood }) end
 	part("ArchRoot", Vector3.new(2, 2, 13), arrive * CFrame.new(-5.2, 13.4, 0), BARK, { Material = Enum.Material.Wood })
 	local back = part("ArchDark", Vector3.new(0.6, 11, 8), arrive * CFrame.new(-5.6, 6.7, 0), Color3.fromRGB(14, 8, 22))

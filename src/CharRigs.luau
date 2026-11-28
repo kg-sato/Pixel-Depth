@@ -119,6 +119,16 @@ local function mount(g)
 		l.Parent = at
 		at.Parent = rig.PrimaryPart
 	end
+	local ea = BOSS[g.char] and d.anchors and d.anchors.eyes
+	if ea then -- the boss's eyes light its face: dim while it sleeps, bright once the fight wakes it (the old WardenEye parts are hidden)
+		local at = Instance.new("Attachment")
+		at.Name, at.Position = "EyeGlow", Vector3.new(-ea[2].X, ea[2].Y - ROOT_Y, -ea[2].Z - 0.6) * s
+		local l = Instance.new("PointLight")
+		l.Color, l.Range, l.Brightness, l.Shadows = g.char == "KilnGolem" and Color3.fromRGB(255, 170, 70) or Color3.fromRGB(120, 255, 240), 10 * s, 0.4, false
+		l.Parent = at
+		at.Parent = rig.PrimaryPart
+		g.eyeLight = l
+	end
 	rig.Parent = vis
 	g.rig, g.s, g.anchor, g.rel, g.yaw = rig, s, anchor, anchor.CFrame:ToObjectSpace(ground), 0
 	local r = PV.rigs[rig]
@@ -180,6 +190,7 @@ function M.start()
 					rig:PivotTo(ground * CFrame.new(0, ROOT_Y * g.s, 0))
 					local r = PV.rigs[rig]
 					if r and BOSS[g.char] and not fight and not r.act then r.nextAct = now + 4 end -- an asleep boss only breathes
+					if g.eyeLight then g.eyeLight.Brightness += ((fight and 2.2 or 0.4) - g.eyeLight.Brightness) * math.min(1, dt * 3) end
 					PV.animate(rig, now, dt, false)
 					if r then turnHead(g, r, dt) end
 					if BOSS[g.char] then -- the boss's knots (Perfect Strike targets) sit in the rig's sockets
