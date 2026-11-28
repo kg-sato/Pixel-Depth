@@ -21,6 +21,9 @@ local KEEP = { Quest = true, Knot1 = true, Knot2 = true, Knot3 = true, Cracks = 
 local BOSS = { RootWarden = true, KilnGolem = true }
 local SIZE = { RootWarden = 1.15, KilnGolem = 0.95 } -- the Warden stands a little taller than its old block body; the Golem's raised arms span its corridor (Gemini, show1128c: they clipped the walls at 1.1)
 M.BOSSNAME = { "RootWarden", "KilnGolem" } -- BossClient's boss numbers
+-- the Warden's eyes as Neon slits riding its head bone: in the cave its baked eye colours read black (still wardeneyes 2026-11-28).
+-- dx: half the gap between the eyes, dz: how far before the "eyes" anchor (studs at scale 1, the meshes' +Z front)
+local EYES = { RootWarden = { dx = 0.7, dz = 0.3, size = Vector3.new(0.8, 0.34, 0.16), awake = Color3.fromRGB(120, 255, 240), asleep = Color3.fromRGB(24, 90, 96) } }
 
 local groups = {} -- placeholder key (its Model, or the folder holding a camp NPC's loose parts) -> one mount
 local vis
@@ -106,6 +109,19 @@ local function mount(g)
 	rig:SetAttribute("Npc", true)
 	local d = CHAR[g.char]
 	local s = math.clamp((hi.Y - lo.Y) / d.height * (SIZE[g.char] or 1), 0.3, 3)
+	local ey, ea = EYES[g.char], d.anchors and d.anchors.eyes
+	g.eyes = nil
+	if ey and ea then -- made in the rig's rest frame (feet at the origin, looking -Z), so ScaleTo scales them with it
+		g.eyes = {}
+		for _, sx in { -1, 1 } do
+			local e = Instance.new("Part")
+			e.Name, e.Size, e.Material, e.Color = "EyeSlit", ey.size, Enum.Material.Neon, ey.asleep
+			e.Anchored, e.CanCollide, e.CanQuery, e.CanTouch, e.CastShadow = true, false, false, false, false
+			e.CFrame = CFrame.new(-(ea[2].X + sx * ey.dx), ea[2].Y, -(ea[2].Z + ey.dz))
+			e.Parent = rig
+			table.insert(g.eyes, e)
+		end
+	end
 	rig:ScaleTo(s)
 	vis = vis or workspace:FindFirstChild("CharRigsVis") or Instance.new("Folder")
 	vis.Name, vis.Parent = "CharRigsVis", workspace
@@ -133,6 +149,11 @@ local function mount(g)
 	g.rig, g.s, g.anchor, g.rel, g.yaw = rig, s, anchor, anchor.CFrame:ToObjectSpace(ground), 0
 	local r = PV.rigs[rig]
 	g.head = r and r.par and headSet(r) or {}
+	if g.eyes and r then
+		for _, pc in r.pieces do if pc.part == "Head" then g.eyeHost = pc.p break end end
+		g.eyeOff = {}
+		for i, e in g.eyes do g.eyeOff[i] = g.eyeHost and g.eyeHost.CFrame:ToObjectSpace(e.CFrame) end
+	end
 	hide(g, true)
 end
 
@@ -193,6 +214,12 @@ function M.start()
 					if g.eyeLight then g.eyeLight.Brightness += ((fight and 2.2 or 0.4) - g.eyeLight.Brightness) * math.min(1, dt * 3) end
 					PV.animate(rig, now, dt, false)
 					if r then turnHead(g, r, dt) end
+					if g.eyes and g.eyeHost then
+						for i, e in g.eyes do
+							if g.eyeOff[i] then e.CFrame = g.eyeHost.CFrame * g.eyeOff[i] end
+							e.Color = fight and EYES[g.char].awake or EYES[g.char].asleep
+						end
+					end
 					if BOSS[g.char] then -- the boss's knots (Perfect Strike targets) sit in the rig's sockets
 						local feet = rig.PrimaryPart.CFrame * CFrame.new(0, -ROOT_Y * g.s, 0)
 						local an = CHAR[g.char].anchors or {}

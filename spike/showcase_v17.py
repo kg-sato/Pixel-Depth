@@ -80,7 +80,7 @@ mark("Q: ride down"); key("Q", 30)
 mark("Camp 1: Wick the elder glowworm"); rig_front("Wick", 7, 1.5); time.sleep(2); snap(); time.sleep(1)
 mark("Camp 1: Smudge the soot sprite"); rig_front("Smudge", 4, 0.3); time.sleep(2); snap()
 mark("a hardness gate: a vein too hard for the Stone Pickaxe")
-r = S(P + "local eq=1 local best,bd for _,d in cv:GetDescendants() do if (d:IsA('BasePart') or d:IsA('Model')) and d:GetAttribute('Ore') and d:GetAttribute('Layer') then local need=C.minTier(d:GetAttribute('Layer'),d:GetAttribute('Ore')) "
+r = S(P + "local eq=1 local best,bd for _,d in cv:GetDescendants() do if (d:IsA('BasePart') or d:IsA('Model')) and d:GetAttribute('Ore') and d:GetAttribute('Layer') and not string.find(d.Name,'^Knot') then local need=C.minTier(d:GetAttribute('Layer'),d:GetAttribute('Ore')) "
           "if need and need>eq then local m=(d:GetPivot().Position-h.Position).Magnitude if not bd or m<bd then best,bd=d,m end end end end if not best then return 'none' end "
           "p:SetAttribute('ShowVein',best:GetFullName()) local bp=best:GetPivot().Position local dir=(h.Position-bp)*Vector3.new(1,0,1) dir=dir.Magnitude>0.1 and dir.Unit or Vector3.new(1,0,0) "
           "h.AssemblyLinearVelocity=Vector3.zero h.CFrame=CFrame.lookAt(bp+dir*5+Vector3.new(0,1,0),bp) return best.Name..' needs T'..C.minTier(best:GetAttribute('Layer'),best:GetAttribute('Ore'))")
