@@ -617,7 +617,7 @@ def wick(v):
 # a round plush plum-velvet mole in a terracotta tunic under a clay-smudged cream apron, a big pink digging nose, tiny round
 # brass spectacles low on the snout, a tilted terracotta beret, wide pale digging paws cradling a freshly painted clay pot
 @char("KilnKeeper", dict(P.palette(form=("Velvet", "Tunic"), Velvet="#6e4a86", VelvetDark="#4a2f5e", Snout="#8c68a2", Nose="#f49ab2", NoseLo="#d8708e",
-                              Tunic="#c86a44", TunicDark="#8e4428", Apron="#f2e2c2", ApronLo="#d8c4a0", Smudge="#b8643e", Paw="#f2dcd2", Claw="#fff6e8",
+                              Tunic="#c86a44", TunicDark="#8e4428", Apron="#a88e70", ApronLo="#8a7258", Smudge="#b8643e", Paw="#f2dcd2", Claw="#fff6e8",
                               Brass="#e0b04a", Eye="#1a1228", Iris="#3a2450", Shine="#ffffff", Pot="#3a948e", PotDark="#1e5450", Paint="#f2e2c2",
                               PaintHi="#c8fff4", Beret="#e07a48", BeretDark="#a04a28", White="#fff8ee", Blush="#f39ab4"), TunicLo="#a8553a", TunicLoTop="#b05c40", TunicCrease="#7a3a26", TunicCreaseTop="#82402a", VelvetLo="#5c3c74", VelvetLoTop="#62427a", VelvetCrease="#3e2652", VelvetCreaseTop="#442a58"))  # k2: warm shading (the cool Lo read olive)
 def keeper(v):
@@ -631,6 +631,8 @@ def keeper(v):
     v.paint("TunicDark", lambda x, y, z: y >= 0.58 and z >= 0.35 and ((x / 0.9) ** 2 + ((z - 1.45) / 1.0) ** 2) > 0.8, part="Body", only={"Apron"})  # k7: a dark border round the apron
     v.torus("Body", "TunicDark", (0, 0.0, 2.55), (0, 0, 1), 0.72, 0.1)  # the tunic's collar
     v.ell("Body", "VelvetDark", (0, 0.5, 2.6), (0.5, 0.25, 0.12))  # k8: a shadowed neck recess under the chin
+    v.carve(lambda x, y, z: z > 2.42 and (x * x + y * y) > 0.5 ** 2, part="Body")  # st1 A: the shoulders round off under the head, a neck pinch
+    v.torus("Body", "VelvetDark", (0, 0.05, 2.5), (0, 0, 1), 0.55, 0.1)
     v.box("Body", "ApronLo", (0, 1.04, 2.28), (0.7, 0.06, 0.08))  # the apron's hem stitch at the bib
     for s in (-1, 1): v.cap("Body", "ApronLo", V(s * 0.42, 0.95, 2.3), V(s * 0.62, 0.2, 2.6), 0.06, 0.06)  # its neck straps
     v.box("Body", "ApronLo", (0.38, 1.04, 1.25), (0.38, 0.08, 0.32))  # a pocket with brushes in it
@@ -675,7 +677,7 @@ def keeper(v):
     v.ell("Head", "Paint", (0.9, 0.25, 3.86), (0.12, 0.1, 0.08))  # a glaze drip on the brim
     v.anchor("eyes", "Head", (0, 0.95, 3.42)); v.anchor("speech", "Head", (0, 0.1, 4.8))
     # k4 arms: the left paw holds a tall painted amphora up beside the head, the right a long glaze brush out to the side
-    arms = {"ArmL": (V(-1.0, 0.2, 2.3), V(-1.72, 0.55, 1.95), V(-1.6, 1.28, 2.42)), "ArmR": (V(1.0, 0.2, 2.3), V(1.85, 0.0, 1.95), V(2.2, 0.35, 2.55))}  # k8: further out
+    arms = {"ArmL": (V(-1.0, 0.2, 2.3), V(-1.72, 0.85, 1.95), V(-1.6, 1.48, 2.42)), "ArmR": (V(1.0, 0.2, 2.3), V(1.75, 0.6, 1.95), V(2.2, 0.9, 2.55))}  # st1 B: elbows forward  # k8: further out
     for A, (sh, el, wr) in arms.items():
         s = -1 if A == "ArmL" else 1
         v.joint(A + "1", tuple(sh), "Body", "arm")
@@ -686,7 +688,7 @@ def keeper(v):
         for k in range(4): v.crystal(A + "2", "Claw", wr + V((k - 1.5) * 0.13, 0.3, 0.0), (0, 1, 0.2), 0.2, 0.05, sides=4)
         v.anchor("hand" + A[3:], A + "2", tuple(wr))
     # the amphora: a tall slender vase standing on the raised paw, two looped handles, a teal glaze band and dots, a darker lip
-    pot = V(-1.62, 1.3, 2.62)
+    pot = V(-1.62, 1.5, 2.62)
     v.tube("ArmL2", "Pot", [pot + V(0, 0, dz) for dz in (0.0, 0.2, 0.42, 0.66, 0.86, 1.02, 1.16)], [0.24, 0.38, 0.45, 0.4, 0.26, 0.17, 0.18])
     v.torus("ArmL2", "PotDark", pot + V(0, 0, 1.2), (0, 0, 1), 0.22, 0.07)  # the lip
     v.torus("ArmL2", "Paint", pot + V(0, 0, 0.45), (0, 0, 1), 0.44, 0.07)
@@ -697,7 +699,7 @@ def keeper(v):
     for s2 in (-1, 1): v.tube("ArmL2", "PotDark", [pot + V(s2 * 0.2, 0, 1.0), pot + V(s2 * 0.42, 0, 1.0), pot + V(s2 * 0.42, 0, 0.72), pot + V(s2 * 0.36, 0, 0.62)], [0.05, 0.05, 0.05, 0.05])
     v.anchor("pot", "ArmL2", tuple(pot + V(0, 0, 0.5)))
     # the glaze brush: a long wooden handle with a brass ferrule and a teal-loaded tip
-    b0, b1 = V(2.2, 0.42, 2.2), V(2.6, 0.3, 3.85)
+    b0, b1 = V(2.2, 0.97, 2.2), V(2.6, 0.85, 3.85)
     v.cap("ArmR2", "PotDark", b0, b1, 0.1, 0.09)  # k8: a thicker brush
     v.torus("ArmR2", "Brass", b1 - (b1 - b0).normalized() * 0.05, tuple((b1 - b0).normalized()), 0.09, 0.04)
     v.cap("ArmR2", "Paint", b1, b1 + (b1 - b0).normalized() * 0.32, 0.12, 0.04)
@@ -711,6 +713,7 @@ def keeper(v):
         v.ell(L + "1", "Paw", tuple(foot + V(0, 0.2, 0.13)), (0.32, 0.42, 0.15))
         for k in (-1, 0, 1): v.crystal(L + "1", "Claw", foot + V(k * 0.13, 0.58, 0.08), (0, 1, -0.3), 0.14, 0.045, sides=4)
         v.anchor("foot" + L[3:], L + "1", tuple(foot + V(0, 0.2, 0.1)))
+    shift_part(v, ["Head"], V(0, 0.18, 0.12))  # st1 A: the head up and forward, the chin over the chest
     P.ground(v)
 
 
@@ -1506,6 +1509,7 @@ def golem(v):
         v.ell("Body", "Seam", tuple(c + V(*n).normalized() * 0.2), (0.3, 0.3, 0.3))
         v.anchor(key, "Body", tuple(c))
     # the head: a big beehive kiln dome, molten slit eyes under a heavy brow, an arched furnace mouth glowing inside
+    v.torus("Body", "IronDark", (0, 0.6, 9.75), (0, 0.3, 1), 1.75, 0.34)  # st1 A: a dark iron neck collar under the kiln head
     v.joint("Head", (0, 0.4, 9.6), "Body", "head")
     v.muscle("Head", "Clay", (0, 0.8, 11.0), (2.35, 2.1, 1.85))  # g9: a bigger head
     P.shade(v, "Clay", parts={"Head"})
@@ -1533,6 +1537,8 @@ def golem(v):
     for xx in (-0.9, 0.9): v.ell("Head", "Rivet", (xx, 2.82, 10.72), (0.1, 0.06, 0.1))
     v.torus("Head", "Patina", (0, 0.8, 12.5), (0, 0, 1), 1.25, 0.18)
     v.paint("IronDark", lambda x, y, z: y > 2.1 and z > 11.68 + (abs(x) - 0.38) * 0.42, part="Head", only={"CoalHot", "WhiteHot"})  # g28: the eye tops slant down to the middle, a stern brow
+    for s in (-1, 1): v.box("Head", "IronDark", (s * 0.92, 2.42, 11.5), (0.26, 0.08, 0.36))  # st2: a dark pupil in each glow, a gaze
+    v.box("Head", "IronDark", (0, 2.95, 12.3), (3.4, 0.36, 0.22), rot=E(-12, 0, 0))  # st2: the iron brow a step further out
     v.anchor("eyes", "Head", (0, 2.9, 11.6)); v.anchor("speech", "Head", (0, 0.4, 16.0))
     # the chimney lid: a tall hinged bronze stack on the crown, its mouth glowing, smoke trailing back
     v.joint("Lid", (0, -0.2, 12.6), "Head", "head")
@@ -1543,13 +1549,14 @@ def golem(v):
     for (dx, dy, dz, r, col) in ((0.1, -0.7, 14.85, 0.78, "Smoke"), (0.7, -1.4, 15.75, 0.66, "Smoke2"), (1.3, -2.0, 16.6, 0.55, "Smoke2"), (1.8, -2.5, 17.3, 0.42, "Smoke")):  # g25: a taller column
         v.ell("Lid", col, (dx, dy, dz), (r, r, r * 0.85))
     # arms: the right fist raised (a slam wind-up), the left hanging forward; bronze bands with verdigris, gauntlet fists
-    arms = {"ArmR": (V(3.4, 0.2, 8.6), V(5.5, -0.4, 9.5), V(6.3, -0.6, 11.7)), "ArmL": (V(-3.4, 0.2, 8.6), V(-6.3, 0.6, 7.3), V(-8.8, 1.6, 7.5))}  # g12: the crucible swung further out  # g8: the off arm swings a molten crucible out at its side (g7: the resting arm clumped with the torso)
+    arms = {"ArmR": (V(3.4, 0.2, 8.6), V(5.5, -0.4, 9.5), V(6.3, -0.6, 11.7)), "ArmL": (V(-3.4, 0.2, 8.6), V(-6.0, 0.8, 6.9), V(-7.6, 2.0, 5.6))}  # st2: the crucible arm lower and in  # g12: the crucible swung further out  # g8: the off arm swings a molten crucible out at its side (g7: the resting arm clumped with the torso)
     for A, (sh, el, wr) in arms.items():
         s = 1 if A == "ArmR" else -1
         v.joint(A, tuple(sh), "Body", "arm")
-        v.cap(A, "Clay", sh, el, 1.15, 1.0)
+        v.cap(A, "Clay", sh, el, 1.3, 0.78)  # st1 D: broad shoulder, pinched elbow
+        v.muscle(A, "BronzeDark", tuple(sh + V(0, 0, 0.6)), (1.7, 1.55, 0.7))  # a bronze pauldron
         v.joint(A + "2", tuple(el), A, "arm")
-        v.cap(A + "2", "Clay", el, wr, 1.0, 1.1)
+        v.cap(A + "2", "Clay", el, wr, 0.78, 1.2)  # st1 D: flaring into the gauntlet
         dirn = (wr - el).normalized()
         for t, col in ((0.2, "Bronze"), (0.6, "Patina")): v.torus(A + "2", col, el.lerp(wr, t), tuple(dirn), 1.08, 0.2)
         v.line(A + "2", "Seam", [el.lerp(wr, 0.3) + V(0, 1.0, 0.1), el.lerp(wr, 0.4) + V(0.2, 1.02, -0.1), el.lerp(wr, 0.5) + V(0, 1.0, 0.1)], r=0.1)  # g14: a glowing crack
@@ -1563,7 +1570,7 @@ def golem(v):
         v.line(A + "2", "Seam", [fist + V(s * 1.25, 0, 0) + fw * 0.5 + dirn * 0.6, fist + V(s * 1.3, 0, 0), fist + V(s * 1.25, 0, 0) + fw * 0.4 - dirn * 0.6], r=0.12)
         v.anchor("hand" + A[3:], A + "2", tuple(fist))
         if A == "ArmL":  # an iron crucible of molten glaze hanging from the fist by a bail
-            cb = fist + V(-0.15, 0.2, -2.3)
+            cb = fist + V(-0.15, 0.6, -2.9)  # st2: hung lower on a longer bail, daylight under the fist
             v.tube(A + "2", "Iron", [cb + V(1.3, 0, 0.6), fist + V(0.7, 0, -0.4), fist + V(-0.7, 0, -0.4), cb + V(-1.3, 0, 0.6)], [0.14, 0.14, 0.14, 0.14])
             v.cap(A + "2", "IronDark", cb + V(0, 0, 0.65), cb + V(0, 0, -0.7), 1.3, 0.9)
             v.torus(A + "2", "Iron", cb + V(0, 0, 0.62), (0, 0, 1), 1.3, 0.15)
@@ -1578,9 +1585,10 @@ def golem(v):
             for k in range(4): v.cap(A + "2", "BronzeDark", fist + V((k - 1.5) * 0.42, 0.55, -0.6), fist + V((k - 1.5) * 0.42, 0.2, -1.05), 0.2, 0.17)  # g10: fingers closed round the bail
             v.anchor("crucible", A + "2", tuple(cb + V(0, 0, 0.66)))
     for s, L in ((-1, "LegL"), (1, "LegR")):
-        hip, foot = V(s * 1.9, -0.2, 4.4), V(s * 2.7, 0.2, 0.0)  # a wider stance, daylight between the legs
+        hip, foot = V(s * 1.9, -0.2, 4.4), V(s * 2.7, 0.2 + s * 0.9, 0.0)  # st1 B: the right foot forward, the left back  # a wider stance, daylight between the legs
         v.joint(L, tuple(hip), "Body", "leg")
-        v.cap(L, "Clay", hip, foot + V(0, 0, 0.9), 1.25, 1.1)
+        v.cap(L, "Clay", hip, hip.lerp(foot, 0.55), 1.4, 0.85)  # st1 D: thigh to a knee pinch
+        v.cap(L, "Clay", hip.lerp(foot, 0.55), foot + V(0, 0, 0.9), 0.85, 1.15)
         v.torus(L, "Patina", hip.lerp(foot, 0.5), (0, 0, 1), 1.22, 0.2)
         v.torus(L, "Bronze", hip.lerp(foot, 0.7), (0, 0, 1), 1.16, 0.16)
         v.cap(L, "ClayDark", foot + V(0, 0, 1.3), foot + V(0, 0, 0.6), 0.95, 1.2)  # g14: an ankle taper into the foot
@@ -1588,6 +1596,7 @@ def golem(v):
         v.ell(L, "BronzeDark", tuple(foot + V(0, -1.0, 0.35)), (0.8, 0.5, 0.35))  # a heel plate
         for k in (-1, 0, 1): v.ell(L, "BronzeDark", tuple(foot + V(k * 0.6, 1.7, 0.35)), (0.32, 0.3, 0.3))  # toe caps
         v.anchor("foot" + L[3:], L, tuple(foot + V(0, 0.4, 0.3)))
+    shift_part(v, ["Head", "Lid"], V(0, 0.45, -0.1))  # st1 A/B: the head forward over the chest, a forward-weighted stance
     P.ground(v)
 
 HERE_CHARS = os.path.dirname(os.path.abspath(__file__))

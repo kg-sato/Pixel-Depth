@@ -28,6 +28,21 @@ function M.start(E)
 		local d = t and t:FindFirstChild("Drop")
 		return d ~= nil and d:IsA("GuiObject") and d.Visible
 	end
+	local mineGuis -- the town's MINE boards: under the banner they ran into "the miners' town" (tour 1127n 9:09)
+	local function mineSigns(on)
+		local hub = workspace:FindFirstChild("Hub")
+		if not hub then return end
+		if not mineGuis then
+			mineGuis = {}
+			for _, d in hub:GetDescendants() do
+				if d:IsA("TextLabel") and string.upper(d.Text) == "MINE" then
+					local sg = d:FindFirstAncestorWhichIsA("SurfaceGui")
+					if sg then mineGuis[sg] = true end
+				end
+			end
+		end
+		for sg in mineGuis do if sg.Parent then sg.Enabled = on end end
+	end
 	local function show(name, line, color, waited, my)
 		if not my then token += 1 my = token end -- the request's own token: a newer arrival cancels an older one still waiting (Codex v14)
 		if my ~= token then return end
@@ -39,7 +54,10 @@ function M.start(E)
 		word.tint(color)
 		word.set(name)
 		sub.Text, sub.TextTransparency = line, 1
-		root.Visible, root.Position, root.Rotation = true, UDim2.fromScale(0.5, 0.26), 0 -- 0.26 since directive v14: at 0.22 the jelly word still clipped the gift pill -- under the timer pill and above the player and the world prompts (Gemini audit 2026-11-18: at 0.33 it piled onto RIDE THE MINECART and the MINE sign)
+		local Y = 0.3 -- tour 1127n 9:09: at 0.26 the word touched the GIFT READY pill above it
+		local town = name == "HOLLOW MOUNTAIN"
+		if town then mineSigns(false) end
+		root.Visible, root.Position, root.Rotation = true, UDim2.fromScale(0.5, Y), 0 -- 0.26 since directive v14: at 0.22 the jelly word still clipped the gift pill -- under the timer pill and above the player and the world prompts (Gemini audit 2026-11-18: at 0.33 it piled onto RIDE THE MINECART and the MINE sign)
 		for _, g in word.glyphs do g.img.ImageTransparency = 0 if g.glow then g.glow.ImageTransparency = 0.62 end end
 		if calm then
 			scale.Scale = 1
@@ -50,9 +68,9 @@ function M.start(E)
 			task.delay(n * 0.07 + 0.1, function() -- the shake as the last letter lands: thrown right, sprung back
 				if my ~= token then return end
 				word.pop(0) -- every letter wobbles together
-				root.Position = UDim2.fromScale(0.53, 0.265)
+				root.Position = UDim2.fromScale(0.53, Y + 0.005)
 				root.Rotation = 2
-				TweenService:Create(root, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Position = UDim2.fromScale(0.5, 0.26), Rotation = 0 }):Play()
+				TweenService:Create(root, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), { Position = UDim2.fromScale(0.5, Y), Rotation = 0 }):Play()
 				scale.Scale = 1.06
 				TweenService:Create(scale, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 				pcall(E.sfx, "land", 1.1)
@@ -60,14 +78,14 @@ function M.start(E)
 		end
 		TweenService:Create(sub, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, 0, false, 0.5), { TextTransparency = 0 }):Play()
 		task.delay(2.6, function()
-			if my ~= token then return end
+			if my ~= token then if town then mineSigns(true) end return end
 			TweenService:Create(root, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { Position = UDim2.fromScale(0.5, 0.15) }):Play()
 			TweenService:Create(sub, TweenInfo.new(0.3), { TextTransparency = 1 }):Play()
 			for _, g in word.glyphs do
 				TweenService:Create(g.img, TweenInfo.new(0.3), { ImageTransparency = 1 }):Play()
 				if g.glow then TweenService:Create(g.glow, TweenInfo.new(0.3), { ImageTransparency = 1 }):Play() end
 			end
-			task.delay(0.4, function() if my == token then root.Visible = false end end)
+			task.delay(0.4, function() if my == token then root.Visible = false end if town then mineSigns(true) end end)
 		end)
 	end
 

@@ -43,6 +43,9 @@ function M.start(E)
 	local CLAY, CLAY_D, AMBER = Color3.fromRGB(166, 226, 208), Color3.fromRGB(150, 78, 58), Color3.fromRGB(255, 176, 84) -- mint-glazed pottery: terracotta, then pale buff, vanished against the hall (Gemini 4/10 twice)
 	local MINT_SLIP, CHEEK = Color3.fromRGB(250, 236, 208), Color3.fromRGB(255, 150, 170)
 	local POSES = { { 0.15, 0.4, 1 }, { -0.15, 0.45, 1 }, { 0, 0.5, 1 }, { 0.28, 0.35, 1 }, { -0.3, 0.38, 1 } } -- frozen poses, all leaning in to grab: tilt, lean, arms up (0 or 1); a new one each time it is caught moving
+	local okCR, CR = pcall(function() return require(script.Parent:WaitForChild("CharRigs", 10)) end) -- the v17 voxel Gloomling and Clayling (2026-11-28)
+	if not okCR then CR = nil end
+	local RIGACT = { windup = "roar", stun = "shake", flee = "hop", pancake = "shake" }
 	local function soot(kind)
 		local clay = kind == 2 -- a clayling: a squat clay figure with painted amber eyes (server: Gloom, kind 2)
 		local SOOT = clay and CLAY or SOOT
@@ -107,7 +110,12 @@ function M.start(E)
 		end
 		local puff = new("ParticleEmitter", body, { Rate = 6, Lifetime = NumberRange.new(0.8, 1.4), Speed = NumberRange.new(0.5, 1.2), SpreadAngle = Vector2.new(180, 180),
 			Size = NumberSequence.new(0.5, 1.1), Transparency = NumberSequence.new(0.45, 1), Color = ColorSequence.new(clay and CLAY or Color3.fromRGB(96, 80, 130)), LightInfluence = 0.3 }) -- soot puffs
-		return { m = m, body = body, mesh = mesh, fluff = fluff, eyes = eyes, clay = clay, puff = puff }
+		local rig = CR and CR.make(clay and "Clayling" or "Gloomling", clay and 3.4 or 2.9) -- the voxel enemy stands in; the part-built one stays hidden for its Highlight, light and puffs
+		if rig then
+			rig.Parent = m
+			for _, q in m:GetDescendants() do if q:IsA("BasePart") and not q:IsDescendantOf(rig) then q.LocalTransparencyModifier = 1 end end
+		end
+		return { m = m, body = body, mesh = mesh, fluff = fluff, eyes = eyes, clay = clay, puff = puff, rig = rig }
 	end
 	local function burstAt(pos, color, n) burst(pos, Vector3.yAxis, color, n) end
 	RunService.RenderStepped:Connect(function(dt)
@@ -163,6 +171,11 @@ function M.start(E)
 				v.body.CFrame = base
 				v.mesh.Scale = Vector3.new(sxz, sy, sxz)
 				for _, f in v.fluff do f.part.CFrame = base * CFrame.new(f.off.Position * Vector3.new(sxz, sy, sxz) + ((f.arm and pose and pose[3] == 1) and Vector3.new(0, 0.8, -1.0) or Vector3.zero)) * f.off.Rotation * CFrame.Angles(0, (v.clay or f.still) and 0 or now * 0.8, 0) end
+				if v.rig then -- its feet under the old body; a clayling seen is a statue, its pose holds
+					v.rig:PivotTo(base * CFrame.new(0, -1.1 * (v.clay and 1.25 or 1) + CR.ROOT_Y * v.rig:GetScale(), 0))
+					if v.rigState ~= state then v.rigState = state CR.play(v.rig, RIGACT[state]) end
+					if not still then CR.animate(v.rig, now, dt, state == "creep") end
+				end
 				local shut = now > v.blink and now < v.blink + 0.12
 				if now > v.blink + 0.12 then v.blink = now + 2 + math.random() * 2 end
 				for _, e in v.eyes do

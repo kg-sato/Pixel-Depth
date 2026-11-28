@@ -71,6 +71,7 @@ local hub = HubBuilder.build(workspace, Vector3.zero)
 local HUB_SPAWN = hub:FindFirstChild("SpawnPoint").CFrame
 local HUB_SELL = hub:FindFirstChild("SellPoint", true)
 local PetJobs = require(game:GetService("ReplicatedStorage").Shared:WaitForChild("PetJobs")) -- crew pets' cave jobs (phase 7)
+task.spawn(function() require(game:GetService("ServerScriptService"):WaitForChild("CharRigLoader")).start() end) -- the v17 voxel NPC meshes into ReplicatedStorage.CharMeshes (2026-11-28)
 task.spawn(function() require(RS.Shared:WaitForChild("PetVoxels")).serverLoad() end) -- the voxel pet meshes into ReplicatedStorage.PetMeshes (2026-11-17)
 local Shop = require(game:GetService("ServerScriptService"):WaitForChild("Shop")) -- gems for Robux, receipts, paid random items
 local A = require(game:GetService("ServerScriptService"):WaitForChild("Analytics")) -- funnel, economy and custom events (phase 11)
@@ -1869,7 +1870,7 @@ end
 if caveDeposits then -- Town and Mine Map Overhaul 2026-11-27: every deposit stands on rock, and nothing hangs in a zip line's path
 	local GS = require(game:GetService("ServerScriptService"):WaitForChild("GroundSnap"))
 	local moved, pruned = GS.snap(workspace.Caves)
-	local cleared = GS.clearZips(workspace.Caves, 8)
+	local cleared = GS.clearZips(workspace.Caves, 11) -- tour 1127n 3:48: at 8 a purple crystal still filled the left edge of the ride
 	print(string.format("[GroundSnap] deposits moved %d, pruned %d; zip path props cleared %d", moved, pruned, cleared))
 	local okW, errW = pcall(GS.wayfinding, workspace.Caves, C) -- lanterns on the main route, fork signposts
 	if not okW then warn("[GroundSnap] wayfinding: " .. tostring(errW)) end

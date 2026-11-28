@@ -14,8 +14,9 @@ local GuiService = game:GetService("GuiService")
 local M = {}
 
 local DIST = 0.7 -- (1.1 still let a crate the player leaned on cover the wheel) studs from the eye to the panel's middle: close, so no post, wall or rock can stand in front of a menu (it was 4 and a lantern post covered the bag)
-local YAW, PITCH, FILL = 3.2, 2, 0.88 -- audit 2026-11-26 (3D panel rule): 3.2 degrees (was 7) keeps the far edge at 85% or more of the near edge's size, so right-side text stops shrinking; degrees turned away, degrees leaned back, share of the view it fills (the user, 2026-11-12: 15 and 4 leaned too far; face the player 5 to 10 degrees more)
+local YAW, PITCH, FILL = 2.2, 1.4, 0.88 -- tour 1127n: 2.2 (was 3.2) so the right side keeps its size -- audit 2026-11-26 (3D panel rule): 3.2 degrees (was 7) keeps the far edge at 85% or more of the near edge's size, so right-side text stops shrinking; degrees turned away, degrees leaned back, share of the view it fills (the user, 2026-11-12: 15 and 4 leaned too far; face the player 5 to 10 degrees more)
 local SKIP = { ARSettings = true } -- menus that are already in the world
+local READABLE = { Codex = true, Forge = true } -- menus whose small labels keep a floor size on the panel
 
 function M.start(E)
 	if not E.GLASS or E.plr:GetAttribute("DevFlatUI") then return end
@@ -99,6 +100,17 @@ function M.start(E)
 		return false
 	end
 
+	local function readable(f) -- tour 1127n 1:31 / 2:01: the Codex tags and the Forge legend shrank to 6-7 px on the panel; scaled text keeps 12 px (11 for the small tags)
+		for _, d in f:GetDescendants() do
+			if (d:IsA("TextLabel") or d:IsA("TextButton")) and d.TextScaled then
+				local min = d.AbsoluteSize.Y < 18 and 11 or 12
+				local c = d:FindFirstChildOfClass("UITextSizeConstraint") or Instance.new("UITextSizeConstraint")
+				if c.MinTextSize < min then c.MinTextSize = min end
+				if c.MaxTextSize < c.MinTextSize then c.MaxTextSize = c.MinTextSize end
+				c.Parent = d
+			end
+		end
+	end
 	RunService:BindToRenderStep("PixelSpatialPanels", Enum.RenderPriority.Camera.Value + 3, function(dt)
 		for _, f in hook.modals or {} do
 			if not SKIP[f.Name] and f:IsA("GuiObject") then
@@ -106,6 +118,7 @@ function M.start(E)
 					held[f] = gui
 					count += 1
 					f.Parent = sg
+					if READABLE[f.Name] then readable(f) end
 					task.delay(0.12, function() if f.Parent == sg then JellyText.popUnder(f) end end) -- the title lands letter by letter as the panel swings in
 					if count == 1 then openedAt, swing, swingV, last = os.clock(), 1, 0, nil end
 				elseif held[f] and not f.Visible then
@@ -180,7 +193,7 @@ function M.start(E)
 		local want = cam.CFrame
 			* CFrame.new(viewH * 0.012, -viewH * (inset / 2) / vp.Y * FILL, -DIST)
 			* CFrame.Angles(0, math.pi, 0) -- the front face looks back at the eye
-			* CFrame.Angles(math.rad(PITCH - lean.Y * 0.5), math.rad(-YAW - swing * 62 - lean.X * 0.8), 0)
+			* CFrame.Angles(math.rad(PITCH - lean.Y * 0.5), math.rad(-YAW - swing * 62 - lean.X * 0.5), 0)
 		-- a short lag behind the view: when the camera turns, the panel trails and catches up
 		-- only the turn trails; the place follows the eye at once (the owner, 2026-11-15: a walking player left the menu behind and had to stop to use it)
 		last = last and last:Lerp(want.Rotation, math.min(1, dt * 14)) or want.Rotation

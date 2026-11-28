@@ -54,15 +54,16 @@ function M.start(E)
 		if OptsR then OptsR:FireServer({ vol = state.vol, shake = state.shake, hints = state.hints, dark = state.dark, fast = state.fast, hudDynamic = state.hudDynamic }) end
 	end
 	local panels, isOpen, focus = {}, false, 0 -- focus: -1 left, 0 middle, 1 right
+	local chronGui -- the Deep Chronicle's face, hidden while the panels are up
 	local shut
 
 	local DEEP = Color3.fromRGB(120, 92, 196) -- v10: the resting colour of every control (the pale lavender read as a second light colour)
-	local function glassButton(parent, word, color, size, pos, act)
+	local function glassButton(parent, word, color, size, pos, act, fitLen)
 		local b = new("TextButton", parent, { Text = "", AutoButtonColor = false, Size = size, Position = pos, AnchorPoint = MID, BackgroundColor3 = color, BackgroundTransparency = 0.15, BorderSizePixel = 0, ZIndex = 4 })
 		new("UICorner", b, { CornerRadius = UDim.new(0.3, 0) })
 		new("UIStroke", b, { Color = WHITE, Thickness = 2, Transparency = 0.25 })
 		new("UIGradient", b, { Rotation = 90, Color = ColorSequence.new(WHITE, Color3.fromRGB(190, 180, 215)) })
-		local holder = new("Frame", b, { Size = UDim2.fromScale(0.84, 0.7), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 5 })
+		local holder = new("Frame", b, { Size = UDim2.fromScale(fitLen and 0.84 * math.min(1, #word / fitLen) or 0.84, 0.7), Position = UDim2.fromScale(0.5, 0.5), AnchorPoint = MID, BackgroundTransparency = 1, ZIndex = 5 })
 		local jt = JellyText.new(holder, word, { color = WHITE, z = 5 })
 		local sc = new("UIScale", b, {})
 		b.MouseEnter:Connect(function() TweenService:Create(sc, TweenInfo.new(0.12), { Scale = 1.07 }):Play() end)
@@ -130,9 +131,9 @@ function M.start(E)
 		local function toggle(i, name, key, act)
 			local y = 0.10 + (i - 1) * 0.112 -- directive v14: five rows end at 0.60, well clear of the buttons at 0.87 (row 5 grazed them at 0.13 apart)
 			local nl = label(card, name, UDim2.fromScale(0.52, 0.1), UDim2.fromScale(0.33, y), WHITE, E.FONT, true) -- the open sentence font: condensed capitals filled in on a phone
-			new("UITextSizeConstraint", nl, { MaxTextSize = 30, MinTextSize = 12 }) -- the same cap as the CONTROLS words (audit UI 2: they were twice the size)
+			new("UITextSizeConstraint", nl, { MaxTextSize = 20, MinTextSize = 12 }) -- tour 1127n: the same size as the CONTROLS words -- the same cap as the CONTROLS words (audit UI 2: they were twice the size)
 			local b, jt
-			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and CYAN or DEEP, UDim2.fromScale(0.26, 0.088), UDim2.fromScale(0.8, y), function() -- 0.088 tall on a 0.112 step: a clear gap between the toggles (audit UI 2)
+			b, jt = glassButton(card, state[key] and "ON" or "OFF", state[key] and CYAN or DEEP, UDim2.fromScale(0.24, 0.074), UDim2.fromScale(0.8, y), function() -- 0.088 tall on a 0.112 step: a clear gap between the toggles (audit UI 2)
 				state[key] = not state[key]
 				jt.set(state[key] and "ON" or "OFF")
 				b.BackgroundColor3 = state[key] and CYAN or DEEP
@@ -164,7 +165,7 @@ function M.start(E)
 			local b = glassButton(foot, s[1], s[2], UDim2.fromScale(0.3, 1), UDim2.new(), function()
 				shut()
 				if s[3] and hook[s[3]] then task.delay(0.3, hook[s[3]]) end
-			end)
+			end, 6) -- tour 1127n 1:52: one letter height on all three pills
 			b.LayoutOrder = i
 		end
 	end
@@ -180,7 +181,7 @@ function M.start(E)
 			new("UICorner", cap, { CornerRadius = UDim.new(0.25, 0) })
 			new("UIStroke", cap, { Color = LILAC, Thickness = 2 })
 			label(cap, k[1], UDim2.fromScale(0.84, 0.7), UDim2.fromScale(0.5, 0.5), LILAC, E.HEAD)
-			new("UITextSizeConstraint", label(card, k[2], UDim2.fromScale(0.33, 0.1), UDim2.fromScale(0.325 + col * 0.5, y), WHITE, E.FONT, true), { MaxTextSize = 30, MinTextSize = 12 })
+			new("UITextSizeConstraint", label(card, k[2], UDim2.fromScale(0.33, 0.1), UDim2.fromScale(0.325 + col * 0.5, y), WHITE, E.FONT, true), { MaxTextSize = 20, MinTextSize = 12 })
 		end
 	end
 
@@ -271,6 +272,10 @@ function M.start(E)
 		end
 		base = CFrame.lookAt(eye, eye + best)
 		hook.arOpen = true
+		local hub = workspace:FindFirstChild("Hub")
+		local chron = hub and hub:FindFirstChild("Chronicle")
+		chronGui = chron and chron:FindFirstChild("ChronicleGui", true)
+		if chronGui then chronGui.Enabled = false end
 		place()
 		flag.Visible, nav.Enabled = true, true
 		local touch = touchNow()
@@ -340,6 +345,7 @@ function M.start(E)
 		if closing and blend <= 0 then
 			isOpen, closing = false, false
 			flag.Visible = false
+			if chronGui then chronGui.Enabled = true chronGui = nil end
 			hook.arOpen = false
 			if hook.blur then hook.blur.Enabled = true end
 			for p, was in nearHid do -- v15 (Codex): give back only what is still ours; a part another flow faded meanwhile (RoofFade, BossClient, DeathScreen) keeps its value

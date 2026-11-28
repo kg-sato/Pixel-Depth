@@ -384,9 +384,7 @@ function M.start(E)
 		now = clock -- from here to the end of the letters, time is the logo's own clock
 		if clock > 0 and not sparked then
 			sparked = true
-			spark.Visible = true
-			TweenService:Create(spark, TweenInfo.new(0.16, Enum.EasingStyle.Quad, Enum.EasingDirection.In, 0, false, 0.14), { Position = UDim2.fromScale(0.05, 0.5), Size = UDim2.fromScale(0.02, 0.9) }):Play()
-			task.delay(0.32, function() spark:Destroy() end)
+			spark:Destroy() -- tour 1127n 0:02: the falling spark drew alone, a stray pink bar top left of the black screen, before any letter
 		end
 		if not slammed and now >= slamAt - 0.25 then spread.goal = 1 end
 		if not slammed and now >= slamAt then

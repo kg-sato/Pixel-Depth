@@ -686,7 +686,8 @@ function Hub.build(parent, origin)
 			vox(trees, "Tuft", Vector3.new(0.9, 0.6, 0.9), CFrame.new(base + Vector3.new(math.cos(a) * tw * 1.4, 0.3, math.sin(a) * tw * 1.4)), shadeOf("grass", k, x, z), { CanCollide = false })
 		end
 	end
-	for _, t in { { -24, -44, 1.1 }, { -54, -44, 1.3, "wisteria" }, { -58, -16, 1, "blossom" }, { -60, 36, 1.2 }, { -48, 54, 1, "blossom" }, { -14, 66, 1.1, "bonsai" }, { 22, 66, 1.2 },
+	-- tour 1127n 0:37: the tree at (-60, 36) stood between the town camera and the Geode Refinery, its roots filling the bottom left; moved to (-70, 24)
+	for _, t in { { -24, -44, 1.1 }, { -54, -44, 1.3, "wisteria" }, { -58, -16, 1, "blossom" }, { -70, 24, 1.0 }, { -48, 54, 1, "blossom" }, { -14, 66, 1.1, "bonsai" }, { 22, 66, 1.2 },
 		{ 44, 56, 1, "wisteria" }, { 60, 48, 1.3 }, { 58, -20, 1, "bonsai" }, { 54, -42, 1.2, "blossom" }, { -8, -58, 1.3 }, { 22, -62, 1.1, "wisteria" }, { 20, -18, 0.9, "blossom" },
 		{ 18, 24, 0.8, "bonsai" }, { -48, -18, 0.8, "blossom" }, { 62, 12, 1.1 }, { -66, 6, 1.1, "wisteria" },
 		{ -38, 54, 0.9, "blossom" }, { 14, 56, 0.8 }, { 44, 12, 0.85, "wisteria" } } do

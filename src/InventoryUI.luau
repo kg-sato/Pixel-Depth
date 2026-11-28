@@ -210,7 +210,7 @@ function M.start(E)
 		foot.Visible = ui.sell
 		titleT.Text = ui.sell and "SELL TO BOLT" or "BACKPACK"
 		totalT.Text = "SELL FOR " .. commas(total()) .. " COINS"
-		hintT.Text = ui.sell and "Tap stacks to pick them. Ore your next pickaxe needs is tagged, never locked." or (n == 0 and emptyT.Text) or "Over capacity you walk slower. Bank at the camp fire; sell at Bolt in town."
+		hintT.Text = ui.sell and "Tap stacks to pick them. Ore your next pickaxe needs is tagged, never locked." or (n == 0 and emptyT.Text) or "Over capacity you walk slower. Bank at the camp fire; sell at the Sell Stall in town."
 	end
 
 	local function open(sellMode)

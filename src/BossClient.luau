@@ -6,6 +6,9 @@ local M = {}
 
 function M.start(E)
 	local C = require(script.Parent:WaitForChild("Config"))
+	local okCR, CR = pcall(function() return require(script.Parent:WaitForChild("CharRigs", 10)) end) -- the v17 voxel boss and NPC rigs (2026-11-28)
+	if okCR and CR then CR.start() else CR = nil end
+	local RIGACT = { bossStart = "roar", bossSlam = "rear", bossSweep = "armflex", bossRings = "stomp", bossKnot = "shake", bossLose = "roar", bossHit = "look" } -- the rig's act per boss event: wake roar, slam hoist, sweep cleave, ring stomp, knot flinch
 	local R, plr, gui, new, S, fit, panel, text, toast, sfx, shake, burst, tween = E.R, E.plr, E.gui, E.new, E.S, E.fit, E.panel, E.text, E.toast, E.sfx, E.shake, E.burst, E.tween
 	local INK, PINK, GOLD, MINT = E.INK, E.PINK, E.GOLD, E.MINT
 	local AMBER, FIRE = Color3.fromRGB(255, 186, 92), Color3.fromRGB(255, 132, 56)
@@ -213,6 +216,7 @@ function M.start(E)
 	local ID_AT = { bossStart = 2, bossKnot = 3, bossSlam = 2, bossWin = 3, bossLose = 1, bossLocked = 2, bossOpen = 1, bossHit = 2, bossDodge = 1, bossHold = 1, bossSweep = 3, bossRings = 2 }
 	R.Fx.OnClientEvent:Connect(function(kind, a, b, c)
 		if ID_AT[kind] then use(({ a, b, c })[ID_AT[kind]]) end
+		if CR and RIGACT[kind] then CR.act(CR.BOSSNAME[now], RIGACT[kind]) end
 		if kind == "bossStart" then
 			local w = warden()
 			base = base or (w and w:GetPivot())

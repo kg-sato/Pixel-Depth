@@ -97,7 +97,7 @@ function M.start(E)
 		new("UIStroke", cap, { Color = Color3.fromRGB(214, 200, 255), Thickness = 1, Transparency = 0.2 })
 		local kt = text(cap, key, UDim2.fromScale(0.8, 0.8), UDim2.fromScale(0.5, 0.5), MID, Color3.new(1, 1, 1), 700, false)
 		kt.Font, kt.ZIndex = E.HEAD, 6
-		local note = text(b, "", UDim2.fromScale(0.5, 0.34), UDim2.fromScale(0.92, 0.92), Vector2.new(1, 1), Color3.new(1, 1, 1), 700) -- audit UI 7: inside the slot's corner (x2 jutted out of the [R] hex)
+		local note = text(b, "", UDim2.fromScale(0.36, 0.26), UDim2.fromScale(0.9, 0.3), Vector2.new(1, 0.5), Color3.new(1, 1, 1), 700) -- audit UI 7: inside the slot (x2 jutted out of the [R] hex); tour 1127n 3:36: the lower corner still ran onto the key cap, so the upper right shoulder
 		note.Font, note.ZIndex, note.TextStrokeColor3 = E.HEAD, 6, Color3.fromRGB(46, 30, 96)
 		local veil = new("ImageLabel", b, { Image = HEX, ImageColor3 = Color3.fromRGB(12, 6, 26), ImageTransparency = 1, BackgroundTransparency = 1, Size = UDim2.fromScale(1, 1), ZIndex = 5 }) -- dims the slot while it recharges
 		local function bounce() -- squash and bounce: 0.92, 1.08, 1 (directive v9)

@@ -71,10 +71,10 @@ end
 function M.clearZips(caves, r)
 	local n = 0
 	for _, seg in M.ropes(caves) do
-		for _, fname in { "Props", "Decor" } do -- set dressing only: never the rock, the landmarks or the ride's own posts
+		for _, fname in { "Props", "Decor", "Landmark" } do -- set dressing only: never the rock, the landmarks' stone or the ride's own posts
 			local f = caves:FindFirstChild(fname)
 			for _, p in f and f:GetDescendants() or {} do
-				if p:IsA("BasePart") and p.Parent and math.max(p.Size.X, p.Size.Y, p.Size.Z) < 24 and distToSeg(p.Position, seg[1], seg[2]) < r + math.max(p.Size.X, p.Size.Y, p.Size.Z) / 2 then
+				if p:IsA("BasePart") and p.Parent and (fname ~= "Landmark" or string.find(p.Name, "Crystal")) and math.max(p.Size.X, p.Size.Y, p.Size.Z) < 24 and distToSeg(p.Position, seg[1], seg[2]) < r + math.max(p.Size.X, p.Size.Y, p.Size.Z) / 2 then
 					local m = p:FindFirstAncestorOfClass("Model")
 					if m and m ~= f and m:IsDescendantOf(f) then m:Destroy() else p:Destroy() end
 					n += 1

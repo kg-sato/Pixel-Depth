@@ -411,7 +411,7 @@ local stepText = text(stepCard, "", UDim2.fromScale(0.78, 0.8), UDim2.fromScale(
 stepText.TextWrapped = true -- a long step takes two lines instead of shrinking to phone-unreadable size
 new("UITextSizeConstraint", stepText, { MaxTextSize = 30 }) -- directive v13: a short step stays a crisp line, not a shout
 stepCard.Name = "StepCard"
-new("UIPadding", stepCard, { PaddingLeft = UDim.new(0, 10) }) -- audit UI 6: the pickaxe overlapped the left edge
+new("UIPadding", stepCard, { PaddingLeft = UDim.new(0.05, 0) }) -- audit UI 6 (tour 1127n 0:25: 10 px was not enough at 1080p): the pickaxe overlapped the left edge
 do -- a small wooden plank nailed over the card's corner names it (Field Notebook pass 2026-11-12)
 	local plank = new("Frame", stepCard, { Name = "Plank", Size = UDim2.fromScale(0.3, 0.66), Position = UDim2.fromScale(0.03, -0.06), AnchorPoint = Vector2.new(0, 0.5), Rotation = -2, ZIndex = 3 })
 	skin(plank, "ribbonPink")
@@ -2904,6 +2904,7 @@ RunService:BindToRenderStep("PixelCam", Enum.RenderPriority.Camera.Value + 1, fu
 		if lead then pet.model:PivotTo(lead) require(RS.Shared.PetVoxels).animate(pet.model, now, dt) continue end
 		local fp = plr.CameraMode == Enum.CameraMode.LockFirstPerson or (cam.CFrame.Position - h.Position).Magnitude < 2.5
 		local ps = (inMine or fp) and C.PET_SCALE_MINE or C.PET_SCALE -- the crew stands big in the open, smaller in the tunnels and in first person (the owner 2026-11-18: 2 to 3x)
+		if not (inMine or fp) then pet.h1 = pet.h1 or pet.model:GetExtentsSize().Y / pet.model:GetScale() ps = math.min(ps, 7 / math.max(pet.h1, 0.5)) end -- tour 1127n 8:57: a big pet towered 60% of the town view; at most 7 studs tall
 		if pet.scale ~= ps then pet.model:ScaleTo(ps) pet.scale = ps end
 		local side = (i % 2 == 0) and 1 or -1
 		local k = math.max(1, ps * 0.8, ps * (pet.model:GetAttribute("Reach") or 0)) -- bigger pets keep further off (v16: the plate pets carry their own footprint)

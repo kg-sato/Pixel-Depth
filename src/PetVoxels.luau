@@ -233,7 +233,7 @@ end
 local rigBuild, rigAnimate -- the v16 plate pets (defined below, after the action library)
 -- client: a fresh, painted model for this pet, or nil while its meshes have not arrived
 function M.build(name)
-	if rigBuild and M.RIG and M.RIG[name] then return rigBuild(name) end
+	if rigBuild and ((M.RIG and M.RIG[name]) or (M.CHAR and M.CHAR[name])) then return rigBuild(name) end
 	local d = DATA[name]
 	local folder = RS:FindFirstChild("PetMeshes")
 	local src = d and folder and folder:FindFirstChild(name)
@@ -456,6 +456,11 @@ local RIG = (function()
 	return ok and r or {}
 end)()
 M.RIG = RIG
+local CHAR = (function() -- the v17 NPC characters (Shared.CharRigData; ServerScriptService.CharRigLoader loads their meshes into ReplicatedStorage.CharMeshes) build through the same rig code (2026-11-28)
+	local ok, r = pcall(function() return require(script.Parent:WaitForChild("CharRigData", 5)) end)
+	return ok and r or {}
+end)()
+M.CHAR = CHAR
 local RIGFX = { -- the v16 voxel pets (design3d/pets/pet_vox.py anchors): orbit = Neon pixel motes circling with trails, the rest emitters
 	Tosk = { { "back", "motes", C3(255, 190, 60), { C3(255, 170, 50), 8, 0.5 } }, { "canopy", "leaf", C3(130, 220, 80) },
 		{ "tuskL", "orbit", C3(255, 196, 70), { C3(255, 180, 60), 4, 0.3 } }, { "tuskR", "orbit", C3(255, 196, 70), { C3(255, 180, 60), 4, 0.3 } },
@@ -608,8 +613,8 @@ local function rigFx(m, name, d, rig)
 end
 
 rigBuild = function(name)
-	local d = RIG[name]
-	local folder = RS:FindFirstChild("PetMeshes")
+	local d = RIG[name] or CHAR[name]
+	local folder = RS:FindFirstChild((d and d.npc) and "CharMeshes" or "PetMeshes")
 	local src = d and folder and folder:FindFirstChild(name)
 	if not src then return nil end
 	local parts = {}

@@ -814,15 +814,15 @@
  },
  "KilnKeeper": {
   "name": "KilnKeeper",
-  "tris": 16888,
-  "maxPart": 6400,
+  "tris": 16616,
+  "maxPart": 6044,
   "objects": 8,
   "parts": 8,
-  "height": 4.5,
+  "height": 4.6,
   "size": [
    4.8,
-   3.1,
-   4.5
+   3.3,
+   4.6
   ],
   "parent": {
    "Body": null,
@@ -848,42 +848,42 @@
    "Body": [
     -0.3,
     1.6,
-    -0.35
+    -0.45
    ],
    "Head": [
     -0.3,
-    2.65,
-    -0.15
+    2.75,
+    -0.05
    ],
    "ArmL1": [
     -1.3,
     2.3,
-    -0.15
+    -0.25
    ],
    "ArmL2": [
     -2.02,
     1.95,
-    0.2
+    0.4
    ],
    "ArmR1": [
     0.7,
     2.3,
-    -0.15
+    -0.25
    ],
    "ArmR2": [
-    1.55,
+    1.45,
     1.95,
-    -0.35
+    0.15
    ],
    "LegL1": [
     -0.85,
     0.7,
-    -0.3
+    -0.4
    ],
    "LegR1": [
     0.25,
     0.7,
-    -0.3
+    -0.4
    ]
   },
   "anchors": {
@@ -892,23 +892,23 @@
     [
      -0.3,
      2.0,
-     0.65
+     0.55
     ]
    ],
    "eyes": [
     "Head",
     [
      -0.3,
-     3.42,
-     0.6
+     3.52,
+     0.7
     ]
    ],
    "speech": [
     "Head",
     [
      -0.3,
-     4.8,
-     -0.25
+     4.9,
+     -0.15
     ]
    ],
    "handL": [
@@ -916,7 +916,7 @@
     [
      -1.9,
      2.42,
-     0.93
+     1.03
     ]
    ],
    "handR": [
@@ -924,7 +924,7 @@
     [
      1.9,
      2.55,
-     0.0
+     0.45
     ]
    ],
    "pot": [
@@ -932,7 +932,7 @@
     [
      -1.92,
      3.12,
-     0.95
+     1.05
     ]
    ],
    "brush": [
@@ -940,7 +940,7 @@
     [
      2.3,
      3.85,
-     -0.05
+     0.4
     ]
    ],
    "footL": [
@@ -948,7 +948,7 @@
     [
      -1.15,
      0.1,
-     0.5
+     0.4
     ]
    ],
    "footR": [
@@ -956,7 +956,7 @@
     [
      0.5,
      0.1,
-     -0.1
+     -0.2
     ]
    ]
   },
@@ -987,10 +987,10 @@
    "TunicCreaseTop": "#82402a",
    "TunicDark": "#8e4428",
    "TunicDarkTop": "#ad502d",
-   "Apron": "#f2e2c2",
-   "ApronTop": "#f9f0df",
-   "ApronLo": "#d8c4a0",
-   "ApronLoTop": "#e4d4b8",
+   "Apron": "#a88e70",
+   "ApronTop": "#b8a083",
+   "ApronLo": "#8a7258",
+   "ApronLoTop": "#a28464",
    "Smudge": "#b8643e",
    "SmudgeTop": "#c97651",
    "Paw": "#f2dcd2",
@@ -1029,22 +1029,24 @@
    "VelvetAOTop": "#633d6a",
    "VelvetDarkAO": "#261729",
    "VelvetDarkAOTop": "#3c2241",
+   "TunicAO": "#8f6230",
+   "TunicAOTop": "#ad7536",
    "VelvetLoAO": "#3a243f",
    "VelvetLoAOTop": "#402a46",
    "VelvetCreaseAO": "#1a0f1d",
    "VelvetCreaseAOTop": "#201323",
-   "ApronAO": "#e1d887",
-   "ApronAOTop": "#eae2a1",
+   "ApronAO": "#797152",
+   "ApronAOTop": "#92865d",
    "SmudgeAO": "#7b592f",
    "SmudgeAOTop": "#986b36",
    "TunicDarkAO": "#50361a",
    "TunicDarkAOTop": "#6d4821",
-   "TunicAO": "#8f6230",
-   "TunicAOTop": "#ad7536",
    "TunicHiAO": "#c36e3a",
    "TunicHiAOTop": "#cc7b4f",
-   "ApronLoAO": "#bcb36f",
-   "ApronLoAOTop": "#cbc285",
+   "PawAO": "#ddbf9a",
+   "PawAOTop": "#e7d0b4",
+   "PotAO": "#28515a",
+   "PotAOTop": "#306875",
    "VelvetHiAO": "#6b457c",
    "VelvetHiAOTop": "#7a4f8f",
    "SnoutAO": "#6c4d71",
@@ -1054,13 +1056,9 @@
    "BeretAO": "#b67825",
    "BeretAOTop": "#d88b28",
    "NoseAO": "#e85a5e",
-   "NoseAOTop": "#ef7679",
-   "PawAO": "#ddbf9a",
-   "PawAOTop": "#e7d0b4",
-   "PotAO": "#28515a",
-   "PotAOTop": "#306875"
+   "NoseAOTop": "#ef7679"
   },
-  "cells": 11671,
+  "cells": 11662,
   "proportions": {
    "clearance": 0.36,
    "head": 0.8,
@@ -2956,15 +2954,15 @@
  },
  "KilnGolem": {
   "name": "KilnGolem",
-  "tris": 60556,
-  "maxPart": 10720,
+  "tris": 64976,
+  "maxPart": 10782,
   "objects": 10,
   "parts": 9,
-  "height": 17.68,
+  "height": 17.51,
   "size": [
-   19.72,
-   6.97,
-   17.68
+   18.02,
+   7.99,
+   17.51
   ],
   "parent": {
    "Body": null,
@@ -2990,130 +2988,130 @@
   "axes": {},
   "pivots": {
    "Body": [
-    1.7,
+    0.85,
     6.5,
-    -0.085
+    -0.595
    ],
    "Head": [
-    1.7,
-    9.6,
+    0.85,
+    9.43,
     0.315
    ],
    "Lid": [
-    1.7,
-    12.6,
+    0.85,
+    12.43,
     -0.285
    ],
    "ArmR": [
-    5.1,
+    4.25,
     8.6,
-    0.115
+    -0.395
    ],
    "ArmR2": [
-    7.2,
+    6.35,
     9.5,
-    -0.485
+    -0.995
    ],
    "ArmL": [
-    -1.7,
+    -2.55,
     8.6,
-    0.115
+    -0.395
    ],
    "ArmL2": [
-    -4.6,
-    7.3,
-    0.515
+    -5.15,
+    6.9,
+    0.205
    ],
    "LegL": [
-    -0.2,
+    -1.05,
     4.4,
-    -0.285
+    -0.795
    ],
    "LegR": [
-    3.6,
+    2.75,
     4.4,
-    -0.285
+    -0.795
    ]
   },
   "anchors": {
    "Knot1": [
     "Body",
     [
-     -0.3,
+     -1.15,
      8.9,
-     2.215
+     1.705
     ]
    ],
    "Knot2": [
     "Body",
     [
-     3.8,
+     2.95,
      7.4,
-     2.365
+     1.855
     ]
    ],
    "Knot3": [
     "Body",
     [
-     1.7,
+     0.85,
      7.0,
-     -2.885
+     -3.395
     ]
    ],
    "eyes": [
     "Head",
     [
-     1.7,
-     11.6,
+     0.85,
+     11.43,
      2.815
     ]
    ],
    "speech": [
     "Head",
     [
-     1.7,
-     16.0,
+     0.85,
+     15.83,
      0.315
     ]
    ],
    "handR": [
     "ArmR2",
     [
-     8.358,
+     7.508,
      12.683,
-     -0.774
+     -1.284
     ]
    ],
    "handL": [
     "ArmL2",
     [
-     -8.072,
-     7.578,
-     1.904
+     -7.454,
+     5.028,
+     1.933
     ]
    ],
    "crucible": [
     "ArmL2",
     [
-     -8.222,
-     5.938,
-     2.104
+     -7.604,
+     2.788,
+     2.533
     ]
    ],
    "footL": [
     "LegL",
     [
-     -1.0,
+     -1.85,
      0.3,
-     0.515
+     -0.895
     ]
    ],
    "footR": [
     "LegR",
     [
-     4.4,
+     3.55,
      0.3,
-     0.515
+     0.905
     ]
    ]
   },
@@ -3190,40 +3188,40 @@
    "BronzeCreaseAOTop": "#0c0d08",
    "BronzeAO": "#4e4626",
    "BronzeAOTop": "#574f29",
-   "ClayCreaseAO": "#2d2813",
-   "ClayCreaseAOTop": "#322c15",
-   "PatinaAO": "#447a77",
-   "PatinaAOTop": "#4d9491",
-   "SocketAO": "#000000",
-   "SocketAOTop": "#000000",
    "ClayLoAO": "#53471f",
    "ClayLoAOTop": "#5a4d21",
-   "ClayDarkAO": "#3f2913",
-   "ClayDarkAOTop": "#492f14",
+   "ClayCreaseAO": "#2d2813",
+   "ClayCreaseAOTop": "#322c15",
+   "BronzeDarkAO": "#14110a",
+   "BronzeDarkAOTop": "#2d2715",
+   "PatinaAO": "#447a77",
+   "PatinaAOTop": "#4d9491",
    "IronDarkAO": "#080708",
    "IronDarkAOTop": "#19181b",
+   "SocketAO": "#000000",
+   "SocketAOTop": "#000000",
    "IronAO": "#252425",
    "IronAOTop": "#373439",
    "SootLoAO": "#000000",
    "SootLoAOTop": "#131011",
    "BronzeLoAO": "#292a17",
    "BronzeLoAOTop": "#2e301a",
+   "ClayDarkAO": "#3f2913",
+   "ClayDarkAOTop": "#492f14",
+   "RivetAO": "#c6bb2e",
+   "RivetAOTop": "#d7cc41",
    "ClayLiAO": "#9e702f",
    "ClayLiAOTop": "#bc8434",
    "SmokeAO": "#707070",
    "SmokeAOTop": "#847f83",
    "Smoke2AO": "#999999",
-   "Smoke2AOTop": "#aca8ab",
-   "BronzeDarkAO": "#14110a",
-   "BronzeDarkAOTop": "#2d2715",
-   "RivetAO": "#c6bb2e",
-   "RivetAOTop": "#d7cc41"
+   "Smoke2AOTop": "#aca8ab"
   },
-  "cells": 62742,
+  "cells": 62557,
   "proportions": {
    "clearance": 0.36,
-   "head": 0.37,
-   "shoulder": 10.03
+   "head": 0.38,
+   "shoulder": 9.86
   },
   "npc": true
  }

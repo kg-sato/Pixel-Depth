@@ -397,8 +397,8 @@ function M.build(caves)
 			local a = k / 8 * math.pi * 2
 			part("PadCollar", Vector3.new(1.2, 0.8, 1.2), O * CFrame.new(x + math.cos(a) * 1.7, y + 0.15, z + math.sin(a) * 1.7) * CFrame.Angles(0, a + 0.3, 0), Color3.fromRGB(70, 74, 84), { Material = Enum.Material.Slate, CanCollide = false })
 		end
-		part("PadStem", Vector3.new(2.2, 0.9, 2.2), O * CFrame.new(x, y + 0.25, z), CREAM:Lerp(CLAY_D, 0.25), { CanCollide = false }) -- the foot, sunk into the floor
-		part("PadStem", Vector3.new(1.6, 1.0, 1.6), O * CFrame.new(x, y + 1.05, z), CREAM, { CanCollide = false })
+		part("PadStem", Vector3.new(3.4, 1.1, 3.4), O * CFrame.new(x, y + 0.25, z), CREAM:Lerp(CLAY_D, 0.25), { CanCollide = false }) -- the foot, sunk into the floor (tour 1127n 5:52: the thin stem hid under the cap and the pad read as a floating glowing shelf)
+		part("PadStem", Vector3.new(2.6, 1.2, 2.6), O * CFrame.new(x, y + 1.05, z), CREAM, { CanCollide = false })
 		local cap = part("BouncePad", Vector3.new(5.4, 1.1, 5.4), O * CFrame.new(x, y + 1.95, z), Color3.fromRGB(226, 140, 52), { Material = Enum.Material.SmoothPlastic, CanCollide = false, Transparency = 1 }) -- the pad's box: invisible, the mushroom draws it
 		cap:SetAttribute("BouncePad", power)
 		part("PadCap", Vector3.new(5.2, 0.7, 5.2), O * CFrame.new(x, y + 1.9, z), Color3.fromRGB(214, 128, 46), { CanCollide = false })
@@ -410,9 +410,9 @@ function M.build(caves)
 		motes.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.18), NumberSequenceKeypoint.new(1, 0.05) })
 		motes.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.2, 0.3), NumberSequenceKeypoint.new(1, 1) })
 		motes.Parent = dome
-		local gills = part("PadGills", Vector3.new(4.6, 0.16, 4.6), O * CFrame.new(x, y + 1.47, z), Color3.fromRGB(255, 196, 110), { Material = Enum.Material.Neon, CanCollide = false, Transparency = 0.35 })
+		local gills = part("PadGills", Vector3.new(4.6, 0.16, 4.6), O * CFrame.new(x, y + 1.47, z), Color3.fromRGB(255, 196, 110), { Material = Enum.Material.Neon, CanCollide = false, Transparency = 0.6 })
 		local l = Instance.new("PointLight")
-		l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 180, 90), 12, 0.7, false
+		l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 180, 90), 12, 0.45, false
 		l.Parent = gills
 		for k = 0, 4 do -- cream spots on the dome
 			local a = k / 5 * math.pi * 2 + 0.4
@@ -583,6 +583,9 @@ function M.build(caves)
 			local a = k * 1.1
 			part("FossilHint", Vector3.new(1.1 - k * 0.12, 1.1 - k * 0.12, 0.2), cf * CFrame.new(math.cos(a) * (1.6 - k * 0.28), math.sin(a) * (1.6 - k * 0.28), 0.42), AMBER:Lerp(CLAY, 0.45), { CanCollide = false, CastShadow = false })
 		end
+		for _, e in { { 7.8, 0.5, 0, 3.15 }, { 7.8, 0.5, 0, -3.15 }, { 0.5, 6.8, 3.65, 0 }, { 0.5, 6.8, -3.65, 0 } } do -- tour 1127n 5:59: a dark fired-clay frame round the slab, so it reads as a set piece on the wall
+			part("FossilFrame", Vector3.new(e[1], e[2], 1.1), cf * CFrame.new(e[3], e[4], 0.1), CLAY_D, ROCK)
+		end
 		slab:SetAttribute("Fossil", i)
 		fossils[i] = prompt(slab, "Brush", "Old fossil", "Fossil", i, 9)
 	end
@@ -684,7 +687,10 @@ function M.build(caves)
 		pad(11, 0, -86, 78) -- from the floor up to any step
 		pad(22, 5.5, -72, 62) -- from the low step on to the tall one
 		for i, sx in { -76, -92 } do -- pot shelves on the west wall
+			part("ShelfBack", Vector3.new(0.5, 7.4, 9.6), O * CFrame.new(-6.0, 13.9, sx), BARK:Lerp(Color3.new(0, 0, 0), 0.35), { Material = Enum.Material.Wood, CanCollide = false }) -- tour 1127n 5:52: a backboard and brackets tie the shelves to the wall (they read as floating slabs)
+			for _, dz in { -4.1, 4.1 } do part("ShelfPost", Vector3.new(0.5, 7.6, 0.5), O * CFrame.new(-4.7, 13.8, sx + dz), BARK, { Material = Enum.Material.Wood, CanCollide = false }) end
 			for lv = 0, 1 do
+				for _, dz in { -3.4, 3.4 } do part("ShelfBracket", Vector3.new(1.6, 0.9, 0.35), O * CFrame.new(-5.1, 11.4 + lv * 3.2, sx + dz) * CFrame.Angles(0, 0, -0.5), BARK, { Material = Enum.Material.Wood, CanCollide = false }) end
 				part("Shelf", Vector3.new(2.2, 0.5, 9), O * CFrame.new(-4.7, 12 + lv * 3.2, sx), BARK, { Material = Enum.Material.Wood, CanCollide = false })
 				for q = 0, 3 do
 					local v = (q * 3 + lv * 5 + i * 7) % 5 -- directive v14 round 5 (Gemini full1122e: "a hall of duplicated props"): one gap a shelf, three belly widths, squat and tall
