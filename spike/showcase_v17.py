@@ -49,7 +49,8 @@ def rig_front(n, back=7, up=1.5):  # in front of a rig, not merely near it: the 
 
 
 def look_gloom():
-    C("local g=workspace:FindFirstChild('GloomVis') local m=g and g:FindFirstChildWhichIsA('Model') if m and m.PrimaryPart then local cam=workspace.CurrentCamera cam.CFrame=CFrame.lookAt(cam.CFrame.Position,m.PrimaryPart.Position) end return 1")
+    C("local g=workspace:FindFirstChild('GloomVis') local cam=workspace.CurrentCamera local best,bd for _,m in (g and g:GetChildren() or {}) do if m:IsA('Model') and m.PrimaryPart then local d=(m.PrimaryPart.Position-cam.CFrame.Position).Magnitude if not bd or d<bd then best,bd=m,d end end end "
+      "if best then cam.CFrame=CFrame.lookAt(cam.CFrame.Position,best.PrimaryPart.Position) end return 1")
 
 
 N.play(False); N.restore()

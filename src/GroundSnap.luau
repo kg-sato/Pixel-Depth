@@ -154,11 +154,20 @@ function M.wayfinding(caves, C)
 				if last then walked += (w.Position - last).Magnitude end
 				last = w.Position
 				if walked >= 34 and (w.Position - camp).Magnitude > 48 and (w.Position - goal).Magnitude > 14 and i < #wps then
-					walked = 0
 					local nxt = wps[math.min(#wps, i + 1)].Position
 					local side = Vector3.new(-(nxt - w.Position).Z, 0, (nxt - w.Position).X)
 					side = side.Magnitude > 0.01 and side.Unit or Vector3.xAxis
-					local f = floor(w.Position + side * 3) or w.Position
+					local f -- 2026-11-28 (camp2_test z-fight): a lantern pressed flat against a wall rock; take a side with room, or try the next waypoint
+					for _, sd in { 3, -3, 1.5, -1.5 } do
+						local c = floor(w.Position + side * sd) or (w.Position + side * sd)
+						local free = true
+						for _, q in workspace:GetPartBoundsInBox(CFrame.new(c + Vector3.new(0, 3.2, 0)), Vector3.new(1.6, 5.6, 1.6)) do
+							if q.CanCollide and not q:IsDescendantOf(folder) then free = false break end
+						end
+						if free then f = c break end
+					end
+					if not f then continue end
+					walked = 0
 					local post = prop(folder, "RouteLanternPost", Vector3.new(0.6, 5, 0.6), CFrame.new(f + Vector3.new(0, 2.3, 0)) * CFrame.Angles(0, 0.35, 0), WOOD_D)
 					local lamp = prop(folder, "RouteLantern", Vector3.new(0.6, 0.8, 0.6), CFrame.new(f + Vector3.new(0, 5.4, 0)), WARM, Enum.Material.Neon)
 					prop(folder, "RouteLanternCap", Vector3.new(1.1, 0.22, 1.1), CFrame.new(f + Vector3.new(0, 5.92, 0)), Color3.fromRGB(44, 38, 52), Enum.Material.Metal)

@@ -19,7 +19,7 @@ local NAMED = { MossLegs = "Moss", MossBody = "Moss", MossScarf = "Moss", MossHe
 	Keeper = "KilnKeeper", KeeperApron = "KilnKeeper", KeeperEye = "KilnKeeper", KeeperHat = "KilnKeeper", KeeperHead = "KilnKeeper", KeeperPaw = "KilnKeeper", KeeperSnout = "KilnKeeper" }
 local KEEP = { Quest = true, Knot1 = true, Knot2 = true, Knot3 = true, Cracks = true } -- parts of a placeholder model that stay visible
 local BOSS = { RootWarden = true, KilnGolem = true }
-local SIZE = { RootWarden = 1.15, KilnGolem = 1.1 } -- the bosses stand a little taller than their old block bodies
+local SIZE = { RootWarden = 1.15, KilnGolem = 0.95 } -- the Warden stands a little taller than its old block body; the Golem's raised arms span its corridor (Gemini, show1128c: they clipped the walls at 1.1)
 M.BOSSNAME = { "RootWarden", "KilnGolem" } -- BossClient's boss numbers
 
 local groups = {} -- placeholder key (its Model, or the folder holding a camp NPC's loose parts) -> one mount
@@ -102,6 +102,8 @@ local function mount(g)
 	local ground = CFrame.lookAt(feet, feet + front.Unit)
 	local rig = PV.build(g.char)
 	if not rig then g.dirty = true return end -- the meshes have not arrived yet: try again
+	rig:SetAttribute("Voxel", nil) -- "Voxel" marks crew pets (pet tests and PetCompanion count them)
+	rig:SetAttribute("Npc", true)
 	local d = CHAR[g.char]
 	local s = math.clamp((hi.Y - lo.Y) / d.height * (SIZE[g.char] or 1), 0.3, 3)
 	rig:ScaleTo(s)
@@ -113,7 +115,7 @@ local function mount(g)
 		local at = Instance.new("Attachment")
 		at.Name, at.Position = "CharFill", Vector3.new(0, h * 0.5 - ROOT_Y * s, -math.max(2, h * 0.45))
 		local l = Instance.new("PointLight")
-		l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 236, 214), math.max(8, h * 1.4), BOSS[g.char] and 1.1 or 0.45, false
+		l.Color, l.Range, l.Brightness, l.Shadows = Color3.fromRGB(255, 236, 214), math.max(8, h * 1.6), BOSS[g.char] and 1.1 or 0.8, false -- 0.8: Tock read pitch black at the night campfire (show1128c)
 		l.Parent = at
 		at.Parent = rig.PrimaryPart
 	end
@@ -212,6 +214,16 @@ end
 function M.make(char, height)
 	local d = CHAR[char]
 	local rig = d and PV.build(char)
+	if rig then rig:SetAttribute("Voxel", nil) rig:SetAttribute("Npc", true) end
+	local a = rig and rig.PrimaryPart and d.anchors and d.anchors.eyes
+	if a then -- a glow on the face: the old sprites had neon eyes and the voxel one vanished in the dark (Gemini, show1128c)
+		local at = Instance.new("Attachment")
+		at.Name, at.Position = "EyeGlow", Vector3.new(-a[2].X, a[2].Y - ROOT_Y, -a[2].Z - 0.35)
+		local l = Instance.new("PointLight")
+		l.Color, l.Range, l.Brightness, l.Shadows = char == "Clayling" and Color3.fromRGB(122, 232, 200) or Color3.fromRGB(255, 160, 60), 7, 1.6, false
+		l.Parent = at
+		at.Parent = rig.PrimaryPart
+	end
 	if rig then rig:ScaleTo(math.clamp(height / d.height, 0.2, 3)) end
 	return rig
 end
