@@ -6,12 +6,13 @@ game = pathlib.Path(__file__).resolve().parent.parent
 root = game.parent.parent
 R, name = sys.argv[1], sys.argv[2]
 BL = r"C:\Users\kgsat\Downloads\blender-5.3.0-beta+v53.32f5c9c48bca-windows.amd64-release\blender-5.3.0-beta+v53.32f5c9c48bca-windows.amd64-release\blender.exe"
-r = subprocess.run([BL, "-b", "-P", str(game / "design3d/chars/npcs_vox.py"), "--", str(game / "design3d/chars/out_vox"), name], capture_output=True, text=True, cwd=game)
+r = subprocess.run([BL, "-b", "--factory-startup", "-P", str(game / "design3d/chars/npcs_vox.py"), "--", str(game / "design3d/chars/out_vox"), name], capture_output=True, text=True, cwd=game)
 print([l for l in (r.stdout + r.stderr).splitlines() if "cells," in l or "Traceback" in l or "Error:" in l][:4])
 out = game / "captures/chars" / R
+out.mkdir(parents=True, exist_ok=True); shutil.copy(game / "design3d/chars/npcs_vox.py", out / "npcs_vox.py")  # the builder as graded, to restore a best round
 subprocess.run([sys.executable, str(game / "spike/pet_turntable_grade.py"), str(game / "design3d/chars/out_vox"), str(out), name], capture_output=True, text=True, cwd=game)
 brief = (game / "spike/pet_grade_brief.md").read_text(encoding="utf-8")
-brief = brief.replace("Each other image (P01..P06) is ONE pet", "Each other image (P01) is ONE character (a town NPC, not a pet)").replace("For EACH of P01..P06", "For P01").replace("voxel-creature pet game", "voxel game with voxel creature pets and voxel NPC characters")
+brief = brief.replace("Each other image (P01..P06) is ONE pet", "Each other image (P01) is ONE character (a town NPC, not a pet)").replace("For EACH of P01..P06", "For P01").replace("voxel-creature pet game", "voxel game with voxel creature pets and voxel NPC characters").replace('top-down "town" view (small in frame)', 'top-down "town" view seen from behind its right shoulder (small in frame)')  # 2026-11-27: the town view is from behind (azimuth 155); graders kept asking to see the face in it
 procs = []
 for g in "ab":
     d = out / f"blind_{g}"; d.mkdir(parents=True, exist_ok=True)
