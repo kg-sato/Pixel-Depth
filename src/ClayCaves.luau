@@ -240,7 +240,7 @@ function M.build(caves)
 	-- the kiln camp (centre): the kiln, the Kiln Keeper's stall, a ring of butter tiles marking the safe ground
 	for k = 0, 23 do
 		local a = k / 24 * math.pi * 2
-		part("RingTile", Vector3.new(3.4, 0.3, 1.4), O * CFrame.new(math.cos(a) * (C.CAMP_RING - 2), 0.75, math.sin(a) * (C.CAMP_RING - 2)) * CFrame.Angles(0, -a + math.pi / 2, 0), k % 2 == 0 and CREAM or AMBER, { CanCollide = false, CastShadow = false })
+		part("RingTile", Vector3.new(3.4, 0.3, 1.4), O * CFrame.new(math.cos(a) * (C.CAMP_RING - 2), 0.14, math.sin(a) * (C.CAMP_RING - 2)) * CFrame.Angles(0, -a + math.pi / 2, 0), k % 2 == 0 and CREAM:Lerp(CLAY_L, 0.35) or AMBER:Lerp(CLAY, 0.3), { CanCollide = false, CastShadow = false, Material = Enum.Material.Slate }) -- 2026-11-28 (tour 1127n): at 0.75 the tiles floated 0.56 over the floor and read as glowing slabs; set in the floor, a step darker
 	end
 	local kiln = O * CFrame.new(6, 0, -12)
 	for i, s in { { 13, 4, 0 }, { 11.4, 4, 4 }, { 9, 3.4, 7.7 }, { 5.6, 2.6, 10.7 } } do -- a stepped beehive kiln
@@ -279,7 +279,7 @@ function M.build(caves)
 	part("CounterTop", Vector3.new(8.6, 0.4, 3), stall * CFrame.new(0, 3.55, 0), Color3.fromRGB(176, 150, 124), { Material = Enum.Material.Sandstone })
 	for _, x in { -4, 4 } do for _, z in { -2.6, 1.4 } do part("Post", Vector3.new(0.5, 8, 0.5), stall * CFrame.new(x, 4.75, z), BARK, { Material = Enum.Material.Wood }) end end
 	for k = 0, 4 do part("Awning", Vector3.new(1.84, 0.4, 5.4), stall * CFrame.new(-3.68 + k * 1.84, 9 + (k % 2) * 0.06, -0.6) * CFrame.Angles(0.14, 0, 0), k % 2 == 0 and CLAY_L or CREAM, DECO) end
-	for i, x in { -2.6, -0.6, 1.6 } do
+	for i, x in { -3.2, -2.1, 2.9 } do -- 2026-11-28: the pots stand to the sides, so the Kiln Keeper's voxel face shows over the counter
 		part("Pot", Vector3.new(1.1, 1.2 + i * 0.2, 1.1), stall * CFrame.new(x, 4.35 + i * 0.1, 0.2), i % 2 == 0 and CLAY_L or CLAY, DECO)
 		part("PotRim", Vector3.new(1.34, 0.26, 1.34), stall * CFrame.new(x, 5.08 + i * 0.2, 0.2), CLAY_D, DECO)
 	end

@@ -76,7 +76,7 @@ function M.clearZips(caves, r)
 			for _, p in f and f:GetDescendants() or {} do
 				if p:IsA("BasePart") and p.Parent and (fname ~= "Landmark" or string.find(p.Name, "Crystal")) and math.max(p.Size.X, p.Size.Y, p.Size.Z) < 24 and distToSeg(p.Position, seg[1], seg[2]) < r + math.max(p.Size.X, p.Size.Y, p.Size.Z) / 2 then
 					local m = p:FindFirstAncestorOfClass("Model")
-					if m and m ~= f and m:IsDescendantOf(f) then m:Destroy() else p:Destroy() end
+					if fname ~= "Landmark" and m and m ~= f and m:IsDescendantOf(f) then m:Destroy() else p:Destroy() end -- a landmark loses only the crystal, never the whole model
 					n += 1
 				end
 			end

@@ -134,10 +134,10 @@ function M.start(E)
 	PPS.PromptTriggered:Connect(function(prompt)
 		if prompt.Parent and prompt.Parent:GetAttribute("Station") == "guide" and not win.Visible then E.openPanel(win) end
 	end)
-	plr:GetAttributeChangedSignal("InCave"):Connect(function() if plr:GetAttribute("InCave") then clear() end end)
+	plr:GetAttributeChangedSignal("InCave"):Connect(function() if plr:GetAttribute("InCave") then clear() if win.Visible then E.closePanel(win) end end end) -- 2026-11-28 showcase: a picker left open rode down into the caves
 	plr:GetAttributeChangedSignal("DevGuide"):Connect(function() -- Studio test hook: player attribute DevGuide = a station key
 		local k = plr:GetAttribute("DevGuide")
-		if k == "picker" then E.openPanel(win) elseif type(k) == "string" then guide(k) end
+		if k == "picker" then E.openPanel(win) elseif type(k) == "string" then if win.Visible then E.closePanel(win) end guide(k) end -- a key acts like its button: the picker closes
 	end)
 end
 
